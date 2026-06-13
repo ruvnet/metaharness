@@ -4,6 +4,32 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Added — Iter 36 (2026-06-13)
+
+- **`scripts/release-notes.mjs`** — extracts CHANGELOG entries as
+  GitHub-flavoured release notes ready for
+  `gh release create vX.Y.Z --notes-file -`. Selection modes:
+  - `--from-iter=N --to-iter=M` — explicit iter range
+  - `--version=X.Y.Z` — entries since the previous git tag
+  - `--since=v0.1.0 --until=HEAD` — git-tag date window
+  - default (no flags) — everything since the last released tag
+- **`release.mjs` updated**: after `--push` succeeds, automatically
+  writes `dist/release-notes-v<version>.md` and surfaces the
+  `gh release create … --notes-file dist/…` command for the operator.
+  Closes the loop between npm publish and the GitHub Release UI.
+- **`__tests__/release-notes.test.ts`** (9 cases) — pins the
+  parse → render → CLI shape:
+  - canonical `### Added — Iter N (YYYY-MM-DD)` header parsed correctly
+  - section ends at next `## ` heading (doesn't bleed into "Unreleased")
+  - returns `[]` when no sections match
+  - renderer groups by kind (Added before Fixed before Changed)
+  - iter range header is correct
+  - empty selection rendered gracefully
+  - title forwarded
+  - live CHANGELOG `--from-iter=30 --to-iter=35` smoke
+  - bad `--since` tag exits non-zero with a clear error
+- TS suite: **374/374** (up from 365).
+
 ### Added — Iter 35 (2026-06-13)
 
 - **ADR-019: Release orchestration** —

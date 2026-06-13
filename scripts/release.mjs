@@ -186,6 +186,22 @@ async function main() {
     const pushT = await run('git', ['push', 'origin', `v${newVersion}`]);
     if (pushT.code !== 0) { log('FAIL', `git push tag failed`); process.exit(1); }
     log('PASS', `pushed — publish.yml will fire on the tag`);
+
+    // Optional: stage GitHub release notes from CHANGELOG so the
+    // operator can `gh release create v<version> --notes-file -` next.
+    // Writes to dist/release-notes-v<version>.md, never invokes gh.
+    log('STEP', `staging GitHub release notes`);
+    const notes = await run('node', ['scripts/release-notes.mjs', `--version=${newVersion}`]);
+    if (notes.code === 0 && notes.stdout) {
+      const { writeFile, mkdir } = await import('node:fs/promises');
+      await mkdir(join(ROOT, 'dist'), { recursive: true });
+      const out = join(ROOT, 'dist', `release-notes-v${newVersion}.md`);
+      await writeFile(out, notes.stdout, 'utf-8');
+      log('PASS', `notes at ${out}`);
+      log('INFO', `  Next: gh release create v${newVersion} --notes-file ${out}`);
+    } else {
+      log('WARN', 'release-notes generation failed (non-fatal)');
+    }
   } else {
     log('INFO', `did not push (omit --push intentionally?). Run:`);
     log('INFO', `  git push origin ${branch} && git push origin v${newVersion}`);
