@@ -1,0 +1,36 @@
+{
+  "name": "@ruflo/host-claude-code",
+  "version": "0.1.0",
+  "description": "Claude Code host adapter for agent-harness-generator (MCP + hooks + .claude/settings.json)",
+  "homepage": "https://github.com/ruvnet/agent-harness-generator",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "directory": "packages/host-claude-code"
+  },
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist/**", "README.md"],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run --passWithNoTests",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": ["agent-harness", "claude-code", "mcp", "host-adapter", "ruflo"],
+  "publishConfig": { "access": "public" },
+  "dependencies": { "@ruflo/kernel": "0.1.0" },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  },
+  "engines": { "node": ">=20.0.0" }
+}

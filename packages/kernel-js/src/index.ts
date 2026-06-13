@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: MIT
+//
+// @ruflo/kernel runtime resolver. Per ADR-002a, kernel ships as Rust
+// source compiled to wasm (primary) + per-platform NAPI-RS (fallback).
+
+export type { McpServerSpec, ToolSpec, AgentSpec, HookSpec, HarnessSpec, HostAdapter } from './types.js';
 
 export interface KernelInfo {
   version: string;
   git_sha: string;
   target: string;
-}
-
-export interface McpServerSpec {
-  name: string;
-  command?: string[];
-  url?: string;
-  env?: Array<[string, string]>;
 }
 
 interface KernelBackend {

@@ -1,0 +1,52 @@
+{
+  "name": "agent-harness-generator",
+  "displayName": "Agent Harness Generator",
+  "description": "Scaffold your own focused AI agent harness — Claude Code / Codex / pi.dev / Hermes. WASM kernel, multi-host, witness-signed.",
+  "version": "0.1.0",
+  "author": {
+    "id": "ruvnet",
+    "displayName": "rUv",
+    "url": "https://ruv.io"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/ruvnet/agent-harness-generator",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/agent-harness-generator"
+  },
+  "categories": ["scaffolding", "agent-tooling", "marketplace"],
+  "tags": [
+    "agent-harness",
+    "scaffold",
+    "generator",
+    "mcp",
+    "claude-code",
+    "codex",
+    "pi-dev",
+    "hermes-agent",
+    "rust",
+    "wasm",
+    "napi-rs"
+  ],
+  "minClaudeFlowVersion": "3.0.0",
+  "type": "scaffolding",
+  "skills": [
+    "create-harness",
+    "list-templates",
+    "publish-harness"
+  ],
+  "commands": [
+    {
+      "name": "create-harness",
+      "description": "Scaffold a new AI agent harness in the current directory"
+    },
+    {
+      "name": "list-harness-templates",
+      "description": "List available harness templates (minimal, vertical, multi-host)"
+    }
+  ],
+  "permissions": ["memory", "filesystem", "network"],
+  "hooks": [],
+  "trustLevel": "official",
+  "verified": true
+}

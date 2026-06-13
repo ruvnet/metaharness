@@ -1,0 +1,23 @@
+# {{name}}
+
+{{description}}
+
+## Behavioral rules
+
+- Use the harness's MCP tools (`mcp__{{name}}__*`) for orchestration
+- Memory and routing are handled by the kernel — you don't need to learn them
+- Defer destructive operations to the user
+
+## Commands
+
+After `{{name}} init`, the following are available:
+
+| Command | What it does |
+|---|---|
+| `{{name}} doctor` | Health check the install |
+| `{{name}} memory search <query>` | Semantic search across stored patterns |
+| `{{name}} route <task>` | Get the routing tier recommendation |
+
+## Architecture
+
+This harness uses [@ruflo/kernel](https://www.npmjs.com/package/@ruflo/kernel) for its primitives. The kernel is a Rust-compiled WASM module with a NAPI-RS native fallback — same code runs identically on every platform.
