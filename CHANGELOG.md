@@ -4,6 +4,45 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Added — Iter 10 (2026-06-13)
+
+- **MCP tool dispatch chain in Rust kernel** (`crates/kernel/src/dispatch.rs`):
+  - `ToolCallRequest`, `Dispatch::{Invoke, NotFound, BadArgs, Denied}`
+  - `dispatch()` looks up the tool, shape-checks args (must be JSON
+    object), checks claims against `tool.invoke.<server>.<tool>` capability
+  - `dispatch_unauthenticated()` skips claim check for SelfPeer/dev paths
+  - 6 new Rust test cases including the capability-specificity case
+    (allow `tool.invoke.memory.*` does NOT allow alerts)
+- **Cost tracking subsystem in Rust** (`crates/kernel/src/cost.rs`):
+  - `CostEvent`, `CostTotals` with per-tier breakdown +
+    success/fail counts
+  - `check_budget()` returns Ok(remaining) or Err(over-by)
+  - `success_rate()` and `avg_cost()` derivers
+  - 5 new Rust tests
+- **AST-aware identifier rename** (`packages/create-agent-harness/src/
+  rename.ts`):
+  - Token-boundary-aware regex (no Babel dependency)
+  - Skips partial-word matches (`oldName` doesn't touch `oldNameXY`)
+  - Skips left-side property accesses (`obj.oldName.foo` left alone)
+  - DOES rename inside string literals (intentional — error messages
+    reference identifiers by name)
+  - `renameFileMap()` helper for bulk transforms
+  - 13 new TS tests including rule-chain ordering (a -> b -> c)
+- **Tarball builder for IPFS** (`packages/create-agent-harness/src/
+  tarball.ts`):
+  - POSIX ustar format with FIXED metadata (mode 0644, mtime 0, uid 0,
+    gid 0, ustar version "00") for deterministic sha256 across CI
+    runners
+  - Skips .git, node_modules, target, dist, .cache
+  - 5 new TS tests including determinism + content-change-changes-hash
+- **Cross-host integration smoke** (`__tests__/integration/multi-host.test.
+  ts`):
+  - Scaffolds minimal template for every host -> validates package.json
+    declares @ruflo/host-<n>
+  - Scaffolds every template for claude-code -> validates artifact
+    presence
+  - mcpServers config contains the harness name
+
 ### Added — Iter 9 (2026-06-13)
 
 - **Federation transport in Rust kernel** (`crates/kernel/src/federation.rs`):
