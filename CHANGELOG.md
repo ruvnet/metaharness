@@ -4,6 +4,34 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Added — Iter 32 (2026-06-13)
+
+- **`examples/quickstart/`** — first RUNNABLE example. Before this iter
+  the `examples/` directory had three READMEs but no executable code.
+  Now there's a single-script demo:
+  - `node examples/quickstart/quickstart.mjs` — scaffolds a `demo-bot`
+    harness from the `minimal` template, runs the full `harness validate`
+    umbrella against the output, prints a summary, cleans up. ~50ms.
+  - Flags: `--host=<id>` (any of 6 hosts), `--template=<id>`,
+    `--name=<n>`, `--keep` (don't auto-clean).
+  - Imports from the built `dist/` — no TS toolchain needed at runtime.
+  - Locally verified on all 6 hosts (50–55ms each):
+    `claude-code, codex, pi-dev, hermes, openclaw, rvm`.
+- **`examples/README.md` rewritten** to lead with the quickstart and
+  signal `runnable? yes` vs the docs-only multi-host + federation
+  examples.
+- **`__tests__/examples-quickstart.test.ts`** (4 cases) — pins the
+  example as code that must keep running, not docs that nobody verifies:
+  - script + README exist
+  - default run exits 0 with `Result: HEALTHY`
+  - invalid `--host` exits 2 with explanatory error
+  - smoke-runs all 6 hosts (one assertion per host)
+- CI milestone: iter-31 commit `b37060c` ran with **all 16 jobs GREEN**
+  for the first time (Rust×3 + WASM×3 + Node20+22×3 + Bench + pack+install×3
+  + CI-passed aggregator). The iter-31 batch-install fix unblocked the
+  last 2 pack-install jobs.
+- TS suite: **345/345** (up from 341).
+
 ### Fixed — Iter 31 (2026-06-13)
 
 - **CI `pack+install` job RED on macos+windows since iter 16** —
