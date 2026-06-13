@@ -1,0 +1,148 @@
+name: Publish
+
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to publish (semver)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+  attestations: write
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+  GCP_WIF_PROVIDER: ${{ vars.GCP_WIF_PROVIDER }}
+  GCP_WIF_SERVICE_ACCOUNT: ${{ vars.GCP_WIF_SERVICE_ACCOUNT }}
+
+jobs:
+  build-native:
+    name: native ${{ matrix.target }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            artifact: kernel-linux-x64-gnu
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+            artifact: kernel-linux-arm64-gnu
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            artifact: kernel-darwin-x64
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            artifact: kernel-darwin-arm64
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            artifact: kernel-win32-x64-msvc
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: Swatinem/rust-cache@v2
+      - name: Install @napi-rs/cli
+        run: npm install -g @napi-rs/cli@^3
+      - name: Cross-compile setup (aarch64 linux only)
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+      - name: napi build
+        working-directory: crates/kernel-napi
+        run: napi build --platform --release --target ${{ matrix.target }}
+      - name: Upload native artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: crates/kernel-napi/*.node
+
+  build-wasm:
+    name: wasm
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: Swatinem/rust-cache@v2
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      - name: Build wasm
+        run: wasm-pack build crates/kernel-wasm --target bundler --release --out-dir ../../packages/kernel-js/pkg
+      - name: Upload wasm artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-wasm
+          path: packages/kernel-js/pkg/
+
+  gcp-auth-and-publish:
+    name: Publish to npm (gated on GCP secret fetch)
+    needs: [build-native, build-wasm]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Download native artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist-native
+      - name: Download wasm artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: kernel-wasm
+          path: packages/kernel-js/pkg
+      - name: GCP Workload Identity Federation
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.GCP_WIF_PROVIDER }}
+          service_account: ${{ env.GCP_WIF_SERVICE_ACCOUNT }}
+      - name: Fetch NPM_TOKEN from GCP Secret Manager
+        id: secrets
+        uses: google-github-actions/get-secretmanager-secrets@v2
+        with:
+          secrets: |-
+            npm_token:${{ env.GCP_PROJECT_ID }}/NPM_TOKEN
+      - name: Smoke test before publish
+        run: |
+          npm ci || npm install
+          npm run build
+          npm run test
+          node scripts/smoke.mjs
+      - name: Publish @ruflo/kernel-* native packages
+        env:
+          NODE_AUTH_TOKEN: ${{ steps.secrets.outputs.npm_token }}
+        run: |
+          echo "TODO: publish per-platform native packages from dist-native/ (lands in a follow-up iteration)"
+      - name: Publish @ruflo/kernel umbrella
+        env:
+          NODE_AUTH_TOKEN: ${{ steps.secrets.outputs.npm_token }}
+        working-directory: packages/kernel-js
+        run: npm publish --provenance --access public
+      - name: Publish create-agent-harness
+        env:
+          NODE_AUTH_TOKEN: ${{ steps.secrets.outputs.npm_token }}
+        working-directory: packages/create-agent-harness
+        run: npm publish --provenance --access public

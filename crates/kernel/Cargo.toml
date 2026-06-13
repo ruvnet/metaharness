@@ -1,0 +1,22 @@
+[package]
+name = "ruflo-kernel"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Cross-platform kernel for the agent-harness-generator (MCP, hooks, memory, routing, intelligence, claims, witness)"
+keywords = ["agent", "mcp", "wasm", "harness", "scaffold"]
+categories = ["api-bindings", "wasm"]
+
+[lib]
+crate-type = ["lib"]
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+anyhow.workspace = true

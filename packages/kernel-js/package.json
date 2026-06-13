@@ -1,0 +1,43 @@
+{
+  "name": "@ruflo/kernel",
+  "version": "0.1.0",
+  "description": "Cross-platform kernel for the agent-harness-generator — wasm primary, NAPI-RS native fallback",
+  "homepage": "https://github.com/ruvnet/agent-harness-generator",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "directory": "packages/kernel-js"
+  },
+  "license": "MIT",
+  "author": "rUv <ruv@ruv.net>",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist/**",
+    "pkg/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run --passWithNoTests",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": ["agent-harness", "mcp", "wasm", "kernel", "ruflo"],
+  "publishConfig": { "access": "public" },
+  "optionalDependencies": {
+    "@ruflo/kernel-darwin-arm64": "0.1.0",
+    "@ruflo/kernel-darwin-x64": "0.1.0",
+    "@ruflo/kernel-linux-x64-gnu": "0.1.0",
+    "@ruflo/kernel-linux-arm64-gnu": "0.1.0",
+    "@ruflo/kernel-win32-x64-msvc": "0.1.0"
+  },
+  "engines": { "node": ">=20.0.0" }
+}

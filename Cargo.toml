@@ -1,0 +1,34 @@
+[workspace]
+members = [
+    "crates/kernel",
+    "crates/kernel-wasm",
+    "crates/kernel-napi",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+license = "MIT"
+repository = "https://github.com/ruvnet/agent-harness-generator"
+homepage = "https://github.com/ruvnet/agent-harness-generator"
+authors = ["rUv <ruv@ruv.net>"]
+
+[workspace.dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+anyhow = "1.0"
+wasm-bindgen = "0.2"
+serde-wasm-bindgen = "0.6"
+napi = { version = "2", default-features = false, features = ["napi6"] }
+napi-derive = "2"
+js-sys = "0.3"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"

@@ -1,0 +1,48 @@
+{
+  "name": "create-agent-harness",
+  "version": "0.1.0",
+  "description": "Scaffold your own focused AI agent harness — Claude Code / Codex / pi.dev / Hermes",
+  "homepage": "https://github.com/ruvnet/agent-harness-generator",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "directory": "packages/create-agent-harness"
+  },
+  "license": "MIT",
+  "author": "rUv <ruv@ruv.net>",
+  "type": "module",
+  "bin": { "create-agent-harness": "./dist/bin.js" },
+  "files": ["dist/**", "templates/**", "README.md", "LICENSE"],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run --passWithNoTests",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "agent-harness",
+    "agent-harness-generator",
+    "scaffold",
+    "create-agent-harness",
+    "mcp-server",
+    "claude-code",
+    "codex",
+    "pi-dev",
+    "hermes-agent",
+    "multi-agent",
+    "agentic-ai",
+    "autonomous-agents"
+  ],
+  "publishConfig": { "access": "public" },
+  "dependencies": {
+    "@ruflo/kernel": "0.1.0",
+    "prompts": "^2.4.2",
+    "kolorist": "^1.8.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/prompts": "^2.4.9",
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  },
+  "engines": { "node": ">=20.0.0" }
+}

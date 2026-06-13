@@ -1,0 +1,37 @@
+{
+  "name": "agent-harness-generator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Scaffold your own focused AI agent harness — workspace root",
+  "homepage": "https://github.com/ruvnet/agent-harness-generator",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/agent-harness-generator.git"
+  },
+  "license": "MIT",
+  "author": "rUv <ruv@ruv.net>",
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run -ws --if-present build",
+    "test": "npm run -ws --if-present test",
+    "lint": "npm run -ws --if-present lint",
+    "build:wasm": "wasm-pack build crates/kernel-wasm --target bundler --out-dir ../../packages/kernel-js/pkg --release",
+    "build:napi": "cd crates/kernel-napi && napi build --platform --release --output-dir ../../packages/kernel-js/native",
+    "test:rust": "cargo test --workspace",
+    "fmt:rust": "cargo fmt --all",
+    "clippy": "cargo clippy --workspace --all-targets -- -D warnings",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^3.0.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
