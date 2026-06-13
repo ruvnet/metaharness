@@ -215,6 +215,19 @@ export function wasmGuestJson(spec: HarnessSpec): string {
       version: '0.1.0',
       entrypoint: 'pkg/ruflo_kernel_wasm.js',
     },
+    // RVF (RuVector Format) — recommended companion for RVM-deployed
+    // harnesses. Hardware-isolated vector storage inside the partition,
+    // HNSW + SIMD via @ruvector/rvf-wasm. Optional; the partition still
+    // boots if the user doesn't bundle it.
+    companion: {
+      vector_format: {
+        package: '@ruvector/rvf',
+        version: '^0.2.0',
+        wasm_addon: '@ruvector/rvf-wasm',
+        recommended: true,
+        reason: 'RVM partitions benefit from in-partition HNSW vector storage; RVF is the matching binary format',
+      },
+    },
     lifecycle: 'managed',
     proof_tier_default: 'P2',
     failure_class_recovery: {

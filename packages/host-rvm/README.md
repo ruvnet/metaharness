@@ -65,6 +65,31 @@ const caps = buildCapabilityTable([
 
 For everyday local-dev, use the OS-level adapters. For federation across trust boundaries, RVM is the natural backend.
 
+## Pairs with @ruvector/rvf (recommended)
+
+[`@ruvector/rvf`](https://www.npmjs.com/package/@ruvector/rvf) — RuVector Format, a unified TypeScript SDK for vector intelligence with HNSW + SIMD — is the recommended vector-storage companion for RVM-deployed harnesses. The pairing gives you:
+
+- **Hardware-isolated vector storage** — the RVF index lives inside the RVM partition, gated by the same capability tokens
+- **WASM addon** (`@ruvector/rvf-wasm`) — runs as a sub-guest under the RVM partition, so vector ops benefit from RVM's witness-native syscalls
+- **Binary format with HNSW** — the same on-disk format works in Node, the browser, and inside an RVM partition
+
+The adapter declares this pairing in the emitted `wasm-guest.json`:
+
+```json
+{
+  "companion": {
+    "vector_format": {
+      "package": "@ruvector/rvf",
+      "version": "^0.2.0",
+      "wasm_addon": "@ruvector/rvf-wasm",
+      "recommended": true
+    }
+  }
+}
+```
+
+RVF is opt-in — the partition still boots without it. Use `@ruflo/kernel/memory-rvf` to plug it into the kernel memory subsystem.
+
 ## RVM facts
 
 - Bare-metal microhypervisor for AArch64

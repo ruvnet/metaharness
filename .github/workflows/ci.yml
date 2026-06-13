@@ -1,5 +1,13 @@
 name: CI
 
+# Full 3-platform matrix across every gate.
+# Ubuntu 22.04 / macOS 14 / Windows 2022 must all green before merge.
+#
+# Lessons baked in:
+#   - `/tmp` does NOT resolve on Windows (use os.tmpdir()).
+#   - File paths in test fixtures MUST be normalised via path.join + posix.
+#   - WASM binary path separators differ; the loader is platform-agnostic.
+
 on:
   push:
     branches: [main]
@@ -14,9 +22,16 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: short
+
 jobs:
+  # ─────────────────────────────────────────────────────────────────────
+  # Rust workspace — 3 platforms
+  # ─────────────────────────────────────────────────────────────────────
   rust:
-    name: Rust ${{ matrix.os }}
+    name: Rust / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -29,39 +44,59 @@ jobs:
           components: rustfmt, clippy
           targets: wasm32-unknown-unknown
       - uses: Swatinem/rust-cache@v2
-      - name: cargo fmt
+        with:
+          shared-key: rust-${{ matrix.os }}
+      - name: cargo fmt --check
         run: cargo fmt --all -- --check
-      - name: cargo clippy
+      - name: cargo clippy -D warnings
         run: cargo clippy --workspace --all-targets -- -D warnings
       - name: cargo test
         run: cargo test --workspace --verbose
-      - name: cargo doc
+      - name: cargo doc -D warnings
         run: cargo doc --workspace --no-deps
         env:
           RUSTDOCFLAGS: -D warnings
 
+  # ─────────────────────────────────────────────────────────────────────
+  # WASM build + validate — 3 platforms
+  # (validates the pipeline works on every OS, not just ubuntu)
+  # ─────────────────────────────────────────────────────────────────────
   wasm:
-    name: WASM build + validate
-    runs-on: ubuntu-latest
+    name: WASM / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
       - uses: Swatinem/rust-cache@v2
-      - name: Install wasm-pack
+        with:
+          shared-key: wasm-${{ matrix.os }}
+      - name: Install wasm-pack (Linux / macOS)
+        if: runner.os != 'Windows'
+        shell: bash
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      - name: Install wasm-pack (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: cargo install wasm-pack --locked
       - name: Install wasm-tools
         run: cargo install wasm-tools --locked
       - name: Build wasm bundler target
         run: wasm-pack build crates/kernel-wasm --target bundler --release
       - name: Validate wasm
+        shell: bash
         run: wasm-tools validate crates/kernel-wasm/pkg/*.wasm
-      - name: Size budget gate (<500 KB hard cap per ADR-002a)
+      - name: Size budget gate (< 500 KB, ADR-002a)
+        shell: bash
         run: |
           set -euo pipefail
           for f in crates/kernel-wasm/pkg/*.wasm; do
-            sz=$(wc -c < "$f")
+            sz=$(wc -c < "$f" | tr -d ' ')
             echo "wasm: $f size=$sz"
             if [ "$sz" -gt 512000 ]; then
               echo "::error::wasm size $sz exceeds 500 KB hard budget (ADR-002a)"
@@ -69,8 +104,11 @@ jobs:
             fi
           done
 
+  # ─────────────────────────────────────────────────────────────────────
+  # Node tests — 3 platforms × 2 Node versions
+  # ─────────────────────────────────────────────────────────────────────
   node:
-    name: Node ${{ matrix.node }} on ${{ matrix.os }}
+    name: Node ${{ matrix.node }} / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     needs: [wasm]
     strategy:
@@ -89,3 +127,66 @@ jobs:
         run: npm run build
       - name: TypeScript tests
         run: npm test
+      - name: Path-handling guard (the /tmp Windows bug regression test)
+        shell: bash
+        run: node scripts/path-guard.mjs
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Per-platform npm pack + install smoke for every published package
+  # ─────────────────────────────────────────────────────────────────────
+  pack-install:
+    name: pack+install / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    needs: [node]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Build all packages
+        run: |
+          npm ci || npm install
+          npm run build
+      - name: npm pack every published package
+        shell: bash
+        run: node scripts/pack-all.mjs
+      - name: Install every tarball into a tmp project
+        shell: bash
+        run: node scripts/install-all.mjs
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Bench (Linux only — others would be redundant for synthetic corpus)
+  # ─────────────────────────────────────────────────────────────────────
+  bench:
+    name: Bench (smoke)
+    runs-on: ubuntu-latest
+    needs: [node]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci || npm install
+      - run: npm run build
+      - name: Run benchmark (small corpus for smoke)
+        run: BENCH_ITEMS=200 BENCH_QUERIES=50 BENCH_OUT=./bench-report.json npm --prefix packages/bench run bench
+      - name: Upload bench report
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-report
+          path: packages/bench/bench-report.json
+          if-no-files-found: warn
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Final gate — all jobs must pass
+  # ─────────────────────────────────────────────────────────────────────
+  ci-pass:
+    name: CI passed
+    needs: [rust, wasm, node, pack-install, bench]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "All cross-platform gates green."

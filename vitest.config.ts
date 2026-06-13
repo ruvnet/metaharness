@@ -5,7 +5,11 @@ export default defineConfig({
   test: {
     globals: false,
     environment: 'node',
-    include: ['packages/*/__tests__/**/*.test.ts'],
+    include: [
+      'packages/*/__tests__/**/*.test.ts',
+      'packages/*/__tests__/integration/**/*.test.ts',
+      '__tests__/**/*.test.ts',
+    ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],

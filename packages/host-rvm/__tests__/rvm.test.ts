@@ -150,6 +150,14 @@ describe('wasmGuestJson', () => {
     expect(parsed.failure_class_recovery.F1).toBe('restart-guest');
     expect(parsed.failure_class_recovery.F4).toBe('partition-evict');
   });
+
+  it('declares @ruvector/rvf as the recommended vector-format companion', () => {
+    const out = wasmGuestJson({ name: 'demo' });
+    const parsed = JSON.parse(out);
+    expect(parsed.companion?.vector_format?.package).toBe('@ruvector/rvf');
+    expect(parsed.companion?.vector_format?.wasm_addon).toBe('@ruvector/rvf-wasm');
+    expect(parsed.companion?.vector_format?.recommended).toBe(true);
+  });
 });
 
 describe('installScript', () => {

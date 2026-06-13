@@ -21,6 +21,10 @@
     "./memory": {
       "types": "./dist/memory.d.ts",
       "import": "./dist/memory.js"
+    },
+    "./memory-rvf": {
+      "types": "./dist/memory-rvf.d.ts",
+      "import": "./dist/memory-rvf.js"
     }
   },
   "files": [
@@ -38,6 +42,12 @@
   "publishConfig": { "access": "public" },
   "dependencies": {
     "@ruvector/emergent-time": "^0.1.0"
+  },
+  "peerDependencies": {
+    "@ruvector/rvf": "^0.2.0"
+  },
+  "peerDependenciesMeta": {
+    "@ruvector/rvf": { "optional": true }
   },
   "optionalDependencies": {
     "@ruflo/kernel-darwin-arm64": "0.1.0",

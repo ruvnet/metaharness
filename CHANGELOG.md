@@ -4,6 +4,45 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Added — Iter 16 (2026-06-13)
+
+- **Full 3-platform CI matrix** — Ubuntu / macOS / Windows on every gate:
+  - Rust (fmt --check / clippy -D warnings / test / doc) × 3 OS
+  - WASM build + `wasm-tools validate` + 500 KB size budget × 3 OS
+    (catches "works on Linux only" regressions in the wasm-pack pipeline)
+  - Node 20 + 22 × 3 OS for TS tests
+  - **`pack-install` job × 3 OS** — `npm pack` every published package
+    then `npm install <tarball>` into a throwaway project. Catches the
+    "broken files: [...] list", "missing bin script", "per-platform
+    install fail" classes upstream of release.
+  - Bench (smoke, Linux only — uploads `bench-report.json` artifact)
+  - Final `ci-pass` aggregator job for branch-protection
+- **Cross-platform path-handling guard** (`scripts/path-guard.mjs`):
+  - Greps every Rust + TS source file for known-bad patterns:
+    - Hardcoded `/tmp/` literals (the exact `/tmp` Windows bug that
+      surfaced earlier in development — file writes appeared to succeed
+      but landed somewhere bash couldn't see)
+    - Hardcoded `C:\\`, `/Users/`, `/home/` absolute paths
+  - Excludes tests, fixtures, and comments
+  - Runs in CI on every push/PR via the Node job
+- **`__tests__/path-handling.test.ts`** (8 cases): pins
+  `os.tmpdir()` non-empty on every platform, posix.sep normalisation
+  invariants, Windows drive-letter detection, mkdtemp parallel uniqueness
+- **`@ruvector/rvf` integration** (paired with RVM per user request):
+  - `@ruflo/kernel`: declares `@ruvector/rvf ^0.2.0` as optional peer
+    dep + new `./memory-rvf` subpath export
+  - `packages/kernel-js/src/memory-rvf.ts`: `createRvfBackend()`
+    returns a `RvfBackend` wrapper over RVF's HNSW + SIMD index;
+    `isRvfAvailable()` predicate; graceful null fallback when RVF
+    isn't installed
+  - `@ruflo/host-rvm`: emitted `wasm-guest.json` now declares
+    `companion.vector_format` referencing `@ruvector/rvf` +
+    `@ruvector/rvf-wasm`, marked `recommended: true`
+  - host-rvm README documents the pairing (hardware-isolated vector
+    storage via RVM partition + RVF binary format + RVF-wasm sub-guest)
+  - 2 new TS test cases in memory-rvf + 1 new in host-rvm pinning
+    the companion declaration
+
 ### Added — Iter 15 (2026-06-13)
 
 - **`@ruflo/vertical-base` shared contract** for `@ruflo/vertical-*` packs
