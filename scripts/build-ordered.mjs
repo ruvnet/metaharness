@@ -31,10 +31,11 @@ const PHASES = [
     'host-rvm',
     'sdk',
     'create-agent-harness',
-    'bench',
   ],
-  // Phase 4: vertical-trading
-  ['vertical-trading'],
+  // Phase 4: vertical-trading (depends on vertical-base) + bench
+  // (depends on EVERY host adapter for the cross-host benchmark in
+  // iter 39's host-bench.ts).
+  ['vertical-trading', 'bench'],
 ];
 
 const ROOT = process.cwd();

@@ -4,6 +4,22 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Fixed — Iter 41 (2026-06-13)
+
+- **CI Node jobs RED on iter-39** — `packages/bench` started importing
+  the 6 host adapters for the cross-host benchmark, but
+  `scripts/build-ordered.mjs` had `bench` in Phase 3 *parallel to* the
+  hosts. On a fresh CI checkout the bench `tsc` ran before the hosts
+  had finished, hitting `TS2307: Cannot find module '@ruflo/host-rvm'`.
+- **Fix**: moved `bench` from Phase 3 to Phase 4 alongside
+  `vertical-trading` (both depend on a previous phase's output).
+  Now: kernel → vertical-base → (hosts + sdk + cli) → (vertical-trading
+  + bench). Clean rebuild on Windows: 9.6s.
+- Locally the test suite stayed 405/405 because the build artefacts
+  from the prior iter-39 build were already on disk. This was a
+  fresh-checkout-only failure — the kind cross-platform CI exists to
+  catch.
+
 ### Added — Iter 40 (2026-06-13)
 
 - **`examples/federation/federation.mjs`** — second runnable example
