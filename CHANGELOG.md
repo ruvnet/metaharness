@@ -4,6 +4,33 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Added — Iter 37 (2026-06-13)
+
+- **`__tests__/witness-tamper.test.ts`** (16 cases) — pins the TS
+  witness-client shape gate around the Rust-side Ed25519 verifier
+  (per ADR-011). The kernel handles the cryptographic check; this
+  test pins the wrapper that surrounds it:
+  - well-shaped manifest passes
+  - non-object inputs rejected (null, string, number)
+  - unsupported `schema` version rejected with reason mentioning
+    `schema`
+  - truncated `public_key` (32 hex chars instead of 64) rejected
+  - truncated `signature` (64 hex chars instead of 128) rejected
+  - missing `public_key` field rejected
+  - `entries` as string instead of array rejected
+  - missing `harness` / `version` fields rejected
+  - `findWitness` locates both `<dir>/witness.json` and
+    `<dir>/.harness/witness.json`
+  - `findWitness` returns null on empty dir
+  - `readAndVerify` reads + validates a well-shaped file
+  - `readAndVerify` on a tampered signature reports the failure reason
+  - `readAndVerify` throws on missing file (no silent success)
+  - `readAndVerify` throws on invalid JSON
+- This locks the publish-time gate that prevents an unsigned or
+  shape-malformed harness from reaching npm. If the wrapper ever
+  silently accepts a malformed manifest, the test fires immediately.
+- TS suite: **390/390** (up from 374).
+
 ### Added — Iter 36 (2026-06-13)
 
 - **`scripts/release-notes.mjs`** — extracts CHANGELOG entries as
