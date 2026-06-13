@@ -4,6 +4,37 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Added — Iter 30 (2026-06-13)
+
+- **e2e validate-per-host sweep** added to
+  `__tests__/e2e-scaffold-validate.test.ts`. Iter 23's "scaffolds for
+  every host" only checked the scaffolder didn't throw — this new case
+  runs the full `harness validate` umbrella against the output of every
+  host (claude-code / codex / pi-dev / hermes / openclaw / rvm).
+  Catches host-specific artifact regressions: a host adapter that emits
+  a malformed `.codex/config.toml`, a host-specific MCP config that
+  fails the iter-20 mcp check, etc. — without needing a host-specific
+  test suite for each.
+- **`__tests__/workflows.test.ts`** (7 cases) — `.github/workflows/*.yml`
+  structural validation. Catches the silent-CI-drift bugs that
+  actionlint would catch, but as part of the same vitest run:
+  - no tab-indented YAML lines (causes parse errors only on some
+    parsers)
+  - every `node scripts/<X>.mjs` reference points at a real file
+    (catches script renames that miss the workflow)
+  - unique job names per workflow
+  - ci.yml matrix runs every gate on all 3 OS
+  - publish.yml runs **both gates** (`validate-gcp-secrets.mjs` +
+    `publish-dryrun.mjs`) BEFORE any `npm publish --provenance`
+  - publish.yml runs `marketplace-entry.mjs` AFTER the final
+    `npm publish`
+  - publish.yml has a step for every 6-host adapter package
+- These two together close the loop: the validate umbrella is now
+  asserted to work per-host, AND the publish workflow is asserted to
+  invoke it in the right order. Future workflow drift fails CI before
+  it ships.
+- TS suite: **341/341** (up from 333).
+
 ### Added — Iter 29 (2026-06-13)
 
 - **`scripts/version-bump.mjs`** — atomic cross-package version sync.

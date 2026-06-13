@@ -106,6 +106,38 @@ describe('e2e: scaffold → validate', () => {
     }
   }, 30_000);
 
+  it('validate umbrella reports HEALTHY for EVERY host (not just claude-code)', async () => {
+    // The iter-23 "scaffolds for every host" only checks the scaffolder
+    // doesn't throw. This checks that `harness validate` accepts the
+    // OUTPUT of each host — host-specific config files (.codex/config.toml,
+    // AGENTS.md, capability-table.json, etc.) must each clear doctor +
+    // path-guard + mcp without manual fixes.
+    const hosts = ['claude-code', 'codex', 'pi-dev', 'hermes', 'openclaw', 'rvm'] as const;
+    for (const host of hosts) {
+      const dir = await mkdtemp(join(tmpdir(), `ahg-e2e-validate-${host}-`));
+      try {
+        await scaffold({
+          name: `e2e-val-${host}`,
+          template: 'minimal',
+          host,
+          description: `e2e validate for ${host}`,
+          targetDir: dir,
+          force: true,
+          generatorVersion: GENERATOR_VERSION,
+        });
+        const v = await validate([dir, '--skip-gcp']);
+        const txt = v.lines.join('\n');
+        expect(txt, `host=${host} validate output:\n${txt}`).toMatch(/PASS doctor/);
+        expect(txt, `host=${host} path-guard`).toMatch(/PASS path-guard/);
+        expect(txt, `host=${host} mcp`).toMatch(/PASS mcp/);
+        expect(txt, `host=${host} should be HEALTHY`).toMatch(/Result: HEALTHY/);
+        expect(v.code, `host=${host} validate exit code`).toBe(0);
+      } finally {
+        await rm(dir, { recursive: true, force: true });
+      }
+    }
+  }, 120_000);
+
   it('subsequent scaffold with same name and force=true is idempotent', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'ahg-e2e-idem-'));
     try {
