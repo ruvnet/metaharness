@@ -14,7 +14,7 @@ const SUBCOMMANDS = [
   'sign', 'verify', 'doctor',
   'federate', 'secrets', 'validate',
   'mcp', 'publish', 'upgrade',
-  'completions', 'help',
+  'completions', 'sbom', 'audit', 'help',
 ] as const;
 
 const SECRETS_SUBSUBS = ['check', 'fetch', 'validate-token', 'help'] as const;

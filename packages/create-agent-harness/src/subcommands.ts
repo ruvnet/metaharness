@@ -20,6 +20,8 @@ import { mcpDispatch } from './mcp-cmd.js';
 import { publishCmd } from './publish-cmd.js';
 import { upgradeCmd } from './upgrade-cmd.js';
 import { completionsCmd } from './completions-cmd.js';
+import { sbomCmd } from './sbom-cmd.js';
+import { auditCmd } from './audit-cmd.js';
 
 // Pull the version from the workspace package.json (Node's `with: { type: 'json' }`
 // import attributes — works in Node 20.10+).
@@ -253,6 +255,10 @@ export async function dispatch(subcommand: string, args: string[]): Promise<Subc
       return upgradeCmd(args.slice(0));
     case 'completions':
       return completionsCmd(args.slice(0));
+    case 'sbom':
+      return sbomCmd(args.slice(0));
+    case 'audit':
+      return auditCmd(args.slice(0));
     case 'help':
     case undefined:
       return {
@@ -271,6 +277,8 @@ export async function dispatch(subcommand: string, args: string[]): Promise<Subc
           '  publish   — pin the harness manifest to IPFS via Pinata (dry-run default)',
           '  upgrade   — re-render template + drift plan (--apply to apply)',
           '  completions — emit shell completion (bash | zsh | fish)',
+          '  sbom      — emit SPDX-2.3 SBOM for the harness (npm)',
+          '  audit     — npm audit per-harness with structured output',
           '  help      — show this message',
           '',
           'Flags:',

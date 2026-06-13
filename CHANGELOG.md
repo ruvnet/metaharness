@@ -4,6 +4,36 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Added — Iter 51 (2026-06-13)
+
+- **2 new `harness` subcommands** brining the binary to **12 total**,
+  surfacing the iter-38 + iter-50 security work at the per-harness layer:
+  - **`harness sbom [path] [--out=<file>] [--include-dev] [--validate-only]`**
+    — emits SPDX-2.3 SBOM for the harness at `<path>`. Reads
+    `package-lock.json` when present (precise versions + integrity);
+    falls back to `package.json dependencies` (declared ranges) with
+    caveat. Prints JSON to stdout or writes to `--out`.
+  - **`harness audit [path] [--level=high|critical|moderate|low|info]
+    [--include-dev]`** — wraps `npm audit --json` against the
+    harness's lockfile and reports structured per-severity counts +
+    advisory IDs. Exits 1 on advisories ≥ level. Requires
+    `package-lock.json` (CLI prompts for `npm install --package-lock-only`
+    if missing).
+- **`harness completions` updated** to include `sbom` + `audit` in all
+  3 shells (bash/zsh/fish) — the cross-shell parity test catches the
+  regression class where a new subcommand ships but the completions
+  forget to update.
+- **`__tests__/harness-sbom-audit.test.ts`** (8 cases):
+  - `sbom`: no package.json (fail), package-lock present (use it),
+    no lockfile (fall back to manifest), `--out=` writes file with
+    valid SPDX-2.3 shape
+  - `audit`: no package.json (fail), no lockfile (prompts), unknown
+    `--level=` (exit 2), tiny lockfile runs cleanly (PASS or no-output)
+- Full harness CLI surface: **12 subcommands** (sign / verify / doctor /
+  federate / secrets / validate / mcp / publish / upgrade / completions
+  / **sbom** / **audit**) + 4 standard CLI flags.
+- TS suite: **465/465** (up from 457).
+
 ### Added — Iter 50 (2026-06-13) — MILESTONE
 
 - **`scripts/sbom.mjs` — SPDX-2.3 Software Bill of Materials
