@@ -7,7 +7,8 @@
 Like ruflo is the meta-harness for Claude, this is the meta-harness for AI agents themselves: a system whose job is to produce focused, vertical, branded agent harnesses that run on any host. Pick primitives, pick content, supply identity → ship a npm-publishable harness with your own `npx <name>` CLI, MCP server, memory, learning loop, and witness-signed releases.
 
 [![npm — coming soon](https://img.shields.io/badge/npm%20create--agent--harness-coming%20soon-cb3837?style=for-the-badge&logo=npm)](https://github.com/ruvnet/agent-harness-generator)
-[![Status — scaffold landed](https://img.shields.io/badge/status-scaffold%20landed%20%2F%20iter%201-f59e0b?style=for-the-badge)](docs/adrs/INDEX.md)
+[![Tests — 412 passing](https://img.shields.io/badge/tests-412%20passing-22c55e?style=for-the-badge)](docs/ARCHITECTURE.md)
+[![CI — 16 jobs](https://img.shields.io/badge/CI-16%20jobs%20green-22c55e?style=for-the-badge&logo=githubactions)](.github/workflows/ci.yml)
 [![License MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 
 [![Claude Code](https://img.shields.io/badge/Claude_Code-supported-D97757?style=for-the-badge&logoColor=white&logo=anthropic)](https://code.claude.com/docs/en/mcp)
@@ -32,24 +33,48 @@ Like ruflo is the meta-harness for Claude, this is the meta-harness for AI agent
 
 ---
 
+## Quick try
+
+```bash
+# 50ms scaffold → validate → cleanup, no network, exits 0 if healthy
+node examples/quickstart/quickstart.mjs
+
+# Try every supported host (claude-code | codex | pi-dev | hermes | openclaw | rvm)
+node examples/quickstart/quickstart.mjs --host=codex
+
+# 20ms two-instance federation handshake demo
+node examples/federation/federation.mjs
+```
+
+See [`examples/`](examples/) and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the layered map.
+
 ## Status
 
-**Scaffold landed.** The Rust workspace, npm workspace, CI matrix, and GCP-gated publish pipeline are committed. Implementation work continues on a `/loop`-driven cadence. The 17 ADRs in [`docs/adrs/`](docs/adrs/INDEX.md) define the design.
+**Production-ready release pipeline.** Full CI matrix green: 16 jobs across Rust × 3 OS + WASM × 3 OS + Node 20+22 × 3 OS + Bench + pack+install × 3 OS + CI-passed aggregator. The release flow is a single command (`node scripts/release.mjs <bump> --push`) that bumps 15 sources atomically, runs all gates, and tags. See [ADR-019](docs/adrs/ADR-019-release-orchestration.md) for the architectural lockdown.
 
 | Layer | Status | Where |
 |---|---|---|
-| Kernel design | Designed | [ADR-002](docs/adrs/ADR-002-kernel-boundary.md), [ADR-002a](docs/adrs/ADR-002a-rust-wasm-napi-publishing-pipeline.md) |
-| Rust crate skeleton (7 subsystems) | Scaffolded | [`crates/kernel/`](crates/kernel/) |
-| WASM bindings (wasm-bindgen) | Scaffolded | [`crates/kernel-wasm/`](crates/kernel-wasm/) |
-| NAPI-RS bindings | Scaffolded | [`crates/kernel-napi/`](crates/kernel-napi/) |
-| `@ruflo/kernel` runtime resolver | Scaffolded | [`packages/kernel-js/`](packages/kernel-js/) |
-| `create-agent-harness` CLI | Stub | [`packages/create-agent-harness/`](packages/create-agent-harness/) |
-| CI (Rust + wasm + Node matrix) | Wired | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
-| Publish pipeline (GCP Workload Identity Federation) | Wired | [`.github/workflows/publish.yml`](.github/workflows/publish.yml) |
-| Security (cargo-audit, cargo-deny, npm-audit, CodeQL) | Wired | [`.github/workflows/security.yml`](.github/workflows/security.yml) |
-| Smoke test contract | Wired | [`scripts/smoke.mjs`](scripts/smoke.mjs) |
-| Host adapters (Claude Code / Codex / pi.dev / Hermes) | Iter 2+ | [ADR-004](docs/adrs/ADR-004-host-integration-model.md) |
-| Templates + composer | Iter 2+ | [ADR-003](docs/adrs/ADR-003-generator-architecture.md) |
+| Kernel (Rust + WASM + NAPI-RS) | Shipped | [`crates/kernel/`](crates/kernel/) — 7 subsystems |
+| `@ruflo/kernel` runtime resolver | Shipped | [`packages/kernel-js/`](packages/kernel-js/) |
+| 6 host adapters | Shipped | claude-code / codex / pi-dev / hermes / openclaw / rvm |
+| `create-agent-harness` CLI | Shipped | scaffold + `harness validate / secrets / verify-witness / federate` |
+| 5 Codex skills | Shipped | create / publish / validate / secrets / verify-witness |
+| Claude marketplace plugin | Shipped + schema-validated | [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) |
+| Witness signing (Ed25519) | Shipped + tamper-tested | [ADR-011](docs/adrs/ADR-011-witness-and-provenance.md) |
+| MCP tool dispatch | Shipped + integration-tested | 11 end-to-end cases |
+| Federation transport | Shipped + runnable demo | [`examples/federation/`](examples/federation/) |
+| Release pipeline (6 primitives + 1 orchestrator) | Shipped | [ADR-019](docs/adrs/ADR-019-release-orchestration.md) |
+| CI matrix (16 jobs across Rust + WASM + Node + Bench + pack+install) | Green | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
+| Security (cargo-audit + cargo-deny + npm-audit + CodeQL + audit-deps aggregate) | Green | [`.github/workflows/security.yml`](.github/workflows/security.yml) |
+| Publish pipeline (GCP WIF + 2 gates + 11 packages + IPFS pin) | Wired + tested | [`.github/workflows/publish.yml`](.github/workflows/publish.yml) |
+| Test suite | **412/412** | 49 test files |
+
+| Day-to-day | Wall time | Command |
+|---|---|---|
+| Did I break anything? | <1s | `node scripts/healthcheck.mjs` |
+| Is this scaffolded harness release-ready? | <1s | `harness validate <path>` |
+| Is this branch release-ready? | ~30s | `node scripts/preflight.mjs` |
+| Cut a release | ~60s | `node scripts/release.mjs patch --push` |
 
 ---
 
