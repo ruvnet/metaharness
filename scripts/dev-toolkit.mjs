@@ -53,6 +53,7 @@ const HARNESS_SUBCOMMANDS = [
   { name: 'analyze-repo', summary: 'Recommend a harness from a local repo (--embed for ruvllm)', iter: 55 },
   { name: 'diag', summary: 'Kernel-version skew check (ADR-027) — --json for CI, --bundle for support tickets (iter 90)', iter: 66 },
   { name: 'export-config', summary: 'Emit MCP + claims + permissions as single JSON for sharing/auditing (sanitised — iter 97)', iter: 97 },
+  { name: 'compare', summary: 'Diff two harnesses: manifest meta + host list + per-file fingerprints (--bundle for JSON; iter 105)', iter: 105 },
 ];
 
 async function listScripts() {

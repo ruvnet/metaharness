@@ -276,6 +276,7 @@ Honesty caveat from the underlying `@ruvector/emergent-time` package: the SDK is
 | Check that your local kernel matches the harness | `harness diag` (iter 66) |
 | File a useful support ticket | `harness diag --bundle` (iter 90) |
 | Share MCP/Bash/claims config for an audit | `harness export-config` (iter 97) |
+| Diff two harnesses (e.g. yours vs an upstream baseline) | `harness compare a/ b/` (iter 105) |
 | Drift-detect against the latest template | `harness upgrade` (iter 47) |
 | Sign a release manifest | `harness sign` (iter 8) |
 | Verify the witness signature | `harness verify` (iter 8) |
@@ -289,7 +290,21 @@ Honesty caveat from the underlying `@ruvector/emergent-time` package: the SDK is
 | GCP Secret Manager helpers | `harness secrets` (iter 18) |
 | Emit shell completion (bash/zsh/fish) | `harness completions` (iter 48) |
 
-16 subcommands total as of iter 97. Every subcommand respects `--help` / `-h`.
+17 subcommands total as of iter 105. Every subcommand respects `--help` / `-h`.
+
+### `harness compare a/ b/`
+
+Two-harness diff: useful when you've forked an upstream template, or when a
+support ticket says "mine and theirs scaffolded different things". Reports:
+
+- **manifest meta** — same name? same kernel? same surface?
+- **hosts** — which adapters each side ships
+- **files** — added / removed / changed (per-file SHA-256 fingerprints; the
+  cheapest possible byte-equality test)
+
+Exit codes: `0` IDENTICAL · `1` DRIFT · `2` missing manifest in one or both
+sides. `--bundle` emits the schema-1 envelope (ADR-031) so CI or a support
+script can json-parse the verdict.
 
 ---
 

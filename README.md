@@ -2,121 +2,103 @@
 
 # agent-harness-generator
 
-**The meta-harness for AI agents — a harness that builds other harnesses.**
+### Paste any GitHub repo. Get a custom AI agent harness for it.
 
-Like ruflo is the meta-harness for Claude, this is the meta-harness for AI agents themselves: a system whose job is to produce focused, vertical, branded agent harnesses that run on any host. Pick primitives, pick content, supply identity → ship a npm-publishable harness with your own `npx <name>` CLI, MCP server, memory, learning loop, and witness-signed releases.
+[**Open the Studio →**](https://ruvnet.github.io/agent-harness-generator/)
 
-[![Open the Studio →](https://img.shields.io/badge/Studio-open_in_browser_↗-7c5cff?style=for-the-badge&logo=githubpages&logoColor=white)](https://ruvnet.github.io/agent-harness-generator/)
-[![npm — coming soon](https://img.shields.io/badge/npm%20create--agent--harness-coming%20soon-cb3837?style=for-the-badge&logo=npm)](https://github.com/ruvnet/agent-harness-generator)
-[![Tests — 563 passing](https://img.shields.io/badge/tests-563%20passing-22c55e?style=for-the-badge)](docs/ARCHITECTURE.md)
-[![CI — 16 jobs](https://img.shields.io/badge/CI-16%20jobs%20green-22c55e?style=for-the-badge&logo=githubactions)](.github/workflows/ci.yml)
+[![Open the Studio](https://img.shields.io/badge/Studio-open_in_browser_↗-7c5cff?style=for-the-badge&logo=githubpages&logoColor=white)](https://ruvnet.github.io/agent-harness-generator/)
+[![User guide](https://img.shields.io/badge/User_guide-plain_language-22c55e?style=for-the-badge)](docs/USERGUIDE.md)
+[![Tests — 568 passing](https://img.shields.io/badge/tests-568%20passing-22c55e?style=for-the-badge)](docs/ARCHITECTURE.md)
 [![License MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 
-[![Claude Code](https://img.shields.io/badge/Claude_Code-supported-D97757?style=for-the-badge&logoColor=white&logo=anthropic)](https://code.claude.com/docs/en/mcp)
-[![Codex](https://img.shields.io/badge/OpenAI_Codex-supported-412991?style=for-the-badge&logoColor=white)](https://developers.openai.com/codex)
-[![pi.dev](https://img.shields.io/badge/pi.dev-supported-8b5cf6?style=for-the-badge&logoColor=white)](https://pi.dev/)
-[![Hermes](https://img.shields.io/badge/Hermes_Agent-supported-06b6d4?style=for-the-badge&logoColor=white)](https://hermes-agent.nousresearch.com/docs/)
-[![OpenClaw](https://img.shields.io/badge/OpenClaw-supported-ef4444?style=for-the-badge&logoColor=white)](https://github.com/openclaw/openclaw)
-[![RVM](https://img.shields.io/badge/RVM-hardware--isolated-1f2937?style=for-the-badge&logoColor=white)](https://github.com/ruvnet/rvm)
-
-[![Rust + WASM](https://img.shields.io/badge/kernel-Rust_%2B_WASM-orange?style=for-the-badge&logo=rust)](docs/adrs/ADR-002-kernel-boundary.md)
-[![NAPI-RS](https://img.shields.io/badge/native-NAPI--RS-blue?style=for-the-badge)](https://napi.rs/)
-[![GCP-gated publish](https://img.shields.io/badge/publish-GCP_secret_gated-22c55e?style=for-the-badge&logo=googlecloud)](.github/workflows/publish.yml)
-[![Witness signed](https://img.shields.io/badge/witness-Ed25519_signed-22c55e?style=for-the-badge)](docs/adrs/ADR-011-witness-and-provenance.md)
+[![Agent Harness Studio](docs/web-ui/screenshot-desktop.png)](https://ruvnet.github.io/agent-harness-generator/)
 
 </div>
 
-## ⚡ Try it in 30 seconds
+---
+
+## What this is
+
+**Every serious repo deserves its own agent.** A repo-aware CLI, a repo-aware coding agent, a local MCP server, memory scoped to the project, skills generated from the actual file layout, governance policy, release verification, witness-signed provenance.
+
+`agent-harness-generator` builds those, on demand, from a GitHub URL or a blank slate. **It is not another agent framework. It is a factory for agent frameworks.**
+
+The model is replaceable. The harness is the product.
+
+## What it gives you
+
+In under 60 seconds, in your browser, with nothing leaving your machine:
+
+- A custom AI agent harness for your repo (or any repo)
+- Recommended agents, skills, slash commands, MCP tools
+- A scoped memory namespace + governance policy
+- Witness-signed provenance + release gates
+- Drops into Claude Code, OpenAI Codex, pi.dev, Hermes, OpenClaw, or RVM — pick one or all
+
+Output is an npm-publishable `.zip` with **your name on it, your branding, your `npx <your-name>` CLI**.
+
+## Try it in 30 seconds
 
 ```bash
-# Browser — zero install. Live now.
+# In the browser — zero install, nothing leaves the page
 open https://ruvnet.github.io/agent-harness-generator/
 
-# OR — terminal scaffold
+# Or in the terminal — same scaffold, byte-identical
 npx create-agent-harness my-bot --template vertical:coding --host claude-code
 cd my-bot && npx . --help
 ```
 
-That's it. You now own an npm-publishable AI agent harness with your name on it, your branding, your agents, your MCP server, your memory, and an `npx <your-name>` command. It runs on Claude Code, Codex, pi.dev, Hermes, OpenClaw, or RVM — pick one or all. **Nothing leaves your browser or your machine.**
-
-[![Open the Studio](docs/web-ui/screenshot-desktop.png)](https://ruvnet.github.io/agent-harness-generator/)
-
----
-
-> **One line:** A **meta-harness** — a marketplace plugin + CLI that scaffolds your own focused, vertical AI agent harnesses with their own `npx <name>` command, MCP server, memory, learning loop, and brand — that run unchanged on Claude Code, Codex, pi.dev, Hermes, OpenClaw, and RVM.
-
-> **What's a meta-harness?** A harness is a runtime that orchestrates AI agents (memory + routing + hooks + MCP + claims). A *meta-harness* is the level above: a harness whose product is OTHER harnesses. agent-harness-generator emits self-contained, npm-publishable harnesses you OWN — same kernel, your branding, your agents, your marketplace presence. The kernel updates flow to your harness via `@ruflo/kernel` npm peer; the content stays yours.
-
-> **One paragraph:** [Ruflo](https://github.com/ruvnet/ruflo) bundles primitives (MCP server, hooks, memory bridge, swarm coordinator, intelligence pipeline, claims, routing) WITH opinionated content (60+ agents, 30+ skills, 33 plugins). `agent-harness-generator` factors those apart. You pick the primitives, pick the content, supply a name + brand, and out comes a brand-new npm-publishable harness with its own CLI, MCP registration, memory namespace, and marketplace identity — running on the host of your choice.
-
----
-
-## Agent Harness Studio — the browser product
-
-A **100% client-side** Studio (in the spirit of ruflo's [goal UI](https://goal.ruv.io)) that turns **any GitHub repo — or a blank slate — into a governed, branded, multi-host AI agent harness**. Recommend agents, skills, commands, MCP tools, and policy; preview the live file tree; download a signed-ready, npm-publishable `.zip`. Nothing leaves your browser. Desktop- and mobile-friendly, deployable to GitHub Pages.
-
-[![Open the Studio](https://img.shields.io/badge/Studio-open_in_browser-7c5cff?style=for-the-badge)](https://ruvnet.github.io/agent-harness-generator/) &nbsp; [![design ADR-020→024](https://img.shields.io/badge/design-ADR--020→024-8b5cf6?style=for-the-badge)](docs/adrs/INDEX.md)
-
-[![Agent Harness Studio](docs/web-ui/screenshot-desktop.png)](https://ruvnet.github.io/agent-harness-generator/)
-
-> **Embeddings recommend · rules generate · tests prove parity.**
-
-### Four tabs — the agent-harness supply chain
-
-| Tab | What it does |
-|---|---|
-| **Repo → Harness** | Paste a GitHub URL → deterministic repo analysis → archetype scoring → an **editable harness plan** (agents, skills, commands, MCP mode, risk policy, confidence). No repo code is ever executed. Semantic engine: **Lexical** (default, deterministic) or optional in-browser **MiniLM** embeddings (Transformers.js, WebGPU/WASM). |
-| **Create harness** | Branded-runtime builder: 16 quick-start verticals, composable agents/skills/commands, kernel options, and the **Primitives** panel (CLI · MCP · memory · learning · witness · release gates). Live file tree + `<name>.zip`, byte-compatible with `create-agent-harness`. |
-| **Skill / Agent / Command** | Author or pick a single artifact → a Claude-ready `SKILL.md` folder (YAML frontmatter) you drop straight into **Claude desktop** or **claude.ai**. |
-| **Verify** | Drop a generated `.zip` → unzipped and **checked in-browser** (structure · kernel dep · host wiring · unresolved vars · MCP policy · secrets). Nothing uploaded. |
-
-<p align="center">
-  <img src="docs/web-ui/screenshot-repo.png" width="32%" alt="Repo → Harness" />
-  <img src="docs/web-ui/screenshot-artifact.png" width="32%" alt="Author a Claude skill/agent/command" />
-  <img src="docs/web-ui/screenshot-verify.png" width="32%" alt="In-browser Verify" />
-</p>
-<p align="center"><img src="docs/web-ui/screenshot-mobile.png" width="22%" alt="Mobile-friendly" /></p>
-
-### MCP — one selectable, security-first primitive
-
-MCP is included as a first-class adapter surface, **not** the core identity. It is **modular, gated, and default-deny** ([ADR-022](docs/adrs/ADR-022-mcp-primitive.md)):
-
-- Modes: `off` · `local` (stdio) · `remote` (Streamable HTTP + auth).
-- Emits `src/mcp/{server,tools,resources,prompts,policy,audit}.ts` (+ `auth.ts` remote) and a **scannable** `.harness/mcp-policy.json`.
-- Safe defaults: default-deny, no network/shell/file-write, approve-dangerous, 30 s timeout, 8 calls/turn, audit on.
-- `harness mcp-scan <path>` — *"npm audit for agent tools"*: static-only scan (never executes) flagging shell/network grants, missing audit/timeouts, wildcard permissions, unguarded secrets, and unpinned deps. Exit 1 on any HIGH.
-
-**CLI Repo → Harness** ([ADR-026](docs/adrs/ADR-026-cli-repo-analyzer-ruvllm.md)) — the deeper, local counterpart to the Studio's importer:
+**Don't know what to pick?** Run the wizard:
 
 ```bash
-harness analyze-repo .                       # local, analysis-only → repo-profile.json + harness-plan.json
-harness analyze-repo . --embed               # opt-in deterministic embeddings via @ruvector/ruvllm (offline; lexical fallback)
-harness analyze-repo . --scaffold my-harness # materialise the recommended harness
+npx create-agent-harness --wizard
 ```
 
-No repository code is executed; inferred build/test commands are emitted as `trust: inferred · execution: disabled`.
-
-### Quick start
+**Already have a repo you want a harness for?**
 
 ```bash
-cd apps/web-ui
-npm install
-npm run dev      # local Studio
-npm test         # 48 generator unit tests
-npm run e2e      # Playwright desktop + mobile (zero console errors)
-npm run bench    # generator hot-path micro-bench (sub-100µs/op)
+harness analyze-repo .                       # local — deterministic analysis only
+harness analyze-repo . --scaffold my-bot     # materialise the recommended harness
 ```
 
-Source + rationale: [`apps/web-ui/`](apps/web-ui/) · ADRs [020](docs/adrs/ADR-020-web-generator-ui.md) · [021](docs/adrs/ADR-021-client-side-packaging-and-pages-deploy.md) · [022](docs/adrs/ADR-022-mcp-primitive.md) · [023](docs/adrs/ADR-023-repo-to-harness-importer.md) · [024](docs/adrs/ADR-024-studio-and-verify.md) · [025](docs/adrs/ADR-025-browser-embeddings-minilm.md).
+No repository code is executed. Inferred build/test commands are emitted as `trust: inferred · execution: disabled`.
+
+📖 **[Read the plain-language user guide →](docs/USERGUIDE.md)**
 
 ---
 
-## Quick-start templates — 19 verticals
+## Hosts
 
-One canonical catalog ([`templates/catalog.def.mjs`](packages/create-agent-harness/templates/catalog.def.mjs)) feeds the CLI templates, the [`catalog.json`](packages/create-agent-harness/templates/catalog.json) the [`template-catalog`](crates/template-catalog/) Rust crate validates, and the Studio gallery — so UI, CLI, and core never drift.
+The same harness output runs on six agent hosts:
+
+| Host | What ships | Notes |
+|---|---|---|
+| [**Claude Code**](https://code.claude.com/docs/en/mcp) | MCP server + hooks + 3-scope settings | Richest surface; Ruflo-native |
+| [**OpenAI Codex**](https://developers.openai.com/codex) | MCP via `~/.codex/config.toml` | TOML, no hooks |
+| [**pi.dev**](https://pi.dev/) | Pi extension via `pi.registerTool()` | No MCP by design |
+| [**Hermes**](https://hermes-agent.nousresearch.com/docs/) | MCP runtime, `<think>` scrubbing | Per Hermes issue #741 |
+| [**OpenClaw**](https://github.com/openclaw/openclaw) | `~/.openclaw/openclaw.json` + workspace skills | Personal-AI gateway |
+| [**RVM**](https://github.com/ruvnet/rvm) | Bare-metal microhypervisor + capability tokens | Hardware isolation for untrusted peers |
+
+See [ADR-004 — Host integration model](docs/adrs/ADR-004-host-integration-model.md).
+
+---
+
+## MCP — modular, default-deny
+
+MCP is included as a first-class **adapter surface, not the identity**. It is gated and default-deny ([ADR-022](docs/adrs/ADR-022-mcp-primitive.md)):
+
+- Modes: `off` · `local` (stdio) · `remote` (HTTPS + auth)
+- Emits `src/mcp/{server,tools,resources,prompts,policy,audit}.ts` + a scannable `.harness/mcp-policy.json`
+- Safe defaults: no network, no shell, no file-write, approve-dangerous, 30s timeout, 8 calls/turn, audit on
+- `harness mcp-scan <path>` — *"npm audit for agent tools"*: static-only scan flagging shell/network grants, missing audit/timeouts, wildcard permissions, unguarded secrets, unpinned deps. Exits 1 on any HIGH.
+
+---
+
+## Verticals (19 quick-start templates)
 
 ```bash
-npx create-agent-harness --list                       # browse the catalog
+npx create-agent-harness --list
 npx create-agent-harness my-bot --template vertical:coding
 ```
 
@@ -124,191 +106,119 @@ npx create-agent-harness my-bot --template vertical:coding
 |---|---|
 | Starter / Operations | `minimal`, `vertical:devops` |
 | Engineering | `vertical:coding`, `vertical:ai` |
-| Knowledge | `vertical:research`, `vertical:ruview` (ruvector), **`vertical:education`** (mastery-based tutoring, iter 80) |
-| Finance / Professional | `vertical:trading`, `vertical:legal`, `vertical:health` |
-| Customer / Growth | `vertical:support`, `vertical:crm`, `vertical:marketing`, `vertical:advertising`, **`vertical:sales`** (B2B pipeline, iter 87) |
-| Business / Frontier | `vertical:business`, `vertical:agentics`, **`vertical:gaming`** (playtest pod, iter 96), `vertical:exotic` |
+| Knowledge | `vertical:research`, `vertical:ruview`, `vertical:education` |
+| Finance / Pro | `vertical:trading`, `vertical:legal`, `vertical:health` |
+| Customer / Growth | `vertical:support`, `vertical:crm`, `vertical:marketing`, `vertical:advertising`, `vertical:sales` |
+| Business / Frontier | `vertical:business`, `vertical:agentics`, `vertical:gaming`, `vertical:exotic` |
 
-Each generated vertical ships bespoke domain agents (with system prompts), skills, commands, and guarded per-host settings. The 11 generated dirs come from the definition; `minimal`, `devops`, `trading`, `support`, `legal`, and `research` are curated by hand and never clobbered by the generator.
-
-**Latest vertical — `vertical:education`** (iter 80): a tutoring pod (tutor → explainer → quiz-master → grader) over per-learner mastery memory. Pedagogy invariants are policy: abstain-not-hallucinate floor, no teaching on unmastered prereqs, hidden rubrics. Two commands: `teach-next` (run a teaching cycle) and `mastery-report` (summarise the learner's map). MCP namespaces `mastery_log` + `curriculum`; everything else default-deny.
+Each ships bespoke domain agents (with system prompts), skills, commands, and per-host settings — all default-deny.
 
 ---
 
-## Quick try
+## Day-to-day commands
 
-```bash
-# 50ms scaffold → validate → cleanup, no network, exits 0 if healthy
-node examples/quickstart/quickstart.mjs
+After scaffolding, every harness has a `harness` CLI:
 
-# Try every supported host (claude-code | codex | pi-dev | hermes | openclaw | rvm)
-node examples/quickstart/quickstart.mjs --host=codex
+| You're trying to … | Subcommand |
+|---|---|
+| Smoke-check the scaffold | `harness doctor` |
+| Run every release gate | `harness validate` |
+| Check kernel ↔ harness compatibility | `harness diag` |
+| File a useful support ticket | `harness diag --bundle > bundle.json` |
+| Diff two harnesses | `harness compare a/ b/` |
+| Share MCP + Bash + claims config for review | `harness export-config` |
+| Run npm-audit per-harness | `harness audit --bundle > audit.json` |
+| Emit SPDX-2.3 SBOM | `harness sbom` |
+| Drift-detect against the latest template | `harness upgrade` |
+| Sign / verify the witness | `harness sign` · `harness verify` |
+| Pin the manifest to IPFS | `harness publish --confirm` |
+| Recommend a harness from a repo | `harness analyze-repo` |
 
-# 20ms two-instance federation handshake demo
-node examples/federation/federation.mjs
-```
+17 subcommands total. Every one respects `--help` / `-h`. Shell completion: `harness completions bash | zsh | fish`.
 
-See [`examples/`](examples/) and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the layered map.
+📖 Full reference: [docs/USAGE.md](docs/USAGE.md)
+
+---
 
 ## Status
 
-**Production-ready release pipeline.** Full CI matrix green: 16 jobs across Rust × 3 OS + WASM × 3 OS + Node 20+22 × 3 OS + Bench + pack+install × 3 OS + CI-passed aggregator. The release flow is a single command (`node scripts/release.mjs <bump> --push`) that bumps 15 sources atomically, runs all gates, and tags. See [ADR-019](docs/adrs/ADR-019-release-orchestration.md) for the architectural lockdown.
+Production-ready release pipeline. CI matrix green: 16 jobs across Rust × 3 OS + WASM × 3 OS + Node 20+22 × 3 OS + Bench + pack+install × 3 OS + CI-passed aggregator. Single-command releases (`node scripts/release.mjs <bump> --push`) atomically bump 15 sources, run all gates, and tag.
 
-| Layer | Status | Where |
-|---|---|---|
-| Kernel (Rust + WASM + NAPI-RS) | Shipped | [`crates/kernel/`](crates/kernel/) — 7 subsystems |
-| `@ruflo/kernel` runtime resolver | Shipped | [`packages/kernel-js/`](packages/kernel-js/) |
-| 6 host adapters | Shipped | claude-code / codex / pi-dev / hermes / openclaw / rvm |
-| `create-agent-harness` CLI | Shipped | scaffold + 15 `harness` subcommands (see row below) |
-| 6 Codex skills | Shipped | create / publish / validate / secrets / verify-witness / upgrade-harness |
-| Claude marketplace plugin | Shipped + schema-validated | [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) |
-| Witness signing (Ed25519) | Shipped + tamper-tested | [ADR-011](docs/adrs/ADR-011-witness-and-provenance.md) |
-| MCP tool dispatch | Shipped + integration-tested | 11 end-to-end cases |
-| Federation transport | Shipped + runnable demo | [`examples/federation/`](examples/federation/) |
-| Release pipeline (6 primitives + 1 orchestrator) | Shipped | [ADR-019](docs/adrs/ADR-019-release-orchestration.md) |
-| CI matrix (16 jobs across Rust + WASM + Node + Bench + pack+install) | Green | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
-| Security (cargo-audit + cargo-deny + npm-audit + CodeQL + audit-deps aggregate) | Green | [`.github/workflows/security.yml`](.github/workflows/security.yml) |
-| Publish pipeline (GCP WIF + 2 gates + 11 packages + IPFS pin) | Wired + tested | [`.github/workflows/publish.yml`](.github/workflows/publish.yml) |
-| Test suite | **563/563** | 66 test files |
-| 15 `harness` subcommands | Shipped | sign · verify · doctor · federate · secrets · validate · mcp · publish · upgrade · completions · sbom · audit · mcp-scan · analyze-repo · **diag** (ADR-027) |
-| Agent Harness Studio (live Pages) | Shipped | <https://ruvnet.github.io/agent-harness-generator/> — 100% client-side |
-| Perf-regression gate (host-bench-baseline) | Wired + baselined | [`packages/bench/host-baseline.json`](packages/bench/host-baseline.json) — 50% threshold |
-| SBOM (SPDX-2.3) | Wired | [`scripts/sbom.mjs`](scripts/sbom.mjs) — CI artifact |
-
-| Day-to-day | Wall time | Command |
-|---|---|---|
-| First scaffold — don't know what to pick? | ~30s | `npx create-agent-harness --wizard` (iter 100) |
-| Did I break anything? | <1s | `node scripts/healthcheck.mjs` |
-| Is the deployed Studio alive? | ~1s | `node scripts/healthcheck.mjs --probe-pages` |
-| Is THIS local kernel compatible with this harness? | <100ms | `harness diag <path>` |
-| Same, for a CI script | <100ms | `harness diag <path> --json` |
-| File a support ticket — bundle everything the maintainer needs | <100ms | `harness diag <path> --bundle > bundle.json` |
-| Share MCP + Bash + claims config for a security review | <100ms | `harness export-config <path> > config.json` |
-| Share npm-audit findings for a vuln review (machine-parseable) | ~3s | `harness audit <path> --bundle > audit.json` |
-| Is this scaffolded harness release-ready? | <1s | `harness validate <path>` |
-| Is this branch release-ready? | ~30s | `node scripts/preflight.mjs` |
-| Preview the v0.1.0 GH release body | ~1s | `node scripts/release-notes.mjs --version=0.1.0` |
-| Same, tweet-length summary | ~1s | `node scripts/release-notes.mjs --version=0.1.0 --summary` |
-| Cut a release | ~60s | `node scripts/release.mjs patch --push` |
+| Layer | Status |
+|---|---|
+| Rust kernel (WASM + NAPI-RS) | Shipped — 7 subsystems |
+| 6 host adapters | claude-code · codex · pi-dev · hermes · openclaw · rvm |
+| 17 `harness` subcommands | Shipped |
+| 7 Codex skills | Shipped |
+| Claude marketplace plugin | Shipped + schema-validated |
+| Witness signing (Ed25519) | Shipped + tamper-tested |
+| MCP tool dispatch | 11 end-to-end cases |
+| Test suite | **568/568** across 67 files |
+| CI matrix | 16 jobs green |
+| Security pipeline | cargo-audit · cargo-deny · npm-audit · CodeQL · SBOM (SPDX-2.3) |
+| Publish pipeline | GCP WIF + 2 gates + 11 packages + IPFS pin |
+| Agent Harness Studio | Live at <https://ruvnet.github.io/agent-harness-generator/> |
 
 ---
 
-## Architecture in 60 seconds — the meta-harness pattern
+## Architecture in 30 seconds
 
 ```
-   You                                  <- harness AUTHOR (uses the meta-harness)
-       |
-       v
-   agent-harness-generator              <- THE META-HARNESS
-   (this repo: scaffolds, signs, publishes harnesses)
-       |
-       v
-   Your harness (npm package)           <- THE HARNESS YOU SHIP
-       |
-       v
-   Your users
-       |
-       v
-   npx <your-name>                      <- Identity (rename + brand)
-       |
-       v
-   <your-harness>                       <- Content (your agents/skills/plugins/prompts)
-       |
-       v
-   @ruflo/kernel                        <- Kernel (shared primitives, Rust + WASM + NAPI-RS)
-       |
-       v
-   Host adapter                         <- Per-host abstraction
-   (Claude Code / Codex / pi.dev / Hermes / OpenClaw / RVM)
-       |
-       v
-   LLM providers
+You (harness author)
+   └→ agent-harness-generator    ← the factory
+        └→ Your harness (.zip)    ← what you ship
+             ├ npx <your-name>     ← your identity
+             ├ <your agents>       ← your content
+             └ @ruflo/kernel       ← shared primitives (Rust + WASM + NAPI-RS)
+                  └→ Host adapter (Claude Code / Codex / pi.dev / Hermes / OpenClaw / RVM)
+                       └→ LLM providers
 ```
 
-Read top-down: you (the harness author) operate the meta-harness. The meta-harness produces your harness. Your harness is what users install. They never see the meta-harness layer — only the brand and CLI you ship.
+You operate the factory. The factory produces your harness. Your users never see the factory — only the brand and CLI you ship. The kernel ships as `@ruflo/kernel` (Rust → wasm-pack + NAPI-RS); your content stays yours.
 
-The kernel is **Rust source code compiled to two targets**: WebAssembly (primary, cross-platform) and per-platform native binaries via [NAPI-RS](https://napi.rs/) (escape hatch for hot Node paths). At load time, [`@ruflo/kernel`](packages/kernel-js/) prefers the native package for the current platform and falls back to wasm.
-
-**Working precedent:** [`@ruvector/emergent-time@0.1.0`](https://www.npmjs.com/package/@ruvector/emergent-time) — 55 KB wasm-opt'd module shipping today through exactly this Rust → wasm-pack → npm pipeline.
-
----
-
-## Host support
-
-| Host | Integration shape | Notes |
-|---|---|---|
-| [**Claude Code**](https://code.claude.com/docs/en/mcp) | MCP server + 5-handler-type hooks + 3-scope settings | Ruflo-native target; richest hook surface |
-| [**OpenAI Codex**](https://developers.openai.com/codex) | MCP via `~/.codex/config.toml` `[mcp_servers.*]` tables | TOML not JSON; no first-class hooks |
-| [**pi.dev**](https://pi.dev/) | Pi extension (TypeScript via `pi install npm:...`) | **No MCP by design** — adapter uses `pi.registerTool()` |
-| [**Hermes Agent**](https://hermes-agent.nousresearch.com/docs/) | MCP-supported runtime (`optional-mcps/`) | Adapter scrubs `<think>` + stray `<tool_call>` per [issue #741](https://github.com/NousResearch/hermes-agent/issues/741) |
-| [**OpenClaw**](https://github.com/openclaw/openclaw) | MCP via `~/.openclaw/openclaw.json` + workspace skills | Personal AI assistant gateway with built-in multi-platform messaging (WhatsApp/Telegram/Slack/Discord) |
-| [**RVM**](https://github.com/ruvnet/rvm) | Bare-metal microhypervisor (AArch64) with capability tokens + hash-chained witness | **Hardware-isolated** deployment for federated / multi-tenant / untrusted-peer scenarios (ADR-018) |
-
-See [ADR-004 — Host integration model](docs/adrs/ADR-004-host-integration-model.md).
+📖 Deeper: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/adrs/INDEX.md](docs/adrs/INDEX.md) (31 ADRs)
 
 ---
 
 ## Quality gates
 
-| Concern | Where | What it does |
-|---|---|---|
-| **CI** | [`ci.yml`](.github/workflows/ci.yml) | Rust 3-platform matrix (fmt + clippy `-D warnings` + test + doc), wasm build + `wasm-tools validate` + 500 KB size budget, Node 20/22 × 3-platform tests |
-| **Publish gate** | [`publish.yml`](.github/workflows/publish.yml) | GCP Workload Identity Federation auth → Secret Manager fetches `NPM_TOKEN` → smoke test → `npm publish --provenance` (SLSA L2) |
-| **Security** | [`security.yml`](.github/workflows/security.yml) | cargo-audit, cargo-deny, npm-audit, CodeQL, weekly cron |
-| **Smoke** | [`smoke.mjs`](scripts/smoke.mjs) | Kernel loads, `kernelInfo().version` matches `package.json`, `mcpValidate` accepts/rejects correctly |
-| **Provenance** | [ADR-011](docs/adrs/ADR-011-witness-and-provenance.md) | Ed25519-signed witness manifest, byte-deterministic across CI runners (wasm enables this) |
+| Concern | Where |
+|---|---|
+| **CI** | [`ci.yml`](.github/workflows/ci.yml) — Rust 3-platform × fmt/clippy/test/doc + WASM build + size budget + Node 20/22 × 3-platform |
+| **Publish** | [`publish.yml`](.github/workflows/publish.yml) — GCP WIF → Secret Manager → smoke → `npm publish --provenance` (SLSA L2) |
+| **Security** | [`security.yml`](.github/workflows/security.yml) — cargo-audit + cargo-deny + npm-audit + CodeQL + weekly cron |
+| **Provenance** | [ADR-011](docs/adrs/ADR-011-witness-and-provenance.md) — Ed25519-signed witness manifest, byte-deterministic across runners |
+| **Studio liveness** | [`pages-monitor.yml`](.github/workflows/pages-monitor.yml) — daily HTTP probe of live Studio |
 
 ---
 
-## Quick start (developers)
+## Developer quick-start
 
 ```bash
 git clone https://github.com/ruvnet/agent-harness-generator
 cd agent-harness-generator
 
-# Rust workspace
 cargo test --workspace
 cargo clippy --workspace --all-targets -- -D warnings
 
-# WASM build
-npm run build:wasm
-
-# TypeScript + smoke
 npm install
-npm run build
-npm run smoke
+npm run build:wasm
+npm test
+node scripts/healthcheck.mjs
 ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full developer workflow.
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
-## Read the design (17 ADRs + INDEX)
-
-**Start here:** [`docs/adrs/INDEX.md`](docs/adrs/INDEX.md)
-
-Highlights:
-
-- [ADR-001 Goals & non-goals](docs/adrs/ADR-001-goals-and-non-goals.md) — what this is and isn't
-- [ADR-002 Kernel boundary](docs/adrs/ADR-002-kernel-boundary.md) — Rust + WASM + NAPI-RS
-- [ADR-002a Publishing pipeline](docs/adrs/ADR-002a-rust-wasm-napi-publishing-pipeline.md) — Cargo workspace + wasm-pack + napi build
-- [ADR-003 Generator architecture](docs/adrs/ADR-003-generator-architecture.md) — `create-vite`-style templates + AST-aware rename
-- [ADR-004 Host integration](docs/adrs/ADR-004-host-integration-model.md) — adapter contract per host
-- [ADR-006 Memory + learning](docs/adrs/ADR-006-memory-and-learning-integration.md) — `@ruvector/emergent-time@0.1.0` integration
-- [ADR-009 Anti-slop](docs/adrs/ADR-009-anti-slop.md) — derived trust tiers
-- [ADR-011 Witness + provenance](docs/adrs/ADR-011-witness-and-provenance.md) — signed manifests
-
----
-
-## Related projects
+## Related
 
 - [**ruflo**](https://github.com/ruvnet/ruflo) — the meta-harness this generator factors apart
 - [**ruvector**](https://github.com/ruvnet/ruvector) — vector + agentic database (memory backend)
 - [**@ruvector/emergent-time**](https://www.npmjs.com/package/@ruvector/emergent-time) — memory-decay clock the kernel uses
-- [**NAPI-RS**](https://napi.rs/) — Rust → Node bindings used for the native target
 
 ## License
 
 MIT — see [LICENSE](LICENSE).
 
-> **Keywords:** agent harness, agent harness generator, AI agent scaffolding, MCP server, Claude Code plugin, Codex plugin, pi.dev extension, hermes agent, multi-agent framework, agentic AI, agentic workflow, autonomous agents, agent orchestration, vertical AI harness, agent CLI generator, npm create agent, npx scaffold, Rust WASM kernel, NAPI-RS, wasm-bindgen, wasm-pack, agent memory, ReasoningBank, HNSW, emergent time, agent provenance, witness manifest, plugin marketplace, IPFS registry, drift detection, anti-slop, TDD, self-evolving agent, federated agents, swarm intelligence, GCP Workload Identity Federation, Secret Manager, SLSA provenance, npm provenance
+> **Keywords:** agent harness, AI agent scaffolding, repo-to-agent, MCP server, Claude Code plugin, Codex plugin, pi.dev extension, hermes agent, openclaw, RVM, agentic workflow, multi-agent framework, vertical AI, Rust WASM kernel, NAPI-RS, agent memory, witness manifest, SBOM, SLSA provenance, GCP WIF, plugin marketplace.
