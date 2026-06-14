@@ -1,8 +1,28 @@
 # Contributing to agent-harness-generator
 
-Thanks for considering contributing. This repo is currently in the **design + scaffold** phase — most of the implementation work is happening on a `/loop` cadence against the ADR set in [`docs/adrs/`](./docs/adrs/INDEX.md). Engineers familiar with the design are welcome to push back on any decision.
+Thanks for considering contributing. The pipeline is production-ready (50+ iters, 478+ tests, 16-job CI matrix). Most contributions land via `/loop` against the [ADR set](./docs/adrs/INDEX.md); design pushback is welcome.
 
-## Quick start
+## Orientation map
+
+```bash
+node scripts/dev-toolkit.mjs            # everything the repo offers, one screen
+node scripts/dev-toolkit.mjs --filter=release   # narrow to one topic
+node scripts/dev-toolkit.mjs --check-health     # verify the toolkit isn't broken
+node scripts/dev-toolkit.mjs --json              # machine-readable
+```
+
+Single command tells you every dev script + every `harness` subcommand + every CI job + every entry point.
+
+## Day-to-day commands
+
+| Question | Command | Wall time |
+|---|---|---|
+| Did I break anything? | `node scripts/healthcheck.mjs` | <1s |
+| Is this scaffolded harness OK? | `harness validate <path>` | <1s |
+| Is this branch release-ready? | `node scripts/preflight.mjs` | ~30s |
+| Cut a release | `node scripts/release.mjs <bump> --push` | ~60s |
+
+## First-time setup
 
 ```bash
 git clone https://github.com/ruvnet/agent-harness-generator
@@ -24,6 +44,9 @@ npm install
 npm run build
 npm test
 npm run smoke
+
+# Confirm the toolkit is wired
+node scripts/dev-toolkit.mjs --check-health
 ```
 
 ## Repo layout
