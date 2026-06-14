@@ -29,6 +29,9 @@ const PHASES = [
     'host-hermes',
     'host-openclaw',
     'host-rvm',
+    'host-copilot',         // iter 127 (ADR-032)
+    'host-opencode',        // iter 128 (ADR-036)
+    'host-github-actions',  // iter 146 (ADR-033)
     'sdk',
     'create-agent-harness',
   ],
