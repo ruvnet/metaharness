@@ -4,6 +4,24 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Changed — Iter 62 (2026-06-14)
+
+- **README.md rewritten end-user-first** — the previous version led with
+  "meta-harness" architecture which is what *contributors* want to read.
+  End users want "what can I make in 30 seconds?". New top:
+  - Live Studio URL prominent in the badge row
+  - "⚡ Try it in 30 seconds" callout at the very top with browser +
+    `npx` paths side by side
+  - Big linkable screenshot of the live Studio under the callout
+  - Architecture / meta-harness sections moved BELOW the try-it path
+- Status table refreshed:
+  - Tests: 412 → **529** (was stale, behind by ~5 iters)
+  - 5 Codex skills → 6 (upgrade-harness from iter 49 added)
+  - 3 new shipped rows: Studio (live Pages URL), perf-regression gate,
+    SPDX SBOM emitter
+- `docs/web-ui/screenshot-desktop.png` (417 KB, ships with the repo)
+  now linked from the top callout as a clickable Studio entrypoint.
+
 ### Added — Iter 61 (2026-06-14)
 
 - **`scripts/audit-deps.mjs` now scans `apps/web-ui/`** — closes a real

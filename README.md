@@ -6,8 +6,9 @@
 
 Like ruflo is the meta-harness for Claude, this is the meta-harness for AI agents themselves: a system whose job is to produce focused, vertical, branded agent harnesses that run on any host. Pick primitives, pick content, supply identity → ship a npm-publishable harness with your own `npx <name>` CLI, MCP server, memory, learning loop, and witness-signed releases.
 
+[![Open the Studio →](https://img.shields.io/badge/Studio-open_in_browser_↗-7c5cff?style=for-the-badge&logo=githubpages&logoColor=white)](https://ruvnet.github.io/agent-harness-generator/)
 [![npm — coming soon](https://img.shields.io/badge/npm%20create--agent--harness-coming%20soon-cb3837?style=for-the-badge&logo=npm)](https://github.com/ruvnet/agent-harness-generator)
-[![Tests — 412 passing](https://img.shields.io/badge/tests-412%20passing-22c55e?style=for-the-badge)](docs/ARCHITECTURE.md)
+[![Tests — 529 passing](https://img.shields.io/badge/tests-529%20passing-22c55e?style=for-the-badge)](docs/ARCHITECTURE.md)
 [![CI — 16 jobs](https://img.shields.io/badge/CI-16%20jobs%20green-22c55e?style=for-the-badge&logo=githubactions)](.github/workflows/ci.yml)
 [![License MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 
@@ -24,6 +25,23 @@ Like ruflo is the meta-harness for Claude, this is the meta-harness for AI agent
 [![Witness signed](https://img.shields.io/badge/witness-Ed25519_signed-22c55e?style=for-the-badge)](docs/adrs/ADR-011-witness-and-provenance.md)
 
 </div>
+
+## ⚡ Try it in 30 seconds
+
+```bash
+# Browser — zero install. Live now.
+open https://ruvnet.github.io/agent-harness-generator/
+
+# OR — terminal scaffold
+npx create-agent-harness my-bot --template vertical:coding --host claude-code
+cd my-bot && npx . --help
+```
+
+That's it. You now own an npm-publishable AI agent harness with your name on it, your branding, your agents, your MCP server, your memory, and an `npx <your-name>` command. It runs on Claude Code, Codex, pi.dev, Hermes, OpenClaw, or RVM — pick one or all. **Nothing leaves your browser or your machine.**
+
+[![Open the Studio](docs/web-ui/screenshot-desktop.png)](https://ruvnet.github.io/agent-harness-generator/)
+
+---
 
 > **One line:** A **meta-harness** — a marketplace plugin + CLI that scaffolds your own focused, vertical AI agent harnesses with their own `npx <name>` command, MCP server, memory, learning loop, and brand — that run unchanged on Claude Code, Codex, pi.dev, Hermes, OpenClaw, and RVM.
 
@@ -140,7 +158,7 @@ See [`examples/`](examples/) and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 
 | `@ruflo/kernel` runtime resolver | Shipped | [`packages/kernel-js/`](packages/kernel-js/) |
 | 6 host adapters | Shipped | claude-code / codex / pi-dev / hermes / openclaw / rvm |
 | `create-agent-harness` CLI | Shipped | scaffold + `harness validate / secrets / verify-witness / federate` |
-| 5 Codex skills | Shipped | create / publish / validate / secrets / verify-witness |
+| 6 Codex skills | Shipped | create / publish / validate / secrets / verify-witness / upgrade-harness |
 | Claude marketplace plugin | Shipped + schema-validated | [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) |
 | Witness signing (Ed25519) | Shipped + tamper-tested | [ADR-011](docs/adrs/ADR-011-witness-and-provenance.md) |
 | MCP tool dispatch | Shipped + integration-tested | 11 end-to-end cases |
@@ -149,7 +167,10 @@ See [`examples/`](examples/) and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 
 | CI matrix (16 jobs across Rust + WASM + Node + Bench + pack+install) | Green | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
 | Security (cargo-audit + cargo-deny + npm-audit + CodeQL + audit-deps aggregate) | Green | [`.github/workflows/security.yml`](.github/workflows/security.yml) |
 | Publish pipeline (GCP WIF + 2 gates + 11 packages + IPFS pin) | Wired + tested | [`.github/workflows/publish.yml`](.github/workflows/publish.yml) |
-| Test suite | **412/412** | 49 test files |
+| Test suite | **529/529** | 64 test files |
+| Agent Harness Studio (live Pages) | Shipped | <https://ruvnet.github.io/agent-harness-generator/> — 100% client-side |
+| Perf-regression gate (host-bench-baseline) | Wired + baselined | [`packages/bench/host-baseline.json`](packages/bench/host-baseline.json) — 50% threshold |
+| SBOM (SPDX-2.3) | Wired | [`scripts/sbom.mjs`](scripts/sbom.mjs) — CI artifact |
 
 | Day-to-day | Wall time | Command |
 |---|---|---|
