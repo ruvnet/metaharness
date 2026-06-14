@@ -70,3 +70,29 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # iter 78: post-deploy verification. The deploy step above can succeed
+  # (status 200 from the Pages API) while the served URL is still serving
+  # stale or broken content for a few seconds. This job re-uses iter 72's
+  # healthcheck --probe-pages — 2-stage HTTP probe of the live URL +
+  # Vite bundle — so a degraded deploy fails LOUDLY on the same run as
+  # the deploy itself, not silently until the next manual probe.
+  verify:
+    needs: deploy
+    runs-on: ubuntu-latest
+    # Reset working-directory to repo root (we need scripts/, not apps/web-ui/).
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Wait for Pages CDN to settle
+        # Pages serves through Fastly; new deploys take a few seconds
+        # to propagate. 30s is empirically enough on the agent-harness
+        # repo without making the workflow slow.
+        run: sleep 30
+      - name: Probe the live Studio (2-stage HTTP check)
+        run: node scripts/healthcheck.mjs --probe-pages --check=pages

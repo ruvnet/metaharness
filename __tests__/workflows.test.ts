@@ -91,4 +91,17 @@ describe('.github/workflows/*.yml', () => {
       expect(pub, `publish.yml missing ${host}`).toMatch(new RegExp(host));
     }
   });
+
+  // iter 78 — pages.yml self-verifies the live deploy after deploy step
+  // succeeds so a degraded Pages deploy fails LOUDLY on the same run.
+  it('pages.yml chains a verify job that probes the live Studio after deploy (iter 78)', async () => {
+    const pages = await readFile(join(WORKFLOWS, 'pages.yml'), 'utf-8');
+    // The verify job exists and depends on deploy
+    expect(pages, 'pages.yml missing verify job').toMatch(/^\s{2}verify:\s*$/m);
+    // verify must `needs: deploy`
+    const verifyBlock = pages.slice(pages.indexOf('  verify:'));
+    expect(verifyBlock).toMatch(/needs:\s*deploy/);
+    // and use the iter-72 healthcheck probe
+    expect(verifyBlock).toMatch(/healthcheck\.mjs --probe-pages/);
+  });
 });

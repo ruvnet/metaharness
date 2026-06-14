@@ -4,6 +4,30 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Added — Iter 78 (2026-06-14)
+
+- **`pages.yml` now self-verifies after every deploy** — closes the
+  "deploy step returned 200 but the served URL is broken" failure
+  mode that's bitten the repo once already (iter 57's 404 deploys).
+  iters 72/76/77 wired `--probe-pages` into CLI surfaces; iter 78
+  wires it into CI itself.
+- **3-job chain** in `pages.yml`: `build` → `deploy` → `verify`.
+  The new `verify` job:
+  - `needs: deploy` so it only runs on a green deploy
+  - sleeps 30s for Fastly/CDN propagation (empirically enough on this
+    repo without slowing the workflow)
+  - runs `node scripts/healthcheck.mjs --probe-pages --check=pages`
+    against the live URL — same 2-stage probe as the daily-driver
+- **One probe implementation** across the whole repo: healthcheck owns
+  the fetch logic; preflight (iter 77), release.mjs (iter 77), and
+  now pages.yml (iter 78) all delegate to it. No duplicate fetch +
+  parsing code.
+- **`__tests__/workflows.test.ts`** 7 → 8 cases:
+  - `pages.yml chains a verify job that probes the live Studio after deploy`
+    asserts (a) job exists, (b) `needs: deploy`, (c) calls
+    `healthcheck.mjs --probe-pages`.
+- TS suite: **568/568** (was 567).
+
 ### Added — Iter 77 (2026-06-14)
 
 - **`scripts/release.mjs` preflight now gates on the live Studio**.
