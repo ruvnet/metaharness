@@ -4,6 +4,41 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Added — Iter 66 (2026-06-14)
+
+- **`harness diag` — 15th subcommand, the ADR-027 diagnostic UX loop**.
+  iter 56 + iter 58 wrote `manifest.meta.surface` and
+  `manifest.meta.kernel_version`; iter 66 makes them *actionable*
+  from the CLI for an end user who downloaded a harness and wants to
+  know if their local kernel install is compatible.
+- **`packages/create-agent-harness/src/diag.ts`** — new module:
+  - `skewVerdict(manifestVer, localVer)` — pure semver compare
+    → `match` / `patch-diff` / `minor-diff` / `major-diff` / `unparseable`
+  - `resolveLocalKernelVersion(harnessDir)` — uses `createRequire`
+    rooted at the harness's own `package.json` so it follows real Node
+    resolution; falls back to the workspace kernel when running
+    uninstalled in the monorepo
+  - `buildDiagReport(dir)` + `formatDiagReport(report)` — splits data
+    collection from rendering so the report shape is testable directly
+  - `diagCmd(args)` — the CLI entry, wired in `subcommands.ts`
+- **Exit code contract**: 0 on match/patch (informational),
+  1 on minor/major (action needed), 2 on no manifest at path.
+- **CLI smoke (end-to-end against a real scaffold)**:
+  ```
+  harness diag /tmp/some-harness
+    surface:              cli
+    manifest kernel:      0.1.0
+    installed kernel:     0.1.0
+    PASS kernel versions match exactly
+  ```
+- **`__tests__/harness-diag.test.ts`** — 14 cases:
+  - `skewVerdict` (6) — match / patch / minor / major / unparseable / prerelease
+  - `formatDiagReport` (5) — exit codes per verdict + actionable line content
+  - `diagCmd` e2e (3) — fresh scaffold → PASS, no manifest → exit 2,
+    synthesized skew manifest → exit 1
+- TS suite: **549/549** (was 535).
+- `harness help` updated to list the new subcommand.
+
 ### Added — Iter 65 (2026-06-14)
 
 - **Path-handling regression guard now scans `apps/`** — closes the
