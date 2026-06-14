@@ -7,12 +7,12 @@ const base: HarnessConfig = {
   name: 'legal-redline',
   description: 'Redline contracts fast',
   hosts: ['claude-code'],
-  template: 'vertical-devops',
+  template: 'vertical:devops',
   memory: 'agentdb',
   routing: '3-tier',
   marketplace: 'powered-by',
   agents: ['responder', 'escalator'],
-  skills: ['create-harness'],
+  skills: ['memory-inspect'],
   commands: ['doctor'],
 };
 
@@ -38,7 +38,7 @@ describe('buildScaffold', () => {
 
   it('emits Claude-ready skills and commands', () => {
     const p = paths(base);
-    expect(p).toContain('.claude/skills/create-harness/SKILL.md');
+    expect(p).toContain('.claude/skills/memory-inspect/SKILL.md');
     expect(p).toContain('.claude/commands/doctor.md');
   });
 

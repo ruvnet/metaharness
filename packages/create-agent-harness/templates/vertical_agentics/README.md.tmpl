@@ -1,0 +1,30 @@
+# {{name}}
+
+{{description}}
+
+> **Agentics** — Orchestrator → planner → workers → critic, with a swarm-bus MCP and shared memory.
+>
+> Generated with [`create-agent-harness`](https://github.com/ruvnet/agent-harness-generator). WASM kernel, multi-host support, witness-signed releases.
+
+## Install
+
+```bash
+npm install -g {{name}}
+{{name}} init
+{{name}} doctor
+```
+
+## Agents
+
+| Agent | Role |
+|---|---|
+| `orchestrator` | Routes work and owns the goal state. |
+| `planner` | Builds the dependency-aware plan. |
+| `worker` | Executes one task and reports. |
+| `critic` | Reviews outputs before they land. |
+
+This harness ships with the **{{host}}** adapter.
+
+## License
+
+MIT

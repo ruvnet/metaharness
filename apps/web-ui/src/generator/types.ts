@@ -6,7 +6,9 @@
 
 export type HostId = 'claude-code' | 'codex' | 'pi-dev' | 'hermes' | 'openclaw' | 'rvm';
 
-export type TemplateId = 'minimal' | 'vertical-devops' | 'vertical-trading' | 'vertical-support';
+// Template ids come from the canonical catalog (e.g. "minimal",
+// "vertical:coding"). Kept as a string so adding a template needs no type edit.
+export type TemplateId = string;
 
 export type MemoryBackend = 'agentdb' | 'sqlite' | 'in-memory';
 
@@ -41,8 +43,18 @@ export interface HostInfo {
 
 export interface TemplateInfo {
   id: TemplateId;
+  /** Gallery grouping label, e.g. "Engineering", "Growth". */
+  category: string;
   name: string;
+  domain: string;
   description: string;
+  /** Default `description` var when this template is chosen. */
+  harnessDesc: string;
+  /** One-line "what you get" blurb for the gallery card. */
+  quickStart: string;
+  tags: string[];
+  /** Whether the CLI materialises an on-disk template dir for this id. */
+  generate: boolean;
   /** Catalog ids pre-selected when this template is chosen. */
   defaultAgents: string[];
   defaultSkills: string[];

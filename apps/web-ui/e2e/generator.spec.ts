@@ -37,6 +37,15 @@ test.describe('Agent Harness Generator UI', () => {
     expect(dl.suggestedFilename()).toBe('contract-sentinel.zip');
   });
 
+  test('quick-start gallery: picking a template updates the description + agents', async ({ page }) => {
+    await page.goto('/');
+    // Pick the Agentics template from the gallery.
+    await page.getByTestId('tpl-vertical:agentics').click();
+    await expect(page.getByLabel('Description')).toHaveValue(/swarm/i);
+    // Its orchestrator agent file should appear in the tree.
+    await expect(page.getByRole('button', { name: 'orchestrator.ts' })).toBeVisible();
+  });
+
   test('invalid name blocks download and shows the reason', async ({ page }) => {
     await page.goto('/');
     await page.getByLabel('Harness name').fill('Bad--Name');

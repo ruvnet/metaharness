@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx {{name}}*)",
+      "mcp__{{name}}__*",
+      "mcp__experiments__*",
+      "Bash(python *)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Bash(rm -rf*)"
+    ]
+  },
+  "mcpServers": {
+    "{{name}}": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "{{name}}@latest",
+        "mcp",
+        "start"
+      ]
+    },
+    "experiments": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "{{name}}@latest",
+        "mcp",
+        "experiments"
+      ]
+    }
+  }
+}

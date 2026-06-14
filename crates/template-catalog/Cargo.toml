@@ -1,0 +1,18 @@
+[package]
+name = "template-catalog"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Canonical, embedded quick-start template catalog for agent-harness-generator (parsed from templates/catalog.json)"
+keywords = ["agent", "harness", "scaffold", "templates", "catalog"]
+categories = ["config"]
+
+[lib]
+crate-type = ["lib"]
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true

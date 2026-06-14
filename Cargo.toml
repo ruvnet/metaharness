@@ -3,6 +3,7 @@ members = [
     "crates/kernel",
     "crates/kernel-wasm",
     "crates/kernel-napi",
+    "crates/template-catalog",
 ]
 resolver = "2"
 

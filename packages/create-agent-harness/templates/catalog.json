@@ -1,0 +1,965 @@
+{
+  "schema": 1,
+  "generatedBy": "gen-templates.mjs",
+  "templates": [
+    {
+      "id": "minimal",
+      "dir": "minimal",
+      "category": "Starter",
+      "name": "Minimal",
+      "domain": "starter",
+      "description": "Kernel + one host adapter + an init entry point. The smallest publishable harness.",
+      "harnessDesc": "My AI agent harness",
+      "quickStart": "The bare scaffold — learn the system, then grow into a vertical.",
+      "tags": [
+        "starter",
+        "minimal"
+      ],
+      "generate": false,
+      "mcpServers": [
+        "{{name}}"
+      ],
+      "agentCount": 0,
+      "skillCount": 0,
+      "commandCount": 1,
+      "agents": [],
+      "skills": [],
+      "commands": [
+        {
+          "id": "doctor",
+          "name": "doctor",
+          "description": "Health-check the harness: kernel load, MCP wiring, memory backend, host adapter."
+        }
+      ]
+    },
+    {
+      "id": "vertical:devops",
+      "dir": "vertical_devops",
+      "category": "Operations",
+      "name": "DevOps / SRE",
+      "domain": "devops/incident-response",
+      "description": "Incident-response harness — responder, runbook-runner, escalator, postmortem agents.",
+      "harnessDesc": "Incident response with on-call workflows",
+      "quickStart": "4 on-call agents + alerts & runbook-store MCP servers + guarded kubectl perms.",
+      "tags": [
+        "devops",
+        "sre",
+        "incident-response",
+        "on-call"
+      ],
+      "generate": false,
+      "mcpServers": [
+        "{{name}}"
+      ],
+      "agentCount": 4,
+      "skillCount": 0,
+      "commandCount": 1,
+      "agents": [
+        {
+          "id": "responder",
+          "name": "Responder",
+          "tier": "haiku",
+          "role": "Triages alerts, finds the runbook."
+        },
+        {
+          "id": "runbook-runner",
+          "name": "Runbook Runner",
+          "tier": "sonnet",
+          "role": "Executes runbooks with confirm gates."
+        },
+        {
+          "id": "escalator",
+          "name": "Escalator",
+          "tier": "sonnet",
+          "role": "Pages humans on severity."
+        },
+        {
+          "id": "postmortem",
+          "name": "Postmortem",
+          "tier": "opus",
+          "role": "Blameless postmortems."
+        }
+      ],
+      "skills": [],
+      "commands": [
+        {
+          "id": "doctor",
+          "name": "doctor",
+          "description": "Health-check the harness: kernel load, MCP wiring, memory backend, host adapter."
+        }
+      ]
+    },
+    {
+      "id": "vertical:coding",
+      "dir": "vertical_coding",
+      "category": "Engineering",
+      "name": "Advanced Coding",
+      "domain": "software-engineering",
+      "description": "A senior engineering pod — architect, implementer, reviewer, and test-writer over a shared code memory.",
+      "harnessDesc": "Plan, implement, review, and test code changes",
+      "quickStart": "Architect → implement → review → test, with a code-index MCP and push-guarded git perms.",
+      "tags": [
+        "coding",
+        "engineering",
+        "tdd",
+        "code-review",
+        "refactor"
+      ],
+      "generate": true,
+      "mcpServers": [
+        "{{name}}",
+        "code_index"
+      ],
+      "agentCount": 4,
+      "skillCount": 1,
+      "commandCount": 2,
+      "agents": [
+        {
+          "id": "architect",
+          "name": "Architect",
+          "tier": "opus",
+          "role": "Designs the change before code is written."
+        },
+        {
+          "id": "implementer",
+          "name": "Implementer",
+          "tier": "sonnet",
+          "role": "Writes code that matches the surrounding style."
+        },
+        {
+          "id": "reviewer",
+          "name": "Reviewer",
+          "tier": "opus",
+          "role": "Hunts correctness bugs in the diff."
+        },
+        {
+          "id": "test-writer",
+          "name": "Test Writer",
+          "tier": "sonnet",
+          "role": "Adds the missing tests for the change."
+        }
+      ],
+      "skills": [
+        {
+          "id": "plan-change",
+          "name": "plan-change",
+          "description": "Turn a feature request into a minimal, file-level implementation plan before any code."
+        }
+      ],
+      "commands": [
+        {
+          "id": "doctor",
+          "name": "doctor",
+          "description": "Health-check the harness: kernel load, MCP wiring, memory backend, host adapter."
+        },
+        {
+          "id": "review-diff",
+          "name": "review-diff",
+          "description": "Review the current working diff for correctness, security, and reuse."
+        }
+      ]
+    },
+    {
+      "id": "vertical:research",
+      "dir": "vertical_research",
+      "category": "Knowledge",
+      "name": "Research Dossiers",
+      "domain": "research/multi-source-dossier",
+      "description": "Research dossier harness — scout, web-searcher, source-grader, synthesizer, fact-checker, citer; evidence-graded multi-source synthesis.",
+      "harnessDesc": "Fan-out research and produce cited dossiers",
+      "quickStart": "Scout → search → grade → synthesize → fact-check → cite, with web-search & dossier MCPs.",
+      "tags": [
+        "research",
+        "rag",
+        "citations",
+        "synthesis",
+        "fact-checking"
+      ],
+      "generate": false,
+      "mcpServers": [
+        "{{name}}"
+      ],
+      "agentCount": 6,
+      "skillCount": 0,
+      "commandCount": 1,
+      "agents": [
+        {
+          "id": "scout",
+          "name": "Scout",
+          "tier": "sonnet",
+          "role": "Decomposes the question into sub-queries."
+        },
+        {
+          "id": "web-searcher",
+          "name": "Web Searcher",
+          "tier": "sonnet",
+          "role": "Fans out searches and collects sources."
+        },
+        {
+          "id": "source-grader",
+          "name": "Source Grader",
+          "tier": "sonnet",
+          "role": "Grades source quality and recency."
+        },
+        {
+          "id": "synthesizer",
+          "name": "Synthesizer",
+          "tier": "opus",
+          "role": "Writes the dossier from the evidence."
+        },
+        {
+          "id": "fact-checker",
+          "name": "Fact Checker",
+          "tier": "opus",
+          "role": "Adversarially verifies each claim."
+        },
+        {
+          "id": "citer",
+          "name": "Citer",
+          "tier": "haiku",
+          "role": "Normalises and checks citations."
+        }
+      ],
+      "skills": [],
+      "commands": [
+        {
+          "id": "doctor",
+          "name": "doctor",
+          "description": "Health-check the harness: kernel load, MCP wiring, memory backend, host adapter."
+        }
+      ]
+    },
+    {
+      "id": "vertical:trading",
+      "dir": "vertical_trading",
+      "category": "Finance",
+      "name": "Trading Desk",
+      "domain": "trading/quantitative",
+      "description": "Trading harness — market-watcher, signal-gen, risk-checker, executor (paper by default), postmortem; circuit-breaker safety patterns.",
+      "harnessDesc": "Watch markets, generate signals, gate risk, execute (paper)",
+      "quickStart": "Watch → signal → risk-gate → execute (paper) → postmortem, with circuit-breaker safety.",
+      "tags": [
+        "trading",
+        "finance",
+        "risk",
+        "backtesting",
+        "quant"
+      ],
+      "generate": false,
+      "mcpServers": [
+        "{{name}}"
+      ],
+      "agentCount": 5,
+      "skillCount": 0,
+      "commandCount": 1,
+      "agents": [
+        {
+          "id": "market-watcher",
+          "name": "Market Watcher",
+          "tier": "haiku",
+          "role": "Streams and summarises market state."
+        },
+        {
+          "id": "signal-gen",
+          "name": "Signal Generator",
+          "tier": "sonnet",
+          "role": "Emits directional signals with confidence."
+        },
+        {
+          "id": "risk-checker",
+          "name": "Risk Checker",
+          "tier": "opus",
+          "role": "The non-bypassable risk gate."
+        },
+        {
+          "id": "executor",
+          "name": "Executor",
+          "tier": "sonnet",
+          "role": "Routes approved orders (paper by default)."
+        },
+        {
+          "id": "postmortem",
+          "name": "Postmortem",
+          "tier": "opus",
+          "role": "Attributes wins and losses."
+        }
+      ],
+      "skills": [],
+      "commands": [
+        {
+          "id": "doctor",
+          "name": "doctor",
+          "description": "Health-check the harness: kernel load, MCP wiring, memory backend, host adapter."
+        }
+      ]
+    },
+    {
+      "id": "vertical:support",
+      "dir": "vertical_support",
+      "category": "Customer",
+      "name": "Customer Support",
+      "domain": "customer-support",
+      "description": "Customer support harness — triager, kb-searcher, responder, escalator; KB-RAG MCP and escalation rules.",
+      "harnessDesc": "Triage tickets, answer with cited KB, escalate",
+      "quickStart": "Triage → KB-search → respond → escalate, with a KB-RAG MCP and abstain-not-hallucinate policy.",
+      "tags": [
+        "support",
+        "customer-service",
+        "ticketing",
+        "kb",
+        "escalation"
+      ],
+      "generate": false,
+      "mcpServers": [
+        "{{name}}"
+      ],
+      "agentCount": 4,
+      "skillCount": 0,
+      "commandCount": 1,
+      "agents": [
+        {
+          "id": "triager",
+          "name": "Triager",
+          "tier": "haiku",
+          "role": "Classifies and routes inbound tickets."
+        },
+        {
+          "id": "kb-searcher",
+          "name": "KB Searcher",
+          "tier": "sonnet",
+          "role": "Finds cited answers in the knowledge base."
+        },
+        {
+          "id": "responder",
+          "name": "Responder",
+          "tier": "sonnet",
+          "role": "Writes the customer-facing reply."
+        },
+        {
+          "id": "escalator",
+          "name": "Escalator",
+          "tier": "sonnet",
+          "role": "Hands off to a human with context."
+        }
+      ],
+      "skills": [],
+      "commands": [
+        {
+          "id": "doctor",
+          "name": "doctor",
+          "description": "Health-check the harness: kernel load, MCP wiring, memory backend, host adapter."
+        }
+      ]
+    },
+    {
+      "id": "vertical:legal",
+      "dir": "vertical_legal",
+      "category": "Professional",
+      "name": "Legal Redline",
+      "domain": "legal/contract-review",
+      "description": "Legal review harness — redline, citation-checker, risk-rater; citation-search MCP and a deliberation-first workflow. Drafts only; not legal advice.",
+      "harnessDesc": "Redline contracts, check citations, rate risk",
+      "quickStart": "Redline → citation-check → risk-rate, with a citation-search MCP. Always defers to a licensed human.",
+      "tags": [
+        "legal",
+        "contracts",
+        "redline",
+        "compliance"
+      ],
+      "generate": false,
+      "mcpServers": [
+        "{{name}}"
+      ],
+      "agentCount": 3,
+      "skillCount": 0,
+      "commandCount": 1,
+      "agents": [
+        {
+          "id": "redline",
+          "name": "Redliner",
+          "tier": "opus",
+          "role": "Proposes redlines against a playbook."
+        },
+        {
+          "id": "citation-checker",
+          "name": "Citation Checker",
+          "tier": "opus",
+          "role": "Verifies every cited authority."
+        },
+        {
+          "id": "risk-rater",
+          "name": "Risk Rater",
+          "tier": "sonnet",
+          "role": "Scores residual risk per clause."
+        }
+      ],
+      "skills": [],
+      "commands": [
+        {
+          "id": "doctor",
+          "name": "doctor",
+          "description": "Health-check the harness: kernel load, MCP wiring, memory backend, host adapter."
+        }
+      ]
+    },
+    {
+      "id": "vertical:business",
+      "dir": "vertical_business",
+      "category": "Business",
+      "name": "Business Operations",
+      "domain": "business/strategy",
+      "description": "A business pod — analyst, strategist, and ops-coordinator for plans, metrics, and execution.",
+      "harnessDesc": "Analyse, strategise, and coordinate execution",
+      "quickStart": "Analyst → strategist → ops-coordinator, with a metrics MCP for KPI grounding.",
+      "tags": [
+        "business",
+        "strategy",
+        "operations",
+        "kpi",
+        "planning"
+      ],
+      "generate": true,
+      "mcpServers": [
+        "{{name}}",
+        "metrics"
+      ],
+      "agentCount": 3,
+      "skillCount": 1,
+      "commandCount": 1,
+      "agents": [
+        {
+          "id": "analyst",
+          "name": "Analyst",
+          "tier": "sonnet",
+          "role": "Turns raw metrics into findings."
+        },
+        {
+          "id": "strategist",
+          "name": "Strategist",
+          "tier": "opus",
+          "role": "Chooses the bet and the trade-offs."
+        },
+        {
+          "id": "ops-coordinator",
+          "name": "Ops Coordinator",
+          "tier": "sonnet",
+          "role": "Turns the chosen bet into owned actions."
+        }
+      ],
+      "skills": [
+        {
+          "id": "quarterly-plan",
+          "name": "quarterly-plan",
+          "description": "Build a quarterly plan: findings → strategy → owned action items tied to KPIs."
+        }
+      ],
+      "commands": [
+        {
+          "id": "doctor",
+          "name": "doctor",
+          "description": "Health-check the harness: kernel load, MCP wiring, memory backend, host adapter."
+        }
+      ]
+    },
+    {
+      "id": "vertical:crm",
+      "dir": "vertical_crm",
+      "category": "Customer",
+      "name": "Customer Management",
+      "domain": "crm/lifecycle",
+      "description": "A CRM pod — lead-qualifier, account-manager, and churn-watcher over the customer lifecycle.",
+      "harnessDesc": "Qualify leads, manage accounts, watch for churn",
+      "quickStart": "Qualify → manage → watch-churn, with a CRM-store MCP and lifecycle memory.",
+      "tags": [
+        "crm",
+        "sales",
+        "accounts",
+        "churn",
+        "lifecycle"
+      ],
+      "generate": true,
+      "mcpServers": [
+        "{{name}}",
+        "crm_store"
+      ],
+      "agentCount": 3,
+      "skillCount": 1,
+      "commandCount": 1,
+      "agents": [
+        {
+          "id": "lead-qualifier",
+          "name": "Lead Qualifier",
+          "tier": "haiku",
+          "role": "Scores and routes inbound leads."
+        },
+        {
+          "id": "account-manager",
+          "name": "Account Manager",
+          "tier": "sonnet",
+          "role": "Owns the relationship and the next play."
+        },
+        {
+          "id": "churn-watcher",
+          "name": "Churn Watcher",
+          "tier": "sonnet",
+          "role": "Detects and explains churn risk early."
+        }
+      ],
+      "skills": [
+        {
+          "id": "memory-inspect",
+          "name": "memory-inspect",
+          "description": "Search and inspect the harness memory namespace (HNSW + emergent-time decay)."
+        }
+      ],
+      "commands": [
+        {
+          "id": "doctor",
+          "name": "doctor",
+          "description": "Health-check the harness: kernel load, MCP wiring, memory backend, host adapter."
+        }
+      ]
+    },
+    {
+      "id": "vertical:marketing",
+      "dir": "vertical_marketing",
+      "category": "Growth",
+      "name": "Marketing",
+      "domain": "marketing/content",
+      "description": "A marketing pod — strategist, content-creator, and SEO-analyst for campaigns and content.",
+      "harnessDesc": "Plan campaigns, create content, optimise for SEO",
+      "quickStart": "Strategy → content → SEO, with an analytics MCP for grounding claims in real traffic.",
+      "tags": [
+        "marketing",
+        "content",
+        "seo",
+        "campaigns",
+        "growth"
+      ],
+      "generate": true,
+      "mcpServers": [
+        "{{name}}",
+        "analytics"
+      ],
+      "agentCount": 3,
+      "skillCount": 1,
+      "commandCount": 1,
+      "agents": [
+        {
+          "id": "strategist",
+          "name": "Strategist",
+          "tier": "opus",
+          "role": "Sets the audience, message, and channel."
+        },
+        {
+          "id": "content-creator",
+          "name": "Content Creator",
+          "tier": "sonnet",
+          "role": "Writes on-brand content for the channel."
+        },
+        {
+          "id": "seo-analyst",
+          "name": "SEO Analyst",
+          "tier": "sonnet",
+          "role": "Grounds content in real search demand."
+        }
+      ],
+      "skills": [
+        {
+          "id": "campaign-brief",
+          "name": "campaign-brief",
+          "description": "Produce a campaign brief: audience, message, channels, content plan, and the metric."
+        }
+      ],
+      "commands": [
+        {
+          "id": "doctor",
+          "name": "doctor",
+          "description": "Health-check the harness: kernel load, MCP wiring, memory backend, host adapter."
+        }
+      ]
+    },
+    {
+      "id": "vertical:advertising",
+      "dir": "vertical_advertising",
+      "category": "Growth",
+      "name": "Advertising",
+      "domain": "advertising/media",
+      "description": "An ad shop — media-planner, copywriter, and performance-analyst across online and traditional.",
+      "harnessDesc": "Plan media, write copy, and optimise ad spend",
+      "quickStart": "Media-plan → copy → performance, spanning digital (PPC/social) and traditional (print/OOH/radio).",
+      "tags": [
+        "advertising",
+        "media-planning",
+        "ppc",
+        "ooh",
+        "creative"
+      ],
+      "generate": true,
+      "mcpServers": [
+        "{{name}}",
+        "ad_metrics"
+      ],
+      "agentCount": 3,
+      "skillCount": 1,
+      "commandCount": 1,
+      "agents": [
+        {
+          "id": "media-planner",
+          "name": "Media Planner",
+          "tier": "opus",
+          "role": "Allocates budget across channels."
+        },
+        {
+          "id": "copywriter",
+          "name": "Copywriter",
+          "tier": "sonnet",
+          "role": "Writes copy to the channel and format."
+        },
+        {
+          "id": "performance-analyst",
+          "name": "Performance Analyst",
+          "tier": "sonnet",
+          "role": "Reads results and reallocates spend."
+        }
+      ],
+      "skills": [
+        {
+          "id": "media-plan",
+          "name": "media-plan",
+          "description": "Build a cross-channel media plan with budget split, creative, and KPIs."
+        }
+      ],
+      "commands": [
+        {
+          "id": "doctor",
+          "name": "doctor",
+          "description": "Health-check the harness: kernel load, MCP wiring, memory backend, host adapter."
+        }
+      ]
+    },
+    {
+      "id": "vertical:ai",
+      "dir": "vertical_ai",
+      "category": "Engineering",
+      "name": "AI / ML Engineering",
+      "domain": "ai/ml-lifecycle",
+      "description": "An ML pod — data-curator, trainer, evaluator, and deployer over the model lifecycle.",
+      "harnessDesc": "Curate data, train, evaluate, and deploy models",
+      "quickStart": "Curate → train → evaluate → deploy, with an experiment-tracking MCP and eval gates.",
+      "tags": [
+        "ai",
+        "ml",
+        "training",
+        "evaluation",
+        "mlops"
+      ],
+      "generate": true,
+      "mcpServers": [
+        "{{name}}",
+        "experiments"
+      ],
+      "agentCount": 4,
+      "skillCount": 1,
+      "commandCount": 1,
+      "agents": [
+        {
+          "id": "data-curator",
+          "name": "Data Curator",
+          "tier": "sonnet",
+          "role": "Builds and documents the dataset."
+        },
+        {
+          "id": "trainer",
+          "name": "Trainer",
+          "tier": "sonnet",
+          "role": "Runs reproducible training jobs."
+        },
+        {
+          "id": "evaluator",
+          "name": "Evaluator",
+          "tier": "opus",
+          "role": "The honest eval gate."
+        },
+        {
+          "id": "deployer",
+          "name": "Deployer",
+          "tier": "sonnet",
+          "role": "Ships behind a guardrail."
+        }
+      ],
+      "skills": [
+        {
+          "id": "eval-report",
+          "name": "eval-report",
+          "description": "Produce an honest eval report: metrics, subgroup slices, baseline delta, ship/no-ship."
+        }
+      ],
+      "commands": [
+        {
+          "id": "doctor",
+          "name": "doctor",
+          "description": "Health-check the harness: kernel load, MCP wiring, memory backend, host adapter."
+        }
+      ]
+    },
+    {
+      "id": "vertical:agentics",
+      "dir": "vertical_agentics",
+      "category": "Frontier",
+      "name": "Agentics",
+      "domain": "agentics/orchestration",
+      "description": "A self-coordinating swarm — orchestrator, planner, worker, and critic over shared memory.",
+      "harnessDesc": "Orchestrate a multi-agent swarm over shared memory",
+      "quickStart": "Orchestrator → planner → workers → critic, with a swarm-bus MCP and shared memory.",
+      "tags": [
+        "agentics",
+        "multi-agent",
+        "swarm",
+        "orchestration",
+        "planning"
+      ],
+      "generate": true,
+      "mcpServers": [
+        "{{name}}",
+        "swarm_bus"
+      ],
+      "agentCount": 4,
+      "skillCount": 2,
+      "commandCount": 1,
+      "agents": [
+        {
+          "id": "orchestrator",
+          "name": "Orchestrator",
+          "tier": "opus",
+          "role": "Routes work and owns the goal state."
+        },
+        {
+          "id": "planner",
+          "name": "Planner",
+          "tier": "opus",
+          "role": "Builds the dependency-aware plan."
+        },
+        {
+          "id": "worker",
+          "name": "Worker",
+          "tier": "sonnet",
+          "role": "Executes one task and reports."
+        },
+        {
+          "id": "critic",
+          "name": "Critic",
+          "tier": "opus",
+          "role": "Reviews outputs before they land."
+        }
+      ],
+      "skills": [
+        {
+          "id": "memory-inspect",
+          "name": "memory-inspect",
+          "description": "Search and inspect the harness memory namespace (HNSW + emergent-time decay)."
+        },
+        {
+          "id": "run-swarm",
+          "name": "run-swarm",
+          "description": "Decompose a goal and run the orchestrator→planner→worker→critic loop to completion."
+        }
+      ],
+      "commands": [
+        {
+          "id": "doctor",
+          "name": "doctor",
+          "description": "Health-check the harness: kernel load, MCP wiring, memory backend, host adapter."
+        }
+      ]
+    },
+    {
+      "id": "vertical:ruview",
+      "dir": "vertical_ruview",
+      "category": "Knowledge",
+      "name": "Ruvector Review",
+      "domain": "ruvector/retrieval",
+      "description": "A ruvector-backed retrieval & review desk — indexer, retriever, and reviewer over a vector store.",
+      "harnessDesc": "Index a corpus, retrieve with citations, review answers",
+      "quickStart": "Index → retrieve → review, on a ruvector HNSW store with emergent-time decay.",
+      "tags": [
+        "ruvector",
+        "retrieval",
+        "review",
+        "hnsw",
+        "vector-db"
+      ],
+      "generate": true,
+      "mcpServers": [
+        "{{name}}",
+        "ruvector"
+      ],
+      "agentCount": 3,
+      "skillCount": 2,
+      "commandCount": 1,
+      "agents": [
+        {
+          "id": "indexer",
+          "name": "Indexer",
+          "tier": "sonnet",
+          "role": "Chunks and embeds the corpus."
+        },
+        {
+          "id": "retriever",
+          "name": "Retriever",
+          "tier": "sonnet",
+          "role": "Runs HNSW search with citations."
+        },
+        {
+          "id": "reviewer",
+          "name": "Reviewer",
+          "tier": "opus",
+          "role": "Grades the answer against the sources."
+        }
+      ],
+      "skills": [
+        {
+          "id": "memory-inspect",
+          "name": "memory-inspect",
+          "description": "Search and inspect the harness memory namespace (HNSW + emergent-time decay)."
+        },
+        {
+          "id": "index-and-ask",
+          "name": "index-and-ask",
+          "description": "Index a corpus into ruvector and answer a question with reviewed citations."
+        }
+      ],
+      "commands": [
+        {
+          "id": "doctor",
+          "name": "doctor",
+          "description": "Health-check the harness: kernel load, MCP wiring, memory backend, host adapter."
+        }
+      ]
+    },
+    {
+      "id": "vertical:health",
+      "dir": "vertical_health",
+      "category": "Professional",
+      "name": "Health & Wellness",
+      "domain": "health/coordination",
+      "description": "A wellness-coordination harness — intake, triage, and care-coordinator. Informational only; not medical advice.",
+      "harnessDesc": "Coordinate intake and wellness information (not medical advice)",
+      "quickStart": "Intake → triage → coordinate, with a knowledge MCP. Hard-codes \"see a clinician\" for anything clinical.",
+      "tags": [
+        "health",
+        "wellness",
+        "intake",
+        "coordination",
+        "safety"
+      ],
+      "generate": true,
+      "mcpServers": [
+        "{{name}}",
+        "health_kb"
+      ],
+      "agentCount": 3,
+      "skillCount": 1,
+      "commandCount": 1,
+      "agents": [
+        {
+          "id": "intake",
+          "name": "Intake",
+          "tier": "haiku",
+          "role": "Collects structured intake, flags red flags."
+        },
+        {
+          "id": "triage",
+          "name": "Triage",
+          "tier": "sonnet",
+          "role": "Routes to the right resource, not a diagnosis."
+        },
+        {
+          "id": "care-coordinator",
+          "name": "Care Coordinator",
+          "tier": "sonnet",
+          "role": "Organises logistics and reminders."
+        }
+      ],
+      "skills": [
+        {
+          "id": "wellness-intake",
+          "name": "wellness-intake",
+          "description": "Run a safe, structured wellness intake that escalates red flags to professionals."
+        }
+      ],
+      "commands": [
+        {
+          "id": "doctor",
+          "name": "doctor",
+          "description": "Health-check the harness: kernel load, MCP wiring, memory backend, host adapter."
+        }
+      ]
+    },
+    {
+      "id": "vertical:exotic",
+      "dir": "vertical_exotic",
+      "category": "Frontier",
+      "name": "Exotic / Self-Evolving",
+      "domain": "exotic/self-evolution",
+      "description": "A frontier harness — a meta-agent that proposes, tests, and federates improvements to itself.",
+      "harnessDesc": "A self-evolving, federation-aware experimental harness",
+      "quickStart": "Hypothesizer → experimenter → federator over a witness-signed evolution log (ADR-014).",
+      "tags": [
+        "exotic",
+        "self-evolving",
+        "federation",
+        "meta",
+        "experimental"
+      ],
+      "generate": true,
+      "mcpServers": [
+        "{{name}}",
+        "evolution_log",
+        "federation"
+      ],
+      "agentCount": 3,
+      "skillCount": 2,
+      "commandCount": 1,
+      "agents": [
+        {
+          "id": "hypothesizer",
+          "name": "Hypothesizer",
+          "tier": "opus",
+          "role": "Proposes a falsifiable self-improvement."
+        },
+        {
+          "id": "experimenter",
+          "name": "Experimenter",
+          "tier": "opus",
+          "role": "Tests the hypothesis safely and records it."
+        },
+        {
+          "id": "federator",
+          "name": "Federator",
+          "tier": "sonnet",
+          "role": "Shares vetted improvements across instances."
+        }
+      ],
+      "skills": [
+        {
+          "id": "memory-inspect",
+          "name": "memory-inspect",
+          "description": "Search and inspect the harness memory namespace (HNSW + emergent-time decay)."
+        },
+        {
+          "id": "evolve",
+          "name": "evolve",
+          "description": "Run one safe self-improvement cycle: hypothesize → experiment → record → (maybe) federate."
+        }
+      ],
+      "commands": [
+        {
+          "id": "doctor",
+          "name": "doctor",
+          "description": "Health-check the harness: kernel load, MCP wiring, memory backend, host adapter."
+        }
+      ]
+    }
+  ]
+}

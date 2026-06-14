@@ -1,0 +1,30 @@
+# {{name}}
+
+{{description}}
+
+> **Advanced Coding** — Architect → implement → review → test, with a code-index MCP and push-guarded git perms.
+>
+> Generated with [`create-agent-harness`](https://github.com/ruvnet/agent-harness-generator). WASM kernel, multi-host support, witness-signed releases.
+
+## Install
+
+```bash
+npm install -g {{name}}
+{{name}} init
+{{name}} doctor
+```
+
+## Agents
+
+| Agent | Role |
+|---|---|
+| `architect` | Designs the change before code is written. |
+| `implementer` | Writes code that matches the surrounding style. |
+| `reviewer` | Hunts correctness bugs in the diff. |
+| `test-writer` | Adds the missing tests for the change. |
+
+This harness ships with the **{{host}}** adapter.
+
+## License
+
+MIT

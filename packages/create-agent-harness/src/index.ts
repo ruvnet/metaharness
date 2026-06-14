@@ -2,7 +2,7 @@
 
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { walkTemplate, asFileMap } from './walker.js';
 import { writeAtomic } from './writer.js';
 import { emptyManifest, fingerprintFiles, sha256 } from './manifest.js';
@@ -22,8 +22,60 @@ export const TEMPLATES = [
   'vertical:trading',
   'vertical:legal',
   'vertical:research',
+  'vertical:coding',
+  'vertical:business',
+  'vertical:crm',
+  'vertical:marketing',
+  'vertical:advertising',
+  'vertical:ai',
+  'vertical:agentics',
+  'vertical:ruview',
+  'vertical:health',
+  'vertical:exotic',
 ] as const;
 export type TemplateId = (typeof TEMPLATES)[number];
+
+export interface CatalogEntry {
+  id: string;
+  category: string;
+  name: string;
+  domain: string;
+  description: string;
+  quickStart: string;
+  tags: string[];
+  generate: boolean;
+  agentCount: number;
+  skillCount: number;
+  commandCount: number;
+}
+
+/** Read the canonical template catalog shipped at templates/catalog.json. */
+export function loadCatalog(): CatalogEntry[] {
+  const p = join(TEMPLATES_ROOT, 'catalog.json');
+  if (!existsSync(p)) return [];
+  try {
+    const parsed = JSON.parse(readFileSync(p, 'utf-8')) as { templates?: CatalogEntry[] };
+    return parsed.templates ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/** Render the catalog as a human-readable table for `--list`. */
+export function formatCatalog(entries: CatalogEntry[]): string[] {
+  const lines: string[] = ['Available templates:', ''];
+  let category = '';
+  for (const e of entries) {
+    if (e.category !== category) {
+      category = e.category;
+      lines.push(`  ${category}`);
+    }
+    const counts = `${e.agentCount}a/${e.skillCount}s/${e.commandCount}c`;
+    lines.push(`    ${e.id.padEnd(22)} ${counts.padEnd(10)} ${e.quickStart}`);
+  }
+  lines.push('', `Scaffold with: create-agent-harness <name> --template <id>`);
+  return lines;
+}
 
 export interface CliArgs {
   name?: string;
@@ -34,6 +86,7 @@ export interface CliArgs {
   force?: boolean;
   description?: string;
   fromExisting?: string;
+  list?: boolean;
 }
 
 export function parseArgs(argv: string[]): CliArgs {
@@ -56,6 +109,8 @@ export function parseArgs(argv: string[]): CliArgs {
       out.description = argv[++i];
     } else if (a === '--from-existing') {
       out.fromExisting = argv[++i] ?? process.cwd();
+    } else if (a === '--list' || a === '--templates') {
+      out.list = true;
     } else if (!a.startsWith('-') && !out.name) {
       out.name = a;
     }
@@ -164,6 +219,11 @@ export function detectRufloProject(dir: string): {
 
 export async function main(argv: string[]): Promise<number> {
   const args = parseArgs(argv);
+
+  if (args.list) {
+    for (const line of formatCatalog(loadCatalog())) console.log(line);
+    return 0;
+  }
 
   if (args.fromExisting !== undefined) {
     const root = args.fromExisting || process.cwd();

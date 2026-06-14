@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx {{name}}*)",
+      "mcp__{{name}}__*",
+      "mcp__ruvector__*"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)"
+    ]
+  },
+  "mcpServers": {
+    "{{name}}": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "{{name}}@latest",
+        "mcp",
+        "start"
+      ]
+    },
+    "ruvector": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "{{name}}@latest",
+        "mcp",
+        "ruvector"
+      ]
+    }
+  }
+}

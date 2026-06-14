@@ -1,0 +1,30 @@
+# {{name}}
+
+{{description}}
+
+> **AI / ML Engineering** — Curate → train → evaluate → deploy, with an experiment-tracking MCP and eval gates.
+>
+> Generated with [`create-agent-harness`](https://github.com/ruvnet/agent-harness-generator). WASM kernel, multi-host support, witness-signed releases.
+
+## Install
+
+```bash
+npm install -g {{name}}
+{{name}} init
+{{name}} doctor
+```
+
+## Agents
+
+| Agent | Role |
+|---|---|
+| `data-curator` | Builds and documents the dataset. |
+| `trainer` | Runs reproducible training jobs. |
+| `evaluator` | The honest eval gate. |
+| `deployer` | Ships behind a guardrail. |
+
+This harness ships with the **{{host}}** adapter.
+
+## License
+
+MIT

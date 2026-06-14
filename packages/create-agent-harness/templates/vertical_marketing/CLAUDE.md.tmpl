@@ -1,0 +1,30 @@
+# {{name}}
+
+{{description}}
+
+> Marketing harness · domain: `marketing/content`. Generated with [create-agent-harness](https://github.com/ruvnet/agent-harness-generator).
+
+## Behavioral rules
+
+- Use the harness's MCP tools (`mcp__{{name}}__*`) for orchestration
+- Memory and routing are handled by the kernel — you don't need to learn them
+- Defer destructive operations to the user
+
+## Agents
+
+| Agent | Tier | Role |
+|---|---|---|
+| `strategist` | opus | Sets the audience, message, and channel. |
+| `content-creator` | sonnet | Writes on-brand content for the channel. |
+| `seo-analyst` | sonnet | Grounds content in real search demand. |
+## Skills
+
+- `/campaign-brief` — Produce a campaign brief: audience, message, channels, content plan, and the metric.
+
+## Commands
+
+- `doctor` — Health-check the harness: kernel load, MCP wiring, memory backend, host adapter.
+
+## Architecture
+
+This harness uses [@ruflo/kernel](https://www.npmjs.com/package/@ruflo/kernel) — a Rust-compiled WASM module with a NAPI-RS native fallback — so the same code runs identically on every platform.

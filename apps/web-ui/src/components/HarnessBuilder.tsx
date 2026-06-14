@@ -5,9 +5,10 @@ import {
   COMMANDS,
   HOSTS,
   SKILLS,
-  TEMPLATES,
   buildScaffold,
   downloadBlob,
+  findTemplate,
+  templatesByCategory,
   totalBytes,
   validateHarnessName,
   zipFilesUnder,
@@ -16,20 +17,22 @@ import type { GenFile, HarnessConfig, HostId, TemplateId } from '../generator';
 import { Chip, Field, Section } from './ui';
 import { FileTree } from './FileTree';
 
+const DEFAULT_TEMPLATE = 'vertical:coding';
+
 function defaultsFor(template: TemplateId): Pick<HarnessConfig, 'agents' | 'skills' | 'commands'> {
-  const t = TEMPLATES.find((x) => x.id === template)!;
+  const t = findTemplate(template)!;
   return { agents: t.defaultAgents, skills: t.defaultSkills, commands: t.defaultCommands };
 }
 
 const INITIAL: HarnessConfig = {
-  name: 'legal-redline',
-  description: 'Redline contracts and surface risky clauses',
+  name: 'my-harness',
+  description: findTemplate(DEFAULT_TEMPLATE)?.harnessDesc ?? 'My AI agent harness',
   hosts: ['claude-code'],
-  template: 'vertical-devops',
+  template: DEFAULT_TEMPLATE,
   memory: 'agentdb',
   routing: '3-tier',
   marketplace: 'powered-by',
-  ...defaultsFor('vertical-devops'),
+  ...defaultsFor(DEFAULT_TEMPLATE),
 };
 
 function toggle<T>(arr: T[], v: T): T[] {
@@ -50,7 +53,8 @@ export function HarnessBuilder() {
   }
 
   function pickTemplate(id: TemplateId) {
-    patch({ template: id, ...defaultsFor(id) });
+    const t = findTemplate(id);
+    patch({ template: id, description: t?.harnessDesc ?? cfg.description, ...defaultsFor(id) });
   }
 
   async function download() {
@@ -107,22 +111,40 @@ export function HarnessBuilder() {
           </div>
         </Section>
 
-        <Section title="Template" desc="Starting content. Pre-selects agents, skills, and commands.">
-          <div className="grid gap-2 sm:grid-cols-2">
-            {TEMPLATES.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => pickTemplate(t.id)}
-                className={`rounded-lg border p-3 text-left transition ${
-                  cfg.template === t.id
-                    ? 'border-brand bg-brand/10 shadow-[0_0_0_1px_rgba(124,92,255,0.4)]'
-                    : 'border-ink-700 bg-ink-800/50 hover:border-ink-600'
-                }`}
-              >
-                <div className="text-sm font-semibold text-white">{t.name}</div>
-                <div className="mt-1 text-xs text-slate-400">{t.description}</div>
-              </button>
+        <Section
+          title="Quick-start template"
+          desc="Pick a vertical to jump-start — it pre-fills the brand description, agents, skills, and commands."
+        >
+          <div className="max-h-[460px] space-y-4 overflow-auto pr-1 scroll-thin">
+            {templatesByCategory().map((group) => (
+              <div key={group.category}>
+                <div className="field-label">{group.category}</div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {group.templates.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      data-testid={`tpl-${t.id}`}
+                      onClick={() => pickTemplate(t.id)}
+                      className={`rounded-lg border p-3 text-left transition ${
+                        cfg.template === t.id
+                          ? 'border-brand bg-brand/10 shadow-[0_0_0_1px_rgba(124,92,255,0.4)]'
+                          : 'border-ink-700 bg-ink-800/50 hover:border-ink-600'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-white">{t.name}</span>
+                        {!t.generate && (
+                          <span className="rounded bg-ink-700 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-slate-400">
+                            curated
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-1 text-xs text-slate-400">{t.quickStart}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </Section>

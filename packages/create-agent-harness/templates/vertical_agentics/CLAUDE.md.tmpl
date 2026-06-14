@@ -1,0 +1,32 @@
+# {{name}}
+
+{{description}}
+
+> Agentics harness · domain: `agentics/orchestration`. Generated with [create-agent-harness](https://github.com/ruvnet/agent-harness-generator).
+
+## Behavioral rules
+
+- Use the harness's MCP tools (`mcp__{{name}}__*`) for orchestration
+- Memory and routing are handled by the kernel — you don't need to learn them
+- Defer destructive operations to the user
+
+## Agents
+
+| Agent | Tier | Role |
+|---|---|---|
+| `orchestrator` | opus | Routes work and owns the goal state. |
+| `planner` | opus | Builds the dependency-aware plan. |
+| `worker` | sonnet | Executes one task and reports. |
+| `critic` | opus | Reviews outputs before they land. |
+## Skills
+
+- `/memory-inspect` — Search and inspect the harness memory namespace (HNSW + emergent-time decay).
+- `/run-swarm` — Decompose a goal and run the orchestrator→planner→worker→critic loop to completion.
+
+## Commands
+
+- `doctor` — Health-check the harness: kernel load, MCP wiring, memory backend, host adapter.
+
+## Architecture
+
+This harness uses [@ruflo/kernel](https://www.npmjs.com/package/@ruflo/kernel) — a Rust-compiled WASM module with a NAPI-RS native fallback — so the same code runs identically on every platform.

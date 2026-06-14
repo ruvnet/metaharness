@@ -1,0 +1,30 @@
+{
+  "name": "{{name}}",
+  "version": "0.1.0",
+  "description": "{{description}}",
+  "type": "module",
+  "bin": {
+    "{{name}}": "./bin/{{name}}.js"
+  },
+  "files": ["bin/**", "dist/**", ".claude/**", "CLAUDE.md", "README.md", "LICENSE"],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run --passWithNoTests",
+    "init": "node ./dist/init.js"
+  },
+  "dependencies": {
+    "@ruflo/kernel": "^0.1.0",
+    "@ruflo/host-{{host}}": "^0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

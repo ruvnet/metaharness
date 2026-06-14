@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx {{name}}*)",
+      "mcp__{{name}}__*",
+      "mcp__ad_metrics__*"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)"
+    ]
+  },
+  "mcpServers": {
+    "{{name}}": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "{{name}}@latest",
+        "mcp",
+        "start"
+      ]
+    },
+    "ad_metrics": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "{{name}}@latest",
+        "mcp",
+        "ads"
+      ]
+    }
+  }
+}

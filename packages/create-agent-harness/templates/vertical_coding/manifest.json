@@ -1,0 +1,91 @@
+{
+  "id": "vertical:coding",
+  "description": "A senior engineering pod — architect, implementer, reviewer, and test-writer over a shared code memory.",
+  "domain": "software-engineering",
+  "category": "Engineering",
+  "files": [
+    {
+      "src": "package.json.tmpl",
+      "dst": "package.json",
+      "render": true
+    },
+    {
+      "src": "CLAUDE.md.tmpl",
+      "dst": "CLAUDE.md",
+      "render": true
+    },
+    {
+      "src": "README.md.tmpl",
+      "dst": "README.md",
+      "render": true
+    },
+    {
+      "src": ".claude/settings.json.tmpl",
+      "dst": ".claude/settings.json",
+      "render": true
+    },
+    {
+      "src": "src/init.ts.tmpl",
+      "dst": "src/init.ts",
+      "render": true
+    },
+    {
+      "src": "src/agents/architect.ts.tmpl",
+      "dst": "src/agents/architect.ts",
+      "render": true
+    },
+    {
+      "src": "src/agents/implementer.ts.tmpl",
+      "dst": "src/agents/implementer.ts",
+      "render": true
+    },
+    {
+      "src": "src/agents/reviewer.ts.tmpl",
+      "dst": "src/agents/reviewer.ts",
+      "render": true
+    },
+    {
+      "src": "src/agents/test-writer.ts.tmpl",
+      "dst": "src/agents/test-writer.ts",
+      "render": true
+    },
+    {
+      "src": ".claude/skills/plan-change/SKILL.md.tmpl",
+      "dst": ".claude/skills/plan-change/SKILL.md",
+      "render": true
+    },
+    {
+      "src": ".claude/commands/doctor.md.tmpl",
+      "dst": ".claude/commands/doctor.md",
+      "render": true
+    },
+    {
+      "src": ".claude/commands/review-diff.md.tmpl",
+      "dst": ".claude/commands/review-diff.md",
+      "render": true
+    }
+  ],
+  "vars": [
+    {
+      "name": "name",
+      "prompt": "Harness name (kebab-case)",
+      "validate": "^[a-z0-9-]+$"
+    },
+    {
+      "name": "description",
+      "prompt": "One-line description",
+      "default": "Plan, implement, review, and test code changes"
+    },
+    {
+      "name": "host",
+      "prompt": "Host adapter",
+      "default": "claude-code",
+      "choices": [
+        "claude-code",
+        "codex",
+        "pi-dev",
+        "hermes"
+      ]
+    }
+  ]
+}

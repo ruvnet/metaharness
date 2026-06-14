@@ -1,0 +1,15 @@
+---
+name: index-and-ask
+description: Index a corpus into ruvector and answer a question with reviewed citations.
+---
+
+# index-and-ask
+
+Index a corpus and answer a question.
+
+1. Indexer chunks + embeds the corpus into ruvector.
+2. Retriever runs HNSW search for the question.
+3. The harness drafts an answer from the passages.
+4. Reviewer grades grounding and flags ungrounded claims.
+
+Return the answer with citations and the reviewer's grade.

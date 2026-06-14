@@ -1,0 +1,30 @@
+# {{name}}
+
+{{description}}
+
+> Advertising harness · domain: `advertising/media`. Generated with [create-agent-harness](https://github.com/ruvnet/agent-harness-generator).
+
+## Behavioral rules
+
+- Use the harness's MCP tools (`mcp__{{name}}__*`) for orchestration
+- Memory and routing are handled by the kernel — you don't need to learn them
+- Defer destructive operations to the user
+
+## Agents
+
+| Agent | Tier | Role |
+|---|---|---|
+| `media-planner` | opus | Allocates budget across channels. |
+| `copywriter` | sonnet | Writes copy to the channel and format. |
+| `performance-analyst` | sonnet | Reads results and reallocates spend. |
+## Skills
+
+- `/media-plan` — Build a cross-channel media plan with budget split, creative, and KPIs.
+
+## Commands
+
+- `doctor` — Health-check the harness: kernel load, MCP wiring, memory backend, host adapter.
+
+## Architecture
+
+This harness uses [@ruflo/kernel](https://www.npmjs.com/package/@ruflo/kernel) — a Rust-compiled WASM module with a NAPI-RS native fallback — so the same code runs identically on every platform.
