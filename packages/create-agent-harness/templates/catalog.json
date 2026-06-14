@@ -897,6 +897,82 @@
       ]
     },
     {
+      "id": "vertical:gaming",
+      "dir": "vertical_gaming",
+      "category": "Frontier",
+      "name": "Game Design / Playtest",
+      "domain": "gaming",
+      "description": "A game-design pod — playtest reader, balance critic, economy modeler, narrative thread keeper over per-build telemetry memory.",
+      "harnessDesc": "Read playtests → critique balance → model economy → keep narrative consistent across builds",
+      "quickStart": "Playtest reader → balance critic → economy modeler → narrative keeper over per-build telemetry memory.",
+      "tags": [
+        "gaming",
+        "game-design",
+        "playtest",
+        "balance",
+        "narrative"
+      ],
+      "generate": true,
+      "mcpServers": [
+        "{{name}}",
+        "telemetry_store",
+        "design_doc"
+      ],
+      "agentCount": 4,
+      "skillCount": 2,
+      "commandCount": 2,
+      "agents": [
+        {
+          "id": "playtest-reader",
+          "name": "Playtest Reader",
+          "tier": "sonnet",
+          "role": "Reads playtest sessions and surfaces the signal."
+        },
+        {
+          "id": "balance-critic",
+          "name": "Balance Critic",
+          "tier": "opus",
+          "role": "Critiques mechanic balance with concrete proposals."
+        },
+        {
+          "id": "economy-modeler",
+          "name": "Economy Modeler",
+          "tier": "opus",
+          "role": "Models in-game economy flows."
+        },
+        {
+          "id": "narrative-keeper",
+          "name": "Narrative Keeper",
+          "tier": "sonnet",
+          "role": "Maintains narrative + lore consistency across builds."
+        }
+      ],
+      "skills": [
+        {
+          "id": "memory-inspect",
+          "name": "memory-inspect",
+          "description": "Search and inspect the harness memory namespace (HNSW + emergent-time decay)."
+        },
+        {
+          "id": "playtest-recap",
+          "name": "playtest-recap",
+          "description": "Run one full playtest analysis cycle: read → critique balance → model economy → check narrative."
+        }
+      ],
+      "commands": [
+        {
+          "id": "doctor",
+          "name": "doctor",
+          "description": "Health-check the harness: kernel load, MCP wiring, memory backend, host adapter."
+        },
+        {
+          "id": "design-doc-diff",
+          "name": "design-doc-diff",
+          "description": "Diff the current design doc against the previous build and surface unresolved tensions."
+        }
+      ]
+    },
+    {
       "id": "vertical:sales",
       "dir": "vertical_sales",
       "category": "Customer / Growth",

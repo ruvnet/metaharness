@@ -35,9 +35,9 @@ const catalog = JSON.parse(readFileSync(catalogPath, 'utf-8')) as {
 const generated = catalog.templates.filter((t) => t.generate);
 
 describe('catalog.json', () => {
-  it('has a schema and 18 templates (iter 87: + vertical:sales)', () => {
+  it('has a schema and 19 templates (iter 96: + vertical:gaming)', () => {
     expect(catalog.schema).toBe(1);
-    expect(catalog.templates.length).toBe(18);
+    expect(catalog.templates.length).toBe(19);
   });
 
   it('every id is unique and listed in TEMPLATES', () => {
@@ -67,11 +67,12 @@ describe('catalog.json', () => {
 
   it('loadCatalog() + formatCatalog() round-trip', () => {
     const loaded = loadCatalog();
-    expect(loaded.length).toBe(18);  // iter 87: + vertical:sales
+    expect(loaded.length).toBe(19);  // iter 96: + vertical:gaming
     const lines = formatCatalog(loaded);
     expect(lines.join('\n')).toContain('vertical:coding');
     expect(lines.join('\n')).toContain('vertical:education');  // iter 80 pin
     expect(lines.join('\n')).toContain('vertical:sales');      // iter 87 pin
+    expect(lines.join('\n')).toContain('vertical:gaming');     // iter 96 pin
     expect(lines.join('\n')).toContain('Available templates:');
   });
 });

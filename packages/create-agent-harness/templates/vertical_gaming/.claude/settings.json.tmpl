@@ -1,0 +1,45 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx {{name}}*)",
+      "mcp__{{name}}__*",
+      "mcp__telemetry_store__*",
+      "mcp__design_doc__*"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Bash(rm -rf*)",
+      "Bash(git push*)"
+    ]
+  },
+  "mcpServers": {
+    "{{name}}": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "{{name}}@latest",
+        "mcp",
+        "start"
+      ]
+    },
+    "telemetry_store": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "{{name}}@latest",
+        "mcp",
+        "telemetry"
+      ]
+    },
+    "design_doc": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "{{name}}@latest",
+        "mcp",
+        "design"
+      ]
+    }
+  }
+}

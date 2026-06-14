@@ -1,0 +1,13 @@
+---
+description: Diff the current design doc against the previous build and surface unresolved tensions.
+---
+
+Generate the design-doc diff.
+
+1. Read the previous + current design doc from memory.
+2. Surface adds / removes / changes by section (mechanics, economy, narrative).
+3. For each change, check whether the OTHER three sections have been updated to reflect it (a mechanic change without a balance update is a tension; a narrative change without a dialog update is a tension).
+4. Report tensions as `section A changed → section B not aligned → suggested fix`.
+5. Stop. Do not write the fix; designer decides.
+
+A design doc is a system; changing one piece propagates. Surface the propagation cost.

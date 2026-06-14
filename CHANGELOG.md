@@ -4,6 +4,47 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Added — Iter 96 (2026-06-14)
+
+- **`vertical:gaming` — 19th vertical template**. Third new vertical
+  in 16 iters (after iter 80 education + iter 87 sales). Game design
+  pod for the "Frontier" row.
+- **Four agents** with discipline-anchored system prompts:
+  - **Playtest Reader** (sonnet) — surfaces raw observations, not
+    interpretations ("player paused for 12s before opening help
+    overlay", not "players find this confusing"); "skip the highlight
+    reel, the boring middle is where bugs live"
+  - **Balance Critic** (opus) — proposes ONE specific change per
+    imbalance + predicts the second-order effect; rejects vague
+    "feels off" criticism
+  - **Economy Modeler** (opus) — flags inflation/deflation/strati-
+    fication; shows the spreadsheet logic, never "the economy is
+    broken"
+  - **Narrative Keeper** (sonnet) — maintains lore consistency;
+    flags contradictions and dropped threads; **never invents lore**
+- **Two commands**:
+  - `playtest-recap` — full cycle (read → critique → model → check)
+    outputting ONE design doc patch reviewable in <10 minutes
+  - `design-doc-diff` — surface unresolved tensions between sections
+    (mechanic changed → balance not aligned)
+- **MCP namespaces**: `telemetry_store` + `design_doc`
+- **iter-86 healthcheck did its job** — when I bumped catalog.json
+  but hadn't updated the TS test or Rust test yet, healthcheck FAILed
+  loudly:
+  ```
+  FAIL catalogCount TS test expects 18 but catalog has 19;
+                    Rust test expects 18 but catalog has 19
+  ```
+  After updating all three sites, healthcheck PASSes with `19 templates
+  in JSON + TS test + Rust test (in sync)`.
+- **Defense layers all green pre-push**:
+  - Layer 1 (catalogCount): PASS
+  - Layer 3 (vertical-tour): 18/18 HEALTHY in 1.2s
+  - Layer 4 (Rust): 5/5 passed
+- **README templates table** updated — heading 18 → 19, `vertical:gaming`
+  appended to the "Business / Frontier" row alongside `business`,
+  `agentics`, `exotic`.
+
 ### Added — Iter 95 (2026-06-14)
 
 - **ADR-030 — The Discovery Loop**. Iters 90→94 demonstrated the

@@ -1,0 +1,96 @@
+{
+  "id": "vertical:gaming",
+  "description": "A game-design pod — playtest reader, balance critic, economy modeler, narrative thread keeper over per-build telemetry memory.",
+  "domain": "gaming",
+  "category": "Frontier",
+  "files": [
+    {
+      "src": "package.json.tmpl",
+      "dst": "package.json",
+      "render": true
+    },
+    {
+      "src": "CLAUDE.md.tmpl",
+      "dst": "CLAUDE.md",
+      "render": true
+    },
+    {
+      "src": "README.md.tmpl",
+      "dst": "README.md",
+      "render": true
+    },
+    {
+      "src": ".claude/settings.json.tmpl",
+      "dst": ".claude/settings.json",
+      "render": true
+    },
+    {
+      "src": "src/init.ts.tmpl",
+      "dst": "src/init.ts",
+      "render": true
+    },
+    {
+      "src": "src/agents/playtest-reader.ts.tmpl",
+      "dst": "src/agents/playtest-reader.ts",
+      "render": true
+    },
+    {
+      "src": "src/agents/balance-critic.ts.tmpl",
+      "dst": "src/agents/balance-critic.ts",
+      "render": true
+    },
+    {
+      "src": "src/agents/economy-modeler.ts.tmpl",
+      "dst": "src/agents/economy-modeler.ts",
+      "render": true
+    },
+    {
+      "src": "src/agents/narrative-keeper.ts.tmpl",
+      "dst": "src/agents/narrative-keeper.ts",
+      "render": true
+    },
+    {
+      "src": ".claude/skills/memory-inspect/SKILL.md.tmpl",
+      "dst": ".claude/skills/memory-inspect/SKILL.md",
+      "render": true
+    },
+    {
+      "src": ".claude/skills/playtest-recap/SKILL.md.tmpl",
+      "dst": ".claude/skills/playtest-recap/SKILL.md",
+      "render": true
+    },
+    {
+      "src": ".claude/commands/doctor.md.tmpl",
+      "dst": ".claude/commands/doctor.md",
+      "render": true
+    },
+    {
+      "src": ".claude/commands/design-doc-diff.md.tmpl",
+      "dst": ".claude/commands/design-doc-diff.md",
+      "render": true
+    }
+  ],
+  "vars": [
+    {
+      "name": "name",
+      "prompt": "Harness name (kebab-case)",
+      "validate": "^[a-z0-9-]+$"
+    },
+    {
+      "name": "description",
+      "prompt": "One-line description",
+      "default": "Read playtests → critique balance → model economy → keep narrative consistent across builds"
+    },
+    {
+      "name": "host",
+      "prompt": "Host adapter",
+      "default": "claude-code",
+      "choices": [
+        "claude-code",
+        "codex",
+        "pi-dev",
+        "hermes"
+      ]
+    }
+  ]
+}

@@ -396,6 +396,35 @@ export const CATALOG = [
     commands: [doctorCommand],
   },
 
+  // --- Game design / playtest (iter 96) ------------------------------------
+  {
+    id: 'vertical:gaming',
+    category: 'Frontier',
+    name: 'Game Design / Playtest',
+    domain: 'gaming',
+    description: 'A game-design pod — playtest reader, balance critic, economy modeler, narrative thread keeper over per-build telemetry memory.',
+    harnessDesc: 'Read playtests → critique balance → model economy → keep narrative consistent across builds',
+    quickStart: 'Playtest reader → balance critic → economy modeler → narrative keeper over per-build telemetry memory.',
+    tags: ['gaming', 'game-design', 'playtest', 'balance', 'narrative'],
+    mcp: [{ key: 'telemetry_store', sub: 'telemetry' }, { key: 'design_doc', sub: 'design' }],
+    allow: ['mcp__telemetry_store__*', 'mcp__design_doc__*'],
+    deny: ['Bash(rm -rf*)', 'Bash(git push*)'],
+    agents: [
+      { id: 'playtest-reader', name: 'Playtest Reader', tier: 'sonnet', role: 'Reads playtest sessions and surfaces the signal.', systemPrompt: 'You read playtest sessions (videos, transcripts, telemetry) and surface the signal: where players got stuck, where they smiled, where they quit. You report observations, not interpretations — "player paused for 12s on the crafting menu before opening the help overlay", not "players find crafting confusing". Designers want the raw signal; interpretation is the next agent\'s job. Skip the highlight reel; the boring middle is where bugs live.' },
+      { id: 'balance-critic', name: 'Balance Critic', tier: 'opus', role: 'Critiques mechanic balance with concrete proposals.', systemPrompt: 'You critique mechanic balance. Read the playtest reader\'s observations + the current numeric design doc. For each imbalance you flag, propose ONE specific change (a number, a duration, a rule) and predict its second-order effect ("doubling reload time makes shotgun viable in close quarters but obsoletes the existing 8-second cooldown design — adjust that too"). Avoid vague "feels off" criticism. A balance change without a predicted side-effect is incomplete.' },
+      { id: 'economy-modeler', name: 'Economy Modeler', tier: 'opus', role: 'Models in-game economy flows.', systemPrompt: 'You model the in-game economy: sources, sinks, conversion rates, time-to-acquire each tier. Flag inflation (more sources than sinks at endgame), deflation (sinks dominate, players hoard), or stratification (rich-get-richer with no catchup). For every imbalance, simulate the fix in the design doc memory and report what would change. Never just say "the economy is broken" — show the spreadsheet logic.' },
+      { id: 'narrative-keeper', name: 'Narrative Keeper', tier: 'sonnet', role: 'Maintains narrative + lore consistency across builds.', systemPrompt: 'You maintain narrative consistency. Read the design doc + current build dialog + lore memory. Flag contradictions (character A says X in build 5 but Y in build 6), dropped threads (a quest seed planted in act 1 with no payoff), or tonal drift. Never invent new lore — your job is to keep what exists coherent, not to add. If a contradiction has both sides documented, surface BOTH and let the designer pick.' },
+    ],
+    skills: [
+      memorySkill,
+      { id: 'playtest-recap', name: 'playtest-recap', description: 'Run one full playtest analysis cycle: read → critique balance → model economy → check narrative.', body: 'Run one playtest recap cycle.\n\n1. Playtest reader pulls the latest session telemetry/transcripts from memory and surfaces 5-10 raw observations.\n2. Balance critic reads observations + numeric design doc; flags 0-3 mechanic imbalances with specific proposals + second-order predictions.\n3. Economy modeler simulates the proposals against the economy spreadsheet in memory; reports projected source/sink changes.\n4. Narrative keeper diffs the new build\'s dialog against the lore memory; flags contradictions or dropped threads.\n5. Output: ONE design doc patch the designer can review in <10 minutes.\n\nAvoid the highlight-reel trap — report the boring middle where bugs live.' },
+    ],
+    commands: [
+      doctorCommand,
+      { id: 'design-doc-diff', name: 'design-doc-diff', description: 'Diff the current design doc against the previous build and surface unresolved tensions.', body: 'Generate the design-doc diff.\n\n1. Read the previous + current design doc from memory.\n2. Surface adds / removes / changes by section (mechanics, economy, narrative).\n3. For each change, check whether the OTHER three sections have been updated to reflect it (a mechanic change without a balance update is a tension; a narrative change without a dialog update is a tension).\n4. Report tensions as `section A changed → section B not aligned → suggested fix`.\n5. Stop. Do not write the fix; designer decides.\n\nA design doc is a system; changing one piece propagates. Surface the propagation cost.' },
+    ],
+  },
+
   // --- Sales / pipeline (iter 87) ------------------------------------------
   {
     id: 'vertical:sales',

@@ -433,6 +433,37 @@ export const GEN_TEMPLATES: GeneratedTemplate[] = [
     ]
   },
   {
+    "id": "vertical:gaming",
+    "category": "Frontier",
+    "name": "Game Design / Playtest",
+    "domain": "gaming",
+    "description": "A game-design pod — playtest reader, balance critic, economy modeler, narrative thread keeper over per-build telemetry memory.",
+    "harnessDesc": "Read playtests → critique balance → model economy → keep narrative consistent across builds",
+    "quickStart": "Playtest reader → balance critic → economy modeler → narrative keeper over per-build telemetry memory.",
+    "tags": [
+      "gaming",
+      "game-design",
+      "playtest",
+      "balance",
+      "narrative"
+    ],
+    "generate": true,
+    "defaultAgents": [
+      "playtest-reader",
+      "balance-critic",
+      "economy-modeler",
+      "narrative-keeper"
+    ],
+    "defaultSkills": [
+      "memory-inspect",
+      "playtest-recap"
+    ],
+    "defaultCommands": [
+      "doctor",
+      "design-doc-diff"
+    ]
+  },
+  {
     "id": "vertical:sales",
     "category": "Customer / Growth",
     "name": "Sales / Pipeline",
@@ -950,6 +981,42 @@ export const GEN_AGENTS: CatalogItem[] = [
     ]
   },
   {
+    "id": "playtest-reader",
+    "name": "Playtest Reader",
+    "description": "Reads playtest sessions and surfaces the signal.",
+    "body": "You read playtest sessions (videos, transcripts, telemetry) and surface the signal: where players got stuck, where they smiled, where they quit. You report observations, not interpretations — \"player paused for 12s on the crafting menu before opening the help overlay\", not \"players find crafting confusing\". Designers want the raw signal; interpretation is the next agent's job. Skip the highlight reel; the boring middle is where bugs live.",
+    "tags": [
+      "gaming"
+    ]
+  },
+  {
+    "id": "balance-critic",
+    "name": "Balance Critic",
+    "description": "Critiques mechanic balance with concrete proposals.",
+    "body": "You critique mechanic balance. Read the playtest reader's observations + the current numeric design doc. For each imbalance you flag, propose ONE specific change (a number, a duration, a rule) and predict its second-order effect (\"doubling reload time makes shotgun viable in close quarters but obsoletes the existing 8-second cooldown design — adjust that too\"). Avoid vague \"feels off\" criticism. A balance change without a predicted side-effect is incomplete.",
+    "tags": [
+      "gaming"
+    ]
+  },
+  {
+    "id": "economy-modeler",
+    "name": "Economy Modeler",
+    "description": "Models in-game economy flows.",
+    "body": "You model the in-game economy: sources, sinks, conversion rates, time-to-acquire each tier. Flag inflation (more sources than sinks at endgame), deflation (sinks dominate, players hoard), or stratification (rich-get-richer with no catchup). For every imbalance, simulate the fix in the design doc memory and report what would change. Never just say \"the economy is broken\" — show the spreadsheet logic.",
+    "tags": [
+      "gaming"
+    ]
+  },
+  {
+    "id": "narrative-keeper",
+    "name": "Narrative Keeper",
+    "description": "Maintains narrative + lore consistency across builds.",
+    "body": "You maintain narrative consistency. Read the design doc + current build dialog + lore memory. Flag contradictions (character A says X in build 5 but Y in build 6), dropped threads (a quest seed planted in act 1 with no payoff), or tonal drift. Never invent new lore — your job is to keep what exists coherent, not to add. If a contradiction has both sides documented, surface BOTH and let the designer pick.",
+    "tags": [
+      "gaming"
+    ]
+  },
+  {
     "id": "prospector",
     "name": "Prospector",
     "description": "Researches accounts + identifies buying signals.",
@@ -1106,6 +1173,12 @@ export const GEN_SKILLS: CatalogItem[] = [
     "body": "Run a wellness intake.\n\n1. Intake collects goals, volunteered history, and routine.\n2. On any red-flag symptom, STOP and direct to emergency/professional care.\n3. Triage routes to the right resource (clinician / dietitian / mental-health / info).\n4. Care-coordinator organises logistics and questions for a real clinician.\n\nThis harness is informational only and is not a substitute for professional medical advice."
   },
   {
+    "id": "playtest-recap",
+    "name": "playtest-recap",
+    "description": "Run one full playtest analysis cycle: read → critique balance → model economy → check narrative.",
+    "body": "Run one playtest recap cycle.\n\n1. Playtest reader pulls the latest session telemetry/transcripts from memory and surfaces 5-10 raw observations.\n2. Balance critic reads observations + numeric design doc; flags 0-3 mechanic imbalances with specific proposals + second-order predictions.\n3. Economy modeler simulates the proposals against the economy spreadsheet in memory; reports projected source/sink changes.\n4. Narrative keeper diffs the new build's dialog against the lore memory; flags contradictions or dropped threads.\n5. Output: ONE design doc patch the designer can review in <10 minutes.\n\nAvoid the highlight-reel trap — report the boring middle where bugs live."
+  },
+  {
     "id": "qualify-lead",
     "name": "qualify-lead",
     "description": "Run one qualification pass on a lead: BANT/MEDDPICC score + missing-fact list + go/no-go.",
@@ -1137,6 +1210,12 @@ export const GEN_COMMANDS: CatalogItem[] = [
     "name": "review-diff",
     "description": "Review the current working diff for correctness, security, and reuse.",
     "body": "Review the current git diff.\n\n1. `git diff` to read the change.\n2. Report only high-confidence findings as `file:line — issue — fix`.\n3. Separate bugs from nits.\n4. End with APPROVE or REQUEST-CHANGES and a one-line reason."
+  },
+  {
+    "id": "design-doc-diff",
+    "name": "design-doc-diff",
+    "description": "Diff the current design doc against the previous build and surface unresolved tensions.",
+    "body": "Generate the design-doc diff.\n\n1. Read the previous + current design doc from memory.\n2. Surface adds / removes / changes by section (mechanics, economy, narrative).\n3. For each change, check whether the OTHER three sections have been updated to reflect it (a mechanic change without a balance update is a tension; a narrative change without a dialog update is a tension).\n4. Report tensions as `section A changed → section B not aligned → suggested fix`.\n5. Stop. Do not write the fix; designer decides.\n\nA design doc is a system; changing one piece propagates. Surface the propagation cost."
   },
   {
     "id": "pipeline-report",
