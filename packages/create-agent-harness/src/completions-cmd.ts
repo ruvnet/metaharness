@@ -21,6 +21,8 @@ const SUBCOMMANDS = [
   'diag',
   // iter 97 — export MCP + claims as single JSON
   'export-config',
+  // iter 105 — diff two harness manifests + per-file fingerprints
+  'compare',
   'help',
 ] as const;
 
@@ -86,6 +88,7 @@ _harness() {
     'analyze-repo:recommend a harness from a local repo'
     'diag:kernel-version skew check (ADR-027 diagnostic)'
     'export-config:emit MCP servers + claims + permissions as a single JSON'
+    'compare:diff two harnesses (manifest + per-file fingerprints, ADR-031 --bundle)'
     'help:show help'
   )
 

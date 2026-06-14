@@ -25,6 +25,7 @@ import { auditCmd } from './audit-cmd.js';
 import { mcpScanCmd } from './mcp-scan.js';
 import { diagCmd } from './diag.js';
 import { exportConfigCmd } from './export-config.js';
+import { compareCmd } from './compare-cmd.js';
 import { analyzeRepoCmd } from './analyze-repo.js';
 
 // Pull the version from the workspace package.json (Node's `with: { type: 'json' }`
@@ -304,6 +305,8 @@ export async function dispatch(subcommand: string, args: string[]): Promise<Subc
       return diagCmd(args.slice(0));
     case 'export-config':
       return exportConfigCmd(args.slice(0));
+    case 'compare':
+      return compareCmd(args.slice(0));
     case 'help':
     case undefined:
       return {
@@ -328,6 +331,7 @@ export async function dispatch(subcommand: string, args: string[]): Promise<Subc
           '  analyze-repo — recommend a harness from a local repo (--embed for ruvllm)',
           '  diag      — kernel-version skew check (ADR-027 diagnostic)',
           '  export-config — emit MCP + claims + permissions as a single JSON (iter 97)',
+          '  compare       — diff two harnesses (manifest + per-file fingerprints); ADR-031 --bundle (iter 105)',
           '  help      — show this message',
           '',
           'Flags:',
