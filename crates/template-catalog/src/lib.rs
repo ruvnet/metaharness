@@ -108,10 +108,10 @@ mod tests {
     fn embedded_json_parses() {
         let c = Catalog::load().expect("catalog.json parses");
         assert_eq!(c.schema, 1);
-        // iter 80 bumped to 17 with vertical:education. Rust assertion
-        // was missed at the time; iter 85 fixes the regression that
-        // caught CI red on iter 83 (after the iter-80 → 83 trio).
-        assert_eq!(c.templates.len(), 17, "expected 17 templates");
+        // iter 87 bumped to 18 with vertical:sales. iter 86's
+        // healthcheck catalogCount cross-check now pins TS + Rust + JSON
+        // assertions together so this can't drift silently again.
+        assert_eq!(c.templates.len(), 18, "expected 18 templates");
     }
 
     #[test]

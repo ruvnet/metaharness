@@ -897,6 +897,82 @@
       ]
     },
     {
+      "id": "vertical:sales",
+      "dir": "vertical_sales",
+      "category": "Customer / Growth",
+      "name": "Sales / Pipeline",
+      "domain": "sales",
+      "description": "A B2B sales pod — prospector, qualifier, demo-coach, closer over per-account context memory.",
+      "harnessDesc": "Prospect → qualify → demo → close, with a CRM-store MCP and no-stretch policy",
+      "quickStart": "Prospect → qualify → demo → close with hidden-pain framework + objection-handling memory.",
+      "tags": [
+        "sales",
+        "pipeline",
+        "b2b",
+        "qualification",
+        "demo"
+      ],
+      "generate": true,
+      "mcpServers": [
+        "{{name}}",
+        "crm_store",
+        "pricing_book"
+      ],
+      "agentCount": 4,
+      "skillCount": 2,
+      "commandCount": 2,
+      "agents": [
+        {
+          "id": "prospector",
+          "name": "Prospector",
+          "tier": "sonnet",
+          "role": "Researches accounts + identifies buying signals."
+        },
+        {
+          "id": "qualifier",
+          "name": "Qualifier",
+          "tier": "haiku",
+          "role": "Fast triage with a hidden-pain framework."
+        },
+        {
+          "id": "demo-coach",
+          "name": "Demo Coach",
+          "tier": "sonnet",
+          "role": "Generates personalised demos from the prospect brief."
+        },
+        {
+          "id": "closer",
+          "name": "Closer",
+          "tier": "opus",
+          "role": "Handles objections + negotiates honestly."
+        }
+      ],
+      "skills": [
+        {
+          "id": "memory-inspect",
+          "name": "memory-inspect",
+          "description": "Search and inspect the harness memory namespace (HNSW + emergent-time decay)."
+        },
+        {
+          "id": "qualify-lead",
+          "name": "qualify-lead",
+          "description": "Run one qualification pass on a lead: BANT/MEDDPICC score + missing-fact list + go/no-go."
+        }
+      ],
+      "commands": [
+        {
+          "id": "doctor",
+          "name": "doctor",
+          "description": "Health-check the harness: kernel load, MCP wiring, memory backend, host adapter."
+        },
+        {
+          "id": "pipeline-report",
+          "name": "pipeline-report",
+          "description": "Summarise the current pipeline by stage + the one bottleneck to address this week."
+        }
+      ]
+    },
+    {
       "id": "vertical:education",
       "dir": "vertical_education",
       "category": "Knowledge",

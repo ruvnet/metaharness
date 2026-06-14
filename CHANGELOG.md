@@ -4,6 +4,35 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Added — Iter 87 (2026-06-14)
+
+- **`vertical:sales` — 18th vertical template**. Second new product
+  surface in 7 iters; B2B pipeline pod for the "Customer / Growth"
+  row.
+- **Four agents** with honesty-bias system prompts:
+  - **Prospector** (sonnet) — researches accounts, surfaces signals
+    with citations; refuses to invent signals
+  - **Qualifier** (haiku) — BANT/MEDDPICC triage; biased toward
+    disqualification — running a no-fit lead costs more than declining
+  - **Demo Coach** (sonnet) — personalised demo from prospector brief;
+    never promises a roadmap item the product doesn't ship today
+  - **Closer** (opus) — handles objections + negotiates against the
+    pricing book; rejects bad-fit deals (a stretched promise is a
+    churn quarter from now)
+- **Two commands**:
+  - `qualify-lead` — one BANT/MEDDPICC pass + go/no-go
+  - `pipeline-report` — weekly conversion rates + the ONE bottleneck
+- **MCP namespaces**: `crm_store` + `pricing_book`. `Bash(rm -rf*)` +
+  `Bash(git push*)` denied explicitly.
+- **iter-86 healthcheck enforced the cross-language sync** —
+  `node scripts/healthcheck.mjs --check=catalogCount` confirmed all 3
+  sites moved together before push (TS test 17 → 18, Rust test 17 → 18,
+  catalog.json 17 → 18). The iter-83-style failure mode can't happen
+  again.
+- **README** templates table surfaces `vertical:sales` in the
+  "Customer / Growth" row alongside support/crm/marketing/advertising;
+  heading bumped 17 → 18.
+
 ### Added — Iter 86 (2026-06-14)
 
 - **`scripts/healthcheck.mjs catalogCount` — new 8th check** that

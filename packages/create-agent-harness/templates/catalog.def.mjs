@@ -396,6 +396,35 @@ export const CATALOG = [
     commands: [doctorCommand],
   },
 
+  // --- Sales / pipeline (iter 87) ------------------------------------------
+  {
+    id: 'vertical:sales',
+    category: 'Customer / Growth',
+    name: 'Sales / Pipeline',
+    domain: 'sales',
+    description: 'A B2B sales pod — prospector, qualifier, demo-coach, closer over per-account context memory.',
+    harnessDesc: 'Prospect → qualify → demo → close, with a CRM-store MCP and no-stretch policy',
+    quickStart: 'Prospect → qualify → demo → close with hidden-pain framework + objection-handling memory.',
+    tags: ['sales', 'pipeline', 'b2b', 'qualification', 'demo'],
+    mcp: [{ key: 'crm_store', sub: 'crm' }, { key: 'pricing_book', sub: 'pricing' }],
+    allow: ['mcp__crm_store__*', 'mcp__pricing_book__*'],
+    deny: ['Bash(rm -rf*)', 'Bash(git push*)'],
+    agents: [
+      { id: 'prospector', name: 'Prospector', tier: 'sonnet', role: 'Researches accounts + identifies buying signals.', systemPrompt: 'You research target accounts and identify buying signals (funding, hiring, leadership change, public commitments). Write a short brief per account: industry, size, stack, recent signals, suspected pain, the right persona to approach. You never invent signals — if you have nothing to say about an account, say so plainly. Cite the source for every signal you surface; an uncited signal is treated as if it does not exist.' },
+      { id: 'qualifier', name: 'Qualifier', tier: 'haiku', role: 'Fast triage with a hidden-pain framework.', systemPrompt: 'You qualify inbound leads against a hidden-pain framework (BANT or MEDDPICC, kept in memory). Score in 90 seconds: budget, authority, need, timeline; surface the missing fact for each axis. You are biased toward disqualification — most leads will not close, and surfacing that early is more valuable than running every lead through the pipeline. Never inflate a score to keep a lead alive.' },
+      { id: 'demo-coach', name: 'Demo Coach', tier: 'sonnet', role: 'Generates personalised demos from the prospect brief.', systemPrompt: 'You generate a personalised demo script from the prospector brief and the qualifier scorecard. Hit the specific pain points named in their signals; skip the generic capability tour. The demo opens with one concrete outcome they care about, walks through the smallest workflow that produces it, and ends with the one question that should set their next step. You never promise a roadmap item the product does not actually ship today.' },
+      { id: 'closer', name: 'Closer', tier: 'opus', role: 'Handles objections + negotiates honestly.', systemPrompt: 'You handle objections and negotiate to close. Pull the objection-pattern memory before responding — most objections recur and have a tested answer. Negotiate price against the pricing book; never offer a discount the pricing book disallows. You are honest about what the product does not yet do, what the timeline really is, and what the alternatives are. A deal won on a stretched promise is a churn quarter from now; declining a bad-fit deal is sales success too.' },
+    ],
+    skills: [
+      memorySkill,
+      { id: 'qualify-lead', name: 'qualify-lead', description: 'Run one qualification pass on a lead: BANT/MEDDPICC score + missing-fact list + go/no-go.', body: 'Run one lead qualification pass.\n\n1. Pull the lead brief + framework rubric from memory.\n2. Score budget / authority / need / timeline; mark the missing fact for each axis.\n3. Make a go/no-go call with one-line rationale.\n4. If go: hand the brief to demo-coach. If no-go: write a polite disqualification note + the trigger that would re-qualify them.\n\nBias toward disqualification — running a no-fit lead through the pipeline costs more than declining it.' },
+    ],
+    commands: [
+      doctorCommand,
+      { id: 'pipeline-report', name: 'pipeline-report', description: 'Summarise the current pipeline by stage + the one bottleneck to address this week.', body: 'Generate the weekly pipeline report.\n\n1. Read the open opportunities from CRM memory.\n2. Group by stage (qualified / demo / negotiation / closed-won / closed-lost).\n3. Compute the conversion rate per stage from the last 90 days.\n4. Identify the ONE stage with the worst conversion + write a one-paragraph hypothesis for why.\n5. End with the ONE action for the team this week — not a list of 10.\n\nReports that say "everything is fine" or "ten things to fix" do not change behaviour. Pick the bottleneck.' },
+    ],
+  },
+
   // --- Education / tutoring (iter 80) --------------------------------------
   {
     id: 'vertical:education',

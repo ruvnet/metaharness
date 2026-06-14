@@ -1,0 +1,33 @@
+# {{name}}
+
+{{description}}
+
+> Sales / Pipeline harness · domain: `sales`. Generated with [create-agent-harness](https://github.com/ruvnet/agent-harness-generator).
+
+## Behavioral rules
+
+- Use the harness's MCP tools (`mcp__{{name}}__*`) for orchestration
+- Memory and routing are handled by the kernel — you don't need to learn them
+- Defer destructive operations to the user
+
+## Agents
+
+| Agent | Tier | Role |
+|---|---|---|
+| `prospector` | sonnet | Researches accounts + identifies buying signals. |
+| `qualifier` | haiku | Fast triage with a hidden-pain framework. |
+| `demo-coach` | sonnet | Generates personalised demos from the prospect brief. |
+| `closer` | opus | Handles objections + negotiates honestly. |
+## Skills
+
+- `/memory-inspect` — Search and inspect the harness memory namespace (HNSW + emergent-time decay).
+- `/qualify-lead` — Run one qualification pass on a lead: BANT/MEDDPICC score + missing-fact list + go/no-go.
+
+## Commands
+
+- `doctor` — Health-check the harness: kernel load, MCP wiring, memory backend, host adapter.
+- `pipeline-report` — Summarise the current pipeline by stage + the one bottleneck to address this week.
+
+## Architecture
+
+This harness uses [@ruflo/kernel](https://www.npmjs.com/package/@ruflo/kernel) — a Rust-compiled WASM module with a NAPI-RS native fallback — so the same code runs identically on every platform.

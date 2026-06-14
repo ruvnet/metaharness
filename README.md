@@ -111,7 +111,7 @@ Source + rationale: [`apps/web-ui/`](apps/web-ui/) · ADRs [020](docs/adrs/ADR-0
 
 ---
 
-## Quick-start templates — 17 verticals
+## Quick-start templates — 18 verticals
 
 One canonical catalog ([`templates/catalog.def.mjs`](packages/create-agent-harness/templates/catalog.def.mjs)) feeds the CLI templates, the [`catalog.json`](packages/create-agent-harness/templates/catalog.json) the [`template-catalog`](crates/template-catalog/) Rust crate validates, and the Studio gallery — so UI, CLI, and core never drift.
 
@@ -126,7 +126,7 @@ npx create-agent-harness my-bot --template vertical:coding
 | Engineering | `vertical:coding`, `vertical:ai` |
 | Knowledge | `vertical:research`, `vertical:ruview` (ruvector), **`vertical:education`** (mastery-based tutoring, iter 80) |
 | Finance / Professional | `vertical:trading`, `vertical:legal`, `vertical:health` |
-| Customer / Growth | `vertical:support`, `vertical:crm`, `vertical:marketing`, `vertical:advertising` |
+| Customer / Growth | `vertical:support`, `vertical:crm`, `vertical:marketing`, `vertical:advertising`, **`vertical:sales`** (B2B pipeline, iter 87) |
 | Business / Frontier | `vertical:business`, `vertical:agentics`, `vertical:exotic` |
 
 Each generated vertical ships bespoke domain agents (with system prompts), skills, commands, and guarded per-host settings. The 11 generated dirs come from the definition; `minimal`, `devops`, `trading`, `support`, `legal`, and `research` are curated by hand and never clobbered by the generator.
