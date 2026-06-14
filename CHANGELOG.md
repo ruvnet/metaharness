@@ -4,6 +4,35 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Added — Iter 53 (2026-06-13)
+
+- **`scripts/bench-baseline.mjs`** — performance regression detector
+  against a stored baseline. Closes the loop on iter-13's memory bench
+  + iter-39's host-bench: those produce reports, this one gates them.
+  - `--current=<path>` (required) — bench report to evaluate
+  - `--baseline=<path>` — comparison baseline
+    (default: `packages/bench/baseline.json`)
+  - `--threshold=<pct>` — max acceptable regression (default 25%)
+  - `--update` — overwrite baseline with current (re-baselining)
+  - Auto-classifies metrics: latency-ish keys (`meanMs`, `p95Ms`,
+    `cost`, `wall`, `count`) are **lower-is-better**; quality keys
+    (`ndcg`, `recall`, `precision`, `mrr`, `hitrate`) and unknowns
+    are **higher-is-better**
+  - First run with no baseline establishes one and exits 0
+  - Exits 1 when any tracked metric regresses by > threshold
+- **`flattenMetrics()` + `compare()` exported** for programmatic use.
+- **`__tests__/bench-baseline.test.ts`** (11 cases):
+  - `flattenMetrics`: handles host-bench shape (`results[i].host`),
+    classifies latency keys as lower-is-better, classifies ndcg/recall
+    as higher-is-better
+  - `compare`: no regressions on matching reports, latency regression
+    above threshold flagged, latency IMPROVEMENT not flagged (positive
+    delta on `lower` is OK only when below threshold), quality
+    regression flagged, quality improvement not flagged
+  - script: `--update` writes baseline, missing baseline establishes
+    one, exit 1 on real regression
+- TS suite: **478/478** (up from 467).
+
 ### Added — Iter 52 (2026-06-13)
 
 - **`__tests__/e2e-lifecycle.test.ts`** — strongest cross-iter
