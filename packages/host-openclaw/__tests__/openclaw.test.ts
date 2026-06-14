@@ -126,4 +126,36 @@ describe('@ruflo/host-openclaw — config generation', () => {
       ]);
     });
   });
+
+  // CodeQL js/incomplete-sanitization regression (alert #2, fixed iter 138).
+  describe('skillMarkdown YAML description escaping', () => {
+    it('escapes a backslash so it cannot break the quoted scalar', () => {
+      const md = skillMarkdown({ name: 'x', description: 'path C:\\\\temp' } as Parameters<typeof skillMarkdown>[0]);
+      // Backslashes must be doubled inside the double-quoted YAML scalar.
+      const descLine = md.split('\n').find((l) => l.startsWith('description:'))!;
+      expect(descLine).toContain('\\\\');
+      expect(descLine.endsWith('"')).toBe(true);
+    });
+
+    it('a TRAILING backslash cannot escape the closing quote', () => {
+      // Pre-fix, input ending in a single '\' produced  description: "...\\"
+      // where the final \" escapes our own quote, breaking the YAML doc.
+      const md = skillMarkdown({ name: 'x', description: 'danger\\' } as Parameters<typeof skillMarkdown>[0]);
+      const descLine = md.split('\n').find((l) => l.startsWith('description:'))!;
+      // Must terminate with an unescaped closing quote: even count of \ before it.
+      expect(descLine).toMatch(/description: "danger\\\\"$/);
+    });
+
+    it('still escapes embedded double-quotes', () => {
+      const md = skillMarkdown({ name: 'x', description: 'say "hi"' } as Parameters<typeof skillMarkdown>[0]);
+      const descLine = md.split('\n').find((l) => l.startsWith('description:'))!;
+      expect(descLine).toContain('\\"hi\\"');
+    });
+
+    it('flattens raw newlines so they cannot break the single-line scalar', () => {
+      const md = skillMarkdown({ name: 'x', description: 'line1\nline2' } as Parameters<typeof skillMarkdown>[0]);
+      const descLine = md.split('\n').find((l) => l.startsWith('description:'))!;
+      expect(descLine).toBe('description: "line1 line2"');
+    });
+  });
 });

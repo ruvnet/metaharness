@@ -79,8 +79,15 @@ export function skillMarkdown(spec: HarnessSpec): string {
   lines.push('---');
   lines.push(`name: ${spec.name}`);
   if (spec.description) {
-    // YAML-safe: wrap in quotes and escape inner quotes.
-    const desc = spec.description.replace(/"/g, '\\"');
+    // CodeQL js/incomplete-sanitization: escaping only `"` is incomplete —
+    // a backslash in the input mis-escapes, and a TRAILING backslash would
+    // escape our own closing quote and break the YAML document. Escape the
+    // backslash FIRST, then the quote, then flatten raw newlines (illegal in
+    // a single-line double-quoted YAML scalar) so no input can break out.
+    const desc = spec.description
+      .replace(/\\/g, '\\\\')
+      .replace(/"/g, '\\"')
+      .replace(/[\r\n]+/g, ' ');
     lines.push(`description: "${desc}"`);
   }
   lines.push('---');

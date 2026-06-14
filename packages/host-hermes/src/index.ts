@@ -40,11 +40,17 @@ export const HOST_NAME = 'hermes' as const;
  */
 export function scrubHermesBlocks(text: string): string {
   if (typeof text !== 'string' || text.indexOf('<') === -1) return text;
+  // CodeQL js/polynomial-redos: `<think>[\s\S]*?</think>` is O(n²) on an
+  // UNCLOSED tag — the lazy `[\s\S]*?` scans to EOF then backtracks looking
+  // for the close tag at every position. Replaced with a tempered greedy
+  // token `(?:(?!</tag>)[\s\S])*` which consumes each character exactly once
+  // (linear) and still stops at the first close tag. An unclosed open tag
+  // simply doesn't match (left in place) instead of triggering a backtrack.
   return text
-    .replace(/<think>[\s\S]*?<\/think>/gi, '')
-    .replace(/<thinking>[\s\S]*?<\/thinking>/gi, '')
-    .replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '')
-    .replace(/<tool_call>[\s\S]*?<\/tool_call>/gi, '');
+    .replace(/<think>(?:(?!<\/think>)[\s\S])*<\/think>/gi, '')
+    .replace(/<thinking>(?:(?!<\/thinking>)[\s\S])*<\/thinking>/gi, '')
+    .replace(/<reasoning>(?:(?!<\/reasoning>)[\s\S])*<\/reasoning>/gi, '')
+    .replace(/<tool_call>(?:(?!<\/tool_call>)[\s\S])*<\/tool_call>/gi, '');
 }
 
 /**

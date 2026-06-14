@@ -65,4 +65,31 @@ describe('@ruflo/host-hermes — Hermes-4 quirk handling', () => {
       expect(c).toContain('scrub_stray_tool_calls: true');
     });
   });
+
+  // CodeQL js/polynomial-redos regression (alert #1, fixed iter 138).
+  describe('ReDoS hardening', () => {
+    it('handles a pathological UNCLOSED <think> in linear time', () => {
+      // The old lazy pattern `<think>[\s\S]*?</think>` was O(n²) here: it
+      // scanned to EOF then backtracked at every position for the missing
+      // close tag. The tempered-greedy rewrite is linear.
+      const evil = '<think>' + 'a'.repeat(200000); // no closing tag
+      const start = Date.now();
+      const out = scrubHermesBlocks(evil);
+      const elapsed = Date.now() - start;
+      expect(elapsed).toBeLessThan(1000);
+      // Unclosed tag doesn't match -> left in place (don't silently drop).
+      expect(out).toBe(evil);
+    });
+
+    it('still strips a well-formed block after a long prefix (linear)', () => {
+      const big = 'x'.repeat(200000);
+      const out = scrubHermesBlocks(`${big}<think>drop</think>${big}`);
+      expect(out).toBe(big + big);
+    });
+
+    it('strips only up to the FIRST close tag (tempered token correctness)', () => {
+      const out = scrubHermesBlocks('a<think>one</think>b<think>two</think>c');
+      expect(out).toBe('abc');
+    });
+  });
 });
