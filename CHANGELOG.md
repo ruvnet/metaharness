@@ -4,6 +4,26 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Fixed — Iter 69 (2026-06-14)
+
+- **`scripts/dev-toolkit.mjs` currency** — the iter-55 contributor
+  orientation map was frozen at 12 subcommands. Added the 3 that
+  landed since:
+  - `mcp-scan` (PR #1 / iter 55) — Security-scan the harness MCP
+    surface (policy + perms + deps)
+  - `analyze-repo` (PR #1 / iter 55) — Recommend a harness from a
+    local repo (`--embed` for ruvllm)
+  - `diag` (iter 66) — Kernel-version skew check (ADR-027 diagnostic)
+- `node scripts/dev-toolkit.mjs` now reports `15 total — 15 listed`
+  (was `12 total`).
+- **`__tests__/dev-toolkit.test.ts`** updated: assertion grows
+  12 → 15. Test no longer pretends the toolkit is current when it's
+  five subcommands behind reality.
+- This is the third "catch up with the 5 missed subcommands" repair
+  in two iters (iter 67 fixed completions, iter 68 chained diag into
+  e2e lifecycle, iter 69 fixes dev-toolkit). Every surface listing
+  subcommands is now consistent.
+
 ### Added — Iter 68 (2026-06-14)
 
 - **`harness diag` chained into the iter-52 e2e lifecycle test** as

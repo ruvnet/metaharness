@@ -32,9 +32,17 @@ describe('scripts/dev-toolkit.mjs', () => {
     expect(r.stdout).toMatch(/CI matrix/);
   });
 
-  it('lists every harness subcommand (currently 12)', async () => {
+  it('lists every harness subcommand (currently 15)', async () => {
+    // iter 69: refreshed from 12 → 15. mcp-scan + analyze-repo landed
+    // in PR #1 (iter 55); diag landed in iter 66. Every dispatcher-
+    // honoured subcommand MUST show up here or new contributors won't
+    // discover the tool that solves their problem.
     const r = await run();
-    const subs = ['sign', 'verify', 'doctor', 'federate', 'secrets', 'validate', 'mcp', 'publish', 'upgrade', 'completions', 'sbom', 'audit'];
+    const subs = [
+      'sign', 'verify', 'doctor', 'federate', 'secrets', 'validate',
+      'mcp', 'publish', 'upgrade', 'completions', 'sbom', 'audit',
+      'mcp-scan', 'analyze-repo', 'diag',
+    ];
     for (const s of subs) {
       expect(r.stdout, `missing subcommand: ${s}`).toContain(`harness ${s}`);
     }

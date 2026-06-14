@@ -49,6 +49,9 @@ const HARNESS_SUBCOMMANDS = [
   { name: 'completions', summary: 'Emit shell completion (bash | zsh | fish)', iter: 48 },
   { name: 'sbom', summary: 'Emit SPDX-2.3 SBOM for the harness (npm)', iter: 51 },
   { name: 'audit', summary: 'npm audit per-harness with structured output', iter: 51 },
+  { name: 'mcp-scan', summary: 'Security-scan the harness MCP surface (policy + perms + deps)', iter: 55 },
+  { name: 'analyze-repo', summary: 'Recommend a harness from a local repo (--embed for ruvllm)', iter: 55 },
+  { name: 'diag', summary: 'Kernel-version skew check (ADR-027 diagnostic)', iter: 66 },
 ];
 
 async function listScripts() {
