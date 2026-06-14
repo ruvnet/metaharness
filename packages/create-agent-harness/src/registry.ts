@@ -83,7 +83,7 @@ export function buildRegistryEntry(input: RegistryEntryInput): RegistryEntry {
   // Default tags pulled from template + hosts + a few defaults.
   const tags = input.tags ?? Array.from(new Set([
     'agent-harness',
-    'openharness',
+    'metaharness',
     templateCategory,
     ...hosts.map(h => `host:${h}`),
     'mcp',

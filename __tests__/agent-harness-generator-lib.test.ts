@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 //
 // iter 116 — verifies the @ruvnet/agent-harness-generator library wrapper
-// re-exports the openharness API surface cleanly. The wrapper has no
+// re-exports the metaharness API surface cleanly. The wrapper has no
 // implementation; if any of these imports fail at type-check time, the
 // dual-package model is broken.
 

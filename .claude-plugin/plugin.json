@@ -1,7 +1,7 @@
 {
   "name": "agent-harness-generator",
-  "displayName": "OpenHarness",
-  "description": "OpenHarness — mint a custom AI agent harness from any repo. Paste a GitHub URL or start blank; output runs on Claude Code, OpenAI Codex, pi.dev, Hermes, OpenClaw, or RVM. WASM kernel (Rust → wasm-bindgen + NAPI-RS), 6 hosts, witness-signed Ed25519 releases, GCP Secret Manager validation. Browser Studio + `npx openharness` CLI.",
+  "displayName": "MetaHarness",
+  "description": "MetaHarness — mint a custom AI agent harness from any repo. Paste a GitHub URL or start blank; output runs on Claude Code, OpenAI Codex, pi.dev, Hermes, OpenClaw, or RVM. WASM kernel (Rust → wasm-bindgen + NAPI-RS), 6 hosts, witness-signed Ed25519 releases, GCP Secret Manager validation. Browser Studio + `npx metaharness` CLI.",
   "version": "0.1.0",
   "author": {
     "id": "ruvnet",
@@ -16,7 +16,7 @@
   },
   "categories": ["scaffolding", "agent-tooling", "marketplace"],
   "tags": [
-    "openharness",
+    "metaharness",
     "agent-harness",
     "agent-harness-generator",
     "ai-agent",

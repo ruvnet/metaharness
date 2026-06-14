@@ -1,17 +1,17 @@
 # @ruvnet/agent-harness-generator
 
 > Library / core package for the **Agent Harness Generator**. Pair with
-> [`openharness`](https://www.npmjs.com/package/openharness) for the CLI.
+> [`metaharness`](https://www.npmjs.com/package/metaharness) for the CLI.
 
 ## What this is
 
 The **library** half of the dual-package model. If you want to **run** the
-generator, use `openharness`. If you want to **import** it from your own code,
+generator, use `metaharness`. If you want to **import** it from your own code,
 use this package.
 
 ```bash
 # Run it (CLI)
-npx openharness my-bot --template vertical:coding
+npx metaharness my-bot --template vertical:coding
 
 # Import it (library)
 npm install @ruvnet/agent-harness-generator
@@ -48,7 +48,7 @@ console.log(`wrote ${result.files.length} files`);
 | **Types** | `Host`, `TemplateId`, `CatalogEntry`, `CliArgs`, `ScaffoldOptions`, `ScaffoldResult`, `TemplateVars` |
 
 The full per-subcommand surface (validate / sbom / audit / score / genome /
-threat-model / …) lives in `openharness`. We re-export the *generation*
+threat-model / …) lives in `metaharness`. We re-export the *generation*
 primitives here; per-subcommand commands stay CLI-only because they assume
 the harness has already been written to disk and is being inspected.
 
@@ -56,9 +56,9 @@ the harness has already been written to disk and is being inspected.
 
 ```
   ┌─────────────────────────────────┐
-  │ openharness                       │   ← the published CLI
-  │  • bin: openharness, harness      │     `npx openharness`
-  │  • full implementation          │     `npx openharness score ./my-bot`
+  │ metaharness                       │   ← the published CLI
+  │  • bin: metaharness, harness      │     `npx metaharness`
+  │  • full implementation          │     `npx metaharness score ./my-bot`
   │  • full JS API                  │
   └────────────┬────────────────────┘
                │ depends on
@@ -74,7 +74,7 @@ implementation — if logic ever leaks into this package, it's a bug.
 
 ## When to use which
 
-- **`openharness`** — you want the command-line tool, full subcommand
+- **`metaharness`** — you want the command-line tool, full subcommand
   surface, marketplace plugin, Codex skills.
 - **`@ruvnet/agent-harness-generator`** — you're embedding the generator
   in a build script, a web service, or another tool, and don't want the
@@ -82,8 +82,8 @@ implementation — if logic ever leaks into this package, it's a bug.
 
 ## Version pinning
 
-This package always depends on the same minor version of `openharness`. A
-patch release of `openharness` doesn't bump us automatically — we cut a
+This package always depends on the same minor version of `metaharness`. A
+patch release of `metaharness` doesn't bump us automatically — we cut a
 matching patch and re-publish so the dependency stays tight.
 
 ## License

@@ -27,9 +27,9 @@ OIA explicitly incorporates existing standards rather than replacing them. Its a
 
 OIA does **not** define a proprietary wire protocol, schema, or identity model. It is a *reference architecture*: a structured vocabulary and evaluation framework that vendors, architects, and regulators can use to assess alignment, identify capability gaps, and plan implementations. The adjacent ecosystem of wire-level specs (MCP for tool access, Google's A2A for agent-to-agent delegation, IBM/Hugging Face ACP for agent communication protocol, the Agent Protocol OpenAPI wrapper) sit *inside* OIA's framework as layer-specific implementations rather than competitors.
 
-### Why OIA is relevant to OpenHarness
+### Why OIA is relevant to MetaHarness
 
-OpenHarness currently generates harnesses targeting six confirmed host adapters (Claude Code, Codex, pi.dev, Hermes, OpenClaw, RVM) with two more proposed (Copilot: ADR-032; GitHub Actions: ADR-033). Every one of those hosts is a silo: a harness generated for Claude Code is not discoverable or callable by a Codex client, and vice versa. A user who hands a harness to a colleague running a different platform must regenerate or manually adapt it.
+MetaHarness currently generates harnesses targeting six confirmed host adapters (Claude Code, Codex, pi.dev, Hermes, OpenClaw, RVM) with two more proposed (Copilot: ADR-032; GitHub Actions: ADR-033). Every one of those hosts is a silo: a harness generated for Claude Code is not discoverable or callable by a Codex client, and vice versa. A user who hands a harness to a colleague running a different platform must regenerate or manually adapt it.
 
 OIA directly addresses this. Its nine-layer model provides a *common evaluation surface* across vendors and platforms. A harness that self-describes in OIA-aligned terms becomes:
 
@@ -37,7 +37,7 @@ OIA directly addresses this. Its nine-layer model provides a *common evaluation 
 2. **Assessable** by architects and enterprise procurement using OIA as the evaluation rubric.
 3. **Composable** in multi-vendor agent networks that use OIA as a coordination meta-framework.
 
-The question this ADR must answer is: **where in the OpenHarness architecture does OIA plug in?**
+The question this ADR must answer is: **where in the MetaHarness architecture does OIA plug in?**
 
 ### Three candidate integration points
 
@@ -115,7 +115,7 @@ Layer names and horizontal span keys are **placeholder names** derived from OIA 
 
 ### Security composition: OIA identity and ADR-010 claims
 
-OIA at v0.1 does not specify an identity or claims model. The v0.1 reader's digest does not enumerate a wire-level identity scheme. When OIA ships identity primitives (likely through OIDC-A, FIDO Agentic Authentication, or a bespoke credential envelope — none of those are confirmed), those primitives will need to compose with the OpenHarness claims-based authorization model (ADR-010) and the MCP default-deny gate (ADR-022).
+OIA at v0.1 does not specify an identity or claims model. The v0.1 reader's digest does not enumerate a wire-level identity scheme. When OIA ships identity primitives (likely through OIDC-A, FIDO Agentic Authentication, or a bespoke credential envelope — none of those are confirmed), those primitives will need to compose with the MetaHarness claims-based authorization model (ADR-010) and the MCP default-deny gate (ADR-022).
 
 **Pre-emptive rule:** if OIA introduces a capability scope that would widen an MCP permission (e.g. an OIA "trusted peer" claim that implicitly grants `allowNetwork: true`), the composition is **denied at the policy gate**. The `mcp-policy.json` default-deny posture is not negotiable for external identity claims. An OIA caller that wants elevated capability must request it through the same approval gate any other caller uses. This is analogous to how ADR-033 (GHA) treats `GITHUB_TOKEN` — the external token scopes the available capability, but the in-harness `mcp-policy.json` may be narrower, and the narrower constraint wins.
 
@@ -195,7 +195,7 @@ MCP is a transport primitive that changes which files get emitted, which hosts c
 
 ### Alternative C: Do nothing; MCP is sufficient for interoperability
 
-MCP (ADR-022) solves tool-access interoperability within a session. It does not solve discovery, multi-vendor capability declaration, or enterprise procurement alignment. OIA addresses those gaps. "MCP is enough" is true for runtime tool invocation but false for the broader discoverability and evaluation problem OIA is designed for. Rejecting OIA entirely cedes the field to harnesses that do describe themselves in OIA terms, making OpenHarness-generated harnesses invisible to OIA-aware evaluators.
+MCP (ADR-022) solves tool-access interoperability within a session. It does not solve discovery, multi-vendor capability declaration, or enterprise procurement alignment. OIA addresses those gaps. "MCP is enough" is true for runtime tool invocation but false for the broader discoverability and evaluation problem OIA is designed for. Rejecting OIA entirely cedes the field to harnesses that do describe themselves in OIA terms, making MetaHarness-generated harnesses invisible to OIA-aware evaluators.
 
 ### Alternative D: Wait for OIA v1.0 before writing any ADR
 

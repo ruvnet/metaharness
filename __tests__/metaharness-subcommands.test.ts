@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 //
-// iter 117 — verifies the new openharness subcommand router. Per the user's
-// directive: "Before generation: openharness. Inside generated harness: harness."
+// iter 117 — verifies the new metaharness subcommand router. Per the user's
+// directive: "Before generation: metaharness. Inside generated harness: harness."
 //
 // We cover the structural surface (router recognizes the verbs, falls
 // through correctly, errors helpfully). The from-repo verb invokes git
@@ -46,21 +46,21 @@ async function captureMain(argv: string[]): Promise<{ code: number; out: string;
   }
 }
 
-describe('openharness subcommand router (iter 117)', () => {
+describe('metaharness subcommand router (iter 117)', () => {
   it('from-repo with missing args returns exit 2 with usage', async () => {
     const r = await captureMain(['from-repo']);
     expect(r.code).toBe(2);
-    expect(r.err).toMatch(/Usage: npx openharness from-repo/);
+    expect(r.err).toMatch(/Usage: npx metaharness from-repo/);
   });
 
   it('from-repo with only URL returns exit 2 (still need name)', async () => {
     const r = await captureMain(['from-repo', 'https://github.com/foo/bar']);
     expect(r.code).toBe(2);
-    expect(r.err).toMatch(/Usage: npx openharness from-repo/);
+    expect(r.err).toMatch(/Usage: npx metaharness from-repo/);
   });
 
   it('analyze runs analyze-repo against a real local dir', async () => {
-    const dir = await mkdtemp(join(tmpdir(), 'openharness-analyze-'));
+    const dir = await mkdtemp(join(tmpdir(), 'metaharness-analyze-'));
     try {
       await writeFile(join(dir, 'package.json'), JSON.stringify({ name: 'demo' }), 'utf-8');
       await writeFile(join(dir, 'README.md'), '# demo', 'utf-8');
@@ -75,7 +75,7 @@ describe('openharness subcommand router (iter 117)', () => {
   });
 
   it('genome runs the genome command against a real dir', async () => {
-    const dir = await mkdtemp(join(tmpdir(), 'openharness-genome-'));
+    const dir = await mkdtemp(join(tmpdir(), 'metaharness-genome-'));
     try {
       await writeFile(join(dir, 'package.json'), JSON.stringify({ name: 'demo', scripts: { test: 'vitest' } }), 'utf-8');
       const r = await captureMain(['genome', dir]);
@@ -98,21 +98,21 @@ describe('openharness subcommand router (iter 117)', () => {
     // No name + no subcommand → prints usage with exit 2.
     const r = await captureMain([]);
     expect(r.code).toBe(2);
-    expect(r.out).toMatch(/Usage: npx openharness/);
+    expect(r.out).toMatch(/Usage: npx metaharness/);
   });
 
   it('unknown first-arg verb (not a subcommand, not a flag) falls through to legacy scaffold', async () => {
     // "unknown-name" isn't a subcommand → router returns null → legacy scaffold runs.
     // We chdir to a tempdir so the legacy scaffold writes there, not into the
     // repo root (iter 118 caught a stray artifact from the old version of this test).
-    const dir = await mkdtemp(join(tmpdir(), 'openharness-bare-'));
+    const dir = await mkdtemp(join(tmpdir(), 'metaharness-bare-'));
     const origCwd = process.cwd();
     try {
       process.chdir(dir);
       const r = await captureMain(['unknown-name-here', '--force']);
       // Whatever the result, the "from-repo" usage line MUST NOT appear —
       // confirms the router did not intercept the unknown verb.
-      expect(r.err).not.toMatch(/Usage: npx openharness from-repo/);
+      expect(r.err).not.toMatch(/Usage: npx metaharness from-repo/);
     } finally {
       process.chdir(origCwd);
       await rm(dir, { recursive: true, force: true });

@@ -61,7 +61,7 @@ export default function App() {
               <Boxes size={13} /> Meta-harness · the agent harness supply chain
             </div>
             <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              Open Harness <span className="text-brand-glow">Studio</span>
+              MetaHarness <span className="text-brand-glow">Studio</span>
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-slate-400 sm:text-base">
               Turn any GitHub repo — or a blank slate — into a governed, branded, multi-host AI agent harness. Recommend

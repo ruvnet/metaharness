@@ -90,8 +90,8 @@ function resolveLocalGeneratorVersion(): string | undefined {
   const candidates = [
     // Workspace: packages/create-agent-harness/dist/ → ../package.json
     resolve(__dirname, '..', 'package.json'),
-    // Installed: node_modules/openharness/package.json (post iter 108 rename)
-    resolve(__dirname, '..', '..', 'openharness', 'package.json'),
+    // Installed: node_modules/metaharness/package.json (post iter 108 rename)
+    resolve(__dirname, '..', '..', 'metaharness', 'package.json'),
     // Legacy: node_modules/create-agent-harness/package.json (pre-rename installs)
     resolve(__dirname, '..', '..', 'create-agent-harness', 'package.json'),
   ];
@@ -100,8 +100,8 @@ function resolveLocalGeneratorVersion(): string | undefined {
       if (existsSync(p)) {
         const pkg = JSON.parse(readFileSync(p, 'utf-8')) as { name?: string; version?: string };
         // Accept either name — `create-agent-harness` is the legacy resolved-from-sibling
-        // case, `openharness` is the current publishable name (iter 108).
-        if ((pkg.name === 'openharness' || pkg.name === 'create-agent-harness') && typeof pkg.version === 'string') {
+        // case, `metaharness` is the current publishable name (iter 108).
+        if ((pkg.name === 'metaharness' || pkg.name === 'create-agent-harness') && typeof pkg.version === 'string') {
           return pkg.version;
         }
       }
@@ -328,7 +328,7 @@ export async function buildSupportBundle(harnessDir: string): Promise<SupportBun
       for (const block of [pkg.dependencies, pkg.devDependencies, pkg.peerDependencies] as Array<Record<string, string> | undefined>) {
         if (block && typeof block === 'object') {
           for (const [name, version] of Object.entries(block)) {
-            if (name.startsWith('@ruflo/') || name === 'create-agent-harness' || name === 'openharness') {
+            if (name.startsWith('@ruflo/') || name === 'create-agent-harness' || name === 'metaharness') {
               rufloDeps[name] = version;
             }
           }
