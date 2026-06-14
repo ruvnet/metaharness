@@ -20,7 +20,8 @@
 // dimensions a single model cannot self-correct. That is the beyond-SOTA claim,
 // and the ablation (ablation.ts) MEASURES it rather than asserting it.
 
-import type { FusionModelMap, OpenRouterTransport, ChatMessage } from './fusion.js';
+import type { FusionModelMap, OpenRouterTransport, ChatMessage, FusionResult } from './fusion.js';
+import { fuseResearch, FUSION_STAGES } from './fusion.js';
 
 /**
  * The DRACO-optimised fusion model map. Each stage gets the cheapest model that
@@ -53,11 +54,11 @@ export const SINGLE_MODEL_PROMPT =
   'supports its claim before finalising.';
 
 /**
- * Run the single-model baseline for one question: one model call, end to end.
- * Same transport interface as the fusion harness, so the ablation drives both
- * with the same (injected) transport.
+ * ARM 1 — VANILLA: ask one model the raw question in a single call, no harness
+ * structure at all. This is the floor — what you get from a chat box. No
+ * decompose, no source-grading, no verify. The thesis: a HARNESS beats this.
  */
-export async function singleModelResearch(
+export async function vanillaResearch(
   question: { id: string; prompt: string },
   model: string,
   transport: OpenRouterTransport,
@@ -68,4 +69,29 @@ export async function singleModelResearch(
   ];
   const { text, tokens } = await transport(model, messages);
   return { questionId: question.id, answer: text, totalTokens: tokens };
+}
+
+/** Back-compat alias — `singleModelResearch` was the vanilla arm in the 2-way ablation. */
+export const singleModelResearch = vanillaResearch;
+
+/** A fusion map with the SAME model on every stage — structure, but no fusion. */
+export function uniformModelMap(model: string): FusionModelMap {
+  return Object.fromEntries(FUSION_STAGES.map((s) => [s, model])) as FusionModelMap;
+}
+
+/**
+ * ARM 2 — HARNESS (single-model): run the full 6-stage pipeline (decompose →
+ * search → grade → synthesize → verify → cite) but with ONE model on every
+ * stage. Structure helps (coverage, balance, citations) — BUT the verify stage
+ * is the same model that wrote the synthesis, so it rubber-stamps its own work:
+ * a hallucinated citation survives its own review. The thesis: this beats
+ * vanilla (structure) but loses to fusion (no independent check). Opts out of
+ * the fusion-distinctness assertion since it is intentionally single-model.
+ */
+export async function singleModelHarness(
+  question: { id: string; prompt: string },
+  model: string,
+  transport: OpenRouterTransport,
+): Promise<FusionResult> {
+  return fuseResearch(question, uniformModelMap(model), transport, { enforceFusion: false });
 }

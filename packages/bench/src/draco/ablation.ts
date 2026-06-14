@@ -20,6 +20,8 @@ import {
   DRACO_OPTIMIZED_MODELS,
   DRACO_SINGLE_MODEL,
   singleModelResearch,
+  vanillaResearch,
+  singleModelHarness,
 } from './optimized.js';
 import type { DracoCorpus } from './runner.js';
 
@@ -149,5 +151,103 @@ export async function runAblation(corpus: DracoCorpus, opts: AblationOptions): P
     delta: fusionScore - singleScore,
     deltaByDimension,
     fusionWins: fusionScore > singleScore,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// THREE-WAY ABLATION — the full thesis (ADR-037 §M6, refined).
+//
+//   vanilla   < harness   < fusion+harness
+//   (raw chat)  (structure)  (structure + independent fusion)
+//
+// The claim the benchmark proves: a HARNESS beats vanilla (structure adds
+// coverage/balance/citations), and FUSION beats the harness (an independent
+// verifier of a different family catches the hallucinations a single model
+// rubber-stamps). Each "<" is a MEASURED delta over the same corpus + scorer.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface ThreeWayReport {
+  corpusVersion: number;
+  transport: 'mock' | 'live';
+  judged: boolean;
+  judge?: { model: string; promptVersion: number };
+  arms: { vanilla: ArmResult; harness: ArmResult; fusion: ArmResult };
+  /** vanilla→harness and harness→fusion deltas. */
+  deltas: { harnessOverVanilla: number; fusionOverHarness: number; fusionOverVanilla: number };
+  /** True iff vanilla <= harness <= fusion AND fusion strictly beats vanilla. */
+  thesisHolds: boolean;
+  /** The measured ordering, best last. */
+  ordering: Array<'vanilla' | 'harness' | 'fusion'>;
+}
+
+export async function runThreeWayAblation(corpus: DracoCorpus, opts: AblationOptions): Promise<ThreeWayReport> {
+  const judged = !!opts.judgeTransport;
+  const judgeModel = opts.judgeModel ?? DRACO_JUDGE.model;
+  if (judged) assertJudgeIndependent(judgeModel, DRACO_OPTIMIZED_MODELS);
+  const singleModel = opts.singleModel ?? DRACO_SINGLE_MODEL;
+
+  let questions = corpus.questions;
+  if (opts.limit != null) questions = questions.slice(0, opts.limit);
+
+  const dims = { vanilla: [] as DimensionScores[], harness: [] as DimensionScores[], fusion: [] as DimensionScores[] };
+  const faith = { vanilla: [] as number[], harness: [] as number[], fusion: [] as number[] };
+  const tokens = { vanilla: 0, harness: 0, fusion: 0 };
+
+  const scoreOne = async (answer: string, q: typeof questions[number]) => {
+    const d = await scoreAnswer(answer, q.rubric, q.prompt, opts.checkUrl);
+    let f: number | undefined;
+    if (judged && opts.judgeTransport) f = (await judgeFaithfulness(answer, opts.judgeTransport, judgeModel)).faithfulness;
+    return { d, f };
+  };
+
+  for (const q of questions) {
+    const v = await vanillaResearch({ id: q.id, prompt: q.prompt }, singleModel, opts.transport);
+    tokens.vanilla += v.totalTokens;
+    const vs = await scoreOne(v.answer, q); dims.vanilla.push(vs.d); if (vs.f != null) faith.vanilla.push(vs.f);
+
+    const h = await singleModelHarness({ id: q.id, prompt: q.prompt }, singleModel, opts.transport);
+    tokens.harness += h.totalTokens;
+    const hs = await scoreOne(h.answer, q); dims.harness.push(hs.d); if (hs.f != null) faith.harness.push(hs.f);
+
+    const f = await fuseResearch({ id: q.id, prompt: q.prompt }, DRACO_OPTIMIZED_MODELS, opts.transport);
+    tokens.fusion += f.totalTokens;
+    const fs = await scoreOne(f.answer, q); dims.fusion.push(fs.d); if (fs.f != null) faith.fusion.push(fs.f);
+  }
+
+  const score = (ds: DimensionScores[], ff: number[]) => {
+    const perQ = ds.map((d, i) => {
+      const vals = [d.grounding, d.coverage, d.balance, d.cleanliness];
+      if (judged) vals.push(ff[i] ?? 0);
+      return vals.reduce((a, b) => a + b, 0) / vals.length;
+    });
+    return mean(perQ);
+  };
+  const arm = (name: ArmResult['arm'], ds: DimensionScores[], ff: number[], tk: number): ArmResult => ({
+    arm: name, score: score(ds, ff), perDimension: avgDims(ds, judged ? ff : null), totalTokens: tk,
+  });
+
+  const vanilla = arm('single', dims.vanilla, faith.vanilla, tokens.vanilla);
+  const harness = { ...arm('single', dims.harness, faith.harness, tokens.harness), arm: 'single' as const };
+  const fusion = arm('fusion', dims.fusion, faith.fusion, tokens.fusion);
+
+  const ordering = ([
+    ['vanilla', vanilla.score] as const,
+    ['harness', harness.score] as const,
+    ['fusion', fusion.score] as const,
+  ]).sort((a, b) => a[1] - b[1]).map(([n]) => n);
+
+  return {
+    corpusVersion: corpus.version,
+    transport: opts.transportKind,
+    judged,
+    ...(judged ? { judge: { model: judgeModel, promptVersion: DRACO_JUDGE.promptVersion } } : {}),
+    arms: { vanilla, harness, fusion },
+    deltas: {
+      harnessOverVanilla: harness.score - vanilla.score,
+      fusionOverHarness: fusion.score - harness.score,
+      fusionOverVanilla: fusion.score - vanilla.score,
+    },
+    thesisHolds: vanilla.score <= harness.score && harness.score <= fusion.score && fusion.score > vanilla.score,
+    ordering,
   };
 }

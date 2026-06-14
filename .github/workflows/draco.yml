@@ -96,6 +96,9 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
           cd packages/bench && npm install && npm run build
-          # A small judged sample to control spend; the full run is the M6 proof.
-          node ./dist/draco/draco-bin.js --live --limit=5 --out=draco/runs/judged-$(date +%Y%m%dT%H%M%SZ).json
-          echo "Real judged DRACO run complete. transport:live judged:true."
+          TS=$(date +%Y%m%dT%H%M%SZ)
+          # A small judged sample to control spend.
+          node ./dist/draco/draco-bin.js --live --limit=5 --out=draco/runs/judged-$TS.json
+          # The full thesis: vanilla < harness < fusion+harness, with measured deltas.
+          node ./dist/draco/draco-bin.js --threeway --live --limit=5 --out=draco/runs/threeway-$TS.json
+          echo "Real judged DRACO + three-way ablation complete. transport:live judged:true."

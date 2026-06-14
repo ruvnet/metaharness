@@ -157,8 +157,13 @@ export async function fuseResearch(
   question: { id: string; prompt: string },
   models: FusionModelMap,
   transport: OpenRouterTransport,
+  opts: { enforceFusion?: boolean } = {},
 ): Promise<FusionResult> {
-  assertFusionDistinct(models);
+  // enforceFusion defaults to true (a real fusion run REQUIRES an independent
+  // verifier). The single-model HARNESS arm of the ablation runs the same
+  // 6-stage pipeline with one model on every stage — intentionally NOT fusion —
+  // so it opts out (enforceFusion:false) to measure "structure without fusion".
+  if (opts.enforceFusion !== false) assertFusionDistinct(models);
   const provenance: StageProvenance[] = [];
   let totalTokens = 0;
 

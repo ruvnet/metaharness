@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url';
 import { runDraco, type DracoCorpus } from './runner.js';
 import { openRouterTransport, type OpenRouterTransport } from './fusion.js';
 import { liveUrlChecker, type UrlChecker } from './scorer.js';
-import { runAblation } from './ablation.js';
+import { runAblation, runThreeWayAblation } from './ablation.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const dracoDir = resolve(here); // dist/draco at runtime; corpus is shipped alongside source
@@ -85,6 +85,25 @@ async function main() {
     transport = mockTransport();
     checkUrl = mockUrlChecker;
     kind = 'mock';
+  }
+
+  // The full thesis: --threeway runs vanilla < harness < fusion+harness.
+  if (has('threeway')) {
+    const r = await runThreeWayAblation(corpus, { transport, transportKind: kind, checkUrl, judgeTransport, limit });
+    process.stdout.write(`\nDRACO ${kind.toUpperCase()} THREE-WAY — vanilla < harness < fusion+harness\n`);
+    if (kind === 'mock') process.stdout.write('NOTE: MOCK transport — demonstrates the machinery, not a live result.\n');
+    process.stdout.write(`  vanilla (raw chat):            ${r.arms.vanilla.score.toFixed(4)}\n`);
+    process.stdout.write(`  harness (structure, 1 model):  ${r.arms.harness.score.toFixed(4)}  (+${r.deltas.harnessOverVanilla.toFixed(4)} vs vanilla)\n`);
+    process.stdout.write(`  fusion+harness (independent):  ${r.arms.fusion.score.toFixed(4)}  (+${r.deltas.fusionOverHarness.toFixed(4)} vs harness)\n`);
+    process.stdout.write(`  ordering (best last): ${r.ordering.join(' < ')}\n`);
+    process.stdout.write(`  thesis (vanilla ≤ harness ≤ fusion, fusion > vanilla): ${r.thesisHolds ? 'HOLDS' : 'does not hold'}\n`);
+    if (out) {
+      const outPath = resolve(out);
+      mkdirSync(dirname(outPath), { recursive: true });
+      writeFileSync(outPath, JSON.stringify(r, null, 2) + '\n', 'utf-8');
+      process.stderr.write(`[draco] wrote ${outPath}\n`);
+    }
+    return;
   }
 
   // M6: --ablation runs the fusion-vs-single comparison (the beyond-SOTA proof).

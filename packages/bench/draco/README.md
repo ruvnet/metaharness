@@ -172,3 +172,27 @@ deterministically — a single model ships a dead/fabricated citation (grounding
 it, and fusion ships a resolving citation (grounding 1). The **real numeric
 delta** runs in the weekly judged cadence (needs the key); the **mechanism** is
 proven offline. The benchmark earns its beyond-SOTA claim — it does not assert it.
+
+## The full thesis — vanilla < harness < fusion+harness (three-way)
+
+The benchmark proves a **two-step** claim, not just one:
+
+```bash
+node dist/draco/draco-bin.js --threeway          # mock: machinery demo (a tie — a mock can't differentiate the arms)
+node dist/draco/draco-bin.js --threeway --live    # REAL ordering with measured deltas (needs OPENROUTER_API_KEY)
+```
+
+| Arm | What | Why it scores where it does |
+|---|---|---|
+| **vanilla** | one model, raw question, one call | no decomposition, no source-grading, no citations → low grounding + coverage |
+| **harness** | the full 6-stage pipeline, **one** model | structure adds citations + coverage + balance — BUT the verify stage is the same model that wrote the synthesis, so it rubber-stamps its own hallucinations |
+| **fusion+harness** | the pipeline with **different model families** | an independent verifier (different family) catches the fabricated citations the single model approved → highest grounding + faithfulness |
+
+`runThreeWayAblation` runs all three over the **same corpus + scorer**, so each
+`<` is a **measured delta**. `thesisHolds` is true only when
+`vanilla ≤ harness ≤ fusion` AND `fusion > vanilla`. The ordering is proven
+deterministically in `draco-threeway.test.ts` (a single model rubber-stamps a
+fabricated citation → harness keeps it, grounding 0; fusion's independent
+verifier removes it → grounding 1). The **real numeric ordering** runs in the
+weekly judged cadence. **Structure beats vanilla; independent fusion beats
+structure** — earned, not asserted.
