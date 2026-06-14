@@ -41,17 +41,21 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
 
-      - name: Install + build the bench package
+      - name: Install + build (root, dependency-ordered — resolves @ruflo/* workspace deps)
         shell: bash
         run: |
           npm ci || npm install
-          npm --workspace @ruflo/bench run build || (cd packages/bench && npm install && npm run build)
+          # The ordered root build compiles kernel → hosts → bench, so
+          # host-bench.ts's @ruflo/host-* imports resolve. A bench-only build
+          # fails (the @ruflo scope is unpublished — workspace symlinks only
+          # exist from the repo root).
+          npm run build
 
       - name: Run the DRACO deterministic subset (offline, mock) + unit tests
         shell: bash
         run: |
           cd packages/bench
-          npx vitest run __tests__/draco-corpus.test.ts __tests__/draco-fusion.test.ts __tests__/draco-scorer.test.ts __tests__/draco-judge.test.ts
+          npx vitest run __tests__/draco-corpus.test.ts __tests__/draco-fusion.test.ts __tests__/draco-scorer.test.ts __tests__/draco-judge.test.ts __tests__/draco-ablation.test.ts __tests__/draco-threeway.test.ts
           node ./dist/draco/draco-bin.js --out=draco-current.json
 
       - name: Gate the machinery against the committed mock baseline
@@ -68,37 +72,74 @@ jobs:
 
   draco-judged:
     # Real OpenRouter run — only on the scheduled cadence + manual dispatch,
-    # never on push (it spends tokens). Skips cleanly without the key.
+    # never on push (it spends tokens). The OPENROUTER_API_KEY is sourced from
+    # GCP Secret Manager via Workload Identity Federation — the SAME pattern
+    # publish.yml uses for NPM_TOKEN (ADR-018 / iter-145). NO long-lived key in
+    # GitHub secrets. Skips cleanly when GCP WIF isn't configured (forks).
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write   # required for GCP Workload Identity Federation
+    env:
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      GCP_WIF_PROVIDER: ${{ vars.GCP_WIF_PROVIDER }}
+      GCP_WIF_SERVICE_ACCOUNT: ${{ vars.GCP_WIF_SERVICE_ACCOUNT }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
 
-      - name: Check for the OpenRouter key (GCP-secret-sourced in CI)
-        id: key
+      - name: Is GCP WIF configured? (skip cleanly on forks / no-GCP)
+        id: gate
         shell: bash
-        env:
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
-          if [ -z "$OPENROUTER_API_KEY" ]; then
-            echo "present=false" >> "$GITHUB_OUTPUT"
-            echo "OPENROUTER_API_KEY absent — skipping the live judged run (this is expected on forks)."
+          if [ -z "${GCP_WIF_PROVIDER}" ] || [ -z "${GCP_PROJECT_ID}" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "GCP WIF not configured (no GCP_WIF_PROVIDER / GCP_PROJECT_ID) — skipping the live judged run. Expected on forks."
           else
-            echo "present=true" >> "$GITHUB_OUTPUT"
+            echo "configured=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Build + run a REAL judged DRACO run
-        if: steps.key.outputs.present == 'true'
+      - name: GCP Workload Identity Federation
+        if: steps.gate.outputs.configured == 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.GCP_WIF_PROVIDER }}
+          service_account: ${{ env.GCP_WIF_SERVICE_ACCOUNT }}
+
+      - name: Install gcloud SDK
+        if: steps.gate.outputs.configured == 'true'
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Fetch OPENROUTER_API_KEY from GCP Secret Manager
+        if: steps.gate.outputs.configured == 'true'
+        id: secrets
+        uses: google-github-actions/get-secretmanager-secrets@v2
+        with:
+          secrets: |-
+            openrouter_api_key:${{ env.GCP_PROJECT_ID }}/OPENROUTER_API_KEY
+
+      - name: Validate the GCP secret gate (the OpenRouter key resolves)
+        if: steps.gate.outputs.configured == 'true'
         shell: bash
         env:
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          GCP_PROJECT: ${{ env.GCP_PROJECT_ID }}
+          NPM_SECRET_NAME: NPM_TOKEN
+          REQUIRED_SECRETS: OPENROUTER_API_KEY
+        run: node scripts/validate-gcp-secrets.mjs
+
+      - name: Build + run a REAL judged DRACO run + the three-way ablation
+        if: steps.gate.outputs.configured == 'true'
+        shell: bash
+        env:
+          OPENROUTER_API_KEY: ${{ steps.secrets.outputs.openrouter_api_key }}
         run: |
-          cd packages/bench && npm install && npm run build
+          npm ci || npm install
+          npm run build
           TS=$(date +%Y%m%dT%H%M%SZ)
           # A small judged sample to control spend.
-          node ./dist/draco/draco-bin.js --live --limit=5 --out=draco/runs/judged-$TS.json
+          node packages/bench/dist/draco/draco-bin.js --live --limit=5 --out=packages/bench/draco/runs/judged-$TS.json
           # The full thesis: vanilla < harness < fusion+harness, with measured deltas.
-          node ./dist/draco/draco-bin.js --threeway --live --limit=5 --out=draco/runs/threeway-$TS.json
-          echo "Real judged DRACO + three-way ablation complete. transport:live judged:true."
+          node packages/bench/dist/draco/draco-bin.js --threeway --live --limit=5 --out=packages/bench/draco/runs/threeway-$TS.json
+          echo "Real judged DRACO + three-way ablation complete. transport:live judged:true. Key sourced from GCP Secret Manager."
