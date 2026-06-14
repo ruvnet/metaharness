@@ -4,6 +4,29 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Fixed — Iter 85 (2026-06-14)
+
+- **`crates/template-catalog/src/lib.rs` template-count assertion**
+  16 → 17. iter 80 added vertical:education, bumping the embedded
+  catalog.json from 16 to 17 entries. The TypeScript test was updated
+  in iter 80 but the parallel Rust assertion (5 lines away from the
+  TS update conceptually, but in a different language) was missed.
+- **CI caught the regression** on `1434320` (iter 83) — Rust job
+  failed on all 3 OS targets:
+  ```
+  assertion `left == right` failed: expected 16 templates
+  ```
+- **The fix is one line** — bump the literal to 17 — plus a comment
+  pointing at iter 80 + iter 85 so the regression history is visible
+  in the source for any future template addition.
+- **Lesson surfaced** by the test failure: catalog.json's template
+  count is asserted in TWO places (TypeScript + Rust). Both must move
+  together. Worth a future cross-language counter check in
+  healthcheck if it happens again.
+- **Cargo test passes locally**: `cargo test -p template-catalog --lib`
+  → 5/5 passed.
+- TS suite: **576/576** locally (Rust + TS now both green).
+
 ### Added — Iter 84 (2026-06-14)
 
 - **`.github/workflows/pages-monitor.yml`** — daily liveness probe of
