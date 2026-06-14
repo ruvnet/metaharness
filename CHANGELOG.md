@@ -4,6 +4,26 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Added — Iter 65 (2026-06-14)
+
+- **Path-handling regression guard now scans `apps/`** — closes the
+  third (and last) pillar of the `apps/web-ui` surface-coverage sweep:
+  - iter 61 — `audit-deps.mjs` covers `apps/web-ui`
+  - iter 64 — `scripts/sbom.mjs` covers `apps/web-ui`
+  - iter 65 — `scripts/path-guard.mjs` covers `apps/web-ui`
+- The iter-16 / iter-26 path-handling guard previously only walked
+  `['packages', 'crates', 'scripts']`. PR #1's apps/web-ui tree was
+  silently outside the scan, so a hardcoded `/tmp/`, `C:\…`,
+  `/Users/…`, or `/home/…` in apps/web-ui/src/ would've slipped past
+  the cross-platform guarantee.
+- Verified: scanner reports clean against the live repo (zero hits
+  in apps/web-ui/src/), confirming PR #1 is portable code.
+- **`__tests__/path-handling.test.ts`** 8 → **10** cases (+2):
+  - SCAN_DIRS includes `'apps'` (source-pinned, so removing it is
+    visible in code review)
+  - scanner runs green on the live repo with apps included
+- TS suite: **535/535** (was 533).
+
 ### Added — Iter 64 (2026-06-14)
 
 - **SBOM coverage of `apps/web-ui/`** — closes the SPDX analog of

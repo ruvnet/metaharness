@@ -88,3 +88,31 @@ describe('cross-platform mkdtemp + cleanup contract', () => {
     expect(b.startsWith(tmpdir())).toBe(true);
   });
 });
+
+// iter 65 — pin that the scanner now covers apps/web-ui and runs green.
+// Closes the third pillar of the apps/web-ui surface-coverage sweep
+// (audit-deps iter 61, SBOM iter 64, this).
+describe('scripts/path-guard.mjs scans apps/web-ui (iter 65)', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { fileURLToPath } = await import('node:url');
+  const { resolve, dirname } = await import('node:path');
+  const __dirname = dirname(fileURLToPath(import.meta.url));
+  const GUARD = resolve(__dirname, '..', 'scripts', 'path-guard.mjs');
+  const text = readFileSync(GUARD, 'utf-8');
+
+  it('SCAN_DIRS includes apps so apps/web-ui and future apps/* are covered', () => {
+    expect(text).toMatch(/SCAN_DIRS\s*=\s*\[[^\]]*'apps'/);
+  });
+
+  it('runs green on the live repo with apps included', async () => {
+    const { execFile } = await import('node:child_process');
+    const { promisify } = await import('node:util');
+    const exec = promisify(execFile);
+    const r = await exec('node', [GUARD], {
+      cwd: resolve(__dirname, '..'),
+      windowsHide: true,
+      maxBuffer: 4 * 1024 * 1024,
+    });
+    expect(r.stdout).toMatch(/clean.*apps/);
+  }, 60_000);
+});
