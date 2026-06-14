@@ -107,6 +107,20 @@ function matches(name, filterStr) {
   return name.toLowerCase().includes(filterStr.toLowerCase());
 }
 
+/**
+ * iter 83: runnable example demos in examples/. New contributors hit
+ * dev-toolkit for orientation but the 4 runnable demos were invisible
+ * because they don't live in scripts/. Each demo is a single node
+ * script that exercises a real product surface end-to-end without npm
+ * or network.
+ */
+const EXAMPLE_DEMOS = [
+  { name: 'quickstart', cmd: 'node examples/quickstart/quickstart.mjs', wall: '~50ms', what: 'Scaffold minimal harness → validate (any of 6 hosts)', iter: 32 },
+  { name: 'federation', cmd: 'node examples/federation/federation.mjs', wall: '~20ms', what: 'Two-instance federation handshake demo', iter: 40 },
+  { name: 'host-tour',  cmd: 'node examples/host-tour/host-tour.mjs',  wall: '~200ms', what: 'Scaffold + validate for ALL 6 hosts in one run', iter: 55 },
+  { name: 'education',  cmd: 'node examples/education/education.mjs',  wall: '~200ms', what: 'Scaffold vertical:education → 4-agent shape + validate', iter: 82 },
+];
+
 async function checkHealth() {
   const missing = [];
   for (const p of ['scripts/healthcheck.mjs', 'scripts/preflight.mjs', 'scripts/release.mjs', 'scripts/sbom.mjs', 'scripts/audit-deps.mjs', 'scripts/bench-baseline.mjs']) {
@@ -119,11 +133,12 @@ async function main() {
   const scripts = (await listScripts()).filter(s => matches(s.path, filter));
   const subs = HARNESS_SUBCOMMANDS.filter(s => matches(s.name, filter));
   const entry = entryPoints().filter(s => matches(s.name, filter));
+  const examples = EXAMPLE_DEMOS.filter(e => matches(e.name, filter));
   const ci = ciSummary();
   const health = CHECK_HEALTH ? await checkHealth() : null;
 
   if (JSON_OUT) {
-    process.stdout.write(JSON.stringify({ scripts, harnessSubcommands: subs, entryPoints: entry, ci, health }, null, 2) + '\n');
+    process.stdout.write(JSON.stringify({ scripts, harnessSubcommands: subs, entryPoints: entry, examples, ci, health }, null, 2) + '\n');
     process.exit(CHECK_HEALTH && !health?.ok ? 1 : 0);
   }
 
@@ -143,6 +158,12 @@ async function main() {
   log(`## harness subcommands (${HARNESS_SUBCOMMANDS.length} total) — ${subs.length} listed`);
   for (const s of subs) {
     log(`  harness ${s.name.padEnd(12)} (iter ${String(s.iter).padStart(2)}) — ${s.summary}`);
+  }
+  log('');
+  log(`## Runnable example demos (examples/) — ${examples.length} listed`);
+  for (const e of examples) {
+    log(`  ${e.name.padEnd(12)} (iter ${String(e.iter).padStart(2)}, ${e.wall.padEnd(7)}) — ${e.what}`);
+    log(`    $ ${e.cmd}`);
   }
   log('');
   log(`## ${ci.name}`);

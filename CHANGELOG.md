@@ -4,6 +4,37 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Added — Iter 83 (2026-06-14)
+
+- **`dev-toolkit.mjs` now lists the 4 runnable example demos**. iter 55
+  shipped the orientation map listing scripts/, harness subcommands,
+  entry points, CI jobs — but the runnable demos in `examples/` were
+  invisible. New contributors running `node scripts/dev-toolkit.mjs`
+  for orientation couldn't discover the 4 single-script demos that
+  exercise real product surfaces end-to-end.
+- **New section** in default text output:
+  ```
+  ## Runnable example demos (examples/) — 4 listed
+    quickstart  (iter 32, ~50ms ) — Scaffold minimal harness → validate
+      $ node examples/quickstart/quickstart.mjs
+    federation  (iter 40, ~20ms ) — Two-instance federation handshake demo
+      $ node examples/federation/federation.mjs
+    host-tour   (iter 55, ~200ms) — Scaffold + validate for ALL 6 hosts
+      $ node examples/host-tour/host-tour.mjs
+    education   (iter 82, ~200ms) — Scaffold vertical:education → 4-agent
+      $ node examples/education/education.mjs
+  ```
+- **JSON output** gains an `examples` array (4 entries) so CI scripts
+  and tooling can enumerate the demos programmatically.
+- **`--filter=<topic>`** narrows examples too (the existing filter logic
+  applies uniformly across all 4 sections).
+- **`__tests__/dev-toolkit.test.ts`** 8 → **9** cases (+1):
+  - "lists all 4 runnable example demos (iter 83)" — pins the section
+    name, each demo's name, and each demo's `node examples/<name>/<name>.mjs`
+    command-line shape. The `--json` test now also asserts
+    `parsed.examples.length === 4`.
+- TS suite: **575/575** (was 574; +1 dev-toolkit case).
+
 ### Added — Iter 82 (2026-06-14)
 
 - **`examples/education/`** — runnable end-to-end demo of the iter-80
