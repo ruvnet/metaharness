@@ -121,38 +121,41 @@ Each ships bespoke domain agents (with system prompts), skills, commands, and pe
 ## One-command examples
 
 Don't want to pick flags? Each host and vertical has a dedicated
-`@metaharness/*` wrapper — one `npx` away, no template/host flags to
-remember. A scaffold from a wrapper is byte-identical to the equivalent
-`metaharness` invocation.
+`@metaharness/*` wrapper — **published, one `npx` away**, no template/host
+flags to remember. A scaffold from a wrapper is byte-identical to the
+equivalent `metaharness` invocation.
 
-> **Heads-up:** the `@metaharness/*` wrappers are built and CI-verified
-> ([`examples-packages/`](examples-packages/)) but publish to npm once the
-> `@metaharness` org is live. Until then, use the equivalent
-> `npx metaharness my-bot --template <id> --host <id>` form shown above.
+**Host integrations**
 
-```bash
-# Host integrations
-npx @metaharness/claude-code  my-bot   # Claude Code workspace + plugin
-npx @metaharness/codex        my-bot   # OpenAI Codex
-npx @metaharness/hermes       my-bot   # Hermes cli-config
-npx @metaharness/pi-dev       my-bot   # pi.dev AGENTS.md
-npx @metaharness/openclaw     my-bot   # OpenClaw .openclaw/
-npx @metaharness/rvm          my-bot   # RVM deployment partition
-npx @metaharness/copilot      my-bot   # VSCode / Copilot mcp.json
-npx @metaharness/opencode     my-bot   # OpenCode .opencode/
+| Package | Scaffolds | npm |
+|---|---|---|
+| `npx @metaharness/claude-code my-bot` | Claude Code workspace + plugin | [![npm](https://img.shields.io/npm/v/@metaharness/claude-code?color=cb3837&logo=npm)](https://www.npmjs.com/package/@metaharness/claude-code) |
+| `npx @metaharness/codex my-bot` | OpenAI Codex | [![npm](https://img.shields.io/npm/v/@metaharness/codex?color=cb3837&logo=npm)](https://www.npmjs.com/package/@metaharness/codex) |
+| `npx @metaharness/hermes my-bot` | Hermes cli-config | [![npm](https://img.shields.io/npm/v/@metaharness/hermes?color=cb3837&logo=npm)](https://www.npmjs.com/package/@metaharness/hermes) |
+| `npx @metaharness/pi-dev my-bot` | pi.dev AGENTS.md | [![npm](https://img.shields.io/npm/v/@metaharness/pi-dev?color=cb3837&logo=npm)](https://www.npmjs.com/package/@metaharness/pi-dev) |
+| `npx @metaharness/openclaw my-bot` | OpenClaw `.openclaw/` | [![npm](https://img.shields.io/npm/v/@metaharness/openclaw?color=cb3837&logo=npm)](https://www.npmjs.com/package/@metaharness/openclaw) |
+| `npx @metaharness/rvm my-bot` | RVM deployment partition | [![npm](https://img.shields.io/npm/v/@metaharness/rvm?color=cb3837&logo=npm)](https://www.npmjs.com/package/@metaharness/rvm) |
+| `npx @metaharness/copilot my-bot` | VSCode / Copilot `mcp.json` | [![npm](https://img.shields.io/npm/v/@metaharness/copilot?color=cb3837&logo=npm)](https://www.npmjs.com/package/@metaharness/copilot) |
+| `npx @metaharness/opencode my-bot` | OpenCode `.opencode/` | [![npm](https://img.shields.io/npm/v/@metaharness/opencode?color=cb3837&logo=npm)](https://www.npmjs.com/package/@metaharness/opencode) |
 
-# Vertical workflows (ready-made multi-agent pods)
-npx @metaharness/devops          my-bot   # incident response
-npx @metaharness/research        my-bot   # multi-source dossier
-npx @metaharness/trading         my-bot   # quant trading (paper-by-default)
-npx @metaharness/support         my-bot   # customer support
-npx @metaharness/legal           my-bot   # contract redline (drafts only)
-npx @metaharness/repo-maintainer my-bot   # OSS repo maintainer
-# …plus education, sales, gaming, coding
-```
+**Vertical workflows** (ready-made multi-agent pods)
 
-Source + per-package README for all 18: [`examples-packages/`](examples-packages/) ·
-plain-language deep-dive gists: [`examples-packages/GISTS.md`](examples-packages/GISTS.md).
+| Package | Scaffolds | npm |
+|---|---|---|
+| `npx @metaharness/devops my-bot` | incident response | [![npm](https://img.shields.io/npm/v/@metaharness/devops?color=cb3837&logo=npm)](https://www.npmjs.com/package/@metaharness/devops) |
+| `npx @metaharness/research my-bot` | multi-source dossier | [![npm](https://img.shields.io/npm/v/@metaharness/research?color=cb3837&logo=npm)](https://www.npmjs.com/package/@metaharness/research) |
+| `npx @metaharness/trading my-bot` | quant trading (paper-by-default) | [![npm](https://img.shields.io/npm/v/@metaharness/trading?color=cb3837&logo=npm)](https://www.npmjs.com/package/@metaharness/trading) |
+| `npx @metaharness/support my-bot` | customer support | [![npm](https://img.shields.io/npm/v/@metaharness/support?color=cb3837&logo=npm)](https://www.npmjs.com/package/@metaharness/support) |
+| `npx @metaharness/legal my-bot` | contract redline (drafts only) | [![npm](https://img.shields.io/npm/v/@metaharness/legal?color=cb3837&logo=npm)](https://www.npmjs.com/package/@metaharness/legal) |
+| `npx @metaharness/repo-maintainer my-bot` | OSS repo maintainer | [![npm](https://img.shields.io/npm/v/@metaharness/repo-maintainer?color=cb3837&logo=npm)](https://www.npmjs.com/package/@metaharness/repo-maintainer) |
+| `npx @metaharness/coding my-bot` | engineering pod | [![npm](https://img.shields.io/npm/v/@metaharness/coding?color=cb3837&logo=npm)](https://www.npmjs.com/package/@metaharness/coding) |
+| `npx @metaharness/education my-bot` | tutor pod | [![npm](https://img.shields.io/npm/v/@metaharness/education?color=cb3837&logo=npm)](https://www.npmjs.com/package/@metaharness/education) |
+| `npx @metaharness/sales my-bot` | sales pipeline pod | [![npm](https://img.shields.io/npm/v/@metaharness/sales?color=cb3837&logo=npm)](https://www.npmjs.com/package/@metaharness/sales) |
+| `npx @metaharness/gaming my-bot` | game-design pod | [![npm](https://img.shields.io/npm/v/@metaharness/gaming?color=cb3837&logo=npm)](https://www.npmjs.com/package/@metaharness/gaming) |
+
+All 18 are live on npm under [`@metaharness`](https://www.npmjs.com/org/metaharness). Source + per-package README:
+[`examples-packages/`](examples-packages/) · plain-language deep-dive gists:
+[`examples-packages/GISTS.md`](examples-packages/GISTS.md).
 
 ---
 
