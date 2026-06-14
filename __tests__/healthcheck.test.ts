@@ -29,10 +29,10 @@ describe('scripts/healthcheck.mjs', () => {
     expect(r.stderr).toMatch(/Result: HEALTHY/);
   }, 30_000);
 
-  it('runs all 7 checks by default (iter 72: + pages)', async () => {
+  it('runs all 8 checks by default (iter 86: + catalogCount)', async () => {
     const r = await run();
-    expect(r.stderr).toMatch(/healthcheck — 7 checks/);
-    for (const name of ['version', 'plugin', 'codex', 'workflows', 'pathguard', 'examples', 'pages']) {
+    expect(r.stderr).toMatch(/healthcheck — 8 checks/);
+    for (const name of ['version', 'plugin', 'codex', 'workflows', 'pathguard', 'examples', 'pages', 'catalogCount']) {
       expect(r.stderr).toContain(name);
     }
   }, 30_000);
@@ -42,9 +42,25 @@ describe('scripts/healthcheck.mjs', () => {
     expect(r.code).toBe(0);
     const parsed = JSON.parse(r.stdout);
     expect(Array.isArray(parsed.results)).toBe(true);
-    expect(parsed.results).toHaveLength(7);
+    expect(parsed.results).toHaveLength(8);
     expect(typeof parsed.ok).toBe('boolean');
     expect(parsed.ok).toBe(true);
+  }, 30_000);
+
+  // iter 86: cross-language template-count check.
+  it('catalogCount agrees across catalog.json + TS test + Rust test', async () => {
+    const r = await run(['--check=catalogCount']);
+    expect(r.code).toBe(0);
+    expect(r.stderr).toMatch(/PASS\s+catalogCount/);
+    // Output mentions all three sources
+    expect(r.stderr).toMatch(/JSON \+ TS test \+ Rust test/);
+  }, 30_000);
+
+  it('catalogCount surfaces the count in the detail line', async () => {
+    const r = await run(['--check=catalogCount']);
+    // Pin that the number 17 (or whatever the current count is) appears
+    // in the human output — useful for grep-on-deploy verification.
+    expect(r.stderr).toMatch(/\d+ templates in JSON/);
   }, 30_000);
 
   it('--check=plugin runs only the plugin check', async () => {

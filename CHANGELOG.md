@@ -4,6 +4,42 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Added — Iter 86 (2026-06-14)
+
+- **`scripts/healthcheck.mjs catalogCount` — new 8th check** that
+  closes the cross-language assertion drift iter 85 documented. The
+  template count is asserted in THREE places that must agree:
+  1. `packages/create-agent-harness/templates/catalog.json` →
+     `.templates.length`
+  2. `packages/create-agent-harness/__tests__/generated-templates.test.ts`
+     → `templates.length).toBe(N)` and `loaded.length).toBe(N)`
+  3. `crates/template-catalog/src/lib.rs` →
+     `assert_eq!(c.templates.len(), N, "expected N templates")`
+- **catalogCount reads all three** and FAILs if any drifts. The exact
+  miss class that caught iter 83's CI red (TS bumped to 17 in iter 80,
+  Rust missed until iter 85) now fails LOUDLY in healthcheck — and
+  healthcheck runs on every iter-43 CI Node job, so the regression
+  surfaces in the SAME push that introduces it instead of two pushes
+  later.
+- **Local run on a clean repo**:
+  ```
+  PASS catalogCount 17 templates in JSON + TS test + Rust test (in sync)
+  ```
+  On a synthetic drift (TS still says 16, Rust + JSON say 17), the
+  output would be:
+  ```
+  FAIL catalogCount TS test expects 16 but catalog has 17
+  ```
+- **`__tests__/healthcheck.test.ts`** 9 → **11** cases (+2):
+  - 8 checks default (was 7)
+  - JSON `results.length === 8`
+  - `--check=catalogCount` alone reports PASS + `JSON + TS test + Rust test`
+  - `--check=catalogCount` surfaces the template count in human output
+- TS suite: **578/578** (was 576).
+- The healthcheck → preflight → release.mjs chain now catches this
+  drift class at the earliest point: `node scripts/healthcheck.mjs`
+  on any contributor's laptop.
+
 ### Fixed — Iter 85 (2026-06-14)
 
 - **`crates/template-catalog/src/lib.rs` template-count assertion**

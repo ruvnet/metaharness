@@ -140,6 +140,61 @@ const CHECKS = {
     return { tag: 'FAIL', detail: `missing: ${missing.join(', ')}` };
   },
 
+  // iter 86: surface the iter-85 lesson — catalog.json's template count
+  // is asserted in THREE places that must move together:
+  //   1. The catalog.json source file itself (.templates.length)
+  //   2. packages/create-agent-harness/__tests__/generated-templates.test.ts
+  //      (`.templates.length).toBe(N)` and `expect(loaded.length).toBe(N)`)
+  //   3. crates/template-catalog/src/lib.rs
+  //      (`assert_eq!(c.templates.len(), N, "expected N templates")`)
+  // iter 80 → 85 caught a divergence the hard way (CI red on iter 83).
+  // This check fails LOUDLY before push when any of the three drifts.
+  async catalogCount() {
+    const catalogPath = join(ROOT, 'packages', 'create-agent-harness', 'templates', 'catalog.json');
+    const tsTestPath = join(ROOT, 'packages', 'create-agent-harness', '__tests__', 'generated-templates.test.ts');
+    const rustLibPath = join(ROOT, 'crates', 'template-catalog', 'src', 'lib.rs');
+    const missing = [catalogPath, tsTestPath, rustLibPath].filter(p => !existsSync(p));
+    if (missing.length > 0) {
+      return { tag: 'SKIP', detail: `precondition missing: ${missing.map(p => p.slice(ROOT.length + 1)).join(', ')}` };
+    }
+    let catalogN = null;
+    try {
+      const j = JSON.parse(await readFile(catalogPath, 'utf-8'));
+      catalogN = Array.isArray(j.templates) ? j.templates.length : null;
+    } catch {
+      return { tag: 'FAIL', detail: 'catalog.json malformed JSON' };
+    }
+    if (catalogN === null) return { tag: 'FAIL', detail: 'catalog.json missing .templates array' };
+
+    const tsText = await readFile(tsTestPath, 'utf-8');
+    // Match the first numeric literal in `templates.length).toBe(N)` AND
+    // `loaded.length).toBe(N)`. They MUST agree with each other and with
+    // catalog.json. iter 80 inline assertion shape:
+    //   expect(catalog.templates.length).toBe(17);
+    //   expect(loaded.length).toBe(17);
+    const tsMatches = [...tsText.matchAll(/\.length\)\s*\.toBe\((\d+)\)/g)].map(m => Number(m[1]));
+    const tsDistinct = [...new Set(tsMatches)];
+    if (tsDistinct.length === 0) return { tag: 'FAIL', detail: 'TS test has no .length).toBe(N) assertion' };
+
+    const rustText = await readFile(rustLibPath, 'utf-8');
+    // assert_eq!(c.templates.len(), N, "expected N templates")
+    const rustMatch = rustText.match(/c\.templates\.len\(\)\s*,\s*(\d+)/);
+    if (!rustMatch) return { tag: 'FAIL', detail: 'Rust test has no c.templates.len() assertion' };
+    const rustN = Number(rustMatch[1]);
+
+    const drifts = [];
+    if (!tsDistinct.includes(catalogN)) {
+      drifts.push(`TS test expects ${tsDistinct.join('/')} but catalog has ${catalogN}`);
+    }
+    if (rustN !== catalogN) {
+      drifts.push(`Rust test expects ${rustN} but catalog has ${catalogN}`);
+    }
+    if (drifts.length > 0) {
+      return { tag: 'FAIL', detail: drifts.join('; ') };
+    }
+    return { tag: 'PASS', detail: `${catalogN} templates in JSON + TS test + Rust test (in sync)` };
+  },
+
   // iter 72: opt-in HTTP probe of the live Studio. Off by default
   // because healthcheck is supposed to be I/O-free and offline-friendly.
   // CI workflow can pass --probe-pages to also verify the deployed
