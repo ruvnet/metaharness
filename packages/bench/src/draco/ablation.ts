@@ -55,6 +55,8 @@ export interface AblationOptions {
   judgeTransport?: OpenRouterTransport;
   judgeModel?: string;
   singleModel?: string;
+  /** Override the fusion-arm model map (e.g. the cheap preset). Defaults to DRACO_OPTIMIZED_MODELS. */
+  fusionModels?: import('./fusion.js').FusionModelMap;
   limit?: number;
 }
 
@@ -80,8 +82,9 @@ function avgDims(rows: DimensionScores[], faith: number[] | null) {
 export async function runAblation(corpus: DracoCorpus, opts: AblationOptions): Promise<AblationReport> {
   const judged = !!opts.judgeTransport;
   const judgeModel = opts.judgeModel ?? DRACO_JUDGE.model;
-  if (judged) assertJudgeIndependent(judgeModel, DRACO_OPTIMIZED_MODELS);
   const singleModel = opts.singleModel ?? DRACO_SINGLE_MODEL;
+  const fusionModels = opts.fusionModels ?? DRACO_OPTIMIZED_MODELS;
+  if (judged) assertJudgeIndependent(judgeModel, fusionModels);
 
   let questions = corpus.questions;
   if (opts.limit != null) questions = questions.slice(0, opts.limit);
@@ -112,7 +115,7 @@ export async function runAblation(corpus: DracoCorpus, opts: AblationOptions): P
     if (s.faith != null) singleFaith.push(s.faith);
 
     // fusion arm
-    const fused = await fuseResearch({ id: q.id, prompt: q.prompt }, DRACO_OPTIMIZED_MODELS, opts.transport);
+    const fused = await fuseResearch({ id: q.id, prompt: q.prompt }, fusionModels, opts.transport);
     fusionTokens += fused.totalTokens;
     const f = await scoreOne(fused.answer, q);
     fusionDims.push(f.dims);
@@ -183,7 +186,8 @@ export interface ThreeWayReport {
 export async function runThreeWayAblation(corpus: DracoCorpus, opts: AblationOptions): Promise<ThreeWayReport> {
   const judged = !!opts.judgeTransport;
   const judgeModel = opts.judgeModel ?? DRACO_JUDGE.model;
-  if (judged) assertJudgeIndependent(judgeModel, DRACO_OPTIMIZED_MODELS);
+  const fusionModels = opts.fusionModels ?? DRACO_OPTIMIZED_MODELS;
+  if (judged) assertJudgeIndependent(judgeModel, fusionModels);
   const singleModel = opts.singleModel ?? DRACO_SINGLE_MODEL;
 
   let questions = corpus.questions;
@@ -209,7 +213,7 @@ export async function runThreeWayAblation(corpus: DracoCorpus, opts: AblationOpt
     tokens.harness += h.totalTokens;
     const hs = await scoreOne(h.answer, q); dims.harness.push(hs.d); if (hs.f != null) faith.harness.push(hs.f);
 
-    const f = await fuseResearch({ id: q.id, prompt: q.prompt }, DRACO_OPTIMIZED_MODELS, opts.transport);
+    const f = await fuseResearch({ id: q.id, prompt: q.prompt }, fusionModels, opts.transport);
     tokens.fusion += f.totalTokens;
     const fs = await scoreOne(f.answer, q); dims.fusion.push(fs.d); if (fs.f != null) faith.fusion.push(fs.f);
   }

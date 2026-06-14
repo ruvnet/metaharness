@@ -196,3 +196,34 @@ fabricated citation → harness keeps it, grounding 0; fusion's independent
 verifier removes it → grounding 1). The **real numeric ordering** runs in the
 weekly judged cadence. **Structure beats vanilla; independent fusion beats
 structure** — earned, not asserted.
+
+## Live findings (exploratory, n=2) — honest WIP
+
+First real OpenRouter runs (frontier: opus-4 / gpt-5 / gemini-2.5-pro; cheap:
+haiku-4.5 / gpt-5-mini / gemini-2.5-flash), `--threeway --live --limit=2`:
+
+| run | vanilla | harness | fusion | ordering |
+|---|---|---|---|---|
+| frontier (pre cite-guard) | 0.74 | 0.73 | 0.34 | vanilla ≥ harness ≫ fusion |
+| cheap (pre cite-guard) | 0.76 | 0.49 | 0.65 | vanilla > fusion > harness |
+
+**The thesis does NOT yet reproduce live at n=2 — and that's the benchmark
+working, not failing.** Two honest findings:
+
+1. **n=2 is far too small.** The orderings flip between runs — high variance.
+   A real result needs the full 20-question corpus (or more), run several times.
+2. **A pipeline bug surfaced.** The fusion arm collapsed on the frontier run
+   (coverage 0.70 → 0.10) because the cheap final `cite` stage *re-emitted and
+   truncated* the dossier. Fixed: `fuseResearch` now keeps the load-bearing
+   synthesis if a downstream stage returns < 70 % of its length (a citation
+   pass must refine, never discard). That guard landed AFTER these two runs.
+3. **Grounding is dominated by URL hallucination.** Real models cite plausible
+   URLs that 404, so grounding is noisy across all arms — the scorer is
+   correctly harsh, but it means grounding needs many samples to signal.
+
+**Status: mechanism PROVEN (the offline tests show fusion catches a fabricated
+citation a single model rubber-stamps); live confirmation is WIP** — it needs
+the full corpus + the cite-guard fix + repeated runs, which the weekly
+`draco-judged` cadence (GCP-keyed) is built to accumulate. We do not claim a
+live beyond-SOTA result we have not earned. The benchmark's value is precisely
+that it refused to rubber-stamp the claim at n=2.

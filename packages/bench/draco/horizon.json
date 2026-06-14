@@ -113,5 +113,16 @@
     "date": "2026-06-14",
     "accomplished": "M6 complete: optimized fusion harness (DRACO_OPTIMIZED_MODELS) + single-model baseline + runAblation + --ablation CLI + 5 tests incl. a DETERMINISTIC proof that fusion catches a fabricated citation single ships (grounding 1 vs 0). 75/75 bench tests. The beyond-SOTA mechanism is proven offline; the real numeric delta runs in the keyed draco-judged cadence.",
     "nextAction": "ALL 6 milestones (M1-M6) complete. Remaining: (a) the first REAL judged + ablation numbers when OPENROUTER_API_KEY is added to CI secrets (the draco-judged cadence writes runs/judged-*.json + an ablation result); (b) optional M5b harness draco subcommand (ADR-031 bundle) running DRACO against a scaffolded research harness. Update the README Benchmarks row with the real delta once the cadence has run."
+  },
+  "liveFindings": {
+    "date": "2026-06-14",
+    "runs": "--threeway --live --limit=2 (frontier + cheap), pre cite-guard",
+    "result": "Thesis NOT reproduced at n=2 — orderings flip between runs (high variance). Frontier: vanilla 0.74 / harness 0.73 / fusion 0.34 (fusion collapsed — lossy cite=haiku stage truncated the dossier). Cheap: vanilla 0.76 / fusion 0.65 / harness 0.49.",
+    "fixes": [
+      "cite-guard: fuseResearch keeps the folded synthesis if a downstream stage returns <70% of its length (a citation pass must refine not discard) — landed after these runs",
+      "DRACO_CHEAP_MODELS preset + --cheap flag for cheap confirmation before frontier spend"
+    ],
+    "honest": "Mechanism proven offline; live confirmation is WIP — needs the full 20-Q corpus + repeated runs (the weekly GCP-keyed draco-judged cadence accumulates these). No unearned beyond-SOTA claim. OPENROUTER_API_KEY added to GCP Secret Manager (cognitum-20260110, version 2, validated fetchable).",
+    "nextAction": "Run --threeway --live on the FULL corpus (no --limit) several times via the cadence to get a stable ordering; investigate whether the harness pipeline needs prompt tuning so structure reliably beats vanilla on coverage+faithfulness (the dims it should win)."
   }
 }

@@ -30,12 +30,12 @@ import { fuseResearch, FUSION_STAGES } from './fusion.js';
  * family. This is the configuration the M6 ablation runs as the "fusion" arm.
  */
 export const DRACO_OPTIMIZED_MODELS: FusionModelMap = {
-  decompose: 'anthropic/claude-haiku-4',
-  search: 'anthropic/claude-haiku-4',
+  decompose: 'anthropic/claude-haiku-4.5',
+  search: 'anthropic/claude-haiku-4.5',
   grade: 'anthropic/claude-sonnet-4',
   synthesize: 'anthropic/claude-opus-4',
   verify: 'openai/gpt-5', // independent family — catches anthropic blind spots
-  cite: 'anthropic/claude-haiku-4',
+  cite: 'anthropic/claude-haiku-4.5',
 };
 
 /**
@@ -45,6 +45,23 @@ export const DRACO_OPTIMIZED_MODELS: FusionModelMap = {
  * catch its own hallucinated citations or unsupported claims.
  */
 export const DRACO_SINGLE_MODEL = 'anthropic/claude-opus-4';
+
+/**
+ * CHEAP preset — confirm the pipeline works end-to-end (and the
+ * vanilla<harness<fusion ordering reproduces) on inexpensive models BEFORE
+ * spending on the frontier. Still a real fusion: the verifier (openai) +
+ * judge (google) are different families than the synthesizer (anthropic).
+ */
+export const DRACO_CHEAP_MODELS: FusionModelMap = {
+  decompose: 'anthropic/claude-haiku-4.5',
+  search: 'anthropic/claude-haiku-4.5',
+  grade: 'anthropic/claude-haiku-4.5',
+  synthesize: 'anthropic/claude-haiku-4.5',
+  verify: 'openai/gpt-5-mini', // independent family, cheap
+  cite: 'anthropic/claude-haiku-4.5',
+};
+export const DRACO_CHEAP_SINGLE_MODEL = 'anthropic/claude-haiku-4.5';
+export const DRACO_CHEAP_JUDGE = 'google/gemini-2.5-flash'; // third family, cheap
 
 /** System prompt for the single-model baseline — strong, but self-checked only. */
 export const SINGLE_MODEL_PROMPT =

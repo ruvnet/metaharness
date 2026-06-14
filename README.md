@@ -40,6 +40,30 @@ In under 60 seconds, in your browser, with nothing leaving your machine:
 
 Output is an npm-publishable `.zip` with **your name on it, your branding, your `npx <your-name>` CLI**.
 
+## Tune it to your project — then ship it as your own npm
+
+A generated harness is a **starting point you own**, not a fixed framework. Open
+it and make it yours:
+
+- **Keep only what your repo needs.** Delete the agents, skills, slash commands,
+  and MCP servers you won't use — the scaffold ships a recommended set, but a
+  payments service and a docs site want very different harnesses. A smaller,
+  targeted harness is faster, cheaper, and easier to reason about. `harness
+  doctor` / `harness validate` keep it healthy as you trim.
+- **Optimize the model routing for your work.** Swap the per-task model tiers,
+  tighten the governance policy, point the memory namespace at your domain. The
+  harness is config you control, not a black box.
+- **Publish it as your own package for the whole org.** Rename it, set your
+  scope, and `npm publish` — now anyone on your team runs
+  `npx @your-org/your-harness` and gets the *same* repo-tuned agent. One
+  command, org-wide, versioned like any other dependency. (The 19
+  [`@metaharness/*`](examples-packages/) examples are exactly this pattern,
+  published live.)
+
+The benchmark below ([DRACO](packages/bench/draco/)) exists to prove this pays
+off: a **tuned harness beats a vanilla model**, and a **fusion harness beats
+everything** — measured, not asserted.
+
 ## Try it in 30 seconds
 
 ```bash

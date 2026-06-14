@@ -21,6 +21,7 @@ import { runDraco, type DracoCorpus } from './runner.js';
 import { openRouterTransport, type OpenRouterTransport } from './fusion.js';
 import { liveUrlChecker, type UrlChecker } from './scorer.js';
 import { runAblation, runThreeWayAblation } from './ablation.js';
+import { DRACO_CHEAP_MODELS, DRACO_CHEAP_SINGLE_MODEL, DRACO_CHEAP_JUDGE } from './optimized.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const dracoDir = resolve(here); // dist/draco at runtime; corpus is shipped alongside source
@@ -87,9 +88,16 @@ async function main() {
     kind = 'mock';
   }
 
+  // --cheap: confirm the pipeline + ordering on inexpensive models before
+  // spending on the frontier. Overrides the fusion map + single model + judge.
+  const cheap = has('cheap');
+  const cheapOpts = cheap
+    ? { fusionModels: DRACO_CHEAP_MODELS, singleModel: DRACO_CHEAP_SINGLE_MODEL, judgeModel: DRACO_CHEAP_JUDGE }
+    : {};
+
   // The full thesis: --threeway runs vanilla < harness < fusion+harness.
   if (has('threeway')) {
-    const r = await runThreeWayAblation(corpus, { transport, transportKind: kind, checkUrl, judgeTransport, limit });
+    const r = await runThreeWayAblation(corpus, { transport, transportKind: kind, checkUrl, judgeTransport, limit, ...cheapOpts });
     process.stdout.write(`\nDRACO ${kind.toUpperCase()} THREE-WAY — vanilla < harness < fusion+harness\n`);
     if (kind === 'mock') process.stdout.write('NOTE: MOCK transport — demonstrates the machinery, not a live result.\n');
     process.stdout.write(`  vanilla (raw chat):            ${r.arms.vanilla.score.toFixed(4)}\n`);
@@ -108,7 +116,7 @@ async function main() {
 
   // M6: --ablation runs the fusion-vs-single comparison (the beyond-SOTA proof).
   if (has('ablation')) {
-    const ab = await runAblation(corpus, { transport, transportKind: kind, checkUrl, judgeTransport, limit });
+    const ab = await runAblation(corpus, { transport, transportKind: kind, checkUrl, judgeTransport, limit, ...cheapOpts });
     process.stdout.write(`\nDRACO ${kind.toUpperCase()} ABLATION — optimised fusion vs single-model\n`);
     if (kind === 'mock') {
       process.stdout.write('NOTE: MOCK transport — this demonstrates the ablation MACHINERY, not a live result.\n');

@@ -38,12 +38,12 @@ export type FusionModelMap = Record<FusionStage, string>;
  * helper `assertFusionDistinct` enforces it.
  */
 export const DEFAULT_FUSION_MODELS: FusionModelMap = {
-  decompose: 'anthropic/claude-haiku-4',
-  search: 'anthropic/claude-haiku-4',
+  decompose: 'anthropic/claude-haiku-4.5',
+  search: 'anthropic/claude-haiku-4.5',
   grade: 'anthropic/claude-sonnet-4',
   synthesize: 'anthropic/claude-opus-4',
   verify: 'openai/gpt-5', // DIFFERENT family than synthesize — fusion's point
-  cite: 'anthropic/claude-haiku-4',
+  cite: 'anthropic/claude-haiku-4.5',
 };
 
 /** Extract the provider/family prefix of an OpenRouter model id (before the '/'). */
@@ -195,15 +195,26 @@ export async function fuseResearch(
     { role: 'system', content: 'Adversarially verify each load-bearing claim in the dossier against its cited source. Label each SUPPORTED, WEAK, or UNSUPPORTED. Flag any citation you cannot confirm.' },
     { role: 'user', content: answer },
   ]);
-  // Fuse: fold the verifier's feedback back into the synthesis.
-  answer = await run('synthesize', [
-    { role: 'system', content: 'Revise the dossier to address the verifier feedback: drop or soften UNSUPPORTED claims, strengthen WEAK ones, remove unconfirmable citations.' },
+  // Fuse: fold the verifier's feedback back into the synthesis. This is the
+  // load-bearing OUTPUT — the strong synthesizer owns the dossier. A downstream
+  // stage may REFINE it but must never be allowed to silently discard it.
+  const folded = await run('synthesize', [
+    { role: 'system', content: 'Revise the dossier to address the verifier feedback: drop or soften UNSUPPORTED claims, strengthen WEAK ones, remove unconfirmable citations. Return the FULL revised dossier — do not summarise or shorten it.' },
     { role: 'user', content: `Dossier:\n${answer}\n\nVerifier feedback:\n${verdict}` },
   ]);
-  answer = await run('cite', [
-    { role: 'system', content: 'Normalise every citation to a consistent format and confirm each resolves to the source it claims.' },
+  answer = folded;
+
+  // Citation normalisation is a REFINEMENT pass, not a rewrite. A (often
+  // cheaper) cite model that returns a fraction of the dossier has summarised
+  // or truncated it, not normalised it — in that case keep the folded dossier.
+  // Without this guard a weak final stage collapses the whole answer (observed
+  // live: fusion coverage 0.70 → 0.10 when cite=haiku re-emitted the dossier).
+  const cited = await run('cite', [
+    { role: 'system', content: 'Normalise every citation in the dossier below to a consistent format. Return the ENTIRE dossier verbatim with ONLY the citations reformatted — do NOT summarise, shorten, or omit any section.' },
     { role: 'user', content: answer },
   ]);
+  // Adopt the cite output only if it preserved the dossier (≥70% of length).
+  answer = cited.length >= folded.length * 0.7 ? cited : folded;
 
   return { questionId: question.id, answer, provenance, totalTokens };
 }
