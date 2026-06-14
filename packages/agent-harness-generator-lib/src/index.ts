@@ -2,7 +2,7 @@
 //
 // @ruvnet/agent-harness-generator — library/core API for the harness generator.
 //
-// The actual implementation lives in the `mintagent` package (which is the
+// The actual implementation lives in the `openharness` package (which is the
 // published CLI). This package re-exports the JS API surface so consumers can
 // import it cleanly without depending on the CLI's `bin` entry:
 //
@@ -10,12 +10,12 @@
 //       from '@ruvnet/agent-harness-generator';
 //
 // Why split? Per the user's iter-108 naming directive:
-//   - `mintagent`                     — the CLI, what users run (`npx mintagent`)
+//   - `openharness`                     — the CLI, what users run (`npx openharness`)
 //   - `@ruvnet/agent-harness-generator` — the library, what code imports
 //
-// One source of truth (mintagent), two published names. The wrapper has no
+// One source of truth (openharness), two published names. The wrapper has no
 // implementation of its own — if you find yourself adding logic here, that
-// logic belongs in mintagent and gets re-exported.
+// logic belongs in openharness and gets re-exported.
 
 export {
   // Core scaffold pipeline.
@@ -41,7 +41,7 @@ export {
   sha256,
   fingerprintFiles,
   diffFingerprints,
-} from 'mintagent';
+} from 'openharness';
 
 export type {
   Host,
@@ -51,4 +51,4 @@ export type {
   ScaffoldOptions,
   ScaffoldResult,
   TemplateVars,
-} from 'mintagent';
+} from 'openharness';

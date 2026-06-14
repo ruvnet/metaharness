@@ -116,7 +116,7 @@ export function formatCatalog(entries: CatalogEntry[]): string[] {
     const counts = `${e.agentCount}a/${e.skillCount}s/${e.commandCount}c`;
     lines.push(`    ${e.id.padEnd(22)} ${counts.padEnd(10)} ${e.quickStart}`);
   }
-  lines.push('', `Scaffold with: mintagent <name> --template <id>`);
+  lines.push('', `Scaffold with: openharness <name> --template <id>`);
   return lines;
 }
 
@@ -273,38 +273,38 @@ export function detectRufloProject(dir: string): {
 /**
  * iter 117 — subcommand router. Per the user's directive:
  *
- *   Before generation: `mintagent`
+ *   Before generation: `openharness`
  *   Inside generated harness: `harness`
  *
  * The factory side gains 4 explicit verbs (new / from-repo / analyze / genome)
  * so the surface reads as a tool, not as "the thing that takes a name". The
- * legacy bare-name form (`mintagent my-bot`) still works as a back-compat
- * shortcut for `mintagent new my-bot`.
+ * legacy bare-name form (`openharness my-bot`) still works as a back-compat
+ * shortcut for `openharness new my-bot`.
  */
-async function runMintAgentSubcommand(sub: string, rest: string[]): Promise<number | null> {
+async function runOpenHarnessSubcommand(sub: string, rest: string[]): Promise<number | null> {
   switch (sub) {
     case 'new': {
-      // `mintagent new <name> [--template <id>] [--host <id>]`
+      // `openharness new <name> [--template <id>] [--host <id>]`
       // Just an explicit alias for the bare-name form. Falls through to the
       // legacy scaffold pipeline so semantics stay byte-identical.
       return null; // signal "not handled — fall through to main()"
     }
     case 'from-repo': {
-      // `mintagent from-repo <url> <name> [--template <id>] [--host <id>]`
+      // `openharness from-repo <url> <name> [--template <id>] [--host <id>]`
       // Clones a public GitHub repo to a tempdir, runs analyze-repo on it,
       // and scaffolds the recommended harness as <name>. NO repository code
       // is executed during analysis — same invariant as `analyze`.
       const url = rest[0];
       const name = rest[1];
       if (!url || !name) {
-        console.error('Usage: npx mintagent from-repo <repo-url> <harness-name> [--template <id>] [--host <id>]');
+        console.error('Usage: npx openharness from-repo <repo-url> <harness-name> [--template <id>] [--host <id>]');
         return 2;
       }
       const { spawnSync } = await import('node:child_process');
       const { mkdtempSync } = await import('node:fs');
       const { tmpdir } = await import('node:os');
       const { join: pathJoin } = await import('node:path');
-      const tmp = mkdtempSync(pathJoin(tmpdir(), 'mintagent-fromrepo-'));
+      const tmp = mkdtempSync(pathJoin(tmpdir(), 'openharness-fromrepo-'));
       console.log(`Cloning ${url} → ${tmp} (depth=1, code never executed)`);
       const clone = spawnSync('git', ['clone', '--depth=1', '--quiet', url, tmp], { stdio: 'inherit' });
       if (clone.status !== 0) {
@@ -320,7 +320,7 @@ async function runMintAgentSubcommand(sub: string, rest: string[]): Promise<numb
       return r.code;
     }
     case 'analyze': {
-      // `mintagent analyze <path> [--scaffold <name>] [--embed]`
+      // `openharness analyze <path> [--scaffold <name>] [--embed]`
       // Alias for `harness analyze-repo`. Surface unification per the
       // user's command-model directive.
       const { analyzeRepoCmd } = await import('./analyze-repo.js');
@@ -329,7 +329,7 @@ async function runMintAgentSubcommand(sub: string, rest: string[]): Promise<numb
       return r.code;
     }
     case 'genome': {
-      // `mintagent genome <path>` — flagship feature per the user.
+      // `openharness genome <path>` — flagship feature per the user.
       // Same code path as `harness genome`.
       const { genomeCmd } = await import('./genome.js');
       const r = await genomeCmd(rest);
@@ -347,7 +347,7 @@ export async function main(argv: string[]): Promise<number> {
   // the first arg isn't a recognised subcommand, letting us fall through.
   const first = argv[0];
   if (first && !first.startsWith('-')) {
-    const subResult = await runMintAgentSubcommand(first, argv.slice(1));
+    const subResult = await runOpenHarnessSubcommand(first, argv.slice(1));
     if (subResult !== null) return subResult;
     // `new <name>` — strip the verb and fall through to the legacy scaffold.
     if (first === 'new') {
@@ -368,7 +368,7 @@ export async function main(argv: string[]): Promise<number> {
     // arg-driven scaffold is what CI should use).
     if (!process.stdin.isTTY) {
       console.error('--wizard requires an interactive TTY. Use the arg-driven form in CI:');
-      console.error('  npx mintagent <name> --template <id> --host <id>');
+      console.error('  npx openharness <name> --template <id> --host <id>');
       return 2;
     }
     const { runWizard, makeReadlineAsker, answersToInvocation } = await import('./wizard.js');
@@ -409,10 +409,10 @@ export async function main(argv: string[]): Promise<number> {
   }
 
   if (!args.name) {
-    console.log('Usage: npx mintagent <name> [--template <id>] [--host claude-code|codex|pi-dev|hermes] [--description "..."] [--force]');
-    console.log('       npx mintagent --from-existing [./path]');
-    console.log('       npx mintagent --wizard          (iter 100 — interactive picker)');
-    console.log('       npx mintagent --list            (browse all templates)');
+    console.log('Usage: npx openharness <name> [--template <id>] [--host claude-code|codex|pi-dev|hermes] [--description "..."] [--force]');
+    console.log('       npx openharness --from-existing [./path]');
+    console.log('       npx openharness --wizard          (iter 100 — interactive picker)');
+    console.log('       npx openharness --list            (browse all templates)');
     console.log('');
     console.log(`Templates: ${TEMPLATES.join(', ')}`);
     console.log(`Hosts: ${HOSTS.join(', ')}`);

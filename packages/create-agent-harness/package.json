@@ -1,7 +1,7 @@
 {
-  "name": "mintagent",
+  "name": "openharness",
   "version": "0.1.0",
-  "description": "MintAgent — mint a custom AI agent harness from any repo. Browser Studio + `npx mintagent` CLI. Runs on Claude Code, Codex, pi.dev, Hermes, OpenClaw, RVM.",
+  "description": "OpenHarness — mint a custom AI agent harness from any repo. Browser Studio + `npx openharness` CLI. Runs on Claude Code, Codex, pi.dev, Hermes, OpenClaw, RVM.",
   "homepage": "https://github.com/ruvnet/agent-harness-generator",
   "repository": {
     "type": "git",
@@ -20,7 +20,7 @@
     }
   },
   "bin": {
-    "mintagent": "./dist/bin.js",
+    "openharness": "./dist/bin.js",
     "harness": "./dist/harness-bin.js"
   },
   "files": [
@@ -36,7 +36,7 @@
     "gen:templates": "node scripts/gen-templates.mjs"
   },
   "keywords": [
-    "mintagent",
+    "openharness",
     "agent-harness",
     "agent-harness-generator",
     "ai-agent",

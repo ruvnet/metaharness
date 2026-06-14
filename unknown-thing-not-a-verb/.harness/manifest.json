@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "generator": "0.1.0",
+  "template": "minimal",
+  "template_version": "0.0.0",
+  "vars": {
+    "name": "unknown-thing-not-a-verb",
+    "description": "My AI agent harness",
+    "host": "claude-code"
+  },
+  "hosts": [
+    "claude-code"
+  ],
+  "files": {
+    ".claude/settings.json": "6fe613b195bc6660e90ccb82bf575a05ef018c5843f33b505fd6bbfa3a30d2be",
+    "CLAUDE.md": "bf9c024f972ed81f234606f5055b380a56718703375f9bcb41f838038f1ef0cc",
+    "package.json": "f96a73f726d286c29d31ed04b4f5beec15bd89f0cac7c06db13f21c2be8a1fd4",
+    "README.md": "eddb845df9c34f37ed4eac2d30e1a18dfda31088be4474383bbdc00a37d2425b",
+    "src/init.ts": "a13a3856d3d208405f1ee3d6c2e81cd60d6f6edf0f8d4bca5c595bb6f530d3b3"
+  },
+  "generated_at": "2026-06-14T15:16:30.791Z",
+  "meta": {
+    "surface": "cli",
+    "kernel_version": "0.1.0"
+  }
+}

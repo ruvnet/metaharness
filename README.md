@@ -1,12 +1,12 @@
 <div align="center">
 
-# MintAgent
+# OpenHarness
 
 ### Mint a custom AI agent harness from any repo.
 
-`npx mintagent` · [open the Studio →](https://ruvnet.github.io/agent-harness-generator/)
+`npx openharness` · [open the Studio →](https://ruvnet.github.io/agent-harness-generator/)
 
-<sub>(Repo: `ruvnet/agent-harness-generator` · CLI: `mintagent` · Library: `@ruvnet/agent-harness-generator`)</sub>
+<sub>(Repo: `ruvnet/agent-harness-generator` · CLI: `openharness` · Library: `@ruvnet/agent-harness-generator`)</sub>
 
 [![Open the Studio](https://img.shields.io/badge/Studio-open_in_browser_↗-7c5cff?style=for-the-badge&logo=githubpages&logoColor=white)](https://ruvnet.github.io/agent-harness-generator/)
 [![User guide](https://img.shields.io/badge/User_guide-plain_language-22c55e?style=for-the-badge)](docs/USERGUIDE.md)
@@ -23,7 +23,7 @@
 
 **Every serious repo deserves its own agent.** A repo-aware CLI, a repo-aware coding agent, a local MCP server, memory scoped to the project, skills generated from the actual file layout, governance policy, release verification, witness-signed provenance.
 
-`mintagent` mints those, on demand, from a GitHub URL or a blank slate. **It is not another agent framework. It is a factory for agent frameworks.**
+`openharness` mints those, on demand, from a GitHub URL or a blank slate. **It is not another agent framework. It is a factory for agent frameworks.**
 
 The model is replaceable. The harness is the product.
 
@@ -46,14 +46,14 @@ Output is an npm-publishable `.zip` with **your name on it, your branding, your 
 open https://ruvnet.github.io/agent-harness-generator/
 
 # Or in the terminal — same scaffold, byte-identical
-npx mintagent my-bot --template vertical:coding --host claude-code
+npx openharness my-bot --template vertical:coding --host claude-code
 cd my-bot && npx . --help
 ```
 
 **Don't know what to pick?** Run the wizard:
 
 ```bash
-npx mintagent --wizard
+npx openharness --wizard
 ```
 
 **Already have a repo you want a harness for?**
@@ -100,8 +100,8 @@ MCP is included as a first-class **adapter surface, not the identity**. It is ga
 ## Verticals (19 quick-start templates)
 
 ```bash
-npx mintagent --list
-npx mintagent my-bot --template vertical:coding
+npx openharness --list
+npx openharness my-bot --template vertical:coding
 ```
 
 | Category | Templates |
@@ -228,28 +228,28 @@ MIT — see [LICENSE](LICENSE).
 
 ## FAQ
 
-### What is MintAgent?
+### What is OpenHarness?
 
-MintAgent is a CLI and browser Studio that turns any GitHub repo (or a
+OpenHarness is a CLI and browser Studio that turns any GitHub repo (or a
 blank slate) into a custom AI agent harness. The output is a branded,
 npm-publishable package with its own `npx <name>` CLI, MCP server, memory,
 governance policy, and Ed25519 witness-signed releases. Runs on Claude
 Code, OpenAI Codex, pi.dev, Hermes, OpenClaw, and RVM.
 
-### How is MintAgent different from an agent framework?
+### How is OpenHarness different from an agent framework?
 
-Frameworks help **developers** build agents. MintAgent helps
+Frameworks help **developers** build agents. OpenHarness helps
 **repositories** ship agents. The model is replaceable; the harness is
 the product.
 
 ### Do I need to run a server?
 
 No. The Studio is 100% client-side (GitHub Pages). The CLI runs locally.
-There is no MintAgent account, no hosted backend, no telemetry.
+There is no OpenHarness account, no hosted backend, no telemetry.
 
 ### Does it execute my code during analysis?
 
-No. `mintagent analyze` and `mintagent genome` are deterministic
+No. `openharness analyze` and `openharness genome` are deterministic
 static-analysis only. Inferred build/test commands are marked
 `trust: inferred · execution: disabled`.
 
@@ -274,4 +274,4 @@ Ed25519 witness; `harness sbom` emits SPDX-2.3.
 
 ---
 
-> **Keywords:** mintagent, AI agent CLI, AI agent scaffold, AI agent generator, repo to agent, GitHub repo to AI agent, agent harness, agent harness generator, agent framework alternative, agentic AI, agentic workflow, autonomous AI agents, multi-agent framework, multi-agent system, MCP, MCP server, model context protocol, Claude Code plugin, OpenAI Codex plugin, Anthropic agents, GPT agent, Codex agent, pi.dev extension, hermes agent, Nous Research, OpenClaw, RVM agent, vertical AI agents, custom AI CLI, npx mintagent, npm create AI agent, Rust WASM agent kernel, NAPI-RS, wasm-bindgen, agent memory, ReasoningBank, HNSW vector search, emergent time, witness manifest, Ed25519 signed, provenance, SBOM, SPDX, SLSA, plugin marketplace, IPFS registry, drift detection, anti-slop, TDD agents, self-evolving agents, federated agents, swarm intelligence, GCP Workload Identity Federation, Secret Manager, npm provenance, repo-aware AI, repo-native CLI, repo factory.
+> **Keywords:** openharness, AI agent CLI, AI agent scaffold, AI agent generator, repo to agent, GitHub repo to AI agent, agent harness, agent harness generator, agent framework alternative, agentic AI, agentic workflow, autonomous AI agents, multi-agent framework, multi-agent system, MCP, MCP server, model context protocol, Claude Code plugin, OpenAI Codex plugin, Anthropic agents, GPT agent, Codex agent, pi.dev extension, hermes agent, Nous Research, OpenClaw, RVM agent, vertical AI agents, custom AI CLI, npx openharness, npm create AI agent, Rust WASM agent kernel, NAPI-RS, wasm-bindgen, agent memory, ReasoningBank, HNSW vector search, emergent time, witness manifest, Ed25519 signed, provenance, SBOM, SPDX, SLSA, plugin marketplace, IPFS registry, drift detection, anti-slop, TDD agents, self-evolving agents, federated agents, swarm intelligence, GCP Workload Identity Federation, Secret Manager, npm provenance, repo-aware AI, repo-native CLI, repo factory.

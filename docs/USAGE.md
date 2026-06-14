@@ -21,17 +21,17 @@ You'll be able to `npm publish` it and your users will do `npx my-bot init` in t
 
 ## 1. Install
 
-Once `mintagent` is published to npm (currently in Phase 1 development), you'll be able to run:
+Once `openharness` is published to npm (currently in Phase 1 development), you'll be able to run:
 
 ```bash
-npx mintagent my-bot                       # arg-driven (default template + claude-code)
-npx mintagent --wizard                     # iter 100 — interactive picker
-npx mintagent --list                       # browse all 19 templates
+npx openharness my-bot                       # arg-driven (default template + claude-code)
+npx openharness --wizard                     # iter 100 — interactive picker
+npx openharness --list                       # browse all 19 templates
 ```
 
 No global install required. The package downloads itself on use.
 
-**Don't know what to pick?** Run `--wizard` — 4-question form (name → template → host → description), with the equivalent `npx mintagent …` command printed afterwards so you can skip the wizard next time.
+**Don't know what to pick?** Run `--wizard` — 4-question form (name → template → host → description), with the equivalent `npx openharness …` command printed afterwards so you can skip the wizard next time.
 
 If you're working from the repo directly:
 
@@ -61,7 +61,7 @@ The generator ships with six templates:
 Pick one with `--template`:
 
 ```bash
-npx mintagent my-bot --template vertical:devops
+npx openharness my-bot --template vertical:devops
 ```
 
 Or run interactively (no `--template` flag) to be prompted.
@@ -82,7 +82,7 @@ Generated harnesses run on four hosts. You can target one or more:
 | `rvm` | RVM partition manifest (TOML) + capability table (JSON) + wasm-guest descriptor + install runbook |
 
 ```bash
-npx mintagent my-bot \
+npx openharness my-bot \
   --template vertical:devops \
   --host claude-code \
   --host codex
@@ -182,7 +182,7 @@ You review and resolve, then commit. Same model copier uses.
 If you've been using ruflo and want to ship your own focused harness from it:
 
 ```bash
-npx mintagent --from-existing ./
+npx openharness --from-existing ./
 ```
 
 This detects your ruflo install (`.claude/`, `CLAUDE.md`, `.mcp.json`), lifts the agents/skills/commands you've customised into a new harness, and renames every `ruflo` / `claude-flow` reference. **`.claude-flow/`** local state is left behind by design — eject starts with a fresh memory.
@@ -257,7 +257,7 @@ Honesty caveat from the underlying `@ruvector/emergent-time` package: the SDK is
 |---|---|
 | `Error: target exists` | Pass `--force` or pick a new directory name |
 | `invalid harness name` | Must be kebab-case, lowercase, no leading number, no consecutive hyphens, no trailing hyphen, ≤ 214 chars (npm rule) |
-| `unknown template` | Check `npx mintagent --list` for the current template list (19 verticals at iter 96) |
+| `unknown template` | Check `npx openharness --list` for the current template list (19 verticals at iter 96) |
 | `witness verification failed` on publish | Your `.harness/witness.json` was tampered with OR `harness sign` was never run |
 | `npm publish: 403` | Token expired — rotate via `gcloud secrets versions add NPM_TOKEN --data-file=-` |
 | `harness doctor` reports issues you don't understand | Run `harness diag <path> --bundle > bundle.json` and attach to an issue at <https://github.com/ruvnet/agent-harness-generator/issues>. The bundle is sanitised (secret/token/key/password fields redacted). |

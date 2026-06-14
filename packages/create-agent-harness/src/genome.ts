@@ -169,7 +169,7 @@ export function formatGenomeReport(r: GenomeReport): string[] {
   out.push('');
 
   out.push(`Verdict: ${verdictLine(r.verdict)} (exit ${r.exitCode})`);
-  out.push(`Scaffold it: npx mintagent ${r.plan.name} --template ${r.plan.template}`);
+  out.push(`Scaffold it: npx openharness ${r.plan.name} --template ${r.plan.template}`);
   return out;
 }
 

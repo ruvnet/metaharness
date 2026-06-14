@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx unknown-thing-not-a-verb*)",
+      "mcp__unknown-thing-not-a-verb__*"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)"
+    ]
+  },
+  "mcpServers": {
+    "unknown-thing-not-a-verb": {
+      "command": "npx",
+      "args": ["-y", "unknown-thing-not-a-verb@latest", "mcp", "start"]
+    }
+  }
+}

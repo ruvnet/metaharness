@@ -20,7 +20,7 @@ interface OnboardingModalProps {
 const STEPS = [
   {
     icon: Boxes,
-    title: 'Welcome to Agent Harness Studio',
+    title: 'Welcome to Open Harness Studio',
     blurb:
       'Scaffold a focused, branded AI agent harness in your browser. 100% client-side — nothing leaves this page. Output is byte-compatible with the `npx create-agent-harness` CLI.',
     bullets: [

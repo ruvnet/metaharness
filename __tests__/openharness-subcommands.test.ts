@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 //
-// iter 117 — verifies the new mintagent subcommand router. Per the user's
-// directive: "Before generation: mintagent. Inside generated harness: harness."
+// iter 117 — verifies the new openharness subcommand router. Per the user's
+// directive: "Before generation: openharness. Inside generated harness: harness."
 //
 // We cover the structural surface (router recognizes the verbs, falls
 // through correctly, errors helpfully). The from-repo verb invokes git
@@ -46,21 +46,21 @@ async function captureMain(argv: string[]): Promise<{ code: number; out: string;
   }
 }
 
-describe('mintagent subcommand router (iter 117)', () => {
+describe('openharness subcommand router (iter 117)', () => {
   it('from-repo with missing args returns exit 2 with usage', async () => {
     const r = await captureMain(['from-repo']);
     expect(r.code).toBe(2);
-    expect(r.err).toMatch(/Usage: npx mintagent from-repo/);
+    expect(r.err).toMatch(/Usage: npx openharness from-repo/);
   });
 
   it('from-repo with only URL returns exit 2 (still need name)', async () => {
     const r = await captureMain(['from-repo', 'https://github.com/foo/bar']);
     expect(r.code).toBe(2);
-    expect(r.err).toMatch(/Usage: npx mintagent from-repo/);
+    expect(r.err).toMatch(/Usage: npx openharness from-repo/);
   });
 
   it('analyze runs analyze-repo against a real local dir', async () => {
-    const dir = await mkdtemp(join(tmpdir(), 'mintagent-analyze-'));
+    const dir = await mkdtemp(join(tmpdir(), 'openharness-analyze-'));
     try {
       await writeFile(join(dir, 'package.json'), JSON.stringify({ name: 'demo' }), 'utf-8');
       await writeFile(join(dir, 'README.md'), '# demo', 'utf-8');
@@ -75,7 +75,7 @@ describe('mintagent subcommand router (iter 117)', () => {
   });
 
   it('genome runs the genome command against a real dir', async () => {
-    const dir = await mkdtemp(join(tmpdir(), 'mintagent-genome-'));
+    const dir = await mkdtemp(join(tmpdir(), 'openharness-genome-'));
     try {
       await writeFile(join(dir, 'package.json'), JSON.stringify({ name: 'demo', scripts: { test: 'vitest' } }), 'utf-8');
       const r = await captureMain(['genome', dir]);
@@ -98,18 +98,18 @@ describe('mintagent subcommand router (iter 117)', () => {
     // No name + no subcommand → prints usage with exit 2.
     const r = await captureMain([]);
     expect(r.code).toBe(2);
-    expect(r.out).toMatch(/Usage: npx mintagent/);
+    expect(r.out).toMatch(/Usage: npx openharness/);
   });
 
   it('unknown first-arg verb (not a subcommand, not a flag) falls through to legacy scaffold', async () => {
     // "my-bot" isn't a subcommand → router returns null → legacy scaffold runs.
     // Without --template the scaffold may fail differently; we just check the
     // router didn't intercept (no "from-repo" usage in output).
-    const dir = await mkdtemp(join(tmpdir(), 'mintagent-bare-'));
+    const dir = await mkdtemp(join(tmpdir(), 'openharness-bare-'));
     try {
       const r = await captureMain(['unknown-thing-not-a-verb', '--target', dir]);
       // Whatever the result, the "from-repo" usage line MUST NOT appear.
-      expect(r.err).not.toMatch(/Usage: npx mintagent from-repo/);
+      expect(r.err).not.toMatch(/Usage: npx openharness from-repo/);
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
