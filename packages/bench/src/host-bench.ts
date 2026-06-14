@@ -4,7 +4,7 @@
 //
 // Per ADR-004, every host adapter implements `generateConfig(spec)` →
 // `Record<filename, contents>`. This benchmark measures THROUGHPUT of
-// that function for each of the 6 supported hosts, lets users compare
+// that function for each of the 8 supported hosts, lets users compare
 // adapters apples-to-apples, and surfaces regressions before they land.
 //
 // What we measure (deterministic, no I/O):
@@ -19,6 +19,8 @@ import adapterPiDev from '@ruflo/host-pi-dev';
 import adapterHermes from '@ruflo/host-hermes';
 import adapterOpenclaw from '@ruflo/host-openclaw';
 import adapterRvm from '@ruflo/host-rvm';
+import adapterCopilot from '@ruflo/host-copilot';
+import adapterOpencode from '@ruflo/host-opencode';
 
 interface HostAdapter {
   name: string;
@@ -32,6 +34,8 @@ export const HOST_ADAPTERS: HostAdapter[] = [
   adapterHermes as HostAdapter,
   adapterOpenclaw as HostAdapter,
   adapterRvm as HostAdapter,
+  adapterCopilot as HostAdapter,   // iter 127 (ADR-032)
+  adapterOpencode as HostAdapter,  // iter 128 (ADR-036)
 ];
 
 export interface HostBenchResult {

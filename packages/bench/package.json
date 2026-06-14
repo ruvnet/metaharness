@@ -19,7 +19,9 @@
     "@ruflo/host-pi-dev": "0.1.0",
     "@ruflo/host-hermes": "0.1.0",
     "@ruflo/host-openclaw": "0.1.0",
-    "@ruflo/host-rvm": "0.1.0"
+    "@ruflo/host-rvm": "0.1.0",
+    "@ruflo/host-copilot": "0.1.0",
+    "@ruflo/host-opencode": "0.1.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
