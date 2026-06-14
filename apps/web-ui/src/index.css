@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  margin: 0;
+  background: #0a0a0f;
+  color: #e6e6f0;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Subtle aurora backdrop, like the ruflo goal UI. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(60rem 40rem at 80% -10%, rgba(124, 92, 255, 0.18), transparent 60%),
+    radial-gradient(50rem 40rem at -10% 10%, rgba(34, 211, 238, 0.1), transparent 55%);
+  pointer-events: none;
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl border border-ink-700 bg-ink-850/70 backdrop-blur-sm;
+  }
+  .chip {
+    @apply inline-flex select-none items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm transition;
+  }
+  .chip-off {
+    @apply border-ink-700 bg-ink-800/60 text-slate-300 hover:border-ink-600 hover:bg-ink-700/60;
+  }
+  .chip-on {
+    @apply border-brand bg-brand/15 text-white shadow-[0_0_0_1px_rgba(124,92,255,0.4)];
+  }
+  .field-label {
+    @apply mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-400;
+  }
+  .input {
+    @apply w-full rounded-lg border border-ink-700 bg-ink-900/80 px-3 py-2 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-brand focus:ring-2 focus:ring-brand/30;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply bg-brand text-white shadow-glow hover:bg-brand-glow;
+  }
+  .btn-ghost {
+    @apply border border-ink-700 bg-ink-800/60 text-slate-200 hover:border-ink-600 hover:bg-ink-700/60;
+  }
+}
+
+/* Thin scrollbars in the preview panes. */
+.scroll-thin::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: #33334d;
+  border-radius: 4px;
+}

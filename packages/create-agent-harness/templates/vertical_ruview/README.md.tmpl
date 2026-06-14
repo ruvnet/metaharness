@@ -1,0 +1,29 @@
+# {{name}}
+
+{{description}}
+
+> **Ruvector Review** — Index → retrieve → review, on a ruvector HNSW store with emergent-time decay.
+>
+> Generated with [`create-agent-harness`](https://github.com/ruvnet/agent-harness-generator). WASM kernel, multi-host support, witness-signed releases.
+
+## Install
+
+```bash
+npm install -g {{name}}
+{{name}} init
+{{name}} doctor
+```
+
+## Agents
+
+| Agent | Role |
+|---|---|
+| `indexer` | Chunks and embeds the corpus. |
+| `retriever` | Runs HNSW search with citations. |
+| `reviewer` | Grades the answer against the sources. |
+
+This harness ships with the **{{host}}** adapter.
+
+## License
+
+MIT

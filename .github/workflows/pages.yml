@@ -1,0 +1,72 @@
+# Build, test, and deploy the Agent Harness Generator web UI to GitHub Pages.
+# The UI is 100% client-side (no backend), so a static build is all Pages needs.
+name: pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/web-ui/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment; cancel in-progress runs on new pushes.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: apps/web-ui
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/web-ui/package-lock.json
+
+      - run: npm ci
+
+      - name: Unit tests (generator core)
+        run: npm test
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E (desktop + mobile)
+        run: npm run e2e
+
+      - name: Build (base = /agent-harness-generator/)
+        run: npm run build
+
+      # SPA + Pages: 404 falls back to index.html so deep links work.
+      - name: SPA fallback
+        run: cp dist/index.html dist/404.html
+
+      - name: Disable Jekyll processing
+        run: touch dist/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/web-ui/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

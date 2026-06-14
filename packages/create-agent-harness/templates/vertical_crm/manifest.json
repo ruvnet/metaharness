@@ -1,0 +1,81 @@
+{
+  "id": "vertical:crm",
+  "description": "A CRM pod — lead-qualifier, account-manager, and churn-watcher over the customer lifecycle.",
+  "domain": "crm/lifecycle",
+  "category": "Customer",
+  "files": [
+    {
+      "src": "package.json.tmpl",
+      "dst": "package.json",
+      "render": true
+    },
+    {
+      "src": "CLAUDE.md.tmpl",
+      "dst": "CLAUDE.md",
+      "render": true
+    },
+    {
+      "src": "README.md.tmpl",
+      "dst": "README.md",
+      "render": true
+    },
+    {
+      "src": ".claude/settings.json.tmpl",
+      "dst": ".claude/settings.json",
+      "render": true
+    },
+    {
+      "src": "src/init.ts.tmpl",
+      "dst": "src/init.ts",
+      "render": true
+    },
+    {
+      "src": "src/agents/lead-qualifier.ts.tmpl",
+      "dst": "src/agents/lead-qualifier.ts",
+      "render": true
+    },
+    {
+      "src": "src/agents/account-manager.ts.tmpl",
+      "dst": "src/agents/account-manager.ts",
+      "render": true
+    },
+    {
+      "src": "src/agents/churn-watcher.ts.tmpl",
+      "dst": "src/agents/churn-watcher.ts",
+      "render": true
+    },
+    {
+      "src": ".claude/skills/memory-inspect/SKILL.md.tmpl",
+      "dst": ".claude/skills/memory-inspect/SKILL.md",
+      "render": true
+    },
+    {
+      "src": ".claude/commands/doctor.md.tmpl",
+      "dst": ".claude/commands/doctor.md",
+      "render": true
+    }
+  ],
+  "vars": [
+    {
+      "name": "name",
+      "prompt": "Harness name (kebab-case)",
+      "validate": "^[a-z0-9-]+$"
+    },
+    {
+      "name": "description",
+      "prompt": "One-line description",
+      "default": "Qualify leads, manage accounts, watch for churn"
+    },
+    {
+      "name": "host",
+      "prompt": "Host adapter",
+      "default": "claude-code",
+      "choices": [
+        "claude-code",
+        "codex",
+        "pi-dev",
+        "hermes"
+      ]
+    }
+  ]
+}

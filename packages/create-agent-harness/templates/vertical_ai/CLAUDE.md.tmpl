@@ -1,0 +1,31 @@
+# {{name}}
+
+{{description}}
+
+> AI / ML Engineering harness · domain: `ai/ml-lifecycle`. Generated with [create-agent-harness](https://github.com/ruvnet/agent-harness-generator).
+
+## Behavioral rules
+
+- Use the harness's MCP tools (`mcp__{{name}}__*`) for orchestration
+- Memory and routing are handled by the kernel — you don't need to learn them
+- Defer destructive operations to the user
+
+## Agents
+
+| Agent | Tier | Role |
+|---|---|---|
+| `data-curator` | sonnet | Builds and documents the dataset. |
+| `trainer` | sonnet | Runs reproducible training jobs. |
+| `evaluator` | opus | The honest eval gate. |
+| `deployer` | sonnet | Ships behind a guardrail. |
+## Skills
+
+- `/eval-report` — Produce an honest eval report: metrics, subgroup slices, baseline delta, ship/no-ship.
+
+## Commands
+
+- `doctor` — Health-check the harness: kernel load, MCP wiring, memory backend, host adapter.
+
+## Architecture
+
+This harness uses [@ruflo/kernel](https://www.npmjs.com/package/@ruflo/kernel) — a Rust-compiled WASM module with a NAPI-RS native fallback — so the same code runs identically on every platform.

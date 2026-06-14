@@ -1,9 +1,10 @@
-# ADR-022: CLI and Web-UI Integration
+# ADR-027: CLI and Web-UI Integration
 
 **Status**: Accepted
 **Date**: 2026-06-13
-**Related**: ADR-003 (generator architecture), ADR-007 (CI guards), ADR-010 (TDD test contracts), ADR-019 (release orchestration), ADR-020 (web generator UI, PR #1), ADR-021 (client-side packaging + Pages deploy, PR #1)
+**Related**: ADR-003 (generator architecture), ADR-007 (CI guards), ADR-010 (TDD test contracts), ADR-019 (release orchestration), ADR-020 (web generator UI), ADR-021 (client-side packaging + Pages deploy), ADR-022 (MCP primitive), ADR-023 (Repo→Harness importer), ADR-024 (Studio + Verify), ADR-026 (CLI repo analyzer)
 **Supersedes / Superseded-by**: none
+**Renumbered**: originally drafted as ADR-022 on iter 55 before the PR #1 ADRs landed; renumbered to 027 to avoid collision with PR #1's ADR-022 (MCP primitive).
 
 ## Context
 

@@ -4,7 +4,7 @@
 
 ## How to read this set
 
-Each ADR is independently reviewable. None of them ships code; the whole series is documentation that the repo `ruvnet/agent-harness-generator` will eventually be built against. The naming convention is `ADR-NNN-kebab-case-slug.md` with three-digit padding.
+Each ADR is independently reviewable. The early series (ADR-001…019) is design documentation the repo is built against; the later, `Accepted` ADRs (e.g. ADR-019 release orchestration, ADR-020/021 the web UI) document decisions whose code has already landed. The naming convention is `ADR-NNN-kebab-case-slug.md` with three-digit padding.
 
 Every ADR follows the same shape:
 
@@ -53,7 +53,14 @@ ADR-006 (memory + learning) and ADR-008 (drift detection) cut across all phases.
 | [ADR-016](./ADR-016-migration-for-ruflo-users.md) | Migration for existing ruflo users | Proposed | Moving from ruflo to a generated harness without losing memory / patterns / skills. |
 | [ADR-018](./ADR-018-rvm-as-deployment-target.md) | RVM as deployment target | Accepted | Use the RVM microhypervisor as the hardware-isolation tier for federation + multi-tenant deployments. |
 | [ADR-019](./ADR-019-release-orchestration.md) | Release orchestration | Accepted | `scripts/release.mjs` composes version-bump + preflight + marketplace + dry-run + tag into one command; refuses dirty tree; per-step PASS/SKIP/FAIL gating. |
-| [ADR-022](./ADR-022-cli-and-web-ui-integration.md) | CLI and Web-UI integration | Accepted | Byte-parity contract between `packages/create-agent-harness/` (CLI) and `apps/web-ui/` (PR #1 browser generator); decoupled release cadence; asymmetric-features table; 6 required tests for integration. |
+| [ADR-020](./ADR-020-web-generator-ui.md) | Web generator UI | Accepted | `apps/web-ui` — client-only React/Vite generator. Composes harnesses + Claude skills/agents/commands, live preview, zip download. Renderer ported behaviour-for-behaviour from the CLI; parity test pins it. |
+| [ADR-021](./ADR-021-client-side-packaging-and-pages-deploy.md) | Client-side packaging + Pages deploy | Accepted | JSZip + Blob in-browser packaging (deterministic dates); `VITE_BASE` env-driven base path; gated GitHub Pages workflow (unit + e2e before deploy); UI isolated from the kernel workspace. |
+| [ADR-022](./ADR-022-mcp-primitive.md) | MCP as a modular, gated, security-first primitive | Accepted | MCP is one selectable primitive (off/local/remote), default-deny. Emits gated `src/mcp/*` + scannable `mcp-policy.json`; `harness mcp-scan` is "npm audit for agent tools"; policy is witness-bound. |
+| [ADR-023](./ADR-023-repo-to-harness-importer.md) | Repo → Harness importer | Accepted | Paste a GitHub URL → deterministic file inventory + archetype scoring → editable harness plan. Embeddings recommend, rules generate, tests prove parity; no repo code executed. |
+| [ADR-024](./ADR-024-studio-and-verify.md) | Agent Harness Studio + in-browser Verify | Accepted | Four-tab Studio (Repo→Harness / Create harness / Skill·Agent·Command / Verify). `verifyFileMap` validates a dropped zip in-browser — structure + MCP policy + secrets — no upload. |
+| [ADR-025](./ADR-025-browser-embeddings-minilm.md) | Browser embeddings (Transformers.js MiniLM) | Accepted | Implements the ADR-023 `semantic` term with optional, lazy, WebGPU/WASM MiniLM (`all-MiniLM-L6-v2`). Injected into the rule-based scorer; rounded for determinism; lexical fallback stays the default so the deploy needs no model. |
+| [ADR-026](./ADR-026-cli-repo-analyzer-ruvllm.md) | CLI repo analyzer + ruvllm | Accepted | `harness analyze-repo [path]` — local, analysis-only repo → plan, mirroring the browser core. Opt-in `--embed` via `@ruvector/ruvllm` (deterministic, offline, optionalDependency) with lexical fallback; writes repo-profile.json + harness-plan.json. |
+| [ADR-027](./ADR-027-cli-and-web-ui-integration.md) | CLI and Web-UI integration | Accepted | Byte-parity contract between `packages/create-agent-harness/` (CLI) and `apps/web-ui/` (Studio); decoupled release cadence (npm tag-driven vs Pages push-driven); asymmetric-features table; 6 required tests; manifest.meta.surface + meta.kernel_version diagnostics (iter 56). |
 
 ## Conventions used across the series
 

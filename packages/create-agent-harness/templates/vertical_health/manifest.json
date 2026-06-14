@@ -1,0 +1,81 @@
+{
+  "id": "vertical:health",
+  "description": "A wellness-coordination harness — intake, triage, and care-coordinator. Informational only; not medical advice.",
+  "domain": "health/coordination",
+  "category": "Professional",
+  "files": [
+    {
+      "src": "package.json.tmpl",
+      "dst": "package.json",
+      "render": true
+    },
+    {
+      "src": "CLAUDE.md.tmpl",
+      "dst": "CLAUDE.md",
+      "render": true
+    },
+    {
+      "src": "README.md.tmpl",
+      "dst": "README.md",
+      "render": true
+    },
+    {
+      "src": ".claude/settings.json.tmpl",
+      "dst": ".claude/settings.json",
+      "render": true
+    },
+    {
+      "src": "src/init.ts.tmpl",
+      "dst": "src/init.ts",
+      "render": true
+    },
+    {
+      "src": "src/agents/intake.ts.tmpl",
+      "dst": "src/agents/intake.ts",
+      "render": true
+    },
+    {
+      "src": "src/agents/triage.ts.tmpl",
+      "dst": "src/agents/triage.ts",
+      "render": true
+    },
+    {
+      "src": "src/agents/care-coordinator.ts.tmpl",
+      "dst": "src/agents/care-coordinator.ts",
+      "render": true
+    },
+    {
+      "src": ".claude/skills/wellness-intake/SKILL.md.tmpl",
+      "dst": ".claude/skills/wellness-intake/SKILL.md",
+      "render": true
+    },
+    {
+      "src": ".claude/commands/doctor.md.tmpl",
+      "dst": ".claude/commands/doctor.md",
+      "render": true
+    }
+  ],
+  "vars": [
+    {
+      "name": "name",
+      "prompt": "Harness name (kebab-case)",
+      "validate": "^[a-z0-9-]+$"
+    },
+    {
+      "name": "description",
+      "prompt": "One-line description",
+      "default": "Coordinate intake and wellness information (not medical advice)"
+    },
+    {
+      "name": "host",
+      "prompt": "Host adapter",
+      "default": "claude-code",
+      "choices": [
+        "claude-code",
+        "codex",
+        "pi-dev",
+        "hermes"
+      ]
+    }
+  ]
+}
