@@ -4,6 +4,38 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Added — Iter 82 (2026-06-14)
+
+- **`examples/education/`** — runnable end-to-end demo of the iter-80
+  vertical:education vertical. Matches the iter-32 `quickstart/` +
+  iter-40 `federation/` pattern: a single script that exercises the
+  scaffolder + validate umbrella without invoking npm or pulling
+  network. ~200ms wall time.
+- **`examples/education/education.mjs`** — 3-step demo:
+  1. scaffold `my-tutor` from `vertical:education` (host selectable)
+  2. surface the 4 agents + 2 commands + 2 skills the iter-80
+     catalog promised
+  3. run `harness validate --skip-gcp` and assert HEALTHY
+  Exits non-zero if any of the 4 expected agents (tutor / explainer /
+  quiz-master / grader) is missing, OR validate doesn't HEALTHY.
+- **`examples/education/README.md`** — how to run + sample output +
+  what-it-demonstrates table mapping iter numbers to what each layer
+  exercises. Links sideways to `quickstart/`, `federation/`,
+  `host-tour/`.
+- **`__tests__/examples-education.test.ts`** — 6 cases:
+  - script + README exist
+  - default host (claude-code) → HEALTHY
+  - all 4 expected agents surface in the printout
+  - both iter-80 commands (`teach-next` skill + `mastery-report`
+    command) surface
+  - unsupported `--host=invalid-host` exits 2
+  - non-default host (codex) → HEALTHY
+- Why a separate demo: same reason `quickstart/` + `federation/` /
+  `host-tour/` exist. Verticals are CODE that must keep working, not
+  docs nobody runs. CI runs all four scripts as smoke tests; users
+  can copy them as starting points.
+- TS suite: **574/574** (was 568; +6 examples-education cases).
+
 ### Changed — Iter 81 (2026-06-14)
 
 - **README templates table surfaces `vertical:education`** with one-line
