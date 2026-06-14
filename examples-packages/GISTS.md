@@ -15,6 +15,7 @@ Plain-language deep-dives for each `@metaharness/*` example package (iter 140).
 | `@metaharness/legal` | https://gist.github.com/ruvnet/72e46e135dbf10df91d819072802578d |
 | `@metaharness/openclaw` | https://gist.github.com/ruvnet/d88608ce148db9ca410243d35997d38a |
 | `@metaharness/opencode` | https://gist.github.com/ruvnet/e620f3ee6fd0a71bb7c76237e09cb7a4 |
+| `@metaharness/github-actions` | https://gist.github.com/ruvnet/a77366913e70fe65d9cffa12d59f8ef9 |
 | `@metaharness/pi-dev` | https://gist.github.com/ruvnet/ec3c2bb303ba99d83dc5cb36306d6380 |
 | `@metaharness/repo-maintainer` | https://gist.github.com/ruvnet/a1e9a4b3da25e64ccfcc1124515f722d |
 | `@metaharness/research` | https://gist.github.com/ruvnet/7ad69e82554b1f144aa4f5b34498536b |

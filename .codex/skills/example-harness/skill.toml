@@ -8,7 +8,7 @@
 [skill]
 name = "example-harness"
 version = "0.1.0"
-description = "Scaffold a ready-made AI agent harness in one command from the 18 published @metaharness/* example packages — 8 host integrations (Claude Code, Codex, Hermes, pi.dev, OpenClaw, RVM, Copilot, OpenCode) + 10 vertical pods (devops, research, trading, support, legal, coding, education, sales, gaming, repo-maintainer)."
+description = "Scaffold a ready-made AI agent harness in one command from the 19 published @metaharness/* example packages — 9 host integrations (Claude Code, Codex, Hermes, pi.dev, OpenClaw, RVM, Copilot, OpenCode, GitHub Actions) + 10 vertical pods (devops, research, trading, support, legal, coding, education, sales, gaming, repo-maintainer)."
 author = "rUv <ruv@ruv.net>"
 homepage = "https://github.com/ruvnet/agent-harness-generator"
 license = "MIT"
@@ -28,7 +28,7 @@ name = "package"
 prompt = "Which example package?"
 required = true
 choices = [
-  "claude-code", "codex", "hermes", "pi-dev", "openclaw", "rvm", "copilot", "opencode",
+  "claude-code", "codex", "hermes", "pi-dev", "openclaw", "rvm", "copilot", "opencode", "github-actions",
   "devops", "research", "trading", "support", "legal", "coding", "education", "sales", "gaming", "repo-maintainer",
 ]
 

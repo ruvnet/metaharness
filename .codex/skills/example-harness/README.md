@@ -45,6 +45,7 @@ npx --yes @metaharness/<package>@latest <name>
 | `@metaharness/rvm` | RVM deployment partition |
 | `@metaharness/copilot` | VSCode / Copilot `mcp.json` |
 | `@metaharness/opencode` | OpenCode `.opencode/` |
+| `@metaharness/github-actions` | GitHub Actions CI/CD (non-interactive) |
 
 **Vertical workflows** (ready-made multi-agent pods)
 

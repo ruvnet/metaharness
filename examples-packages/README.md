@@ -15,6 +15,7 @@ npx @metaharness/openclaw     my-bot   # OpenClaw .openclaw/
 npx @metaharness/rvm          my-bot   # RVM deployment partition
 npx @metaharness/copilot      my-bot   # VSCode / Copilot mcp.json
 npx @metaharness/opencode     my-bot   # OpenCode .opencode/
+npx @metaharness/github-actions my-bot # GitHub Actions CI/CD (non-interactive)
 
 # Vertical workflows (ready-made multi-agent pods)
 npx @metaharness/devops          my-bot   # incident response

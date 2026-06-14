@@ -140,6 +140,7 @@ equivalent `metaharness` invocation.
 | `npx @metaharness/rvm my-bot` | RVM deployment partition | [![npm](https://img.shields.io/npm/v/@metaharness/rvm?color=cb3837&logo=npm)](https://www.npmjs.com/package/@metaharness/rvm) |
 | `npx @metaharness/copilot my-bot` | VSCode / Copilot `mcp.json` | [![npm](https://img.shields.io/npm/v/@metaharness/copilot?color=cb3837&logo=npm)](https://www.npmjs.com/package/@metaharness/copilot) |
 | `npx @metaharness/opencode my-bot` | OpenCode `.opencode/` | [![npm](https://img.shields.io/npm/v/@metaharness/opencode?color=cb3837&logo=npm)](https://www.npmjs.com/package/@metaharness/opencode) |
+| `npx @metaharness/github-actions my-bot` | GitHub Actions CI/CD (non-interactive) | [![npm](https://img.shields.io/npm/v/@metaharness/github-actions?color=cb3837&logo=npm)](https://www.npmjs.com/package/@metaharness/github-actions) |
 
 **Vertical workflows** (ready-made multi-agent pods)
 
