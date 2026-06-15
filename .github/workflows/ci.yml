@@ -137,6 +137,12 @@ jobs:
       - name: Path-handling guard (the /tmp Windows bug regression test)
         shell: bash
         run: node scripts/path-guard.mjs
+      - name: Native-router interop guard (ADR-043 — CJS default-unwrap regression)
+        # tiny-dancer is CJS; vitest's interop masks the ESM `.default` unwrap, so
+        # this runs under plain `node` (the real install condition) and fails if a
+        # change re-breaks native availability. Skips when tiny-dancer is absent.
+        shell: bash
+        run: node scripts/native-router-guard.mjs
       - name: Healthcheck (iter 42 — daily-driver supercheck)
         # 8 read-only checks <1s: version coherence + plugin shape +
         # codex skills + workflows refs + path-guard wiring + examples
