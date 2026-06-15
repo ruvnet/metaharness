@@ -1,0 +1,15 @@
+{
+  "name": "metaharness",
+  "description": "MetaHarness Marketplace: mint a custom, branded AI agent harness from any repo — runs on Claude Code, OpenAI Codex, pi.dev, Hermes, OpenClaw, RVM, Copilot, OpenCode, or GitHub Actions. WASM kernel, witness-signed releases, npx CLI.",
+  "owner": {
+    "name": "ruvnet",
+    "url": "https://github.com/ruvnet"
+  },
+  "plugins": [
+    {
+      "name": "metaharness",
+      "source": "./",
+      "description": "Scaffold your own focused AI agent harness with its own npx CLI, MCP wiring, and host adapter. 14 skills (create/validate/publish/diag/score/threat-model/…), 9 host integrations, Ed25519 witness provenance, and GCP Secret Manager validation. Install, then run /create-harness or `npx metaharness <name>`."
+    }
+  ]
+}

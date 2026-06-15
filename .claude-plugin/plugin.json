@@ -54,6 +54,7 @@
   "type": "scaffolding",
   "skills": [
     "create-harness",
+    "list-templates",
     "publish-harness",
     "validate-harness",
     "harness-secrets",
