@@ -272,3 +272,35 @@ when dead links are the only support. This both explains the augment loss and
 gives the next live run a precise, falsifiable target: maximise *redundant* live
 citations (Self-RAG: verify-then-cite, keep a live mirror per claim), not raw
 source count. Shipped as a tested component; CI-guarded via the bench suite.
+
+---
+
+## Arm 6 — live-citation enforcer (Self-RAG dead→live mirror swap): the coverage rescue
+
+`packages/bench/src/draco/live-citation.ts` + `__tests__/draco-live-citation.test.ts`.
+
+Arm 5 (the grounding gate) proved the honest grounding win exists ONLY for
+REDUNDANT dead citations; a dead-ONLY claim must be dropped (coverage cost). Arm 6
+attacks that loss at the source — the RETRIEVE→JUDGE→CONSOLIDATE pipeline. Given a
+pool of retrieved sources with known liveness, for each dead-only claim it finds a
+LIVE pooled source that supports the SAME claim and SWAPS it in, converting a
+would-be-dropped claim into a live-cited one: **coverage preserved AND grounding
+raised**.
+
+Honesty invariants (unit-proven): swap in a live mirror ONLY when a real pooled
+source genuinely supports the claim (shares its content terms); never reuse a
+mirror (no manufactured redundancy); never fabricate; when no live mirror exists,
+leave the dead citation for the gate to drop honestly. The composed pipeline
+`enforce → gate` emits an answer in which **every surviving citation resolves
+live** and **no claim is hidden**.
+
+**Result (7 unit tests, offline, no run):** on a synthetic harness output whose
+sole rubric-bearing claim is dead-cited, gate-alone drops it (coverage → 0) while
+`enforce→gate` rescues it via a live mirror (coverage → 1, grounding → 1) — a
+strictly higher composite. This quantifies the exact mechanism by which a Self-RAG
+verify-then-cite harness can honestly out-score vanilla: **maintain a live mirror
+per claim in the retrieval pool**. It is the actionable spec for the next live
+frontier run (supply the harness a liveness-checked source pool and enforce live
+citation), with the offline pipeline already CI-guarded so the logic can't regress
+before that run. Nothing gamed: the rescue requires a genuine live source; absent
+one, the claim is still dropped.
