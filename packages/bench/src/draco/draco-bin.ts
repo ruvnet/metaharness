@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url';
 import { runDraco, type DracoCorpus } from './runner.js';
 import { openRouterTransport, type OpenRouterTransport } from './fusion.js';
 import { liveUrlChecker, type UrlChecker } from './scorer.js';
-import { runAblation, runThreeWayAblation, runAugmentAblation } from './ablation.js';
+import { runAblation, runThreeWayAblation, runAugmentAblation, runSelfConsistencyAblation } from './ablation.js';
 import { DRACO_CHEAP_MODELS, DRACO_CHEAP_SINGLE_MODEL, DRACO_CHEAP_JUDGE } from './optimized.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -114,6 +114,26 @@ async function main() {
       const outPath = resolve(out);
       mkdirSync(dirname(outPath), { recursive: true });
       writeFileSync(outPath, JSON.stringify(r, null, 2) + '\n', 'utf-8');
+      process.stderr.write(`[draco] wrote ${outPath}\n`);
+    }
+    return;
+  }
+
+  // ADR-038 arm 2: --selfcon runs vanilla vs best-of-N self-consistency selection.
+  if (has('selfcon')) {
+    const nCand = arg('candidates') ? parseInt(arg('candidates')!, 10) : 3;
+    const sc = await runSelfConsistencyAblation(corpus, { transport, transportKind: kind, checkUrl, judgeTransport, limit, onProgress, candidates: nCand, ...cheapOpts });
+    process.stdout.write(`\nDRACO ${kind.toUpperCase()} SELF-CONSISTENCY — vanilla vs best-of-${sc.candidates} selection\n`);
+    if (kind === 'mock') process.stdout.write('NOTE: MOCK transport — machinery only, not a live result.\n');
+    process.stdout.write(`  vanilla (single draw):      ${sc.vanilla.score.toFixed(4)}\n`);
+    process.stdout.write(`  self-consistency (best-of-${sc.candidates}): ${sc.selfConsistency.score.toFixed(4)}  (${sc.delta >= 0 ? '+' : ''}${sc.delta.toFixed(4)} vs vanilla)\n`);
+    process.stdout.write(`  self-consistency ${sc.selfConsistencyWins ? 'WINS' : 'does not win'}\n`);
+    process.stdout.write(`  by dimension: grounding ${sc.deltaByDimension.grounding.toFixed(2)} · coverage ${sc.deltaByDimension.coverage.toFixed(2)} · balance ${sc.deltaByDimension.balance.toFixed(2)} · cleanliness ${sc.deltaByDimension.cleanliness.toFixed(2)}${sc.deltaByDimension.faithfulness != null ? ` · faithfulness ${sc.deltaByDimension.faithfulness.toFixed(2)}` : ''}\n`);
+    process.stdout.write(`  selection histogram (angle picks): ${JSON.stringify(sc.selectionHistogram)}\n`);
+    if (out) {
+      const outPath = resolve(out);
+      mkdirSync(dirname(outPath), { recursive: true });
+      writeFileSync(outPath, JSON.stringify(sc, null, 2) + '\n', 'utf-8');
       process.stderr.write(`[draco] wrote ${outPath}\n`);
     }
     return;

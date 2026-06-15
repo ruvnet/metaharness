@@ -24,6 +24,7 @@ import {
   singleModelHarness,
 } from './optimized.js';
 import { augmentedResearch } from './augment.js';
+import { selfConsistentResearch } from './self-consistency.js';
 import type { DracoCorpus } from './runner.js';
 
 export interface ArmResult {
@@ -397,5 +398,110 @@ export async function runAugmentAblation(corpus: DracoCorpus, opts: AblationOpti
       ...(judged ? { faithfulness: (ad as { faithfulness: number }).faithfulness - (vd as { faithfulness: number }).faithfulness } : {}),
     },
     augmentWins: aScore > vScore,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SELF-CONSISTENCY ABLATION (ADR-038 arm 2) — vanilla vs best-of-N selection.
+//
+// Generate N intact diverse-angle dossiers, judge-select the best. Never
+// transforms a candidate → grounding cannot be lost. Measured vs vanilla on the
+// identical scorer. Requires a judge transport (the selector); without one it
+// degenerates to vanilla and is meaningless, so judgeTransport is required.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface SelfConsistencyReport {
+  corpusVersion: number;
+  transport: 'mock' | 'live';
+  judged: boolean;
+  judge?: { model: string; promptVersion: number };
+  candidates: number;
+  vanilla: ArmResult;
+  selfConsistency: ArmResult;
+  delta: number;
+  deltaByDimension: { grounding: number; coverage: number; balance: number; cleanliness: number; faithfulness?: number };
+  selfConsistencyWins: boolean;
+  /** How often each candidate angle was selected (diagnostic). */
+  selectionHistogram: number[];
+}
+
+export async function runSelfConsistencyAblation(
+  corpus: DracoCorpus,
+  opts: AblationOptions & { candidates?: number },
+): Promise<SelfConsistencyReport> {
+  const judged = !!opts.judgeTransport;
+  const judgeModel = opts.judgeModel ?? DRACO_JUDGE.model;
+  const baseModel = opts.singleModel ?? DRACO_SINGLE_MODEL;
+  const candidates = opts.candidates ?? 3;
+  if (!opts.judgeTransport) {
+    throw new Error('self-consistency selection requires a judge transport (the selector). Run with the judge enabled.');
+  }
+
+  let questions = corpus.questions;
+  if (opts.limit != null) questions = questions.slice(0, opts.limit);
+
+  const scoreOne = async (answer: string, q: typeof questions[number]) => {
+    const d = await scoreAnswer(answer, q.rubric, q.prompt, opts.checkUrl);
+    let f: number | undefined;
+    if (judged && opts.judgeTransport) f = (await judgeFaithfulness(answer, opts.judgeTransport, judgeModel)).faithfulness;
+    return { d, f };
+  };
+
+  const vDims: DimensionScores[] = [];
+  const sDims: DimensionScores[] = [];
+  const vFaith: number[] = [];
+  const sFaith: number[] = [];
+  let vTokens = 0;
+  let sTokens = 0;
+  const hist: number[] = [];
+
+  let done = 0;
+  const rows = await mapPooled(questions, DRACO_CONCURRENCY, async (q) => {
+    const [v, sc] = await Promise.all([
+      vanillaResearch({ id: q.id, prompt: q.prompt }, baseModel, opts.transport),
+      selfConsistentResearch({ id: q.id, prompt: q.prompt }, {
+        baseModel, judgeModel, transport: opts.transport, judgeTransport: opts.judgeTransport!, candidates,
+      }),
+    ]);
+    const [vs, ss] = await Promise.all([scoreOne(v.answer, q), scoreOne(sc.answer, q)]);
+    opts.onProgress?.(++done, questions.length, q.id);
+    return { v, sc, vs, ss };
+  });
+  for (const r of rows) {
+    vTokens += r.v.totalTokens; vDims.push(r.vs.d); if (r.vs.f != null) vFaith.push(r.vs.f);
+    sTokens += r.sc.totalTokens; sDims.push(r.ss.d); if (r.ss.f != null) sFaith.push(r.ss.f);
+    hist[r.sc.selectedIndex] = (hist[r.sc.selectedIndex] ?? 0) + 1;
+  }
+
+  const score = (ds: DimensionScores[], ff: number[]) =>
+    mean(ds.map((d, i) => {
+      const vals = [d.grounding, d.coverage, d.balance, d.cleanliness];
+      if (judged) vals.push(ff[i] ?? 0);
+      return vals.reduce((x, y) => x + y, 0) / vals.length;
+    }));
+
+  const vScore = score(vDims, vFaith);
+  const sScore = score(sDims, sFaith);
+  const vd = avgDims(vDims, judged ? vFaith : null);
+  const sd = avgDims(sDims, judged ? sFaith : null);
+
+  return {
+    corpusVersion: corpus.version,
+    transport: opts.transportKind,
+    judged,
+    ...(judged ? { judge: { model: judgeModel, promptVersion: DRACO_JUDGE.promptVersion } } : {}),
+    candidates,
+    vanilla: { arm: 'single', score: vScore, perDimension: vd, totalTokens: vTokens },
+    selfConsistency: { arm: 'fusion', score: sScore, perDimension: sd, totalTokens: sTokens },
+    delta: sScore - vScore,
+    deltaByDimension: {
+      grounding: sd.grounding - vd.grounding,
+      coverage: sd.coverage - vd.coverage,
+      balance: sd.balance - vd.balance,
+      cleanliness: sd.cleanliness - vd.cleanliness,
+      ...(judged ? { faithfulness: (sd as { faithfulness: number }).faithfulness - (vd as { faithfulness: number }).faithfulness } : {}),
+    },
+    selfConsistencyWins: sScore > vScore,
+    selectionHistogram: Array.from({ length: candidates }, (_, i) => hist[i] ?? 0),
   };
 }
