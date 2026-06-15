@@ -23,7 +23,8 @@
     "test:rust": "cargo test --workspace",
     "fmt:rust": "cargo fmt --all",
     "clippy": "cargo clippy --workspace --all-targets -- -D warnings",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "pretest": "npm run build"
   },
   "devDependencies": {
     "@napi-rs/cli": "^3.0.0",
