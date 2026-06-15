@@ -109,6 +109,24 @@ jobs:
           test -f my-bot/package.json
           echo "Scaffolded my-bot/ with $(ls my-bot/ | wc -l) entries"
 
+      - name: '`metaharness score <repo>` produces the ADR-041 scorecard'
+        shell: bash
+        run: |
+          # Build a tiny fixture repo and verify the published score command works:
+          # the 6-line card, the --top candidate list, and the --constraints gate.
+          mkdir -p /tmp/smoke-score
+          cd /tmp/smoke-score
+          printf '{"name":"smoke-sdk","scripts":{"build":"tsc","test":"vitest"},"devDependencies":{"typescript":"^5"}}' > package.json
+          printf '# smoke-sdk\nA TypeScript SDK / npm client library.\n' > README.md
+          OUT=$(npx --yes metaharness@latest score . 2>&1)
+          echo "$OUT"
+          echo "$OUT" | grep -q "Harness fit:"
+          echo "$OUT" | grep -q "Recommended mode:"
+          npx --yes metaharness@latest score . --top 2 | grep -q "harness designs"
+          # --constraints exits 0 for a healthy repo (hard gate satisfied)
+          npx --yes metaharness@latest score . --constraints | grep -q "scaffold-ready"
+          echo "score command smoke OK"
+
       - name: '`harness doctor` on the scaffolded harness exits 0'
         shell: bash
         run: |
