@@ -235,3 +235,40 @@ dossier, not REPLACE it through lossy stages. The first arm (below) tests this
 directly: keep vanilla's grounding, add an independent verify+prune pass that
 only raises cleanliness/faithfulness without rebuilding (and discarding) the
 dossier. Self-consistency selection (best-of-N judged) is the second lever.
+
+---
+
+## Arm 5 — grounding gate (citation-level JUDGE→CONSOLIDATE): the honest lever, bounded
+
+`packages/bench/src/draco/grounding-gate.ts` + `__tests__/draco-grounding-gate.test.ts`.
+
+The harness loses on `grounding` (= live cited URLs / total cited URLs) because it
+surfaces many sources, many dead. The question: can a citation-level JUDGE step
+recover grounding **without gaming**? The gate enforces one non-negotiable
+invariant — **never strip a dead citation while keeping the claim it supported**
+(that hides an unsupported claim to pump the metric). So, per claim (sentence):
+
+- dead URL co-located with a **live** URL → strip the dead token only; the claim
+  stays supported → **grounding ↑ at zero coverage cost** (pure win);
+- a claim whose **only** citations are dead → drop the whole claim → honest
+  **coverage cost** if it carried a rubric term;
+- prose without citations → kept verbatim.
+
+This is fully **offline-testable** (injected URL checker, like the scorer) — no
+API run, no gaming. It yields a closed-form break-even (`groundingGain`):
+
+```
+Δmean = (Δgrounding − Δcoverage) / 4
+```
+
+**Result (mechanistic, proven by the 10 unit tests):** the gate is a *strict
+composite win only when the harness's dead citations are REDUNDANT* (co-located
+with a live citation for the same claim). When a dead URL is the *sole* support
+for a rubric-covered claim, the honest gate must drop the claim and pays the
+coverage cost — which is exactly why augment's blunt LLM prune lost −0.028 (it
+removed content). So the grounding penalty is recoverable **iff** the harness
+emits redundant live+dead citations; it is *not* recoverable by any honest means
+when dead links are the only support. This both explains the augment loss and
+gives the next live run a precise, falsifiable target: maximise *redundant* live
+citations (Self-RAG: verify-then-cite, keep a live mirror per claim), not raw
+source count. Shipped as a tested component; CI-guarded via the bench suite.
