@@ -8,6 +8,10 @@ on:
     paths:
       - 'apps/web-ui/**'
       - '.github/workflows/pages.yml'
+      # The post-deploy verify job runs this probe — a change to it must
+      # re-validate Pages, else a fix to the probe lands but the workflow stays
+      # stale-red until an unrelated web-ui push (the c237ddb situation).
+      - 'scripts/healthcheck.mjs'
   workflow_dispatch:
 
 permissions:
