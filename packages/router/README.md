@@ -55,3 +55,27 @@ matches frontier quality at ~10× lower cost. The leverage is **choosing** the
 model, not wrapping it. This is that choice as a library.
 
 MIT.
+
+## Trained router (kernel ridge regression)
+
+For a *learned*, regularised router (vs. plain k-NN), train one from the same
+dataset — no model files, no native deps, pure TS (ADR-043):
+
+```ts
+import { trainRouter, TrainedRouter } from '@metaharness/router';
+
+const { router, lambda, looQuality } = trainRouter(rows, prices, { qualityBar: 0.8 });
+// rows: [{ embedding, scores: { modelId: quality } }]  · λ fit by leave-one-out CV
+const pick = router.route(queryEmbedding);
+
+// persist / reload the trained model (portable JSON)
+const json = router.toJSON();
+const same = TrainedRouter.fromJSON(json);
+```
+
+KRR with a cosine kernel is the regularised generalisation of k-NN; `λ` (fit by
+LOO) controls the bias–variance trade-off that hurts k-NN on small data. On the
+DRACO n=20 dataset it ties k-NN (the data ceiling); it's the router that
+generalises better as your eval set grows. The trained model is the same dataset
+a native FastGRNN (`@ruvector/tiny-dancer`) will consume once its crate supports
+training + persistence.

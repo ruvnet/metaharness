@@ -76,6 +76,28 @@ export class Router {
     this.qualityBar = opts.qualityBar;
   }
 
+  /**
+   * Build a Router from a flat routing dataset: rows of (query embedding → the
+   * quality each model achieved on that query) + a per-model price table. This
+   * is the shape the DRACO benchmark emits and the shape a tiny-dancer training
+   * pipeline would consume — so the same dataset seeds this no-model router AND
+   * trains the native one.
+   */
+  static fromExamples(
+    rows: { embedding: number[]; scores: Record<string, number> }[],
+    prices: Record<string, number>,
+    opts: { k?: number; qualityBar?: number } = {},
+  ): Router {
+    const ids = new Set<string>();
+    for (const r of rows) for (const id of Object.keys(r.scores)) ids.add(id);
+    const candidates: RouterCandidate[] = [...ids].map((id) => ({
+      id,
+      costPerMTok: prices[id] ?? 0,
+      examples: rows.filter((r) => id in r.scores).map((r) => ({ embedding: r.embedding, quality: r.scores[id] })),
+    }));
+    return new Router({ candidates, ...opts });
+  }
+
   /** Predict a candidate's quality on `queryEmbedding` via k-NN over its examples. */
   predict(candidate: RouterCandidate, queryEmbedding: number[]): number {
     if (candidate.examples.length === 0) return 0;
@@ -106,3 +128,6 @@ export class Router {
     return { ...scored[0], metBar: this.qualityBar == null };
   }
 }
+
+// Training pipeline (ADR-043) — kernel ridge regression router.
+export * from './train.js';
