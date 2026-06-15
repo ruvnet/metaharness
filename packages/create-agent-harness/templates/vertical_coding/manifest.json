@@ -68,6 +68,21 @@
       "src": ".claude/commands/review-diff.md.tmpl",
       "dst": ".claude/commands/review-diff.md",
       "render": true
+    },
+    {
+      "src": "tsconfig.json.tmpl",
+      "dst": "tsconfig.json",
+      "render": true
+    },
+    {
+      "src": "bin/cli.js.tmpl",
+      "dst": "bin/cli.js",
+      "render": true
+    },
+    {
+      "src": "__tests__/smoke.test.ts.tmpl",
+      "dst": "__tests__/smoke.test.ts",
+      "render": true
     }
   ],
   "vars": [

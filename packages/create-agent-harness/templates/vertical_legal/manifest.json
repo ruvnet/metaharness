@@ -47,6 +47,21 @@
       "src": "src/agents/risk-rater.ts.tmpl",
       "dst": "src/agents/risk-rater.ts",
       "render": true
+    },
+    {
+      "src": "tsconfig.json.tmpl",
+      "dst": "tsconfig.json",
+      "render": true
+    },
+    {
+      "src": "bin/cli.js.tmpl",
+      "dst": "bin/cli.js",
+      "render": true
+    },
+    {
+      "src": "__tests__/smoke.test.ts.tmpl",
+      "dst": "__tests__/smoke.test.ts",
+      "render": true
     }
   ],
   "vars": [
