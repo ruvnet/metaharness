@@ -9,6 +9,7 @@ import {
   oracleCostOptimal,
   routerPolicy,
   routerEscalate,
+  domainRouter,
   analyse,
 } from '../src/draco/routing.js';
 
@@ -87,6 +88,31 @@ describe('router_v2 — adaptive escalation on the pre-signal', () => {
   it('threshold 0 never escalates (= always cheap)', () => {
     const r = routerEscalate(MS, { cheapModel: 'anthropic/claude-haiku-4.5', escalateTo: 'anthropic/claude-opus-4', threshold: 0 });
     expect(r.picks).toEqual(['anthropic/claude-haiku-4.5', 'anthropic/claude-haiku-4.5']);
+  });
+});
+
+describe('domain_router — learned, leave-one-out, no embeddings', () => {
+  // 4 questions, 2 domains. In sci, haiku wins; in fin, opus wins.
+  const MD: RoutingMatrix = {
+    models: ['anthropic/claude-haiku-4.5', 'anthropic/claude-opus-4'],
+    questionIds: ['sci-001', 'sci-002', 'fin-001', 'fin-002'],
+    cells: {
+      'sci-001': { 'anthropic/claude-haiku-4.5': { quality: 0.9, tokens: 1000 }, 'anthropic/claude-opus-4': { quality: 0.6, tokens: 1000 } },
+      'sci-002': { 'anthropic/claude-haiku-4.5': { quality: 0.85, tokens: 1000 }, 'anthropic/claude-opus-4': { quality: 0.65, tokens: 1000 } },
+      'fin-001': { 'anthropic/claude-haiku-4.5': { quality: 0.5, tokens: 1000 }, 'anthropic/claude-opus-4': { quality: 0.9, tokens: 1000 } },
+      'fin-002': { 'anthropic/claude-haiku-4.5': { quality: 0.55, tokens: 1000 }, 'anthropic/claude-opus-4': { quality: 0.95, tokens: 1000 } },
+    },
+  };
+
+  it('routes each domain to its historically-best model (LOO) and matches the oracle here', () => {
+    const r = domainRouter(MD);
+    // sci → haiku (learned from the OTHER sci question), fin → opus.
+    expect(r.picks).toEqual([
+      'anthropic/claude-haiku-4.5', 'anthropic/claude-haiku-4.5',
+      'anthropic/claude-opus-4', 'anthropic/claude-opus-4',
+    ]);
+    // = oracle on this clean split: mean(0.9,0.85,0.9,0.95)
+    expect(r.quality).toBeCloseTo((0.9 + 0.85 + 0.9 + 0.95) / 4);
   });
 });
 

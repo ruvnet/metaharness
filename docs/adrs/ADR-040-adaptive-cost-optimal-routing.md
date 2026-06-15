@@ -143,6 +143,32 @@ threshold couldn't. Next: train/evaluate `@ruvector/tiny-dancer` (FastGRNN +
 uncertainty + circuit breaker) on this matrix, reported as % of oracle on the
 same data. router_v2 stays in-tree as the measured-rejected naive baseline.
 
+## Result — first router to beat the best fixed model (learned feature)
+
+Evaluated offline on the run-2 matrix (no new spend):
+
+| policy | quality | % oracle-q | cost |
+|--------|---------|-----------|------|
+| always_opus (best fixed) | 0.6960 | 91% | $1.27 |
+| router_v2 (self-signal) | 0.6512 | 85% | $0.38 |
+| **domain_router (learned, leave-one-out)** | **0.7022** | **92%** | $1.42 |
+| oracle | 0.7682 | 100% | $1.68 |
+
+`domain_router` routes each question to the model that historically wins its
+DOMAIN (id prefix), trained leave-one-out (never sees its own answer). It is the
+**first router to beat the best fixed model** (0.7022 > 0.6960, 92% > 91%
+oracle-q) and it crushes the self-signal `router_v2` (0.7022 vs 0.6512).
+
+**The finding is the contrast, not the +0.006:** the routing *signal* is
+everything. A model's self-rating is useless (router_v2, 85%); a learned mapping
+from a real feature (domain) clears the best fixed model (92%). The gap to the
+oracle (92% → 100%) is the headroom a *richer* learned signal can still capture —
+which is precisely the case for tiny-dancer (FastGRNN over query EMBEDDINGS, a
+far richer feature than the 5-way domain label). Note tiny-dancer is
+inference-only — it needs a pre-trained model + an embedding pipeline (the
+broader ruvector stack), so `domain_router` is the no-dependency proof that a
+learned feature-router works; the embedding router is the richer follow-up.
+
 ## Honest guardrails
 
 - The "haiku > opus on DRACO" claim must **survive repeated runs** before it

@@ -123,7 +123,7 @@ async function main() {
   // and evaluates the routing ladder (always_X, oracle, cost-optimal oracle,
   // router_v1) on quality/dollar. Needs --live + a judge for real quality.
   if (has('routing')) {
-    const { runRoutingMatrix, alwaysPolicy, oracleQuality, oracleCostOptimal, routerPolicy, routerEscalate, analyse } = await import('./routing.js');
+    const { runRoutingMatrix, alwaysPolicy, oracleQuality, oracleCostOptimal, routerPolicy, routerEscalate, domainRouter, analyse } = await import('./routing.js');
     const pool = (arg('pool') ?? 'anthropic/claude-haiku-4.5,openai/gpt-5,anthropic/claude-opus-4').split(',');
     const eps = arg('epsilon') ? parseFloat(arg('epsilon')!) : 0.03;
     const concurrency = parseInt(process.env.DRACO_CONCURRENCY ?? '4', 10) || 4;
@@ -139,7 +139,8 @@ async function main() {
     const routerV1 = routerPolicy(matrix, 'router_v1(always-cheapest)', () => cheapest);
     // router_v2: escalate cheapest→dearest when the pre-signal is low. Sweep thresholds.
     const v2s = recordSignal ? [0.5, 0.6, 0.7, 0.8].map((t) => routerEscalate(matrix, { cheapModel: cheapest, escalateTo: dearest, threshold: t })) : [];
-    const ladder = analyse([...always, oQ, routerV1, ...v2s, oCO], oCO);
+    const dRouter = domainRouter(matrix); // learned (domain → best model), leave-one-out, no embeddings
+    const ladder = analyse([...always, oQ, routerV1, ...v2s, dRouter, oCO], oCO);
     process.stdout.write(`\nDRACO ${kind.toUpperCase()} ROUTING (ADR-040) — quality/dollar ladder (eps=${eps})\n`);
     process.stdout.write(`  pool: ${pool.join(', ')}\n`);
     for (const p of ladder) {

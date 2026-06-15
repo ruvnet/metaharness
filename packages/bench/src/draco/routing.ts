@@ -224,6 +224,35 @@ export function routerEscalate(
   return { label, picks, quality, costUSD: cost, qualityPerUSD: cost > 0 ? quality / cost : Infinity };
 }
 
+/**
+ * domain_router — a LEARNED router that needs no embeddings: route each question
+ * to the model that historically wins its DOMAIN (the `sci-`/`fin-`/`law-`/`cur-`/
+ * `tech-` id prefix). Trained LEAVE-ONE-OUT (for question q, learn the best model
+ * from the OTHER questions of q's domain) so it never sees its own answer — an
+ * honest generalisation estimate. This tests whether a real feature (domain)
+ * captures the oracle gap the self-signal router (router_v2) could not.
+ */
+export function domainRouter(m: RoutingMatrix, prices = BLENDED_USD_PER_MTOK): PolicyResult {
+  const domainOf = (qid: string) => qid.split('-')[0];
+  const picks = m.questionIds.map((q) => {
+    const d = domainOf(q);
+    const peers = m.questionIds.filter((o) => o !== q && domainOf(o) === d);
+    const pool = peers.length > 0 ? peers : m.questionIds.filter((o) => o !== q); // fallback: global
+    // best mean-quality model over the peer (training) set
+    let best = m.models[0];
+    let bestMean = -Infinity;
+    for (const model of m.models) {
+      const mean = pool.reduce((s, o) => s + m.cells[o][model].quality, 0) / pool.length;
+      if (mean > bestMean) { bestMean = mean; best = model; }
+    }
+    return best;
+  });
+  let qSum = 0, cost = 0;
+  m.questionIds.forEach((q, i) => { qSum += m.cells[q][picks[i]].quality; cost += costOf(picks[i], m.cells[q][picks[i]].tokens, prices); });
+  const quality = qSum / m.questionIds.length;
+  return { label: 'domain_router(leave-one-out)', picks, quality, costUSD: cost, qualityPerUSD: cost > 0 ? quality / cost : Infinity };
+}
+
 function bestBy(m: RoutingMatrix, q: string, key: (c: RoutingCell) => number): string {
   let best = m.models[0];
   for (const model of m.models) if (key(m.cells[q][model]) > key(m.cells[q][best])) best = model;
