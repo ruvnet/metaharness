@@ -40,6 +40,17 @@ In under 60 seconds, in your browser, with nothing leaving your machine:
 
 Output is an npm-publishable `.zip` with **your name on it, your branding, your `npx <your-name>` CLI**.
 
+### New
+
+- **Score any repo before you build it.** `npx metaharness score <repo>` reads
+  the repo (never runs it) and prints a one-screen report card — how well a
+  harness fits, how likely it is to build, how safe the tools are, and the
+  rough **cost per run** — so you know what you'll get before scaffolding.
+- **Pick the cheapest model that's good enough.** [`@metaharness/router`](https://www.npmjs.com/package/@metaharness/router)
+  routes each request to the right model from your own results — same quality,
+  far less spend. Works out of the box; **train it on your data** for a sharper
+  fit (`npm i @metaharness/router`).
+
 ## Tune it to your project — then ship it as your own npm
 
 A generated harness is a **starting point you own**, not a fixed framework. Open
@@ -205,6 +216,7 @@ After scaffolding, every harness has a `harness` CLI:
 | Check kernel ↔ harness compatibility | `harness diag` |
 | Score the harness 0-100 with badges | `harness score` |
 | Pre-scaffold: is this REPO ready for an agent? | `harness genome <repo>` |
+| Pre-scaffold: fit/cost/safety report card for a repo | `metaharness score <repo>` |
 | MCP threat-model artifact for a PR review | `harness threat-model` |
 | Declare OIA v0.1 layer alignment | `harness oia-manifest` |
 | File a useful support ticket | `harness diag --bundle > bundle.json` |
