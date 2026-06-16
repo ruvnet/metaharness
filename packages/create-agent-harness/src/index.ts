@@ -138,6 +138,7 @@ export interface CliArgs {
   yes?: boolean;
   force?: boolean;
   description?: string;
+  target?: string;
   fromExisting?: string;
   list?: boolean;
   wizard?: boolean;
@@ -161,6 +162,10 @@ export function parseArgs(argv: string[]): CliArgs {
       out.force = true;
     } else if (a === '--description' || a === '-d') {
       out.description = argv[++i];
+    } else if (a === '--target') {
+      // GH issue #9: `--target <path>` writes the harness AT <path> (was
+      // silently ignored; scaffold always landed in $CWD/<name>).
+      out.target = argv[++i];
     } else if (a === '--from-existing') {
       out.fromExisting = argv[++i] ?? process.cwd();
     } else if (a === '--list' || a === '--templates') {
@@ -459,7 +464,8 @@ export async function main(argv: string[]): Promise<number> {
   }
 
   if (!args.name) {
-    console.log('Usage: npx metaharness <name> [--template <id>] [--host claude-code|codex|pi-dev|hermes] [--description "..."] [--force]');
+    console.log('Usage: npx metaharness <name> [--template <id>] [--host claude-code|codex|pi-dev|hermes] [--description "..."] [--target <path>] [--force]');
+    console.log('       --target <path>   write the harness to <path> instead of ./<name>');
     console.log('       npx metaharness score <repo> [--json]   (scorecard: fit/cost/safety for a repo — ADR-041)');
     console.log('       npx metaharness analyze <repo>           (recommend a harness plan, no-exec)');
     console.log('       npx metaharness genome <repo>            (7-section repo readiness)');
@@ -479,7 +485,11 @@ export async function main(argv: string[]): Promise<number> {
   }
 
   const template = args.template ?? 'minimal';
-  const targetDir = resolve(process.cwd(), args.name);
+  // GH issue #9: honor `--target <path>` (write the harness AT <path>); default
+  // remains $CWD/<name>. Both are resolved against CWD so relative paths work.
+  const targetDir = args.target
+    ? resolve(process.cwd(), args.target)
+    : resolve(process.cwd(), args.name);
 
   try {
     const result = await scaffold({

@@ -35,4 +35,18 @@ describe('parseArgs', () => {
   it('returns empty CLI args for empty input', () => {
     expect(parseArgs([])).toEqual({});
   });
+
+  // GH issue #9: --target must be parsed (was silently ignored).
+  it('parses --target <path>', () => {
+    const r = parseArgs(['my-bot', '--target', '/tmp/where/i/want/it']);
+    expect(r.name).toBe('my-bot');
+    expect(r.target).toBe('/tmp/where/i/want/it');
+  });
+
+  it('--target does not get swallowed as the name', () => {
+    const r = parseArgs(['my-bot', '--host', 'codex', '--target', './out']);
+    expect(r.name).toBe('my-bot');
+    expect(r.target).toBe('./out');
+    expect(r.hosts).toEqual(['codex']);
+  });
 });
