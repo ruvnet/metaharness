@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/ruvnet-agent-harness-generator-badge.png)](https://mseep.ai/app/ruvnet-agent-harness-generator)
+
 <div align="center">
 
 # MetaHarness
