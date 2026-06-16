@@ -76,12 +76,37 @@ ${(spec.agents ?? []).map(a => `### ${a.name}\n\n${a.systemPrompt ?? ''}`).join(
 `;
 }
 
+/**
+ * ADR-044: emit `trust.json` for `~/.pi/agent/trust.json`. Pi gates extension
+ * tool execution behind a trust file; a generated harness ships a trust entry
+ * for its own extension so `pi install npm:<harness>` is trusted out of the
+ * box (rather than every tool prompting). Permission allow/deny patterns from
+ * the harness posture (ADR-022) ride along so Pi can scope tool access.
+ */
+export function trustJson(spec: HarnessSpec): string {
+  return JSON.stringify({
+    schema: 1,
+    trusted_extensions: [
+      {
+        // The harness publishes its Pi extension under the harness package name.
+        name: spec.name,
+        source: `npm:${spec.name}`,
+        // Default-deny posture (ADR-022) carried through for tool scoping.
+        allow: spec.permissions?.allow ?? [],
+        deny: spec.permissions?.deny ?? [],
+      },
+    ],
+  }, null, 2) + '\n';
+}
+
 export const adapter: HostAdapter = {
   name: HOST_NAME,
   generateConfig: (spec: HarnessSpec) => ({
     'pi-extension/src/index.ts': extensionSource(spec),
     'AGENTS.md': agentsMarkdown(spec),
     'SYSTEM.md': spec.systemPrompt ?? '',
+    // ADR-044: was missing — Pi's trust gate file.
+    'trust.json': trustJson(spec),
   }),
 };
 

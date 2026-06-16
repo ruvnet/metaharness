@@ -7,7 +7,7 @@
 // assert syntactic + structural compliance with the VSCode 1.99+ schema.
 
 import { describe, it, expect } from 'vitest';
-import { serverToVscode, mcpJson, installRunbook, adapter, HOST_NAME } from '../src/index.js';
+import { serverToVscode, mcpJson, installRunbook, copilotInstructions, adapter, HOST_NAME } from '../src/index.js';
 
 const baseSpec = {
   name: 'demo',
@@ -79,6 +79,29 @@ describe('@metaharness/host-copilot (iter 127, ADR-032)', () => {
     const keys = Object.keys(out);
     expect(keys).toContain('.vscode/mcp.json');
     expect(keys).toContain('install.md');
+  });
+
+  // ADR-044 — Copilot custom instructions (systemPrompt was dropped).
+  it('copilotInstructions carries name + description + system prompt + agents', () => {
+    const md = copilotInstructions({
+      name: 'demo', description: 'A demo.', systemPrompt: 'Be precise.',
+      agents: [{ name: 'reviewer', systemPrompt: 'Review.' }],
+    } as any);
+    expect(md).toContain('# demo');
+    expect(md).toContain('A demo.');
+    expect(md).toContain('Be precise.');
+    expect(md).toContain('**reviewer**');
+  });
+
+  it('generateConfig emits .github/copilot-instructions.md when systemPrompt present', () => {
+    const out = adapter.generateConfig!({ name: 'demo', systemPrompt: 'You are demo.' } as any);
+    expect(Object.keys(out)).toContain('.github/copilot-instructions.md');
+    expect(out['.github/copilot-instructions.md']).toContain('You are demo.');
+  });
+
+  it('generateConfig omits copilot-instructions.md for a bare MCP-only spec', () => {
+    const out = adapter.generateConfig!({ name: 'bare', mcpServers: [] } as any);
+    expect(Object.keys(out)).not.toContain('.github/copilot-instructions.md');
   });
 
   it('emitted mcp.json is byte-deterministic for the same spec (witness-stable)', () => {

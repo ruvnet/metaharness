@@ -29,6 +29,37 @@ function find(files: GenFile[], path: string): GenFile | undefined {
   return files.find((f) => f.path === path);
 }
 
+/** ADR-044: an MCP surface is present in any host's config shape. */
+function mcpServerPresent(files: GenFile[]): boolean {
+  for (const f of files) {
+    if (!/\.(json|toml|yaml)$/.test(f.path)) continue;
+    try {
+      if (f.path.endsWith('.json')) {
+        const j = JSON.parse(f.content);
+        if (j.mcpServers || j.servers || j.mcp_servers || j.mcp?.servers) return true;
+        // opencode (ADR-046): `mcp` is a direct name→{type,…} map.
+        if (j.mcp && typeof j.mcp === 'object' && Object.values(j.mcp).some((v: any) => v && (v.type || v.command || v.url))) return true;
+      } else if (/mcp_servers|\[mcp_servers/.test(f.content)) {
+        return true;
+      }
+    } catch { /* ignore non-JSON */ }
+  }
+  return false;
+}
+
+/** ADR-044: a permission/allow-deny posture is present in any host's config. */
+function permissionsPresent(files: GenFile[]): boolean {
+  for (const f of files) {
+    if (!f.path.endsWith('.json')) continue;
+    try {
+      const j = JSON.parse(f.content);
+      if (j.permissions?.deny || j.permissions?.allow) return true; // openclaw shape
+      if (j.permission && (j.permission.bash || j.permission.edit)) return true; // opencode (ADR-046)
+    } catch { /* ignore */ }
+  }
+  return false;
+}
+
 export function verifyFileMap(files: GenFile[]): VerifyReport {
   const checks: Check[] = [];
   const pass = (id: string, title: string) => checks.push({ id, severity: 'pass', title, detail: 'OK' });
@@ -53,9 +84,32 @@ export function verifyFileMap(files: GenFile[]): VerifyReport {
   if (find(files, '.harness/manifest.json')) pass('manifest', '.harness/manifest.json present');
   else fail('manifest', 'medium', '.harness/manifest.json present', 'Missing generator manifest (drift detection).');
 
-  const hostArtifacts = ['.claude/settings.json', '.codex/config.toml', 'AGENTS.md', 'cli-config.yaml', '.openclaw/openclaw.json', 'rvm.manifest.toml'];
-  if (hostArtifacts.some((p) => find(files, p))) pass('host', 'at least one host adapter wired');
-  else fail('host', 'medium', 'at least one host adapter wired', 'No host config (.claude/.codex/AGENTS.md/…).');
+  const hostArtifacts = [
+    '.claude/settings.json', '.codex/config.toml', 'AGENTS.md', 'cli-config.yaml',
+    '.openclaw/openclaw.json', 'rvm.manifest.toml', '.opencode/opencode.json',
+    '.vscode/mcp.json', '.github/copilot-instructions.md', 'capability-table.json',
+  ];
+  if (hostArtifacts.some((p) => find(files, p)) || files.some((f) => f.path.startsWith('.github/workflows/'))) {
+    pass('host', 'at least one host adapter wired');
+  } else {
+    fail('host', 'medium', 'at least one host adapter wired', 'No host config (.claude/.codex/AGENTS.md/…).');
+  }
+
+  // --- ADR-044 host capability coverage -----------------------------------
+  // Surface which HarnessSpec capabilities the emitted tree actually represents,
+  // so the Studio's Verify tab reflects the coverage the host adapters now cover.
+  const hasSystemPrompt = files.some((f) =>
+    ['CLAUDE.md', 'AGENTS.md', '.github/copilot-instructions.md', 'SYSTEM.md'].includes(f.path) && f.content.trim().length > 0);
+  const hasAgents = files.some((f) => /(^|\/)\.?(claude|opencode)\/agents\//.test(f.path) || f.path.startsWith('src/agents/'));
+  const hasMcp = mcpServerPresent(files);
+  const hasPerms = permissionsPresent(files);
+  const covered = [hasSystemPrompt && 'system-prompt', hasAgents && 'agents', hasMcp && 'mcp', hasPerms && 'permissions'].filter(Boolean);
+  checks.push({
+    id: 'capability-coverage',
+    severity: covered.length >= 2 ? 'pass' : 'info',
+    title: `host capability coverage: ${covered.length}/4`,
+    detail: covered.length ? `Represented: ${covered.join(', ')}. Live-verify with \`node scripts/verify-harness-live.mjs --dir <harness>\` (OpenRouter).` : 'No spec capabilities detected in the emitted tree.',
+  });
 
   // --- no unresolved template vars ----------------------------------------
   const unresolved = files.filter((f) => /\{\{[a-zA-Z_][\w]*\}\}/.test(f.content) && !f.path.endsWith('.json'));

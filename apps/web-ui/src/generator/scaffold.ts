@@ -180,6 +180,35 @@ function agentIndex(ids: string[]): string {
   return `// SPDX-License-Identifier: MIT\n${imports}\n\nexport const agents = [\n${list}\n];\n\nexport default agents;\n`;
 }
 
+/**
+ * ADR-044 parity: derive a Claude-Code-style allow/deny list from the web-UI's
+ * boolean McpPolicy so opencode/openclaw/rvm reflect the harness's real posture
+ * instead of hard-coding it. Mirrors the host-adapter capability fixes (the
+ * CLI side reads spec.permissions; the web UI derives it from the flags).
+ */
+function policyLists(cfg: HarnessConfig): { allow: string[]; deny: string[] } {
+  const p = cfg.mcpPolicy;
+  const mcpOn = cfg.primitives.mcp !== 'off';
+  const allow: string[] = [];
+  if (mcpOn) allow.push(`mcp__${cfg.name}__*`);
+  if (p.allowShell) allow.push('Bash(*)');
+  const deny: string[] = ['Read(./.env)', 'Read(./.env.*)', 'Bash(rm:*)', 'Bash(git push:*)'];
+  if (!p.allowFileWrite) deny.push('Write(*)', 'Edit(*)');
+  return { allow, deny };
+}
+
+/**
+ * ADR-044 parity: pass-through env block for headless hosts — provider-agnostic
+ * so a generated harness can run on OpenRouter/OpenAI, not just Anthropic.
+ */
+function providerEnvLines(indent: string): string[] {
+  return [
+    `${indent}ANTHROPIC_API_KEY: \${{ secrets.ANTHROPIC_API_KEY }}`,
+    `${indent}OPENROUTER_API_KEY: \${{ secrets.OPENROUTER_API_KEY }}`,
+    `${indent}OPENAI_API_KEY: \${{ secrets.OPENAI_API_KEY }}`,
+  ];
+}
+
 /** The MCP server entry a host config registers, or null when MCP is off. */
 function mcpServerEntry(cfg: HarnessConfig): Record<string, unknown> | null {
   if (cfg.primitives.mcp === 'off') return null;
@@ -194,15 +223,22 @@ function hostFiles(host: HostId, cfg: HarnessConfig): GenFile[] {
     case 'claude-code':
       return [{ path: '.claude/settings.json', content: claudeSettings(cfg) }];
     case 'codex':
-      return [{ path: '.codex/config.toml', content: codexConfig(cfg) }];
+      return [
+        { path: '.codex/config.toml', content: codexConfig(cfg) },
+        // ADR-044 parity: Codex reads repo-root AGENTS.md for instructions.
+        { path: 'AGENTS.md', content: `# ${cfg.name}\n\n${cfg.description}\n\n## Behavioral rules\n\n- Use the harness's MCP tools (\`mcp__${cfg.name}__*\`) for orchestration.\n- Defer destructive operations to the user.\n` },
+      ];
     case 'pi-dev':
       return [
         { path: 'AGENTS.md', content: `# ${cfg.name}\n\n${cfg.description}\n\nThis pi.dev extension registers tools via \`pi.registerTool()\`.\n` },
         { path: 'SYSTEM.md', content: `You are ${cfg.name}. ${cfg.description}\n` },
       ];
     case 'hermes': {
+      // ADR-046 — verified against hermes cli-config.yaml.example: nested
+      // `model:` + `agent.personalities`; no name/description/scrub keys.
+      const persona = (cfg.description || `You are ${cfg.name}.`).replace(/[\r\n]+/g, ' ');
       const files: GenFile[] = [
-        { path: 'cli-config.yaml', content: `name: ${cfg.name}\ndescription: ${cfg.description}\nmcp:\n  enabled: ${cfg.primitives.mcp !== 'off'}\n  scrub_think_tags: true\n` },
+        { path: 'cli-config.yaml', content: `# Hermes Agent config for ${cfg.name} — subset of cli-config.yaml.example.\nmodel:\n  provider: "auto"\nagent:\n  personalities:\n    ${cfg.name}: ${JSON.stringify(persona)}\n` },
       ];
       if (cfg.primitives.mcp !== 'off') {
         files.push({ path: `optional-mcps/${cfg.name}.json`, content: JSON.stringify({ [cfg.name]: mcpServerEntry(cfg) }, null, 2) + '\n' });
@@ -210,12 +246,25 @@ function hostFiles(host: HostId, cfg: HarnessConfig): GenFile[] {
       return files;
     }
     case 'openclaw': {
-      const server = mcpServerEntry(cfg);
-      const body = server ? { mcpServers: { [cfg.name]: server } } : { mcpServers: {} };
-      return [{ path: '.openclaw/openclaw.json', content: JSON.stringify(body, null, 2) + '\n' }];
+      // ADR-046 — verified against real openclaw 2026.6.8: MCP nests under
+      // `mcp.servers` with `enabled` (NOT top-level `mcp_servers`); openclaw has
+      // no top-level allow/deny permissions concept.
+      const servers = mcpServerEntry(cfg) ? { [cfg.name]: { enabled: true, command: 'npx', args: ['-y', `${cfg.name}@latest`, 'mcp', 'start'] } } : {};
+      return [{ path: '.openclaw/openclaw.json', content: JSON.stringify({ mcp: { servers } }, null, 2) + '\n' }];
     }
-    case 'rvm':
-      return [{ path: 'rvm.manifest.toml', content: `[harness]\nname = "${cfg.name}"\nisolation = "hardware"\nwitness = "ed25519"\n` }];
+    case 'rvm': {
+      // ADR-044 parity: emit a capability table derived from the policy (the
+      // web UI previously emitted only the partition manifest — no caps).
+      const { allow } = policyLists(cfg);
+      const caps = allow.map((pattern) => {
+        const rights = pattern === '*' ? ['READ', 'WRITE', 'EXECUTE'] : pattern.startsWith('Read') ? ['READ'] : ['EXECUTE'];
+        return { rights, resource: pattern, proof_tier: rights.includes('EXECUTE') ? 'P2' : 'P1', expires_at: 0 };
+      });
+      return [
+        { path: 'rvm.manifest.toml', content: `[harness]\nname = "${cfg.name}"\nisolation = "hardware"\nwitness = "ed25519"\n` },
+        { path: 'capability-table.json', content: JSON.stringify(caps, null, 2) + '\n' },
+      ];
+    }
     case 'copilot': {
       // iter 127 — ADR-032: VSCode 1.99+ MCP via .vscode/mcp.json.
       const server = mcpServerEntry(cfg);
@@ -223,16 +272,23 @@ function hostFiles(host: HostId, cfg: HarnessConfig): GenFile[] {
       return [
         { path: '.vscode/mcp.json', content: JSON.stringify(body, null, 2) + '\n' },
         { path: 'install.md', content: `# Installing ${cfg.name} into GitHub Copilot (VSCode)\n\n1. Open this folder in VSCode 1.99+ and trust the workspace.\n2. Open the Copilot Chat panel and run \`/mcp\` to verify \`${cfg.name}\` is registered.\n` },
+        // ADR-044 parity: Copilot reads .github/copilot-instructions.md.
+        { path: '.github/copilot-instructions.md', content: `# ${cfg.name}\n\n${cfg.description}\n\n## Behavioral rules\n\n- Use the harness's MCP tools (\`mcp__${cfg.name}__*\`) for orchestration.\n- Defer destructive operations to the user.\n` },
       ];
     }
     case 'opencode': {
       // iter 128 — ADR-036: sst/opencode TUI via .opencode/opencode.json.
       const server = mcpServerEntry(cfg);
+      // ADR-046 — verified against real opencode 1.17.7: `mcp` is a direct
+      // name→{type,command[],enabled} map; permissions live in a top-level
+      // `permission` object, NOT under mcp.
       const body = {
         $schema: 'https://opencode.ai/schema/opencode.json',
-        mcp: {
-          servers: server ? { [cfg.name]: server } : {},
-          permissions: { allow: [], deny: ['Bash(rm:*)', 'Bash(git push:*)'] },
+        mcp: server ? { [cfg.name]: { type: 'local', command: ['npx', '-y', `${cfg.name}@latest`, 'mcp', 'start'], enabled: true } } : {},
+        permission: {
+          edit: cfg.mcpPolicy.allowFileWrite ? 'allow' : 'ask',
+          bash: { '*': cfg.mcpPolicy.allowShell ? 'allow' : 'ask', 'rm *': 'deny', 'git push *': 'deny' },
+          webfetch: 'ask',
         },
       };
       return [
@@ -268,7 +324,8 @@ function hostFiles(host: HostId, cfg: HarnessConfig): GenFile[] {
         '        with:',
         '          task: ${{ github.event.comment.body || github.event_name }}',
         '        env:',
-        '          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}',
+        // ADR-044 parity: provider-agnostic (was ANTHROPIC-only).
+        ...providerEnvLines('          '),
         '',
       ].join('\n');
       const action = [
@@ -287,7 +344,7 @@ function hostFiles(host: HostId, cfg: HarnessConfig): GenFile[] {
       return [
         { path: `.github/workflows/${slug}.yml`, content: workflow },
         { path: `.github/actions/${slug}/action.yml`, content: action },
-        { path: 'install.md', content: `# Installing ${cfg.name} as a GitHub Actions harness\n\n1. Commit \`.github/workflows/${slug}.yml\` + \`.github/actions/${slug}/action.yml\`.\n2. Add \`ANTHROPIC_API_KEY\` as a repo secret.\n3. Trigger: Actions → ${slug} → Run workflow, or comment on an issue.\n` },
+        { path: 'install.md', content: `# Installing ${cfg.name} as a GitHub Actions harness\n\n1. Commit \`.github/workflows/${slug}.yml\` + \`.github/actions/${slug}/action.yml\`.\n2. Add your model-provider key as a repo secret — one of \`ANTHROPIC_API_KEY\`, \`OPENROUTER_API_KEY\`, or \`OPENAI_API_KEY\` (the workflow passes all three through; set whichever your harness uses).\n3. Trigger: Actions → ${slug} → Run workflow, or comment on an issue.\n` },
       ];
     }
   }

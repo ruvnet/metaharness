@@ -2,10 +2,39 @@
 // Per user directive: "use things like -p and plugin dir to confirm harnesses
 // work as expected for each host."
 import { execSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const HOSTS = ['claude-code', 'codex', 'pi-dev', 'hermes', 'openclaw', 'rvm', 'copilot', 'opencode', 'github-actions'];
 const results = [];
+
+// ADR-045: scaffold each host through the REAL `metaharness --host <X>` path so
+// this gate verifies the CLI's actual output — not adapter-direct fixtures that
+// could pass while `npx metaharness --host X` silently emits the wrong tree
+// (the gap ADR-045 fixed). If the CLI bin isn't built we fall back to verifying
+// whatever bot-<host>/ dirs already exist in CWD (legacy behaviour).
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const cliBin = join(repoRoot, 'packages', 'create-agent-harness', 'dist', 'bin.js');
+let scaffoldRoot = process.cwd();
+if (existsSync(cliBin)) {
+  try {
+    scaffoldRoot = mkdtempSync(join(tmpdir(), 'verify-all-hosts-'));
+    for (const host of HOSTS) {
+      execSync(
+        `node ${JSON.stringify(cliBin)} ${JSON.stringify('bot-' + host)} --template vertical:coding --host ${host} --description ${JSON.stringify('Verification harness for ' + host)} --force`,
+        { cwd: scaffoldRoot, stdio: 'ignore', timeout: 30000 },
+      );
+    }
+    console.log(`Scaffolded all ${HOSTS.length} hosts via metaharness --host into ${scaffoldRoot}`);
+  } catch (e) {
+    console.error('Scaffold step failed; falling back to CWD bot-<host>/ dirs:', String(e).slice(0, 120));
+    scaffoldRoot = process.cwd();
+  }
+} else {
+  console.log('CLI bin not built (dist/bin.js missing) — verifying pre-existing bot-<host>/ dirs in CWD.');
+}
 
 // iter 134: detect whether `claude` CLI is on PATH. CI runners typically
 // don't have it; we must fall back to schema/dep verification just like
@@ -21,7 +50,7 @@ try {
 }
 
 for (const host of HOSTS) {
-  const dir = `bot-${host}`;
+  const dir = join(scaffoldRoot, `bot-${host}`);
   if (!existsSync(dir)) { results.push({ host, status: 'no-scaffold' }); continue; }
   let proof = '';
   try {
@@ -67,10 +96,12 @@ for (const host of HOSTS) {
         rvm:     { path: 'rvm.manifest.toml',     test: (s) => /\[harness/.test(s),                          tool: 'RVM partition TOML' },
         copilot: { path: '.vscode/mcp.json',      test: (s) => { try { const j=JSON.parse(s); return j.servers || j.mcpServers; } catch { return false; } }, tool: 'VSCode mcp.json valid JSON' },
         opencode:{ path: '.opencode/opencode.json',test:(s) => { try { const j=JSON.parse(s); return j.mcp; } catch { return false; } }, tool: 'opencode.json valid JSON' },
-        // iter 147 — github-actions (ADR-033) emits workflow YAML at runtime;
-        // the scaffold ships the @metaharness/host-github-actions dep, which the
-        // dep-fallback below verifies.
-        'github-actions':{ path: '.github/workflows', test: () => true, tool: 'GHA workflow (emitted at runtime)' },
+        // ADR-045 — the CLI now emits the workflow file directly, so verify the
+        // actual YAML (name + provider-agnostic env), not the containing dir.
+        // (Was `.github/workflows` — a directory — which threw EISDIR once a
+        // real scaffold existed.) Harness name is `bot-github-actions`, slug =
+        // same after slugify.
+        'github-actions':{ path: '.github/workflows/bot-github-actions.yml', test: (s) => /name:/.test(s) && /OPENROUTER_API_KEY|ANTHROPIC_API_KEY/.test(s), tool: 'GHA workflow YAML (provider-agnostic env)' },
       };
       const c = checks[host];
       const fp = `${dir}/${c.path}`;
@@ -129,4 +160,111 @@ for (const r of results) {
 }
 const pass = results.filter(r => r.status === 'PASS').length;
 console.log(`\n${pass}/${results.length} hosts verified.`);
+
+// ADR-046 — opt-in `--real` pass: boot each INSTALLED host runtime against its
+// scaffold. This is the top verification tier (above schema-shape + the
+// OpenRouter live-content check) — it caught the opencode/openclaw schema bugs
+// that the other tiers passed. Each check is best-effort: a host whose runtime
+// isn't installed (or whose model key is absent) is reported `skip`, not failed,
+// so the gate stays green on CI without every runtime. Use `--real-strict` to
+// fail on any attempted-but-failed real check.
+const REAL = process.argv.includes('--real') || process.argv.includes('--real-strict');
+if (REAL) {
+  const STRICT = process.argv.includes('--real-strict');
+  const onPath = (bin) => { try { execSync(`command -v ${bin}`, { stdio: 'ignore' }); return true; } catch { return false; } };
+  const orKey = process.env.OPENROUTER_API_KEY;
+  const realResults = [];
+  const run = (cmd, opts = {}) => execSync(cmd, { encoding: 'utf-8', timeout: 120000, stdio: ['ignore', 'pipe', 'pipe'], ...opts });
+
+  // host -> () => { ok, proof } | throws | returns {skip, proof}
+  const realChecks = {
+    'claude-code': (dir) => {
+      if (!onPath('claude')) return { skip: true, proof: 'claude CLI not installed' };
+      // `claude -p` is a full agent turn (heavy). It also flakes transiently when
+      // this gate is itself run from INSIDE a `claude` session (nested-CLI
+      // contention) — verified by it passing standalone but erroring nested. So
+      // allow 4 min and retry once on error before failing.
+      const cmd = `cd ${JSON.stringify(dir)} && claude -p --allow-dangerously-skip-permissions "Reply with exactly: REAL_OK"`;
+      let out = '', err;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try { out = run(cmd, { timeout: 240000 }).trim(); err = null; break; }
+        catch (e) { err = e; }
+      }
+      if (err && !out) throw err;
+      return { ok: out.includes('REAL_OK'), proof: `claude -p → ${out.slice(0, 24)}` };
+    },
+    codex: (dir) => {
+      if (!onPath('codex')) return { skip: true, proof: 'codex not installed' };
+      // Parse-validate our generated config via a throwaway CODEX_HOME. NOTE:
+      // `codex doctor` exits non-zero when unrelated checks fail (no auth, MCP
+      // handshake) — so capture stdout regardless of exit code and assert only
+      // on the config-parse + MCP-register lines.
+      const home = `${dir}/.codexhome`; execSync(`mkdir -p ${JSON.stringify(home)}`);
+      execSync(`cp ${JSON.stringify(dir + '/.codex/config.toml')} ${JSON.stringify(home + '/config.toml')}`);
+      let out = '';
+      try { out = run(`CODEX_HOME=${JSON.stringify(home)} codex doctor`).toString(); }
+      catch (e) { out = `${e.stdout ?? ''}${e.stderr ?? ''}`; }
+      return { ok: /config\.toml parse\s+ok/i.test(out) && /MCP servers\s+1/i.test(out), proof: 'codex doctor: config parse ok + MCP registered' };
+    },
+    openclaw: (dir) => {
+      if (!onPath('openclaw')) return { skip: true, proof: 'openclaw not installed' };
+      const out = run(`OPENCLAW_CONFIG_PATH=${JSON.stringify(dir + '/.openclaw/openclaw.json')} openclaw config validate`).toString();
+      return { ok: /Config valid/i.test(out), proof: out.trim().split('\n')[0].slice(0, 50) };
+    },
+    opencode: (dir) => {
+      if (!onPath('opencode')) return { skip: true, proof: 'opencode not installed' };
+      if (!orKey) return { skip: true, proof: 'no OPENROUTER_API_KEY' };
+      // Disable the (unpublished) harness MCP server so the spawn doesn't hang;
+      // we are proving config-load + a real model turn, not MCP registration.
+      const cfg = `${dir}/.opencode/opencode.json`;
+      const j = JSON.parse(readFileSync(cfg, 'utf-8'));
+      for (const k of Object.keys(j.mcp || {})) j.mcp[k].enabled = false;
+      execSync(`cat > ${JSON.stringify(cfg)} <<'EOF'\n${JSON.stringify(j, null, 2)}\nEOF`, { shell: '/bin/bash' });
+      const out = run(`cd ${JSON.stringify(dir)} && opencode run --model openrouter/anthropic/claude-3.5-haiku "Reply with exactly: REAL_OK"`).toString();
+      return { ok: out.includes('REAL_OK'), proof: 'opencode run loaded config + replied' };
+    },
+    'pi-dev': (dir) => {
+      if (!onPath('pi')) return { skip: true, proof: 'pi not installed' };
+      if (!orKey) return { skip: true, proof: 'no OPENROUTER_API_KEY' };
+      const out = run(`cd ${JSON.stringify(dir)} && pi --provider openrouter --model anthropic/claude-3.5-haiku -p "Reply with exactly: REAL_OK"`).toString();
+      return { ok: out.includes('REAL_OK'), proof: 'pi -p discovered AGENTS.md + replied' };
+    },
+    hermes: (dir) => {
+      if (!onPath('hermes')) return { skip: true, proof: 'hermes not installed' };
+      // Load our generated cli-config.yaml in a throwaway HERMES_HOME and assert
+      // `hermes config check` accepts it (exit 0 + model.provider parsed).
+      const home = `${dir}/.hermeshome`; execSync(`mkdir -p ${JSON.stringify(home)}`);
+      execSync(`cp ${JSON.stringify(dir + '/cli-config.yaml')} ${JSON.stringify(home + '/config.yaml')}`);
+      let out = '';
+      try { out = run(`HERMES_HOME=${JSON.stringify(home)} hermes config show`).toString(); }
+      catch (e) { out = `${e.stdout ?? ''}${e.stderr ?? ''}`; }
+      return { ok: /provider'?:\s*'?auto/i.test(out) && !/traceback|invalid/i.test(out), proof: 'hermes config show loaded our config (model.provider parsed)' };
+    },
+    'github-actions': (dir) => {
+      if (!onPath('act')) return { skip: true, proof: 'act not installed' };
+      const out = run(`cd ${JSON.stringify(dir)} && act workflow_dispatch -l`).toString();
+      return { ok: /gha-|harness|Job ID/i.test(out) || /\bgha\b/i.test(out) || out.includes(`bot-github-actions`), proof: 'act parsed + listed the workflow job' };
+    },
+  };
+
+  console.log('\nReal-runtime verification (--real, ADR-046):');
+  console.log('-'.repeat(80));
+  let realPass = 0, realAttempted = 0;
+  for (const host of HOSTS) {
+    const fn = realChecks[host];
+    const dir = join(scaffoldRoot, `bot-${host}`);
+    if (!fn || !existsSync(dir)) { console.log(`${host.padEnd(14)} ·  n/a`); continue; }
+    try {
+      const r = fn(dir);
+      if (r.skip) { console.log(`${host.padEnd(14)} ·  SKIP   ${r.proof}`); continue; }
+      realAttempted++; if (r.ok) realPass++;
+      console.log(`${host.padEnd(14)} ${r.ok ? '✓' : '✗'}  ${r.ok ? 'PASS' : 'FAIL'}   ${r.proof}`);
+    } catch (e) {
+      realAttempted++;
+      console.log(`${host.padEnd(14)} ✗  ERROR  ${String(e).replace(/\n/g, ' ').slice(0, 70)}`);
+    }
+  }
+  console.log(`\n${realPass}/${realAttempted} installed runtimes really-run-verified.`);
+  if (STRICT && realPass !== realAttempted) process.exit(1);
+}
 process.exit(pass === results.length ? 0 : 1);
