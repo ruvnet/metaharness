@@ -4,72 +4,60 @@ import { describe, it, expect } from 'vitest';
 import { serverToOpenClaw, configJson, skillMarkdown, installScript, adapter, HOST_NAME } from '../src/index.js';
 
 describe('@metaharness/host-openclaw — config generation', () => {
+  // ADR-046 — verified against real openclaw 2026.6.8: entries carry `enabled`.
   describe('serverToOpenClaw', () => {
-    it('converts stdio command form', () => {
-      const e = serverToOpenClaw({
-        name: 'demo',
-        command: ['npx', '-y', 'demo'],
-      });
+    it('converts stdio command form with enabled flag', () => {
+      const e = serverToOpenClaw({ name: 'demo', command: ['npx', '-y', 'demo'] });
+      expect(e.enabled).toBe(true);
       expect(e.command).toBe('npx');
       expect(e.args).toEqual(['-y', 'demo']);
       expect(e.url).toBeUndefined();
     });
 
     it('converts url form', () => {
-      const e = serverToOpenClaw({
-        name: 'remote',
-        url: 'https://example.com/mcp',
-      });
+      const e = serverToOpenClaw({ name: 'remote', url: 'https://example.com/mcp' });
+      expect(e.enabled).toBe(true);
       expect(e.url).toBe('https://example.com/mcp');
       expect(e.command).toBeUndefined();
     });
 
     it('includes env when present', () => {
-      const e = serverToOpenClaw({
-        name: 'x',
-        command: ['demo'],
-        env: [['FOO', 'bar']],
-      });
+      const e = serverToOpenClaw({ name: 'x', command: ['demo'], env: [['FOO', 'bar']] });
       expect(e.env).toEqual({ FOO: 'bar' });
     });
   });
 
   describe('configJson', () => {
-    it('wraps under top-level mcp_servers', () => {
-      const out = configJson({
+    // ADR-046: real openclaw nests MCP under `mcp.servers`, NOT top-level `mcp_servers`.
+    it('nests servers under mcp.servers (verified real schema)', () => {
+      const parsed = JSON.parse(configJson({
         name: 'h',
         mcpServers: [
           { name: 'a', command: ['x'] },
           { name: 'b', url: 'https://y' },
         ],
-      });
-      const parsed = JSON.parse(out);
-      expect(parsed.mcp_servers).toBeDefined();
-      expect(parsed.mcp_servers.a).toBeDefined();
-      expect(parsed.mcp_servers.b).toBeDefined();
+      }));
+      expect(parsed.mcp_servers).toBeUndefined();
+      expect(parsed.mcp.servers.a.enabled).toBe(true);
+      expect(parsed.mcp.servers.b.enabled).toBe(true);
     });
 
     it('is valid JSON', () => {
-      const out = configJson({ name: 'h' });
-      expect(() => JSON.parse(out)).not.toThrow();
+      expect(() => JSON.parse(configJson({ name: 'h' }))).not.toThrow();
     });
 
     it('always ends with a newline (POSIX file)', () => {
       expect(configJson({ name: 'h' }).endsWith('\n')).toBe(true);
     });
 
-    // ADR-044 — permissions wired (previously dropped).
-    it('emits a permissions block when the harness declares one', () => {
+    // ADR-046: openclaw has no top-level allow/deny permissions concept.
+    it('does not emit a top-level permissions block (not in openclaw schema)', () => {
       const parsed = JSON.parse(configJson({
         name: 'h',
         permissions: { allow: ['mcp__mem__*'], deny: ['Read(./.env*)'] },
       } as any));
-      expect(parsed.permissions.allow).toContain('mcp__mem__*');
-      expect(parsed.permissions.deny).toContain('Read(./.env*)');
-    });
-
-    it('omits permissions when none declared (no empty block)', () => {
-      expect(JSON.parse(configJson({ name: 'h' })).permissions).toBeUndefined();
+      expect(parsed.permissions).toBeUndefined();
+      expect(parsed.mcp).toBeDefined();
     });
   });
 

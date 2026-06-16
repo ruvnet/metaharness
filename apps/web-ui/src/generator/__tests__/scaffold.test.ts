@@ -117,10 +117,10 @@ describe('buildScaffold', () => {
       expect(caps[0]?.rights).toContain('EXECUTE'); // mcp__name__* → EXECUTE
     });
 
-    it('openclaw carries the permission posture', () => {
+    it('openclaw nests MCP under mcp.servers with enabled (ADR-046 real schema)', () => {
       const json = JSON.parse(fileFor({ ...base, hosts: ['openclaw'] }, '.openclaw/openclaw.json'));
-      expect(json.permissions.deny).toContain('Read(./.env)');
-      expect(json.mcp_servers).toBeDefined();
+      expect(json.mcp_servers).toBeUndefined();
+      expect(json.mcp.servers['legal-redline'].enabled).toBe(true);
     });
 
     it('codex emits AGENTS.md and copilot emits copilot-instructions.md', () => {

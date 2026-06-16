@@ -243,11 +243,11 @@ function hostFiles(host: HostId, cfg: HarnessConfig): GenFile[] {
       return files;
     }
     case 'openclaw': {
-      const server = mcpServerEntry(cfg);
-      // ADR-044 parity: carry the harness permission posture (was dropped).
-      const body: Record<string, unknown> = server ? { mcp_servers: { [cfg.name]: server } } : { mcp_servers: {} };
-      body.permissions = policyLists(cfg);
-      return [{ path: '.openclaw/openclaw.json', content: JSON.stringify(body, null, 2) + '\n' }];
+      // ADR-046 — verified against real openclaw 2026.6.8: MCP nests under
+      // `mcp.servers` with `enabled` (NOT top-level `mcp_servers`); openclaw has
+      // no top-level allow/deny permissions concept.
+      const servers = mcpServerEntry(cfg) ? { [cfg.name]: { enabled: true, command: 'npx', args: ['-y', `${cfg.name}@latest`, 'mcp', 'start'] } } : {};
+      return [{ path: '.openclaw/openclaw.json', content: JSON.stringify({ mcp: { servers } }, null, 2) + '\n' }];
     }
     case 'rvm': {
       // ADR-044 parity: emit a capability table derived from the policy (the

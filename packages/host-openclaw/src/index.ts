@@ -28,22 +28,24 @@ import type { HostAdapter, HarnessSpec, McpServerSpec } from '@metaharness/kerne
 export const HOST_NAME = 'openclaw' as const;
 
 /**
- * The shape of an entry in `~/.openclaw/openclaw.json`'s mcp_servers map.
- * JSON — NOT TOML (Codex) and NOT YAML (Hermes).
+ * An entry in OpenClaw's `mcp.servers` map — VERIFIED against a real
+ * `openclaw` 2026.6.8 install via `openclaw config schema`/`config validate`
+ * (ADR-046). Each entry carries an `enabled` flag; `command` is a string +
+ * separate `args` array; `env` is an object. (The earlier top-level
+ * `mcp_servers` map without `enabled` was REJECTED — `config validate`
+ * reported "<root>: Invalid input".)
  */
 export interface OpenClawMcpServerEntry {
+  enabled: boolean;
   command?: string;
   args?: string[];
   url?: string;
   env?: Record<string, string>;
 }
 
-/**
- * Convert a kernel McpServerSpec to OpenClaw's JSON entry shape.
- * Mirrors Claude Code's MCP entry shape since both speak JSON.
- */
+/** Convert a kernel McpServerSpec to OpenClaw's mcp.servers entry shape. */
 export function serverToOpenClaw(s: McpServerSpec): OpenClawMcpServerEntry {
-  const entry: OpenClawMcpServerEntry = {};
+  const entry: OpenClawMcpServerEntry = { enabled: true };
   if (s.command && s.command.length > 0) {
     entry.command = s.command[0];
     if (s.command.length > 1) entry.args = s.command.slice(1);
@@ -62,19 +64,19 @@ export function serverToOpenClaw(s: McpServerSpec): OpenClawMcpServerEntry {
  * json`; users merge this snippet into theirs.
  */
 export function configJson(spec: HarnessSpec): string {
-  const mcpServers: Record<string, OpenClawMcpServerEntry> = {};
+  const servers: Record<string, OpenClawMcpServerEntry> = {};
   for (const s of spec.mcpServers ?? []) {
-    mcpServers[s.name] = serverToOpenClaw(s);
+    servers[s.name] = serverToOpenClaw(s);
   }
-  const cfg: Record<string, unknown> = { mcp_servers: mcpServers };
-  // ADR-044: carry the harness default-deny posture (previously dropped).
-  // OpenClaw gates tool access through a permissions allow/deny policy.
-  if (spec.permissions && (spec.permissions.allow?.length || spec.permissions.deny?.length)) {
-    cfg.permissions = {
-      allow: spec.permissions.allow ?? [],
-      deny: spec.permissions.deny ?? [],
-    };
-  }
+  // ADR-046: real openclaw (2026.6.8) nests MCP under `mcp.servers` (NOT
+  // top-level `mcp_servers`), each entry needs `enabled`. OpenClaw has NO
+  // top-level allow/deny `permissions` concept — tool gating is the structured
+  // `approvals.exec` ({enabled, mode}) / `security.installPolicy`, which does
+  // not map to the kernel's allow/deny patterns. Rather than invent a value the
+  // schema rejects, we emit only the (verified-valid) `mcp.servers` block and
+  // leave security to OpenClaw's own defaults + `openclaw configure`. Verified
+  // to pass `openclaw config validate`.
+  const cfg: Record<string, unknown> = { mcp: { servers } };
   return JSON.stringify(cfg, null, 2) + '\n';
 }
 

@@ -90,9 +90,11 @@ export function hostConfigFiles(host: string, cfg: HostConfigInput): HostFile[] 
     }
 
     case 'openclaw': {
-      const body: Record<string, unknown> = { mcp_servers: server ? { [cfg.name]: server } : {} };
-      body.permissions = policyLists(cfg);
-      return [{ path: '.openclaw/openclaw.json', content: JSON.stringify(body, null, 2) + '\n' }];
+      // ADR-046 — verified against real openclaw 2026.6.8: MCP nests under
+      // `mcp.servers` with an `enabled` flag (NOT top-level `mcp_servers`);
+      // no top-level allow/deny permissions concept.
+      const servers = server ? { [cfg.name]: { enabled: true, command: 'npx', args: ['-y', `${cfg.name}@latest`, 'mcp', 'start'] } } : {};
+      return [{ path: '.openclaw/openclaw.json', content: JSON.stringify({ mcp: { servers } }, null, 2) + '\n' }];
     }
 
     case 'rvm': {
