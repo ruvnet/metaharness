@@ -28,14 +28,16 @@ real schema bugs** that the schema-shape + OpenRouter live-content checks missed
 | codex | `codex doctor` + `codex exec` (OpenRouter) | ✅ valid + runs (no fix) |
 | opencode | `opencode run` (OpenRouter) | 🐛→✅ schema bug FIXED + re-run OK |
 | openclaw | `openclaw config validate` | 🐛→✅ schema bug FIXED + valid |
+| pi-dev | `@mariozechner/pi-coding-agent` `pi -p` (OpenRouter) | ✅ discovers AGENTS.md + runs (`PI_REAL_OK`) |
+| hermes | `hermes 0.16.0` `config show`/`check` | 🐛→✅ schema FIXED + real hermes loads it |
 | github-actions | `act` (Docker, real runner image) | ✅ workflow ran |
-| hermes | diff vs authoritative `cli-config.yaml.example` | 🐛→✅ schema FIXED (not live-run) |
-| pi-dev | — | ⚠ no clean npm install (pkg names taken by others) |
 | rvm | — | ⚠ AArch64 bare-metal, can't run on x86 |
 | copilot | — | ⚠ interactive VSCode only |
 
-3 codegen paths (adapter · CLI host-config · web-UI) all fixed for each bug;
-host unit tests updated to the verified-real schemas. See ADR-046.
+**All 7 feasible hosts really-run-verified.** Repeatable via
+`node scripts/verify-all-hosts.mjs --real` (`--real-strict` to gate). 3 codegen
+paths (adapter · CLI host-config · web-UI) fixed for each schema bug; host unit
+tests updated to the verified-real schemas. See ADR-046.
 
 ## Live provider status
 

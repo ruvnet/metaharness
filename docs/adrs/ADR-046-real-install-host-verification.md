@@ -26,21 +26,31 @@ checks had missed — because neither had ever started the real host.
 | **codex** | `codex 0.140.0` — `codex doctor` (config parse + MCP register) + `codex exec` via OpenRouter | ✅ config valid; runs → `CODEX_REAL_OK`. No fix needed. |
 | **opencode** | `opencode 1.17.7` — `opencode run` via OpenRouter | ❌→✅ **config REJECTED**; fixed; re-run loads config + runs → `OPENCODE_CLI_FIXED_OK` |
 | **openclaw** | `openclaw 2026.6.8` — `openclaw config validate` / `config schema` | ❌→✅ **"Invalid input"**; fixed; re-validate → `Config valid` |
+| **pi-dev** | `@mariozechner/pi-coding-agent` 0.73.1 — `pi -p` via OpenRouter | ✅ discovers our `AGENTS.md`; runs → `PI_REAL_OK` |
+| **hermes** | `hermes` 0.16.0 (installed non-interactively) — `hermes config check`/`show` | ❌→✅ **schema mismatch** fixed; real hermes loads our config (`model.provider` parsed) |
 | **github-actions** | `act 0.2.89` — ran the generated workflow in Docker (real runner image) | ✅ job succeeded; composite action executed |
-| **hermes** | schema diff vs authoritative `cli-config.yaml.example` | ❌→✅ **schema mismatch**; fixed against template (not live-run — see below) |
 
-### Not locally feasible (documented, not faked)
+**All 7 feasible hosts are really-run-verified.** A repeatable opt-in
+`--real` mode in `scripts/verify-all-hosts.mjs` boots each installed runtime
+against its scaffold (`--real-strict` to fail the gate on any attempted-but-
+failed check); runtimes that aren't installed report `skip`, so CI stays green.
 
-- **pi-dev**: no cleanly-installable npm package for the badlogic Pi coding
-  agent in this environment — `@mariozechner/pi` ships `pi-pods`, `@badlogic/pi`
-  is "Prime Intellect CLI". Not the pi.dev coding agent. Left unverified.
+### Resolving pi-dev + hermes (initially thought infeasible)
+
+- **pi-dev**: the right package is **`@mariozechner/pi-coding-agent`** (bin `pi`)
+  — NOT `@mariozechner/pi` (`pi-pods`) or `@badlogic/pi` ("Prime Intellect
+  CLI"), both of which squat the obvious names. Once found, `pi -p` runs our
+  scaffold (pi natively discovers `AGENTS.md`).
+- **hermes**: installs non-interactively with `bash install.sh --non-interactive
+  --skip-setup` (uv + repo clone + deps, no model download, no wizard). Real
+  hermes then loads our corrected config.
+
+### Genuinely not feasible on this host (documented, not faked)
+
 - **rvm**: an AArch64 bare-metal microhypervisor built from source — cannot run
   on this x86 host at all.
 - **copilot**: requires interactive VSCode 1.99+ with a Copilot subscription —
-  no headless path.
-- **hermes**: the installer needs `uv` + a repo clone + python/node deps + an
-  **interactive** API-key/gateway setup stage. Config was corrected against the
-  authoritative template; a full live run was not performed.
+  no headless path. (Config shape is the verified-compatible VSCode `mcp.json`.)
 
 ## The three bugs (only real installs caught these)
 
@@ -75,11 +85,12 @@ tests updated to assert the verified-real schema.
   schema-shape and live-content checks. The OpenRouter live-content check
   (ADR-044) and schema checks remain useful fast gates, but they are NOT
   sufficient on their own — they passed on configs three real hosts rejected.
-- `scripts/verify-all-hosts.mjs` already scaffolds via the real `--host` path
-  (ADR-045); where a host runtime is installed it should additionally be run
-  (claude-code already does). Wiring `opencode run` / `codex exec` /
-  `openclaw config validate` / `act` into an opt-in `--real` mode of that gate
-  is a follow-up.
+- `scripts/verify-all-hosts.mjs` scaffolds via the real `--host` path (ADR-045)
+  and, under `--real`, additionally boots each installed runtime: `claude -p`,
+  `codex doctor`, `opencode run`, `openclaw config validate`, `pi -p`,
+  `hermes config show`, `act -l`. This is the implemented top tier (no longer a
+  follow-up). Model-routed checks (opencode/pi) are gated on `OPENROUTER_API_KEY`
+  and skip cleanly without it.
 
 ## Consequences
 
