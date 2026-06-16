@@ -104,7 +104,11 @@ export function workflowYaml(spec: HarnessSpec): string {
     '          # structured output. Wire your model provider key here.',
     '          task: ${{ github.event.comment.body || github.event_name }}',
     '        env:',
+    '          # ADR-044: provider-agnostic. Set whichever your harness uses as a',
+    '          # repo secret; unset ones are empty and the harness ignores them.',
     '          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}',
+    '          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}',
+    '          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}',
     '',
   ].join('\n');
 }
@@ -115,6 +119,8 @@ export function workflowYaml(spec: HarnessSpec): string {
  */
 export function actionYaml(spec: HarnessSpec): string {
   const slug = ghaSlug(spec.name);
+  const hasPrompt = !!spec.systemPrompt;
+  const hasMcp = (spec.mcpServers?.length ?? 0) > 0;
   return [
     `# Composite action for the ${spec.name} harness (ADR-033).`,
     '# Called by .github/workflows/' + slug + '.yml. Reusable across workflows.',
@@ -131,10 +137,24 @@ export function actionYaml(spec: HarnessSpec): string {
     'runs:',
     '  using: composite',
     '  steps:',
+    ...(hasMcp ? [
+      // ADR-044: surface the harness's MCP servers to the runner. The manifest
+      // is emitted alongside the action; the entrypoint reads it to register
+      // servers (the runner has no interactive `mcp add` step).
+      '    - id: mcp',
+      '      shell: bash',
+      '      run: |',
+      '        echo "MCP servers for this harness:" && cat "$GITHUB_ACTION_PATH/mcp-servers.json"',
+      '',
+    ] : []),
     '    - id: run',
     '      shell: bash',
     '      run: |',
     `        echo "Running ${spec.name} harness (non-interactive)…"`,
+    ...(hasPrompt ? [
+      '        # ADR-044: the harness system prompt ships next to the action.',
+      '        export HARNESS_SYSTEM_PROMPT="$(cat "$GITHUB_ACTION_PATH/SYSTEM.md")"',
+    ] : []),
     '        # Replace with your harness entrypoint. It MUST: read $TASK,',
     '        # complete autonomously, write a structured result to',
     '        # $GITHUB_OUTPUT as result=<json>, and exit 0 on success.',
@@ -189,11 +209,22 @@ export const adapter: HostAdapter = {
   name: HOST_NAME,
   generateConfig: (spec: HarnessSpec) => {
     const slug = ghaSlug(spec.name);
-    return {
+    const out: Record<string, string> = {
       [`.github/workflows/${slug}.yml`]: workflowYaml(spec),
       [`.github/actions/${slug}/action.yml`]: actionYaml(spec),
       'install.md': installRunbook(spec),
     };
+    // ADR-044: ship the system prompt next to the action (read at runtime).
+    if (spec.systemPrompt) {
+      out[`.github/actions/${slug}/SYSTEM.md`] =
+        `# ${spec.name}\n\n${spec.description ? spec.description + '\n\n' : ''}${spec.systemPrompt}\n`;
+    }
+    // ADR-044: ship the MCP server manifest so the runner can register them.
+    if ((spec.mcpServers?.length ?? 0) > 0) {
+      out[`.github/actions/${slug}/mcp-servers.json`] =
+        JSON.stringify({ mcpServers: spec.mcpServers }, null, 2) + '\n';
+    }
+    return out;
   },
 };
 

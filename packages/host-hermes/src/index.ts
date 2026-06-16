@@ -81,15 +81,36 @@ export function optionalMcpYaml(server: McpServerSpec): string {
 }
 
 /**
- * Build cli-config.yaml content with the harness's system prompt + agents.
+ * Build cli-config.yaml content — VERIFIED against the authoritative
+ * `cli-config.yaml.example` in NousResearch/hermes-agent (ADR-046).
+ *
+ * The real hermes config is a nested schema (`model:`, `agent:`, `skills:`,
+ * `memory:`, …). It has NO `name`/`description`/`system_prompt`/`scrub_*`
+ * top-level keys (those were assumed, never real). The harness identity maps
+ * onto:
+ *   - `model.provider: "auto"`  — auto-detect from credentials (OpenRouter,
+ *     Anthropic, …); a generated harness leaves the choice to the user's keys.
+ *   - `agent.personalities.<name>` — a name→prompt map. The harness system
+ *     prompt + each agent's prompt become named personalities (selectable with
+ *     `/personality`).
+ * Hermes-4 <think>/<tool_call> scrubbing (scrubHermesBlocks) is RUNTIME logic,
+ * not a config key, so it is no longer emitted into the YAML.
  */
 export function cliConfigYaml(spec: HarnessSpec): string {
-  const lines: string[] = [];
-  lines.push(`name: ${spec.name}`);
-  if (spec.description) lines.push(`description: ${JSON.stringify(spec.description)}`);
-  if (spec.systemPrompt) lines.push(`system_prompt: ${JSON.stringify(spec.systemPrompt)}`);
-  lines.push(`scrub_think_blocks: true`);
-  lines.push(`scrub_stray_tool_calls: true`);
+  const yamlStr = (s: string) => JSON.stringify(s.replace(/[\r\n]+/g, ' '));
+  const lines: string[] = [
+    `# Hermes Agent config for ${spec.name} — subset of cli-config.yaml.example.`,
+    'model:',
+    '  provider: "auto"  # auto-detect from credentials (OPENROUTER_API_KEY, ANTHROPIC_API_KEY, …)',
+    'agent:',
+    '  personalities:',
+  ];
+  // Harness identity → the default personality.
+  const persona = spec.systemPrompt ?? spec.description ?? `You are ${spec.name}.`;
+  lines.push(`    ${spec.name}: ${yamlStr(persona)}`);
+  for (const a of spec.agents ?? []) {
+    lines.push(`    ${a.name}: ${yamlStr(a.systemPrompt ?? `You are the ${a.name} agent.`)}`);
+  }
   return lines.join('\n') + '\n';
 }
 

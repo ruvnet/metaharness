@@ -1,4 +1,4 @@
-# ADR-044: The Algorithmic Agent Harness — algorithms as the control plane
+# ADR-047: The Algorithmic Agent Harness — algorithms as the control plane
 
 **Status**: Proposed
 **Date**: 2026-06-16

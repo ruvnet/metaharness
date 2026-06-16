@@ -24,6 +24,22 @@ import type { HostAdapter, HarnessSpec, McpServerSpec } from '@metaharness/kerne
 export const HOST_NAME = 'codex' as const;
 
 /**
+ * ADR-044: emit AGENTS.md from the harness system prompt, description, and
+ * agent roster. Codex reads repo-root AGENTS.md for project instructions; the
+ * adapter previously dropped `spec.systemPrompt` and `spec.agents` entirely.
+ */
+export function agentsMarkdown(spec: HarnessSpec): string {
+  const lines: string[] = [`# ${spec.name}`, ''];
+  if (spec.description) lines.push(spec.description, '');
+  if (spec.systemPrompt) lines.push(spec.systemPrompt, '');
+  if (spec.agents && spec.agents.length > 0) {
+    lines.push('## Agents', '');
+    for (const a of spec.agents) lines.push(`### ${a.name}`, '', a.systemPrompt ?? '', '');
+  }
+  return lines.join('\n');
+}
+
+/**
  * Escape a string for inclusion in a TOML basic string literal.
  * TOML basic strings allow common escapes (\", \\, \n, etc.).
  */
@@ -85,10 +101,17 @@ export function mcpAddCommands(spec: HarnessSpec): string[] {
 
 export const adapter: HostAdapter = {
   name: HOST_NAME,
-  generateConfig: (spec: HarnessSpec) => ({
-    '.codex/config.toml': configToml(spec),
-    'install-mcp.sh': mcpAddCommands(spec).join('\n') + '\n',
-  }),
+  generateConfig: (spec: HarnessSpec) => {
+    const out: Record<string, string> = {
+      '.codex/config.toml': configToml(spec),
+      'install-mcp.sh': mcpAddCommands(spec).join('\n') + '\n',
+    };
+    // ADR-044: emit AGENTS.md (system prompt + agent roster).
+    if (spec.systemPrompt || spec.description || (spec.agents?.length ?? 0) > 0) {
+      out['AGENTS.md'] = agentsMarkdown(spec);
+    }
+    return out;
+  },
 };
 
 export default adapter;

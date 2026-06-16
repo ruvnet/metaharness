@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// Safety layer (ADR-044): policy rules + risk scoring. Default-deny on tools, in
+// Safety layer (ADR-047): policy rules + risk scoring. Default-deny on tools, in
 // keeping with the ADR-022 MCP posture — an action is allowed only if it clears
 // the rules AND its scored risk is within budget.
 

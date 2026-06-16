@@ -58,11 +58,28 @@ describe('@metaharness/host-hermes — Hermes-4 quirk handling', () => {
     });
   });
 
+  // ADR-046 — verified against the authoritative hermes cli-config.yaml.example.
   describe('cliConfigYaml', () => {
-    it('sets both scrub flags to true (per issue #741)', () => {
-      const c = cliConfigYaml({ name: 'h' });
-      expect(c).toContain('scrub_think_blocks: true');
-      expect(c).toContain('scrub_stray_tool_calls: true');
+    it('emits the real hermes schema: model + agent.personalities (no invented keys)', () => {
+      const c = cliConfigYaml({ name: 'h', systemPrompt: 'Be terse.' } as any);
+      expect(c).toContain('model:');
+      expect(c).toContain('provider: "auto"');
+      expect(c).toContain('agent:');
+      expect(c).toContain('personalities:');
+      expect(c).toContain('h: "Be terse."'); // harness identity → default personality
+      // The previously-invented keys are NOT in the real hermes schema.
+      expect(c).not.toContain('scrub_think_blocks');
+      expect(c).not.toContain('system_prompt:');
+      expect(c).not.toMatch(/^name:/m);
+    });
+
+    it('maps each agent to a named personality', () => {
+      const c = cliConfigYaml({
+        name: 'h',
+        agents: [{ name: 'reviewer', systemPrompt: 'Review code.' }, { name: 'tester', systemPrompt: 'Write tests.' }],
+      } as any);
+      expect(c).toContain('reviewer: "Review code."');
+      expect(c).toContain('tester: "Write tests."');
     });
   });
 

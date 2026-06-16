@@ -116,6 +116,54 @@ export function buildCapabilityTable(claims: KernelClaim[]): RvmCapabilityToken[
   });
 }
 
+/**
+ * ADR-044 fix: derive RVM capability *rights* from a harness permission
+ * allow-pattern (Claude-Code-style: `Read(...)`, `Bash(...)`, `mcp__srv__*`,
+ * `Write`/`Edit`, `*`). The dotted-capability convention in
+ * `rightsFromCapability` doesn't fit these patterns (they'd all fall through
+ * to `[READ]`), so permission patterns get their own mapping: an `allow`
+ * entry is a grant to *do* something, which is EXECUTE unless it is clearly a
+ * pure read/write file op.
+ */
+export function rightsFromPermission(pattern: string): RvmRight[] {
+  if (pattern === '*' || pattern === '*:*' || pattern === '*.*') {
+    return ['READ', 'WRITE', 'GRANT', 'REVOKE', 'EXECUTE', 'PROVE', 'GRANT_ONCE'];
+  }
+  if (/^Read\b|^Read\(/i.test(pattern)) return ['READ'];
+  if (/^(Write|Edit|MultiEdit)\b|^(Write|Edit|MultiEdit)\(/i.test(pattern)) return ['READ', 'WRITE'];
+  // Tool invocation (MCP tools, Bash, Task, WebFetch, …) — the common case.
+  return ['EXECUTE'];
+}
+
+/**
+ * ADR-044 fix: build the capability table from a HarnessSpec instead of the
+ * previously hard-coded empty array. Order of precedence:
+ *   1. an explicit `(spec as any).claims: KernelClaim[]` extension (the
+ *      "Caller wires actual claims via spec extensions" path) — uses the
+ *      dotted-capability semantics via buildCapabilityTable;
+ *   2. otherwise derive tokens from `spec.permissions.allow` (the harness's
+ *      real default-deny posture, ADR-022).
+ *
+ * Deterministic (ADR-011 witness-stable): derived claims use a fixed expiry
+ * sentinel of 0 ("non-expiring") rather than a wall-clock value.
+ */
+const DERIVED_CLAIM_EXPIRY = 0;
+export function buildCapabilityTableForSpec(spec: HarnessSpec): RvmCapabilityToken[] {
+  const explicit = (spec as { claims?: KernelClaim[] }).claims;
+  if (explicit && explicit.length > 0) return buildCapabilityTable(explicit);
+  const allow = spec.permissions?.allow ?? [];
+  return allow.map(pattern => {
+    const rights = rightsFromPermission(pattern);
+    return {
+      rights,
+      resource: pattern,
+      proof_tier: defaultProofTier(rights),
+      expires_at: DERIVED_CLAIM_EXPIRY,
+      grant_once: rights.includes('GRANT_ONCE') ? true : undefined,
+    };
+  });
+}
+
 export interface RvmPartitionSpec {
   /** Harness name; doubles as the partition's coherence domain seed. */
   name: string;
@@ -165,9 +213,11 @@ export function partitionToml(spec: HarnessSpec, partition: RvmPartitionSpec = d
   lines.push(`version = "0.1.0"`);
   lines.push(`lifecycle = "managed"`);
   lines.push('');
-  if (spec.description) {
+  if (spec.description || spec.systemPrompt) {
     lines.push('[metadata]');
-    lines.push(`description = "${tomlEscape(spec.description)}"`);
+    if (spec.description) lines.push(`description = "${tomlEscape(spec.description)}"`);
+    // ADR-044: carry the harness system prompt so the wasm guest can load it.
+    if (spec.systemPrompt) lines.push(`system_prompt = "${tomlEscape(spec.systemPrompt)}"`);
   }
   return lines.join('\n') + '\n';
 }
@@ -243,8 +293,11 @@ export const adapter: HostAdapter = {
   name: HOST_NAME,
   generateConfig: (spec: HarnessSpec) => ({
     'rvm-partition.toml': partitionToml(spec),
+    // ADR-044 fix: was buildCapabilityTable([]) — always empty, so the entire
+    // RVM capability-token security model emitted nothing. Now derived from the
+    // harness's permission posture (or an explicit spec.claims extension).
     'capability-table.json': JSON.stringify(
-      buildCapabilityTable([]),  // Caller wires actual claims via spec extensions
+      buildCapabilityTableForSpec(spec),
       null, 2,
     ) + '\n',
     'wasm-guest.json': wasmGuestJson(spec),

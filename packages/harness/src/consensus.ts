@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// Consensus layer (ADR-044): merge multiple worker outputs into one answer via
+// Consensus layer (ADR-047): merge multiple worker outputs into one answer via
 // weighted majority or Borda count. Used when the algorithm router fans a step
 // out to several agents and the harness must reconcile their proposals.
 

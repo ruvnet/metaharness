@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// Agent pool (ADR-044): agents are specialised, replaceable workers — not
+// Agent pool (ADR-047): agents are specialised, replaceable workers — not
 // sovereign actors. The pool selects a worker per step via a UCB1 contextual
 // bandit and applies an online reward update after verification, so routing
 // improves run-over-run (the ADR-014 learning loop, scoped to worker selection).

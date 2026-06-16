@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// Recovery layer (ADR-044): circuit breaker + retry budget. Together they make
+// Recovery layer (ADR-047): circuit breaker + retry budget. Together they make
 // runaway loops impossible — the breaker stops hammering a failing dependency,
 // and the budget caps total retries/spend across a whole run.
 

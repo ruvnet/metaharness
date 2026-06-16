@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// Shared types for the Algorithmic Agent Harness (ADR-044).
+// Shared types for the Algorithmic Agent Harness (ADR-047).
 //
 // The harness treats models as interchangeable workers and algorithms as the
 // control plane. These types are the contract between the deterministic control

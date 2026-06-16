@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// @metaharness/harness — the Algorithmic Agent Harness (ADR-044).
+// @metaharness/harness — the Algorithmic Agent Harness (ADR-047).
 //
 // A dependency-free, deterministic control plane that wraps any model, tool,
 // skill, or workflow as a replaceable WORKER. The harness owns state, selection,

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// Verifier layer (ADR-044): property tests + critique loop. Verification is
+// Verifier layer (ADR-047): property tests + critique loop. Verification is
 // adversarial by construction — the verifier is never the agent that produced the
 // output, which is how the harness resists agents colluding on a bad answer.
 

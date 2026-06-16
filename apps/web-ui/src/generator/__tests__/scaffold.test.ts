@@ -87,4 +87,53 @@ describe('buildScaffold', () => {
   it('produces a non-trivial byte size', () => {
     expect(totalBytes(buildScaffold(base))).toBeGreaterThan(1000);
   });
+
+  // ADR-044 — web-UI parity with the host-adapter capability fixes.
+  describe('ADR-044 host parity', () => {
+    const fileFor = (cfg: HarnessConfig, path: string) =>
+      buildScaffold(cfg).find((f) => f.path === path)?.content ?? '';
+
+    it('github-actions workflow env is provider-agnostic (was ANTHROPIC-only)', () => {
+      const yml = fileFor({ ...base, hosts: ['github-actions'] }, '.github/workflows/legal-redline.yml');
+      expect(yml).toContain('ANTHROPIC_API_KEY:');
+      expect(yml).toContain('OPENROUTER_API_KEY:');
+      expect(yml).toContain('OPENAI_API_KEY:');
+    });
+
+    it('opencode uses the verified real schema (ADR-046): mcp map + top-level permission', () => {
+      const json = JSON.parse(fileFor({ ...base, hosts: ['opencode'] }, '.opencode/opencode.json'));
+      // mcp is a direct name→{type,command[],enabled} map; no servers/permissions under mcp.
+      expect(json.mcp['legal-redline'].type).toBe('local');
+      expect(json.mcp['legal-redline'].enabled).toBe(true);
+      expect(json.permission.bash['rm *']).toBe('deny');
+      expect(json.permission.edit).toBe('ask'); // SAFE_MCP_POLICY: no file writes
+    });
+
+    it('rvm emits a capability table (was absent in the web UI)', () => {
+      const paths2 = paths({ ...base, hosts: ['rvm'] });
+      expect(paths2).toContain('capability-table.json');
+      const caps = JSON.parse(fileFor({ ...base, hosts: ['rvm'] }, 'capability-table.json'));
+      expect(Array.isArray(caps)).toBe(true);
+      expect(caps[0]?.rights).toContain('EXECUTE'); // mcp__name__* → EXECUTE
+    });
+
+    it('openclaw nests MCP under mcp.servers with enabled (ADR-046 real schema)', () => {
+      const json = JSON.parse(fileFor({ ...base, hosts: ['openclaw'] }, '.openclaw/openclaw.json'));
+      expect(json.mcp_servers).toBeUndefined();
+      expect(json.mcp.servers['legal-redline'].enabled).toBe(true);
+    });
+
+    it('codex emits AGENTS.md and copilot emits copilot-instructions.md', () => {
+      expect(paths({ ...base, hosts: ['codex'] })).toContain('AGENTS.md');
+      expect(paths({ ...base, hosts: ['copilot'] })).toContain('.github/copilot-instructions.md');
+    });
+
+    it('allowShell policy opens opencode bash wildcard to "allow"', () => {
+      const json = JSON.parse(fileFor(
+        { ...base, hosts: ['opencode'], mcpPolicy: { ...SAFE_MCP_POLICY, allowShell: true } },
+        '.opencode/opencode.json',
+      ));
+      expect(json.permission.bash['*']).toBe('allow');
+    });
+  });
 });

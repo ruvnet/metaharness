@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 import { describe, it, expect } from 'vitest';
-import { tomlEscape, serverToToml, configToml, mcpAddCommands } from '../src/index.js';
+import { tomlEscape, serverToToml, configToml, mcpAddCommands, agentsMarkdown, adapter } from '../src/index.js';
 
 describe('@metaharness/host-codex — TOML generation', () => {
   describe('tomlEscape', () => {
@@ -79,6 +79,32 @@ describe('@metaharness/host-codex — TOML generation', () => {
         mcpServers: [{ name: 'remote', url: 'https://x' }],
       });
       expect(cmds[0]).toContain('codex mcp add remote --url https://x');
+    });
+  });
+
+  // ADR-044 — AGENTS.md emission (systemPrompt + agents were dropped).
+  describe('agentsMarkdown (ADR-044)', () => {
+    it('carries name, description, system prompt, and agents', () => {
+      const md = agentsMarkdown({
+        name: 'demo', description: 'A demo.', systemPrompt: 'Be terse.',
+        agents: [{ name: 'reviewer', systemPrompt: 'Review code.' }],
+      } as any);
+      expect(md).toContain('# demo');
+      expect(md).toContain('A demo.');
+      expect(md).toContain('Be terse.');
+      expect(md).toContain('### reviewer');
+      expect(md).toContain('Review code.');
+    });
+
+    it('generateConfig emits AGENTS.md when a system prompt is present', () => {
+      const out = adapter.generateConfig!({ name: 'demo', systemPrompt: 'You are demo.' } as any);
+      expect(Object.keys(out)).toContain('AGENTS.md');
+      expect(out['AGENTS.md']).toContain('You are demo.');
+    });
+
+    it('generateConfig omits AGENTS.md for a bare spec', () => {
+      const out = adapter.generateConfig!({ name: 'bare', mcpServers: [] } as any);
+      expect(Object.keys(out)).not.toContain('AGENTS.md');
     });
   });
 });

@@ -3,8 +3,10 @@
 import { describe, it, expect } from 'vitest';
 import {
   rightsFromCapability,
+  rightsFromPermission,
   defaultProofTier,
   buildCapabilityTable,
+  buildCapabilityTableForSpec,
   defaultPartitionSpec,
   partitionToml,
   wasmGuestJson,
@@ -192,5 +194,78 @@ describe('adapter', () => {
       'rvm-partition.toml',
       'wasm-guest.json',
     ]);
+  });
+});
+
+// ADR-044 — capability table is no longer always-empty.
+describe('rightsFromPermission (ADR-044)', () => {
+  it('* expands to all 7 rights', () => {
+    expect(rightsFromPermission('*')).toEqual([
+      'READ', 'WRITE', 'GRANT', 'REVOKE', 'EXECUTE', 'PROVE', 'GRANT_ONCE',
+    ]);
+  });
+  it('Read(...) -> [READ]', () => {
+    expect(rightsFromPermission('Read(./src/**)')).toEqual(['READ']);
+  });
+  it('Edit/Write -> [READ, WRITE]', () => {
+    expect(rightsFromPermission('Edit(./src/**)')).toEqual(['READ', 'WRITE']);
+    expect(rightsFromPermission('Write')).toEqual(['READ', 'WRITE']);
+  });
+  it('MCP tool + Bash -> [EXECUTE]', () => {
+    expect(rightsFromPermission('mcp__codeindex__*')).toEqual(['EXECUTE']);
+    expect(rightsFromPermission('Bash(git status)')).toEqual(['EXECUTE']);
+  });
+});
+
+describe('buildCapabilityTableForSpec (ADR-044)', () => {
+  it('derives tokens from spec.permissions.allow (no longer empty)', () => {
+    const table = buildCapabilityTableForSpec({
+      name: 'demo',
+      permissions: { allow: ['mcp__mem__*', 'Read(./README.md)'], deny: [] },
+    } as any);
+    expect(table.length).toBe(2);
+    expect(table[0]!.rights).toEqual(['EXECUTE']);
+    expect(table[0]!.proof_tier).toBe('P2');
+    expect(table[1]!.rights).toEqual(['READ']);
+    expect(table[1]!.proof_tier).toBe('P1');
+  });
+
+  it('prefers an explicit spec.claims extension when present', () => {
+    const table = buildCapabilityTableForSpec({
+      name: 'demo',
+      permissions: { allow: ['mcp__mem__*'] },
+      claims: [{ capability: 'admin.grant_once', expires_at: 500 }],
+    } as any);
+    expect(table.length).toBe(1);
+    expect(table[0]!.rights).toEqual(['GRANT_ONCE']);
+    expect(table[0]!.grant_once).toBe(true);
+    expect(table[0]!.expires_at).toBe(500);
+  });
+
+  it('empty when no permissions and no claims', () => {
+    expect(buildCapabilityTableForSpec({ name: 'x' } as any)).toEqual([]);
+  });
+
+  it('derived claims are deterministic (witness-stable, ADR-011)', () => {
+    const spec = { name: 'd', permissions: { allow: ['mcp__a__*', 'Bash(ls)'] } } as any;
+    expect(JSON.stringify(buildCapabilityTableForSpec(spec)))
+      .toBe(JSON.stringify(buildCapabilityTableForSpec(spec)));
+  });
+
+  it('generateConfig now emits a non-empty capability table for a harness with perms', () => {
+    const out = adapter.generateConfig({
+      name: 'real', permissions: { allow: ['mcp__mem__*'] },
+    } as any);
+    const table = JSON.parse(out['capability-table.json']!);
+    expect(table.length).toBe(1);
+    expect(table[0]!.rights).toEqual(['EXECUTE']);
+  });
+});
+
+describe('partitionToml system_prompt (ADR-044)', () => {
+  it('emits system_prompt in [metadata] when present', () => {
+    const toml = partitionToml({ name: 'h', systemPrompt: 'You are h.' } as any);
+    expect(toml).toContain('[metadata]');
+    expect(toml).toContain('system_prompt = "You are h."');
   });
 });

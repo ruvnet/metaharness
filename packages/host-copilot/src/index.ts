@@ -115,12 +115,36 @@ export function installRunbook(spec: HarnessSpec): string {
   ].join('\n') + '\n';
 }
 
+/**
+ * ADR-044: emit `.github/copilot-instructions.md` from the harness system
+ * prompt + description. GitHub Copilot reads this file for repo-wide custom
+ * instructions; the adapter previously dropped `spec.systemPrompt`.
+ */
+export function copilotInstructions(spec: HarnessSpec): string {
+  const lines: string[] = [`# ${spec.name}`, ''];
+  if (spec.description) lines.push(spec.description, '');
+  if (spec.systemPrompt) lines.push(spec.systemPrompt, '');
+  if (spec.agents && spec.agents.length > 0) {
+    lines.push('## Agent roles', '');
+    for (const a of spec.agents) lines.push(`- **${a.name}**: ${a.systemPrompt ?? ''}`);
+    lines.push('');
+  }
+  return lines.join('\n');
+}
+
 export const adapter: HostAdapter = {
   name: HOST_NAME,
-  generateConfig: (spec: HarnessSpec) => ({
-    '.vscode/mcp.json': mcpJson(spec),
-    'install.md': installRunbook(spec),
-  }),
+  generateConfig: (spec: HarnessSpec) => {
+    const out: Record<string, string> = {
+      '.vscode/mcp.json': mcpJson(spec),
+      'install.md': installRunbook(spec),
+    };
+    // ADR-044: emit Copilot custom instructions (system prompt + agent roles).
+    if (spec.systemPrompt || spec.description || (spec.agents?.length ?? 0) > 0) {
+      out['.github/copilot-instructions.md'] = copilotInstructions(spec);
+    }
+    return out;
+  },
 };
 
 export default adapter;

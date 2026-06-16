@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// Hash-chained receipts (ADR-044 audit layer; the ADR-011 witness substrate made
+// Hash-chained receipts (ADR-047 audit layer; the ADR-011 witness substrate made
 // first-class in the harness). Every step emits a receipt whose `thisHash` chains
 // over the previous receipt's hash, so any tampering or reordering is detectable
 // by replaying the chain — `verify()` recomputes every link.
@@ -29,7 +29,7 @@ function sortKeys(value: unknown): unknown {
   return value;
 }
 
-/** A single receipt — the ADR-044 receipt format plus the chaining hashes. */
+/** A single receipt — the ADR-047 receipt format plus the chaining hashes. */
 export interface Receipt {
   runId: string;
   step: string;

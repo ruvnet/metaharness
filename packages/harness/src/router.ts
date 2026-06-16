@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// Intent classifier + algorithm router (ADR-044). The classifier picks a workflow
+// Intent classifier + algorithm router (ADR-047). The classifier picks a workflow
 // path with a softmax over keyword features plus hard rules; the router maps the
 // chosen intent to a deterministic strategy — an ordered DAG of step kinds.
 //
@@ -17,7 +17,7 @@ export interface Strategy {
   steps: { kind: string; deps?: string[] }[];
 }
 
-/** The default strategy table from ADR-044 §"Algorithm router". */
+/** The default strategy table from ADR-047 §"Algorithm router". */
 export const DEFAULT_STRATEGIES: Record<string, Strategy> = {
   coding: {
     intent: 'coding',

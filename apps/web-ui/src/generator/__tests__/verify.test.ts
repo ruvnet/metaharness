@@ -54,4 +54,21 @@ describe('verifyFileMap', () => {
     expect(r.ok).toBe(true);
     expect(r.checks.some((c) => c.id === 'mcp-off')).toBe(true);
   });
+
+  // ADR-044 — capability-coverage surface in the Verify tab.
+  it('reports host capability coverage (system-prompt + agents + mcp + permissions)', () => {
+    const r = verifyFileMap(buildScaffold(cfg()));
+    const cov = r.checks.find((c) => c.id === 'capability-coverage');
+    expect(cov).toBeDefined();
+    expect(cov!.title).toMatch(/coverage: [2-4]\/4/);
+    expect(cov!.detail).toContain('system-prompt');
+    expect(cov!.detail).toContain('verify-harness-live');
+  });
+
+  it('detects an opencode harness host artifact + permissions coverage', () => {
+    const r = verifyFileMap(buildScaffold(cfg({ hosts: ['opencode'] })));
+    expect(r.checks.some((c) => c.id === 'host' && c.severity === 'pass')).toBe(true);
+    const cov = r.checks.find((c) => c.id === 'capability-coverage')!;
+    expect(cov.detail).toContain('permissions');
+  });
 });

@@ -109,4 +109,43 @@ describe('@metaharness/host-github-actions (ADR-033)', () => {
       for (const v of Object.values(out)) expect(v.length).toBeGreaterThan(0);
     });
   });
+
+  // ADR-044 — provider-agnostic key, system prompt, MCP wiring.
+  describe('ADR-044 capability fixes', () => {
+    it('workflow env is provider-agnostic (anthropic + openrouter + openai)', () => {
+      const yml = workflowYaml(base);
+      expect(yml).toContain('ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}');
+      expect(yml).toContain('OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}');
+      expect(yml).toContain('OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}');
+    });
+
+    it('action injects HARNESS_SYSTEM_PROMPT only when a system prompt is present', () => {
+      expect(actionYaml(base)).not.toContain('HARNESS_SYSTEM_PROMPT');
+      const withPrompt = actionYaml({ ...base, systemPrompt: 'Be terse.' } as HarnessSpec);
+      expect(withPrompt).toContain('HARNESS_SYSTEM_PROMPT');
+      expect(withPrompt).toContain('SYSTEM.md');
+    });
+
+    it('action adds an MCP step only when servers are declared', () => {
+      expect(actionYaml(base)).not.toContain('mcp-servers.json');
+      const withMcp = actionYaml({ ...base, mcpServers: [{ name: 'mem', command: ['node', 's.js'] }] } as HarnessSpec);
+      expect(withMcp).toContain('mcp-servers.json');
+    });
+
+    it('generateConfig emits SYSTEM.md + mcp-servers.json when declared (gated)', () => {
+      const out = adapter.generateConfig({
+        name: 'My Bot', description: 'does things', systemPrompt: 'Be terse.',
+        mcpServers: [{ name: 'mem', command: ['node', 's.js'] }],
+      } as HarnessSpec);
+      expect(Object.keys(out).sort()).toEqual([
+        '.github/actions/my-bot/SYSTEM.md',
+        '.github/actions/my-bot/action.yml',
+        '.github/actions/my-bot/mcp-servers.json',
+        '.github/workflows/my-bot.yml',
+        'install.md',
+      ]);
+      expect(out['.github/actions/my-bot/SYSTEM.md']).toContain('Be terse.');
+      expect(JSON.parse(out['.github/actions/my-bot/mcp-servers.json']!).mcpServers).toHaveLength(1);
+    });
+  });
 });

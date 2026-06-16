@@ -1,7 +1,7 @@
 {
   "name": "@metaharness/harness",
   "version": "0.1.0",
-  "description": "Algorithmic Agent Harness (ADR-044) — a deterministic control plane that wraps any model/tool/skill as a replaceable worker: utility-scored decisions, four-gate safety, hash-chained receipts, circuit-breaker recovery, adversarial verification, and a bandit agent pool. The model proposes, the harness decides, the algorithms verify.",
+  "description": "Algorithmic Agent Harness (ADR-047) — a deterministic control plane that wraps any model/tool/skill as a replaceable worker: utility-scored decisions, four-gate safety, hash-chained receipts, circuit-breaker recovery, adversarial verification, and a bandit agent pool. The model proposes, the harness decides, the algorithms verify.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

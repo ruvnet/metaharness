@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// The Harness Kernel (ADR-044): owns the run lifecycle and drives the execution
+// The Harness Kernel (ADR-047): owns the run lifecycle and drives the execution
 // loop. The model proposes (workers produce outputs); the harness decides
 // (utility scoring + four gates + safety); the algorithms verify (verifier layer
 // + receipts). Given the same goal, policy, budget and worker outputs, a run

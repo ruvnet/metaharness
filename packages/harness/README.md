@@ -2,7 +2,7 @@
 
 > The Algorithmic Agent Harness — **the model proposes, the harness decides, the algorithms verify.**
 
-A dependency-free, deterministic **control plane** for AI agents (ADR-044). Single
+A dependency-free, deterministic **control plane** for AI agents (ADR-047). Single
 agents fail because they fold reasoning, tool use, memory, routing, safety,
 evaluation, and recovery into one fragile loop. This package inverts that: it
 treats models/tools/skills as interchangeable **workers** and makes *algorithms*
@@ -81,4 +81,4 @@ latencyMs, verdict }`.
 
 ## License
 
-MIT © rUv. See [ADR-044](../../docs/adrs/ADR-044-algorithmic-agent-harness.md).
+MIT © rUv. See [ADR-047](../../docs/adrs/ADR-047-algorithmic-agent-harness.md).

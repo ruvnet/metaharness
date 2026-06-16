@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// The decision rule (ADR-044 key invariant).
+// The decision rule (ADR-047 key invariant).
 //
 //   decision = argmax utility(action)
 //   utility  = quality − latency_cost − token_cost − risk_penalty + confidence_bonus
@@ -22,7 +22,7 @@ export interface ScoringWeights {
   confidence: number;
 }
 
-/** ADR-044 reference weights: quality − 0.15·latency_s − 4.0·cost − 2.5·risk + 0.5·conf. */
+/** ADR-047 reference weights: quality − 0.15·latency_s − 4.0·cost − 2.5·risk + 0.5·conf. */
 export const DEFAULT_WEIGHTS: ScoringWeights = {
   latency: 0.15,
   cost: 4.0,
