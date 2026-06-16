@@ -19,7 +19,7 @@
 //   deny rules from .harness/mcp-policy.json verbatim, so the harness's
 //   posture wins through OpenCode's own enforcement gate.
 
-import type { HostAdapter, HarnessSpec, McpServerSpec } from '@metaharness/kernel';
+import type { HostAdapter, HarnessSpec, McpServerSpec, AgentSpec } from '@metaharness/kernel';
 
 export const HOST_NAME = 'opencode' as const;
 
@@ -61,7 +61,12 @@ export function opencodeJson(spec: HarnessSpec): string {
   for (const s of spec.mcpServers ?? []) {
     servers[s.name] = serverToOpencode(s);
   }
-  const policy = (spec as any).mcpPolicy as {
+  // ADR-044 fix: the kernel contract field is `spec.permissions`. The earlier
+  // code read only `(spec as any).mcpPolicy`, a field the CLI generator
+  // (manifest.ts) never sets, so a harness's allow/deny posture was silently
+  // dropped and OpenCode always got empty arrays. Prefer the real field; keep
+  // `mcpPolicy` as a back-compat fallback for callers still passing it.
+  const policy = (spec.permissions ?? (spec as any).mcpPolicy) as {
     allow?: string[];
     deny?: string[];
   } | undefined;
@@ -78,6 +83,46 @@ export function opencodeJson(spec: HarnessSpec): string {
     },
   };
   return JSON.stringify(cfg, null, 2) + '\n';
+}
+
+/**
+ * ADR-044: render an OpenCode agent definition. OpenCode reads agents from
+ * `.opencode/agents/<name>.md` as markdown with YAML frontmatter (the host's
+ * own header comment documents this surface; the adapter previously dropped
+ * `spec.agents` entirely). Frontmatter is sanitized so an agent prompt with
+ * quotes/newlines cannot break the YAML document.
+ */
+export function agentMarkdown(a: AgentSpec): string {
+  const desc = (a.systemPrompt ?? '')
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/[\r\n]+/g, ' ')
+    .slice(0, 200);
+  return [
+    '---',
+    `description: "${desc}"`,
+    'mode: subagent',
+    '---',
+    '',
+    a.systemPrompt ?? `Agent: ${a.name}`,
+    '',
+  ].join('\n');
+}
+
+/**
+ * ADR-044: emit AGENTS.md from `spec.systemPrompt`. OpenCode reads repo-root
+ * AGENTS.md for project instructions; the adapter previously dropped the
+ * harness system prompt.
+ */
+export function agentsMarkdown(spec: HarnessSpec): string {
+  return [
+    `# ${spec.name}`,
+    '',
+    spec.description ?? '',
+    '',
+    spec.systemPrompt ?? '',
+    '',
+  ].join('\n');
 }
 
 /**
@@ -121,10 +166,18 @@ export function installRunbook(spec: HarnessSpec): string {
 
 export const adapter: HostAdapter = {
   name: HOST_NAME,
-  generateConfig: (spec: HarnessSpec) => ({
-    '.opencode/opencode.json': opencodeJson(spec),
-    'install.md': installRunbook(spec),
-  }),
+  generateConfig: (spec: HarnessSpec) => {
+    const out: Record<string, string> = {
+      '.opencode/opencode.json': opencodeJson(spec),
+      'install.md': installRunbook(spec),
+    };
+    // ADR-044: emit the system prompt + one file per agent.
+    if (spec.systemPrompt || spec.description) out['AGENTS.md'] = agentsMarkdown(spec);
+    for (const a of spec.agents ?? []) {
+      out[`.opencode/agents/${a.name}.md`] = agentMarkdown(a);
+    }
+    return out;
+  },
 };
 
 export default adapter;

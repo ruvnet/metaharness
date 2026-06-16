@@ -39,3 +39,8 @@ coverage/
 
 # DRACO transient run output (the committed baseline is runs/baseline-mock.json)
 packages/bench/draco-current.json
+
+# Runtime artifacts from ruflo / claude-flow tooling (not source)
+.claude-flow/
+**/ruvector.db
+ruvector.db

@@ -4,7 +4,7 @@
 // host-copilot test suite, adapted for OpenCode's $schema-anchored JSON.
 
 import { describe, it, expect } from 'vitest';
-import { serverToOpencode, opencodeJson, installRunbook, adapter, HOST_NAME } from '../src/index.js';
+import { serverToOpencode, opencodeJson, installRunbook, agentMarkdown, agentsMarkdown, adapter, HOST_NAME } from '../src/index.js';
 
 const baseSpec = {
   name: 'demo',
@@ -96,6 +96,59 @@ describe('@metaharness/host-opencode (iter 128, ADR-036)', () => {
 
   it('byte-deterministic for the same spec (witness-stable ADR-011)', () => {
     expect(opencodeJson(baseSpec as any)).toBe(opencodeJson(baseSpec as any));
+  });
+
+  // ADR-044 — permissions wired to the kernel `spec.permissions` field.
+  it('opencodeJson reads spec.permissions (kernel contract field)', () => {
+    const spec = {
+      name: 'perms',
+      mcpServers: [],
+      permissions: { allow: ['mcp__mem__*'], deny: ['Read(./.env*)'] },
+    };
+    const parsed = JSON.parse(opencodeJson(spec as any));
+    expect(parsed.mcp.permissions.allow).toContain('mcp__mem__*');
+    expect(parsed.mcp.permissions.deny).toContain('Read(./.env*)');
+  });
+
+  it('spec.permissions wins over legacy mcpPolicy when both present', () => {
+    const spec = {
+      name: 'both',
+      mcpServers: [],
+      permissions: { allow: ['from-permissions'], deny: [] },
+      mcpPolicy: { allow: ['from-mcpPolicy'], deny: [] },
+    };
+    const parsed = JSON.parse(opencodeJson(spec as any));
+    expect(parsed.mcp.permissions.allow).toEqual(['from-permissions']);
+  });
+
+  // ADR-044 — agents + system prompt emission.
+  it('agentMarkdown emits YAML frontmatter + body, sanitized', () => {
+    const md = agentMarkdown({ name: 'reviewer', systemPrompt: 'Review "carefully"\nalways' });
+    expect(md).toMatch(/^---\n/);
+    expect(md).toContain('mode: subagent');
+    expect(md).toContain('\\"carefully\\"'); // quotes escaped in frontmatter
+    expect(md).not.toMatch(/description: ".*\n.*"/); // no raw newline in scalar
+  });
+
+  it('generateConfig emits .opencode/agents/<name>.md per agent + AGENTS.md', () => {
+    const spec = {
+      name: 'demo',
+      systemPrompt: 'You are demo, a repo-aware agent.',
+      mcpServers: [],
+      agents: [{ name: 'reviewer', systemPrompt: 'Review code.' }, { name: 'tester', systemPrompt: 'Write tests.' }],
+    };
+    const out = adapter.generateConfig!(spec as any);
+    expect(Object.keys(out)).toContain('.opencode/agents/reviewer.md');
+    expect(Object.keys(out)).toContain('.opencode/agents/tester.md');
+    expect(Object.keys(out)).toContain('AGENTS.md');
+    expect(out['AGENTS.md']).toContain('You are demo, a repo-aware agent.');
+  });
+
+  it('agentsMarkdown carries name + description + system prompt', () => {
+    const md = agentsMarkdown({ name: 'h', description: 'd', systemPrompt: 'sp' } as any);
+    expect(md).toContain('# h');
+    expect(md).toContain('d');
+    expect(md).toContain('sp');
   });
 
   it('every emitted server entry has command OR url (schema gate)', () => {
