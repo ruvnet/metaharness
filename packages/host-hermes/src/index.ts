@@ -88,6 +88,15 @@ export function cliConfigYaml(spec: HarnessSpec): string {
   lines.push(`name: ${spec.name}`);
   if (spec.description) lines.push(`description: ${JSON.stringify(spec.description)}`);
   if (spec.systemPrompt) lines.push(`system_prompt: ${JSON.stringify(spec.systemPrompt)}`);
+  // ADR-044: wire the agent roster (previously dropped). Hermes-agent reads
+  // a list of named agents with their own system prompts.
+  if (spec.agents && spec.agents.length > 0) {
+    lines.push('agents:');
+    for (const a of spec.agents) {
+      lines.push(`  - name: ${a.name}`);
+      if (a.systemPrompt) lines.push(`    system_prompt: ${JSON.stringify(a.systemPrompt)}`);
+    }
+  }
   lines.push(`scrub_think_blocks: true`);
   lines.push(`scrub_stray_tool_calls: true`);
   return lines.join('\n') + '\n';

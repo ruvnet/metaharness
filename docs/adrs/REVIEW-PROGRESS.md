@@ -26,13 +26,15 @@ Status: 🔲 todo · 🛠 in-progress · ✅ done (adapter emits + unit test + l
 | codex          | 100% | ✅ | DONE (iter 4): emits AGENTS.md (systemPrompt + agent roster); 11 tests |
 | copilot        | 100% | ✅ | DONE (iter 4): emits `.github/copilot-instructions.md` (systemPrompt + agent roles); 12 tests |
 | github-actions | 100% | ✅ | DONE (iter 5): provider-agnostic keys (anthropic/openrouter/openai); SYSTEM.md shipped + read at runtime; MCP manifest wired; 20 tests |
-| hermes         | ~60% | 🔲 | wire `spec.agents` into cli-config.yaml |
-| openclaw       | ~60% | 🔲 | wire `spec.permissions`; per-skill SKILL.md |
+| hermes         | 100% | ✅ | DONE (iter 6): agent roster wired into cli-config.yaml; 14 tests |
+| openclaw       | 100% | ✅ | DONE (iter 6): `spec.permissions` wired into openclaw.json; 20 tests |
 | opencode       | 100% | ✅ | DONE (iter 1): permissions→`spec.permissions`; emits `.opencode/agents/` + AGENTS.md; 16 tests pass |
-| pi-dev         | ~75% | 🔲 | emit `trust.json` |
+| pi-dev         | 100% | ✅ | DONE (iter 6): emits `trust.json` (+ first test suite for the host); 9 tests |
 | rvm            | 100% | ✅ | DONE (iter 2): capability table derived from `spec.permissions`/`claims` (was `[]`); `system_prompt` in partition; 36 tests pass |
 
-**CLI gate: 6/9 hosts at 100%.** Next: hermes (agents into cli-config), openclaw (permissions + per-skill), pi-dev (trust.json) — then web-UI.
+**CLI gate: 9/9 hosts at 100% ✅ — COMPLETE.** All 9 host adapters fully consume
+the kernel `HarnessSpec`; 153 host unit tests pass. Moving to the web-UI generator
+parity pass.
 
 ## Web-UI coverage (after CLI gate)
 
@@ -77,3 +79,10 @@ Status: 🔲 todo · 🛠 in-progress · ✅ done (adapter emits + unit test + l
   runtime. (3) MCP servers wired via `.github/actions/<slug>/mcp-servers.json` +
   an MCP step. New files gated on presence (bare spec still emits 3 files).
   +5 unit tests (20/20 pass). github-actions → 100%. Next: hermes.
+- **iter 6 (2026-06-16)**: **Fixed the last 3 CLI hosts** (batched). hermes: agent
+  roster wired into `cli-config.yaml` (was dropped). openclaw: `spec.permissions`
+  allow/deny wired into `openclaw.json` (was dropped). pi-dev: emits `trust.json`
+  (Pi's trust-gate file, was missing) carrying the default-deny posture — and
+  added the host's **first test suite** (pi-dev had zero tests). All 9 host
+  suites green: **153 tests**. **CLI GATE COMPLETE (9/9).** Next: web-UI generator
+  parity (`apps/web-ui/src/generator/*`).

@@ -57,6 +57,20 @@ describe('@metaharness/host-openclaw — config generation', () => {
     it('always ends with a newline (POSIX file)', () => {
       expect(configJson({ name: 'h' }).endsWith('\n')).toBe(true);
     });
+
+    // ADR-044 — permissions wired (previously dropped).
+    it('emits a permissions block when the harness declares one', () => {
+      const parsed = JSON.parse(configJson({
+        name: 'h',
+        permissions: { allow: ['mcp__mem__*'], deny: ['Read(./.env*)'] },
+      } as any));
+      expect(parsed.permissions.allow).toContain('mcp__mem__*');
+      expect(parsed.permissions.deny).toContain('Read(./.env*)');
+    });
+
+    it('omits permissions when none declared (no empty block)', () => {
+      expect(JSON.parse(configJson({ name: 'h' })).permissions).toBeUndefined();
+    });
   });
 
   describe('skillMarkdown', () => {

@@ -66,7 +66,16 @@ export function configJson(spec: HarnessSpec): string {
   for (const s of spec.mcpServers ?? []) {
     mcpServers[s.name] = serverToOpenClaw(s);
   }
-  return JSON.stringify({ mcp_servers: mcpServers }, null, 2) + '\n';
+  const cfg: Record<string, unknown> = { mcp_servers: mcpServers };
+  // ADR-044: carry the harness default-deny posture (previously dropped).
+  // OpenClaw gates tool access through a permissions allow/deny policy.
+  if (spec.permissions && (spec.permissions.allow?.length || spec.permissions.deny?.length)) {
+    cfg.permissions = {
+      allow: spec.permissions.allow ?? [],
+      deny: spec.permissions.deny ?? [],
+    };
+  }
+  return JSON.stringify(cfg, null, 2) + '\n';
 }
 
 /**

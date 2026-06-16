@@ -64,6 +64,25 @@ describe('@metaharness/host-hermes — Hermes-4 quirk handling', () => {
       expect(c).toContain('scrub_think_blocks: true');
       expect(c).toContain('scrub_stray_tool_calls: true');
     });
+
+    // ADR-044 — agents wired into cli-config (previously dropped).
+    it('emits the agent roster when agents are declared', () => {
+      const c = cliConfigYaml({
+        name: 'h',
+        agents: [
+          { name: 'reviewer', systemPrompt: 'Review code.' },
+          { name: 'tester', systemPrompt: 'Write tests.' },
+        ],
+      } as any);
+      expect(c).toContain('agents:');
+      expect(c).toContain('- name: reviewer');
+      expect(c).toContain('system_prompt: "Review code."');
+      expect(c).toContain('- name: tester');
+    });
+
+    it('omits the agents block when none are declared', () => {
+      expect(cliConfigYaml({ name: 'h' })).not.toContain('agents:');
+    });
   });
 
   // CodeQL js/polynomial-redos regression (alert #1, fixed iter 138).
