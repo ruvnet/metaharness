@@ -30,9 +30,9 @@ Status: 🔲 todo · 🛠 in-progress · ✅ done (adapter emits + unit test + l
 | openclaw       | ~60% | 🔲 | wire `spec.permissions`; per-skill SKILL.md |
 | opencode       | 100% | ✅ | DONE (iter 1): permissions→`spec.permissions`; emits `.opencode/agents/` + AGENTS.md; 16 tests pass |
 | pi-dev         | ~75% | 🔲 | emit `trust.json` |
-| rvm            | ~55% | 🔲 | **BUG**: capability table built from empty array; wire claims; systemPrompt |
+| rvm            | 100% | ✅ | DONE (iter 2): capability table derived from `spec.permissions`/`claims` (was `[]`); `system_prompt` in partition; 36 tests pass |
 
-**CLI gate: 1/9 hosts at 100%.** Next: rvm (bug-grade empty capability table) or claude-code (stub).
+**CLI gate: 2/9 hosts at 100%.** Next: claude-code (stub: no CLAUDE.md/agents, hooks command-only).
 
 ## Web-UI coverage (after CLI gate)
 
@@ -51,3 +51,10 @@ Status: 🔲 todo · 🛠 in-progress · ✅ done (adapter emits + unit test + l
   read from `spec.permissions` (was the never-set `mcpPolicy`), emits
   `.opencode/agents/<name>.md` per agent + `AGENTS.md` system prompt; +5 unit
   tests (16/16 pass). opencode → 100%. Next: rvm (empty capability table bug).
+- **iter 2 (2026-06-16)**: **Fixed rvm** (bug-grade): `generateConfig` built the
+  capability table from a hard-coded `[]`, so the entire RVM capability-token
+  security model emitted nothing. Added `rightsFromPermission()` +
+  `buildCapabilityTableForSpec()` — tokens now derived from `spec.permissions.allow`
+  (or an explicit `spec.claims` extension), deterministic (expiry sentinel 0,
+  witness-stable). Also emit `system_prompt` in the partition `[metadata]`.
+  +11 unit tests (36/36 pass). rvm → 100%. Next: claude-code (stub).
