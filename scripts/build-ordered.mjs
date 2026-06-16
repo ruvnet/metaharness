@@ -17,9 +17,9 @@ import { promisify } from 'node:util';
 const execFile = promisify(execFileCb);
 
 const PHASES = [
-  // Phase 1: kernel-js — everything imports from it. router is dependency-free
-  // (no internal imports) so it builds here too.
-  ['kernel-js', 'router'],
+  // Phase 1: kernel-js — everything imports from it. router and harness are
+  // dependency-free (no internal imports) so they build here too.
+  ['kernel-js', 'router', 'harness'],
   // Phase 2: vertical-base — vertical-trading imports from it
   ['vertical-base'],
   // Phase 3: hosts + sdk + cli — all depend on kernel-js

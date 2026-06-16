@@ -1,0 +1,53 @@
+{
+  "name": "@metaharness/harness",
+  "version": "0.1.0",
+  "description": "Algorithmic Agent Harness (ADR-044) — a deterministic control plane that wraps any model/tool/skill as a replaceable worker: utility-scored decisions, four-gate safety, hash-chained receipts, circuit-breaker recovery, adversarial verification, and a bandit agent pool. The model proposes, the harness decides, the algorithms verify.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "agent-harness",
+    "control-plane",
+    "metaharness",
+    "receipts",
+    "verification",
+    "circuit-breaker",
+    "contextual-bandit",
+    "consensus",
+    "governance"
+  ],
+  "author": "rUv <ruv@ruv.net>",
+  "license": "MIT",
+  "homepage": "https://github.com/ruvnet/agent-harness-generator",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/agent-harness-generator",
+    "directory": "packages/harness"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
