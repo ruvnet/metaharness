@@ -87,4 +87,51 @@ describe('buildScaffold', () => {
   it('produces a non-trivial byte size', () => {
     expect(totalBytes(buildScaffold(base))).toBeGreaterThan(1000);
   });
+
+  // ADR-044 — web-UI parity with the host-adapter capability fixes.
+  describe('ADR-044 host parity', () => {
+    const fileFor = (cfg: HarnessConfig, path: string) =>
+      buildScaffold(cfg).find((f) => f.path === path)?.content ?? '';
+
+    it('github-actions workflow env is provider-agnostic (was ANTHROPIC-only)', () => {
+      const yml = fileFor({ ...base, hosts: ['github-actions'] }, '.github/workflows/legal-redline.yml');
+      expect(yml).toContain('ANTHROPIC_API_KEY:');
+      expect(yml).toContain('OPENROUTER_API_KEY:');
+      expect(yml).toContain('OPENAI_API_KEY:');
+    });
+
+    it('opencode permissions derive from mcpPolicy (was hard-coded empty allow)', () => {
+      const json = JSON.parse(fileFor({ ...base, hosts: ['opencode'] }, '.opencode/opencode.json'));
+      // SAFE_MCP_POLICY: mcp on → harness namespace allowed; secrets + dangerous denied.
+      expect(json.mcp.permissions.allow).toContain('mcp__legal-redline__*');
+      expect(json.mcp.permissions.deny).toContain('Read(./.env)');
+    });
+
+    it('rvm emits a capability table (was absent in the web UI)', () => {
+      const paths2 = paths({ ...base, hosts: ['rvm'] });
+      expect(paths2).toContain('capability-table.json');
+      const caps = JSON.parse(fileFor({ ...base, hosts: ['rvm'] }, 'capability-table.json'));
+      expect(Array.isArray(caps)).toBe(true);
+      expect(caps[0]?.rights).toContain('EXECUTE'); // mcp__name__* → EXECUTE
+    });
+
+    it('openclaw carries the permission posture', () => {
+      const json = JSON.parse(fileFor({ ...base, hosts: ['openclaw'] }, '.openclaw/openclaw.json'));
+      expect(json.permissions.deny).toContain('Read(./.env)');
+      expect(json.mcp_servers).toBeDefined();
+    });
+
+    it('codex emits AGENTS.md and copilot emits copilot-instructions.md', () => {
+      expect(paths({ ...base, hosts: ['codex'] })).toContain('AGENTS.md');
+      expect(paths({ ...base, hosts: ['copilot'] })).toContain('.github/copilot-instructions.md');
+    });
+
+    it('allowShell policy widens opencode allow to Bash(*)', () => {
+      const json = JSON.parse(fileFor(
+        { ...base, hosts: ['opencode'], mcpPolicy: { ...SAFE_MCP_POLICY, allowShell: true } },
+        '.opencode/opencode.json',
+      ));
+      expect(json.mcp.permissions.allow).toContain('Bash(*)');
+    });
+  });
 });

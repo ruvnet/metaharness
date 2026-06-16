@@ -38,9 +38,14 @@ parity pass.
 
 ## Web-UI coverage (after CLI gate)
 
+The web-UI **reimplements** host config generation in
+`apps/web-ui/src/generator/scaffold.ts` (browser-only, no node deps — it does
+NOT import the `@metaharness/host-*` packages), so adapter fixes do not flow
+through automatically. ADR-027 byte-parity surface.
+
 | Area | Status | Notes |
 |------|:------:|-------|
-| `apps/web-ui/src/generator/*` parity with adapter fixes | 🔲 | Mirror each host fix into the browser generator |
+| `scaffold.ts` parity with adapter fixes | ✅ | DONE (iter 7): github-actions provider-agnostic key; opencode permissions from `mcpPolicy` (was hard-coded); rvm capability-table.json (was absent); openclaw permissions; codex AGENTS.md; copilot copilot-instructions.md. +6 tests (60/60 generator tests pass) |
 | `verify.ts` capability checks | 🔲 | Surface live/coverage status in VerifyPanel |
 
 ## Iteration log
@@ -86,3 +91,13 @@ parity pass.
   added the host's **first test suite** (pi-dev had zero tests). All 9 host
   suites green: **153 tests**. **CLI GATE COMPLETE (9/9).** Next: web-UI generator
   parity (`apps/web-ui/src/generator/*`).
+- **iter 7 (2026-06-16)**: **Web-UI parity pass.** The browser generator
+  (`scaffold.ts`) reimplements host config gen separately from the adapters and
+  carried the same gaps/bugs. Fixed: github-actions provider-agnostic env
+  (anthropic/openrouter/openai, was ANTHROPIC-only); opencode permissions derived
+  from `cfg.mcpPolicy` via new `policyLists()` (was hard-coded empty allow); rvm
+  now emits `capability-table.json` (was absent in the web UI entirely); openclaw
+  carries the permission posture; codex emits `AGENTS.md`; copilot emits
+  `.github/copilot-instructions.md`. +6 scaffold tests; **60/60 generator tests
+  pass**. Next: surface live/coverage status in VerifyPanel + run the live
+  verifier on a real scaffold.
