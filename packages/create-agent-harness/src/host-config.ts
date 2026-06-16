@@ -82,8 +82,11 @@ export function hostConfigFiles(host: string, cfg: HostConfigInput): HostFile[] 
       ];
 
     case 'hermes': {
+      // ADR-046 — verified against hermes cli-config.yaml.example: nested
+      // `model:` + `agent.personalities` schema; no name/description/scrub keys.
+      const persona = (cfg.description || `You are ${cfg.name}.`).replace(/[\r\n]+/g, ' ');
       const files: HostFile[] = [
-        { path: 'cli-config.yaml', content: `name: ${cfg.name}\ndescription: ${cfg.description}\nmcp:\n  enabled: ${cfg.mcp !== 'off'}\n  scrub_think_tags: true\n` },
+        { path: 'cli-config.yaml', content: `# Hermes Agent config for ${cfg.name} — subset of cli-config.yaml.example.\nmodel:\n  provider: "auto"\nagent:\n  personalities:\n    ${cfg.name}: ${JSON.stringify(persona)}\n` },
       ];
       if (server) files.push({ path: `optional-mcps/${cfg.name}.json`, content: JSON.stringify({ [cfg.name]: server }, null, 2) + '\n' });
       return files;

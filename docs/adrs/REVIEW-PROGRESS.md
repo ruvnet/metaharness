@@ -16,6 +16,27 @@ follow-up tracked as **ADR-045** (CLI scaffold → adapter wiring).
 > verifier, then update the row + the log below. Move to web-UI only after all
 > nine CLI hosts hit ✅.
 
+## Real-install host verification (ADR-046, 2026-06-16)
+
+Question raised: "are all hosts proven functional using actual installs?" — only
+claude-code was. This pass installed + ran each feasible runtime. **It caught 3
+real schema bugs** that the schema-shape + OpenRouter live-content checks missed.
+
+| Host | Real runtime | Verdict |
+|------|---|---|
+| claude-code | `claude -p` + `--plugin-dir` | ✅ runs |
+| codex | `codex doctor` + `codex exec` (OpenRouter) | ✅ valid + runs (no fix) |
+| opencode | `opencode run` (OpenRouter) | 🐛→✅ schema bug FIXED + re-run OK |
+| openclaw | `openclaw config validate` | 🐛→✅ schema bug FIXED + valid |
+| github-actions | `act` (Docker, real runner image) | ✅ workflow ran |
+| hermes | diff vs authoritative `cli-config.yaml.example` | 🐛→✅ schema FIXED (not live-run) |
+| pi-dev | — | ⚠ no clean npm install (pkg names taken by others) |
+| rvm | — | ⚠ AArch64 bare-metal, can't run on x86 |
+| copilot | — | ⚠ interactive VSCode only |
+
+3 codegen paths (adapter · CLI host-config · web-UI) all fixed for each bug;
+host unit tests updated to the verified-real schemas. See ADR-046.
+
 ## Live provider status
 
 - `OPENROUTER_API_KEY` (GCP secret, project `cognitum-20260110`): **reachable ✓** (73 chars).
