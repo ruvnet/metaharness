@@ -35,6 +35,13 @@ checks had missed — because neither had ever started the real host.
 against its scaffold (`--real-strict` to fail the gate on any attempted-but-
 failed check); runtimes that aren't installed report `skip`, so CI stays green.
 
+> **Caveat — claude-code under nested execution.** `claude -p` is verified
+> against a fresh scaffold standalone (`REAL_OK`, exit 0). When the `--real`
+> gate is itself run *from inside* a `claude` session, the nested `claude -p`
+> flakes intermittently (CLI-in-CLI contention) — so the gate's claude-code
+> check retries once and a lone in-session miss is a known artifact, not a
+> harness defect. Run the gate from a plain shell for a clean 7/7.
+
 ### Resolving pi-dev + hermes (initially thought infeasible)
 
 - **pi-dev**: the right package is **`@mariozechner/pi-coding-agent`** (bin `pi`)

@@ -180,9 +180,17 @@ if (REAL) {
   const realChecks = {
     'claude-code': (dir) => {
       if (!onPath('claude')) return { skip: true, proof: 'claude CLI not installed' };
-      // `claude -p` is heavy (full agent turn); allow up to 4 min — the default
-      // 120s run() timeout flakes under load (esp. when nested in a session).
-      const out = run(`cd ${JSON.stringify(dir)} && claude -p --allow-dangerously-skip-permissions "Reply with exactly: REAL_OK"`, { timeout: 240000 }).trim();
+      // `claude -p` is a full agent turn (heavy). It also flakes transiently when
+      // this gate is itself run from INSIDE a `claude` session (nested-CLI
+      // contention) — verified by it passing standalone but erroring nested. So
+      // allow 4 min and retry once on error before failing.
+      const cmd = `cd ${JSON.stringify(dir)} && claude -p --allow-dangerously-skip-permissions "Reply with exactly: REAL_OK"`;
+      let out = '', err;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try { out = run(cmd, { timeout: 240000 }).trim(); err = null; break; }
+        catch (e) { err = e; }
+      }
+      if (err && !out) throw err;
       return { ok: out.includes('REAL_OK'), proof: `claude -p → ${out.slice(0, 24)}` };
     },
     codex: (dir) => {
