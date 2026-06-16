@@ -61,13 +61,16 @@ through automatically. ADR-027 byte-parity surface.
   scaffold**: **PASS** — extracted system prompt + 2 MCP capabilities, real
   model (`anthropic/claude-haiku-4.5`) judged it coherent, $0.000286 (iter 8).
 
-## Follow-up found during review → ADR-045
+## Follow-up → ADR-045 (IMPLEMENTED 2026-06-16)
 
-`npx metaharness <name> --host <non-claude>` records the host in the manifest
-but emits only `.claude/*` config — the CLI scaffold renders claude-shaped
-templates and never invokes the now-spec-complete `@metaharness/host-*` adapters.
-Three codegen paths exist; only the adapters + web-UI cover all 9 hosts. Tracked
-as **ADR-045** (deferred: cross-cutting wiring change + gate update).
+`npx metaharness <name> --host <non-claude>` used to record the host in the
+manifest but emit only `.claude/*`. **Fixed**: new dependency-free
+`src/host-config.ts` (`hostConfigFiles`) wired into `scaffold()` emits each
+host's native config; `verify-all-hosts.mjs` now scaffolds via the real
+`--host` path (gate hardened 9/9, fixed a latent github-actions EISDIR);
+`verify-harness-live.mjs --all` live-verifies **9/9 hosts** against a real model
+via OpenRouter (~$0.0027). +10 CLI tests; 287 CLI tests pass. All three codegen
+paths (adapters · web-UI · CLI templates) now cover all 9 hosts.
 
 ## Iteration log
 

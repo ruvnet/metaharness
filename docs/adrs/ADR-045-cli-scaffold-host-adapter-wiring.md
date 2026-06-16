@@ -1,6 +1,6 @@
 # ADR-045: CLI Scaffold Does Not Invoke Host Adapters for Non-Claude Hosts
 
-**Status**: Proposed (follow-up — discovered during the ADR-044 review)
+**Status**: Implemented (2026-06-16)
 **Date**: 2026-06-16
 **Project**: `ruvnet/agent-harness-generator`
 **Related**: ADR-004 (host integration model), ADR-027 (CLI ↔ web-UI parity), ADR-044 (host capability coverage)
@@ -38,24 +38,38 @@ which is exercised end-to-end by `npx metaharness`:
 calling the adapters directly (or fall back to a dep-presence check), not by the
 `npx metaharness --host` path — so this gap was invisible to the existing gate.
 
-## Decision (proposed)
+## Decision (implemented)
 
-Wire the host adapters into the CLI scaffold so `--host X` emits X's config:
+Emit the selected host's native config from the CLI scaffold path:
 
-1. After `walkTemplate` renders the claude-shaped base tree, build a
-   `HarnessSpec` from the resolved template + manifest (name, description,
-   systemPrompt, agents, mcpServers, permissions).
-2. For each `opts.host`, call `@metaharness/host-<host>`'s
-   `adapter.generateConfig(spec)` and merge the returned file map into the
-   scaffold (host-specific files win; claude-base stays for `claude-code`).
-3. Make `verify-all-hosts.mjs` scaffold its `bot-<host>/` fixtures via the real
-   `npx metaharness --host` path so this can never silently regress again.
+1. Added `packages/create-agent-harness/src/host-config.ts` — a
+   **dependency-free** `hostConfigFiles(host, { name, description, mcp, … })`
+   that returns the host's config files. It does NOT import the
+   `@metaharness/host-*` packages (keeps the published `metaharness` CLI
+   standalone) and mirrors `apps/web-ui/src/generator/scaffold.ts` so the CLI
+   and web-UI surfaces stay byte-parity-aligned (ADR-027). `claude-code` returns
+   `[]` — the templates already own the richer `.claude/` tree.
+2. `scaffold()` (`src/index.ts`) merges those files into the rendered tree
+   **before** computing manifest fingerprints (so they are tracked + witnessed),
+   never clobbering a template file.
+3. `scripts/verify-all-hosts.mjs` now scaffolds each host through the real
+   `node dist/bin.js <name> --host <X>` path into a temp dir, then runs the
+   schema checks — so the gate can never again pass while `--host X` emits the
+   wrong tree. (Also fixed a latent EISDIR in the github-actions check that this
+   real-scaffold step exposed.)
 
-This is deferred to a follow-on PR because it is a cross-cutting wiring change
-(spec construction + multi-host merge + the gate change), larger than the
-single-host capability fixes of ADR-044. ADR-044's objective — every adapter
-fully consumes the spec — is complete; this ADR tracks getting that output in
-front of `npx metaharness` users.
+**Verified**: `--host opencode/codex/copilot/github-actions/hermes/openclaw/
+pi-dev/rvm/claude-code` each emit their native config; the hardened gate reports
+9/9; and `scripts/verify-harness-live.mjs --all` live-verifies all 9 against a
+real model via OpenRouter (9/9 PASS, ~$0.0027 total). +10 CLI unit tests.
+
+### Why dependency-free instead of importing the adapters
+
+The canonical adapters live in `@metaharness/host-*`. Importing them would add 9
+deps to the standalone `metaharness` CLI and couple publish ordering. The
+adapters and `host-config.ts` are kept in lockstep by the parity tests; if they
+diverge, a future refactor can extract one shared module once the CLI and web-UI
+share a build boundary.
 
 ## Consequences
 

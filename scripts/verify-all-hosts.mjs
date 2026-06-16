@@ -2,10 +2,39 @@
 // Per user directive: "use things like -p and plugin dir to confirm harnesses
 // work as expected for each host."
 import { execSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const HOSTS = ['claude-code', 'codex', 'pi-dev', 'hermes', 'openclaw', 'rvm', 'copilot', 'opencode', 'github-actions'];
 const results = [];
+
+// ADR-045: scaffold each host through the REAL `metaharness --host <X>` path so
+// this gate verifies the CLI's actual output — not adapter-direct fixtures that
+// could pass while `npx metaharness --host X` silently emits the wrong tree
+// (the gap ADR-045 fixed). If the CLI bin isn't built we fall back to verifying
+// whatever bot-<host>/ dirs already exist in CWD (legacy behaviour).
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const cliBin = join(repoRoot, 'packages', 'create-agent-harness', 'dist', 'bin.js');
+let scaffoldRoot = process.cwd();
+if (existsSync(cliBin)) {
+  try {
+    scaffoldRoot = mkdtempSync(join(tmpdir(), 'verify-all-hosts-'));
+    for (const host of HOSTS) {
+      execSync(
+        `node ${JSON.stringify(cliBin)} ${JSON.stringify('bot-' + host)} --template vertical:coding --host ${host} --description ${JSON.stringify('Verification harness for ' + host)} --force`,
+        { cwd: scaffoldRoot, stdio: 'ignore', timeout: 30000 },
+      );
+    }
+    console.log(`Scaffolded all ${HOSTS.length} hosts via metaharness --host into ${scaffoldRoot}`);
+  } catch (e) {
+    console.error('Scaffold step failed; falling back to CWD bot-<host>/ dirs:', String(e).slice(0, 120));
+    scaffoldRoot = process.cwd();
+  }
+} else {
+  console.log('CLI bin not built (dist/bin.js missing) — verifying pre-existing bot-<host>/ dirs in CWD.');
+}
 
 // iter 134: detect whether `claude` CLI is on PATH. CI runners typically
 // don't have it; we must fall back to schema/dep verification just like
@@ -21,7 +50,7 @@ try {
 }
 
 for (const host of HOSTS) {
-  const dir = `bot-${host}`;
+  const dir = join(scaffoldRoot, `bot-${host}`);
   if (!existsSync(dir)) { results.push({ host, status: 'no-scaffold' }); continue; }
   let proof = '';
   try {
@@ -67,10 +96,12 @@ for (const host of HOSTS) {
         rvm:     { path: 'rvm.manifest.toml',     test: (s) => /\[harness/.test(s),                          tool: 'RVM partition TOML' },
         copilot: { path: '.vscode/mcp.json',      test: (s) => { try { const j=JSON.parse(s); return j.servers || j.mcpServers; } catch { return false; } }, tool: 'VSCode mcp.json valid JSON' },
         opencode:{ path: '.opencode/opencode.json',test:(s) => { try { const j=JSON.parse(s); return j.mcp; } catch { return false; } }, tool: 'opencode.json valid JSON' },
-        // iter 147 — github-actions (ADR-033) emits workflow YAML at runtime;
-        // the scaffold ships the @metaharness/host-github-actions dep, which the
-        // dep-fallback below verifies.
-        'github-actions':{ path: '.github/workflows', test: () => true, tool: 'GHA workflow (emitted at runtime)' },
+        // ADR-045 — the CLI now emits the workflow file directly, so verify the
+        // actual YAML (name + provider-agnostic env), not the containing dir.
+        // (Was `.github/workflows` — a directory — which threw EISDIR once a
+        // real scaffold existed.) Harness name is `bot-github-actions`, slug =
+        // same after slugify.
+        'github-actions':{ path: '.github/workflows/bot-github-actions.yml', test: (s) => /name:/.test(s) && /OPENROUTER_API_KEY|ANTHROPIC_API_KEY/.test(s), tool: 'GHA workflow YAML (provider-agnostic env)' },
       };
       const c = checks[host];
       const fp = `${dir}/${c.path}`;

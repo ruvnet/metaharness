@@ -7,6 +7,7 @@ import { walkTemplate, asFileMap } from './walker.js';
 import { writeAtomic } from './writer.js';
 import { emptyManifest, fingerprintFiles, sha256 } from './manifest.js';
 import { validateHarnessName } from './renderer.js';
+import { hostConfigFiles } from './host-config.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // Templates live at packages/create-agent-harness/templates/, one level above dist/.
@@ -232,6 +233,21 @@ export async function scaffold(opts: ScaffoldOptions): Promise<ScaffoldResult> {
     host: opts.host,
   };
   const rendered = await walkTemplate(dir, vars, { strict: false });
+
+  // ADR-045: emit the selected host's native config. The templates are
+  // claude-shaped; for any non-claude-code host we additionally merge the
+  // host adapter's output so `--host <X>` actually produces X's config
+  // (previously only the manifest recorded the host). Dependency-free +
+  // byte-parity with the web-UI generator (ADR-027).
+  for (const f of hostConfigFiles(opts.host, {
+    name: opts.name,
+    description: vars.description,
+    mcp: 'local',
+  })) {
+    if (rendered.some(r => r.path === f.path)) continue; // never clobber a template file
+    rendered.push({ path: f.path, content: f.content, rendered: false, unresolved: [] });
+  }
+
   const fileMap = asFileMap(rendered);
 
   // iter 58: stamp kernel_version at scaffold time (ADR-027 diagnostic).
