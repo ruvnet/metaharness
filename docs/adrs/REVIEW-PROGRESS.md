@@ -23,8 +23,8 @@ Status: 🔲 todo · 🛠 in-progress · ✅ done (adapter emits + unit test + l
 | Host | Coverage | Status | Outstanding work |
 |------|:--------:|:------:|------------------|
 | claude-code    | 100% | ✅ | DONE (iter 3): emits CLAUDE.md + `.claude/agents/`; all 5 hook handler types via handler-string prefix; 15 tests pass |
-| codex          | ~50% | 🔲 | emit AGENTS.md (systemPrompt), agents |
-| copilot        | ~55% | 🔲 | emit `.github/copilot-instructions.md` (systemPrompt) |
+| codex          | 100% | ✅ | DONE (iter 4): emits AGENTS.md (systemPrompt + agent roster); 11 tests |
+| copilot        | 100% | ✅ | DONE (iter 4): emits `.github/copilot-instructions.md` (systemPrompt + agent roles); 12 tests |
 | github-actions | ~50% | 🔲 | inject systemPrompt into action, provider-agnostic key, wire MCP into runner |
 | hermes         | ~60% | 🔲 | wire `spec.agents` into cli-config.yaml |
 | openclaw       | ~60% | 🔲 | wire `spec.permissions`; per-skill SKILL.md |
@@ -32,7 +32,7 @@ Status: 🔲 todo · 🛠 in-progress · ✅ done (adapter emits + unit test + l
 | pi-dev         | ~75% | 🔲 | emit `trust.json` |
 | rvm            | 100% | ✅ | DONE (iter 2): capability table derived from `spec.permissions`/`claims` (was `[]`); `system_prompt` in partition; 36 tests pass |
 
-**CLI gate: 3/9 hosts at 100%.** Next: codex (AGENTS.md + agents — quick), then copilot/github-actions/hermes/openclaw/pi-dev.
+**CLI gate: 5/9 hosts at 100%.** Next: github-actions (systemPrompt into action + provider-agnostic key + MCP wiring), hermes (agents), openclaw (permissions + per-skill), pi-dev (trust.json).
 
 ## Web-UI coverage (after CLI gate)
 
@@ -65,3 +65,8 @@ Status: 🔲 todo · 🛠 in-progress · ✅ done (adapter emits + unit test + l
   mcp_tool/prompt/agent) are reachable via a prefix convention on the kernel's
   `handler` string — no kernel-contract change; was command-only. +11 unit tests
   (15/15 pass). claude-code → 100%. Next: codex.
+- **iter 4 (2026-06-16)**: **Fixed codex + copilot** (batched — both system-prompt
+  drops). codex now emits `AGENTS.md` (systemPrompt + agent roster); copilot emits
+  `.github/copilot-instructions.md` (systemPrompt + agent roles). Both adapters
+  previously dropped `spec.systemPrompt`/`spec.agents`. +7 unit tests
+  (codex 11/11, copilot 12/12). codex + copilot → 100%. Next: github-actions.
