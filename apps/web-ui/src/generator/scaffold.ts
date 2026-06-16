@@ -276,12 +276,16 @@ function hostFiles(host: HostId, cfg: HarnessConfig): GenFile[] {
     case 'opencode': {
       // iter 128 — ADR-036: sst/opencode TUI via .opencode/opencode.json.
       const server = mcpServerEntry(cfg);
+      // ADR-046 — verified against real opencode 1.17.7: `mcp` is a direct
+      // name→{type,command[],enabled} map; permissions live in a top-level
+      // `permission` object, NOT under mcp.
       const body = {
         $schema: 'https://opencode.ai/schema/opencode.json',
-        mcp: {
-          servers: server ? { [cfg.name]: server } : {},
-          // ADR-044 parity: derive from the harness policy (was hard-coded).
-          permissions: policyLists(cfg),
+        mcp: server ? { [cfg.name]: { type: 'local', command: ['npx', '-y', `${cfg.name}@latest`, 'mcp', 'start'], enabled: true } } : {},
+        permission: {
+          edit: cfg.mcpPolicy.allowFileWrite ? 'allow' : 'ask',
+          bash: { '*': cfg.mcpPolicy.allowShell ? 'allow' : 'ask', 'rm *': 'deny', 'git push *': 'deny' },
+          webfetch: 'ask',
         },
       };
       return [

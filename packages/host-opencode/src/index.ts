@@ -24,63 +24,79 @@ import type { HostAdapter, HarnessSpec, McpServerSpec, AgentSpec } from '@metaha
 export const HOST_NAME = 'opencode' as const;
 
 /**
- * OpenCode 1.x server entry shape:
- * {
- *   "command": "<binary>",   // stdio
- *   "args": ["..."],         // stdio
- *   "url": "...",            // HTTP streamable (alternative to command)
- *   "env": { "K": "V" }      // optional, both stdio + HTTP
- * }
+ * OpenCode MCP server entry shape — VERIFIED against a real `opencode` 1.17.7
+ * install (ADR-046). `mcp` is a direct name→server map (NOT `mcp.servers`), and
+ * each entry is a tagged union:
+ *   local:  { "type": "local",  "command": ["bin","arg",…], "enabled": true, "environment": {…} }
+ *   remote: { "type": "remote", "url": "https://…",         "enabled": true }
+ * The earlier `{ command, args }` shape (no `type`/`enabled`) is REJECTED by
+ * real opencode with a schema error.
  */
 export function serverToOpencode(s: McpServerSpec): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   if (s.command && s.command.length > 0) {
-    out.command = s.command[0];
-    if (s.command.length > 1) out.args = s.command.slice(1);
+    out.type = 'local';
+    out.command = s.command; // full array, incl. binary + args
   } else if (s.url) {
+    out.type = 'remote';
     out.url = s.url;
+  } else {
+    out.type = 'local';
+    out.command = [];
   }
+  out.enabled = true;
   if (s.env && s.env.length > 0) {
     const env: Record<string, string> = {};
     for (const [k, v] of s.env) env[k] = v;
-    out.env = env;
+    out.environment = env; // opencode key is `environment`, not `env`
   }
   return out;
 }
 
 /**
- * Render the full .opencode/opencode.json content. Includes the
- * `$schema` reference + `mcp.servers` + `mcp.permissions` block.
- *
- * The schema URL is pinned to the OpenCode 1.x snapshot per ADR-036's
- * open question (pin against a snapshot to handle drift). Updates to a
- * v2.x manifest land via a new ADR + a new adapter version.
+ * Map the harness allow/deny posture (ADR-022) onto opencode's top-level
+ * `permission` object — VERIFIED against real opencode 1.17.7, which has NO
+ * `mcp.permissions` key (it parsed our old one as a malformed MCP server).
+ * opencode permission values are "ask" | "allow" | "deny"; `bash` may be a
+ * map of glob→decision.
+ */
+export function permissionBlock(policy: { allow?: string[]; deny?: string[] } | undefined): Record<string, unknown> {
+  const allow = policy?.allow ?? [];
+  const deny = policy?.deny ?? [];
+  const bashAllowsAll = allow.some((a) => /^Bash\(\*\)$/i.test(a));
+  const bash: Record<string, string> = { '*': bashAllowsAll ? 'allow' : 'ask' };
+  for (const d of deny) {
+    const m = /^Bash\(([^)]+)\)$/i.exec(d);
+    if (m) bash[m[1]!.replace(/:/g, ' ').trim()] = 'deny';
+  }
+  // Default-deny: if the policy denies file writes, gate edits to "ask".
+  const denyWrite = deny.some((d) => /^(Write|Edit|MultiEdit)\(/i.test(d));
+  return {
+    edit: denyWrite ? 'deny' : 'ask',
+    bash,
+    webfetch: 'ask',
+  };
+}
+
+/**
+ * Render the full .opencode/opencode.json content — `$schema` + `mcp` map +
+ * top-level `permission`. Verified to load in real opencode 1.17.7 (ADR-046).
  */
 export function opencodeJson(spec: HarnessSpec): string {
-  const servers: Record<string, unknown> = {};
+  const mcp: Record<string, unknown> = {};
   for (const s of spec.mcpServers ?? []) {
-    servers[s.name] = serverToOpencode(s);
+    mcp[s.name] = serverToOpencode(s);
   }
-  // ADR-044 fix: the kernel contract field is `spec.permissions`. The earlier
-  // code read only `(spec as any).mcpPolicy`, a field the CLI generator
-  // (manifest.ts) never sets, so a harness's allow/deny posture was silently
-  // dropped and OpenCode always got empty arrays. Prefer the real field; keep
-  // `mcpPolicy` as a back-compat fallback for callers still passing it.
+  // The kernel contract field is `spec.permissions`; keep `mcpPolicy` as a
+  // back-compat fallback for callers still passing it.
   const policy = (spec.permissions ?? (spec as any).mcpPolicy) as {
     allow?: string[];
     deny?: string[];
   } | undefined;
   const cfg: Record<string, unknown> = {
     $schema: 'https://opencode.ai/schema/opencode.json',
-    mcp: {
-      servers,
-      permissions: {
-        // ADR-036 §Default-deny composition: deny wins via OpenCode's own
-        // enforcement. Always emit something — empty arrays are valid.
-        allow: policy?.allow ?? [],
-        deny: policy?.deny ?? [],
-      },
-    },
+    mcp,
+    permission: permissionBlock(policy),
   };
   return JSON.stringify(cfg, null, 2) + '\n';
 }

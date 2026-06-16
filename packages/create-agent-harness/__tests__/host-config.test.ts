@@ -20,8 +20,11 @@ describe('hostConfigFiles (ADR-045)', () => {
     const files = hostConfigFiles('opencode', base);
     const cfg = files.find((f) => f.path === '.opencode/opencode.json')!;
     const json = JSON.parse(cfg.content);
-    expect(json.mcp.permissions.allow).toContain('mcp__demo-bot__*');
-    expect(json.mcp.permissions.deny).toContain('Read(./.env)');
+    // ADR-046 — verified real-opencode schema: direct mcp map + top-level permission.
+    expect(json.mcp['demo-bot'].type).toBe('local');
+    expect(json.mcp['demo-bot'].enabled).toBe(true);
+    expect(json.permission.bash['rm *']).toBe('deny');
+    expect(json.permission.edit).toBe('ask');
   });
 
   it('codex emits config.toml + AGENTS.md', () => {
@@ -47,9 +50,9 @@ describe('hostConfigFiles (ADR-045)', () => {
     expect(hostConfigFiles('copilot', base).map((f) => f.path)).toContain('.github/copilot-instructions.md');
   });
 
-  it('allowShell widens the allow list to Bash(*)', () => {
+  it('allowShell opens opencode bash wildcard to "allow"', () => {
     const json = JSON.parse(hostConfigFiles('opencode', { ...base, allowShell: true }).find((f) => f.path === '.opencode/opencode.json')!.content);
-    expect(json.mcp.permissions.allow).toContain('Bash(*)');
+    expect(json.permission.bash['*']).toBe('allow');
   });
 
   it('unknown host id emits nothing (no throw)', () => {
@@ -66,7 +69,7 @@ describe('scaffold wires host config (ADR-045 end-to-end)', () => {
     });
     expect(existsSync(join(dir, '.opencode/opencode.json'))).toBe(true);
     const json = JSON.parse(readFileSync(join(dir, '.opencode/opencode.json'), 'utf-8'));
-    expect(json.mcp.permissions.deny).toContain('Read(./.env)');
+    expect(json.permission.bash['rm *']).toBe('deny');
   });
 
   it('host files are recorded in the manifest fingerprints', async () => {

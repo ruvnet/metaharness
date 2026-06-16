@@ -100,11 +100,13 @@ describe('buildScaffold', () => {
       expect(yml).toContain('OPENAI_API_KEY:');
     });
 
-    it('opencode permissions derive from mcpPolicy (was hard-coded empty allow)', () => {
+    it('opencode uses the verified real schema (ADR-046): mcp map + top-level permission', () => {
       const json = JSON.parse(fileFor({ ...base, hosts: ['opencode'] }, '.opencode/opencode.json'));
-      // SAFE_MCP_POLICY: mcp on → harness namespace allowed; secrets + dangerous denied.
-      expect(json.mcp.permissions.allow).toContain('mcp__legal-redline__*');
-      expect(json.mcp.permissions.deny).toContain('Read(./.env)');
+      // mcp is a direct name→{type,command[],enabled} map; no servers/permissions under mcp.
+      expect(json.mcp['legal-redline'].type).toBe('local');
+      expect(json.mcp['legal-redline'].enabled).toBe(true);
+      expect(json.permission.bash['rm *']).toBe('deny');
+      expect(json.permission.edit).toBe('ask'); // SAFE_MCP_POLICY: no file writes
     });
 
     it('rvm emits a capability table (was absent in the web UI)', () => {
@@ -126,12 +128,12 @@ describe('buildScaffold', () => {
       expect(paths({ ...base, hosts: ['copilot'] })).toContain('.github/copilot-instructions.md');
     });
 
-    it('allowShell policy widens opencode allow to Bash(*)', () => {
+    it('allowShell policy opens opencode bash wildcard to "allow"', () => {
       const json = JSON.parse(fileFor(
         { ...base, hosts: ['opencode'], mcpPolicy: { ...SAFE_MCP_POLICY, allowShell: true } },
         '.opencode/opencode.json',
       ));
-      expect(json.mcp.permissions.allow).toContain('Bash(*)');
+      expect(json.permission.bash['*']).toBe('allow');
     });
   });
 });

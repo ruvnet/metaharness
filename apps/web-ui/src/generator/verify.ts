@@ -37,6 +37,8 @@ function mcpServerPresent(files: GenFile[]): boolean {
       if (f.path.endsWith('.json')) {
         const j = JSON.parse(f.content);
         if (j.mcpServers || j.servers || j.mcp_servers || j.mcp?.servers) return true;
+        // opencode (ADR-046): `mcp` is a direct name→{type,…} map.
+        if (j.mcp && typeof j.mcp === 'object' && Object.values(j.mcp).some((v: any) => v && (v.type || v.command || v.url))) return true;
       } else if (/mcp_servers|\[mcp_servers/.test(f.content)) {
         return true;
       }
@@ -51,8 +53,8 @@ function permissionsPresent(files: GenFile[]): boolean {
     if (!f.path.endsWith('.json')) continue;
     try {
       const j = JSON.parse(f.content);
-      if (j.permissions?.deny || j.permissions?.allow) return true;
-      if (j.mcp?.permissions?.deny || j.mcp?.permissions?.allow) return true;
+      if (j.permissions?.deny || j.permissions?.allow) return true; // openclaw shape
+      if (j.permission && (j.permission.bash || j.permission.edit)) return true; // opencode (ADR-046)
     } catch { /* ignore */ }
   }
   return false;

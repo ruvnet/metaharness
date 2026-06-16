@@ -117,8 +117,15 @@ export function hostConfigFiles(host: string, cfg: HostConfigInput): HostFile[] 
     }
 
     case 'opencode':
+      // ADR-046 — verified against real opencode 1.17.7: `mcp` is a direct
+      // name→{type,command[],enabled} map; permissions live in a top-level
+      // `permission` object ("ask"|"allow"|"deny"), NOT under mcp.
       return [
-        { path: '.opencode/opencode.json', content: JSON.stringify({ $schema: 'https://opencode.ai/schema/opencode.json', mcp: { servers: server ? { [cfg.name]: server } : {}, permissions: policyLists(cfg) } }, null, 2) + '\n' },
+        { path: '.opencode/opencode.json', content: JSON.stringify({
+          $schema: 'https://opencode.ai/schema/opencode.json',
+          mcp: server ? { [cfg.name]: { type: 'local', command: ['npx', '-y', `${cfg.name}@latest`, 'mcp', 'start'], enabled: true } } : {},
+          permission: { edit: cfg.allowFileWrite ? 'allow' : 'ask', bash: { '*': cfg.allowShell ? 'allow' : 'ask', 'rm *': 'deny', 'git push *': 'deny' }, webfetch: 'ask' },
+        }, null, 2) + '\n' },
         { path: 'install.md', content: `# Installing ${cfg.name} into OpenCode\n\n1. \`opencode auth login\` to set a model provider.\n2. \`cd\` here and run \`opencode\` — the TUI reads \`.opencode/opencode.json\`.\n3. Inside the TUI run \`/mcp\` to verify \`${cfg.name}\` is registered.\n` },
       ];
 
