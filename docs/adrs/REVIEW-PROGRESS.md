@@ -25,14 +25,14 @@ Status: 🔲 todo · 🛠 in-progress · ✅ done (adapter emits + unit test + l
 | claude-code    | 100% | ✅ | DONE (iter 3): emits CLAUDE.md + `.claude/agents/`; all 5 hook handler types via handler-string prefix; 15 tests pass |
 | codex          | 100% | ✅ | DONE (iter 4): emits AGENTS.md (systemPrompt + agent roster); 11 tests |
 | copilot        | 100% | ✅ | DONE (iter 4): emits `.github/copilot-instructions.md` (systemPrompt + agent roles); 12 tests |
-| github-actions | ~50% | 🔲 | inject systemPrompt into action, provider-agnostic key, wire MCP into runner |
+| github-actions | 100% | ✅ | DONE (iter 5): provider-agnostic keys (anthropic/openrouter/openai); SYSTEM.md shipped + read at runtime; MCP manifest wired; 20 tests |
 | hermes         | ~60% | 🔲 | wire `spec.agents` into cli-config.yaml |
 | openclaw       | ~60% | 🔲 | wire `spec.permissions`; per-skill SKILL.md |
 | opencode       | 100% | ✅ | DONE (iter 1): permissions→`spec.permissions`; emits `.opencode/agents/` + AGENTS.md; 16 tests pass |
 | pi-dev         | ~75% | 🔲 | emit `trust.json` |
 | rvm            | 100% | ✅ | DONE (iter 2): capability table derived from `spec.permissions`/`claims` (was `[]`); `system_prompt` in partition; 36 tests pass |
 
-**CLI gate: 5/9 hosts at 100%.** Next: github-actions (systemPrompt into action + provider-agnostic key + MCP wiring), hermes (agents), openclaw (permissions + per-skill), pi-dev (trust.json).
+**CLI gate: 6/9 hosts at 100%.** Next: hermes (agents into cli-config), openclaw (permissions + per-skill), pi-dev (trust.json) — then web-UI.
 
 ## Web-UI coverage (after CLI gate)
 
@@ -70,3 +70,10 @@ Status: 🔲 todo · 🛠 in-progress · ✅ done (adapter emits + unit test + l
   `.github/copilot-instructions.md` (systemPrompt + agent roles). Both adapters
   previously dropped `spec.systemPrompt`/`spec.agents`. +7 unit tests
   (codex 11/11, copilot 12/12). codex + copilot → 100%. Next: github-actions.
+- **iter 5 (2026-06-16)**: **Fixed github-actions** (3 gaps). (1) workflow env is now
+  provider-agnostic — passes ANTHROPIC_API_KEY + OPENROUTER_API_KEY + OPENAI_API_KEY
+  (was hard-coded ANTHROPIC only). (2) systemPrompt shipped as
+  `.github/actions/<slug>/SYSTEM.md`, exported as `HARNESS_SYSTEM_PROMPT` at
+  runtime. (3) MCP servers wired via `.github/actions/<slug>/mcp-servers.json` +
+  an MCP step. New files gated on presence (bare spec still emits 3 files).
+  +5 unit tests (20/20 pass). github-actions → 100%. Next: hermes.
