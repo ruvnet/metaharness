@@ -1,7 +1,13 @@
 # Host Capability Review — Progress Scoreboard
 
+**Status: ✅ COMPLETE (2026-06-16, iter 8).** Objective reached: all 9 host
+adapters + the web-UI generator fully consume the kernel `HarnessSpec`; 3
+bug-grade defects fixed; live-verified against a real model via OpenRouter.
+**215 unit tests pass** (153 host + 62 web-UI generator). Loop stopped. One
+follow-up tracked as **ADR-045** (CLI scaffold → adapter wiring).
+
 **Branch**: `review/host-capabilities-live-verify`
-**Driver**: `/loop 5m` (cron `45ce56cb`) until 100% coverage.
+**Driver**: `/loop 5m` (cron `45ce56cb`) — ran iters 1–8.
 **Framework**: ADR-044. **Order**: CLI hosts first, then web-UI generator.
 **Live verifier**: `node scripts/verify-harness-live.mjs` (OpenRouter, `OPENROUTER_API_KEY` GCP secret).
 
@@ -46,7 +52,22 @@ through automatically. ADR-027 byte-parity surface.
 | Area | Status | Notes |
 |------|:------:|-------|
 | `scaffold.ts` parity with adapter fixes | ✅ | DONE (iter 7): github-actions provider-agnostic key; opencode permissions from `mcpPolicy` (was hard-coded); rvm capability-table.json (was absent); openclaw permissions; codex AGENTS.md; copilot copilot-instructions.md. +6 tests (60/60 generator tests pass) |
-| `verify.ts` capability checks | 🔲 | Surface live/coverage status in VerifyPanel |
+| `verify.ts` capability checks | ✅ | DONE (iter 8): `capability-coverage` check (N/4 spec capabilities) in the Verify tab; broadened host-artifact detection; +2 tests (62/62 generator tests) |
+
+## Live verification (criterion c)
+
+- `verify-harness-live.mjs --self-test`: **PASS** ($0.0002).
+- `verify-harness-live.mjs --dir demo-bot` against a **real `npx metaharness`
+  scaffold**: **PASS** — extracted system prompt + 2 MCP capabilities, real
+  model (`anthropic/claude-haiku-4.5`) judged it coherent, $0.000286 (iter 8).
+
+## Follow-up found during review → ADR-045
+
+`npx metaharness <name> --host <non-claude>` records the host in the manifest
+but emits only `.claude/*` config — the CLI scaffold renders claude-shaped
+templates and never invokes the now-spec-complete `@metaharness/host-*` adapters.
+Three codegen paths exist; only the adapters + web-UI cover all 9 hosts. Tracked
+as **ADR-045** (deferred: cross-cutting wiring change + gate update).
 
 ## Iteration log
 
@@ -101,3 +122,13 @@ through automatically. ADR-027 byte-parity surface.
   `.github/copilot-instructions.md`. +6 scaffold tests; **60/60 generator tests
   pass**. Next: surface live/coverage status in VerifyPanel + run the live
   verifier on a real scaffold.
+- **iter 8 (2026-06-16)**: **Closed the objective.** (1) Surfaced a
+  `capability-coverage` check (N/4 spec capabilities) in the web-UI Verify tab +
+  broadened host-artifact detection; +2 tests (62/62 generator tests pass). (2)
+  Built the CLI, scaffolded a real `vertical:coding` harness, and ran
+  `verify-harness-live.mjs --dir` against it → **live model PASS** ($0.000286) —
+  criterion (c) closed on real CLI output. (3) Found + documented a distinct
+  wiring gap as **ADR-045**: `npx metaharness --host <non-claude>` emits only
+  `.claude/*` (the CLI renders claude-shaped templates, never invoking the
+  now-complete host adapters). Deferred (cross-cutting). **Loop stopped (cron
+  45ce56cb deleted).**
