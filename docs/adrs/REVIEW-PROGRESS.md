@@ -22,7 +22,7 @@ Status: 🔲 todo · 🛠 in-progress · ✅ done (adapter emits + unit test + l
 
 | Host | Coverage | Status | Outstanding work |
 |------|:--------:|:------:|------------------|
-| claude-code    | ~45% | 🔲 | emit CLAUDE.md (systemPrompt), `.claude/agents/`, all 5 hook handler types |
+| claude-code    | 100% | ✅ | DONE (iter 3): emits CLAUDE.md + `.claude/agents/`; all 5 hook handler types via handler-string prefix; 15 tests pass |
 | codex          | ~50% | 🔲 | emit AGENTS.md (systemPrompt), agents |
 | copilot        | ~55% | 🔲 | emit `.github/copilot-instructions.md` (systemPrompt) |
 | github-actions | ~50% | 🔲 | inject systemPrompt into action, provider-agnostic key, wire MCP into runner |
@@ -32,7 +32,7 @@ Status: 🔲 todo · 🛠 in-progress · ✅ done (adapter emits + unit test + l
 | pi-dev         | ~75% | 🔲 | emit `trust.json` |
 | rvm            | 100% | ✅ | DONE (iter 2): capability table derived from `spec.permissions`/`claims` (was `[]`); `system_prompt` in partition; 36 tests pass |
 
-**CLI gate: 2/9 hosts at 100%.** Next: claude-code (stub: no CLAUDE.md/agents, hooks command-only).
+**CLI gate: 3/9 hosts at 100%.** Next: codex (AGENTS.md + agents — quick), then copilot/github-actions/hermes/openclaw/pi-dev.
 
 ## Web-UI coverage (after CLI gate)
 
@@ -58,3 +58,10 @@ Status: 🔲 todo · 🛠 in-progress · ✅ done (adapter emits + unit test + l
   (or an explicit `spec.claims` extension), deterministic (expiry sentinel 0,
   witness-stable). Also emit `system_prompt` in the partition `[metadata]`.
   +11 unit tests (36/36 pass). rvm → 100%. Next: claude-code (stub).
+- **iter 3 (2026-06-16)**: **Fixed claude-code** (the explicit "full mapping lands
+  in iter 3" stub). Now emits `CLAUDE.md` from systemPrompt+description and
+  `.claude/agents/<name>.md` per agent (both previously dropped). Added
+  `hookHandlerFor()` so all 5 Claude Code hook handler types (command/http/
+  mcp_tool/prompt/agent) are reachable via a prefix convention on the kernel's
+  `handler` string — no kernel-contract change; was command-only. +11 unit tests
+  (15/15 pass). claude-code → 100%. Next: codex.
