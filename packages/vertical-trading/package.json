@@ -36,14 +36,18 @@
     "backtesting",
     "ruflo"
   ],
-  "publishConfig": { "access": "public" },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
-    "@metaharness/vertical-base": "0.1.0"
+    "@metaharness/vertical-base": "^0.1.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "typescript": "^5.4.0",
     "vitest": "^2.0.0"
   },
-  "engines": { "node": ">=20.0.0" }
+  "engines": {
+    "node": ">=20.0.0"
+  }
 }

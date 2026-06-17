@@ -19,19 +19,33 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist/**", "README.md"],
+  "files": [
+    "dist/**",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "vitest run --passWithNoTests",
     "lint": "tsc --noEmit"
   },
-  "keywords": ["agent-harness", "sdk", "kernel", "ruflo"],
-  "publishConfig": { "access": "public" },
-  "dependencies": { "@metaharness/kernel": "0.1.0" },
+  "keywords": [
+    "agent-harness",
+    "sdk",
+    "kernel",
+    "ruflo"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@metaharness/kernel": "^0.1.2"
+  },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "typescript": "^5.4.0",
     "vitest": "^2.0.0"
   },
-  "engines": { "node": ">=20.0.0" }
+  "engines": {
+    "node": ">=20.0.0"
+  }
 }
