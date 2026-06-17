@@ -142,6 +142,7 @@ export interface CliArgs {
   fromExisting?: string;
   list?: boolean;
   wizard?: boolean;
+  withWasm?: string;
 }
 
 export function parseArgs(argv: string[]): CliArgs {
@@ -167,6 +168,10 @@ export function parseArgs(argv: string[]): CliArgs {
       // GH issue #9: `--target <path>` writes the harness AT <path> (was
       // silently ignored; scaffold always landed in $CWD/<name>).
       out.target = argv[++i];
+    } else if (a === '--with-wasm') {
+      // GH #25: build a project's own wasm-pack crate into the harness as
+      // loadable capability commands.
+      out.withWasm = argv[++i];
     } else if (a === '--from-existing') {
       out.fromExisting = argv[++i] ?? process.cwd();
     } else if (a === '--list' || a === '--templates') {
@@ -556,6 +561,7 @@ export async function main(argv: string[]): Promise<number> {
   if (!args.name) {
     console.log('Usage: npx metaharness <name> [--template <id>] [--host claude-code|codex|pi-dev|hermes] [--description "..."] [--target <path>] [--force]');
     console.log('       --target <path>   write the harness to <path> instead of ./<name>');
+    console.log('       --with-wasm <crate-path>   build a wasm-pack crate into the harness as commands (GH #25)');
     console.log('       npx metaharness score <repo> [--json]   (scorecard: fit/cost/safety for a repo — ADR-041)');
     console.log('       npx metaharness analyze <repo>           (recommend a harness plan, no-exec)');
     console.log('       npx metaharness genome <repo>            (7-section repo readiness)');
@@ -603,6 +609,13 @@ export async function main(argv: string[]): Promise<number> {
     console.log(`Manifest: ${result.manifestPath}`);
     if (result.unresolved.length > 0) {
       console.log(`Warning: unresolved vars in template: ${result.unresolved.join(', ')}`);
+    }
+    // GH #25: wire the project's own wasm-pack crate as harness commands.
+    if (args.withWasm) {
+      const { wireWasm } = await import('./with-wasm.js');
+      const w = wireWasm(args.withWasm, targetDir);
+      for (const line of w.lines) console.log(line);
+      if (!w.ok) console.log('(--with-wasm did not complete; the harness scaffold itself is fine.)');
     }
     return 0;
   } catch (err) {
