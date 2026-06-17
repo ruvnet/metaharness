@@ -28,8 +28,13 @@ env:
 jobs:
   build-native:
     name: native ${{ matrix.target }}
+    # The per-platform .node artifacts are not yet consumed by the publish job
+    # (native publish is a TODO), so a flaky cross-compile target must not gate
+    # the real npm publish. continue-on-error keeps the publish job's `needs`
+    # satisfied; fail-fast=false lets every target attempt independently.
+    continue-on-error: true
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         include:
           - target: x86_64-unknown-linux-gnu
