@@ -230,6 +230,34 @@ export interface ScaffoldResult {
  * Returns the list of paths written + the manifest path + any unresolved
  * template variables (should be empty for a clean run).
  */
+
+/** Standard MIT license text for a scaffolded harness (GH #23). */
+function mitLicense(name: string): string {
+  const year = new Date().getFullYear();
+  return `MIT License
+
+Copyright (c) ${year} ${name} authors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+`;
+}
+
 export async function scaffold(opts: ScaffoldOptions): Promise<ScaffoldResult> {
   const nameCheck = validateHarnessName(opts.name);
   if (!nameCheck.valid) {
@@ -286,6 +314,33 @@ export async function scaffold(opts: ScaffoldOptions): Promise<ScaffoldResult> {
         rendered[pkgIdx]!.content = JSON.stringify(pkg, null, 2) + '\n';
       } catch { /* leave package.json untouched if it doesn't parse */ }
     }
+  }
+
+  // GH #23: every scaffold must carry a license. The bin/cli.js template already
+  // ships an `SPDX-License-Identifier: MIT` header and package.json `files`
+  // lists "LICENSE", but neither the `license` field nor the LICENSE file were
+  // emitted — so `npm publish` warned and the published package showed
+  // "license: undefined". Inject both here, single-sourced for every template.
+  {
+    const pkgIdx = rendered.findIndex(r => r.path === 'package.json');
+    if (pkgIdx !== -1) {
+      try {
+        const pkg = JSON.parse(rendered[pkgIdx]!.content) as Record<string, unknown>;
+        if (!pkg.license) {
+          // place `license` right after `description` for conventional ordering
+          const ordered: Record<string, unknown> = {};
+          for (const [k, v] of Object.entries(pkg)) {
+            ordered[k] = v;
+            if (k === 'description') ordered.license = 'MIT';
+          }
+          if (!ordered.license) ordered.license = 'MIT';
+          rendered[pkgIdx]!.content = JSON.stringify(ordered, null, 2) + '\n';
+        }
+      } catch { /* leave package.json untouched if it doesn't parse */ }
+    }
+  }
+  if (!rendered.some(r => r.path === 'LICENSE')) {
+    rendered.push({ path: 'LICENSE', content: mitLicense(opts.name), rendered: false, unresolved: [] });
   }
 
   const fileMap = asFileMap(rendered);

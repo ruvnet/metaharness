@@ -115,6 +115,18 @@ describe('generated templates scaffold cleanly', () => {
           `${t.id} bin[${binName}] must not start with "./" (npm strips it on publish)`).toBe(true);
       }
 
+      // Regression for issue #23: every scaffold must carry a license field
+      // AND emit a matching LICENSE file (package.json `files` lists LICENSE).
+      expect(pkg.license, `${t.id} package.json missing license field`).toBe('MIT');
+      expect(r.paths, `${t.id} missing LICENSE file`).toContain('LICENSE');
+      const license = await readFile(join(target, 'LICENSE'), 'utf-8');
+      expect(license).toContain('MIT License');
+
+      // Regression for issue #24: the generated README must not overclaim a WASM
+      // kernel that the published beta doesn't ship (it resolves to js).
+      const readme = await readFile(join(target, 'README.md'), 'utf-8');
+      expect(readme).not.toContain('WASM kernel, multi-host support, witness-signed releases');
+
       // One agent file per declared agent.
       for (const a of t.agents) {
         expect(r.paths, `${t.id} missing agent ${a.id}`).toContain(`src/agents/${a.id}.ts`);
