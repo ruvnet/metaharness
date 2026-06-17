@@ -9,6 +9,8 @@ const PKG = '@metaharness/example-github';
 const SDK = "@octokit/rest";
 const ENV_VARS = ["GITHUB_TOKEN"];
 const COMMAND = "/gh-triage";
+// metaharness is one-host-per-invocation; --host all writes each host into its
+// own <name>/<host> subdir so every host's config is emitted side by side.
 const ALL_HOSTS = ['claude-code', 'codex', 'copilot', 'github-actions', 'hermes', 'openclaw', 'opencode', 'pi-dev', 'rvm'];
 
 const argv = process.argv.slice(2);
@@ -25,7 +27,15 @@ if (host !== 'all' && !ALL_HOSTS.includes(host)) {
 const hosts = host === 'all' ? ALL_HOSTS : [host];
 
 for (const h of hosts) {
-  const cmd = ['npx --yes metaharness@latest', JSON.stringify(name), '--template minimal', `--host ${h}`, '--force']
+  const target = host === 'all' ? `${name}/${h}` : name;
+  const cmd = [
+    'npx --yes metaharness@latest',
+    JSON.stringify(name),
+    '--template minimal',
+    `--host ${h}`,
+    host === 'all' ? `--target ${JSON.stringify(target)}` : '',
+    '--force',
+  ]
     .filter(Boolean)
     .join(' ');
   try {
@@ -36,13 +46,14 @@ for (const h of hosts) {
   }
 }
 
+const root = host === 'all' ? `${name}/<host>` : name;
 console.log(`\n${PKG} — scaffolded "${name}" for: ${hosts.join(', ')}`);
 console.log('\nNext steps:');
-console.log(`  cd ${name} && npm install`);
+console.log(`  cd ${root} && npm install`);
 console.log(`  npm install ${SDK}`);
 console.log(`  # set env (never commit secrets): ${ENV_VARS.join(', ')}`);
 console.log('  npm run doctor');
 console.log(`  # then in your host run:  ${COMMAND} "<your request>"`);
 if (!allowMutations) {
-  console.log('\nRead-only / sandbox by default. Re-run with --allow-mutations to enable writes (see README → Safety).');
+  console.log('\nRead-only / sandbox by default. Re-run with --allow-mutations to enable writes (see README -> Safety).');
 }
