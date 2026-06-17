@@ -232,7 +232,10 @@ jobs:
         run: |
           mkdir -p /tmp/ex && cd /tmp/ex
           fail=0
-          # host wrapper (hermes), vertical wrapper (devops), claude-code wrapper
+          # host wrapper (hermes), vertical wrapper (devops), claude-code wrapper.
+          # `.claude-plugin/plugin.json` is a Claude-Code artifact: only claude-code-
+          # host scaffolds emit it (GH #11 dropped it for non-claude hosts like
+          # hermes/rvm). So only assert plugin.json for the claude-code-host wrappers.
           for pkg in hermes devops claude-code; do
             echo ""
             echo "=== @metaharness/$pkg ==="
@@ -241,10 +244,17 @@ jobs:
               test -f "$pkg-bot/.harness/manifest.json" \
                 && echo "PASS @metaharness/$pkg — manifest present" \
                 || { echo "FAIL @metaharness/$pkg — no manifest"; fail=1; }
-              # iter-132 propagation: the scaffold must carry the plugin manifest
-              test -f "$pkg-bot/.claude-plugin/plugin.json" \
-                && echo "PASS @metaharness/$pkg — .claude-plugin/plugin.json present" \
-                || { echo "FAIL @metaharness/$pkg — no plugin.json"; fail=1; }
+              # plugin.json only for claude-code-host wrappers (devops + claude-code)
+              case "$pkg" in
+                hermes)
+                  test ! -f "$pkg-bot/.claude-plugin/plugin.json" \
+                    && echo "PASS @metaharness/$pkg — correctly no plugin.json (non-claude host, GH #11)" \
+                    || { echo "FAIL @metaharness/$pkg — unexpected plugin.json on non-claude host"; fail=1; } ;;
+                *)
+                  test -f "$pkg-bot/.claude-plugin/plugin.json" \
+                    && echo "PASS @metaharness/$pkg — .claude-plugin/plugin.json present" \
+                    || { echo "FAIL @metaharness/$pkg — no plugin.json"; fail=1; } ;;
+              esac
             else
               echo "FAIL @metaharness/$pkg — npx invocation errored"; fail=1
             fi

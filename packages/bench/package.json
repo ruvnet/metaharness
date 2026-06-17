@@ -14,7 +14,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@metaharness/kernel": "0.1.0",
+    "@metaharness/kernel": "^0.1.0",
     "@metaharness/host-claude-code": "0.1.0",
     "@metaharness/host-codex": "0.1.0",
     "@metaharness/host-pi-dev": "0.1.0",

@@ -1,7 +1,7 @@
 {
   "name": "@metaharness/host-rvm",
-  "version": "0.1.1",
-  "description": "RVM (Agentic Virtual Machine) host adapter for agent-harness-generator — hardware-isolated deployment via capability tokens",
+  "version": "0.1.2",
+  "description": "RVM (Agentic Virtual Machine) host adapter for agent-harness-generator \u2014 hardware-isolated deployment via capability tokens",
   "homepage": "https://github.com/ruvnet/agent-harness-generator",
   "repository": {
     "type": "git",
@@ -41,7 +41,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@metaharness/kernel": "0.1.0"
+    "@metaharness/kernel": "^0.1.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

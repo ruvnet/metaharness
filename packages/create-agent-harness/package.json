@@ -1,7 +1,7 @@
 {
   "name": "metaharness",
-  "version": "0.1.17",
-  "description": "MetaHarness — mint a custom AI agent harness from any repo. Browser Studio + `npx metaharness` CLI. Runs on Claude Code, Codex, pi.dev, Hermes, OpenClaw, RVM.",
+  "version": "0.1.18",
+  "description": "MetaHarness \u2014 mint a custom AI agent harness from any repo. Browser Studio + `npx metaharness` CLI. Runs on Claude Code, Codex, pi.dev, Hermes, OpenClaw, RVM.",
   "homepage": "https://github.com/ruvnet/agent-harness-generator",
   "repository": {
     "type": "git",
@@ -99,7 +99,7 @@
     "prompts": "^2.4.2"
   },
   "peerDependencies": {
-    "@metaharness/kernel": "0.1.0"
+    "@metaharness/kernel": "^0.1.0"
   },
   "peerDependenciesMeta": {
     "@metaharness/kernel": {

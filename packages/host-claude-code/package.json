@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/host-claude-code",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Claude Code host adapter for agent-harness-generator (MCP + hooks + .claude/settings.json)",
   "homepage": "https://github.com/ruvnet/agent-harness-generator",
   "repository": {
@@ -38,7 +38,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@metaharness/kernel": "0.1.0"
+    "@metaharness/kernel": "^0.1.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

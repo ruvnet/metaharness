@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/host-codex",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "OpenAI Codex CLI host adapter for agent-harness-generator (MCP via ~/.codex/config.toml)",
   "homepage": "https://github.com/ruvnet/agent-harness-generator",
   "repository": {
@@ -39,7 +39,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@metaharness/kernel": "0.1.0"
+    "@metaharness/kernel": "^0.1.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
