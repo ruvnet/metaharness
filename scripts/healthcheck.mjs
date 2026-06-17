@@ -48,7 +48,27 @@ const CHECKS = {
     // @metaharness/router is likewise a standalone published library on its own
     // semver (0.2.0 → 0.3.x as its API grows — ADR-043 native backend), not
     // lock-stepped to the monorepo version.
-    const INDEPENDENT = new Set(['metaharness', '@ruvnet/agent-harness-generator', '@metaharness/router']);
+    // @metaharness/kernel ships on its own semver (it carries the native/wasm
+    // build cadence — 0.1.0 js-only → 0.1.2 with the shipped wasm backend,
+    // GH #20) and the host adapters version with it (bumped to 0.1.2 so their
+    // `@metaharness/kernel` dep can caret-resolve the wasm kernel — they were
+    // already published off the monorepo cadence at 0.1.1). Treat both as
+    // independently-versioned, like metaharness/router/lib.
+    const INDEPENDENT = new Set([
+      'metaharness',
+      '@ruvnet/agent-harness-generator',
+      '@metaharness/router',
+      '@metaharness/kernel',
+      '@metaharness/host-claude-code',
+      '@metaharness/host-codex',
+      '@metaharness/host-copilot',
+      '@metaharness/host-github-actions',
+      '@metaharness/host-hermes',
+      '@metaharness/host-openclaw',
+      '@metaharness/host-opencode',
+      '@metaharness/host-pi-dev',
+      '@metaharness/host-rvm',
+    ]);
     for (const p of packages) {
       if (!p.isDirectory()) continue;
       const pkgPath = join(ROOT, 'packages', p.name, 'package.json');
