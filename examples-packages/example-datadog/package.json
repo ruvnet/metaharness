@@ -1,0 +1,38 @@
+{
+  "name": "@metaharness/example-datadog",
+  "version": "0.1.0",
+  "description": "MetaHarness scaffold for Datadog incident triage — npx @metaharness/example-datadog@latest <project-name> to generate a read-only AI triage bot wired to the Datadog API",
+  "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/examples-packages/example-datadog",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "directory": "examples-packages/example-datadog"
+  },
+  "license": "MIT",
+  "author": "rUv <ruv@ruv.net>",
+  "type": "module",
+  "bin": "bin/scaffold.mjs",
+  "files": [
+    "bin/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "smoke": "node --check bin/scaffold.mjs"
+  },
+  "keywords": [
+    "metaharness",
+    "datadog",
+    "observability",
+    "ai-agent",
+    "mcp",
+    "npx",
+    "scaffold"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

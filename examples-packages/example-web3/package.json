@@ -1,0 +1,43 @@
+{
+  "name": "@metaharness/example-web3",
+  "version": "0.1.0",
+  "description": "MetaHarness scaffold for Blockchain / web3 \u2014 read-chain, event streaming, and simulate-tx on Ethereum Sepolia testnet via viem (npx @metaharness/example-web3 my-bot)",
+  "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/examples-packages/example-web3",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "directory": "examples-packages/example-web3"
+  },
+  "license": "MIT",
+  "author": "rUv <ruv@ruv.net>",
+  "type": "module",
+  "bin": "bin/scaffold.mjs",
+  "files": [
+    "bin/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "smoke": "node --check bin/scaffold.mjs"
+  },
+  "keywords": [
+    "metaharness",
+    "web3",
+    "ethereum",
+    "blockchain",
+    "viem",
+    "evm",
+    "sepolia",
+    "testnet",
+    "ai-agent",
+    "mcp",
+    "npx",
+    "scaffold"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

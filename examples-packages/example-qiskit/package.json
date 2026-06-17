@@ -1,0 +1,44 @@
+{
+  "name": "@metaharness/example-qiskit",
+  "version": "0.1.0",
+  "description": "MetaHarness example \u2014 IBM Quantum / Qiskit Runtime agent scaffold: build + simulate quantum circuits locally before any hardware submission (npx @metaharness/example-qiskit my-bot)",
+  "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/examples-packages/example-qiskit",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "directory": "examples-packages/example-qiskit"
+  },
+  "license": "MIT",
+  "author": "rUv <ruv@ruv.net>",
+  "type": "module",
+  "bin": "bin/scaffold.mjs",
+  "files": [
+    "bin/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "smoke": "node --check bin/scaffold.mjs"
+  },
+  "keywords": [
+    "metaharness",
+    "quantum-computing",
+    "qiskit",
+    "ibm-quantum",
+    "qiskit-ibm-runtime",
+    "ai-agent",
+    "mcp",
+    "npx",
+    "scaffold",
+    "openqasm",
+    "quantum-circuit",
+    "simulation",
+    "ruqu"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

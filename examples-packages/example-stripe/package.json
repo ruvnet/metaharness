@@ -1,0 +1,43 @@
+{
+  "name": "@metaharness/example-stripe",
+  "version": "0.1.0",
+  "description": "MetaHarness scaffold for Stripe billing agents \u2014 subscriptions, refunds, and webhook handling in test mode by default (npx @metaharness/example-stripe my-bot)",
+  "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/examples-packages/example-stripe",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "directory": "examples-packages/example-stripe"
+  },
+  "license": "MIT",
+  "author": "rUv <ruv@ruv.net>",
+  "type": "module",
+  "bin": "bin/scaffold.mjs",
+  "files": [
+    "bin/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "smoke": "node --check bin/scaffold.mjs"
+  },
+  "keywords": [
+    "metaharness",
+    "stripe",
+    "billing",
+    "payments",
+    "subscriptions",
+    "ai-agent",
+    "mcp",
+    "npx",
+    "scaffold",
+    "agent-harness",
+    "tiered-routing",
+    "webhook"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

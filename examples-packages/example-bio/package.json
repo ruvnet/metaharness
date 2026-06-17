@@ -1,0 +1,46 @@
+{
+  "name": "@metaharness/example-bio",
+  "version": "0.1.0",
+  "description": "MetaHarness example \u2014 bioinformatics harness with gene lookup, PubMed literature retrieval, and genomic sequence fetch via NCBI E-utilities and Ensembl REST (npx @metaharness/example-bio my-bot)",
+  "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/examples-packages/example-bio",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "directory": "examples-packages/example-bio"
+  },
+  "license": "MIT",
+  "author": "rUv <ruv@ruv.net>",
+  "type": "module",
+  "bin": "bin/scaffold.mjs",
+  "files": [
+    "bin/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "smoke": "node --check bin/scaffold.mjs"
+  },
+  "keywords": [
+    "metaharness",
+    "example-bio",
+    "bioinformatics",
+    "ncbi",
+    "pubmed",
+    "ensembl",
+    "eutils",
+    "gene",
+    "sequence",
+    "ai-agent",
+    "mcp",
+    "npx",
+    "scaffold",
+    "claude-code",
+    "agent-harness"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "name": "@metaharness/example-iot",
+  "version": "0.1.0",
+  "description": "MetaHarness example \u2014 IoT/robotics telemetry agent with guarded actuation over MQTT and ROS 2 rosbridge (npx @metaharness/example-iot my-bot)",
+  "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/examples-packages/example-iot",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "directory": "examples-packages/example-iot"
+  },
+  "license": "MIT",
+  "author": "rUv <ruv@ruv.net>",
+  "type": "module",
+  "bin": "bin/scaffold.mjs",
+  "files": [
+    "bin/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "smoke": "node --check bin/scaffold.mjs"
+  },
+  "keywords": [
+    "metaharness",
+    "iot",
+    "robotics",
+    "mqtt",
+    "ros2",
+    "rosbridge",
+    "telemetry",
+    "actuation",
+    "ai-agent",
+    "mcp",
+    "npx",
+    "scaffold",
+    "agent-harness"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
