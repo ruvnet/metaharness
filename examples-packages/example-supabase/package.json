@@ -1,0 +1,45 @@
+{
+  "name": "@metaharness/example-supabase",
+  "version": "0.1.0",
+  "description": "MetaHarness SDK showcase \u2014 RLS-aware Supabase data agent (anon vs service-role, pgvector RAG, verification-gated). Run: npx @metaharness/example-supabase my-bot",
+  "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/examples-packages/example-supabase",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "directory": "examples-packages/example-supabase"
+  },
+  "license": "MIT",
+  "author": "rUv <ruv@ruv.net>",
+  "type": "module",
+  "bin": "bin/scaffold.mjs",
+  "files": [
+    "bin/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "smoke": "node --check bin/scaffold.mjs"
+  },
+  "keywords": [
+    "metaharness",
+    "supabase",
+    "supabase-js",
+    "postgres",
+    "rls",
+    "row-level-security",
+    "pgvector",
+    "ai-agent",
+    "mcp",
+    "npx",
+    "scaffold",
+    "agent-harness",
+    "rag",
+    "vector-search"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

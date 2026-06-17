@@ -1,0 +1,43 @@
+{
+  "name": "@metaharness/example-ads",
+  "version": "0.1.0",
+  "description": "MetaHarness example \u2014 Google Ads + Meta Marketing API harness, campaign/spend analysis read-only by default, mutations gated (npx @metaharness/example-ads my-bot)",
+  "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/examples-packages/example-ads",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "directory": "examples-packages/example-ads"
+  },
+  "license": "MIT",
+  "author": "rUv <ruv@ruv.net>",
+  "type": "module",
+  "bin": "bin/scaffold.mjs",
+  "files": [
+    "bin/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "smoke": "node --check bin/scaffold.mjs"
+  },
+  "keywords": [
+    "metaharness",
+    "google-ads",
+    "meta-marketing-api",
+    "facebook-ads",
+    "advertising",
+    "ad-platform",
+    "campaign-analysis",
+    "spend-analysis",
+    "ai-agent",
+    "mcp",
+    "npx",
+    "scaffold"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

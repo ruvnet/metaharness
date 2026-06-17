@@ -1,0 +1,46 @@
+{
+  "name": "@metaharness/example-github",
+  "version": "0.1.0",
+  "description": "MetaHarness example \u2014 GitHub PR review, issue triage, and release notes harness, read-only by default (npx @metaharness/example-github my-bot)",
+  "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/examples-packages/example-github",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "directory": "examples-packages/example-github"
+  },
+  "license": "MIT",
+  "author": "rUv <ruv@ruv.net>",
+  "type": "module",
+  "bin": "bin/scaffold.mjs",
+  "files": [
+    "bin/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "smoke": "node --check bin/scaffold.mjs"
+  },
+  "keywords": [
+    "metaharness",
+    "agent-harness",
+    "agent-harness-generator",
+    "github",
+    "octokit",
+    "pull-request",
+    "issue-triage",
+    "release-notes",
+    "ai-agent",
+    "mcp",
+    "npx",
+    "scaffold",
+    "claude-code",
+    "codex",
+    "copilot"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

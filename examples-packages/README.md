@@ -30,6 +30,30 @@ npx @metaharness/repo-maintainer my-bot   # OSS repo maintainer
 npx @metaharness/coding          my-bot   # engineering pod
 ```
 
+```bash
+# Third-party SDK showcases (ADR-051) — each wires a harness to a real platform
+# SDK across every host. Read-only / sandbox / test-mode by default; mutations
+# need --allow-mutations. Add --host all to emit every host's config.
+npx @metaharness/example-aws         my-bot   # AWS (S3/EC2/Lambda/DynamoDB, dry-run)
+npx @metaharness/example-gcp         my-bot   # Google Cloud (Storage/BigQuery/Vertex)
+npx @metaharness/example-azure       my-bot   # Azure (ARM/Blob/Azure OpenAI)
+npx @metaharness/example-stripe      my-bot   # Stripe billing (TEST MODE by default)
+npx @metaharness/example-slack       my-bot   # Slack triage/notify (scoped tokens)
+npx @metaharness/example-github      my-bot   # GitHub PR/issue automation (Octokit)
+npx @metaharness/example-twilio      my-bot   # Twilio SMS/voice (magic test numbers)
+npx @metaharness/example-datadog     my-bot   # Datadog incident triage (read-only)
+npx @metaharness/example-supabase    my-bot   # Supabase RLS-aware data agent
+npx @metaharness/example-huggingface my-bot   # Hugging Face discovery + inference
+npx @metaharness/example-pinecone    my-bot   # Pinecone RAG memory
+npx @metaharness/example-fhir        my-bot   # Health/FHIR (sandbox EHR; not a medical device)
+npx @metaharness/example-ads         my-bot   # Google/Meta Ads analysis (read-only)
+npx @metaharness/example-web3        my-bot   # web3/viem (testnet read + simulate)
+npx @metaharness/example-iot         my-bot   # IoT/MQTT telemetry (guarded actuation)
+npx @metaharness/example-nasa        my-bot   # NASA imagery + orbital pass prediction
+npx @metaharness/example-qiskit      my-bot   # Quantum circuits (simulate, verify-first)
+npx @metaharness/example-bio         my-bot   # Bioinformatics (NCBI/Ensembl lookup)
+```
+
 Every scaffold ships:
 
 - a `.harness/manifest.json` (signed-shape provenance),
