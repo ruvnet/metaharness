@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/example-ads",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MetaHarness example \u2014 Google Ads + Meta Marketing API harness, campaign/spend analysis read-only by default, mutations gated (npx @metaharness/example-ads my-bot)",
   "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/examples-packages/example-ads",
   "repository": {
@@ -15,7 +15,8 @@
   "files": [
     "bin/**",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "assets/**"
   ],
   "scripts": {
     "smoke": "node --check bin/scaffold.mjs"
