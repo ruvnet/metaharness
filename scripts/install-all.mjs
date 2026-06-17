@@ -78,9 +78,21 @@ for (const t of tarballs) {
     console.log(`  SKIP ${t} (unparseable name)`);
     continue;
   }
-  const rawName = m[1];
-  // ruflo-foo → @metaharness/foo. Others unchanged.
-  const pkgName = rawName.startsWith('ruflo-') ? `@metaharness/${rawName.slice('ruflo-'.length)}` : rawName;
+  // Derive the REAL package name from the tarball's own package.json rather
+  // than guessing from the filename. `npm pack` flattens scoped names
+  // (@metaharness/host-x → metaharness-host-x-VER.tgz), so a filename-based
+  // guess can't reconstruct the scope — it broke for every @metaharness/*
+  // package after the @ruflo→@metaharness rename. Reading the manifest is
+  // scope-agnostic and correct for any future rename.
+  let pkgName;
+  try {
+    pkgName = JSON.parse(
+      execSync(`tar -xzOf ${JSON.stringify(join(packed, t))} package/package.json`, { encoding: 'utf-8' }),
+    ).name;
+  } catch {
+    const rawName = m[1];
+    pkgName = rawName.startsWith('ruflo-') ? `@metaharness/${rawName.slice('ruflo-'.length)}` : rawName;
+  }
   const pkgDir = join(project, 'node_modules', ...pkgName.split('/'));
   if (!existsSync(pkgDir)) {
     console.log(`  FAIL ${pkgName} — not in node_modules`);
