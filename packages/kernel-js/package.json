@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/kernel",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Cross-platform kernel for the agent-harness-generator — wasm primary, NAPI-RS native fallback",
   "homepage": "https://github.com/ruvnet/agent-harness-generator",
   "repository": {
@@ -41,7 +41,7 @@
     "build": "tsc",
     "test": "vitest run",
     "lint": "tsc --noEmit",
-    "build:wasm": "RUSTFLAGS= wasm-pack build ../../crates/kernel-wasm --target nodejs --release --out-dir pkg && node -e \"const f=require('fs');const j=require('./pkg/package.json');j.type='commonjs';f.writeFileSync('./pkg/package.json',JSON.stringify(j,null,2)+'\\n')\""
+    "build:wasm": "RUSTFLAGS= wasm-pack build ../../crates/kernel-wasm --target nodejs --release --out-dir ../../packages/kernel-js/pkg && rm -f pkg/.gitignore && node -e \"const f=require('fs');const j=require('./pkg/package.json');j.type='commonjs';f.writeFileSync('./pkg/package.json',JSON.stringify(j,null,2)+'\\n')\""
   },
   "keywords": [
     "agent-harness",
