@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/example-gcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MetaHarness example \u2014 Google Cloud Platform scaffold wired to Cloud Storage, BigQuery dry-run, and Vertex AI Gemini inference (npx @metaharness/example-gcp my-bot)",
   "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/examples-packages/example-gcp",
   "repository": {
@@ -15,7 +15,8 @@
   "files": [
     "bin/**",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "assets/**"
   ],
   "scripts": {
     "smoke": "node --check bin/scaffold.mjs"

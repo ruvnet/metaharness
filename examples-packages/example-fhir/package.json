@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/example-fhir",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MetaHarness example \u2014 FHIR R4 agent harness pre-wired to fhir-kit-client (SMART on FHIR); reads Patient/Observation/Device from a public sandbox EHR (npx @metaharness/example-fhir my-bot)",
   "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/examples-packages/example-fhir",
   "repository": {
@@ -15,7 +15,8 @@
   "files": [
     "bin/**",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "assets/**"
   ],
   "scripts": {
     "smoke": "node --check bin/scaffold.mjs"

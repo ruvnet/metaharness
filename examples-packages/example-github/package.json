@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/example-github",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MetaHarness example \u2014 GitHub PR review, issue triage, and release notes harness, read-only by default (npx @metaharness/example-github my-bot)",
   "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/examples-packages/example-github",
   "repository": {
@@ -15,7 +15,8 @@
   "files": [
     "bin/**",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "assets/**"
   ],
   "scripts": {
     "smoke": "node --check bin/scaffold.mjs"

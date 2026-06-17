@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/example-huggingface",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MetaHarness example \u2014 Hugging Face SDK showcase: model/dataset discovery, serverless inference, and Space exploration (npx @metaharness/example-huggingface my-bot)",
   "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/examples-packages/example-huggingface",
   "repository": {
@@ -15,7 +15,8 @@
   "files": [
     "bin/**",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "assets/**"
   ],
   "scripts": {
     "smoke": "node --check bin/scaffold.mjs"
