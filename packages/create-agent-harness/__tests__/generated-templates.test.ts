@@ -107,6 +107,14 @@ describe('generated templates scaffold cleanly', () => {
       expect(pkg.name).toBe(name);
       expect(pkg.dependencies['@metaharness/kernel']).toBeDefined();
 
+      // Regression for issue #13: npm strips a "bin" target with a leading "./"
+      // on publish, leaving the package with no CLI. Bin paths must be relative
+      // with no "./" prefix.
+      for (const [binName, binPath] of Object.entries(pkg.bin ?? {})) {
+        expect(typeof binPath === 'string' && !(binPath as string).startsWith('./'),
+          `${t.id} bin[${binName}] must not start with "./" (npm strips it on publish)`).toBe(true);
+      }
+
       // One agent file per declared agent.
       for (const a of t.agents) {
         expect(r.paths, `${t.id} missing agent ${a.id}`).toContain(`src/agents/${a.id}.ts`);

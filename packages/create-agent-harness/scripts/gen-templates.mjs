@@ -69,7 +69,7 @@ function packageJsonTmpl() {
   "description": "{{description}}",
   "type": "module",
   "bin": {
-    "{{name}}": "./bin/{{name}}.js"
+    "{{name}}": "bin/{{name}}.js"
   },
   "files": ["bin/**", "dist/**", ".claude/**", "CLAUDE.md", "README.md", "LICENSE"],
   "scripts": {

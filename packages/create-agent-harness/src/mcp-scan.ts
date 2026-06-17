@@ -143,8 +143,16 @@ function worstOf(findings: Finding[]): Severity {
 
 /** CLI wrapper. Exit code 1 if any HIGH finding, else 0. */
 export function mcpScanCmd(args: string[]): { code: number; lines: string[] } {
-  const dir = args[0] ?? process.cwd();
+  // Honor --json (issue #16): emit the structured report so downstream code can
+  // read report.findings[] instead of parsing text. Flags are ignored when
+  // resolving the scan path, so `mcp-scan --json` (no path) defaults to cwd.
+  const json = args.includes('--json');
+  const dir = args.find((a) => !a.startsWith('-')) ?? process.cwd();
   const report = scanMcp(dir);
+  const highsCount = report.findings.filter((f) => f.severity === 'high').length;
+  if (json) {
+    return { code: highsCount > 0 ? 1 : 0, lines: [JSON.stringify(report, null, 2)] };
+  }
   const lines: string[] = [`harness mcp-scan — ${report.dir}`, ''];
   if (!report.mcpEnabled) {
     lines.push('MCP: not enabled (no policy or server). Nothing to scan.');

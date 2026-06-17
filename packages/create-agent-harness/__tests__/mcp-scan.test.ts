@@ -105,4 +105,24 @@ describe('mcpScanCmd', () => {
     expect(r.code).toBe(0);
     expect(r.lines.join('\n')).toContain('Result: INFO');
   });
+
+  // Regression for issue #16: --json must emit the structured report (findings[])
+  // instead of text, so downstream code can diff findings across runs.
+  it('emits structured JSON with findings[] when --json is passed', async () => {
+    const bad = await makeHarness({ policy: null, allow: ['mcp__bot__*'] });
+    const r = mcpScanCmd([bad, '--json']);
+    const parsed = JSON.parse(r.lines.join('\n'));
+    expect(Array.isArray(parsed.findings)).toBe(true);
+    expect(parsed.findings.length).toBeGreaterThan(0);
+    expect(r.code).toBe(1);
+    // text mode (no --json) must remain non-JSON
+    expect(() => JSON.parse(mcpScanCmd([bad]).lines.join('\n'))).toThrow();
+  });
+
+  it('resolves the scan path even when --json precedes it', async () => {
+    const good = await makeHarness({ policy: SAFE, allow: ['mcp__bot__*'], deps: { '@metaharness/kernel': '0.1.0' } });
+    const r = mcpScanCmd(['--json', good]);
+    const parsed = JSON.parse(r.lines.join('\n'));
+    expect(parsed.dir).toBe(good);
+  });
 });

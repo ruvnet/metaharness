@@ -1,6 +1,6 @@
 {
   "name": "metaharness",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "description": "MetaHarness — mint a custom AI agent harness from any repo. Browser Studio + `npx metaharness` CLI. Runs on Claude Code, Codex, pi.dev, Hermes, OpenClaw, RVM.",
   "homepage": "https://github.com/ruvnet/agent-harness-generator",
   "repository": {
@@ -20,8 +20,8 @@
     }
   },
   "bin": {
-    "metaharness": "./dist/bin.js",
-    "harness": "./dist/harness-bin.js"
+    "metaharness": "dist/bin.js",
+    "harness": "dist/harness-bin.js"
   },
   "files": [
     "dist/**",
