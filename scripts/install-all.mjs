@@ -18,7 +18,26 @@
 // has a structural problem, the batch install fails.
 
 import { execSync } from 'node:child_process';
-import { mkdirSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdirSync, readdirSync, writeFileSync, existsSync, readFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
+
+// Read package/package.json's "name" straight out of a .tgz, in pure Node.
+// Avoids shelling to `tar` — GNU tar on Windows misreads a "D:\..." path as a
+// remote host spec ("Cannot connect to D:"), and bsdtar lacks --force-local.
+// A package tarball is gzip(ustar); scan 512-byte headers for the manifest.
+function packageNameFromTarball(tarballPath) {
+  const buf = gunzipSync(readFileSync(tarballPath));
+  for (let off = 0; off + 512 <= buf.length; ) {
+    const name = buf.toString('utf8', off, off + 100).replace(/\0.*$/, '');
+    if (!name) break; // end-of-archive zero blocks
+    const size = parseInt(buf.toString('utf8', off + 124, off + 136).replace(/\0.*$/, '').trim(), 8) || 0;
+    if (name === 'package/package.json') {
+      return JSON.parse(buf.toString('utf8', off + 512, off + 512 + size)).name;
+    }
+    off += 512 + Math.ceil(size / 512) * 512;
+  }
+  return null;
+}
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
@@ -86,10 +105,11 @@ for (const t of tarballs) {
   // scope-agnostic and correct for any future rename.
   let pkgName;
   try {
-    pkgName = JSON.parse(
-      execSync(`tar -xzOf ${JSON.stringify(join(packed, t))} package/package.json`, { encoding: 'utf-8' }),
-    ).name;
+    pkgName = packageNameFromTarball(join(packed, t));
   } catch {
+    pkgName = null;
+  }
+  if (!pkgName) {
     const rawName = m[1];
     pkgName = rawName.startsWith('ruflo-') ? `@metaharness/${rawName.slice('ruflo-'.length)}` : rawName;
   }
