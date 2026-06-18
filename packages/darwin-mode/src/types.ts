@@ -172,6 +172,17 @@ export interface EvolutionConfig {
   benchSamples?: number;
   /** Minimum mean-delta a child must clear under the bench promotion gate. */
   benchMinDelta?: number;
+  /**
+   * Opt-in SGM cumulative risk budget (ADR-079). Only meaningful with benchSuite.
+   * Every admitted promotion spends 1 from this shared, monotonic budget; once
+   * exhausted, further promotions are refused regardless of local score — so
+   * recursive self-modification cannot accumulate unbounded risk across rounds.
+   * Also enforces the SOTA clauses (no hidden-test regression, cost-per-solve
+   * within costCeilingFactor× the parent). Unset → no risk cap.
+   */
+  riskBudgetTotal?: number;
+  /** Cost-per-solve ceiling as a multiple of the parent (SGM). Default 1.20. */
+  costCeilingFactor?: number;
 }
 
 /** The outcome of an `evolve` run. */

@@ -114,7 +114,7 @@ async function main(): Promise<void> {
   if (command !== 'evolve') {
     process.stderr.write(
       'usage: metaharness-darwin <evolve|bench> …\n' +
-        '  evolve <repo> [--generations N] [--children N] [--concurrency N] [--seed N] [--bench <suite.json>] [--tie faster] [--selection quality-diversity] [--crossover]\n' +
+        '  evolve <repo> [--generations N] [--children N] [--concurrency N] [--seed N] [--bench <suite.json>] [--tie faster] [--selection quality-diversity] [--crossover] [--risk-budget N]\n' +
         '  bench create <repo> [--out <suite.json>]\n' +
         '  bench verify <suite.json>\n',
     );
@@ -133,6 +133,8 @@ async function main(): Promise<void> {
   const selection =
     flag('--selection', 'score') === 'quality-diversity' ? 'quality-diversity' : 'score';
   const crossover = process.argv.includes('--crossover');
+  const riskArg = flag('--risk-budget', '');
+  const riskBudgetTotal = riskArg === '' ? undefined : num('--risk-budget', 0);
 
   const result = await evolve({
     repoRoot,
@@ -148,6 +150,7 @@ async function main(): Promise<void> {
       'check trace quality',
     ],
     ...(benchSuite ? { benchSuite } : {}),
+    ...(riskBudgetTotal !== undefined ? { riskBudgetTotal } : {}),
     tieBreaker,
     selection,
     crossover,

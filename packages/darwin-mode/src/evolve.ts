@@ -23,7 +23,22 @@ import { profileRepo } from './repo_profiler.js';
 import { runVariantTasks } from './sandbox.js';
 import { scoreVariant } from './scorer.js';
 import { evaluateChildAgainstParent } from './bench/runner.js';
-import type { PromotionDecision } from './bench/types.js';
+import { admitWithStatisticalGate, makeRiskBudget } from './bench/risk.js';
+import type { RiskBudget } from './bench/risk.js';
+import type { BenchmarkResult, PromotionDecision } from './bench/types.js';
+
+/** Hidden-test pass rate over a variant's per-task results (SGM SOTA clause). */
+function hiddenRate(results: BenchmarkResult[]): number {
+  if (results.length === 0) return 0;
+  return results.filter((r) => r.hiddenTestPassed).length / results.length;
+}
+
+/** Cost-per-solve: total metered cost divided by solved tasks (≥1 to avoid /0). */
+function costPerSolve(results: BenchmarkResult[]): number {
+  const solved = results.filter((r) => r.solved).length;
+  const cost = results.reduce((s, r) => s + r.costUsd, 0);
+  return cost / Math.max(1, solved);
+}
 import type {
   ArchiveRecord,
   EvolutionConfig,
@@ -158,6 +173,11 @@ export async function evolve(config: EvolutionConfig): Promise<EvolutionResult> 
 
   const seed = config.seed ?? 0;
   const concurrency = config.concurrency ?? DEFAULT_CONCURRENCY;
+  // Opt-in SGM cumulative risk budget (ADR-079), shared across all generations.
+  const riskBudget: RiskBudget | null =
+    config.benchSuite && config.riskBudgetTotal !== undefined
+      ? makeRiskBudget(config.riskBudgetTotal)
+      : null;
   // ADR-071: pluggable generator. Default deterministic; config.generator can
   // be an LLM-backed CodeGenerator (e.g. OpenRouterMutator) — same safety gate.
   const mutator = config.generator ?? new DeterministicMutator(seed);
@@ -225,8 +245,9 @@ export async function evolve(config: EvolutionConfig): Promise<EvolutionResult> 
     if (config.benchSuite) {
       const suite = config.benchSuite;
       benchByChild = new Map();
-      const decisions = await mapLimit(children, concurrency, async ({ child, parent }) => {
-        const { decision } = await evaluateChildAgainstParent({
+      // Concurrent bench evaluation (no shared state).
+      const evaluated = await mapLimit(children, concurrency, async ({ child, parent }) => {
+        const r = await evaluateChildAgainstParent({
           parent,
           child,
           profile,
@@ -235,9 +256,34 @@ export async function evolve(config: EvolutionConfig): Promise<EvolutionResult> 
           samples: config.benchSamples,
           minDelta: config.benchMinDelta,
         });
-        return { id: child.id, decision };
+        return { id: child.id, ...r };
       });
-      for (const d of decisions) benchByChild.set(d.id, d.decision);
+      // Apply the SGM gate SEQUENTIALLY so the shared risk budget charges safely
+      // (ADR-079). Without a budget, the base statistical decision stands.
+      for (const e of evaluated) {
+        let decision = e.decision;
+        if (riskBudget) {
+          const gate = admitWithStatisticalGate({
+            decision,
+            childHiddenTestRate: hiddenRate(e.childResults),
+            parentHiddenTestRate: hiddenRate(e.parentResults),
+            childCostPerSolve: costPerSolve(e.childResults),
+            parentCostPerSolve: costPerSolve(e.parentResults),
+            costCeilingFactor: config.costCeilingFactor,
+            riskBudget,
+          });
+          decision = {
+            ...decision,
+            promote: gate.admit,
+            reasons: [
+              ...decision.reasons,
+              ...gate.reasons,
+              `risk budget remaining: ${gate.riskRemaining}`,
+            ],
+          };
+        }
+        benchByChild.set(e.id, decision);
+      }
     }
 
     // Commit sequentially (single-writer to the archive + one save), honouring

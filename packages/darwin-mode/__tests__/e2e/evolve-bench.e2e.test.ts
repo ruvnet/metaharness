@@ -96,3 +96,41 @@ describe('evolve — opt-in graded promotion (ADR-076 bench gate)', () => {
     expect(await isFile(join(fx.workRoot, 'reports', 'winner.json'))).toBe(true);
   });
 });
+
+describe('evolve — SGM cumulative risk budget (ADR-079)', () => {
+  let fx: Fixture;
+
+  beforeEach(async () => {
+    fx = await makeFixture('darwin-evolve-risk');
+  });
+  afterEach(async () => {
+    await fx.cleanup();
+  });
+
+  it('a zero risk budget refuses every promotion and tags the reason', async () => {
+    const suite = makeSuite('smoke-suite', '1.0.0', [passingTask('b1')]);
+    const result = await evolve({
+      repoRoot: fx.repoRoot,
+      workRoot: fx.workRoot,
+      generations: 1,
+      childrenPerGeneration: 2,
+      concurrency: 2,
+      seed: 0,
+      promotionDelta: 0.05,
+      tasks: ['t1'],
+      benchSuite: suite,
+      riskBudgetTotal: 0, // no risk may be spent → nothing promotes
+    });
+
+    const children = result.records.filter((r) => r.variant.parentId !== null);
+    expect(children.length).toBeGreaterThan(0);
+    for (const child of children) {
+      expect(child.score!.promoted).toBe(false);
+      const decision = JSON.parse(
+        await readFile(join(fx.workRoot, 'runs', `${child.variant.id}.bench.json`), 'utf8'),
+      );
+      // The SGM reasons + remaining-budget annotation are recorded.
+      expect(decision.reasons.some((r: string) => r.includes('risk budget remaining'))).toBe(true);
+    }
+  });
+});
