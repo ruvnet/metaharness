@@ -41,7 +41,7 @@ Then evolve a repo with the CLI (one verb, `evolve`):
 metaharness-darwin evolve <repo> [--generations N] [--children N] [--concurrency N] [--seed N] \
     [--bench <suite.json>] [--tie faster] \
     [--selection score|quality-diversity|behavioral-diversity|niche-steering|clade|pareto] \
-    [--crossover] [--epistasis] [--risk-budget N] [--fdr Q] [--curriculum]
+    [--crossover] [--epistasis] [--risk-budget N] [--fdr Q] [--curriculum] [--sandbox real|mock|agent]
 ```
 
 | Flag | Meaning | Default |
@@ -58,6 +58,7 @@ metaharness-darwin evolve <repo> [--generations N] [--children N] [--concurrency
 | `--risk-budget N` | SGM cumulative risk cap on promotions (ADR-090) | off |
 | `--fdr Q`         | Benjamini-Hochberg FDR control on promotion (ADR-096) | off |
 | `--curriculum`    | difficulty-ladder over a graded suite (ADR-097) | off |
+| `--sandbox …`     | evaluation substrate: `real` (repo test) · `mock` (surface params, ADR-102) · `agent` (real surface code, ADR-106) | `real` |
 
 All flags are **opt-in and additive** over a frozen, reproducible core — every default-path run is byte-identical to the ADR-070…075 baseline.
 
