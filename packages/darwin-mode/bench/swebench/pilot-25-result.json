@@ -1,0 +1,84 @@
+{
+  "experiment": "ADR-142 — SWE-bench Lite pilot (stratified 25, deepseek/searchreplace, single-shot)",
+  "dataset": "princeton-nlp/SWE-bench_Lite (test)",
+  "model": "deepseek/deepseek-chat",
+  "harness": "official swebench 4.1.0 (Docker)",
+  "n": 25,
+  "resolved": 3,
+  "resolveRate": 12,
+  "wilson95": [
+    4.2,
+    30
+  ],
+  "patchApplied": 13,
+  "emptyPatch": 12,
+  "errors": 1,
+  "solveCost_usd": 0.2311,
+  "resolved_ids": [
+    "mwaskom__seaborn-3190",
+    "pytest-dev__pytest-5227",
+    "scikit-learn__scikit-learn-13779"
+  ],
+  "perRepo": {
+    "django/django": {
+      "n": 3,
+      "patched": 3,
+      "resolved": 0
+    },
+    "sympy/sympy": {
+      "n": 3,
+      "patched": 0,
+      "resolved": 0
+    },
+    "matplotlib/matplotlib": {
+      "n": 3,
+      "patched": 1,
+      "resolved": 0
+    },
+    "scikit-learn/scikit-learn": {
+      "n": 2,
+      "patched": 1,
+      "resolved": 1
+    },
+    "pytest-dev/pytest": {
+      "n": 2,
+      "patched": 1,
+      "resolved": 1
+    },
+    "sphinx-doc/sphinx": {
+      "n": 2,
+      "patched": 1,
+      "resolved": 0
+    },
+    "pylint-dev/pylint": {
+      "n": 2,
+      "patched": 0,
+      "resolved": 0
+    },
+    "astropy/astropy": {
+      "n": 2,
+      "patched": 2,
+      "resolved": 0
+    },
+    "mwaskom/seaborn": {
+      "n": 2,
+      "patched": 1,
+      "resolved": 1
+    },
+    "pydata/xarray": {
+      "n": 2,
+      "patched": 1,
+      "resolved": 0
+    },
+    "psf/requests": {
+      "n": 1,
+      "patched": 1,
+      "resolved": 0
+    },
+    "pallets/flask": {
+      "n": 1,
+      "patched": 1,
+      "resolved": 0
+    }
+  }
+}

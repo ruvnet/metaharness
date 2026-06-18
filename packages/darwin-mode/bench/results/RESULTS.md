@@ -139,3 +139,21 @@ program is **compiled and run** against 8 hidden cases. `quality` = pass rate.
   `max_tokens=8000`, then 3 blind judges per dossier). Raw dossiers + usage in
   `draco-quality-cost-frontier.json`.
 - §5: every row has a one-command repro in `bench/REPRODUCE.md` (rows 102–130) against its `bench/results/*.json` artifact.
+
+## 6. Canonical SWE-bench Lite pilot (REAL external benchmark — ADR-142)
+
+The first run on the **public yardstick** (official `swebench` 4.1.0 Docker harness, Python).
+Stratified 25 SWE-bench Lite instances across all 12 repos; Darwin solver (contextBuilder +
+search/replace, deepseek-chat), **open-loop single-shot**.
+
+| metric | value |
+|---|---|
+| resolved | **3 / 25 = 12.0%** (Wilson 95% CI [4.2%, 30.0%]) |
+| patch produced | 13/25 (12 empty); patched-but-wrong 10/13 |
+| resolved repos | seaborn, pytest, scikit-learn (3 distinct) |
+| solve cost | $0.23 (deepseek) |
+
+**Honest:** the floor of a minimal baseline — leaderboard leaders hit 65–88% on Verified using
+iterative agentic loops + frontier models; this is open-loop/single-shot/cheap. Lifts the ADR-098
+boundary (a real number now exists). Biggest lever: the repair loop with test feedback (ADR-126,
+omitted in the pilot) + large-repo patch production (48% empty). Repro: `bench/swebench/`.
