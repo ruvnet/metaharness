@@ -33,6 +33,7 @@ import { cladeThompsonSelect } from './clade.js';
 import type { MutationSurface } from './types.js';
 import { evaluateChildAgainstParent } from './bench/runner.js';
 import { benjaminiHochberg } from './bench/stats.js';
+import { curriculumSuite, maxDifficulty, nextCurriculumLevel } from './curriculum.js';
 import { admitWithStatisticalGate, makeRiskBudget } from './bench/risk.js';
 import type { RiskBudget } from './bench/risk.js';
 import type { BenchmarkResult, PromotionDecision } from './bench/types.js';
@@ -208,6 +209,9 @@ export async function evolve(config: EvolutionConfig): Promise<EvolutionResult> 
 
   const seed = config.seed ?? 0;
   const concurrency = config.concurrency ?? DEFAULT_CONCURRENCY;
+  // Self-directed curriculum (ADR-097): start at the easiest tier and escalate as
+  // the population masters it. Only meaningful with a graded benchSuite.
+  let curriculumLevel = 1;
   // Opt-in SGM cumulative risk budget (ADR-079), shared across all generations.
   const riskBudget: RiskBudget | null =
     config.benchSuite && config.riskBudgetTotal !== undefined
@@ -301,7 +305,10 @@ export async function evolve(config: EvolutionConfig): Promise<EvolutionResult> 
     // decision override the single-run promote flag. Same bounded concurrency.
     let benchByChild: Map<string, PromotionDecision> | null = null;
     if (config.benchSuite) {
-      const suite = config.benchSuite;
+      // With the curriculum on, score only the admitted difficulty tier this gen.
+      const suite = config.curriculum
+        ? curriculumSuite(config.benchSuite, curriculumLevel)
+        : config.benchSuite;
       benchByChild = new Map();
       // Concurrent bench evaluation (no shared state).
       const evaluated = await mapLimit(children, concurrency, async ({ child, parent }) => {
@@ -360,6 +367,22 @@ export async function evolve(config: EvolutionConfig): Promise<EvolutionResult> 
             });
           }
         });
+      }
+
+      // ADR-097: escalate the curriculum when the population MASTERS the tier.
+      if (config.curriculum) {
+        const rates = evaluated.map((e) =>
+          e.childResults.length
+            ? e.childResults.filter((r) => r.solved).length / e.childResults.length
+            : 0,
+        );
+        const meanSolveRate = rates.length ? rates.reduce((s, r) => s + r, 0) / rates.length : 0;
+        curriculumLevel = nextCurriculumLevel(
+          curriculumLevel,
+          meanSolveRate,
+          maxDifficulty(config.benchSuite),
+          config.curriculumThreshold,
+        );
       }
     }
 

@@ -206,6 +206,15 @@ export interface EvolutionConfig {
    * it survives the generation-wide BH correction. Strictly tightens promotion.
    */
   fdrQ?: number;
+  /**
+   * Opt-in self-directed curriculum (ADR-097). Only meaningful with a graded
+   * benchSuite (tasks carrying difficulty 1..5). Scores each generation on only
+   * the admitted difficulty tier, escalating once the population masters it —
+   * so harder tasks arrive as competence grows (a difficulty ladder).
+   */
+  curriculum?: boolean;
+  /** Mean solve rate that counts as "mastered" and escalates the tier. Default 0.9. */
+  curriculumThreshold?: number;
 }
 
 /** The outcome of an `evolve` run. */

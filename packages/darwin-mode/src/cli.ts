@@ -114,7 +114,7 @@ async function main(): Promise<void> {
   if (command !== 'evolve') {
     process.stderr.write(
       'usage: metaharness-darwin <evolve|bench> …\n' +
-        '  evolve <repo> [--generations N] [--children N] [--concurrency N] [--seed N] [--bench <suite.json>] [--tie faster] [--selection quality-diversity|behavioral-diversity|niche-steering|clade] [--crossover] [--epistasis] [--risk-budget N] [--fdr Q]\n' +
+        '  evolve <repo> [--generations N] [--children N] [--concurrency N] [--seed N] [--bench <suite.json>] [--tie faster] [--selection quality-diversity|behavioral-diversity|niche-steering|clade] [--crossover] [--epistasis] [--risk-budget N] [--fdr Q] [--curriculum]\n' +
         '  bench create <repo> [--out <suite.json>]\n' +
         '  bench verify <suite.json>\n',
     );
@@ -144,6 +144,7 @@ async function main(): Promise<void> {
   const riskBudgetTotal = riskArg === '' ? undefined : num('--risk-budget', 0);
   const fdrArg = flag('--fdr', '');
   const fdrQ = fdrArg === '' ? undefined : num('--fdr', 0.05);
+  const curriculum = process.argv.includes('--curriculum');
 
   const result = await evolve({
     repoRoot,
@@ -161,6 +162,7 @@ async function main(): Promise<void> {
     ...(benchSuite ? { benchSuite } : {}),
     ...(riskBudgetTotal !== undefined ? { riskBudgetTotal } : {}),
     ...(fdrQ !== undefined ? { fdrQ } : {}),
+    ...(curriculum ? { curriculum } : {}),
     tieBreaker,
     selection,
     crossover,
