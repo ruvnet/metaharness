@@ -1,0 +1,93 @@
+{
+  "experiment": "ADR-144 — full SWE-bench Lite baseline (300, open-loop, fixed deepseek)",
+  "dataset": "princeton-nlp/SWE-bench_Lite (test, all 300)",
+  "model": "deepseek/deepseek-chat",
+  "harness": "official swebench 4.1.0",
+  "n": 300,
+  "resolved": 23,
+  "resolveRate": 7.7,
+  "wilson95": [
+    5.2,
+    11.2
+  ],
+  "patchProduced": 100,
+  "emptyPatch": 200,
+  "errors": 0,
+  "solveCost_usd": 2.7484,
+  "ofPatchedResolveRate": 23,
+  "perRepo": {
+    "astropy/astropy": {
+      "n": 6,
+      "res": 1
+    },
+    "django/django": {
+      "n": 114,
+      "res": 15
+    },
+    "matplotlib/matplotlib": {
+      "n": 23,
+      "res": 0
+    },
+    "mwaskom/seaborn": {
+      "n": 4,
+      "res": 0
+    },
+    "pallets/flask": {
+      "n": 3,
+      "res": 0
+    },
+    "psf/requests": {
+      "n": 6,
+      "res": 2
+    },
+    "pydata/xarray": {
+      "n": 5,
+      "res": 1
+    },
+    "pylint-dev/pylint": {
+      "n": 6,
+      "res": 0
+    },
+    "pytest-dev/pytest": {
+      "n": 17,
+      "res": 2
+    },
+    "scikit-learn/scikit-learn": {
+      "n": 23,
+      "res": 0
+    },
+    "sphinx-doc/sphinx": {
+      "n": 16,
+      "res": 0
+    },
+    "sympy/sympy": {
+      "n": 77,
+      "res": 2
+    }
+  },
+  "resolved_ids": [
+    "astropy__astropy-12907",
+    "django__django-11039",
+    "django__django-11099",
+    "django__django-11133",
+    "django__django-11422",
+    "django__django-12453",
+    "django__django-12708",
+    "django__django-12983",
+    "django__django-13551",
+    "django__django-14382",
+    "django__django-14855",
+    "django__django-14915",
+    "django__django-15347",
+    "django__django-15789",
+    "django__django-16379",
+    "django__django-16873",
+    "psf__requests-3362",
+    "psf__requests-863",
+    "pydata__xarray-5131",
+    "pytest-dev__pytest-5227",
+    "pytest-dev__pytest-7373",
+    "sympy__sympy-13647",
+    "sympy__sympy-14774"
+  ]
+}

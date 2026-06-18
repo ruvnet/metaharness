@@ -173,3 +173,22 @@ clean batch `swebench` eval.
 resolves came on attempt 2** via traceback feedback (django-15061, seaborn-3190); django-15061 +
 sphinx-8721 are newly cracked (pilot resolved no django/sphinx). Significance needs a larger
 sample → Stage B "scale". Spend so far ~$0.81 of $250.
+
+## 8. Full SWE-bench Lite baseline — all 300 (ADR-144)
+
+The definitive, un-cherry-picked number: every SWE-bench Lite (test) instance, open-loop
+fixed-deepseek single-shot, official `swebench` Docker harness.
+
+| metric | value |
+|---|---|
+| **resolved** | **23 / 300 = 7.7%** (Wilson 95% CI **[5.2%, 11.2%]**) |
+| patch produced | 100/300 (33%); of patched, 23% resolved |
+| errors | 0 |
+| solve cost | $2.75 (deepseek, ~$0.009/instance) |
+| top repos | django 15/114, pytest 2/17, requests 2/6, sympy 2/77 |
+
+**Honest:** below the cherry-picked stratified-25 pilot (12%), as expected — the full set
+includes django/sympy multi-file bugs. Leaderboard leaders hit 65–88% on Verified via iterative
+loops + frontier models at $1–20/instance; this is a single-shot cheap-model **baseline** ($0.009/
+instance). Dominant loss: 67% empty-patch (selection/SEARCH miss on huge repos). This run also
+generates ADR-145's router labels (per-instance deepseek resolve outcomes).
