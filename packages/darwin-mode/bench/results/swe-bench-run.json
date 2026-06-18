@@ -8,10 +8,14 @@
     "p2p": "18/18",
     "FAIL_TO_PASS": 4,
     "PASS_TO_PASS": 18,
-    "chose": "pareto.ts",
-    "patchBytes": 3895,
-    "tokens": 15678,
-    "cost_usd": 0.0022533489
+    "attemptsUsed": 2,
+    "maxAttempts": 3,
+    "chose": [
+      "pareto.ts"
+    ],
+    "patchBytes": 4104,
+    "tokens": 31689,
+    "cost_usd": 0.012264813
   },
   "verdict": "RUNNER VALIDATED: full reliable pipeline RESOLVES the instance end-to-end"
 }

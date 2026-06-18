@@ -39,6 +39,7 @@ LLM, deterministic). **LLM** = one or more live OpenRouter calls (set
 | 123 | SWE-bench runner adapter + real resolved criterion (ADR-098 step 2) | `node --experimental-strip-types bench/experiments/swe-bench-adapter.mjs` | `results/swe-bench-adapter.json` | auto-derived F2P=4/P2P=18; real LLM fix RESOLVED (4/4,18/18); test-gaming patch UNRESOLVED (1/4) | LLM |
 | 124 | `git apply` patch primitive (ADR-098 step-3 prep) | `node --experimental-strip-types bench/experiments/swe-bench-gitapply.mjs` | `results/swe-bench-gitapply.json` | gold unified diff applies+RESOLVES (4/4,18/18); raw LLM diff corrupt → whole-file primitive preferred | LLM |
 | 125 | Consolidated `runSweBenchTask()` corpus-ready runner | `node --experimental-strip-types bench/experiments/swe-bench-run.mjs` | `results/swe-bench-run.json` | one entry point: materialize→derive F2P/P2P→select→whole-file fix→git-diff→criterion; RESOLVED 4/4,18/18 | LLM |
+| 126 | Repair loop + regression-aware feedback + robust parsing | `node --experimental-strip-types bench/experiments/swe-bench-repair.mjs` | `results/swe-bench-repair.json` | single-fault RESOLVED (2 attempts); two-fault whole-file repair regresses P2P (honest limitation → step 3 needs surgical patching) | LLM |
 
 DRACO (`results/draco-quality-cost-frontier.json`, ADR-037–040 lineage) and the
 human-readable summary (`results/RESULTS.md`) accompany these.

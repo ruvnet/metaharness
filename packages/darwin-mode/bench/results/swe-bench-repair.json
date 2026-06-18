@@ -1,0 +1,21 @@
+{
+  "experiment": "ADR-126 — iterative repair loop (two-fault instance)",
+  "result": {
+    "instance_id": "synthetic__two-fault",
+    "resolved": false,
+    "f2p": "4/5",
+    "p2p": "6/17",
+    "FAIL_TO_PASS": 5,
+    "PASS_TO_PASS": 17,
+    "attemptsUsed": 4,
+    "maxAttempts": 4,
+    "chose": [
+      "pareto.ts",
+      "phenotype.ts"
+    ],
+    "patchBytes": 18368,
+    "tokens": 67878,
+    "cost_usd": 0.0267446718
+  },
+  "verdict": "inconclusive"
+}

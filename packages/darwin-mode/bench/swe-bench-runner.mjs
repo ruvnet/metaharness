@@ -29,10 +29,16 @@ const g = (work, c) => execSync(c, { cwd: work, stdio: ['ignore', 'pipe', 'pipe'
 function runTests(work, suites) {
   const out = join(work, '_vitest.json');
   try { execSync(`npx vitest run ${suites.join(' ')} --reporter=json --outputFile=${out}`, { cwd: work, timeout: 120000, stdio: ['ignore', 'pipe', 'pipe'] }); } catch { /* fails → JSON still written */ }
-  if (!existsSync(out)) return {};
-  const j = JSON.parse(readFileSync(out, 'utf8')); const map = {};
-  for (const tr of j.testResults ?? []) { const f = (tr.name || '').split('/').pop()?.replace('.test.ts', ''); for (const a of tr.assertionResults ?? []) map[`${f} › ${a.title}`] = a.status; }
-  return map;
+  if (!existsSync(out)) return { status: {}, messages: {} };
+  const j = JSON.parse(readFileSync(out, 'utf8')); const status = {}, messages = {};
+  for (const tr of j.testResults ?? []) {
+    const f = (tr.name || '').split('/').pop()?.replace('.test.ts', '');
+    for (const a of tr.assertionResults ?? []) {
+      const k = `${f} › ${a.title}`; status[k] = a.status;
+      if (a.status === 'failed') messages[k] = (a.failureMessages ?? []).join('\n').replace(/\s+/g, ' ').slice(0, 220);
+    }
+  }
+  return { status, messages };
 }
 
 const evaluate = (F, P, after) => ({
@@ -49,10 +55,12 @@ export async function runSweBenchTask(task, { model = 'google/gemini-2.5-flash',
   task.materialize(work);
   g(work, 'git init -q'); g(work, 'git add -A'); g(work, 'git commit -qm base');
 
+  const maxAttempts = Math.max(1, task.maxAttempts ?? 3);
+
   // 2. Auto-derive FAIL_TO_PASS (failing now) / PASS_TO_PASS (passing now). (ADR-123)
   const baseRun = runTests(work, task.test_suites);
-  const F2P = Object.keys(baseRun).filter((t) => baseRun[t] === 'failed');
-  const P2P = Object.keys(baseRun).filter((t) => baseRun[t] === 'passed');
+  const F2P = Object.keys(baseRun.status).filter((t) => baseRun.status[t] === 'failed');
+  const P2P = Object.keys(baseRun.status).filter((t) => baseRun.status[t] === 'passed');
 
   // 3. The harness's real contextBuilder selects among the repo's source files. (gated)
   const realFiles = readdirSync(join(work, 'src')).filter((f) => f.endsWith('.ts'));
@@ -60,23 +68,37 @@ export async function runSweBenchTask(task, { model = 'google/gemini-2.5-flash',
   const b = await generateBaselineHarness(await profileRepo(hr), mkdtempSync(join(tmpdir(), 'swe-hw-')));
   const { buildContext } = await import(`${b.dir}/context_builder.ts`);
   const selected = (buildContext(task.problem_statement, realFiles) ?? []).map((c) => c.path).slice(0, 6);
-  const seen = selected.map((f) => `// FILE: ${f}\n${readFileSync(join(work, 'src', f), 'utf8')}`).join('\n\n');
 
-  // 4. Model emits a WHOLE corrected file (ADR-124: reliable, unlike raw diffs).
-  const prompt = `${task.problem_statement}\nIdentify the buggy file among the selected sources and fix it. Return STRICT JSON {"file":"<selected file>","content":"<full corrected file>"}. No fences/prose.\n--- selected files ---\n${seen}\n--- failing tests ---\n${F2P.join('\n')}\n`;
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], max_tokens: 2000, temperature: 0.1 }) });
-  const j = await res.json();
-  let raw = j.choices?.[0]?.message?.content ?? ''; const m = raw.match(/```(?:json)?\n([\s\S]*?)\n```/i); if (m) raw = m[1];
-  let patch = null; try { patch = JSON.parse(raw); } catch { /**/ }
-
-  // 5. Apply by writing the whole file; capture the real unified-diff artifact via `git diff`.
-  let patchBytes = 0, chose = patch?.file ?? null;
-  if (patch && realFiles.includes(patch.file) && typeof patch.content === 'string') {
-    writeFileSync(join(work, 'src', patch.file), patch.content);
-    patchBytes = g(work, 'git diff').toString().length; // the appliable artifact (provenance)
+  // 4–6. Repair loop: each attempt emits a WHOLE corrected file (ADR-124), applies it, and
+  // re-scores; if unresolved, the still-failing tests + assertion messages are fed back so
+  // the next attempt can fix a different/remaining file. Lifts resolve rate on multi-fault
+  // instances a single shot misses.
+  let attemptsUsed = 0, chose = [], tokens = 0, cost = 0, verdict = evaluate(F2P, P2P, baseRun.status), last = baseRun;
+  for (let attempt = 1; attempt <= maxAttempts && !verdict.resolved; attempt++) {
+    attemptsUsed = attempt;
+    const seen = selected.map((f) => `// ===== ${f} =====\n${readFileSync(join(work, 'src', f), 'utf8')}`).join('\n\n');
+    const stillFailing = F2P.filter((t) => last.status[t] !== 'passed');
+    const regressed = P2P.filter((t) => last.status[t] !== 'passed'); // tests that passed at base but a prior attempt broke
+    const feedback = attempt === 1 ? '' : `\n--- attempt ${attempt - 1} left these FAILING (fix the remaining buggy file) ---\n${stillFailing.map((t) => `${t}: ${last.messages[t] ?? ''}`).join('\n')}${regressed.length ? `\n--- and a prior attempt REGRESSED these previously-passing tests; do NOT change their behaviour ---\n${regressed.map((t) => `${t}: ${last.messages[t] ?? ''}`).join('\n')}` : ''}\n`;
+    // Sentinel format (not JSON): names one file, then the exact corrected content between
+    // sentinels. Avoids JSON control-char breakage AND bounds the blob (no trailing prose).
+    const prompt = `${task.problem_statement}\nIdentify the buggy file among the selected sources and fix it. Respond with EXACTLY this and nothing else:\nFILE: <one selected filename>\n<<<CONTENT\n<the COMPLETE corrected file content>\nCONTENT>>>\nNo code fences, no JSON, no commentary outside the sentinels.\n--- selected files ---\n${seen}\n--- failing tests ---\n${stillFailing.join('\n')}\n${feedback}`;
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], max_tokens: 4096, temperature: 0.1 }) });
+    const j = await res.json();
+    tokens += j.usage?.total_tokens ?? 0; cost += j.usage?.cost ?? 0;
+    const rawc = j.choices?.[0]?.message?.content ?? '';
+    const pf = (rawc.match(/FILE:\s*([^\n]+)/i)?.[1] ?? '').trim().replace(/^.*\//, '') || null; // bare filename
+    const cm = rawc.match(/<<<CONTENT\n([\s\S]*?)\nCONTENT>>>/);
+    const pc = cm ? cm[1] : null;
+    if (process.env.SWE_DEBUG) console.error(`[attempt ${attempt}] finish=${j.choices?.[0]?.finish_reason} file=${pf} inRealFiles=${realFiles.includes(pf)} contentLen=${pc?.length}`);
+    if (pf && realFiles.includes(pf) && typeof pc === 'string' && pc.length > 50) {
+      writeFileSync(join(work, 'src', pf), pc);
+      if (!chose.includes(pf)) chose.push(pf);
+    }
+    last = runTests(work, task.test_suites);
+    verdict = evaluate(F2P, P2P, last.status);
   }
 
-  // 6. Score the real resolved criterion.
-  const verdict = evaluate(F2P, P2P, runTests(work, task.test_suites));
-  return { instance_id: task.instance_id, ...verdict, FAIL_TO_PASS: F2P.length, PASS_TO_PASS: P2P.length, chose, patchBytes, tokens: j.usage?.total_tokens ?? null, cost_usd: j.usage?.cost ?? null };
+  const patchBytes = g(work, 'git diff').toString().length; // the appliable artifact (provenance)
+  return { instance_id: task.instance_id, ...verdict, FAIL_TO_PASS: F2P.length, PASS_TO_PASS: P2P.length, attemptsUsed, maxAttempts, chose, patchBytes, tokens, cost_usd: cost };
 }
