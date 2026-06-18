@@ -1,0 +1,13 @@
+{
+  "experiment": "Capstone (ADR-110): evolution improves a real LLM's real-test pass-rate by evolving the harness",
+  "date": "2026-06-18",
+  "method": "A mini evolution loop (real DeterministicMutator, 6 generations × 5 children) where each variant is scored by the REAL pipeline: its real contextBuilder selects files → if the buggy file is surfaced, a real LLM (gemini-2.5-flash) fix is applied → the REAL test command is the verdict. 3 tasks place the buggy file at increasing rank (~8/38/65), so solving more requires a wider context window. The LLM fix per bug is constant → cached → 1 real call total.",
+  "model": "google/gemini-2.5-flash",
+  "llmCalls": 1,
+  "trajectory": ["gen0:1/3","gen1:1/3","gen2:1/3","gen3:2/3","gen4:2/3","gen5:3/3","gen6:3/3"],
+  "finalSolved": "3/3",
+  "baselineContextWindow": 30,
+  "finalContextWindow": 70,
+  "conclusion": "Evolution discovered the wider contextBuilder window (30→70) and climbed the real LLM's real-test pass-rate from 1/3 to 3/3 — self-improvement measured on the fully real substrate (real mutator + real surfaces + real LLM + real tests) for ~$0.0003. This is the ADR-098 behaviour demonstrated end-to-end at micro scale.",
+  "honest_scope": "One bug type, one tunable surface (contextBuilder window), hand-built tasks, fix cached. Not a SWE-bench run; scaling to real multi-file corpora + per-variant LLM fixes is the remaining (token-costly) build."
+}
