@@ -50,6 +50,7 @@ LLM, deterministic). **LLM** = one or more live OpenRouter calls (set
 | 134 | Capability-driven evolution (completes 133) | `node --experimental-strip-types bench/experiments/swe-evolve-capability.mjs` | `results/swe-evolve-capability.json` | discriminating corpus: searchreplace/a1 resolves multi-fault 2/2; wholefile/a1 only 1/2 → evolution selects searchreplace by capability | LLM |
 | 135 | SWE-fix model frontier (resolve-rate per $) | `node --experimental-strip-types bench/experiments/swe-model-frontier.mjs` | `results/swe-model-frontier.json` | deepseek-chat tops (3/3, \$0.006, 484 res/\$); default gemini-flash suboptimal (2/3, failed kernel-js) | LLM |
 | 136 | Full-genome evolve hits a local optimum | `node --experimental-strip-types bench/experiments/swe-evolve-fullgenome.mjs` | `results/swe-evolve-fullgenome.json` | naive (1+λ) single-gene hill-climb traps at gemini/wholefile (3/3 \$0.014); misses deepseek/searchreplace (\$0.006) — re-motivates diversity/crossover (ADR-105) | LLM |
+| 137 | Micro-evolve noise floor + epistasis (honest stop) | `node --experimental-strip-types bench/experiments/swe-evolve-crossover.mjs` | `results/swe-evolve-crossover.json` | per-cell variance dominates (deepseek/wholefile 0/3 vs 2/3); model×patchMode epistasis → naive crossover fails → use linkage-aware (093) + averaged runs | LLM |
 
 DRACO (`results/draco-quality-cost-frontier.json`, ADR-037–040 lineage) and the
 human-readable summary (`results/RESULTS.md`) accompany these.

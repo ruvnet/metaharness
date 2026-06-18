@@ -1,0 +1,32 @@
+{
+  "experiment": "ADR-137 — crossover + diversity escapes the ADR-136 local optimum (real SWE substrate)",
+  "corpus": [
+    "kernel-js",
+    "create-agent-harness",
+    "vertical-base"
+  ],
+  "generations": 1,
+  "configsEvaluated": 4,
+  "trajectory": [
+    {
+      "gen": 0,
+      "elite": "gemini-2.5-flash/wholefile/a1",
+      "eliteResolved": "3/3",
+      "eliteCost": 0.012,
+      "evaluatedThisGen": [
+        "gemini-2.5-flash/wholefile/a1:3/3($0.012)",
+        "gpt-5-mini/wholefile/a1:3/3($0.0121)",
+        "gemini-2.5-flash/searchreplace/a2:2/3($0.0113)",
+        "deepseek-chat/wholefile/a1:0/3($0.0066)"
+      ]
+    }
+  ],
+  "evolvedWinner": {
+    "genome": "gemini-2.5-flash/wholefile/a1",
+    "resolved": "3/3",
+    "cost_usd": 0.012
+  },
+  "reachedGlobalOptimum": false,
+  "totalCost_usd": 0.042,
+  "verdict": "winner 'gemini-2.5-flash/wholefile/a1' (3/3, $0.012) — report as measured"
+}
