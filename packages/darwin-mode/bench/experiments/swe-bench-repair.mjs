@@ -26,6 +26,7 @@ const task = {
   problem_statement: 'Two modules have bugs: paretoFront returns dominated items instead of the non-dominated front, and poincareDistance fails to grow toward the Poincaré-ball boundary. Fix the buggy file(s).',
   test_suites: ['pareto', 'phenotype', 'clade'],
   maxAttempts: 4,
+  patchMode: 'wholefile', // ADR-126 documents the whole-file limitation; ADR-127 default is searchreplace
   materialize(work) {
     for (const d of ['src', '__tests__']) cpSync(join(PKG, d), join(work, d), { recursive: true });
     cpSync(join(PKG, 'package.json'), join(work, 'package.json'));

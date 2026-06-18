@@ -22,7 +22,9 @@ const BUG = { file: 'src/pareto.ts', from: 'if (!dominated) front.push(items[i])
 // FAILING base state (real corpus tasks would `git checkout base_commit` + apply test_patch).
 const task = {
   instance_id: 'synthetic__pareto-dominance',
-  problem_statement: 'paretoFront returns dominated items instead of the non-dominated front.',
+  // bare "pareto" token so the contextBuilder selects pareto.ts (camelCase "paretoFront"
+  // does not tokenise to "pareto" — see ADR-127 file-selection finding).
+  problem_statement: 'The pareto module returns dominated items instead of the non-dominated front.',
   test_suites: ['pareto', 'phenotype', 'clade'],
   materialize(work) {
     for (const d of ['src', '__tests__']) cpSync(join(PKG, d), join(work, d), { recursive: true });

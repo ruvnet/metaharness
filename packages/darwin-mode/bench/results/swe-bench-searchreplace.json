@@ -1,0 +1,22 @@
+{
+  "experiment": "ADR-127 — search/replace patch primitive (two-fault, small + large file)",
+  "patchMode": "searchreplace",
+  "result": {
+    "instance_id": "synthetic__two-fault-searchreplace",
+    "resolved": true,
+    "f2p": "5/5",
+    "p2p": "17/17",
+    "FAIL_TO_PASS": 5,
+    "PASS_TO_PASS": 17,
+    "attemptsUsed": 1,
+    "maxAttempts": 4,
+    "chose": [
+      "pareto.ts",
+      "phenotype.ts"
+    ],
+    "patchBytes": 875,
+    "tokens": 11235,
+    "cost_usd": 0.003759327
+  },
+  "verdict": "SEARCH/REPLACE VALIDATED: two-fault RESOLVED (5/5 F2P, 17/17 P2P — NO regression) in 1 attempt(s), surgical edits to pareto.ts, phenotype.ts — the case whole-file repair (ADR-126) could not resolve"
+}

@@ -47,8 +47,9 @@ const evaluate = (F, P, after) => ({
   p2p: `${P.filter((t) => after[t] === 'passed').length}/${P.length}`,
 });
 
-export async function runSweBenchTask(task, { model = 'google/gemini-2.5-flash', key, pkgPath } = {}) {
+export async function runSweBenchTask(task, { model = 'google/gemini-2.5-flash', key, patchMode = 'searchreplace' } = {}) {
   key = (key || process.env.OPENROUTER_API_KEY || readFileSync('/tmp/.orkey', 'utf8')).trim();
+  patchMode = task.patchMode ?? patchMode;
 
   // 1. Materialize the repo at the failing base state; git-init so we can diff/apply.
   const work = mkdtempSync(join(tmpdir(), `swe-${task.instance_id}-`.replace(/[^a-z0-9-]/gi, '')));
@@ -80,21 +81,32 @@ export async function runSweBenchTask(task, { model = 'google/gemini-2.5-flash',
     const stillFailing = F2P.filter((t) => last.status[t] !== 'passed');
     const regressed = P2P.filter((t) => last.status[t] !== 'passed'); // tests that passed at base but a prior attempt broke
     const feedback = attempt === 1 ? '' : `\n--- attempt ${attempt - 1} left these FAILING (fix the remaining buggy file) ---\n${stillFailing.map((t) => `${t}: ${last.messages[t] ?? ''}`).join('\n')}${regressed.length ? `\n--- and a prior attempt REGRESSED these previously-passing tests; do NOT change their behaviour ---\n${regressed.map((t) => `${t}: ${last.messages[t] ?? ''}`).join('\n')}` : ''}\n`;
-    // Sentinel format (not JSON): names one file, then the exact corrected content between
-    // sentinels. Avoids JSON control-char breakage AND bounds the blob (no trailing prose).
-    const prompt = `${task.problem_statement}\nIdentify the buggy file among the selected sources and fix it. Respond with EXACTLY this and nothing else:\nFILE: <one selected filename>\n<<<CONTENT\n<the COMPLETE corrected file content>\nCONTENT>>>\nNo code fences, no JSON, no commentary outside the sentinels.\n--- selected files ---\n${seen}\n--- failing tests ---\n${stillFailing.join('\n')}\n${feedback}`;
+    // SEARCH/REPLACE primitive (ADR-127, default): the model returns one or more exact
+    // old→new blocks. Surgical — only the matched region changes, so a large file is not
+    // rewritten (no collateral PASS_TO_PASS regressions, ADR-126) and there is no JSON or
+    // diff line-number corruption (ADR-124/126). Multiple blocks across files in one reply.
+    const prompt = patchMode === 'wholefile'
+      ? `${task.problem_statement}\nFix the buggy file. Respond EXACTLY:\nFILE: <one selected filename>\n<<<CONTENT\n<COMPLETE corrected file>\nCONTENT>>>\nNo fences/JSON/prose.\n--- selected files ---\n${seen}\n--- failing tests ---\n${stillFailing.join('\n')}\n${feedback}`
+      : `${task.problem_statement}\nFix the bug(s). For EACH change emit a block EXACTLY:\nFILE: <one selected filename>\n<<<SEARCH\n<exact lines copied verbatim from that file>\n=======\n<replacement lines>\n>>>REPLACE\nThe SEARCH text MUST match the file character-for-character. Emit multiple blocks (across files) if needed. Keep each SEARCH minimal. No fences/JSON/prose outside blocks.\n--- selected files ---\n${seen}\n--- failing tests ---\n${stillFailing.join('\n')}\n${feedback}`;
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], max_tokens: 4096, temperature: 0.1 }) });
     const j = await res.json();
     tokens += j.usage?.total_tokens ?? 0; cost += j.usage?.cost ?? 0;
     const rawc = j.choices?.[0]?.message?.content ?? '';
-    const pf = (rawc.match(/FILE:\s*([^\n]+)/i)?.[1] ?? '').trim().replace(/^.*\//, '') || null; // bare filename
-    const cm = rawc.match(/<<<CONTENT\n([\s\S]*?)\nCONTENT>>>/);
-    const pc = cm ? cm[1] : null;
-    if (process.env.SWE_DEBUG) console.error(`[attempt ${attempt}] finish=${j.choices?.[0]?.finish_reason} file=${pf} inRealFiles=${realFiles.includes(pf)} contentLen=${pc?.length}`);
-    if (pf && realFiles.includes(pf) && typeof pc === 'string' && pc.length > 50) {
-      writeFileSync(join(work, 'src', pf), pc);
-      if (!chose.includes(pf)) chose.push(pf);
+    let applied = 0;
+    if (patchMode === 'wholefile') {
+      const pf = (rawc.match(/FILE:\s*([^\n]+)/i)?.[1] ?? '').trim().replace(/^.*\//, '') || null;
+      const pc = rawc.match(/<<<CONTENT\n([\s\S]*?)\nCONTENT>>>/)?.[1] ?? null;
+      if (pf && realFiles.includes(pf) && typeof pc === 'string' && pc.length > 50) { writeFileSync(join(work, 'src', pf), pc); if (!chose.includes(pf)) chose.push(pf); applied++; }
+    } else {
+      const re = /FILE:\s*([^\n]+)\n<<<SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)\n>>>REPLACE/g;
+      for (let mm; (mm = re.exec(rawc)); ) {
+        const f = mm[1].trim().replace(/^.*\//, ''), search = mm[2], replace = mm[3];
+        if (!realFiles.includes(f)) continue;
+        const fp = join(work, 'src', f); const cur = readFileSync(fp, 'utf8');
+        if (search.length && cur.includes(search)) { writeFileSync(fp, cur.replace(search, replace)); if (!chose.includes(f)) chose.push(f); applied++; }
+      }
     }
+    if (process.env.SWE_DEBUG) console.error(`[attempt ${attempt}] finish=${j.choices?.[0]?.finish_reason} mode=${patchMode} blocksApplied=${applied} chose=${chose.join(',')}`);
     last = runTests(work, task.test_suites);
     verdict = evaluate(F2P, P2P, last.status);
   }
