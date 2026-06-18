@@ -1,0 +1,33 @@
+{
+  "experiment": "ADR-133 — evolve the harness against a real cross-package SWE fitness",
+  "model": "google/gemini-2.5-flash",
+  "corpus": [
+    "kernel-js__rotate",
+    "create-agent-harness__constraints",
+    "vertical-base__validate"
+  ],
+  "genome": "patchMode × maxAttempts × selectK",
+  "generations": 2,
+  "configsEvaluated": 5,
+  "trajectory": [
+    {
+      "gen": 0,
+      "bestGenome": "wholefile/a2/k3",
+      "bestResolved": "3/3",
+      "bestCost": 0.0093
+    },
+    {
+      "gen": 1,
+      "bestGenome": "wholefile/a1/k3",
+      "bestResolved": "3/3",
+      "bestCost": 0.0085
+    }
+  ],
+  "evolvedWinner": {
+    "genome": "wholefile/a1/k3",
+    "resolved": "3/3",
+    "cost_usd": 0.0085
+  },
+  "totalCost_usd": 0.0478,
+  "verdict": "EVOLVED: best genome 'wholefile/a1/k3' (3/3 resolved, $0.0085) — fitness = cross-package resolve-rate over real external code, climbed by elitism + single-gene mutation"
+}

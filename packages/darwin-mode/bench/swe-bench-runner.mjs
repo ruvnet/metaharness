@@ -85,7 +85,7 @@ export async function runSweBenchTask(task, { model = 'google/gemini-2.5-flash',
   const hr = mkdtempSync(join(tmpdir(), 'swe-h-')); writeFileSync(join(hr, 'package.json'), '{"name":"h","version":"1.0.0"}');
   const b = await generateBaselineHarness(await profileRepo(hr), mkdtempSync(join(tmpdir(), 'swe-hw-')));
   const { buildContext } = await import(`${b.dir}/context_builder.ts`);
-  const selected = selectFiles(task.problem_statement, join(work, 'src'), realFiles, buildContext, 6);
+  const selected = selectFiles(task.problem_statement, join(work, 'src'), realFiles, buildContext, task.selectK ?? 6);
 
   // 4–6. Repair loop: each attempt emits a WHOLE corrected file (ADR-124), applies it, and
   // re-scores; if unresolved, the still-failing tests + assertion messages are fed back so
