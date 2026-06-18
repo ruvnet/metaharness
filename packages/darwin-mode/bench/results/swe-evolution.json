@@ -1,0 +1,15 @@
+{
+  "model": "google/gemini-2.5-flash",
+  "llmCalls": 5,
+  "trajectory": [
+    "gen0:0/5",
+    "gen1:0/5",
+    "gen2:0/5",
+    "gen3:5/5",
+    "gen4:5/5",
+    "gen5:5/5",
+    "gen6:5/5"
+  ],
+  "finalSolved": "5/5",
+  "finalContextWindow": "50"
+}
