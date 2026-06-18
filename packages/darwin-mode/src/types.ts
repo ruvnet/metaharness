@@ -148,6 +148,13 @@ export interface EvolutionConfig {
    */
   selection?: 'score' | 'quality-diversity';
   /**
+   * Opt-in genetic crossover (ADR-089). When true and a generation has ≥2
+   * parents, the first child of each parent recombines that parent's surfaces
+   * with the next parent's (inherit a subset from each) instead of mutating.
+   * Default false → mutation-only. Recombination passes the same safety gate.
+   */
+  crossover?: boolean;
+  /**
    * Pluggable code generator (ADR-071). Default is the DeterministicMutator;
    * pass an LLM-backed one (e.g. OpenRouterMutator) to evolve via a model — it
    * still passes the same validateGeneratedCode safety gate.

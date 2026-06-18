@@ -218,6 +218,66 @@ export function pickSurface(
 }
 
 /**
+ * Recombine two parents into a child (genetic crossover, ADR-089). The child is
+ * parentA's directory with a deterministic, non-empty PROPER subset of surface
+ * files replaced by parentB's versions — so it inherits some surfaces from each.
+ *
+ * Recombination only — no code is generated — so every adopted file already
+ * passed the gate when its parent was built; we re-run `validateGeneratedCode`
+ * defensively and skip any file that would fail (the child keeps parentA's), so
+ * the child always still passes `inspectVariant`.
+ *
+ * The archive is a strict tree (one `parentId`): we record `parentA` as the tree
+ * parent and name `parentB` in the summary, so every tree invariant holds.
+ */
+export async function createCrossoverVariant(
+  parentA: HarnessVariant,
+  parentB: HarnessVariant,
+  workRoot: string,
+  generation: number,
+  index: number,
+  seed = 0,
+): Promise<HarnessVariant> {
+  const id = `g${generation}_x${index}`;
+  const dir = join(workRoot, 'variants', id);
+  await copyVariantDir(parentA.dir, dir);
+
+  // Deterministically choose which surfaces come from B (bit per surface).
+  const bits = hash(seed, generation, index, parentA.id, parentB.id, 'crossover');
+  let fromB = SURFACES.filter((_, i) => ((bits >> i) & 1) === 1);
+  // Force a PROPER, non-empty recombination: never all-A and never all-B.
+  if (fromB.length === 0) fromB = [SURFACES[bits % SURFACES.length]];
+  if (fromB.length === SURFACES.length) fromB = fromB.slice(0, SURFACES.length - 1);
+
+  const adopted: MutationSurface[] = [];
+  for (const surface of fromB) {
+    const fileName = FILE_BY_SURFACE[surface];
+    let codeB: string;
+    try {
+      codeB = await readFile(join(parentB.dir, fileName), 'utf8');
+    } catch {
+      continue; // parentB lacks the file — keep parentA's
+    }
+    if (validateGeneratedCode(codeB).length > 0) continue; // defensive: skip unsafe
+    await writeFile(join(dir, fileName), codeB, 'utf8');
+    adopted.push(surface);
+  }
+
+  return {
+    id,
+    parentId: parentA.id,
+    generation,
+    dir,
+    mutationSurface: adopted[0] ?? parentA.mutationSurface,
+    mutationSummary:
+      adopted.length > 0
+        ? `crossover: surfaces [${adopted.join(', ')}] from ${parentB.id} onto ${parentA.id}`
+        : `crossover: no safe surface adopted from ${parentB.id} (identical to ${parentA.id})`,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+/**
  * Recursively copy a variant directory using `node:fs/promises` only (never a
  * shell). The destination is created fresh; only the parent's files are copied,
  * so no extraneous entry can leak in.

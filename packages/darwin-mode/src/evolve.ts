@@ -13,7 +13,12 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { Archive } from './archive.js';
 import { generateBaselineHarness } from './generator.js';
-import { createChildVariant, DeterministicMutator, summarizeFailedTraces } from './mutator.js';
+import {
+  createChildVariant,
+  createCrossoverVariant,
+  DeterministicMutator,
+  summarizeFailedTraces,
+} from './mutator.js';
 import { profileRepo } from './repo_profiler.js';
 import { runVariantTasks } from './sandbox.js';
 import { scoreVariant } from './scorer.js';
@@ -174,21 +179,35 @@ export async function evolve(config: EvolutionConfig): Promise<EvolutionResult> 
   for (let generation = 1; generation <= config.generations; generation++) {
     // Build this generation's children from the current parents.
     const children: Array<{ child: HarnessVariant; parent: HarnessVariant }> = [];
-    for (const parent of parents) {
+    const canCross = config.crossover === true && parents.length >= 2;
+    for (let pIdx = 0; pIdx < parents.length; pIdx++) {
+      const parent = parents[pIdx];
       for (let index = 0; index < config.childrenPerGeneration; index++) {
-        const child = await createChildVariant(
-          parent,
-          config.workRoot,
-          generation,
-          index,
-          mutator,
-          seed,
-          {
-            repoSummary: profile.summary,
-            parentScore: scoreById.get(parent.id)?.finalScore ?? 0,
-            failedTraces: summarizeFailedTraces(tracesById.get(parent.id) ?? []),
-          },
-        );
+        // Opt-in crossover (ADR-089): the first child of each parent recombines
+        // with the next parent's surfaces; the rest are ordinary mutations.
+        const child =
+          canCross && index === 0
+            ? await createCrossoverVariant(
+                parent,
+                parents[(pIdx + 1) % parents.length],
+                config.workRoot,
+                generation,
+                index,
+                seed,
+              )
+            : await createChildVariant(
+                parent,
+                config.workRoot,
+                generation,
+                index,
+                mutator,
+                seed,
+                {
+                  repoSummary: profile.summary,
+                  parentScore: scoreById.get(parent.id)?.finalScore ?? 0,
+                  failedTraces: summarizeFailedTraces(tracesById.get(parent.id) ?? []),
+                },
+              );
         archive.addVariant(child);
         children.push({ child, parent });
       }

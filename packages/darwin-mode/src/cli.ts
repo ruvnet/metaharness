@@ -114,7 +114,7 @@ async function main(): Promise<void> {
   if (command !== 'evolve') {
     process.stderr.write(
       'usage: metaharness-darwin <evolve|bench> …\n' +
-        '  evolve <repo> [--generations N] [--children N] [--concurrency N] [--seed N] [--bench <suite.json>] [--tie faster] [--selection quality-diversity]\n' +
+        '  evolve <repo> [--generations N] [--children N] [--concurrency N] [--seed N] [--bench <suite.json>] [--tie faster] [--selection quality-diversity] [--crossover]\n' +
         '  bench create <repo> [--out <suite.json>]\n' +
         '  bench verify <suite.json>\n',
     );
@@ -132,6 +132,7 @@ async function main(): Promise<void> {
   const tieBreaker = flag('--tie', 'insertion') === 'faster' ? 'faster' : 'insertion';
   const selection =
     flag('--selection', 'score') === 'quality-diversity' ? 'quality-diversity' : 'score';
+  const crossover = process.argv.includes('--crossover');
 
   const result = await evolve({
     repoRoot,
@@ -149,6 +150,7 @@ async function main(): Promise<void> {
     ...(benchSuite ? { benchSuite } : {}),
     tieBreaker,
     selection,
+    crossover,
   });
 
   printReport(result);
