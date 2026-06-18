@@ -38,7 +38,10 @@ npm run build      # tsc
 Then evolve a repo with the CLI (one verb, `evolve`):
 
 ```bash
-metaharness-darwin evolve <repo> [--generations N] [--children N] [--concurrency N] [--seed N]
+metaharness-darwin evolve <repo> [--generations N] [--children N] [--concurrency N] [--seed N] \
+    [--bench <suite.json>] [--tie faster] \
+    [--selection score|quality-diversity|behavioral-diversity|niche-steering|clade|pareto] \
+    [--crossover] [--epistasis] [--risk-budget N] [--fdr Q] [--curriculum]
 ```
 
 | Flag | Meaning | Default |
@@ -47,6 +50,16 @@ metaharness-darwin evolve <repo> [--generations N] [--children N] [--concurrency
 | `--children N`    | children produced per parent per generation | `4` |
 | `--concurrency N` | max variants evaluated concurrently (bounded fan-out) | `4` |
 | `--seed N`        | deterministic seed for mutation selection | `0` |
+| `--bench <suite.json>` | route promotion through the statistical benchmark gate (ADR-087) | off |
+| `--tie faster`    | break score ties by efficiency (ADR-086) | `insertion` |
+| `--selection …`   | parent-selection strategy (see *Evolutionary stack*) | `score` |
+| `--crossover`     | recombine two parents' surfaces (ADR-089) | off |
+| `--epistasis`     | topology-aware crossover via learned linkage (ADR-093) | off |
+| `--risk-budget N` | SGM cumulative risk cap on promotions (ADR-090) | off |
+| `--fdr Q`         | Benjamini-Hochberg FDR control on promotion (ADR-096) | off |
+| `--curriculum`    | difficulty-ladder over a graded suite (ADR-097) | off |
+
+All flags are **opt-in and additive** over a frozen, reproducible core — every default-path run is byte-identical to the ADR-070…075 baseline.
 
 The `<repo>` argument defaults to the current directory. Everything is written
 under a self-describing `.metaharness/` work tree inside the repo:
@@ -200,14 +213,62 @@ The package also re-exports the building blocks behind `evolve`: `profileRepo`,
 `scoreWeights`, `Archive`, `inspectVariant` / `validateGeneratedCode`, plus the
 `SURFACES`, `FILE_BY_SURFACE`, and `APPROVED_FILES` constants.
 
+## Evolutionary stack (ADR-084–105)
+
+The baseline above is the frozen core. On top of it, a set of **opt-in, additive,
+reproducible** mechanisms turn the loop from a single-best search into a real
+evolutionary algorithm. Every one is off by default (so the core stays
+byte-identical) and individually toggled:
+
+| Capability | ADR | How to enable |
+|---|---|---|
+| **Failure-driven mutation** — feed a parent's failing traces into the mutator | 084 | always (the deterministic mutator ignores it) |
+| **LLM mutator** — `OpenRouterMutator` as a `CodeGenerator`, behind the same safety gate; model chosen by a 15-model execution benchmark | 085 | `config.generator` |
+| **Efficiency tie-break** — break score ties by speed | 086 | `--tie faster` |
+| **Graded statistical promotion** — public∧hidden∧regression∧safety + seeded bootstrap CI over a hash-pinned suite | 087 | `--bench s.json` |
+| **MAP-Elites** — keep the elite per behaviour niche | 088 | `--selection quality-diversity` |
+| **Genetic crossover** — recombine two parents' surfaces | 089 | `--crossover` |
+| **SGM risk budget** — bound cumulative self-modification | 090 | `--risk-budget N` |
+| **Hyperbolic phenotyping** — Poincaré-ball behavioural niche from traces | 091 | `--selection behavioral-diversity` |
+| **Active niche steering** — drive toward under-explored regions | 092 | `--selection niche-steering` |
+| **Epistatic linkage** — topology-aware crossover of co-adapted surfaces | 093 | `--crossover --epistasis` |
+| **Clade metaproductivity** — select parents by descendant potential (Huxley-Gödel) | 094 | `--selection clade` |
+| **Benjamini-Hochberg FDR control** — correct promotion for multiple testing | 096 | `--fdr Q` |
+| **Self-directed curriculum** — difficulty ladder over a graded suite | 097 | `--curriculum` |
+| **Multi-objective Pareto** — non-dominated (capability × parsimony) front | 100 | `--selection pareto` |
+
+### The evaluation substrate (ADR-101/102)
+
+By default the sandbox runs the **repo's test command**, which is independent of
+the harness surfaces — so the behavioural manifold is degenerate (measured:
+`nicheEntropy = 0`, ADR-099). `sandboxMode: 'mock'` (ADR-102) instead runs a
+**deterministic surface-driven agent loop**, so a variant's traces depend on its
+surface content and the manifold comes alive. The full real-agent substrate
+(surfaces driving an LLM on real coding tasks → SWE-bench) is **ADR-101/098,
+deferred**.
+
+### Validated results (real, reproducible — see `bench/results/`)
+
+- **Manifold goes live** (ADR-102): real `nicheEntropy 0 → 0.69`, finalScores
+  `flat 0.985 → spread 0.435–0.802` under mock mode.
+- **Self-improvement** (ADR-103): the loop evolves `contextBuilder` (window
+  30 → 70) and climbs `finalScore 0.765 → 0.985` by generation 3.
+- **Diversity beats greedy on deception** (ADR-105): on a deceptive epistatic
+  landscape across 5 seeds, greedy `score` selection crosses it **0/5**,
+  `behavioral-diversity` **5/5**, `clade` **4/5** — empirically justifying the
+  diversity machinery.
+- **Polyglot model frontier** (ADR-085): 15 models × 6 languages, execution-scored;
+  DeepSeek-V3 ($0.4/Mtok) tops quality-per-dollar — cheap beats frontier for code.
+
 ## Status
 
-**Prototype.** The default `DeterministicMutator` performs seeded,
-signature-preserving string edits (bounded context-window, retry-budget,
-threshold, and phrasing perturbations) — a **placeholder** for an LLM-backed
-`CodeGenerator` that slots in behind the *same* `validateGeneratedCode` gate. The
-mutator is the only piece meant to be swapped; the safety boundary, scorer, and
-archive are kernel code.
+**Working prototype, empirically validated (mock substrate).** The
+`DeterministicMutator` is seeded and signature-preserving; the `OpenRouterMutator`
+(ADR-085) is the production LLM `CodeGenerator`, behind the *same*
+`validateGeneratedCode` gate. The safety boundary, scorer, archive, and bench
+layer are kernel code. The frontier is **Tier-2 real-agent execution**
+(ADR-101/098): surfaces driving a real LLM on real tasks, which turns the
+validated mock instrument into real-world SWE results.
 
 ## License
 
