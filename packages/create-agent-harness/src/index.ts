@@ -143,6 +143,8 @@ export interface CliArgs {
   list?: boolean;
   wizard?: boolean;
   withWasm?: string;
+  /** ADR-147: include Darwin Mode self-improvement (default on; --no-darwin to skip). */
+  darwin?: boolean;
 }
 
 export function parseArgs(argv: string[]): CliArgs {
@@ -162,6 +164,10 @@ export function parseArgs(argv: string[]): CliArgs {
       out.yes = true;
     } else if (a === '--force' || a === '-f') {
       out.force = true;
+    } else if (a === '--darwin') {
+      out.darwin = true;
+    } else if (a === '--no-darwin') {
+      out.darwin = false;
     } else if (a === '--description' || a === '-d') {
       out.description = argv[++i];
     } else if (a === '--target') {
@@ -216,6 +222,56 @@ export interface ScaffoldOptions {
   targetDir: string;
   force?: boolean;
   generatorVersion: string;
+  /**
+   * ADR-147: deep-integrate Darwin Mode (@metaharness/darwin) — the generated
+   * harness gets `npm run evolve` (+ dry-run), a real `evolve` skill wired to
+   * the darwin CLI, and the dependency. Default ON; opt out with `--no-darwin`.
+   */
+  darwin?: boolean;
+}
+
+/** ADR-147: the darwin version a scaffolded harness depends on. */
+const DARWIN_VERSION = '^0.2.0';
+
+/** ADR-147: the real `evolve` skill emitted into every darwin-integrated harness. */
+function darwinEvolveSkill(name: string): string {
+  return `---
+name: evolve
+description: "Evolve this harness with Darwin Mode — frozen model, evolving harness (real, sandboxed, safety-gated)."
+---
+
+# evolve — Darwin Mode self-improvement
+
+\`${name}\` ships with **Darwin Mode** (\`@metaharness/darwin\`, ADR-070…146): the model
+is frozen; the *harness* evolves. Each generation mutates ONE of the 7 surface files
+(planner, contextBuilder, reviewer, retry/tool/memory/score policy), sandboxes each
+child, scores it, and keeps only variants that *measurably* improve — building an
+archive of successful descendants.
+
+## Run it
+
+\`\`\`bash
+npm run evolve        # real substrate: runs your test command per variant (deterministic mutator — no API key, no network)
+npm run evolve:dry    # mock substrate: fast, fully offline, no test execution
+\`\`\`
+
+Or directly:
+
+\`\`\`bash
+npx metaharness-darwin evolve . --sandbox real --generations 3 --children 4
+\`\`\`
+
+## Safety (secure by default)
+
+- **Deterministic mutator** is the default — **no network, no API key, air-gapped**.
+- Every mutation passes the \`validateGeneratedCode\` gate: no new imports, network,
+  filesystem, shell, env access, or dependencies — pure refactor/tuning only.
+- Mutations run in a **sandbox**; only variants that pass your tests are archived.
+- Nothing is promoted without measured improvement (guard against Goodharting).
+
+See \`@metaharness/darwin\` for selection strategies (\`--selection\`, \`--crossover\`,
+\`--curriculum\`), statistical gates (\`--fdr\`, \`--bench\`), and the real-LLM mutator (library API).
+`;
 }
 
 export interface ScaffoldResult {
@@ -346,6 +402,31 @@ export async function scaffold(opts: ScaffoldOptions): Promise<ScaffoldResult> {
   }
   if (!rendered.some(r => r.path === 'LICENSE')) {
     rendered.push({ path: 'LICENSE', content: mitLicense(opts.name), rendered: false, unresolved: [] });
+  }
+
+  // ADR-147: deep-integrate Darwin Mode. Default ON (opt out with --no-darwin).
+  // Adds the @metaharness/darwin devDependency + `evolve`/`evolve:dry` scripts to
+  // the generated package.json, and emits a real `evolve` skill wired to the darwin
+  // CLI. Secure by default: the darwin CLI uses the DETERMINISTIC mutator (no network,
+  // no API key) behind the validateGeneratedCode safety gate + sandbox.
+  if (opts.darwin !== false) {
+    const pkgIdx = rendered.findIndex(r => r.path === 'package.json');
+    if (pkgIdx !== -1) {
+      try {
+        const pkg = JSON.parse(rendered[pkgIdx]!.content) as Record<string, any>;
+        pkg.devDependencies = pkg.devDependencies || {};
+        if (!pkg.devDependencies['@metaharness/darwin']) pkg.devDependencies['@metaharness/darwin'] = DARWIN_VERSION;
+        pkg.scripts = pkg.scripts || {};
+        if (!pkg.scripts.evolve) pkg.scripts.evolve = 'metaharness-darwin evolve . --sandbox real --generations 3 --children 4';
+        if (!pkg.scripts['evolve:dry']) pkg.scripts['evolve:dry'] = 'metaharness-darwin evolve . --sandbox mock --generations 2 --children 3';
+        rendered[pkgIdx]!.content = JSON.stringify(pkg, null, 2) + '\n';
+      } catch { /* leave package.json untouched if it doesn't parse */ }
+    }
+    // Emit the real darwin-wired evolve skill (overwrites any template stub).
+    const skillPath = '.claude/skills/evolve/SKILL.md';
+    const skillIdx = rendered.findIndex(r => r.path === skillPath);
+    const skill = { path: skillPath, content: darwinEvolveSkill(opts.name), rendered: false, unresolved: [] };
+    if (skillIdx !== -1) rendered[skillIdx] = skill; else rendered.push(skill);
   }
 
   const fileMap = asFileMap(rendered);
@@ -561,6 +642,7 @@ export async function main(argv: string[]): Promise<number> {
   if (!args.name) {
     console.log('Usage: npx metaharness <name> [--template <id>] [--host claude-code|codex|pi-dev|hermes] [--description "..."] [--target <path>] [--force]');
     console.log('       --target <path>   write the harness to <path> instead of ./<name>');
+    console.log('       --no-darwin       skip Darwin Mode self-improvement (default: integrated; adds `npm run evolve`)');
     console.log('       --with-wasm <crate-path>   build a wasm-pack crate into the harness as commands (GH #25)');
     console.log('       npx metaharness score <repo> [--json]   (scorecard: fit/cost/safety for a repo — ADR-041)');
     console.log('       npx metaharness analyze <repo>           (recommend a harness plan, no-exec)');
@@ -601,6 +683,7 @@ export async function main(argv: string[]): Promise<number> {
       description: args.description,
       targetDir,
       force: args.force,
+      darwin: args.darwin !== false, // ADR-147: deep darwin integration, default on
       generatorVersion: '0.1.0',
     });
     console.log(`Scaffolded ${args.name} into ${targetDir}`);
