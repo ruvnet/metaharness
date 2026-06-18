@@ -3,7 +3,7 @@
 **Status**: Accepted (synthesis / index)
 **Date**: 2026-06-18
 **Project**: `ruvnet/agent-harness-generator`
-**Indexes**: ADR-084 … ADR-107 (the evolution stack built on the ADR-070…083 baseline)
+**Indexes**: ADR-084 … ADR-113 (the evolution stack built on the ADR-070…083 baseline)
 
 > One document a reviewer can read to understand the whole contribution. Darwin Mode's differentiator is not a model — it is an **auditable, statistically-gated, recursive lineage**: a self-improving agent harness where every claim is a committed, reproducible number and every limitation is recorded. This ADR is the provenance.
 
@@ -15,6 +15,8 @@
 4. **Acceptance** — graded statistical promotion over a hash-pinned suite (087), SGM cumulative risk budget (090), Benjamini-Hochberg FDR control (096), self-directed curriculum (097).
 5. **Substrate** — the keystone: `real` (repo test, surface-independent) → `mock` (deterministic surface-param simulation, 102) → `agent` (real surface **code** execution via child strip-types process, 106) → real-LLM eval PoC (107).
 6. **Validation** — system-audit dashboard (099), Poincaré-vs-Euclidean ablation (095), self-improvement demonstrated (103), diversity-beats-greedy-on-deception (105).
+7. **Real-substrate proofs** — Tier-2 real surface-code execution (106), real-LLM fixes a real test (107), surface gates the real LLM (109), evolution lifts a real LLM's real-test pass-rate (110).
+8. **Adversarial self-correction** (after a critical external review) — falsified "ranking determines outcomes" → it's window size for flat distractors (111), but ranking IS causal when relevance varies (113); falsified FDR control at n=3 → guarded at n≥5 (112). Claims trued-up, not defended.
 
 ## The evidence (real, reproducible — `packages/darwin-mode/bench/results/`)
 
@@ -44,4 +46,4 @@ Real LLM solving real SWE-bench-style tasks. **Every piece is now independently 
 
 ## Status
 
-A **working, empirically-validated, fully-documented** self-improving evolutionary harness: 24 ADRs (084–107), 349 tests, every selection/variation/acceptance mechanism opt-in over a frozen reproducible core, the manifold demonstrably live, self-improvement and diversity-superiority measured, and a proven path to real-world evaluation. The scientific product is the provenance: this series.
+A **working, empirically-validated, fully-documented, and adversarially self-corrected** self-improving evolutionary harness: 30 ADRs (084–113), 349 tests, every selection/variation/acceptance mechanism opt-in over a frozen reproducible core. The manifold is demonstrably live, self-improvement and diversity-superiority are measured (mock substrate), the real substrate is proven end-to-end (real surface code → real LLM → real test, with the surface causally gating capability), and a critical external review's three findings have been addressed with reproducible experiments (two corrections + one completion). What remains is **scale**: the real-substrate two-surface epistatic search and the SWE-bench corpus (ADR-098) — token-costly, deliberate, no new mechanism. The scientific product is the provenance: this series, including the parts that falsified and corrected its own claims.
