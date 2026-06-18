@@ -1,0 +1,12 @@
+{
+  "experiment": "ADR-098 nucleus: real surface gates real-LLM solve of a real test (ADR-109)",
+  "date": "2026-06-18",
+  "method": "A real buggy module (merge-intervals, touching-interval bug) + a real Node test, placed among 40 same-overlap distractor files. A variant's REAL contextBuilder (buildContext, run via node --experimental-strip-types) selects which files the LLM sees. If the buggy file survives into its window, the LLM (gemini-2.5-flash) is given it + the failing test and asked to fix it; the REAL test is the verdict.",
+  "model": "google/gemini-2.5-flash",
+  "results": [
+    { "variant": "narrow-window(10)", "surfacedBug": false, "fixed": false, "note": "contextBuilder window too narrow → buggy file not in context → LLM never sees it (0 calls)" },
+    { "variant": "wide-window(60)", "surfacedBug": true, "fixed": true, "tokens": 286, "cost_usd": 0.000274428 }
+  ],
+  "conclusion": "The harness's REAL contextBuilder surface GATES whether a REAL LLM can fix a REAL failing test: narrow window hides the bug (unsolvable), wide window surfaces it (solved, real test passes). All three layers real — surface code + LLM + test command — for <$0.0005. This is the self-improvement premise demonstrated end-to-end: evolving the surface changes what the agent can solve.",
+  "honest_scope": "Single bug, single-file fix, hand-built repo — the ADR-098 nucleus, not a SWE-bench run. Scaling to real multi-file corpora is the remaining build."
+}
