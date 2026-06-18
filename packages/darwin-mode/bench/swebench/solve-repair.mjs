@@ -67,8 +67,18 @@ function fetchRepo(repo, sha) {
   return work;
 }
 async function llm(prompt) {
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, messages: [{ role: 'user', content: prompt }], max_tokens: 4096, temperature: 0 }) });
-  const j = await res.json(); return { raw: j.choices?.[0]?.message?.content ?? '', cost: j.usage?.cost ?? 0 };
+  // Retry on transient network failures (the repair300 run hit a multi-hour outage that
+  // terminally errored 272/300 instances with "fetch failed"). Up to 5 tries, exp backoff.
+  let lastErr;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    if (attempt) await new Promise((r) => setTimeout(r, 2000 * 2 ** (attempt - 1))); // 2,4,8,16s
+    try {
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, messages: [{ role: 'user', content: prompt }], max_tokens: 4096, temperature: 0 }) });
+      if (!res.ok && (res.status === 429 || res.status >= 500)) { lastErr = new Error(`http ${res.status}`); continue; }
+      const j = await res.json(); return { raw: j.choices?.[0]?.message?.content ?? '', cost: j.usage?.cost ?? 0 };
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr ?? new Error('llm failed');
 }
 // Run the official swebench harness on ONE candidate patch → {resolved, logTail}. The harness is
 // the test executor + oracle; we read its per-instance test log for the traceback to feed back.
