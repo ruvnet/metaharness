@@ -3,7 +3,7 @@
 **Status**: Accepted (synthesis / index)
 **Date**: 2026-06-18
 **Project**: `ruvnet/agent-harness-generator`
-**Indexes**: ADR-084 … ADR-138 (the evolution stack + the SWE-bench arc, built on the ADR-070…083 baseline)
+**Indexes**: ADR-084 … ADR-139 (the evolution stack + the SWE-bench arc, built on the ADR-070…083 baseline)
 
 > One document a reviewer can read to understand the whole contribution. Darwin Mode's differentiator is not a model — it is an **auditable, statistically-gated, recursive lineage**: a self-improving agent harness where every claim is a committed, reproducible number and every limitation is recorded. This ADR is the provenance.
 
@@ -17,7 +17,7 @@
 6. **Validation** — system-audit dashboard (099), Poincaré-vs-Euclidean ablation (095), self-improvement demonstrated (103), diversity-beats-greedy-on-deception (105).
 7. **Real-substrate proofs** — Tier-2 real surface-code execution (106), real-LLM fixes a real test (107), surface gates the real LLM (109), evolution lifts a real LLM's real-test pass-rate (110).
 8. **Adversarial self-correction** (after a critical external review) — falsified "ranking determines outcomes" → it's window size for flat distractors (111), but ranking IS causal when relevance varies (113); falsified FDR control at n=3 → guarded at n≥5 (112). Claims trued-up, not defended. Also: diversity-beats-greedy did NOT replicate on the real substrate (114); crossover is not load-bearing — archive retention is (115); retention inconclusive at n=2 (116).
-9. **The SWE-bench arc (117–138)** — from real multi-file reasoning to a self-optimizing harness:
+9. **The SWE-bench arc (117–139)** — from real multi-file reasoning to a self-optimizing harness:
    - **Real reasoning**: real contextBuilder selects → real LLM fixes real code → real test (117); generalizes 5/5 across domains (118); evolution lifts real-test pass-rate 0/5→5/5 (119).
    - **On the project's own code**: fixes a bug in this package's real `pareto.ts` (120), verified by the package's own committed vitest suite (121).
    - **ADR-098 execution**: the long-horizon **validation harness** (122, step 1); the **runner adapter + real resolved criterion** `FAIL_TO_PASS ∧ PASS_TO_PASS` (123, step 2); the **patch-primitive decision** — `git apply` validated, raw LLM diffs corrupt → whole-file (124); the **consolidated `runSweBenchTask()`** entry point (125).
@@ -55,6 +55,7 @@
 | Greedy evolve → local optimum | 136 | naive `(1+λ)` single-gene hill-climb traps at `gemini/wholefile` (3/3 $0.014), misses the cheaper `deepseek/searchreplace` ($0.006) — re-motivates diversity/crossover (105) |
 | Micro-evolve noise floor + epistasis | 137 | per-cell variance dominates at n=1 (deepseek/wholefile 0/3 vs 2/3); model×patchMode epistasis → naive crossover fails → averaged runs + linkage-aware crossover (093) needed |
 | Micro-evolve noise floor, quantified | 138 | per-genome resolve **sd≈0.4-0.5/3**; means ~0.5 apart → need **~4-5 averaged runs** to distinguish (n=1 micro-evolve was under-sampled; justifies 137 stop) |
+| Default validated under averaging | 139 | new default `deepseek/searchreplace` **3.0/3 sd0** (every run) vs old `gemini/searchreplace` 2.25/3 sd0.43 (n=4) — optimum is also most stable |
 
 ## Honest open problems (recorded, not hidden)
 
@@ -69,4 +70,4 @@ Real LLM solving real SWE-bench-style tasks. The SWE arc (117–130) **built and
 
 ## Status
 
-A **working, empirically-validated, fully-documented, and adversarially self-corrected** self-improving evolutionary harness: 59 ADRs (084–138), 350 tests, 38 reproducible experiments, every selection/variation/acceptance mechanism opt-in over a frozen reproducible core. The manifold is demonstrably live; self-improvement and diversity-superiority are measured (mock substrate); the real substrate is proven end-to-end (real surface code → real LLM → real test, surface causally gating capability); a critical external review's three findings were addressed with reproducible experiments (two corrections + one completion); and the **SWE-bench arc (117–130)** built the real-task pipeline to completion — real file selection, surgical patching, the real resolved criterion, a consolidated runner, and that runner as a **fitness function** the engine can optimize. What remains is **scale + data**: the real external SWE corpus + token budget (ADR-098 step 3) — user-gated, no new mechanism. The scientific product is the provenance: this series, including the parts that falsified and corrected its own claims (111/112/114/115) and the limitations surfaced rather than hidden (116/126/128).
+A **working, empirically-validated, fully-documented, and adversarially self-corrected** self-improving evolutionary harness: 60 ADRs (084–139), 350 tests, 39 reproducible experiments, every selection/variation/acceptance mechanism opt-in over a frozen reproducible core. The manifold is demonstrably live; self-improvement and diversity-superiority are measured (mock substrate); the real substrate is proven end-to-end (real surface code → real LLM → real test, surface causally gating capability); a critical external review's three findings were addressed with reproducible experiments (two corrections + one completion); and the **SWE-bench arc (117–130)** built the real-task pipeline to completion — real file selection, surgical patching, the real resolved criterion, a consolidated runner, and that runner as a **fitness function** the engine can optimize. What remains is **scale + data**: the real external SWE corpus + token budget (ADR-098 step 3) — user-gated, no new mechanism. The scientific product is the provenance: this series, including the parts that falsified and corrected its own claims (111/112/114/115) and the limitations surfaced rather than hidden (116/126/128).

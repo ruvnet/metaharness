@@ -101,7 +101,7 @@ program is **compiled and run** against 8 hidden cases. `quality` = pass rate.
 - **Reliability ≠ price:** haiku-4.5 can't compile Rust/C++/C; gemini-2.5-pro is least reliable; even code-specialized codestral fails Rust. → **route per language.**
 - **Mutator routing (TS):** all but gemini-2.5-pro score 100 on TS. Default = `google/gemini-2.5-flash` (fastest perfect-on-TS); `deepseek/deepseek-chat` is the top quality/$ alternative. Raw: `polyglot-code-frontier.json` (15 models, 90 cells).
 
-## 5. Real-substrate self-improvement + the SWE-bench arc (ADRs 102–138)
+## 5. Real-substrate self-improvement + the SWE-bench arc (ADRs 102–139)
 
 §1–4 are the model/cost frontier. This section is the harness **evolving and solving real tasks** — the core "evolve it" claim. Every number is a committed result artifact (`bench/results/`, indexed in `bench/REPRODUCE.md`); the architecture synthesis is `docs/adrs/ADR-108`.
 
@@ -125,6 +125,7 @@ program is **compiled and run** against 8 hidden cases. `quality` = pass rate.
 | Greedy evolve → local optimum | 136 | naive hill-climb traps at `gemini/wholefile`; misses cheaper `deepseek/searchreplace` — re-motivates diversity/crossover |
 | Micro-evolve noise floor + epistasis | 137 | per-cell variance dominates at n=1; model×patchMode epistasis → use averaged runs + linkage-aware crossover (093) |
 | Micro-evolve noise floor, quantified | 138 | per-genome resolve sd≈0.4-0.5/3; need ~4-5 averaged runs to distinguish genomes ~0.5 apart (statistical rigor on LLM-fitness noise) |
+| Default validated under averaging | 139 | deepseek/searchreplace **3.0/3 sd0** vs gemini 2.25/3 sd0.43 (n=4) — the shipped default holds + is the most stable |
 
 **Honest boundary:** the in-loop evolution uses deterministic mock/agent substrates; the SWE results are real LLM on real code but **not yet in-loop at corpus scale** nor on an **external** benchmark (ADR-098 step 3 — user-gated dataset + budget). No leaderboard number is claimed until a real external run exists. Self-corrected claims (111/112/114/115) and surfaced limitations (116/126/128) are part of the record.
 
