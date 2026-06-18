@@ -1,0 +1,54 @@
+{
+  "experiment": "ADR-132 — multi-package self-hosted SWE corpus (cross-package resolve-rate)",
+  "model": "google/gemini-2.5-flash",
+  "packages": 4,
+  "resolveRate": "4/4",
+  "totalCost_usd": 0.0172,
+  "perInstance": [
+    {
+      "instance": "kernel-js__rotate",
+      "resolved": true,
+      "f2p": "2/2",
+      "p2p": "2/2",
+      "attempts": 3,
+      "chose": [
+        "trajectory.ts"
+      ],
+      "cost_usd": 0.0093
+    },
+    {
+      "instance": "create-agent-harness__constraints",
+      "resolved": true,
+      "f2p": "3/3",
+      "p2p": "5/5",
+      "attempts": 1,
+      "chose": [
+        "constraints.ts"
+      ],
+      "cost_usd": 0.0043
+    },
+    {
+      "instance": "vertical-base__validate",
+      "resolved": true,
+      "f2p": "1/1",
+      "p2p": "8/8",
+      "attempts": 1,
+      "chose": [
+        "index.ts"
+      ],
+      "cost_usd": 0.0007
+    },
+    {
+      "instance": "darwin-mode__pareto",
+      "resolved": true,
+      "f2p": "4/4",
+      "p2p": "1/1",
+      "attempts": 1,
+      "chose": [
+        "pareto.ts"
+      ],
+      "cost_usd": 0.0029
+    }
+  ],
+  "verdict": "4/4 resolved across 4 packages, $0.0172 — one runner, real resolved-criterion on each package's own vitest suite"
+}
