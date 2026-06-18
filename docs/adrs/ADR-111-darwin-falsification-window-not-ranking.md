@@ -38,3 +38,9 @@ Before any SWE-bench run (ADR-098), demonstrate evolutionary search beating a ra
 ## Validation
 
 Falsification harness + result committed (`bench/experiments/falsify-context-selection.mjs`, `bench/results/falsify-context-selection.json`). Correction notes added to ADR-109 and ADR-110. No package code changed; 349 tests unaffected. Negative result recorded, claims corrected.
+
+---
+
+## Update (ADR-113): the complete picture
+
+ADR-111's "ranking irrelevant" finding holds **only for flat-overlap distractors**. ADR-113 ran the realistic case (buggy file highly relevant but positionally buried among low-relevance distractors): there the **relevance ranking IS causal** — `real-contextBuilder` solves at window 10 where `first-N` fails at window 30. Full statement: the contextBuilder gates capability through *both* window size (dominant in the flat case) *and* ranking quality (dominant when relevance varies, the realistic case). See ADR-113.

@@ -1,0 +1,14 @@
+{
+  "question": "When file relevance VARIES (buggy file buried but highly relevant), does contextBuilder RANKING matter?",
+  "setup": "buggy file at input index 50 (high relevance) behind 50 low-relevance distractors",
+  "results": {
+    "real-contextBuilder (relevance ranking)": {
+      "window-10": true,
+      "window-30": true
+    },
+    "first-N (position, no ranking)": {
+      "window-10": false,
+      "window-30": false
+    }
+  }
+}
