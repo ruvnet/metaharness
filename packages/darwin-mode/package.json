@@ -1,0 +1,57 @@
+{
+  "name": "@metaharness/darwin",
+  "version": "0.1.0",
+  "description": "Darwin Mode (ADR-070…075) — bounded, empirical, population-based self-improvement of an agent harness. Generate child harness variants, sandbox-score them, archive the lineage, and promote only measured, safe wins. The model is frozen; the harness evolves. Dependency-free (Node built-ins only).",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "metaharness-darwin": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist/**",
+    "README.md",
+    "SECURITY.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "agent-harness",
+    "darwin-mode",
+    "self-improvement",
+    "evolutionary-search",
+    "metaharness",
+    "dgm",
+    "archive",
+    "sandbox",
+    "benchmark"
+  ],
+  "author": "rUv <ruv@ruv.net>",
+  "license": "MIT",
+  "homepage": "https://github.com/ruvnet/agent-harness-generator",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/agent-harness-generator",
+    "directory": "packages/darwin-mode"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

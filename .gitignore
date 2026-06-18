@@ -37,6 +37,9 @@ coverage/
 .harness/cache/
 .gist-staging/
 
+# Darwin Mode (ADR-070) evolution work tree — transient run artifacts
+.metaharness/
+
 # DRACO transient run output (the committed baseline is runs/baseline-mock.json)
 packages/bench/draco-current.json
 
