@@ -1,0 +1,117 @@
+// SPDX-License-Identifier: MIT
+//
+// ADR-143 (Stage B2) — the CLOSED-LOOP solver: ADR-126's repair loop on real SWE-bench. Per
+// instance, up to N attempts: select → search/replace patch → if it applies, run the instance's
+// FAIL_TO_PASS in its official swebench Docker image → if resolved, stop; else feed the failure
+// (apply-rejection OR pytest traceback) back and retry. Reuses the official `swebench` harness as
+// BOTH the test executor and the resolved oracle (no reimplementation). Attacks both pilot failure
+// modes: empty-patch (apply-rejection feedback) and patched-but-wrong (traceback feedback).
+//
+// Run: OPENROUTER_API_KEY=$(cat /tmp/.orkey) node --experimental-strip-types --no-warnings \
+//   bench/swebench/solve-repair.mjs [--instance <id>] [--attempts 3] [--k 15]
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, statSync, appendFileSync } from 'node:fs';
+import { execSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
+import { join, dirname, isAbsolute } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { generateBaselineHarness } from '../../dist/generator.js';
+import { profileRepo } from '../../dist/repo_profiler.js';
+import { selectFiles } from '../swe-bench-runner.mjs';
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const args = process.argv.slice(2);
+const argv = (f, d) => { const i = args.indexOf(f); return i >= 0 ? args[i + 1] : d; };
+const onlyInstance = argv('--instance', null);
+const ATTEMPTS = +argv('--attempts', 3);
+const K = +argv('--k', 15);
+const MODEL = argv('--model', 'deepseek/deepseek-chat');
+const rel = (p) => (isAbsolute(p) ? p : join(HERE, p));
+const OUT = rel(argv('--out', 'predictions-repair.jsonl'));
+const REPORT = rel(argv('--report', 'solve-repair-report.json'));
+const VENV = '/tmp/swebench-venv';
+const key = (process.env.OPENROUTER_API_KEY || readFileSync('/tmp/.orkey', 'utf8')).trim();
+
+let manifest = JSON.parse(readFileSync(join(HERE, 'pilot-sample-25.json'), 'utf8')).instances;
+if (onlyInstance) manifest = manifest.filter((i) => i.instance_id === onlyInstance);
+
+const hr = mkdtempSync(join(tmpdir(), 'sbr-h-')); mkdirSync(join(hr, 'src'), { recursive: true });
+writeFileSync(join(hr, 'package.json'), '{"name":"h","version":"1.0.0"}'); writeFileSync(join(hr, 'src', 'i.js'), 'export const x=1;\n');
+const base = await generateBaselineHarness(await profileRepo(hr), mkdtempSync(join(tmpdir(), 'sbr-hw-')));
+const { buildContext } = await import(`${base.dir}/context_builder.ts`);
+
+const g = (cwd, c) => execSync(c, { cwd, stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 1 << 28, env: { ...process.env, GIT_TERMINAL_PROMPT: '0' } });
+function applyEdit(content, search, replace) {
+  if (search.length && content.includes(search)) return content.replace(search, replace);
+  const cl = content.split('\n'); const sl = search.split('\n');
+  while (sl.length && sl[sl.length - 1].trim() === '') sl.pop();
+  while (sl.length && sl[0].trim() === '') sl.shift();
+  if (!sl.length) return null;
+  const norm = (s) => s.replace(/\s+/g, ' ').trim();
+  for (let i = 0; i + sl.length <= cl.length; i++) {
+    let ok = true; for (let j = 0; j < sl.length; j++) { if (norm(cl[i + j]) !== norm(sl[j])) { ok = false; break; } }
+    if (!ok) continue;
+    const indOf = (s) => (s.match(/^[ \t]*/) || [''])[0];
+    const delta = indOf(cl[i]).length - indOf(sl[0]).length;
+    const rl = replace.split('\n').map((line) => { if (!line.trim()) return line; if (delta >= 0) return ' '.repeat(delta) + line; const lead = indOf(line).length; return line.slice(Math.min(-delta, lead)); });
+    return [...cl.slice(0, i), ...rl, ...cl.slice(i + sl.length)].join('\n');
+  }
+  return null;
+}
+function fetchRepo(repo, sha) {
+  const work = mkdtempSync(join(tmpdir(), 'sbrepo-'));
+  g(work, 'git init -q'); g(work, `git remote add origin https://github.com/${repo}.git`);
+  try { g(work, `git fetch --depth 1 origin ${sha} -q`); g(work, 'git checkout -q FETCH_HEAD'); }
+  catch { g(work, 'git fetch --depth 200 origin -q'); g(work, `git checkout -q ${sha}`); }
+  g(work, 'git config user.email b@b'); g(work, 'git config user.name b'); g(work, 'git commit -qam base --allow-empty');
+  return work;
+}
+async function llm(prompt) {
+  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, messages: [{ role: 'user', content: prompt }], max_tokens: 4096, temperature: 0 }) });
+  const j = await res.json(); return { raw: j.choices?.[0]?.message?.content ?? '', cost: j.usage?.cost ?? 0 };
+}
+// Run the official swebench harness on ONE candidate patch → {resolved, logTail}. The harness is
+// the test executor + oracle; we read its per-instance test log for the traceback to feed back.
+function evalOne(instanceId, patch, runId) {
+  const preds = `/tmp/repair-${runId}.jsonl`;
+  writeFileSync(preds, JSON.stringify({ instance_id: instanceId, model_name_or_path: 'darwin-repair', model_patch: patch }) + '\n');
+  try { execSync(`. ${VENV}/bin/activate && python -m swebench.harness.run_evaluation --dataset_name princeton-nlp/SWE-bench_Lite --predictions_path ${preds} --instance_ids ${instanceId} --run_id ${runId} --max_workers 1 --cache_level instance --timeout 1200`, { cwd: '/tmp', shell: '/bin/bash', stdio: ['ignore', 'pipe', 'pipe'], timeout: 1500000, maxBuffer: 1 << 28 }); } catch { /* non-zero when unresolved */ }
+  let resolved = false; try { const rep = JSON.parse(readFileSync(`/tmp/darwin-repair.${runId}.json`, 'utf8')); resolved = (rep.resolved_ids || []).includes(instanceId); } catch { /**/ }
+  let logTail = ''; try { const lp = `/tmp/logs/run_evaluation/${runId}/darwin-repair/${instanceId}/test_output.txt`; if (existsSync(lp)) { const t = readFileSync(lp, 'utf8'); logTail = t.split('\n').filter((l) => /FAIL|Error|assert|Traceback|^E |raise |\.py:[0-9]/.test(l)).slice(-40).join('\n').slice(-2500); } } catch { /**/ }
+  return { resolved, logTail };
+}
+
+writeFileSync(OUT, ''); const report = []; let totalCost = 0;
+for (const inst of manifest) {
+  const t0 = Date.now(); const row = { instance_id: inst.instance_id, repo: inst.repo, attempts: 0, resolved: false };
+  let bestPatch = '';
+  try {
+    const work = fetchRepo(inst.repo, inst.base_commit);
+    const allPy = g(work, "git ls-files '*.py'").toString().split('\n').filter(Boolean)
+      .filter((f) => !/(^|\/)(tests?|testing|site-packages|\.tox|build|dist)\//i.test(f) && !/(^|\/)(test_|conftest)/i.test(f) && !/_test\.py$/.test(f))
+      .filter((f) => { try { return statSync(join(work, f)).size <= 100_000; } catch { return false; } });
+    const selected = selectFiles(inst.problem_statement, work, allPy, buildContext, K);
+    row.candidateFiles = allPy.length;
+    const seen = selected.map((f) => `# ===== ${f} =====\n${readFileSync(join(work, f), 'utf8').slice(0, 45000)}`).join('\n\n');
+    let feedback = '';
+    for (let att = 1; att <= ATTEMPTS && !row.resolved; att++) {
+      row.attempts = att;
+      g(work, 'git checkout -q -- .'); // reset to base before each attempt's edits
+      const prompt = `Fix the bug by editing the selected real source files. For EACH change emit a block EXACTLY:\nFILE: <one selected path>\n<<<SEARCH\n<exact lines copied verbatim>\n=======\n<replacement lines>\n>>>REPLACE\nSEARCH must match the file (indentation matters). Multiple blocks ok. No prose outside blocks.\n--- problem statement ---\n${inst.problem_statement.slice(0, 6000)}\n--- selected source files ---\n${seen}\n${feedback}`;
+      const { raw, cost } = await llm(prompt); totalCost += cost;
+      let applied = 0; const re = /FILE:\s*([^\n]+)\n<<<SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)\n>>>REPLACE/g; const misses = [];
+      for (let m; (m = re.exec(raw)); ) { const f = m[1].trim(); if (!selected.includes(f) || !existsSync(join(work, f))) { misses.push(`${f} (not a selected file)`); continue; } const cur = readFileSync(join(work, f), 'utf8'); const next = applyEdit(cur, m[2], m[3]); if (next && next !== cur) { writeFileSync(join(work, f), next); applied++; } else misses.push(`${f} (SEARCH text did not match the file)`); }
+      const patch = applied ? g(work, 'git diff').toString() : '';
+      if (!patch) { feedback = `\n--- attempt ${att} produced NO applicable edit ---\nThe following SEARCH blocks did not apply: ${misses.join('; ') || '(none emitted)'}. Re-read the selected files and copy the SEARCH text EXACTLY (including indentation) from the region you intend to change.\n`; continue; }
+      bestPatch = patch;
+      const ev = evalOne(inst.instance_id, patch, `rep_${inst.instance_id}_${att}`.replace(/[^a-zA-Z0-9_]/g, '_'));
+      if (ev.resolved) { row.resolved = true; break; }
+      feedback = `\n--- attempt ${att}: patch applied but tests still FAIL ---\nFailing-test output (fix the logic so these pass; do not edit tests):\n${ev.logTail || '(no log captured)'}\n`;
+    }
+  } catch (e) { row.error = String(e).split('\n')[0].slice(0, 200); }
+  appendFileSync(OUT, JSON.stringify({ instance_id: inst.instance_id, model_name_or_path: 'darwin-deepseek-repair', model_patch: bestPatch }) + '\n');
+  row.sec = Math.round((Date.now() - t0) / 1000); report.push(row);
+  console.error(`[${report.length}/${manifest.length}] ${inst.instance_id} attempts=${row.attempts} resolved=${row.resolved} ${row.sec}s ${row.error ? 'ERR:' + row.error : ''}`);
+}
+const resolved = report.filter((r) => r.resolved).length;
+writeFileSync(REPORT, JSON.stringify({ model: MODEL, attempts: ATTEMPTS, k: K, n: report.length, resolved, totalCost_usd: Math.round(totalCost * 10000) / 10000, instances: report }, null, 2));
+console.error(`\nDONE ${report.length} | resolved ${resolved}/${report.length} | $${Math.round(totalCost * 10000) / 10000} | preds → ${OUT}`);

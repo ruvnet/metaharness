@@ -1,0 +1,210 @@
+{
+  "model": "deepseek/deepseek-chat",
+  "attempts": 3,
+  "k": 15,
+  "n": 25,
+  "resolved": 4,
+  "totalCost_usd": 0.5849,
+  "instances": [
+    {
+      "instance_id": "django__django-14534",
+      "repo": "django/django",
+      "attempts": 3,
+      "resolved": false,
+      "candidateFiles": 853,
+      "sec": 71
+    },
+    {
+      "instance_id": "sympy__sympy-18057",
+      "repo": "sympy/sympy",
+      "attempts": 3,
+      "resolved": false,
+      "candidateFiles": 748,
+      "sec": 33
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-23314",
+      "repo": "matplotlib/matplotlib",
+      "attempts": 3,
+      "resolved": false,
+      "candidateFiles": 764,
+      "sec": 498
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13439",
+      "repo": "scikit-learn/scikit-learn",
+      "attempts": 3,
+      "resolved": false,
+      "candidateFiles": 549,
+      "sec": 56
+    },
+    {
+      "instance_id": "pytest-dev__pytest-6116",
+      "repo": "pytest-dev/pytest",
+      "attempts": 3,
+      "resolved": false,
+      "candidateFiles": 76,
+      "sec": 60
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-7738",
+      "repo": "sphinx-doc/sphinx",
+      "attempts": 3,
+      "resolved": false,
+      "candidateFiles": 186,
+      "sec": 164
+    },
+    {
+      "instance_id": "pylint-dev__pylint-7080",
+      "repo": "pylint-dev/pylint",
+      "attempts": 3,
+      "resolved": false,
+      "candidateFiles": 840,
+      "sec": 43
+    },
+    {
+      "instance_id": "astropy__astropy-12907",
+      "repo": "astropy/astropy",
+      "attempts": 3,
+      "resolved": false,
+      "candidateFiles": 485,
+      "sec": 143
+    },
+    {
+      "instance_id": "mwaskom__seaborn-3010",
+      "repo": "mwaskom/seaborn",
+      "attempts": 3,
+      "resolved": false,
+      "candidateFiles": 108,
+      "sec": 69
+    },
+    {
+      "instance_id": "pydata__xarray-4094",
+      "repo": "pydata/xarray",
+      "attempts": 3,
+      "resolved": false,
+      "candidateFiles": 93,
+      "sec": 319
+    },
+    {
+      "instance_id": "psf__requests-3362",
+      "repo": "psf/requests",
+      "attempts": 3,
+      "resolved": false,
+      "candidateFiles": 86,
+      "sec": 55
+    },
+    {
+      "instance_id": "pallets__flask-4045",
+      "repo": "pallets/flask",
+      "attempts": 3,
+      "resolved": false,
+      "candidateFiles": 31,
+      "sec": 79
+    },
+    {
+      "instance_id": "django__django-15061",
+      "repo": "django/django",
+      "attempts": 2,
+      "resolved": true,
+      "candidateFiles": 854,
+      "sec": 73
+    },
+    {
+      "instance_id": "sympy__sympy-17139",
+      "repo": "sympy/sympy",
+      "attempts": 3,
+      "resolved": false,
+      "candidateFiles": 727,
+      "sec": 63
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-25433",
+      "repo": "matplotlib/matplotlib",
+      "attempts": 3,
+      "resolved": false,
+      "candidateFiles": 758,
+      "sec": 62
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13779",
+      "repo": "scikit-learn/scikit-learn",
+      "attempts": 3,
+      "resolved": false,
+      "candidateFiles": 513,
+      "sec": 9
+    },
+    {
+      "instance_id": "pytest-dev__pytest-5227",
+      "repo": "pytest-dev/pytest",
+      "attempts": 1,
+      "resolved": true,
+      "candidateFiles": 74,
+      "sec": 30
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-8721",
+      "repo": "sphinx-doc/sphinx",
+      "attempts": 1,
+      "resolved": true,
+      "candidateFiles": 186,
+      "sec": 44
+    },
+    {
+      "instance_id": "pylint-dev__pylint-7993",
+      "repo": "pylint-dev/pylint",
+      "attempts": 3,
+      "resolved": false,
+      "candidateFiles": 847,
+      "sec": 22
+    },
+    {
+      "instance_id": "astropy__astropy-6938",
+      "repo": "astropy/astropy",
+      "attempts": 3,
+      "resolved": false,
+      "candidateFiles": 389,
+      "sec": 108
+    },
+    {
+      "instance_id": "mwaskom__seaborn-3190",
+      "repo": "mwaskom/seaborn",
+      "attempts": 2,
+      "resolved": true,
+      "candidateFiles": 112,
+      "sec": 87
+    },
+    {
+      "instance_id": "pydata__xarray-4248",
+      "repo": "pydata/xarray",
+      "attempts": 3,
+      "resolved": false,
+      "candidateFiles": 94,
+      "sec": 78
+    },
+    {
+      "instance_id": "django__django-14411",
+      "repo": "django/django",
+      "attempts": 3,
+      "resolved": false,
+      "candidateFiles": 853,
+      "sec": 237
+    },
+    {
+      "instance_id": "sympy__sympy-20212",
+      "repo": "sympy/sympy",
+      "attempts": 3,
+      "resolved": false,
+      "candidateFiles": 785,
+      "sec": 44
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-23476",
+      "repo": "matplotlib/matplotlib",
+      "attempts": 3,
+      "resolved": false,
+      "candidateFiles": 760,
+      "sec": 61
+    }
+  ]
+}
