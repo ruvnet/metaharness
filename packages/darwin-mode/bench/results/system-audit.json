@@ -1,0 +1,22 @@
+{
+  "determinismDivergence": 0,
+  "fdr": {
+    "q": 0.05,
+    "empirical": 0.049,
+    "controlled": true,
+    "se": 0.0011,
+    "trials": 40000,
+    "hypothesesPerTrial": 12
+  },
+  "hge": 0.0625,
+  "nicheEntropy": 0,
+  "distinctNiches": 1,
+  "adaptationLatency": null,
+  "notes": {
+    "determinism": "two same-seed evolve runs; 0 = identical archive (ADR-075)",
+    "fdr": "BH on true-null uniform p-values; controlled iff empirical ≤ q (validates ADR-096)",
+    "hge": "promoted/scored — clade-productivity proxy (ADR-094)",
+    "nicheEntropy": "Shannon entropy of behavioural niches (ADR-091); higher = less monoculture",
+    "adaptationLatency": "null = requires a graded multi-difficulty benchSuite (ADR-097)"
+  }
+}
