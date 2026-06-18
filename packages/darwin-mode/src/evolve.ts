@@ -111,7 +111,7 @@ async function evaluateVariant(
   // default 'real' mode runs the repo test command (surface-independent).
   const traces =
     cfg.sandboxMode === 'mock'
-      ? await runVariantTasksMock(variant)
+      ? await runVariantTasksMock(variant, cfg.mockTasks)
       : await runVariantTasks(variant, profile, cfg.tasks, { taskTimeoutMs: timeout });
   const score = scoreVariant(
     variant.id,

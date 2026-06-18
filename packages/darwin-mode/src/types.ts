@@ -138,6 +138,8 @@ export interface EvolutionConfig {
    * the harness surfaces (activating ADR-091/092/094/097/100). Reproducible.
    */
   sandboxMode?: 'real' | 'mock';
+  /** Custom scripted suite for 'mock' mode (ADR-102); defaults to DEFAULT_MOCK_TASKS. */
+  mockTasks?: import('./mock-sandbox.js').MockTask[];
   /**
    * Tie-break policy when variants share the top finalScore (ADR-072's scorer
    * ceilings at 0.985, so ties are the common case). 'insertion' (default) is

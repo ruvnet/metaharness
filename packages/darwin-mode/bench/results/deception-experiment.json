@@ -1,0 +1,52 @@
+{
+  "landscape": "easy×3 + treasure requiring BOTH maxAttempts>3 AND contextWindow>=45 (epistatic plateau)",
+  "generations": 20,
+  "childrenPerGeneration": 8,
+  "seeds": [
+    7,
+    11,
+    23,
+    42,
+    101
+  ],
+  "crossover": true,
+  "epistasis": true,
+  "summary": {
+    "score": {
+      "crossedTreasure": 0,
+      "ofSeeds": 5,
+      "maxBestScore": 0.8475,
+      "perSeed": [
+        "stuck",
+        "stuck",
+        "stuck",
+        "stuck",
+        "stuck"
+      ]
+    },
+    "behavioral-diversity": {
+      "crossedTreasure": 5,
+      "ofSeeds": 5,
+      "maxBestScore": 0.985,
+      "perSeed": [
+        "cross",
+        "cross",
+        "cross",
+        "cross",
+        "cross"
+      ]
+    },
+    "clade": {
+      "crossedTreasure": 4,
+      "ofSeeds": 5,
+      "maxBestScore": 0.985,
+      "perSeed": [
+        "stuck",
+        "cross",
+        "cross",
+        "cross",
+        "cross"
+      ]
+    }
+  }
+}
