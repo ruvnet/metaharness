@@ -1,0 +1,13 @@
+{
+  "hypothesis": "crossover is necessary to cross a two-surface deception; selection strategy is secondary",
+  "seeds": [
+    7,
+    11
+  ],
+  "crossedTreasure": {
+    "crossover=true, score": "2/2",
+    "crossover=true, behavioral-diversity": "1/2",
+    "crossover=false, score": "2/2",
+    "crossover=false, behavioral-diversity": "2/2"
+  }
+}

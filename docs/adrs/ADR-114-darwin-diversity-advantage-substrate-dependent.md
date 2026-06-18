@@ -35,3 +35,9 @@ On the real-surface substrate, **greedy+crossover crossed the deception on all 3
 ## Validation
 
 Harness + result committed (`bench/experiments/real-substrate-deception.mjs`, `bench/results/real-substrate-deception.json`). Zero LLM calls (deterministic agent loop). 350 tests unaffected. A strong-deception variant (window>50 ∧ retry>4) was crossed by neither strategy (consistent with ADR-105's strong-deception ceiling).
+
+---
+
+## Correction (ADR-115)
+
+This ADR's *mechanistic* claim — "crossover is the load-bearing piece" — was **refuted** by the crossover ablation (ADR-115): with crossover OFF, the treasure is still crossed (2/2 for both selection strategies). The actual mechanism is **whole-archive retention (ADR-073)** enabling *sequential* single-surface accumulation across generations — no recombination needed. ADR-114's data (diversity did not beat greedy on the agent substrate) stands; its crossover attribution does not. See ADR-115.
