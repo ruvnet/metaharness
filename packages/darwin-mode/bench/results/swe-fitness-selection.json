@@ -1,0 +1,79 @@
+{
+  "experiment": "ADR-130 — SWE resolve-rate as a fitness function for harness selection",
+  "corpus": [
+    "pareto-small",
+    "phenotype-large"
+  ],
+  "configsEvaluated": 3,
+  "model": "google/gemini-2.5-flash",
+  "landscape": [
+    {
+      "config": "wholefile/1",
+      "resolveRate": "2/2",
+      "resolved": 2,
+      "cost_usd": 0.0118,
+      "per": [
+        {
+          "instance": "pareto-small",
+          "resolved": true,
+          "f2p": "4/4",
+          "p2p": "1/1",
+          "attempts": 1
+        },
+        {
+          "instance": "phenotype-large",
+          "resolved": true,
+          "f2p": "1/1",
+          "p2p": "11/11",
+          "attempts": 1
+        }
+      ]
+    },
+    {
+      "config": "wholefile/3",
+      "resolveRate": "2/2",
+      "resolved": 2,
+      "cost_usd": 0.0103,
+      "per": [
+        {
+          "instance": "pareto-small",
+          "resolved": true,
+          "f2p": "4/4",
+          "p2p": "1/1",
+          "attempts": 1
+        },
+        {
+          "instance": "phenotype-large",
+          "resolved": true,
+          "f2p": "1/1",
+          "p2p": "11/11",
+          "attempts": 1
+        }
+      ]
+    },
+    {
+      "config": "searchreplace/3",
+      "resolveRate": "2/2",
+      "resolved": 2,
+      "cost_usd": 0.0076,
+      "per": [
+        {
+          "instance": "pareto-small",
+          "resolved": true,
+          "f2p": "4/4",
+          "p2p": "1/1",
+          "attempts": 1
+        },
+        {
+          "instance": "phenotype-large",
+          "resolved": true,
+          "f2p": "1/1",
+          "p2p": "11/11",
+          "attempts": 1
+        }
+      ]
+    }
+  ],
+  "winner": "searchreplace/3",
+  "verdict": "FITNESS-SELECTED: 'searchreplace/3' wins (resolveRate 2/2, $0.0076) — the SWE resolved-criterion ranks harness configs; evolve() optimizes this signal"
+}
