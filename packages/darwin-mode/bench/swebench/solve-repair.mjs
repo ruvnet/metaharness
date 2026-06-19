@@ -9,7 +9,7 @@
 //
 // Run: OPENROUTER_API_KEY=$(cat /tmp/.orkey) node --experimental-strip-types --no-warnings \
 //   bench/swebench/solve-repair.mjs [--instance <id>] [--attempts 3] [--k 15]
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, statSync, appendFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, statSync, appendFileSync, rmSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join, dirname, isAbsolute } from 'node:path';
@@ -111,9 +111,9 @@ const CONCURRENCY = Math.max(1, +argv('--concurrency', 1));
 writeFileSync(OUT, ''); const report = []; let totalCost = 0;
 async function runInstance(inst) {
   const t0 = Date.now(); const row = { instance_id: inst.instance_id, repo: inst.repo, attempts: 0, resolved: false };
-  let bestPatch = '';
+  let bestPatch = ''; let work;
   try {
-    const work = fetchRepo(inst.repo, inst.base_commit);
+    work = fetchRepo(inst.repo, inst.base_commit);
     const allPy = g(work, "git ls-files '*.py'").toString().split('\n').filter(Boolean)
       .filter((f) => !/(^|\/)(tests?|testing|site-packages|\.tox|build|dist)\//i.test(f) && !/(^|\/)(test_|conftest)/i.test(f) && !/_test\.py$/.test(f))
       .filter((f) => { try { return statSync(join(work, f)).size <= 100_000; } catch { return false; } });
@@ -138,6 +138,7 @@ async function runInstance(inst) {
       feedback = `\n--- attempt ${att}: patch applied but tests still FAIL ---\nFailing-test output (fix the logic so these pass; do not edit tests):\n${ev.logTail || '(no log captured)'}\n`;
     }
   } catch (e) { row.error = String(e).split('\n')[0].slice(0, 200); }
+  finally { if (work) try { rmSync(work, { recursive: true, force: true }); } catch { /* best-effort */ } } // ADR: free the temp clone (prevents 40GB+ accumulation)
   appendFileSync(OUT, JSON.stringify({ instance_id: inst.instance_id, model_name_or_path: 'darwin-deepseek-repair', model_patch: bestPatch }) + '\n');
   row.sec = Math.round((Date.now() - t0) / 1000); report.push(row);
   console.error(`[${report.length}/${manifest.length}] ${inst.instance_id} attempts=${row.attempts} resolved=${row.resolved} ${row.sec}s ${row.error ? 'ERR:' + row.error : ''}`);
