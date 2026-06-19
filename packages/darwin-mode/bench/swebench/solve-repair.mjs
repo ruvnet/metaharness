@@ -24,6 +24,7 @@ const argv = (f, d) => { const i = args.indexOf(f); return i >= 0 ? args[i + 1] 
 const onlyInstance = argv('--instance', null);
 const ATTEMPTS = +argv('--attempts', 3);
 const K = +argv('--k', 15);
+const SLICE = +argv('--slice', 45000); // per-file char budget; shrink for small-context local models (ADR-150)
 const LOCALIZE = args.includes('--localize');
 const MODEL = argv('--model', 'deepseek/deepseek-chat');
 const rel = (p) => (isAbsolute(p) ? p : join(HERE, p));
@@ -83,14 +84,16 @@ function fetchRepo(repo, sha) {
   g(work, 'git config user.email b@b'); g(work, 'git config user.name b'); g(work, 'git commit -qam base --allow-empty');
   return work;
 }
-async function llm(prompt) {
+async function llm(prompt, system) {
   // Retry on transient network failures (the repair300 run hit a multi-hour outage that
   // terminally errored 272/300 instances with "fetch failed"). Up to 5 tries, exp backoff.
+  // Optional system message carries the format contract (ADR-150: weak local models need it).
+  const messages = system ? [{ role: 'system', content: system }, { role: 'user', content: prompt }] : [{ role: 'user', content: prompt }];
   let lastErr;
   for (let attempt = 0; attempt < 5; attempt++) {
     if (attempt) await new Promise((r) => setTimeout(r, 2000 * 2 ** (attempt - 1))); // 2,4,8,16s
     try {
-      const res = await fetch(CHAT_URL, { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, messages: [{ role: 'user', content: prompt }], max_tokens: 4096, temperature: 0 }) });
+      const res = await fetch(CHAT_URL, { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, messages, max_tokens: 4096, temperature: 0 }) });
       if (!res.ok && (res.status === 429 || res.status >= 500)) { lastErr = new Error(`http ${res.status}`); continue; }
       const j = await res.json(); return { raw: j.choices?.[0]?.message?.content ?? '', cost: j.usage?.cost ?? 0 };
     } catch (e) { lastErr = e; }
@@ -138,13 +141,16 @@ async function runInstance(inst) {
     if (LOCALIZE) { const lz = await localize(inst.problem_statement, work, allPy, K); selected = lz.selected; totalCost += lz.cost; }
     else selected = selectFiles(inst.problem_statement, work, allPy, buildContext, K);
     row.candidateFiles = allPy.length;
-    const seen = selected.map((f) => `# ===== ${f} =====\n${readFileSync(join(work, f), 'utf8').slice(0, 45000)}`).join('\n\n');
+    const seen = selected.map((f) => `# ===== ${f} =====\n${readFileSync(join(work, f), 'utf8').slice(0, SLICE)}`).join('\n\n');
     let feedback = '';
     for (let att = 1; att <= ATTEMPTS && !row.resolved; att++) {
       row.attempts = att;
       g(work, 'git checkout -q -- .'); // reset to base before each attempt's edits
-      const prompt = `Fix the bug by editing the selected real source files. For EACH change emit a block EXACTLY:\nFILE: <one selected path>\n<<<SEARCH\n<exact lines copied verbatim>\n=======\n<replacement lines>\n>>>REPLACE\nSEARCH must match the file (indentation matters). Multiple blocks ok. No prose outside blocks.\n--- problem statement ---\n${inst.problem_statement.slice(0, 6000)}\n--- selected source files ---\n${seen}\n${feedback}`;
-      const { raw, cost } = await llm(prompt); totalCost += cost;
+      // ADR-150: system message carries the format contract + example (weak local models ignore an
+      // inline spec and emit prose; deepseek already complies, so additive).
+      const sys = 'You are a non-conversational code-patching tool. Output ONLY search/replace edit blocks. NEVER write prose, explanations, summaries, or markdown fences. Each edit is EXACTLY:\nFILE: path/to/file.py\n<<<SEARCH\n<lines copied verbatim from the file, incl. indentation>\n=======\n<replacement lines>\n>>>REPLACE\nExample:\nFILE: pkg/util.py\n<<<SEARCH\ndef add(a, b):\n    return a - b\n=======\ndef add(a, b):\n    return a + b\n>>>REPLACE';
+      const prompt = `Fix the bug by editing the selected real source files. Emit one or more edit blocks in the exact format from the system message. SEARCH must match the file character-for-character (indentation matters). No prose outside blocks.\n--- problem statement ---\n${inst.problem_statement.slice(0, 6000)}\n--- selected source files ---\n${seen}\n${feedback}`;
+      const { raw, cost } = await llm(prompt, sys); totalCost += cost;
       let applied = 0; const re = /FILE:\s*([^\n]+)\n<<<SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)\n>>>REPLACE/g; const misses = [];
       for (let m; (m = re.exec(raw)); ) { const f = m[1].trim(); if (!selected.includes(f) || !existsSync(join(work, f))) { misses.push(`${f} (not a selected file)`); continue; } const cur = readFileSync(join(work, f), 'utf8'); const next = applyEdit(cur, m[2], m[3]); if (next && next !== cur) { writeFileSync(join(work, f), next); applied++; } else misses.push(`${f} (SEARCH text did not match the file)`); }
       const patch = applied ? g(work, 'git diff').toString() : '';
