@@ -238,7 +238,12 @@ stratified-25 (the in-loop `evalOne` counter over-reported — see the disciplin
 | model (local, $0) | open-loop | + repair | patches applied |
 |---|---|---|---|
 | qwen2.5-coder:7b | 1/25 = 4.0% | 1/25 = 4.0% | 13 → 18 |
-| qwen2.5-coder:32b | *measuring* | — | — |
+| qwen2.5-coder:32b | **2/25 = 8.0%** [2.2, 25.0] | *measuring* | 13 |
+
+**Capability scales the open-loop number** (7b 4.0% → 32b **8.0%**): the larger free local model now
+**matches deepseek's full-300 open-loop baseline (7.7%) at $0 inference** on this sample (resolved
+`mwaskom__seaborn-3010`, `pytest-dev__pytest-5227`). Repair-on-32b is measuring — the test of whether
+the §10 repair lift (which was model-bound on the 7b) reproduces once the model is capable enough.
 
 **Two findings:**
 
