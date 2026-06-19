@@ -30,6 +30,34 @@
 - When the Mac is online: launch a concurrent `qwen-coder-32b` track alongside the hosted track; compare resolve-rate at $0 inference (the "substitute model scale with environmental scaffolding + free local frontier" thesis).
 - ADR-148's escalation can then escalate to the *local* 35B (free) instead of a paid frontier — collapsing the cost ceiling entirely.
 
+## First measured result (2026-06-19) — local qwen2.5-coder:7b, $0 inference
+
+Ran the open-loop solver against **ruvultra ollama** (`qwen2.5-coder:7b`, localhost, $0) on the
+stratified-25 sample, official `swebench` Docker eval:
+
+| metric | value |
+|---|---|
+| resolved | **1/25 = 4.0%** (Wilson 95%: [0.7, 19.5]) |
+| patches applied | 13/25 |
+| resolved instance | `pytest-dev__pytest-5227` |
+| inference cost | **$0.00** (local) |
+
+Honest read vs the hosted deepseek pilot on the *same* 25 (~12–16%): the free 7B lands **~⅓–¼**
+the hosted resolve-rate — below, as predicted by the reasoning ceiling. The *story* is the
+**harness-lift at the apply layer**: qwen-7b went from **0/25 → 13/25 applied** once the harness
+(a) served a 32k context (ollama default 4096 truncated the code prompts), (b) carried the
+search/replace format contract in a **system message + worked example**, and (c) **shrank per-file
+context** (`--slice`) so the prompt fit the window and the instruction survived truncation. Without
+those, a weak local model emits prose summaries, not patches. The remaining apply→resolve gap is
+SEARCH-text precision + single-shot — the **closed-loop repair** track (solve-repair, test feedback)
+is the next measurement, expected to lift the local resolve-rate materially.
+
+Provenance fix: solve.mjs now labels predictions with the actual `--model` (was hardcoded
+`darwin-deepseek-searchreplace`).
+
 ## Validation
 
-`--base-url`/`--api-key-env` flags committed in the solvers; architecture recorded. Live Mac run deferred to availability.
+`--base-url`/`--api-key-env`/`--slice` + system-message format contract committed in the solvers;
+first local $0 number measured (1/25, above). Larger local models (gpt-oss:20b on the Mac, qwen-32b)
+and the closed-loop repair track are the next levers. Live Mac endpoint deferred to its ollama
+binding 0.0.0.0 (CLAUDE.local.md).

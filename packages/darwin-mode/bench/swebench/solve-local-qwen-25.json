@@ -1,0 +1,409 @@
+{
+  "model": "qwen2.5-coder:7b",
+  "k": 4,
+  "n": 25,
+  "totalTokens": 142925,
+  "totalCost_usd": 0,
+  "instances": [
+    {
+      "instance_id": "django__django-14534",
+      "repo": "django/django",
+      "localizeCost": 0,
+      "candidateFiles": 853,
+      "selected": [
+        "django/forms/boundfield.py",
+        "django/contrib/admin/widgets.py",
+        "django/contrib/auth/forms.py",
+        "django/contrib/postgres/forms/array.py"
+      ],
+      "cost_usd": 0,
+      "blocksApplied": 1,
+      "patchBytes": 406,
+      "sec": 7
+    },
+    {
+      "instance_id": "sympy__sympy-18057",
+      "repo": "sympy/sympy",
+      "localizeCost": 0,
+      "candidateFiles": 748,
+      "selected": [
+        "sympy/core/exprtools.py",
+        "sympy/parsing/sympy_parser.py",
+        "sympy/assumptions/assume.py",
+        "sympy/assumptions/cnf.py"
+      ],
+      "cost_usd": 0,
+      "blocksApplied": 0,
+      "patchBytes": 0,
+      "sec": 8
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-23314",
+      "repo": "matplotlib/matplotlib",
+      "localizeCost": 0,
+      "candidateFiles": 764,
+      "selected": [
+        "lib/matplotlib/axes/_subplots.py",
+        "lib/mpl_toolkits/axes_grid1/mpl_axes.py",
+        "examples/subplots_axes_and_figures/gridspec_and_subplots.py",
+        "lib/matplotlib/backends/backend_qt5agg.py"
+      ],
+      "cost_usd": 0,
+      "blocksApplied": 0,
+      "patchBytes": 0,
+      "sec": 9
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13439",
+      "repo": "scikit-learn/scikit-learn",
+      "localizeCost": 0,
+      "candidateFiles": 549,
+      "selected": [
+        "sklearn/externals/six.py",
+        "sklearn/model_selection/_search.py",
+        "sklearn/pipeline.py",
+        "sklearn/utils/mocking.py"
+      ],
+      "cost_usd": 0,
+      "blocksApplied": 0,
+      "patchBytes": 0,
+      "sec": 8
+    },
+    {
+      "instance_id": "pytest-dev__pytest-6116",
+      "repo": "pytest-dev/pytest",
+      "localizeCost": 0,
+      "candidateFiles": 71,
+      "selected": [
+        "src/_pytest/config/argparsing.py",
+        "src/_pytest/__init__.py",
+        "src/_pytest/_argcomplete.py",
+        "src/_pytest/assertion/__init__.py"
+      ],
+      "cost_usd": 0,
+      "blocksApplied": 1,
+      "patchBytes": 554,
+      "sec": 10
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-7738",
+      "repo": "sphinx-doc/sphinx",
+      "localizeCost": 0,
+      "candidateFiles": 186,
+      "selected": [
+        "sphinx/ext/napoleon/docstring.py",
+        "doc/usage/extensions/example_google.py",
+        "doc/usage/extensions/example_numpy.py",
+        "setup.py"
+      ],
+      "cost_usd": 0,
+      "blocksApplied": 0,
+      "patchBytes": 0,
+      "sec": 11
+    },
+    {
+      "instance_id": "pylint-dev__pylint-7080",
+      "repo": "pylint-dev/pylint",
+      "localizeCost": 0,
+      "candidateFiles": 840,
+      "selected": [
+        "pylint/checkers/base_checker.py",
+        "doc/data/messages/a/access-member-before-definition/bad.py",
+        "doc/data/messages/a/access-member-before-definition/good.py",
+        "doc/data/messages/a/assigning-non-slot/bad.py"
+      ],
+      "cost_usd": 0,
+      "blocksApplied": 0,
+      "patchBytes": 0,
+      "sec": 6
+    },
+    {
+      "instance_id": "astropy__astropy-12907",
+      "repo": "astropy/astropy",
+      "localizeCost": 0,
+      "candidateFiles": 485,
+      "selected": [
+        "astropy/modeling/separable.py",
+        "astropy/modeling/models.py",
+        "astropy/modeling/physical_models.py",
+        "astropy/coordinates/matrix_utilities.py"
+      ],
+      "cost_usd": 0,
+      "blocksApplied": 0,
+      "patchBytes": 0,
+      "sec": 13
+    },
+    {
+      "instance_id": "mwaskom__seaborn-3010",
+      "repo": "mwaskom/seaborn",
+      "localizeCost": 0,
+      "candidateFiles": 108,
+      "selected": [
+        "seaborn/_stats/regression.py",
+        "seaborn/_core/groupby.py",
+        "seaborn/_core/plot.py",
+        "seaborn/_oldcore.py"
+      ],
+      "cost_usd": 0,
+      "blocksApplied": 0,
+      "patchBytes": 0,
+      "sec": 9
+    },
+    {
+      "instance_id": "pydata__xarray-4094",
+      "repo": "pydata/xarray",
+      "localizeCost": 0,
+      "candidateFiles": 93,
+      "selected": [
+        "xarray/core/merge.py",
+        "xarray/core/variable.py",
+        "xarray/backends/api.py",
+        "xarray/util/print_versions.py"
+      ],
+      "cost_usd": 0,
+      "blocksApplied": 0,
+      "patchBytes": 0,
+      "sec": 23
+    },
+    {
+      "instance_id": "psf__requests-3362",
+      "repo": "psf/requests",
+      "localizeCost": 0,
+      "candidateFiles": 86,
+      "selected": [
+        "requests/api.py",
+        "requests/models.py",
+        "requests/__init__.py",
+        "requests/adapters.py"
+      ],
+      "cost_usd": 0,
+      "blocksApplied": 0,
+      "patchBytes": 0,
+      "sec": 8
+    },
+    {
+      "instance_id": "pallets__flask-4045",
+      "repo": "pallets/flask",
+      "localizeCost": 0,
+      "candidateFiles": 31,
+      "selected": [
+        "src/flask/blueprints.py",
+        "docs/conf.py",
+        "examples/javascript/js_example/__init__.py",
+        "examples/javascript/js_example/views.py"
+      ],
+      "cost_usd": 0,
+      "blocksApplied": 1,
+      "patchBytes": 699,
+      "sec": 4
+    },
+    {
+      "instance_id": "django__django-15061",
+      "repo": "django/django",
+      "localizeCost": 0,
+      "candidateFiles": 854,
+      "selected": [
+        "django/forms/widgets.py",
+        "django/contrib/admin/widgets.py",
+        "django/contrib/auth/forms.py",
+        "django/contrib/postgres/forms/array.py"
+      ],
+      "cost_usd": 0,
+      "blocksApplied": 0,
+      "patchBytes": 0,
+      "sec": 34
+    },
+    {
+      "instance_id": "sympy__sympy-17139",
+      "repo": "sympy/sympy",
+      "localizeCost": 0,
+      "candidateFiles": 727,
+      "selected": [
+        "sympy/simplify/fu.py",
+        "sympy/strategies/core.py",
+        "sympy/strategies/tree.py",
+        "sympy/simplify/trigsimp.py"
+      ],
+      "cost_usd": 0,
+      "blocksApplied": 1,
+      "patchBytes": 389,
+      "sec": 7
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-25433",
+      "repo": "matplotlib/matplotlib",
+      "localizeCost": 0,
+      "candidateFiles": 758,
+      "selected": [
+        "lib/matplotlib/backends/backend_qt.py",
+        "lib/matplotlib/axes/_secondary_axes.py",
+        "galleries/examples/widgets/range_slider.py",
+        "galleries/examples/axes_grid1/demo_colorbar_of_inset_axes.py"
+      ],
+      "cost_usd": 0,
+      "blocksApplied": 0,
+      "patchBytes": 0,
+      "sec": 22
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13779",
+      "repo": "scikit-learn/scikit-learn",
+      "localizeCost": 0,
+      "candidateFiles": 513,
+      "selected": [
+        "sklearn/ensemble/voting.py",
+        "sklearn/base.py",
+        "sklearn/compose/_column_transformer.py",
+        "sklearn/datasets/base.py"
+      ],
+      "cost_usd": 0,
+      "blocksApplied": 1,
+      "patchBytes": 744,
+      "sec": 20
+    },
+    {
+      "instance_id": "pytest-dev__pytest-5227",
+      "repo": "pytest-dev/pytest",
+      "localizeCost": 0,
+      "candidateFiles": 68,
+      "selected": [
+        "src/_pytest/logging.py",
+        "extra/setup-py.test/setup.py",
+        "bench/bench.py",
+        "bench/bench_argcomplete.py"
+      ],
+      "cost_usd": 0,
+      "blocksApplied": 1,
+      "patchBytes": 510,
+      "sec": 3
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-8721",
+      "repo": "sphinx-doc/sphinx",
+      "localizeCost": 0,
+      "candidateFiles": 186,
+      "selected": [
+        "sphinx/ext/viewcode.py",
+        "sphinx/builders/_epub_base.py",
+        "sphinx/builders/html/__init__.py",
+        "sphinx/builders/html/transforms.py"
+      ],
+      "cost_usd": 0,
+      "blocksApplied": 1,
+      "patchBytes": 593,
+      "sec": 5
+    },
+    {
+      "instance_id": "pylint-dev__pylint-7993",
+      "repo": "pylint-dev/pylint",
+      "localizeCost": 0,
+      "candidateFiles": 847,
+      "selected": [
+        "pylint/reporters/text.py",
+        "pylint/config/_pylint_config/generate_command.py",
+        "pylint/config/_pylint_config/help_message.py",
+        "pylint/config/_pylint_config/__init__.py"
+      ],
+      "cost_usd": 0,
+      "blocksApplied": 1,
+      "patchBytes": 727,
+      "sec": 13
+    },
+    {
+      "instance_id": "astropy__astropy-6938",
+      "repo": "astropy/astropy",
+      "localizeCost": 0,
+      "candidateFiles": 389,
+      "selected": [
+        "astropy/io/fits/fitsrec.py",
+        "astropy/io/fits/util.py",
+        "astropy/io/misc/asdf/tags/fits/fits.py",
+        "examples/io/split-jpeg-to-fits.py"
+      ],
+      "cost_usd": 0,
+      "blocksApplied": 1,
+      "patchBytes": 510,
+      "sec": 6
+    },
+    {
+      "instance_id": "mwaskom__seaborn-3190",
+      "repo": "mwaskom/seaborn",
+      "localizeCost": 0,
+      "candidateFiles": 112,
+      "selected": [
+        "seaborn/_core/scales.py",
+        "seaborn/_core/plot.py",
+        "seaborn/_marks/area.py",
+        "seaborn/_marks/bar.py"
+      ],
+      "cost_usd": 0,
+      "blocksApplied": 1,
+      "patchBytes": 515,
+      "sec": 6
+    },
+    {
+      "instance_id": "pydata__xarray-4248",
+      "repo": "pydata/xarray",
+      "localizeCost": 0,
+      "candidateFiles": 94,
+      "selected": [
+        "xarray/core/coordinates.py",
+        "xarray/coding/variables.py",
+        "xarray/plot/dataset_plot.py",
+        "asv_bench/benchmarks/dataset_io.py"
+      ],
+      "cost_usd": 0,
+      "blocksApplied": 1,
+      "patchBytes": 690,
+      "sec": 6
+    },
+    {
+      "instance_id": "django__django-14411",
+      "repo": "django/django",
+      "localizeCost": 0,
+      "candidateFiles": 853,
+      "selected": [
+        "django/contrib/admin/widgets.py",
+        "django/contrib/auth/forms.py",
+        "django/contrib/admin/templatetags/admin_list.py",
+        "django/contrib/admin/templatetags/admin_modify.py"
+      ],
+      "cost_usd": 0,
+      "blocksApplied": 0,
+      "patchBytes": 0,
+      "sec": 12
+    },
+    {
+      "instance_id": "sympy__sympy-20212",
+      "repo": "sympy/sympy",
+      "localizeCost": 0,
+      "candidateFiles": 785,
+      "selected": [
+        "sympy/functions/elementary/exponential.py",
+        "sympy/series/limits.py",
+        "sympy/utilities/iterables.py",
+        "sympy/parsing/sym_expr.py"
+      ],
+      "cost_usd": 0,
+      "blocksApplied": 1,
+      "patchBytes": 581,
+      "sec": 8
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-23476",
+      "repo": "matplotlib/matplotlib",
+      "localizeCost": 0,
+      "candidateFiles": 760,
+      "selected": [
+        "doc/sphinxext/gallery_order.py",
+        "doc/sphinxext/missing_references.py",
+        "examples/animation/bayes_update.py",
+        "examples/animation/pause_resume.py"
+      ],
+      "cost_usd": 0,
+      "blocksApplied": 2,
+      "patchBytes": 881,
+      "sec": 13
+    }
+  ]
+}

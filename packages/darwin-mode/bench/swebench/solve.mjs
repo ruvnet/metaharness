@@ -134,8 +134,8 @@ for (const inst of manifest) {
     row.blocksApplied = applied;
     const diff = applied ? g(work, 'git diff').toString() : '';
     row.patchBytes = diff.length;
-    appendFileSync(OUT, JSON.stringify({ instance_id: inst.instance_id, model_name_or_path: 'darwin-deepseek-searchreplace', model_patch: diff }) + '\n');
-  } catch (e) { row.error = String(e).split('\n')[0].slice(0, 200); appendFileSync(OUT, JSON.stringify({ instance_id: inst.instance_id, model_name_or_path: 'darwin-deepseek-searchreplace', model_patch: '' }) + '\n'); }
+    appendFileSync(OUT, JSON.stringify({ instance_id: inst.instance_id, model_name_or_path: `darwin-${MODEL.replace(/[/:]/g, '-')}-searchreplace`, model_patch: diff }) + '\n');
+  } catch (e) { row.error = String(e).split('\n')[0].slice(0, 200); appendFileSync(OUT, JSON.stringify({ instance_id: inst.instance_id, model_name_or_path: `darwin-${MODEL.replace(/[/:]/g, '-')}-searchreplace`, model_patch: '' }) + '\n'); }
   row.sec = Math.round((Date.now() - t0) / 1000); report.push(row);
   console.error(`[${report.length}/${manifest.length}] ${inst.instance_id} files=${row.candidateFiles ?? '?'} applied=${row.blocksApplied ?? 0} patch=${row.patchBytes ?? 0}B ${row.sec}s ${row.error ? 'ERR:' + row.error : ''}`);
 }
