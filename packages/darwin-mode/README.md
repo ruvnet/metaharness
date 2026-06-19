@@ -244,9 +244,10 @@ By default the sandbox runs the **repo's test command**, which is independent of
 the harness surfaces — so the behavioural manifold is degenerate (measured:
 `nicheEntropy = 0`, ADR-099). `sandboxMode: 'mock'` (ADR-102) instead runs a
 **deterministic surface-driven agent loop**, so a variant's traces depend on its
-surface content and the manifold comes alive. The full real-agent substrate
-(surfaces driving an LLM on real coding tasks → SWE-bench) is **ADR-101/098,
-deferred**.
+surface content and the manifold comes alive. `sandboxMode: 'agent'` (ADR-106)
+runs a variant's **real surface code** in a child process. The real-LLM-on-real-code
+substrate is **no longer deferred** — it shipped (ADR-106→141) and now runs on
+**canonical SWE-bench Lite** (ADR-142+, below).
 
 ### Validated results (real, reproducible — see `bench/results/`)
 
@@ -261,15 +262,37 @@ deferred**.
 - **Polyglot model frontier** (ADR-085): 15 models × 6 languages, execution-scored;
   DeepSeek-V3 ($0.4/Mtok) tops quality-per-dollar — cheap beats frontier for code.
 
+### Canonical SWE-bench Lite (real, official harness — ADR-142–146)
+
+Run on the **full 300** SWE-bench Lite (test) instances, scored by the **official
+`swebench` Docker harness** — no cherry-picking, tight CIs. Solver = relevance-ranked
+context + symbol-aware localization + search/replace patch, `deepseek-chat`, ~$0.01/instance.
+
+| config | resolved | Wilson 95% CI | ADR |
+|---|---|---|---|
+| baseline (open-loop, single-shot) | 23/300 = **7.7%** | [5.2, 11.2] | 144 |
+| + LLM localization | 24/300 = **8.0%** | [5.4, 11.6] | 146 |
+| + closed-loop repair (test-feedback) | *measuring (full 300)* | — | 149 |
+
+Honest framing: this is a **cheap-model, single-shot baseline** ($0.4/Mtok, <1¢/instance) —
+leaderboard leaders hit 65–88% on Verified using iterative agentic loops + frontier models at
+$1–20/instance. Localization lifted file-selection recall **44.7% → 59.7%** but resolve-rate held
+flat — the bottleneck relocated to *patch emission* (ADR-146). The repair loop and a hybrid
+cheap→frontier escalation (ADR-148) are the measured next levers. Every number is reproducible
+under `bench/swebench/`.
+
 ## Status
 
-**Working prototype, empirically validated (mock substrate).** The
-`DeterministicMutator` is seeded and signature-preserving; the `OpenRouterMutator`
-(ADR-085) is the production LLM `CodeGenerator`, behind the *same*
-`validateGeneratedCode` gate. The safety boundary, scorer, archive, and bench
-layer are kernel code. The frontier is **Tier-2 real-agent execution**
-(ADR-101/098): surfaces driving a real LLM on real tasks, which turns the
-validated mock instrument into real-world SWE results.
+**Working, empirically validated on both the mock substrate *and* canonical
+SWE-bench Lite.** The `DeterministicMutator` is seeded and signature-preserving;
+the `OpenRouterMutator` (ADR-085) is the production LLM `CodeGenerator`, behind the
+*same* `validateGeneratedCode` gate. The safety boundary, scorer, archive, and bench
+layer are kernel code. The real-LLM-on-real-code frontier (once deferred) is now
+**measured**: a reproducible **7.7% [5.2–11.2%]** open-loop baseline on the full
+SWE-bench Lite (ADR-144), with localization (146), the repair loop (149), and a
+hybrid cheap→frontier escalation (148) as the active levers. Darwin Mode also ships
+**integrated into the `metaharness` scaffolder** — `npx metaharness <name>` produces
+a harness with `npm run evolve` out of the box (ADR-147).
 
 ## License
 
