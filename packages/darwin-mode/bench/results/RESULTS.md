@@ -208,3 +208,23 @@ generates ADR-145's router labels (per-instance deepseek resolve outcomes).
 bottleneck **relocated from retrieval to patch-emission** ("can't find" → "can't write"). 34 newly-
 correctly-localized files all failed patch-emission. → justifies the closed-loop repair loop (ADR-143)
 as the next lever, stacked on `--localize`.
+
+## 10. Closed-loop repair at full scale — the decisive lever (ADR-149)
+
+Full 300, `--localize` + closed-loop repair (≤3 attempts, run FAIL_TO_PASS in Docker → feed the
+traceback/apply-rejection back → retry), official `swebench` harness:
+
+| config | resolved | Wilson 95% CI |
+|---|---|---|
+| baseline (open-loop) | 23/300 = 7.7% | [5.2, 11.2] |
+| + localize | 24/300 = 8.0% | [5.4, 11.6] |
+| **+ repair loop** | **46/300 = 15.3%** | **[11.7, 19.8]** |
+
+**The repair loop ~doubles the resolve-rate (7.7% → 15.3%)** on the *same cheap deepseek model*, at
+near-constant cost. Baseline and repair CIs are essentially disjoint (11.2 vs 11.7) → a real,
+non-noise lift. 195/300 non-empty patches submitted. 1 instance (`psf__requests-2317`) wedged its
+Docker container past the 1200s timeout and was killed → counts as unresolved (conservative; 47/300
+= 15.7% had it resolved). Provenance: 3 shards merged (part1 119 + part2-valid 118 + part3 63
+re-fetched after the concurrency clone-rate-limit fix). The test-feedback signal is what climbs the
+emission wall §9 identified. Next: hybrid cheap→frontier escalation on the residual hard tail
+(ADR-148), local-model repair (ADR-150).

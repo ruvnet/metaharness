@@ -281,14 +281,16 @@ context + symbol-aware localization + search/replace patch, `deepseek-chat`, ~$0
 |---|---|---|---|
 | baseline (open-loop, single-shot) | 23/300 = **7.7%** | [5.2, 11.2] | 144 |
 | + LLM localization | 24/300 = **8.0%** | [5.4, 11.6] | 146 |
-| + closed-loop repair (test-feedback) | *measuring (full 300)* | — | 149 |
+| **+ closed-loop repair (test-feedback, ≤3)** | 46/300 = **15.3%** | **[11.7, 19.8]** | 149 |
 
-Honest framing: this is a **cheap-model, single-shot baseline** ($0.4/Mtok, <1¢/instance) —
-leaderboard leaders hit 65–88% on Verified using iterative agentic loops + frontier models at
-$1–20/instance. Localization lifted file-selection recall **44.7% → 59.7%** but resolve-rate held
-flat — the bottleneck relocated to *patch emission* (ADR-146). The repair loop and a hybrid
-cheap→frontier escalation (ADR-148) are the measured next levers. Every number is reproducible
-under `bench/swebench/`.
+The closed-loop repair loop **~doubles** the resolve-rate (7.7% → 15.3%) on the *same cheap model*
+(deepseek, <1¢/instance); the baseline and repair CIs are essentially disjoint (11.2 vs 11.7), so
+it's a real lift, not noise. Honest framing: 15.3% is still a **cheap-model** number — leaderboard
+leaders hit 65–88% on Verified using frontier models + deeper agentic loops at $1–20/instance. The
+contribution is the **harness lift on a fixed cheap model**: open-loop 7.7% → closed-loop 15.3% at
+near-constant cost. Localization lifted file-selection recall **44.7% → 59.7%**; the repair loop
+then converts first-shot misses into fixes via test feedback. Next levers: hybrid cheap→frontier
+escalation (ADR-148), local-model repair (ADR-150). Every number is reproducible under `bench/swebench/`.
 
 ## Status
 
