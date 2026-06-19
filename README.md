@@ -52,6 +52,12 @@ Output is an npm-publishable `.zip` with **your name on it, your branding, your 
   data** for a sharper fit (`npm i @metaharness/router`). Add the optional
   [`@ruvector/tiny-dancer`](https://www.npmjs.com/package/@ruvector/tiny-dancer)
   to train a fast native model instead — same training data, no API change.
+- **Let your harness improve itself.** Every scaffold now ships with **Darwin Mode**
+  ([`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin)) wired in —
+  run `npm run evolve` and the harness mutates its own config, tests each change in a
+  sandbox, and keeps only what *measurably* improves. The model stays frozen; the harness
+  evolves. Safe by default (no network, no API key; pure refactor/tuning behind a safety
+  gate). Validated on real **SWE-bench Lite** bug-fixing. `--no-darwin` to skip.
 
 ## Tune it to your project — then ship it as your own npm
 
