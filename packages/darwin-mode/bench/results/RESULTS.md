@@ -337,3 +337,18 @@ deepseek failed. Blended cost **~$0.34/instance** (Scholar tail = $99.74) vs ~$2
 on all 300 — escalating only the residual is ~6× cheaper for the same ceiling. In-loop UNDER-counted
 the Scholar (37→55 batch; Docker-hang false-negatives) — batch authoritative. Still below the 65–88%
 agentic tier: that gap is architectural (ADR-149 verdict), not closable by escalation.
+
+## 15. deepseek-v4-pro lifts the cheap floor 15.3% → 29.3% (ADR-151)
+
+Same harness (localize + search/replace + ≤3 test-feedback repair), **cheap base model swapped**
+deepseek-V3 → deepseek-v4-pro; full 300, official batch eval, 0 errors:
+
+| Barbarian (cheap + repair) | resolved | Wilson 95% CI | ~$/inst |
+|---|---|---|---|
+| deepseek-V3 (§10/ADR-149) | 46/300 = 15.3% | [11.7, 19.8] | ~$0.01 |
+| **deepseek-v4-pro (ADR-151)** | **88/300 = 29.3%** | **[24.5, 34.7]** | ~$0.11 |
+
+**The cheap floor nearly doubled by swapping the base model alone** — falsifying "the paradigm is
+exhausted regardless of model IQ." v4-pro-alone (29.3%) reaches **88% of the V3+Scholar hybrid (33.3%,
+§14) at ~⅓ the blended cost** and no frontier pass. Next: v4-pro + Scholar hybrid on the 212-tail →
+expected new ceiling ~40%+. In-loop 84 → batch **88** (batch authoritative).
