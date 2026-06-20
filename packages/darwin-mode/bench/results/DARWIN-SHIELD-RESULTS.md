@@ -40,6 +40,16 @@ Corpus: `darwin-shield-bench@1.0.0` — 10 ground-truth vulns, 9 decoys. 50 evol
 - patch-reuse improvement: **100%** (≥ 20% required) ✅
 - seeded-vs-random advantage: **47.1209%** (≥ 15% required) ✅
 
+## Lever ablation (the harness is the lever)
+
+Fitness lost when each lever is knocked out of the champion (full = 0.93275):
+
+- context (→ minimal): **−0.1675**
+- tools (→ single tool): **−0.084**
+- reviewers (→ 1): **−0.07875**
+- model (→ none): **−0**
+- memory (→ off): **−0**
+
 ## Champion genome
 
 ```json
@@ -71,3 +81,9 @@ Corpus: `darwin-shield-bench@1.0.0` — 10 ground-truth vulns, 9 decoys. 50 evol
 ```
 
 Lineage: baseline → g0_v1_1 → g1_v13_p → g2_v8_w → g4_v13_1p → g6_v5_25 → g7_v13_2p → g8_v5_2t → g9_v9_39 → g24_v11_8b → g25_v7_8j
+
+## Hard-corpus stress test (unsaturated frontier)
+
+- champion: TPR **0.6**, FPR 0.666667, fitness **0.7185**
+- fixed harness: TPR 0, fitness 0.128
+- headroom (champion TPR < 1.0): ✅; beats fixed harness: ✅

@@ -36,5 +36,6 @@ export * from './scoring.js';
 export * from './swarm.js';
 export * from './stats.js';
 export * from './compounding.js';
+export * from './ablation.js';
 export * from './evolve.js';
 export * from './bench.js';

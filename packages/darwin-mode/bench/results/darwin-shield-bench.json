@@ -311,5 +311,56 @@
       "pass": true
     },
     "passed": true
+  },
+  "ablation": {
+    "champion": {
+      "id": "g25_v7_8j",
+      "parentId": "g24_v11_8b",
+      "planner": "sink-first",
+      "contextPolicy": "hybrid",
+      "reviewerCount": 4,
+      "retryBudget": 2,
+      "fuzzBudgetSeconds": 15,
+      "tools": [
+        "semgrep",
+        "osv-scanner",
+        "codeql",
+        "trivy"
+      ],
+      "modelMix": [
+        "claude"
+      ],
+      "validationPipeline": [
+        "static",
+        "fuzz",
+        "repro-test",
+        "review"
+      ],
+      "safetyProfile": "strict-defensive"
+    },
+    "fullFitness": 0.93275,
+    "levers": [
+      {
+        "lever": "context (→ minimal)",
+        "delta": 0.1675
+      },
+      {
+        "lever": "tools (→ single tool)",
+        "delta": 0.084
+      },
+      {
+        "lever": "reviewers (→ 1)",
+        "delta": 0.07875
+      },
+      {
+        "lever": "model (→ none)",
+        "delta": 0
+      },
+      {
+        "lever": "memory (→ off)",
+        "delta": 0
+      }
+    ],
+    "topLever": "context (→ minimal)"
   }
 }

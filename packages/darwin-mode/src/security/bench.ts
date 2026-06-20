@@ -25,6 +25,7 @@ import { corpusCounts, runSwarm } from './swarm.js';
 import { evolve, type EvolveResult } from './evolve.js';
 import { decidePromotion, type PromotionDecision } from './stats.js';
 import { measureCompounding, type CompoundingReport } from './compounding.js';
+import { ablate, hardCorpus, type AblationReport } from './ablation.js';
 import { RuvSecurityMemory } from './memory.js';
 import type { HarnessGenome } from './types.js';
 import { round6 } from './util.js';
@@ -59,6 +60,8 @@ export interface BenchReport {
   statisticalPromotion: PromotionDecision;
   /** Cross-run ruVector compounding acceptance (the moat: memory compounds). */
   compounding: CompoundingReport;
+  /** Lever ablation of the champion — proves the HARNESS drives the gain. */
+  ablation: AblationReport;
 }
 
 export interface BenchConfig {
@@ -149,6 +152,10 @@ export function runBenchmark(config: BenchConfig = {}): BenchReport {
   // ruVector integration acceptance test). The real moat is not one run's score.
   const compounding = measureCompounding(corpus, b2FpRate, seed);
 
+  // Lever ablation — quantifies how much fitness each harness knob contributes,
+  // i.e. the empirical proof that the HARNESS (not the frozen model) is the lever.
+  const ablation = ablate(champion.genome, corpus, b2.breakdown.falsePositiveRate);
+
   const gates: AcceptanceGate[] = [
     {
       name: 'TPR improvement ≥ 25% vs fixed harness',
@@ -226,6 +233,66 @@ export function runBenchmark(config: BenchConfig = {}): BenchReport {
     learningCurve: evolved.history,
     statisticalPromotion,
     compounding,
+    ablation,
+  };
+}
+
+/** Champion vs fixed-harness on the HARD corpus — proves an unsaturated frontier. */
+export interface StressResult {
+  championTpr: number;
+  championFpr: number;
+  championFitness: number;
+  baselineTpr: number;
+  baselineFitness: number;
+  /** Champion has headroom (does not saturate at TPR 1.0). */
+  hasHeadroom: boolean;
+  /** Champion still beats the fixed harness on the hard frontier. */
+  beatsBaseline: boolean;
+}
+
+/**
+ * Evolve on the deliberately HARD corpus (subtle vulns + adversarial decoys) and
+ * report the champion vs the fixed harness. A "beyond SOTA" claim is only honest
+ * if the champion is on an unsaturated frontier (TPR < 1.0) yet still dominates.
+ */
+export function hardCorpusStressTest(config: BenchConfig = {}): StressResult {
+  const corpus = hardCorpus();
+  const population = config.population ?? 16;
+  const cycles = config.cycles ?? 50;
+  const seed = config.seed ?? 0;
+  const counts = corpusCounts(corpus);
+
+  const b2genome = baselineGenome();
+  const b2Run = runSwarm(b2genome, corpus, 'hard-b2', {});
+  const b2FpRate = counts.decoys > 0 ? b2Run.metrics.falsePositives / counts.decoys : 0;
+  const b2 = fitness({
+    metrics: b2Run.metrics,
+    groundTruthCount: counts.groundTruth,
+    decoyCount: counts.decoys,
+    baselineFalsePositiveRate: b2FpRate,
+    costBudget: COST_BUDGET,
+    timeBudget: TIME_BUDGET,
+  });
+
+  const evolved = evolve({ corpus, population, cycles, seed, baselineFalsePositiveRate: b2FpRate });
+  const champRun = runSwarm(evolved.champion.genome, corpus, 'hard-champ', {});
+  const champ = fitness({
+    metrics: champRun.metrics,
+    groundTruthCount: counts.groundTruth,
+    decoyCount: counts.decoys,
+    baselineFalsePositiveRate: b2FpRate,
+    costBudget: COST_BUDGET,
+    timeBudget: TIME_BUDGET,
+  });
+
+  return {
+    championTpr: champ.truePositiveRate,
+    championFpr: champ.falsePositiveRate,
+    championFitness: champ.fitness,
+    baselineTpr: b2.truePositiveRate,
+    baselineFitness: b2.fitness,
+    hasHeadroom: champ.truePositiveRate < 1,
+    beatsBaseline: champ.fitness > b2.fitness && champ.truePositiveRate >= b2.truePositiveRate,
   };
 }
 
@@ -268,6 +335,12 @@ export function renderReport(report: BenchReport): string {
   lines.push(`- false-positive repeat-rate drop: **${round6(c.fpRepeatDrop.drop * 100)}%** (≥ 35% required) ${c.fpRepeatDrop.pass ? '✅' : '❌'}`);
   lines.push(`- patch-reuse improvement: **${round6(c.patchReuse.improvement * 100)}%** (≥ 20% required) ${c.patchReuse.pass ? '✅' : '❌'}`);
   lines.push(`- seeded-vs-random advantage: **${round6(c.seededVsRandom.advantage * 100)}%** (≥ 15% required) ${c.seededVsRandom.pass ? '✅' : '❌'}`);
+  lines.push('');
+  lines.push('## Lever ablation (the harness is the lever)');
+  lines.push('');
+  lines.push(`Fitness lost when each lever is knocked out of the champion (full = ${report.ablation.fullFitness}):`);
+  lines.push('');
+  for (const l of report.ablation.levers) lines.push(`- ${l.lever}: **−${l.delta}**`);
   lines.push('');
   lines.push(`## Champion genome`);
   lines.push('');

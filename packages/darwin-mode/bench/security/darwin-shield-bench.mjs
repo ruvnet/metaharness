@@ -16,7 +16,7 @@
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { runBenchmark, renderReport } from '../../dist/security/index.js';
+import { runBenchmark, renderReport, hardCorpusStressTest } from '../../dist/security/index.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const resultsDir = join(here, '..', 'results');
@@ -39,9 +39,23 @@ mkdirSync(resultsDir, { recursive: true });
 const jsonPath = join(resultsDir, 'darwin-shield-bench.json');
 const mdPath = join(resultsDir, 'DARWIN-SHIELD-RESULTS.md');
 writeFileSync(jsonPath, JSON.stringify(report, null, 2) + '\n');
-writeFileSync(mdPath, renderReport(report));
 
-process.stdout.write(renderReport(report));
+// Hard-corpus stress test: an unsaturated frontier (champion TPR < 1.0) where
+// the champion still dominates the fixed harness — an honest "beyond SOTA" check.
+const stress = hardCorpusStressTest(config);
+const stressMd = [
+  '',
+  '## Hard-corpus stress test (unsaturated frontier)',
+  '',
+  `- champion: TPR **${stress.championTpr}**, FPR ${stress.championFpr}, fitness **${stress.championFitness}**`,
+  `- fixed harness: TPR ${stress.baselineTpr}, fitness ${stress.baselineFitness}`,
+  `- headroom (champion TPR < 1.0): ${stress.hasHeadroom ? '✅' : '❌'}; beats fixed harness: ${stress.beatsBaseline ? '✅' : '❌'}`,
+  '',
+].join('\n');
+const fullMd = renderReport(report) + stressMd;
+writeFileSync(mdPath, fullMd);
+
+process.stdout.write(fullMd);
 process.stdout.write(`\nWrote ${jsonPath}\n`);
 process.stdout.write(`Wrote ${mdPath}\n`);
 process.stdout.write(`\nOverall: ${report.passed ? 'PASS ✅' : 'FAIL ❌'}\n`);
