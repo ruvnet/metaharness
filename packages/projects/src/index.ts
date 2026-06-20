@@ -18,3 +18,4 @@ export * from './handoffs.js'; // ADR-163
 export * from './safety-rails.js'; // ADR-164
 export * from './opportunity.js'; // ADR-165
 export * from './review-gates.js'; // ADR-166
+export * from './openrouter.js'; // optional real-LLM client (ADR-163 real A/B)

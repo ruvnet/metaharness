@@ -1,0 +1,21 @@
+{
+  "experiment": "real typed-vs-free-form handoff A/B (ADR-163)",
+  "model": "openai/gpt-4o-mini",
+  "tasks": 6,
+  "hopsPerChain": 3,
+  "hopsTotal": 18,
+  "retriesTyped": 0,
+  "retriesFree": 18,
+  "retryReductionPct": 100,
+  "firstTryValidRate": {
+    "typed": 1,
+    "free": 0
+  },
+  "requests": 54,
+  "tokens": {
+    "prompt": 8813,
+    "completion": 6803
+  },
+  "estCostUSD": 0.0054,
+  "note": "Real LLM calls; non-deterministic. Only difference between arms is whether the handoff schema was named in the prompt; both validate against the same schema with validateHandoff()."
+}

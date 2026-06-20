@@ -86,6 +86,21 @@ The integrated acceptance scenario (100 tasks × 3 repos) composes the modules i
 
 > Note on the scheduler number: the ~88% reflects a seeded population that is ~40% *doomed* tasks (which a naive unbounded loop retries ~50× while the bounded scheduler stops at 3). It is a real measurement of *this* mix, not a universal claim — change the doomed fraction and it moves.
 
+## Real LLM measurement (optional)
+
+Everything above is a deterministic synthetic simulation. There is **one optional benchmark that makes real model calls** — `bench/handoff-llm.bench.mjs` — to validate the typed-handoff claim (ADR-163) against a real model. It is gated on `OPENROUTER_API_KEY` (skips with exit 0 when absent), kept out of the deterministic suite, has a hard request cap, and reads the key from the environment only (never logged or committed). The client itself is unit-tested with a mocked `fetch` (deterministic, no spend).
+
+**A/B design (isolates one variable):** a 3-hop planner→coder→tester chain over 6 tasks. In **typed** mode the prompt names the contract's exact output fields; in **free-form** mode it just asks for "JSON". *Both* validate the output against the same schema with the real `validateHandoff()` and retry identically on failure — so the only difference is whether the contract was specified up front.
+
+**Result** (real run, `openai/gpt-4o-mini`, 54 requests, ~$0.005 — receipt `handoff-llm.json`):
+
+| Mode | First-try-valid hops | Retries |
+|---|---|---|
+| Typed (schema named) | **18 / 18** | **0** |
+| Free-form (no schema) | 0 / 18 | 18 |
+
+Naming the contract's fields up front made every handoff consumable on the first try; without it the model emitted plausible-but-non-matching field names and needed one corrective round-trip per hop (**100% retry reduction here**). Caveats, stated plainly: this is a **single, non-deterministic** run, and the effect size depends on how far the required field names diverge from the model's natural defaults — here that divergence is total, so the gap is maximal. The point it demonstrates is real: agreeing the handoff schema up front removes a real round-trip a real model otherwise spends rediscovering it.
+
 ## License
 
 MIT © rUv
