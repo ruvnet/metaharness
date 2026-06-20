@@ -402,3 +402,20 @@ drift). Contrast: the *same harness* on hosted deepseek-v4-pro reaches 29.3% (§
 harness is the lever, but only above a capability floor — below it, repair recovers little because the
 base can't emit the fix at all.** This closes the ADR-150 local-inference arc: local $0 tracks are
 viable for cheap iteration but the resolve-rate ceiling is the local model, not the harness.
+
+## 19. Agentic loop — first empirical number (ADR-153): 36% on pilot-25 (v4-pro)
+
+The ADR-153 agentic ReAct loop (`solve-agentic.mjs`: read/grep/ls/edit/run_tests/submit, max-steps 15)
+on a capable cheap base (deepseek-v4-pro), official batch eval:
+
+| solver (deepseek-v4-pro) | sample | resolved | Wilson 95% CI | $/inst |
+|---|---|---|---|---|
+| single-shot + repair (§15) | full-300 | 29.3% | [24.5, 34.7] | ~$0.11 |
+| **agentic loop (ADR-153)** | **pilot-25** | **9/25 = 36.0%** | **[20.2, 55.5]** | **~$0.027** |
+
+**Honest read:** the agentic point estimate (36%) is *above* single-shot (29.3%) and the loop is
+markedly cheaper per instance (~$0.027 — it converges fast and run_tests is the free Docker oracle),
+but **n=25 is underpowered**: the CI [20.2, 55.5] overlaps the single-shot reference heavily, so this
+is **promising, not a significant win**. What it *does* establish: the agentic architecture works
+end-to-end on a real cheap base, resolves a competitive fraction, and is affordable. The decisive test
+is a full-300 agentic run (tight CI, directly comparable to 29.3%) — the natural next experiment.
