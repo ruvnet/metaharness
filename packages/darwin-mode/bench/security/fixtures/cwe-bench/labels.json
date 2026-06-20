@@ -1,0 +1,114 @@
+{
+  "corpus": "cwe-bench",
+  "note": "real-CVE-shaped: pre-fix/post-fix pairs + decoys",
+  "labels": [
+    {
+      "file": "vuln/eval.py",
+      "vulnerable": true,
+      "weakness": "CWE-94",
+      "fixed": false
+    },
+    {
+      "file": "fixed/eval.py",
+      "vulnerable": false,
+      "weakness": "CWE-94 (patched)",
+      "fixed": true
+    },
+    {
+      "file": "vuln/exec.py",
+      "vulnerable": true,
+      "weakness": "CWE-94",
+      "fixed": false
+    },
+    {
+      "file": "fixed/exec.py",
+      "vulnerable": false,
+      "weakness": "CWE-94 (patched)",
+      "fixed": true
+    },
+    {
+      "file": "vuln/shell.py",
+      "vulnerable": true,
+      "weakness": "CWE-78",
+      "fixed": false
+    },
+    {
+      "file": "fixed/shell.py",
+      "vulnerable": false,
+      "weakness": "CWE-78 (patched)",
+      "fixed": true
+    },
+    {
+      "file": "vuln/load_yaml.py",
+      "vulnerable": true,
+      "weakness": "CWE-502",
+      "fixed": false
+    },
+    {
+      "file": "fixed/load_yaml.py",
+      "vulnerable": false,
+      "weakness": "CWE-502 (patched)",
+      "fixed": true
+    },
+    {
+      "file": "vuln/load_pickle.py",
+      "vulnerable": true,
+      "weakness": "CWE-502",
+      "fixed": false
+    },
+    {
+      "file": "fixed/load_pickle.py",
+      "vulnerable": false,
+      "weakness": "CWE-502 (patched)",
+      "fixed": true
+    },
+    {
+      "file": "vuln/os_system.py",
+      "vulnerable": true,
+      "weakness": "CWE-78",
+      "fixed": false
+    },
+    {
+      "file": "fixed/os_system.py",
+      "vulnerable": false,
+      "weakness": "CWE-78 (patched)",
+      "fixed": true
+    },
+    {
+      "file": "vuln/weak_hash.py",
+      "vulnerable": true,
+      "weakness": "CWE-327",
+      "fixed": false
+    },
+    {
+      "file": "fixed/weak_hash.py",
+      "vulnerable": false,
+      "weakness": "CWE-327 (patched)",
+      "fixed": true
+    },
+    {
+      "file": "vuln/temp_file.py",
+      "vulnerable": true,
+      "weakness": "CWE-377",
+      "fixed": false
+    },
+    {
+      "file": "fixed/temp_file.py",
+      "vulnerable": false,
+      "weakness": "CWE-377 (patched)",
+      "fixed": true
+    },
+    {
+      "file": "clean/evaluator.py",
+      "vulnerable": false,
+      "weakness": "decoy",
+      "fixed": false
+    },
+    {
+      "file": "clean/loader.py",
+      "vulnerable": false,
+      "weakness": "decoy",
+      "fixed": false
+    }
+  ]
+}

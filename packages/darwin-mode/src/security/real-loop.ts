@@ -15,7 +15,15 @@ import { SemgrepDetectorOracle, type LabeledTarget } from './semgrep-oracle.js';
 import { fnv1a, round6 } from './util.js';
 
 /** A weakness pattern the generator can synthesize a real Semgrep rule for. */
-export type RulePatternKey = 'eval' | 'exec' | 'shell-true' | 'yaml-load' | 'pickle-loads';
+export type RulePatternKey =
+  | 'eval'
+  | 'exec'
+  | 'shell-true'
+  | 'yaml-load'
+  | 'pickle-loads'
+  | 'os-system'
+  | 'weak-hash'
+  | 'mktemp';
 
 /** Real Semgrep rule snippets, keyed by weakness. Defensive detection only. */
 const RULE_SNIPPETS: Record<RulePatternKey, string> = {
@@ -44,6 +52,21 @@ const RULE_SNIPPETS: Record<RulePatternKey, string> = {
     severity: ERROR
     message: CWE-502 unsafe deserialization (pickle.loads)
     pattern: pickle.loads(...)`,
+  'os-system': `  - id: ds-os-system
+    languages: [python]
+    severity: ERROR
+    message: CWE-78 OS command injection via os.system()
+    pattern: os.system(...)`,
+  'weak-hash': `  - id: ds-weak-hash
+    languages: [python]
+    severity: WARNING
+    message: CWE-327 weak hash (md5)
+    pattern: hashlib.md5(...)`,
+  mktemp: `  - id: ds-mktemp
+    languages: [python]
+    severity: WARNING
+    message: CWE-377 insecure temp file (tempfile.mktemp)
+    pattern: tempfile.mktemp(...)`,
 };
 
 /** Synthesize a real Semgrep rule YAML covering the given weakness patterns. */

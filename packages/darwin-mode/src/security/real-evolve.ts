@@ -14,8 +14,13 @@ import { bootstrapDelta, type BootstrapResult } from './stats.js';
 import { SemgrepDetectorOracle, type LabeledTarget } from './semgrep-oracle.js';
 import { generateSemgrepRule, perFileScores, type RulePatternKey } from './real-loop.js';
 
-/** The full weakness vocabulary the detector population draws from. */
+/** The default weakness vocabulary the detector population draws from. */
 export const ALL_PATTERNS: RulePatternKey[] = ['eval', 'exec', 'shell-true', 'yaml-load', 'pickle-loads'];
+
+/** The full weakness vocabulary, including command/crypto/temp-file classes. */
+export const FULL_VOCABULARY: RulePatternKey[] = [
+  'eval', 'exec', 'shell-true', 'yaml-load', 'pickle-loads', 'os-system', 'weak-hash', 'mktemp',
+];
 
 /** A detector genome: a set of weakness patterns the harness chose to cover. */
 export interface DetectorGenome {
@@ -59,6 +64,8 @@ export interface RealEvolveConfig {
   baseline?: RulePatternKey[];
   eliteFraction?: number;
   oracle?: SemgrepDetectorOracle;
+  /** Weakness vocabulary to evolve over (default ALL_PATTERNS). */
+  vocabulary?: RulePatternKey[];
 }
 
 const key = (p: RulePatternKey[]): string => [...new Set(p)].sort().join(',');
@@ -66,12 +73,12 @@ const key = (p: RulePatternKey[]): string => [...new Set(p)].sort().join(',');
 const mean = (xs: number[]): number => (xs.length ? round6(xs.reduce((a, b) => a + b, 0) / xs.length) : 0);
 
 /** Toggle one pattern on/off — the bounded mutation operator (deterministic). */
-function mutatePatterns(patterns: RulePatternKey[], rng: () => number): RulePatternKey[] {
+function mutatePatterns(patterns: RulePatternKey[], rng: () => number, vocab: RulePatternKey[]): RulePatternKey[] {
   const set = new Set(patterns);
-  const pick = ALL_PATTERNS[Math.floor(rng() * ALL_PATTERNS.length)];
+  const pick = vocab[Math.floor(rng() * vocab.length)];
   if (set.has(pick)) set.delete(pick);
   else set.add(pick);
-  return ALL_PATTERNS.filter((p) => set.has(p)); // canonical order
+  return vocab.filter((p) => set.has(p)); // canonical order
 }
 
 /**
@@ -97,6 +104,7 @@ export function evolveDetectorsReal(cfg: RealEvolveConfig): RealEvolveResult {
   const seed = cfg.seed ?? 0;
   const eliteFraction = cfg.eliteFraction ?? 0.34;
   const baselinePatterns = cfg.baseline ?? ['eval'];
+  const vocab = cfg.vocabulary ?? ALL_PATTERNS;
   const rng = makeRng(seed);
 
   // Fitness cache: semgrep is expensive, and rule-sets recur across generations.
@@ -136,7 +144,7 @@ export function evolveDetectorsReal(cfg: RealEvolveConfig): RealEvolveResult {
   // generations rather than handed out at init — a climbing curve is the evidence.
   let population: DetectorGenome[] = [baseGenome];
   for (let i = 1; i < popSize; i += 1) {
-    const subset = ALL_PATTERNS.filter(() => rng() < 0.2);
+    const subset = vocab.filter(() => rng() < 0.2);
     population.push({ id: `g0-${i}`, parentId: 'baseline', patterns: subset });
   }
 
@@ -160,7 +168,7 @@ export function evolveDetectorsReal(cfg: RealEvolveConfig): RealEvolveResult {
     let idx = 0;
     while (next.length < popSize) {
       const parent = elites[idx % elites.length];
-      const childPatterns = mutatePatterns(parent.patterns, rng);
+      const childPatterns = mutatePatterns(parent.patterns, rng, vocab);
       const child: DetectorGenome = { id: `g${gen + 1}-${next.length}`, parentId: parent.id, patterns: childPatterns };
       lineageParent.set(child.id, parent.id);
       next.push(child);

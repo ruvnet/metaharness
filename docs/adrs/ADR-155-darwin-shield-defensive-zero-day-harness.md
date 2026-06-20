@@ -469,9 +469,9 @@ sufficient — the higher-leverage step is evolving the *invariants* themselves.
 | # | Component | Status |
 |---|---|---|
 | 1 | seeded corpus (deterministic regression) | ✅ landed |
-| 2 | real CVE corpus (realism) | ⛳ gap (needs real repos) |
+| 2 | real CVE corpus (realism) | ◑ real-CVE-*shaped* benchmark landed (`cwe-bench`: 8 CWE classes, pre-fix/post-fix pairs, scored by real Semgrep); real scraped repos still pending |
 | 3 | fuzzable harness corpus (discovery) | ◑ real fuzzer landed (`RealFuzzOracle`, python property fuzzer); corpus still small |
-| 4 | hard false-positive corpus (trust) | ◑ partial (`hardCorpus`, tricky decoys) |
+| 4 | hard false-positive corpus (trust) | ✅ patched twins are hard negatives — a detector firing on the *fixed* code is a false positive (`cwe-bench`, 8 fix-pairs, champion FP 0) |
 | 5 | replay receipts (auditability) | ✅ landed |
 | 6 | paired bootstrap (promotion) | ✅ landed |
 | 7 | lineage / metaproductivity score | ✅ landed (`LineageMemory`) |
@@ -484,11 +484,15 @@ sufficient — the higher-leverage step is evolving the *invariants* themselves.
 > receipts, and is now positioned to move from seeded validation to real analyzer
 > and fuzzer oracles.
 
-We **do not** claim full autonomous zero-day SOTA until real Semgrep, CodeQL, and
-fuzzing are wired. The invariant-falsification and rule-synthesis loops currently
-run against **deterministic mock oracles** (`MockFuzzOracle`, `MockDetectorOracle`)
-so the architecture, gates, statistics, and receipts are real and tested; the
-oracle *adapters* are the Phase-2/3 production work.
+**Update (Phase 2 landed):** real **Semgrep** and a real **property fuzzer** are
+now wired behind the identical interfaces and drive the loops end-to-end — real
+Semgrep is the in-loop judge AND the fitness function of the evolutionary search
+(`real-evolve.ts`), and the real fuzzer falsifies the totality invariant
+(`fuzz-oracle.ts`), each verified live with committed receipts. The mock oracles
+remain for the deterministic suite (green when the tools are absent). We still
+**do not** claim full autonomous zero-day SOTA: the two remaining gates are a
+real **scraped CVE corpus at scale** (the `cwe-bench` real-CVE-*shaped* benchmark
+is the bridge) and **CodeQL** (Phase 3).
 
 ### Acceptance test (the bar for "beyond SOTA, validated")
 
