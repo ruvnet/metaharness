@@ -39,13 +39,21 @@ export interface Checkpoint {
 export class CheckpointStore {
   private map = new Map<string, Checkpoint[]>();
 
-  /** Append (or replace by step) a checkpoint for its run, keeping step order. */
+  /** Append (or replace by step) a checkpoint for its run, keeping step order.
+   *  Steps normally arrive in order, so the common path is an O(1) push with no
+   *  re-sort; we only sort when a checkpoint actually lands out of step order. */
   save(cp: Checkpoint): void {
     const list = this.map.get(cp.runId) ?? [];
     const existing = list.findIndex((c) => c.step === cp.step);
-    if (existing >= 0) list[existing] = cp;
-    else list.push(cp);
-    list.sort((a, b) => a.step - b.step);
+    if (existing >= 0) {
+      // Replace in place; the existing entry's position already preserved order.
+      list[existing] = cp;
+    } else {
+      const last = list[list.length - 1];
+      list.push(cp);
+      // Only re-sort if the new step broke the ascending-by-step invariant.
+      if (last !== undefined && cp.step < last.step) list.sort((a, b) => a.step - b.step);
+    }
     this.map.set(cp.runId, list);
   }
 

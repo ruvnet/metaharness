@@ -1,0 +1,81 @@
+{
+  "experiment": "Darwin model bake-off — cost per passing task across cheap + open-frontier lanes",
+  "tasks": 5,
+  "taskNames": [
+    "factorial",
+    "is_prime",
+    "roman_to_int",
+    "longest_common_prefix",
+    "two_sum"
+  ],
+  "perModel": [
+    {
+      "model": "qwen/qwen-2.5-7b-instruct",
+      "lane": "cheap",
+      "passed": 4,
+      "of": 5,
+      "costUSD": 0.000055,
+      "costPerPassingTaskUSD": 0.000014
+    },
+    {
+      "model": "meta-llama/llama-3.3-70b-instruct",
+      "lane": "cheap",
+      "passed": 4,
+      "of": 5,
+      "costUSD": 0.000183,
+      "costPerPassingTaskUSD": 0.000046
+    },
+    {
+      "model": "google/gemini-2.5-flash-lite",
+      "lane": "cheap",
+      "passed": 4,
+      "of": 5,
+      "costUSD": 0.000402,
+      "costPerPassingTaskUSD": 0.000101
+    },
+    {
+      "model": "z-ai/glm-4.7-flash",
+      "lane": "cheap",
+      "passed": 0,
+      "of": 5,
+      "costUSD": 0.001019,
+      "costPerPassingTaskUSD": null
+    },
+    {
+      "model": "z-ai/glm-5.2",
+      "lane": "frontier",
+      "passed": 4,
+      "of": 5,
+      "costUSD": 0.002306,
+      "costPerPassingTaskUSD": 0.000576
+    },
+    {
+      "model": "z-ai/glm-4.7",
+      "lane": "frontier",
+      "passed": 1,
+      "of": 5,
+      "costUSD": 0.004317,
+      "costPerPassingTaskUSD": 0.004317
+    }
+  ],
+  "recommendation": {
+    "bestCheapLane": {
+      "model": "qwen/qwen-2.5-7b-instruct",
+      "passed": 4,
+      "costPerPassingTaskUSD": 0.000014
+    },
+    "bestFrontierLane": {
+      "model": "z-ai/glm-5.2",
+      "passed": 4,
+      "costPerPassingTaskUSD": 0.000576
+    },
+    "escalationUnnecessaryForThisTaskClass": true,
+    "cheapModelMatchingFrontier": {
+      "model": "qwen/qwen-2.5-7b-instruct",
+      "passed": 4,
+      "costPerPassingTaskUSD": 0.000014
+    },
+    "rationale": "Cheap model qwen/qwen-2.5-7b-instruct matches the best frontier pass rate (4/5) at far lower cost per passing task — escalation is unnecessary for this task class."
+  },
+  "note": "Real LLM calls; single non-deterministic run. Each client capped at maxRequests=8 (budget guard). GLM-5.2 sees exactly 5 calls (≤12 cap). \"Passing\" = generated function passes hidden unit tests run in an isolated python subprocess. Cost from token usage × OpenRouter pricing."
+}

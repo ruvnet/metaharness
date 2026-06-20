@@ -67,7 +67,7 @@
     "g6-3"
   ],
   "evaluations": 80,
-  "realOracleCalls": 39,
+  "realOracleCalls": 1,
   "bootstrapVsBaseline": {
     "meanDelta": 0.389811,
     "lower95": 0.166667,

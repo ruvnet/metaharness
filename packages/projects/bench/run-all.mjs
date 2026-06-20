@@ -11,9 +11,14 @@ import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 const resultsDir = join(here, 'results');
 
+// Real-LLM / bakeoff benches make paid API calls and are slow; run-all only runs
+// the deterministic, free benches. Exclude anything matching `-llm.bench.mjs` or
+// `bakeoff`. (integrated.bench.mjs stays in — it is deterministic.)
+const isExcluded = (f) => /-llm\.bench\.mjs$/.test(f) || f.includes('bakeoff');
+
 // Per-module benches first, then the integrated acceptance scenario last.
 const benches = readdirSync(here)
-  .filter((f) => f.endsWith('.bench.mjs') && f !== 'integrated.bench.mjs')
+  .filter((f) => f.endsWith('.bench.mjs') && f !== 'integrated.bench.mjs' && !isExcluded(f))
   .sort();
 benches.push('integrated.bench.mjs');
 

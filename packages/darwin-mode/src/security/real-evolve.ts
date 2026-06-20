@@ -12,7 +12,7 @@
 import { makeRng, fnv1a, round6 } from './util.js';
 import { bootstrapDelta, type BootstrapResult } from './stats.js';
 import { SemgrepDetectorOracle, type LabeledTarget } from './semgrep-oracle.js';
-import { generateSemgrepRule, perFileScores, type RulePatternKey } from './real-loop.js';
+import { generateSemgrepRule, type RulePatternKey } from './real-loop.js';
 
 /** The default weakness vocabulary the detector population draws from. */
 export const ALL_PATTERNS: RulePatternKey[] = ['eval', 'exec', 'shell-true', 'yaml-load', 'pickle-loads'];
@@ -107,23 +107,42 @@ export function evolveDetectorsReal(cfg: RealEvolveConfig): RealEvolveResult {
   const vocab = cfg.vocabulary ?? ALL_PATTERNS;
   const rng = makeRng(seed);
 
-  // Fitness cache: semgrep is expensive, and rule-sets recur across generations.
-  const cleanCount = corpus.labels.filter((l) => !l.vulnerable).length;
-  const fitnessCache = new Map<string, { perFile: number[]; falsePositives: number }>();
+  // OPTIMIZATION: one-shot per-pattern precompute. Semgrep rules match
+  // INDEPENDENTLY, so a rule-set's detections are exactly the UNION of its
+  // patterns' detections. We therefore run semgrep ONCE over the whole vocabulary,
+  // bucket findings by rule-id (`ds-<pattern>`), and then score every candidate in
+  // memory with zero further semgrep calls — identical results, O(1) oracle cost
+  // instead of one invocation per evaluated rule-set.
   let oracleCalls = 0;
+  const perPattern = new Map<RulePatternKey, Set<string>>();
+  for (const p of vocab) perPattern.set(p, new Set<string>());
+  if (vocab.length > 0) {
+    oracleCalls += 1;
+    for (const f of oracle.run(generateSemgrepRule(vocab), corpus.dir)) {
+      const pat = f.ruleId.replace(/^ds-/, '') as RulePatternKey;
+      perPattern.get(pat)?.add(f.path);
+    }
+  }
+
+  // Fitness cache (cheap in-memory union scoring; cache avoids recomputation).
+  const fitnessCache = new Map<string, { perFile: number[]; falsePositives: number }>();
   const score = (patterns: RulePatternKey[]): { perFile: number[]; falsePositives: number } => {
     const k = key(patterns);
     const cached = fitnessCache.get(k);
     if (cached) return cached;
-    let result: { perFile: number[]; falsePositives: number };
-    if (patterns.length === 0) {
-      // Empty detector: catches nothing — vuln files score 0, clean files score 1.
-      result = { perFile: corpus.labels.map((l) => (l.vulnerable ? 0 : 1)), falsePositives: 0 };
-    } else {
-      oracleCalls += 1;
-      const r = perFileScores(oracle, generateSemgrepRule(patterns), corpus);
-      result = { perFile: r.scores, falsePositives: r.falsePositives };
+    const detected = new Set<string>();
+    for (const p of patterns) for (const file of perPattern.get(p) ?? []) detected.add(file);
+    const perFile: number[] = [];
+    let falsePositives = 0;
+    for (const label of corpus.labels) {
+      const hit = detected.has(label.file);
+      if (label.vulnerable) perFile.push(hit ? 1 : 0);
+      else {
+        perFile.push(hit ? 0 : 1);
+        if (hit) falsePositives += 1;
+      }
     }
+    const result = { perFile, falsePositives };
     fitnessCache.set(k, result);
     return result;
   };

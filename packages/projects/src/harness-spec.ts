@@ -212,6 +212,22 @@ export function defaultSpec(): HarnessSpec {
 // trace + hash, so a policy/structure mutation is observable as a hash delta.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Per-step content-hash cache. A step's hash depends only on its (immutable)
+// content, so it is identical across every seed/replay of the same spec. The bench
+// re-replays one spec across many seeds; memoizing keyed by the step object avoids
+// re-hashing each step on every call. WeakMap so entries vanish with the step.
+const STEP_HASH_CACHE = new WeakMap<StepSpec, string>();
+
+/** hashJson(step), cached per step object (content is immutable post-genomeToSpec). */
+function stepHashOf(step: StepSpec): string {
+  let h = STEP_HASH_CACHE.get(step);
+  if (h === undefined) {
+    h = hashJson(step);
+    STEP_HASH_CACHE.set(step, h);
+  }
+  return h;
+}
+
 /**
  * Deterministically "run" a spec. For each step the output is fixedOutputs[id] when
  * provided, else a value derived purely from makeRng(seed) advanced per-step plus
@@ -235,7 +251,7 @@ export function replaySpec(
       // Derive a stable value from the seeded stream + the step's content hash.
       // Advancing rng once per step keeps it order-sensitive yet fully deterministic.
       const draw = rng();
-      const stepHash = hashJson(step);
+      const stepHash = stepHashOf(step);
       output = { v: round6(draw), h: stepHash, role: step.role };
     }
     trace.push({ stepId: step.id, output });

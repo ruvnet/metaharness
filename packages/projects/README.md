@@ -88,7 +88,19 @@ The integrated acceptance scenario (100 tasks × 3 repos) composes the modules i
 
 ## Real LLM measurement (optional)
 
-Everything above is a deterministic synthetic simulation. There is **one optional benchmark that makes real model calls** — `bench/handoff-llm.bench.mjs` — to validate the typed-handoff claim (ADR-163) against a real model. It is gated on `OPENROUTER_API_KEY` (skips with exit 0 when absent), kept out of the deterministic suite, has a hard request cap, and reads the key from the environment only (never logged or committed). The client itself is unit-tested with a mocked `fetch` (deterministic, no spend).
+Everything above is a deterministic synthetic simulation. There are **optional benchmarks that make real model calls** — `bench/handoff-llm.bench.mjs`, `bench/escalation-llm.bench.mjs`, `bench/model-bakeoff.bench.mjs`. All are gated on `OPENROUTER_API_KEY` (skip with exit 0 when absent), kept out of the deterministic suite, have hard request caps, and read the key from the environment only (never logged or committed). The client (`src/openrouter.ts`) is unit-tested with a mocked `fetch` (deterministic, no spend), and the escalation policy it informs lives in `src/router.ts` (also unit-tested without real calls).
+
+### Cost per passing task — the metric that matters (GLM as an open-frontier lane)
+
+The acceptance test is **cost per *passing* task**, not raw benchmark score. `escalation-llm.bench.mjs` runs a real Darwin loop (generate → verify by running the code against hidden tests in an isolated subprocess → escalate) over 10 small coding tasks; `model-bakeoff.bench.mjs` compares lanes. Real runs (single, non-deterministic; receipts `escalation-llm.json`, `model-bakeoff.json`):
+
+| Lane | Pass | Cost / passing task |
+|---|---|---|
+| cheap — `qwen/qwen-2.5-7b-instruct` | 8/10 | **$0.00001** |
+| open-frontier — `z-ai/glm-5.2` (1M ctx) | 8/10 | $0.00051 (**~51×**) |
+| escalation (cheap → GLM on verify-fail) | 8/10 (+0 recovered) | $0.00013 |
+
+**Honest finding:** on this (easy) task class the cheap 7B model matched GLM-5.2's pass rate, so escalation recovered nothing and the frontier lane cost ~51× more per passing task. This *confirms* the framing — GLM-5.2 is not the model you run everywhere; it's the open, MIT-licensed, 1M-context escalation lane you reserve for hard, long-horizon work where a cheap model genuinely can't reach. The task set here is too easy to exercise that; demonstrating GLM's edge needs a harder corpus (the standing real-CVE / repo-scale gap).
 
 **A/B design (isolates one variable):** a 3-hop planner→coder→tester chain over 6 tasks. In **typed** mode the prompt names the contract's exact output fields; in **free-form** mode it just asks for "JSON". *Both* validate the output against the same schema with the real `validateHandoff()` and retry identically on failure — so the only difference is whether the contract was specified up front.
 
