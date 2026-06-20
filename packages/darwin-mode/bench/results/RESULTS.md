@@ -368,3 +368,20 @@ The two levers stack: a better cheap base banks more pre-escalation, so the same
 escalation compounds higher (33.3% → 40.3%). Blended ~$0.39/instance ($33.51 v4-pro + $84.23 sonnet-4).
 In-loop 25 → batch 33 (batch authoritative). The cheap-base+tiering paradigm has more room than the
 15.3%-era "architecture ceiling" analysis assumed; 65–88% agentic-SOTA still needs a multi-step agent.
+
+## 17. Three-tier hybrid — 58.3% on SWE-bench Lite, verified (ADR-154)
+
+Full escalation hierarchy, official batch eval + independent reproducibility check:
+
+| stage | resolved | Wilson 95% CI |
+|---|---|---|
+| v4-pro + Scholar (2-tier, §16) | 121/300 = 40.3% | [34.9, 46.0] |
+| **+ Sage (opus-4.8) — 3-tier** | **175/300 = 58.3%** | **[52.7, 63.8]** |
+
+**58.3% = 7.6× the 7.7% baseline.** Tiers: v4-pro (88) → sonnet-4 Scholar +33 → opus-4.8 Sage +54.
+The Sage in-loop said 23 but batch credited +55; an **independent re-eval of all 55 sage-added
+instances reproduced 55/55 (100%)** — the in-loop was a false-negative artifact of killing wedged
+Docker containers mid-run. **Conservative LOWER bound**: the Sage was only 144/179 of the residual
+(budget guard stopped it); a full Sage pass can only raise it. Blended ~$0.74/instance ($222 for the
+3-tier on 300) vs $1–20/instance for frontier agents. 15.3% → 58.3% via compounding model+tiering
+levers — the "architecture ceiling" was not a paradigm limit. Agentic loop (ADR-153) is the path to 65–88%.
