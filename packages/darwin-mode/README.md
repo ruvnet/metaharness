@@ -285,6 +285,7 @@ context + symbol-aware localization + search/replace patch, `deepseek-chat`, ~$0
 | + LLM localization | 24/300 = **8.0%** | [5.4, 11.6] | 146 |
 | **+ closed-loop repair (test-feedback, ≤3)** | 46/300 = **15.3%** | **[11.7, 19.8]** | 149 |
 | **+ swap base → deepseek-v4-pro (cheap)** | 88/300 = **29.3%** | **[24.5, 34.7]** | 151 |
+| **+ v4-pro + Scholar hybrid** | 121/300 = **40.3%** | **[34.9, 46.0]** | 152 |
 | **+ Barbarian&Scholar hybrid (cheap+frontier tail)** | 100/300 = **33.3%** | **[28.2, 38.8]** | 148 |
 
 The closed-loop repair loop **~doubles** the resolve-rate (7.7% → 15.3%) on the *same cheap model*

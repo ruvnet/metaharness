@@ -352,3 +352,19 @@ deepseek-V3 → deepseek-v4-pro; full 300, official batch eval, 0 errors:
 exhausted regardless of model IQ." v4-pro-alone (29.3%) reaches **88% of the V3+Scholar hybrid (33.3%,
 §14) at ~⅓ the blended cost** and no frontier pass. Next: v4-pro + Scholar hybrid on the 212-tail →
 expected new ceiling ~40%+. In-loop 84 → batch **88** (batch authoritative).
+
+## 16. v4-pro + Scholar hybrid — new ceiling 40.3% (ADR-152)
+
+Stronger cheap base (v4-pro, §15) banks 88/300, then sonnet-4 Scholar escalates only the 212 tail.
+Full 300, official batch eval, 0 errors:
+
+| stage | resolved | Wilson 95% CI |
+|---|---|---|
+| V3 + Scholar hybrid (§14) | 100/300 = 33.3% | [28.2, 38.8] |
+| **v4-pro + Scholar hybrid** | **121/300 = 40.3%** | **[34.9, 46.0]** |
+
+**40.3% = 5.2× the 7.7% baseline** (88 v4-pro + 33 Scholar-tail; tail recovery 33/212 = 15.6%).
+The two levers stack: a better cheap base banks more pre-escalation, so the same frontier-tail
+escalation compounds higher (33.3% → 40.3%). Blended ~$0.39/instance ($33.51 v4-pro + $84.23 sonnet-4).
+In-loop 25 → batch 33 (batch authoritative). The cheap-base+tiering paradigm has more room than the
+15.3%-era "architecture ceiling" analysis assumed; 65–88% agentic-SOTA still needs a multi-step agent.
