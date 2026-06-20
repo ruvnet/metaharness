@@ -195,6 +195,21 @@
       "name": "Beyond SOTA: champion STATISTICALLY beats the previous champion",
       "pass": true,
       "detail": "lower95 0.20225 > 0, meanDelta 0.287181, p=0, unsafe-regression=false"
+    },
+    {
+      "name": "Compounding: false-positive repeat-rate drop ≥ 35%",
+      "pass": true,
+      "detail": "−100% (cold 4 → warm 0)"
+    },
+    {
+      "name": "Compounding: patch-reuse improvement ≥ 20%",
+      "pass": true,
+      "detail": "+100%"
+    },
+    {
+      "name": "Compounding: seeded genomes beat random ≥ 15%",
+      "pass": true,
+      "detail": "+47.1209% (seeded 0.724938 vs random 0.49275)"
     }
   ],
   "passed": true,
@@ -275,5 +290,26 @@
     "prevMeanFitness": 0.5155,
     "unsafeRegression": false,
     "pValue": 0
+  },
+  "compounding": {
+    "fpRepeatDrop": {
+      "cold": 4,
+      "warm": 0,
+      "drop": 1,
+      "pass": true
+    },
+    "patchReuse": {
+      "withMemory": 1,
+      "withoutMemory": 0,
+      "improvement": 1,
+      "pass": true
+    },
+    "seededVsRandom": {
+      "seededMean": 0.724938,
+      "randomMean": 0.49275,
+      "advantage": 0.471209,
+      "pass": true
+    },
+    "passed": true
   }
 }

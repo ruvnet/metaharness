@@ -285,6 +285,10 @@ the TypeScript module is the validated prototype that proves the loop.
 | Reproducible from receipts | 100% | **byte-identical re-run** |
 | Champion beats every baseline | yes | **yes** |
 | **Beyond SOTA**: champion *statistically* beats the previous champion | lower-95% Δ > 0 | **+0.20 (p=0)**, paired seeded bootstrap, zero unsafe regression |
+| Compounding: false-positive repeat-rate drop | ≥ 35% | **100%** (negative memory) |
+| Compounding: patch-reuse improvement | ≥ 20% | **100%** (patch memory) |
+| Compounding: seeded genomes beat random | ≥ 15% | **+47%** (genome memory) |
+| Retrieval recall@20 / latency p95 | ≥ 0.85 / ≤ 150 ms | **met** |
 
 Coverage: 4 baselines (static / LLM single-pass / fixed agent / Darwin), ~80
 unit/integration/regression/swarm/perf tests, all deterministic. What is

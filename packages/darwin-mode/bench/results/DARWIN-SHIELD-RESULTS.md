@@ -24,12 +24,21 @@ Corpus: `darwin-shield-bench@1.0.0` — 10 ground-truth vulns, 9 decoys. 50 evol
 - ✅ **All runs reproducible from receipts** — B0=593274e6 B1=2589863b B2=92a56965 B3=5991a555
 - ✅ **Champion beats every baseline on fitness** — B3 0.93275 vs [0.5665, 0.1365, 0.598]
 - ✅ **Beyond SOTA: champion STATISTICALLY beats the previous champion** — lower95 0.20225 > 0, meanDelta 0.287181, p=0, unsafe-regression=false
+- ✅ **Compounding: false-positive repeat-rate drop ≥ 35%** — −100% (cold 4 → warm 0)
+- ✅ **Compounding: patch-reuse improvement ≥ 20%** — +100%
+- ✅ **Compounding: seeded genomes beat random ≥ 15%** — +47.1209% (seeded 0.724938 vs random 0.49275)
 
 ## Statistical promotion (champion vs previous champion)
 
 - mean per-repo Δ: **0.287181** (prev 0.5155 → new 0.80275)
 - lower-95% bound: **0.20225** (> 0 required), one-sided p = 0
 - verdict: ✅ statistically superior — promoted: lower95 0.20225 > 0, meanDelta 0.287181, zero unsafe
+
+## Compounding (ruVector memory makes the next run smarter)
+
+- false-positive repeat-rate drop: **100%** (≥ 35% required) ✅
+- patch-reuse improvement: **100%** (≥ 20% required) ✅
+- seeded-vs-random advantage: **47.1209%** (≥ 15% required) ✅
 
 ## Champion genome
 
