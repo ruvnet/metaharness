@@ -479,3 +479,59 @@ invariant falsification (real fuzzer behind `FuzzOracle`). 3. generated
 detection-rule synthesis (landed, mock). 4. generated invariant synthesis (landed,
 mock). 5. metaproductivity ranking in ruVector (landed). 6. CodeQL after Semgrep +
 fuzzing are stable. 7. publish DARWIN-SHIELD-BENCH as a reproducibility artifact.
+
+---
+
+## Addendum C — Bounded security agentic loop (the architectural frontier)
+
+**Status**: Proposed (architecture landed with deterministic mock oracles —
+`src/security/agentic.ts`)
+
+### Context
+
+Issue #39 established, on the coding side, that the single-shot paradigm
+(localize → emit → repair, plus model/tiering escalation) tops out (SWE-bench Lite
+7.7% → 58.3%) and the gap to the 65–88% tier is **architectural, not tuning**: it
+needs a multi-step autonomous loop that *discovers* context (ADR-153). Darwin
+Shield hits the identical wall — a single-shot analyzer is structurally blind to a
+weakness whose evidence spans multiple files / call edges.
+
+### Decision
+
+Add a **bounded security agentic loop** — the security analog of ADR-153's
+`--sandbox agentic`. A deterministic, step-budgeted ReAct-style loop over a
+RESTRICTED, gated tool surface: `list_sites`, `read_site`, `grep`, `run_analyzer`,
+`run_fuzzer`, `assert_invariant`, `submit_finding` — every tool read-only or
+oracle-only (no write / network / shell; `FORBIDDEN_TOOLS` is asserted in tests).
+The loop pays the `discoveryDepth` navigation cost to *surface* a multi-step bug,
+then confirms it via invariant falsification (Addendum B) — a real counterexample,
+so clean code and decoys never produce false positives. Every submitted finding
+passes the safety gate; the step trace is the audit receipt.
+
+Per ADR-153, the loop's **policy is the evolvable surface** (`AgenticPolicy`: step
+budget, tool order, planner, whether it fuzzes) — Darwin's mutation surfaces become
+the loop's policy.
+
+### Result (deterministic, mock oracles)
+
+On a discovery corpus where most vulns require multi-step navigation:
+
+| harness | TPR | FP | bounded | deterministic |
+|---|---|---|---|---|
+| single-shot (exhausted paradigm) | **0.25** (only shallow bugs) | 0 | — | yes |
+| agentic loop, budget 10 | 0.75 | 0 | ✅ | yes |
+| agentic loop, budget 40 | **1.0** | 0 | ✅ | yes |
+
+Step budget is the lever: more budget discovers monotonically more, never exceeds
+the bound, never emits unsafe output, and replays byte-identically. This is the
+"architectural, not tuning" win #39 names — crossing the discovery wall a
+single-shot harness structurally cannot.
+
+### Non-goals / honesty
+
+The tool surface runs against deterministic mock oracles (`MockFuzzOracle`); a real
+agentic loop would drive real `read`/`grep`/`run_tests`/`run_fuzzer` inside the
+existing safety gate. The architecture, bound, gating, determinism, and receipts
+are real and tested; wiring the real tool surface + real corpora is the remaining
+production step (Addendum A Phase 2 / Addendum B fuzzer). No claim of autonomous
+zero-day SOTA until those land.

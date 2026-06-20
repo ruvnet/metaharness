@@ -48,6 +48,14 @@ export interface CorpusSite {
   /** The accepted fix (text only; never an exploit). Present for real vulns. */
   acceptedPatch?: string;
   riskTags: string[];
+  /**
+   * Multi-step DISCOVERY depth (ADR-155 Addendum C): how many navigation steps
+   * (reading related sites / following call edges) are needed before the
+   * weakness is even visible. 1 (default) = single-shot visible; > 1 = only an
+   * agentic loop that pays the navigation cost can surface it. This is the
+   * "discovery wall" a single-shot harness structurally cannot cross.
+   */
+  discoveryDepth?: number;
 }
 
 export interface CorpusRepo {
