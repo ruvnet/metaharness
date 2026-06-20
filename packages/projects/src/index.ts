@@ -20,3 +20,4 @@ export * from './opportunity.js'; // ADR-165
 export * from './review-gates.js'; // ADR-166
 export * from './openrouter.js'; // optional real-LLM client (ADR-163 real A/B)
 export * from './router.js'; // escalation router policy
+export * from './discovery.js'; // defensive zero-day discovery harness

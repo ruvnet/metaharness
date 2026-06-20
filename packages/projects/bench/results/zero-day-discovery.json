@@ -1,0 +1,59 @@
+{
+  "experiment": "real defensive zero-day discovery harness",
+  "target": "fixture/target.py",
+  "cheapModel": "qwen/qwen-2.5-7b-instruct",
+  "frontierModel": "z-ai/glm-5.2",
+  "semgrep": true,
+  "candidates": 5,
+  "proposed": 4,
+  "verified": 6,
+  "costUnitsMilliUSD": 4.82268,
+  "costPerVerifiedFindingMilliUSD": 0.80378,
+  "findings": [
+    {
+      "fn": "L4",
+      "weakness": "cwe-78-os-system",
+      "source": "static",
+      "verified": true
+    },
+    {
+      "fn": "L7",
+      "weakness": "cwe-94-eval",
+      "source": "static",
+      "verified": true
+    },
+    {
+      "fn": "run_cmd",
+      "weakness": "CWE-78 OS command injection",
+      "source": "runtime",
+      "verified": true,
+      "evidenceClass": "TypeError",
+      "proofArgsRedacted": true
+    },
+    {
+      "fn": "ratio",
+      "weakness": "unhandled exception",
+      "source": "runtime",
+      "verified": true,
+      "evidenceClass": "ZeroDivisionError",
+      "proofArgsRedacted": true
+    },
+    {
+      "fn": "nth",
+      "weakness": "unhandled exception",
+      "source": "runtime",
+      "verified": true,
+      "evidenceClass": "IndexError",
+      "proofArgsRedacted": true
+    },
+    {
+      "fn": "lookup",
+      "weakness": "unhandled exception",
+      "source": "runtime",
+      "verified": true,
+      "evidenceClass": "KeyError",
+      "proofArgsRedacted": true
+    }
+  ],
+  "note": "Defensive: only execution-verified (or tool-verified) weaknesses reported; proof inputs deliberately not emitted (only exception class / CWE). Real LLM calls; single non-deterministic run."
+}
