@@ -322,3 +322,80 @@ adapters is the production follow-up, not a change to the loop.
 - ADR-077–082 — DGM (arXiv:2505.22954), HGM (arXiv:2510.21614), SGM (arXiv:2510.10232), Hyperagents (arXiv:2603.19461), Darwin Plus synthesis, expected-gains/effective-performance metric.
 - ADR-153 — agentic-loop architecture (the bounded ReAct tool surface the security agents run inside).
 - Prior art: Darwin Gödel Machine; AISLE-style AI-assisted vulnerability research (orchestration > foundation model); Semgrep, CodeQL, OSV, `cargo audit`/`cargo deny`, Trivy/Grype/Syft, AFL++/libFuzzer/honggfuzz/`cargo-fuzz`.
+
+---
+
+## Addendum A — Bounded self-writing extension for Darwin Shield
+
+**Status**: Proposed (Phase 1 landed — `src/security/selfwrite.ts`)
+
+### Context
+
+Darwin Shield currently evolves a *configuration* genome (planner, context policy,
+reviewer count, fuzz budget, retrieval depth, scoring weights). This preserves
+deterministic replay and an auditable benchmark, but limits the system to surfaces
+that already exist. The Darwin Mode kernel already supports source generation
+through a `CodeGenerator` hook whose output is validated before it touches disk and
+only on approved surfaces. This addendum extends that pattern to Darwin Shield with
+**stricter** security boundaries. The goal is not arbitrary self-modification — it
+is bounded generation of *defensive detection logic* judged by a real oracle and
+promoted only when it improves validated outcomes with zero unsafe regression.
+
+### Decision
+
+Darwin Shield may add an **opt-in** `ShieldCodeGenerator` path for bounded
+detection-surface synthesis. The initial editable surface is **detection-rule
+synthesis only**.
+
+- **Allowed generated artifacts**: Semgrep rules, CodeQL query snippets, taint
+  heuristics, reviewer prompts, detector configuration modules, adapter
+  normalization helpers.
+- **Forbidden generated artifacts**: policy-enforcement code, safety-gate code,
+  grader code, paired-bootstrap statistics code, corpus manifest code,
+  receipt-verifier code, promotion logic, sandbox-isolation code, network-access
+  logic, credential-handling logic.
+
+The deterministic config mutator **remains the default**; self-writing is opt-in
+and must be explicitly enabled. The safety layer is the referee and stays outside
+the evolutionary surface — **the model proposes, the harness disposes.**
+
+### Determinism contract
+
+A generated candidate is eligible only when its receipt stores all of: generation
+prompt, model id, seed, generated artifact, formatter output, validator output,
+test output, corpus version, tool versions, receipt hash. Promotion must be
+reproducible from receipts; a candidate that cannot be replayed cannot become
+champion.
+
+### Promotion gate (all ten must pass)
+
+1. paired seeded-bootstrap lower-95% delta > 0; 2. unsafe-output regression = 0;
+3. false-positive regression below threshold; 4. true-positive improvement on ≥1
+hard-corpus segment; 5. easy-corpus performance does not mask hard-corpus
+degradation; 6. receipt replay byte-identical; 7. artifact passes static
+validation; 8. artifact stays inside the allowlisted surface; 9. no forbidden file
+modified; 10. runtime budget respected.
+
+### Phases
+
+- **Phase 1 (landed)** — interface + deterministic mock generator + mock oracle +
+  full receipts + the ten-gate decision: `ShieldCodeGenerator`,
+  `GeneratedDetectorCandidate`, `validateGeneratedShieldCode`, `ShieldGenReceipt`,
+  `MockDetectorOracle`, `evaluateCandidate`, `synthesizeAndEvaluate`
+  (`src/security/selfwrite.ts`, 19 tests).
+- **Phase 2** — wire a real Semgrep oracle behind the identical gate (run Semgrep,
+  normalize JSON, compare to corpus labels, store tool/rule versions, promote only
+  through the existing statistics gate).
+- **Phase 3** — add CodeQL only after Semgrep + fuzzing are stable.
+
+### Non-goals
+
+No arbitrary source generation; no exploit generation; no autonomous changes to the
+safety layer; **no claim of production zero-day discovery until real analyzers, real
+repositories, and real validation oracles are wired.**
+
+### Security posture
+
+Generated security code is treated as **untrusted until validated** — candidates,
+not authority. The policy, grader, statistics engine, receipt verifier, and
+promotion gate remain frozen.
