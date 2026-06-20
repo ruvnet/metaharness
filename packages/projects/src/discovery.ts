@@ -48,7 +48,19 @@ export interface VerifiedFinding {
   source: 'static' | 'runtime';
   verified: boolean;
   evidenceClass?: string;
+  /** Severity heuristic (see severityOf): a bare TypeError from wrong-arg-type is
+   *  trivially reachable for almost any function, so it ranks LOW; genuine
+   *  edge-case logic crashes (div-by-zero, OOB, key/value errors) rank higher. */
+  severity?: 'low' | 'medium' | 'high';
   proofArgsRedacted?: boolean; // proof exists but is intentionally not emitted
+}
+
+/** Classify a runtime crash's significance from its exception class. A TypeError
+ *  is usually "you passed the wrong type" (reachable for nearly any function), so
+ *  it is LOW; the classic edge-case faults are more meaningful robustness/DoS bugs. */
+export function severityOf(evidenceClass?: string): 'low' | 'medium' {
+  if (!evidenceClass || evidenceClass === 'TypeError' || evidenceClass === 'AttributeError') return 'low';
+  return 'medium';
 }
 
 export interface DiscoveryLanes {
@@ -173,6 +185,7 @@ export async function runDiscovery(
         source: 'runtime',
         verified: true,
         evidenceClass: outcome.evidenceClass,
+        severity: severityOf(outcome.evidenceClass),
         proofArgsRedacted: true, // a working proof exists; we deliberately do not emit it
       });
     }

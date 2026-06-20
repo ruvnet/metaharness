@@ -1,0 +1,69 @@
+{
+  "experiment": "proposer bake-off on HARD discovery tasks — does the frontier lane earn its cost?",
+  "cheapModel": "qwen/qwen-2.5-7b-instruct",
+  "frontierModel": "z-ai/glm-5.2",
+  "functions": 6,
+  "perFunction": [
+    {
+      "fn": "chunk_size",
+      "cheap": true,
+      "cheapClass": "ZeroDivisionError",
+      "frontier": true,
+      "frontierClass": "ZeroDivisionError",
+      "recoveredByFrontier": false
+    },
+    {
+      "fn": "parse_pair",
+      "cheap": false,
+      "cheapClass": null,
+      "frontier": true,
+      "frontierClass": "ValueError",
+      "recoveredByFrontier": true
+    },
+    {
+      "fn": "nth_last",
+      "cheap": true,
+      "cheapClass": "TypeError",
+      "frontier": true,
+      "frontierClass": "IndexError",
+      "recoveredByFrontier": false
+    },
+    {
+      "fn": "merge",
+      "cheap": false,
+      "cheapClass": null,
+      "frontier": true,
+      "frontierClass": "TypeError",
+      "recoveredByFrontier": true
+    },
+    {
+      "fn": "from_hex",
+      "cheap": true,
+      "cheapClass": "ValueError",
+      "frontier": true,
+      "frontierClass": "ValueError",
+      "recoveredByFrontier": false
+    },
+    {
+      "fn": "clamp",
+      "cheap": false,
+      "cheapClass": null,
+      "frontier": true,
+      "frontierClass": "TypeError",
+      "recoveredByFrontier": true
+    }
+  ],
+  "cheapVerified": 3,
+  "frontierVerified": 6,
+  "recoveredByFrontier": 3,
+  "cost": {
+    "cheapMilliUSD": 0.065,
+    "frontierMilliUSD": 4.981
+  },
+  "costPerVerifiedMilliUSD": {
+    "cheapOnly": 0.0216,
+    "frontierOnly": 0.8302,
+    "escalation": 0.4259
+  },
+  "note": "Real LLM calls, single non-deterministic run. \"Verified\" = the proposed input actually crashes the function (execution-confirmed). clamp is a robust control and should be verified by NEITHER lane."
+}

@@ -7,7 +7,7 @@
 // findings).
 
 import { describe, it, expect, vi } from 'vitest';
-import { runDiscovery, type CodeTarget, type DiscoveryLanes } from '../src/discovery.js';
+import { runDiscovery, severityOf, type CodeTarget, type DiscoveryLanes } from '../src/discovery.js';
 
 const target: CodeTarget = { path: 'x.py', language: 'python', source: 'def f(): pass' };
 
@@ -33,6 +33,15 @@ describe('runDiscovery — verification spine', () => {
     expect(r.verified).toBe(1); // only real_bug confirmed
     expect(r.findings.map((f) => f.fn)).toEqual(['real_bug']);
     expect(r.findings[0]).toMatchObject({ source: 'runtime', verified: true, evidenceClass: 'ZeroDivisionError', proofArgsRedacted: true });
+  });
+
+  it('ranks a bare TypeError below genuine edge-case faults (severity heuristic)', async () => {
+    expect(severityOf('TypeError')).toBe('low'); // "wrong type" — trivially reachable
+    expect(severityOf('AttributeError')).toBe('low');
+    expect(severityOf('ZeroDivisionError')).toBe('medium');
+    expect(severityOf('IndexError')).toBe('medium');
+    const r = await runDiscovery(target, lanes()); // real_bug → ZeroDivisionError
+    expect(r.findings[0].severity).toBe('medium');
   });
 
   it('never emits the proof input (defensive: redacted, only the exception class)', async () => {
