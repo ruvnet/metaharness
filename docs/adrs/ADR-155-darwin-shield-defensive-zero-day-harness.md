@@ -401,6 +401,17 @@ modified; 10. runtime budget respected.
     1.167.0): a broad candidate beat an eval-only incumbent, per-file mean
     0.5 → 1.0, **lower95 0.125 (p 0.004), FP 0** — flagged `yaml.load`, ignored
     `yaml.safe_load` (receipt: `bench/results/semgrep-inloop-receipt.json`).
+  - **Capstone — real oracle DRIVES the evolution (landed)** — `real-evolve.ts`
+    runs the ADR thesis end-to-end with a real tool: a detector population is
+    mutated and SCORED BY REAL semgrep over the labeled corpus, selected by
+    elitism, and evolved for N generations; the champion is certified vs the
+    baseline by the paired bootstrap. Verified live (semgrep 1.167.0, seed 5): a
+    weak eval-only baseline (mean 0.5) evolved to the full 5-weakness detector
+    (mean 1.0, FP 0) along a climbing learning curve **0.5 → 0.625 → 0.75 → 0.75
+    → 0.875 → 1.0** over a 5-step lineage, **lower95 0.125 (p 0.003)** — with a
+    fitness cache (36 evaluations, 15 real semgrep calls). This is "real oracle
+    judges a candidate" → "real oracle drives the evolutionary search" (receipt:
+    `bench/results/semgrep-evolve-receipt.json`).
 - **Phase 3** — add CodeQL only after Semgrep + fuzzing are stable.
 
 ### Non-goals
