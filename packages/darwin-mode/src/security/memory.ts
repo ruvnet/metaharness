@@ -235,3 +235,90 @@ export class RuvSecurityMemory {
 export function centrality(degree: number): number {
   return clamp(degree / 12, 0, 1);
 }
+
+/** A node in the lineage tree, with its measured fitness. */
+interface LineageNode {
+  id: string;
+  parentId: string | null;
+  fitness: number;
+  children: string[];
+}
+
+/**
+ * Metaproductivity lineage memory (ADR-155 Addendum B; HGM, arXiv:2510.21614).
+ * The Huxley–Gödel insight: the best PARENT is not the best current scorer — it
+ * is the variant whose DESCENDANTS improve fastest. ruVector cross-run seeding
+ * should therefore retrieve productive LINEAGES, not just prior winners. This is
+ * the metaproductivity signal that drives that selection. Pure, deterministic.
+ */
+export class LineageMemory {
+  private readonly nodes = new Map<string, LineageNode>();
+
+  /** Record (or update) a variant and link it to its parent. */
+  record(id: string, parentId: string | null, fitness: number): void {
+    const existing = this.nodes.get(id);
+    if (existing) {
+      existing.fitness = fitness;
+      existing.parentId = parentId;
+    } else {
+      this.nodes.set(id, { id, parentId, fitness, children: [] });
+    }
+    if (parentId) {
+      const parent = this.nodes.get(parentId);
+      if (parent && !parent.children.includes(id)) parent.children.push(id);
+    }
+  }
+
+  size(): number {
+    return this.nodes.size;
+  }
+
+  /** All transitive descendant ids of a node (excluding the node itself). */
+  private descendants(id: string): string[] {
+    const out: string[] = [];
+    const stack = [...(this.nodes.get(id)?.children ?? [])];
+    const seen = new Set<string>();
+    while (stack.length) {
+      const cur = stack.pop()!;
+      if (seen.has(cur)) continue;
+      seen.add(cur);
+      out.push(cur);
+      stack.push(...(this.nodes.get(cur)?.children ?? []));
+    }
+    return out;
+  }
+
+  /**
+   * Metaproductivity of a node: the mean fitness of its descendants (a clade-
+   * metaproductivity approximation). A node with no descendants falls back to its
+   * own fitness (we have no evidence its branch is productive yet). This is the
+   * signal HGM selects on — NOT the node's own score.
+   */
+  metaproductivity(id: string): number {
+    const desc = this.descendants(id);
+    if (desc.length === 0) return this.nodes.get(id)?.fitness ?? 0;
+    let sum = 0;
+    for (const d of desc) sum += this.nodes.get(d)?.fitness ?? 0;
+    return round6(sum / desc.length);
+  }
+
+  /**
+   * Top-k parent ids to continue from, ranked by metaproductivity (descendant
+   * potential) rather than raw fitness — so a high-scoring dead-end loses to a
+   * lower-scoring node whose lineage keeps improving.
+   */
+  topByMetaproductivity(k: number): Array<{ id: string; metaproductivity: number; ownFitness: number }> {
+    return [...this.nodes.values()]
+      .map((n) => ({ id: n.id, metaproductivity: this.metaproductivity(n.id), ownFitness: n.fitness }))
+      .sort((a, b) => b.metaproductivity - a.metaproductivity || b.ownFitness - a.ownFitness)
+      .slice(0, k);
+  }
+
+  /** Top-k by raw fitness (the naive baseline metaproductivity improves on). */
+  topByFitness(k: number): string[] {
+    return [...this.nodes.values()]
+      .sort((a, b) => b.fitness - a.fitness)
+      .slice(0, k)
+      .map((n) => n.id);
+  }
+}

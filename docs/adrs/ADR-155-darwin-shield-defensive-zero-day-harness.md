@@ -399,3 +399,83 @@ repositories, and real validation oracles are wired.**
 Generated security code is treated as **untrusted until validated** — candidates,
 not authority. The policy, grader, statistics engine, receipt verifier, and
 promotion gate remain frozen.
+
+---
+
+## Addendum B — Invariant Genome + metaproductivity (the frontier)
+
+**Status**: Proposed (architecture landed with deterministic mock oracles —
+`src/security/invariant.ts`, `LineageMemory` in `src/security/memory.ts`)
+
+### Context
+
+The SOTA frontier for self-improving security is four layers: (1) DGM-style
+self-modifying harnesses validated empirically (arXiv:2505.22954); (2) the
+Huxley–Gödel Machine (arXiv:2510.21614) — select the parent whose *descendants*
+improve fastest, not the best current scorer; (3) agentic security with validation
++ remediation loops (e.g. Microsoft MDASH); (4) **specification-first** discovery
+(Code Augur): the agent writes explicit security assertions, then guided fuzzing
+tries to *falsify* them. Rule synthesis (Addendum A) is necessary but not
+sufficient — the higher-leverage step is evolving the *invariants* themselves.
+
+### Decision
+
+1. **Invariant Genome** (`invariant.ts`). Evolve explicit security assertions —
+   `input-constraint`, `memory-safety`, `auth-boundary`, `serialization`,
+   `path-traversal`, `taint-flow`, `race-condition` — and score each candidate by
+   whether a fuzzer can *falsify* it:
+
+   > agent proposes invariant → fuzzer tries to break it → a violated invariant
+   > becomes a finding → the fixed finding becomes a durable detector + memory.
+
+   **Trust property**: a finding requires an actual counterexample, so clean code
+   and decoys produce **zero false positives** (verified in tests). A falsified
+   invariant is promoted into a durable detector (`falsificationToDetector`) that
+   re-enters the Addendum-A self-writing gate and ruVector memory.
+
+2. **Metaproductivity ranking** (`LineageMemory`). ruVector cross-run seeding
+   selects by **descendant productivity**, not raw score — a low-scoring node with
+   a productive lineage beats a high-scoring dead end (HGM). Don't just retrieve
+   prior winners; retrieve lineages that produced useful descendants.
+
+### Benchmark stack (status)
+
+| # | Component | Status |
+|---|---|---|
+| 1 | seeded corpus (deterministic regression) | ✅ landed |
+| 2 | real CVE corpus (realism) | ⛳ gap (needs real repos) |
+| 3 | fuzzable harness corpus (discovery) | ⛳ gap (needs real fuzzer) |
+| 4 | hard false-positive corpus (trust) | ◑ partial (`hardCorpus`, tricky decoys) |
+| 5 | replay receipts (auditability) | ✅ landed |
+| 6 | paired bootstrap (promotion) | ✅ landed |
+| 7 | lineage / metaproductivity score | ✅ landed (`LineageMemory`) |
+
+### Honest SOTA claim (what we can defend today)
+
+> Darwin Shield is a **deterministic, self-improving security harness**. It does
+> not retrain the model. It evolves the security workflow around the model,
+> promotes only statistically superior candidates, preserves byte-replayable
+> receipts, and is now positioned to move from seeded validation to real analyzer
+> and fuzzer oracles.
+
+We **do not** claim full autonomous zero-day SOTA until real Semgrep, CodeQL, and
+fuzzing are wired. The invariant-falsification and rule-synthesis loops currently
+run against **deterministic mock oracles** (`MockFuzzOracle`, `MockDetectorOracle`)
+so the architecture, gates, statistics, and receipts are real and tested; the
+oracle *adapters* are the Phase-2/3 production work.
+
+### Acceptance test (the bar for "beyond SOTA, validated")
+
+Darwin Shield beats the fixed harness **on a real CVE corpus** with: paired
+bootstrap lower-95% delta > 0; zero unsafe regression; replayable receipts; and
+**at least one fuzzer-falsified invariant promoted into a durable detector.** The
+mock-oracle analogue of this test passes today (`invariant.test.ts`); swapping in
+the real CVE corpus + fuzzer behind the identical interfaces is the remaining step.
+
+### SOTA upgrade path
+
+1. Semgrep as the first real oracle (Addendum A Phase 2). 2. fuzzer-backed
+invariant falsification (real fuzzer behind `FuzzOracle`). 3. generated
+detection-rule synthesis (landed, mock). 4. generated invariant synthesis (landed,
+mock). 5. metaproductivity ranking in ruVector (landed). 6. CodeQL after Semgrep +
+fuzzing are stable. 7. publish DARWIN-SHIELD-BENCH as a reproducibility artifact.

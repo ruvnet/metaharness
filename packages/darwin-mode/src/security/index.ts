@@ -38,5 +38,6 @@ export * from './stats.js';
 export * from './compounding.js';
 export * from './ablation.js';
 export * from './selfwrite.js';
+export * from './invariant.js';
 export * from './evolve.js';
 export * from './bench.js';
