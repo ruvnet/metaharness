@@ -1,0 +1,84 @@
+{
+  "experiment": "real-corpus defensive scan + AI triage (false-positive suppression on real code)",
+  "corpus": "/tmp/corpus",
+  "frontierModel": "z-ai/glm-5.2",
+  "pythonFiles": "147",
+  "rawFindings": 9,
+  "rawByRule": {
+    "cwe-94-eval": 2,
+    "cwe-78-os-system": 1,
+    "cwe-502-pickle": 1,
+    "cwe-94-exec": 3,
+    "cwe-327-md5": 2
+  },
+  "securityRelevantAfterTriage": 3,
+  "suppressedAsBenign": 6,
+  "suppressionRatePct": 66.7,
+  "costMilliUSD": 8.522,
+  "findings": [
+    {
+      "rule": "cwe-94-eval",
+      "where": "_planted/calc_view.py:5",
+      "securityRelevant": true,
+      "severity": "high",
+      "rationale": "Untrusted HTTP request parameter is passed directly to eval(), allowing arbitrary code execution."
+    },
+    {
+      "rule": "cwe-78-os-system",
+      "where": "_planted/net_tools.py:6",
+      "securityRelevant": true,
+      "severity": "high",
+      "rationale": "Untrusted user input from the HTTP request is directly concatenated into an OS command, enabling arbitrary command injection."
+    },
+    {
+      "rule": "cwe-502-pickle",
+      "where": "_planted/state_loader.py:5",
+      "securityRelevant": true,
+      "severity": "high",
+      "rationale": "pickle.loads is called directly on untrusted HTTP request data, enabling arbitrary code execution via malicious payloads."
+    },
+    {
+      "rule": "cwe-94-eval",
+      "where": "flask/cli.py:1031",
+      "securityRelevant": false,
+      "severity": "none",
+      "rationale": "This intentionally mimics the standard Python interpreter's PYTHONSTARTUP behavior, executing a user-controlled local startup script to initialize the shell context, which is by-design and not driven "
+    },
+    {
+      "rule": "cwe-94-exec",
+      "where": "flask/config.py:209",
+      "securityRelevant": false,
+      "severity": "none",
+      "rationale": "This is Flask's by-design from_pyfile mechanism that intentionally loads trusted local Python config files as modules, a documented and spec-mandated framework feature."
+    },
+    {
+      "rule": "cwe-94-exec",
+      "where": "jinja2/debug.py:145",
+      "securityRelevant": false,
+      "severity": "none",
+      "rationale": "This is a by-design use of exec within Jinja2's debug machinery to regenerate a traceback with an internally-constructed code object, not execution of attacker-controlled input."
+    },
+    {
+      "rule": "cwe-94-exec",
+      "where": "jinja2/environment.py:1228",
+      "securityRelevant": false,
+      "severity": "none",
+      "rationale": "This is a by-design use of exec within the Jinja2 template engine to execute compiled template code."
+    },
+    {
+      "rule": "cwe-327-md5",
+      "where": "paramiko/pkey.py:390",
+      "securityRelevant": false,
+      "severity": "none",
+      "rationale": "MD5 is used here to compute the SSH public key fingerprint, which is a spec-mandated identification format and not a cryptographic security control."
+    },
+    {
+      "rule": "cwe-327-md5",
+      "where": "requests/auth.py:179",
+      "securityRelevant": false,
+      "severity": "none",
+      "rationale": ""
+    }
+  ],
+  "note": "Real third-party source (never executed); GLM-5.2 contextual triage of real semgrep hits. Single non-deterministic run. Demonstrates FP suppression: raw SAST on real code is mostly legitimate/by-design uses."
+}

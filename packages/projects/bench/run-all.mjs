@@ -14,7 +14,7 @@ const resultsDir = join(here, 'results');
 // Real-LLM / bakeoff benches make paid API calls and are slow; run-all only runs
 // the deterministic, free benches. Exclude anything matching `-llm.bench.mjs` or
 // `bakeoff`. (integrated.bench.mjs stays in — it is deterministic.)
-const isExcluded = (f) => /-llm\.bench\.mjs$/.test(f) || f.includes('bakeoff') || f.includes('zero-day-discovery');
+const isExcluded = (f) => /-llm\.bench\.mjs$/.test(f) || f.includes('bakeoff') || f.includes('zero-day-discovery') || f.includes('real-corpus') || f.includes('learning-loop');
 
 // Per-module benches first, then the integrated acceptance scenario last.
 const benches = readdirSync(here)
