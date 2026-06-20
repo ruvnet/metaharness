@@ -112,6 +112,9 @@ async function runInstance(inst) {
     };
     const res = await agenticSolve({ problem: inst.problem_statement, io, llm, maxSteps: MAX_STEPS });
     patch = res.patch; totalCost += res.cost; row.steps = res.steps; row.submitted = res.submitted; row.resolvedInLoop = res.resolvedInLoop;
+    // tool-call histogram + the per-step trace (capped) — debuggability for the next-arc tuning.
+    row.toolHist = res.transcript.reduce((h, t) => { const k = (t.actionRaw.match(/"tool":"(\w+)"|"raw"/) || [])[1] || 'noop'; h[k] = (h[k] || 0) + 1; return h; }, {});
+    row.trace = res.transcript.map((t) => `${t.actionRaw} => ${t.obs.slice(0, 120)}`);
   } catch (e) { row.error = String(e).split('\n')[0].slice(0, 200); }
   finally { if (work) try { rmSync(work, { recursive: true, force: true }); } catch { /**/ } }
   appendFileSync(OUT, JSON.stringify({ instance_id: inst.instance_id, model_name_or_path: 'darwin-agentic', model_patch: patch }) + '\n');
