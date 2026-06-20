@@ -1,6 +1,6 @@
 # ADR-165: Darwin Opportunity Scanner — ROI-ranked automation discovery
 
-**Status**: Proposed
+**Status**: Proposed — reference implementation in `@metaharness/projects`
 **Date**: 2026-06-20
 **Project**: `ruvnet/agent-harness-generator`
 **Codename**: `DARWIN-DISCOVERY`
@@ -151,6 +151,10 @@ Operationalizes the acceptance test ("the top-10 recommended automations must ea
 - **`opportunity.verificationDominates`** — Two candidates with identical `automationValue` and `costSavingPotential` but `verificationMethod` `'oracle-reproduced'` vs `'self-report'`: assert the oracle-backed one ranks strictly higher. Encodes "pick workflows where verification is strong."
 - **`opportunity.lowValueNotFirst`** — A high-`automationValue` but low-`estimatedMonthlyCost` candidate must not outrank a high-spend, equally-verifiable candidate. Encodes "don't optimize low-value tasks first."
 - **`opportunity.boundsAndClamps`** — Property test: for any candidates with terms in `[0,1]`, every emitted `roi` is finite and `riskScore` stays in `[0,1]`; out-of-range inputs are clamped, never propagated.
+
+## Reference implementation
+
+A dependency-free, deterministic reference of this ADR lives in `@metaharness/projects` (committed this session): `packages/projects/src/opportunity.ts` (with its test and `bench/opportunity.bench.mjs`). It implements `OpportunityScore` and `rankOpportunities`, where ROI is the expected saving discounted by risk. The package as a whole has 117 passing tests. The synthetic bench is a deterministic simulation; its receipt (`packages/projects/bench/results/opportunity.json`) shows a deterministic ROI ranking in which every top item carries an estimated monthly cost, an expected saving, a verification method, and a risk score.
 
 ## References
 

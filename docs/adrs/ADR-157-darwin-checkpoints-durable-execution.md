@@ -1,6 +1,6 @@
 # ADR-157: Darwin Checkpoints — durable, resumable mutation runs
 
-**Status**: Proposed
+**Status**: Proposed — reference implementation in `@metaharness/projects`
 **Date**: 2026-06-20
 **Project**: `ruvnet/agent-harness-generator`
 **Codename**: `DARWIN-CHECKPOINT`
@@ -169,6 +169,10 @@ London-school unit tests mock the call boundary (the frontier/tool invoker) and 
 - **`checkpoint.unit.rollbackPointerOnFailure`** (London) — force `evaluate()` to throw on one genome; assert the written checkpoint has `stepResult: 'failed'`, a non-empty `failureReason`, and a `rollbackPointer` to the last `ok` checkpoint, and that resume continues from there without re-running the `ok` predecessors.
 - **`checkpoint.unit.safetyReGateOnRead`** — inject a cached finding mutated to contain an unsafe pattern; assert `detectUnsafe` flags it on read, it is redacted, and `RunMetrics.unsafeOutputs` for the resumed run stays 0 (acceptance invariant preserved).
 - **`checkpoint.unit.invalidationOnSeedChange`** — write checkpoints with `seed: 0`, resume with `seed: 1`; assert every cached entry is treated as a miss (inputHash mismatch) and recomputed.
+
+## Reference implementation
+
+A dependency-free, deterministic reference lives in the `@metaharness/projects` package (committed this session; 117 passing tests across the package). Module: `packages/projects/src/checkpoints.ts` (+ `__tests__/checkpoints.test.ts`, `bench/checkpoints.bench.mjs`). It implements `Checkpoint`, `CheckpointStore`, `CallCache`, and `runWithCheckpoints`. The bench writes a receipt to `packages/projects/bench/results/checkpoints.json`. Measured there — synthetic, deterministic simulation, not field data — resume saves ~39% cost vs restart-from-scratch at 100% reliability, and the durability guarantee holds: `maxDuplicateModelCalls = 0` (the checkpointed prefix is never re-executed on resume). Optimization: `CheckpointStore.save` is O(n) insert-in-order.
 
 ## References
 

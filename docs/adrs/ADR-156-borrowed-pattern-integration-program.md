@@ -1,6 +1,6 @@
 # ADR-156: Borrowed-pattern integration program — Darwin Mode mutates structured policies, not prompts
 
-**Status**: Proposed
+**Status**: Proposed — reference implementation in `@metaharness/projects`
 **Date**: 2026-06-20
 **Project**: `ruvnet/agent-harness-generator`
 **Codename**: `DARWIN-BORROW`
@@ -91,6 +91,12 @@ This program is considered shipped when the **integrated acceptance test** passe
 - **No false winners.** Any policy promoted during the run wins on all four dataset splits (ADR-162), bootstrap-certified (`stats.ts`).
 
 Each child ADR (ADR-157…166) carries its own named Test Contract; this ADR does not duplicate them.
+
+## Reference implementation & empirical update
+
+All ten patterns are implemented in the dependency-free, deterministic `@metaharness/projects` package (117+ passing tests); each child ADR (ADR-157…166) now carries a `## Reference implementation` section pointing at its module + tests + bench receipt. The integrated acceptance scenario is a **deterministic synthetic simulation** (`bench/integrated.bench.mjs`, receipt `integrated.json`): retries −58.9%, wasted tokens −42.0% (memory + trace-leak pruning), cost −64%, solve rate held, 0 guardrail bypasses, 0 false rejections — all gates pass at the committed seed. These are simulation results, not field measurements.
+
+Putting a **real model in the loop** (via OpenRouter) produced net-new decisions recorded in **ADR-167**: an execution-verified defensive discovery harness, an escalation router (cost-per-verified-finding), a self-learning loop backed by the ADR-161 `TieredMemory`, and empirical **open-frontier model selection** (Qwen3-235B / DeepSeek-v3.2 beat GLM-5.2 on verified-per-cost). Those results are real but single non-deterministic runs; production claims require multi-seed bootstrap gating.
 
 ## References
 

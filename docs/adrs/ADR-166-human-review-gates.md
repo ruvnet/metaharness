@@ -1,6 +1,6 @@
 # ADR-166: Human Review Gates — review only the uncertain edge
 
-**Status**: Proposed
+**Status**: Proposed — reference implementation in `@metaharness/projects`
 **Date**: 2026-06-20
 **Project**: `ruvnet/agent-harness-generator`
 **Codename**: `DARWIN-HUMAN-GATE`
@@ -129,6 +129,10 @@ Operationalizes the acceptance test ("human-review rate drops by 50% WITHOUT inc
 - **`reviewGate.nonGatedDeterminism`** — For contexts that route `auto`, run the downstream verification + bootstrap path twice with the same seed and assert byte-identical `BootstrapResult` and verdict. Proves the non-gated path is fully deterministic (no hidden model call).
 - **`reviewGate.routeIsPure`** — Call `routeReview(gate, ctx)` repeatedly (and on a deep-cloned `ctx`) and assert identical `Routing` every time; mutate nothing. Locks the pure-function contract.
 - **`reviewGate.railsTakePrecedence`** — A context whose findings would trip a fail-closed safety rail (ADR-164, e.g. `exploitCodeAllowed !== false` or `detectUnsafe` hit) is rejected by the rail *before* `routeReview` is consulted; assert it never appears as a human-review item. Keeps "reject-without-human" and "ask-a-human" disjoint.
+
+## Reference implementation
+
+A dependency-free, deterministic reference of this ADR lives in `@metaharness/projects` (committed this session): `packages/projects/src/review-gates.ts` (with its test and `bench/review-gates.bench.mjs`). It implements `routeReview` (escalating to a human only on high-risk file, security-sensitive change, over-budget, low-confidence, or ambiguous-bootstrap signals) plus `simulateReviewStream`. The package as a whole has 117 passing tests. The synthetic bench is a deterministic simulation; its receipt (`packages/projects/bench/results/review-gates.json`) shows ~52.5% fewer human reviews, and escaped defects are reported HONESTLY — the signal-less minority can still escape, because risk-based gating is not a free lunch — rather than rigged to zero.
 
 ## References
 

@@ -1,6 +1,6 @@
 # ADR-163: Typed Handoffs — contracted agent-to-agent transitions
 
-**Status**: Proposed
+**Status**: Proposed — reference implementation in `@metaharness/projects`
 **Date**: 2026-06-20
 **Project**: `ruvnet/agent-harness-generator`
 **Codename**: `DARWIN-HANDOFF`
@@ -180,6 +180,10 @@ These named tests operationalize the ADR-155 acceptance test ("reject any handof
 - **`handoff/ab-retry-reduction`** — run the identical task suite twice on the same frozen model: once with free-form hand-offs (control), once with typed contracts (treatment). Assert mean retries(treatment) ≤ mean retries(control). The 5–20% figure is logged as a HYPOTHESIS; the test only asserts non-regression in retries AND no regression in `truePositiveRate`/`unsafeOutputs` (which must stay 0).
 - **`handoff/replay-determinism`** — same `(spec, corpus, seed)` produces byte-identical per-edge verdicts across two runs.
 - **`handoff/disclosure-not-release`** — the terminal edge emits only gated, redacted output (`gateOutputs` applied); assert no `Finding` with `exploitCodeAllowed !== false` can traverse it.
+
+## Reference implementation
+
+A dependency-free, deterministic reference of this ADR lives in `@metaharness/projects` (committed this session): `packages/projects/src/handoffs.ts` (with its test). It implements `HandoffContract`, `validateHandoff`, `HandoffChain`, and `defaultChain` (defensive, terminating at disclosure). The package as a whole is deterministic with 117 passing tests. A REAL-LLM validation (`bench/handoff-llm.bench.mjs`, receipt `packages/projects/bench/results/handoff-llm.json`, openai/gpt-4o-mini via OpenRouter) found that naming the contract's required fields up front made 18/18 hops valid first-try (0 retries) versus free-form 0/18 (18 retries) — a 100% retry reduction on this run. Caveat: this is a single non-deterministic run; the effect size depends on how far the required field names diverge from the model's defaults. Real-LLM benches are optional, API-key-gated (OpenRouter), and excluded from the deterministic test suite.
 
 ## References
 

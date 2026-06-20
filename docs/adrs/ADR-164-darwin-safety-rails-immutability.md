@@ -1,6 +1,6 @@
 # ADR-164: Darwin Safety Rails — immutable, programmable guardrails
 
-**Status**: Proposed
+**Status**: Proposed — reference implementation in `@metaharness/projects`
 **Date**: 2026-06-20
 **Project**: `ruvnet/agent-harness-generator`
 **Codename**: `DARWIN-RAILS`
@@ -162,6 +162,10 @@ These named tests operationalize the ADR-155 acceptance test ("inject a mutation
 - **`rails/scorer-policy-not-self-edited`** — a diff touching `scoring.ts` / `policy.ts` / `rails.ts` is rejected by `rail/scorer-policy-not-self-edited` (ADR-080).
 - **`rails/replay-determinism`** — same `RailSubject` evaluated twice yields byte-identical `RailGateResult` (pure predicates).
 - **`rails/clean-candidate-admitted`** — a normal bounded mutation (within `reviewerCount` 1..5, `retryBudget` 1..6, etc.) touching only approved mutation-surface files yields `admit=true` with no verdicts — rails do not block legitimate evolution.
+
+## Reference implementation
+
+A dependency-free, deterministic reference of this ADR lives in `@metaharness/projects` (committed this session): `packages/projects/src/safety-rails.ts` (with its test and `bench/safety-rails.bench.mjs`). It implements immutable (`Object.freeze`d) `SafetyRail`s plus a `RailRegistry`; `rejectsBeforeBenchmark` always enforces the builtin rail battery even when a caller passes a stripped registry, and protected-path matching is normalized and word-anchored (it catches `scoring-helpers.ts` but not `policyholder.ts`). The package as a whole has 117 passing tests. The synthetic bench is a deterministic simulation; its receipt (`packages/projects/bench/results/safety-rails.json`) shows 100% of cheating mutations rejected with 0 false rejections.
 
 ## References
 

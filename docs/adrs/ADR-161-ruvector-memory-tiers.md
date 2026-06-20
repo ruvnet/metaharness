@@ -1,6 +1,6 @@
 # ADR-161: ruVector Memory Tiers — typed, depth-controlled recall
 
-**Status**: Proposed
+**Status**: Proposed — reference implementation in `@metaharness/projects`
 **Date**: 2026-06-20
 **Project**: `ruvnet/agent-harness-generator`
 **Codename**: `DARWIN-MEMORY-TIERS`
@@ -140,6 +140,10 @@ These operationalize the acceptance test ("memory must reduce token cost WITHOUT
 - **`mutation_tier_equals_seed_population`** — Assert `recallMutation(profile, k)` returns exactly `mem.seedPopulation(profile, k)` (the tier is a named view, not a reimplementation).
 - **`cost_tier_feeds_cost_efficiency`** — Assert that Cost-tier samples used by the planner are drawn against the same `COST_BUDGET`/`TIME_BUDGET` scale the frozen `fitness()` grades on, so a planner cost estimate and the benchmark grade cannot diverge.
 - **`memory_depth_is_clamped`** — Mutating `memoryDepth` beyond `0..MAX_K` is clamped, never accepted raw (ADR-071 allowlist discipline).
+
+## Reference implementation
+
+A dependency-free, deterministic reference lives in the `@metaharness/projects` package (committed this session; 117 passing tests across the package). Module: `packages/projects/src/memory-tiers.ts` (+ `__tests__/memory-tiers.test.ts`, `bench/memory-tiers.bench.mjs`). It implements the five isolated tiers, `TieredMemory`, and mutatable depth. The bench writes a receipt to `packages/projects/bench/results/memory-tiers.json`. Measured there — synthetic, deterministic simulation, not field data — ~13.6% input tokens saved with solve rate unchanged. NOTE: `TieredMemory` (mutation tier) now also backs the self-learning discovery loop (`src/learning-loop.ts`, ADR-167); a single non-deterministic real-LLM run there showed 95.7% cost reduction from escalate-once-to-learn-then-reuse.
 
 ## References
 

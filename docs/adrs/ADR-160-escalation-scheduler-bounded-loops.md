@@ -1,6 +1,6 @@
 # ADR-160: Escalation Scheduler — bounded loops, fail-closed
 
-**Status**: Proposed
+**Status**: Proposed — reference implementation in `@metaharness/projects`
 **Date**: 2026-06-20
 **Project**: `ruvnet/agent-harness-generator`
 **Codename**: `DARWIN-SCHEDULER`
@@ -139,6 +139,10 @@ London-school unit tests (the scheduler's collaborators — the loop step functi
 - **`fail-closed on security uncertainty`** (unit): stub `policy.detectUnsafe` to return a non-empty reason set on the next action; assert `schedule()` halts immediately with `TerminationReason.SecurityUncertain`, `failedClosed: true`, and spends no further budget. Also assert a finding with `exploitCodeAllowed !== false` triggers the same fail-closed exit.
 - **`policy mirrors genome bounds, never widens`** (unit): for genomes across the `BOUNDS` envelope, assert `defaultSchedulerPolicy(g).maxRetriesPerNode === g.retryBudget` and `maxReviewerPasses <= 5`, and that a hand-constructed policy with `maxRetriesPerNode = 7` is rejected as out of bounds.
 - **`determinism: same inputs, same outcome`** (integration): run `schedule()` twice with a fixed seed and fixed (recorded) model outputs; assert byte-identical `ScheduleOutcome` and identical `TerminationReason` — the scheduler honors *the proof is in replay*.
+
+## Reference implementation
+
+A dependency-free, deterministic reference lives in the `@metaharness/projects` package (committed this session; 117 passing tests across the package). Module: `packages/projects/src/scheduler.ts` (+ `__tests__/scheduler.test.ts`, `bench/scheduler.bench.mjs`). It implements `EscalationScheduler`, `SchedulerPolicy`, and a typed `TerminationReason` (including a distinct `max_reviewer_passes`). Every run terminates with a typed reason, budgets are never unboundedly exceeded, and it fails closed on security uncertainty. The bench writes a receipt to `packages/projects/bench/results/scheduler.json`; both arms are real scheduler runs (not a simulated baseline). Bounding cuts doomed-task cost (~88% on a seeded ~40%-doomed mix) — this figure is scenario-dependent, not universal.
 
 ## References
 

@@ -1,6 +1,6 @@
 # ADR-159: HarnessSpec — a declarative, mutatable harness policy
 
-**Status**: Proposed
+**Status**: Proposed — reference implementation in `@metaharness/projects`
 **Date**: 2026-06-20
 **Project**: `ruvnet/agent-harness-generator`
 **Codename**: `HARNESS-SPEC`
@@ -210,6 +210,10 @@ London-school unit tests (collaborators are the genome/spec mappers; frozen `fit
 - **`schema-validation rejects malformed spec`** (unit): feed specs with (a) `guards.safetyProfile !== 'strict-defensive'`, (b) `budgets.retryBudget = 7` (out of `BOUNDS`), (c) a `steps[].dependsOn` cycle, (d) `guards.exploitCodeAllowed = true`; assert each is rejected with a typed validation error. Guards and bounds are non-negotiable.
 - **`mutation preserves guards`** (unit): for any `g` and any mutation, `genomeToSpec(mutate(g, ...)).guards` is unchanged from the parent's guards — the non-mutatable region stays fixed.
 - **`spec lineage is diffable`** (integration): run `evolve` for 3 cycles, export each champion ancestor via `genomeToSpec`, assert consecutive specs differ only in mutated fields and never in `guards`.
+
+## Reference implementation
+
+A dependency-free, deterministic reference lives in the `@metaharness/projects` package (committed this session; 117 passing tests across the package). Module: `packages/projects/src/harness-spec.ts` (+ `__tests__/harness-spec.test.ts`, `bench/harness-spec.bench.mjs`). It implements `HarnessSpec`, the lossless `genomeToSpec`/`specToGenome` round-trip, `validateSpec`, and `replaySpec`. The bench writes a receipt to `packages/projects/bench/results/harness-spec.json`. Measured there — synthetic, deterministic simulation, not field data — the round-trip is lossless, replay is deterministic across 256 seeds, and a policy mutation is observable as a hash delta. Optimization: per-step replay hashes are memoized.
 
 ## References
 

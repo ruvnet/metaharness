@@ -1,6 +1,6 @@
 # ADR-162: DarwinBench Dataset Registry — curated, held-out, adversarial
 
-**Status**: Proposed
+**Status**: Proposed — reference implementation in `@metaharness/projects`
 **Date**: 2026-06-20
 **Project**: `ruvnet/agent-harness-generator`
 **Codename**: `DARWIN-BENCH`
@@ -143,6 +143,10 @@ These operationalize the acceptance test ("a winning variant must win on trainin
 - **`darwinbench_provenance_completeness`** — Constructing a `Dataset` with any `DatasetExample` missing `source` or `split` throws; every accepted example carries a `Provenance{ source, ref, capturedAt }` and a `DatasetSplit`.
 - **`darwinbench_unsafe_regression_per_split`** — The per-split safety check rejects any split on which the new genome emits a non-zero `unsafeOutputs`, matching `decidePromotion`'s `unsafeRegression` semantics.
 - **`darwinbench_llm_judge_excluded_from_replay_gate`** — Assert the promotion decision is identical whether or not an `llm-judge`/`pairwise` evaluator is attached (advisory-only; never decides).
+
+## Reference implementation
+
+A dependency-free, deterministic reference of this ADR lives in `@metaharness/projects` (committed this session): `packages/projects/src/datasets.ts` (with its test and `bench/datasets.bench.mjs`). It implements `DatasetRegistry`, the four splits (train/heldout/regression/adversarial), per-example provenance, and `fourSplitGate` (bootstrap-certified). The package as a whole has 117 passing tests. The synthetic bench is a deterministic simulation; its receipt (`packages/projects/bench/results/datasets.json`) shows a true winner promoted and a train-overfit *false* winner REJECTED because it loses on the adversarial split — the false-winner guard works as designed.
 
 ## References
 

@@ -1,6 +1,6 @@
 # ADR-158: Darwin Trace Format & Cost Ledger — every dollar maps to a span
 
-**Status**: Proposed
+**Status**: Proposed — reference implementation in `@metaharness/projects`
 **Date**: 2026-06-20
 **Project**: `ruvnet/agent-harness-generator`
 **Codename**: `DARWIN-TRACE`
@@ -152,6 +152,10 @@ London-school unit tests mock the call/emit boundary and assert on span interact
 - **`trace.integration.pruningSignalIsStructured`** — given a champion whose ledger flags `review` as a leak and whose `ablate()` shows ~0 fitness loss from a reviewer, assert the pruning hint proposes a bounded `reviewerCount − 1` mutation (still in `[1,5]`), and that the resulting child is only promoted if `decidePromotion` (`stats.ts`/ADR-079) clears it.
 - **`trace.unit.deterministicReplay`** — run the same `(genome, corpus, seed)` twice; assert the two `TraceSpan[]` are byte-identical (fixed `startedAt`, proxy `costUnits`, stable span ids) — the trace replays exactly.
 - **`ledger.unit.cacheHitSpansChargeZero`** — with ADR-157 cache hits, assert spans with `outcome: 'cache_hit'` carry `costUnits: 0` and the ledger still reconciles (reused cost is attributed to the original span, not double-counted).
+
+## Reference implementation
+
+A dependency-free, deterministic reference lives in the `@metaharness/projects` package (committed this session; 117 passing tests across the package). Module: `packages/projects/src/trace.ts` (+ `__tests__/trace.test.ts`, `bench/trace.bench.mjs`). It implements `Tracer`, `CostLedger` (whose `reconcile()` returns `modelCallsCertified`), and `detectLeaks`. The bench writes a receipt to `packages/projects/bench/results/trace.json`. Measured there — synthetic, deterministic simulation, not field data — the ledger reconciles exactly (Σ span cost == accounted) and `detectLeaks` finds 24 leaks projecting ~50.5% savings. This cost-ledger is also the substrate the optional real-LLM benches use to compute cost-per-finding.
 
 ## References
 
