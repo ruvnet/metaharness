@@ -1,0 +1,18 @@
+{
+  "trueWinnerPromoted": true,
+  "falseWinnerPromoted": false,
+  "perSplit": {
+    "trueWinner": {
+      "train": 0.1,
+      "heldout": 0.1,
+      "regression": 0.1,
+      "adversarial": 0.1
+    },
+    "falseWinner": {
+      "train": 0.2,
+      "heldout": 0.05,
+      "regression": 0.05,
+      "adversarial": 0
+    }
+  }
+}

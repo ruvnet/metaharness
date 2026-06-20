@@ -1,0 +1,56 @@
+{
+  "scenario": "100 tasks × 3 repos, evolved policy vs frontier-only",
+  "seed": 42,
+  "totalTasks": 300,
+  "policy": {
+    "plannerModel": "cheap",
+    "coderModel": "cheap",
+    "reviewerModel": "frontier_on_failure",
+    "retrievalTopK": 12,
+    "maxRetries": 2,
+    "frontierEscalationThreshold": 0.78,
+    "securityReviewRequired": true,
+    "batchEval": true,
+    "cacheRepoContext": true
+  },
+  "tokenComposition": {
+    "memoryOnlySavedPct": 14.193441,
+    "combinedSavedPct": 40.680253,
+    "repeatedRetrievalLeakDetected": true,
+    "baselineTokens": 2768846,
+    "evolvedTokens": 1642472.45
+  },
+  "costModel": {
+    "baselineCost": 3000,
+    "evolvedCost": 960,
+    "escalations": 66
+  },
+  "gates": {
+    "retries": {
+      "value": 66.666667,
+      "target": 20,
+      "pass": true
+    },
+    "tokens": {
+      "value": 40.680253,
+      "target": 30,
+      "pass": true
+    },
+    "cost": {
+      "value": 68,
+      "target": 50,
+      "pass": true
+    },
+    "solveRate": {
+      "value": "265/265",
+      "target": "same-or-better",
+      "pass": true
+    },
+    "guardrailBypasses": {
+      "value": 0,
+      "target": 0,
+      "pass": true
+    }
+  },
+  "allPass": true
+}

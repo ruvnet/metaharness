@@ -1,0 +1,7 @@
+{
+  "roundTripOk": true,
+  "replayDeterministic": true,
+  "policyMutationObservable": true,
+  "genomes": 256,
+  "avgSpecBytes": 905
+}

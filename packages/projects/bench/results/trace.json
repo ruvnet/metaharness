@@ -1,0 +1,14 @@
+{
+  "totalCost": 756,
+  "byKind": {
+    "planner": 40,
+    "retrieval": 156,
+    "model": 400,
+    "tool": 20,
+    "memory": 20,
+    "test": 40,
+    "review": 80
+  },
+  "leaks": 24,
+  "projectedSavingsPct": 50.53
+}

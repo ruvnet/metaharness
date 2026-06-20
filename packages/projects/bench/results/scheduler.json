@@ -1,0 +1,7 @@
+{
+  "failingTasks": 200,
+  "costReductionPct": 25,
+  "allTerminated": true,
+  "naiveCost": 786.96,
+  "boundedCost": 590.22
+}
