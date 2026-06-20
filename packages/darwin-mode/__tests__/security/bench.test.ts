@@ -53,6 +53,14 @@ describe('DARWIN-SHIELD-BENCH — acceptance gates', () => {
     }
   });
 
+  it('beyond SOTA: the champion STATISTICALLY beats the previous champion', () => {
+    const sp = report.statisticalPromotion;
+    expect(sp.promote).toBe(true);
+    expect(sp.lower95).toBeGreaterThan(0);
+    expect(sp.unsafeRegression).toBe(false);
+    expect(sp.newMeanFitness).toBeGreaterThan(sp.prevMeanFitness);
+  });
+
   it('renders a non-empty Markdown report', () => {
     const md = renderReport(report);
     expect(md).toContain('DARWIN-SHIELD-BENCH results');

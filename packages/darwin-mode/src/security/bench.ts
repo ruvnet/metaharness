@@ -23,6 +23,7 @@ import {
 import { COST_BUDGET, TIME_BUDGET, fitness, type FitnessBreakdown } from './scoring.js';
 import { corpusCounts, runSwarm } from './swarm.js';
 import { evolve, type EvolveResult } from './evolve.js';
+import { decidePromotion, type PromotionDecision } from './stats.js';
 import { RuvSecurityMemory } from './memory.js';
 import type { HarnessGenome } from './types.js';
 import { round6 } from './util.js';
@@ -53,6 +54,8 @@ export interface BenchReport {
   cyclesRun: number;
   championLineage: string[];
   learningCurve: number[];
+  /** Seeded-bootstrap verdict: champion vs the pre-evolution fixed harness. */
+  statisticalPromotion: PromotionDecision;
 }
 
 export interface BenchConfig {
@@ -133,6 +136,12 @@ export function runBenchmark(config: BenchConfig = {}): BenchReport {
   const b2Run = runSwarm(b2.genome, corpus, 'b2-cost', {});
   const costRatio = b2Run.metrics.costUnits > 0 ? championRun.metrics.costUnits / b2Run.metrics.costUnits : 1;
 
+  // Beyond-SOTA: the champion must STATISTICALLY beat the pre-evolution fixed
+  // harness (B2 = the "previous champion"), not just on a point estimate — the
+  // lower-95% bound on the per-repo score delta must be above zero, with no
+  // unsafe-output regression (ADR-155 addendum, grounded in ADR-079 SGM).
+  const statisticalPromotion = decidePromotion(b2genome, champion.genome, corpus, b2FpRate, { seed });
+
   const gates: AcceptanceGate[] = [
     {
       name: 'TPR improvement ≥ 25% vs fixed harness',
@@ -174,6 +183,11 @@ export function runBenchmark(config: BenchConfig = {}): BenchReport {
       pass: baselines.every((b) => champion.breakdown.fitness > b.breakdown.fitness),
       detail: `B3 ${champion.breakdown.fitness} vs [${baselines.map((b) => b.breakdown.fitness).join(', ')}]`,
     },
+    {
+      name: 'Beyond SOTA: champion STATISTICALLY beats the previous champion',
+      pass: statisticalPromotion.promote,
+      detail: `lower95 ${statisticalPromotion.lower95} > 0, meanDelta ${statisticalPromotion.meanDelta}, p=${statisticalPromotion.pValue}, unsafe-regression=${statisticalPromotion.unsafeRegression}`,
+    },
   ];
 
   return {
@@ -188,6 +202,7 @@ export function runBenchmark(config: BenchConfig = {}): BenchReport {
     cyclesRun: evolved.cyclesRun,
     championLineage: evolved.lineage,
     learningCurve: evolved.history,
+    statisticalPromotion,
   };
 }
 
@@ -216,6 +231,13 @@ export function renderReport(report: BenchReport): string {
   for (const g of report.gates) {
     lines.push(`- ${g.pass ? '✅' : '❌'} **${g.name}** — ${g.detail}`);
   }
+  lines.push('');
+  lines.push('## Statistical promotion (champion vs previous champion)');
+  lines.push('');
+  const sp = report.statisticalPromotion;
+  lines.push(`- mean per-repo Δ: **${sp.meanDelta}** (prev ${sp.prevMeanFitness} → new ${sp.newMeanFitness})`);
+  lines.push(`- lower-95% bound: **${sp.lower95}** (> 0 required), one-sided p = ${sp.pValue}`);
+  lines.push(`- verdict: ${sp.promote ? '✅ statistically superior' : '❌ not certified'} — ${sp.reasons.join('; ')}`);
   lines.push('');
   lines.push(`## Champion genome`);
   lines.push('');

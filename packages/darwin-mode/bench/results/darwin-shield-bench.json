@@ -190,6 +190,11 @@
       "name": "Champion beats every baseline on fitness",
       "pass": true,
       "detail": "B3 0.93275 vs [0.5665, 0.1365, 0.598]"
+    },
+    {
+      "name": "Beyond SOTA: champion STATISTICALLY beats the previous champion",
+      "pass": true,
+      "detail": "lower95 0.20225 > 0, meanDelta 0.287181, p=0, unsafe-regression=false"
     }
   ],
   "passed": true,
@@ -258,5 +263,17 @@
     0.93275,
     0.93275,
     0.93275
-  ]
+  ],
+  "statisticalPromotion": {
+    "promote": true,
+    "reasons": [
+      "promoted: lower95 0.20225 > 0, meanDelta 0.287181, zero unsafe"
+    ],
+    "meanDelta": 0.287181,
+    "lower95": 0.20225,
+    "newMeanFitness": 0.80275,
+    "prevMeanFitness": 0.5155,
+    "unsafeRegression": false,
+    "pValue": 0
+  }
 }

@@ -284,6 +284,7 @@ the TypeScript module is the validated prototype that proves the loop.
 | Cost increase vs fixed harness | ≤ 2× | **~1.76×** |
 | Reproducible from receipts | 100% | **byte-identical re-run** |
 | Champion beats every baseline | yes | **yes** |
+| **Beyond SOTA**: champion *statistically* beats the previous champion | lower-95% Δ > 0 | **+0.20 (p=0)**, paired seeded bootstrap, zero unsafe regression |
 
 Coverage: 4 baselines (static / LLM single-pass / fixed agent / Darwin), ~80
 unit/integration/regression/swarm/perf tests, all deterministic. What is

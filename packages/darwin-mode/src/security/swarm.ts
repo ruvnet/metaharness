@@ -57,6 +57,42 @@ function timeToFindingOf(genome: HarnessGenome): number {
   return round6(plannerCost * ctxCost + 0.1 * genome.tools.length);
 }
 
+/**
+ * Per-repo metrics for one genome — the per-task SAMPLE DISTRIBUTION the
+ * statistical promotion gate (stats.ts, ADR-079/155) bootstraps over. Aggregating
+ * to a single number throws away the variance a champion-vs-champion comparison
+ * needs to be more than one lucky run. Deterministic.
+ */
+export function runSwarmPerRepo(
+  genome: HarnessGenome,
+  corpus: Corpus,
+  opts: SwarmOptions = {},
+): Array<{ repo: string; metrics: RunMetrics }> {
+  const memory = opts.memory;
+  return corpus.repos.map((repo) => {
+    const out = analyzeRepo(genome, repo, memory);
+    const tp = out.truePositives.length;
+    const patchesProposed = tp;
+    const patchesPassing = genome.retryBudget >= 2 ? tp : 0;
+    const reproduced =
+      genome.validationPipeline.includes('repro-test') || genome.fuzzBudgetSeconds >= 30 ? tp : 0;
+    const metrics: RunMetrics = {
+      truePositives: tp,
+      falsePositives: out.falsePositives.length,
+      falseNegatives: out.falseNegatives.length,
+      reproduced,
+      patchesPassing,
+      patchesProposed,
+      toolAgreements: genome.tools.length >= 2 ? tp : 0,
+      novelFindings: tp,
+      unsafeOutputs: 0,
+      costUnits: costOf(genome),
+      timeToFinding: timeToFindingOf(genome),
+    };
+    return { repo: repo.repo, metrics };
+  });
+}
+
 /** Run the full defensive swarm for one genome over the whole corpus. */
 export function runSwarm(
   genome: HarnessGenome,

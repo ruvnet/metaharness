@@ -23,6 +23,13 @@ Corpus: `darwin-shield-bench@1.0.0` — 10 ground-truth vulns, 9 decoys. 50 evol
 - ✅ **Cost increase ≤ 2× fixed harness** — 1.758929×
 - ✅ **All runs reproducible from receipts** — B0=593274e6 B1=2589863b B2=92a56965 B3=5991a555
 - ✅ **Champion beats every baseline on fitness** — B3 0.93275 vs [0.5665, 0.1365, 0.598]
+- ✅ **Beyond SOTA: champion STATISTICALLY beats the previous champion** — lower95 0.20225 > 0, meanDelta 0.287181, p=0, unsafe-regression=false
+
+## Statistical promotion (champion vs previous champion)
+
+- mean per-repo Δ: **0.287181** (prev 0.5155 → new 0.80275)
+- lower-95% bound: **0.20225** (> 0 required), one-sided p = 0
+- verdict: ✅ statistically superior — promoted: lower95 0.20225 > 0, meanDelta 0.287181, zero unsafe
 
 ## Champion genome
 
