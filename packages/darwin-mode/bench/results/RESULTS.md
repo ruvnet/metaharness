@@ -441,3 +441,20 @@ consistently lands at-or-above single-shot at lower cost. The dramatic 65–88% 
 need stronger step models / richer tooling / more steps — this establishes the architecture is real,
 competitive, and cheap, not that it leaps the paradigm on a cheap base. Total agentic spend ~$10.50;
 final budget $497.55/$500 (exhausted).
+
+## 21. Agentic loop ≠ a rescue for weak models — local 14b = 8% (ADR-153 + ADR-150)
+
+The same agentic ReAct loop (§19-20) run $0 on the local `qwen2.5-coder:14b`, pilot-25, official batch:
+
+| agentic loop, pilot-25 | resolved | Wilson 95% CI |
+|---|---|---|
+| deepseek-v4-pro (§19) | 9/25 = 36.0% | [20.2, 55.5] |
+| **qwen-14b (local, $0)** | **2/25 = 8.0%** | **[2.2, 25.0]** |
+
+Same harness, **4.5× difference from the model alone.** And agentic-local (8%) sits in the same
+neighborhood as 14b single-shot+repair (§18: 6.7%) — i.e. the **agentic loop does not rescue a model
+below the capability floor** (16/25 attempts were empty/invalid edits the 14b couldn't emit; in-loop
+over-counted 4→2). This is the §6 capability-floor finding confirmed for the agentic paradigm too: the
+multi-step loop's value comes from the model being strong enough to *use* the tools — read the right
+file, copy SEARCH text exactly, interpret a traceback. Below that floor, more turns don't help. The
+harness is the lever; the model has to be able to pull it.
