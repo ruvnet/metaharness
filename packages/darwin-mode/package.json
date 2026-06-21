@@ -1,7 +1,7 @@
 {
   "name": "@metaharness/darwin",
-  "version": "0.3.0",
-  "description": "An LLM supercharger and cost optimizer: freeze the model class, evolve the harness. Measured on full SWE-bench Lite (300, official swebench Docker, verified): 7.7% open-loop -> 15.3% +repair -> 29.3% (v4-pro base) -> 40.3% 2-tier -> 58.3% 3-tier cheap->frontier escalation, ~$0.01-$0.74/instance (vs $1-20 for frontier agents). The harness, not the model, is the lever. Dependency-free (Node built-ins).",
+  "version": "0.3.1",
+  "description": "Freeze the model, evolve the harness. Two measured applications: (1) SWE-bench Lite code-repair — 7.7% open-loop -> 58.3% via cheap->frontier tiering (official swebench Docker, verified), ~$0.01-$0.74/instance vs $1-20 for frontier agents; (2) Darwin Shield (v0.3.0) — a defensive zero-day discovery harness (Semgrep + fuzz oracles, safety-gated, deterministic replay). The harness, not the model, is the lever. Dependency-free (Node built-ins).",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

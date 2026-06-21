@@ -2,6 +2,10 @@
 
 All notable changes to this package. Dates UTC.
 
+## 0.3.1 — 2026-06-21
+
+- Docs: README now covers the full SWE-bench ladder (incl. **58.3%** 3-tier + agentic 31.3%) and a **Darwin Shield** section (the v0.3.0 defensive security application); npm description updated to the dual-application story. No code change.
+
 ## 0.3.0 — 2026-06-21
 
 - **Darwin Shield (ADR-155): defensive zero-day discovery harness** (`src/security/`,

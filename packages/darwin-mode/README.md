@@ -286,30 +286,51 @@ context + symbol-aware localization + search/replace patch, `deepseek-chat`, ~$0
 | **+ closed-loop repair (test-feedback, ≤3)** | 46/300 = **15.3%** | **[11.7, 19.8]** | 149 |
 | **+ swap base → deepseek-v4-pro (cheap)** | 88/300 = **29.3%** | **[24.5, 34.7]** | 151 |
 | **+ v4-pro + Scholar hybrid** | 121/300 = **40.3%** | **[34.9, 46.0]** | 152 |
-| **+ Sage (opus-4.8) — 3-tier** | 175/300 = **58.3%** | **[52.7, 63.8]** | 154 |
-| **+ Barbarian&Scholar hybrid (cheap+frontier tail)** | 100/300 = **33.3%** | **[28.2, 38.8]** | 148 |
+| **+ Sage (opus-4.8) — 3-tier (headline)** | 175/300 = **58.3%** | **[52.7, 63.8]** | 154 |
+| agentic ReAct loop (v4-pro, new architecture) | 94/300 = **31.3%** | **[26.3, 36.8]** | 153 |
 
-The closed-loop repair loop **~doubles** the resolve-rate (7.7% → 15.3%) on the *same cheap model*
-(deepseek, <1¢/instance); the baseline and repair CIs are essentially disjoint (11.2 vs 11.7), so
-it's a real lift, not noise. Honest framing: 15.3% is still a **cheap-model** number — leaderboard
-leaders hit 65–88% on Verified using frontier models + deeper agentic loops at $1–20/instance. The
-contribution is the **harness lift on a fixed cheap model**: open-loop 7.7% → closed-loop 15.3% at
-near-constant cost. Localization lifted file-selection recall **44.7% → 59.7%**; the repair loop
-then converts first-shot misses into fixes via test feedback. Next levers: hybrid cheap→frontier
-escalation (ADR-148), local-model repair (ADR-150). Every number is reproducible under `bench/swebench/`.
+**The harness, not the model, is the dominant lever — and it compounds.** Closed-loop repair
+~doubles a cheap model for free (7.7% → 15.3%, disjoint CIs); a newer cheap base lifts it again
+(→29.3%); and **N-tier cheap→frontier escalation reaches a batch-verified, independently-reproduced
+58.3%** [52.7, 63.8] — 7.6× the open-loop baseline — at ~$0.74/instance blended (vs $1–20 for
+frontier-on-everything). The mid-arc "ceiling at 15.3%" was real for a *fixed* model but **not a
+paradigm limit**. A separate **agentic ReAct loop** (ADR-153 — read/grep/ls/edit/run_tests/submit;
+implemented + unit-tested) reaches **31.3%** on v4-pro — competitive with single-shot+repair and ~3×
+cheaper per instance; the 65–88% SOTA tier is the next arc (stronger step models / richer tooling).
+Honest caveats throughout: only batch-eval numbers reported (in-loop drifts 1.5–5×), the local-$0
+ceiling is capability-floor-bound (14b+repair = 6.7%). Full evidence: `bench/results/RESULTS.md`.
+
+## Darwin Shield — the defensive security application (ADR-155, v0.3.0)
+
+The same thesis — **freeze the model, evolve the harness, prove everything by replay** — applied to a
+*different task*: **defensive vulnerability discovery**. Exported as `security` from this package
+(`src/security/`); run the benchmark with `metaharness-darwin security bench` or `npm run bench:shield`.
+
+- **Evolving genome** (planner / contextPolicy / reviewerCount / retryBudget / fuzzBudget / tools)
+  with bounded mutation + crossover; `safetyProfile` is **immutable**. Three fixed baselines
+  (static / LLM single-pass / fixed agent) to beat.
+- **Safety layer is load-bearing**: scope gate, exploit redactor, unsafe-output gate —
+  `exploitCodeAllowed` is a hard `false`; any unsafe output is an immediate **−1.00 fitness** term.
+  This is a *defensive* harness (find + prove + patch vulnerabilities), not an exploit generator.
+- **Real oracles**: a Semgrep detector + a property fuzzer + an in-loop judge; with Semgrep present,
+  the security suite runs **hundreds of tests**. Receipts are byte-identical (deterministic replay).
+- **DARWIN-SHIELD-BENCH** (pop 16 × 50 cycles) passes every ADR-155 gate on the seeded corpus:
+  TPR +150% vs the fixed harness, FPR −100%, patch-pass 100%, repro 100%, **0 unsafe outputs**,
+  cost ≤ 2×.
+
+See also the sibling package **[`@metaharness/projects`](../projects/)** (ADR-156…167) — the
+borrowed-pattern integration program backing this work.
 
 ## Status
 
-**Working, empirically validated on both the mock substrate *and* canonical
-SWE-bench Lite.** The `DeterministicMutator` is seeded and signature-preserving;
-the `OpenRouterMutator` (ADR-085) is the production LLM `CodeGenerator`, behind the
-*same* `validateGeneratedCode` gate. The safety boundary, scorer, archive, and bench
-layer are kernel code. The real-LLM-on-real-code frontier (once deferred) is now
-**measured**: a reproducible **7.7% [5.2–11.2%]** open-loop baseline on the full
-SWE-bench Lite (ADR-144), with localization (146), the repair loop (149), and a
-hybrid cheap→frontier escalation (148) as the active levers. Darwin Mode also ships
-**integrated into the `metaharness` scaffolder** — `npx metaharness <name>` produces
-a harness with `npm run evolve` out of the box (ADR-147).
+**Working, empirically validated on the mock substrate, canonical SWE-bench Lite, *and* the
+DARWIN-SHIELD security benchmark.** The `DeterministicMutator` is seeded + signature-preserving; the
+`OpenRouterMutator` (ADR-085) is the production LLM `CodeGenerator`, behind the *same*
+`validateGeneratedCode` gate. SWE-bench is **measured end-to-end**: 7.7% open-loop → 15.3% repair →
+29.3% v4-pro → 40.3% 2-tier → **58.3% 3-tier** (ADR-154, verified + reproduced), plus an agentic ReAct
+loop at 31.3% (ADR-153) and a $0 local track (ADR-150). The defensive **Darwin Shield** application
+(ADR-155) ships in v0.3.0. Darwin Mode also ships **integrated into the `metaharness` scaffolder** —
+`npx metaharness <name>` produces a harness with `npm run evolve` out of the box (ADR-147).
 
 ## License
 
