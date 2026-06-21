@@ -18,4 +18,5 @@ export * from './scorer.js';
 export * from './archive.js';
 export * from './evolve.js';
 export * as bench from './bench/index.js';
+export * as security from './security/index.js';
 //# sourceMappingURL=index.d.ts.map

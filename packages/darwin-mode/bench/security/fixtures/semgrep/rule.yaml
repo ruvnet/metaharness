@@ -1,0 +1,9 @@
+rules:
+  - id: darwin-shield-py-eval
+    languages: [python]
+    severity: ERROR
+    message: CWE-94 code injection via eval() on untrusted input
+    metadata:
+      category: security
+      cwe: CWE-94
+    pattern: eval(...)

@@ -1,0 +1,6 @@
+{
+  "runs": 100,
+  "costSavedPct": 39.26,
+  "reliability": 1,
+  "maxDuplicateModelCalls": 0
+}

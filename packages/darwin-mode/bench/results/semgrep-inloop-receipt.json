@@ -1,0 +1,50 @@
+{
+  "oracle": "semgrep",
+  "version": "1.167.0",
+  "corpus": "bench/security/fixtures/semgrep-corpus",
+  "incumbentRule": [
+    "eval"
+  ],
+  "candidateRule": [
+    "eval",
+    "exec",
+    "shell-true",
+    "yaml-load",
+    "pickle-loads"
+  ],
+  "incumbentPerFileMean": 0.5,
+  "candidatePerFileMean": 1,
+  "candidateFalsePositives": 0,
+  "bootstrap": {
+    "meanDelta": 0.49705,
+    "lower95": 0.125,
+    "upper95": 0.875,
+    "promote": true,
+    "samples": 5000,
+    "pValue": 0.0042
+  },
+  "gates": [
+    {
+      "name": "paired bootstrap lower95 > 0 (real semgrep)",
+      "pass": true,
+      "detail": "lower95 0.125, mean 0.49705, p 0.0042"
+    },
+    {
+      "name": "no false-positive regression",
+      "pass": true,
+      "detail": "inc FP 0 → cand FP 0"
+    },
+    {
+      "name": "candidate carries no unsafe content",
+      "pass": true,
+      "detail": "rule YAML clean"
+    },
+    {
+      "name": "real-oracle replay identical",
+      "pass": true,
+      "detail": "2f028e13"
+    }
+  ],
+  "promote": true,
+  "receiptHash": "2f028e13"
+}

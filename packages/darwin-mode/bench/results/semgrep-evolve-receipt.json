@@ -1,0 +1,59 @@
+{
+  "oracle": "semgrep",
+  "version": "1.167.0",
+  "corpus": "bench/security/fixtures/semgrep-corpus",
+  "config": {
+    "generations": 6,
+    "population": 6,
+    "seed": 5,
+    "baseline": [
+      "eval"
+    ]
+  },
+  "baseline": {
+    "patterns": [
+      "eval"
+    ],
+    "mean": 0.5,
+    "falsePositives": 0
+  },
+  "champion": {
+    "patterns": [
+      "eval",
+      "exec",
+      "shell-true",
+      "yaml-load",
+      "pickle-loads"
+    ],
+    "mean": 1,
+    "falsePositives": 0
+  },
+  "learningCurve": [
+    0.5,
+    0.625,
+    0.75,
+    0.75,
+    0.875,
+    1
+  ],
+  "lineage": [
+    "baseline",
+    "g0-5",
+    "g1-3",
+    "g2-3",
+    "g4-3",
+    "g5-4"
+  ],
+  "evaluations": 36,
+  "realOracleCalls": 15,
+  "bootstrapVsBaseline": {
+    "meanDelta": 0.4989,
+    "lower95": 0.125,
+    "upper95": 0.875,
+    "promote": true,
+    "samples": 5000,
+    "pValue": 0.0032
+  },
+  "promotedOverBaseline": true,
+  "receiptHash": "62ad72e3"
+}

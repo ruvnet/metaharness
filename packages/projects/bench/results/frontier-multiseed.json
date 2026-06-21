@@ -1,0 +1,30 @@
+{
+  "experiment": "multi-seed gate for ADR-167 frontier-lane swap (Qwen3-235B vs GLM-5.2)",
+  "functions": 6,
+  "seedsPerFunction": 4,
+  "cellsPerModel": 24,
+  "verifiedRate": {
+    "qwen/qwen3-235b-a22b-2507": 0.875,
+    "z-ai/glm-5.2": 0.708333,
+    "deepseek/deepseek-v3.2": 0.875
+  },
+  "costPerVerifiedMilliUSD": {
+    "qwen/qwen3-235b-a22b-2507": 0.016383,
+    "z-ai/glm-5.2": 1.176406,
+    "deepseek/deepseek-v3.2": 0.044163
+  },
+  "totalCostMilliUSD": {
+    "qwen/qwen3-235b-a22b-2507": 0.34404,
+    "z-ai/glm-5.2": 19.9989,
+    "deepseek/deepseek-v3.2": 0.92742
+  },
+  "pairedBootstrap_qwenMinusGlm": {
+    "meanDelta": 0.166667,
+    "lower95": 0,
+    "upper95": 0.333333,
+    "pValue": 0.061,
+    "samples": 24
+  },
+  "recommendationConfirmed": true,
+  "note": "Sampling variance via temperature 0.8; paired by (function,seed) cell. lower95 ≥ 0 ⇒ Qwen3-235B is not statistically worse than GLM-5.2; combined with far lower cost-per-verified this confirms the ADR-167 default. N is still modest."
+}

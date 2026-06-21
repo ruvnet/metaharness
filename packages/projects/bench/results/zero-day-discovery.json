@@ -1,0 +1,116 @@
+{
+  "experiment": "defensive zero-day discovery — baseline vs Darwin-optimized policy",
+  "target": "fixture/target.py",
+  "cheapModel": "qwen/qwen-2.5-7b-instruct",
+  "frontierModel": "qwen/qwen3-235b-a22b-2507",
+  "semgrep": true,
+  "baseline": {
+    "verified": 6,
+    "proposed": 5,
+    "skipped": 0,
+    "frontierCalls": 5,
+    "costMilliUSD": 0.148,
+    "costPerVerifiedMilliUSD": 0.025,
+    "findings": [
+      {
+        "fn": "run_cmd",
+        "weakness": "cwe-78-os-system",
+        "source": "static",
+        "verified": true
+      },
+      {
+        "fn": "parse",
+        "weakness": "cwe-94-eval",
+        "source": "static",
+        "verified": true
+      },
+      {
+        "fn": "parse",
+        "weakness": "CWE-94 code injection",
+        "source": "runtime",
+        "verified": true,
+        "evidenceClass": "ZeroDivisionError",
+        "severity": "medium",
+        "proofArgsRedacted": true
+      },
+      {
+        "fn": "ratio",
+        "weakness": "unhandled exception",
+        "source": "runtime",
+        "verified": true,
+        "evidenceClass": "ZeroDivisionError",
+        "severity": "medium",
+        "proofArgsRedacted": true
+      },
+      {
+        "fn": "nth",
+        "weakness": "unhandled exception",
+        "source": "runtime",
+        "verified": true,
+        "evidenceClass": "IndexError",
+        "severity": "medium",
+        "proofArgsRedacted": true
+      },
+      {
+        "fn": "lookup",
+        "weakness": "unhandled exception",
+        "source": "runtime",
+        "verified": true,
+        "evidenceClass": "KeyError",
+        "severity": "medium",
+        "proofArgsRedacted": true
+      }
+    ]
+  },
+  "optimized": {
+    "verified": 5,
+    "proposed": 3,
+    "skipped": 2,
+    "frontierCalls": 3,
+    "costMilliUSD": 0.098,
+    "costPerVerifiedMilliUSD": 0.02,
+    "findings": [
+      {
+        "fn": "run_cmd",
+        "weakness": "cwe-78-os-system",
+        "source": "static",
+        "verified": true
+      },
+      {
+        "fn": "parse",
+        "weakness": "cwe-94-eval",
+        "source": "static",
+        "verified": true
+      },
+      {
+        "fn": "ratio",
+        "weakness": "unhandled exception",
+        "source": "runtime",
+        "verified": true,
+        "evidenceClass": "ZeroDivisionError",
+        "severity": "medium",
+        "proofArgsRedacted": true
+      },
+      {
+        "fn": "nth",
+        "weakness": "unhandled exception",
+        "source": "runtime",
+        "verified": true,
+        "evidenceClass": "IndexError",
+        "severity": "medium",
+        "proofArgsRedacted": true
+      },
+      {
+        "fn": "lookup",
+        "weakness": "unhandled exception",
+        "source": "runtime",
+        "verified": true,
+        "evidenceClass": "KeyError",
+        "severity": "medium",
+        "proofArgsRedacted": true
+      }
+    ]
+  },
+  "frontierCallsSavedPct": 40,
+  "note": "Optimized policy skips frontier escalation for statically-verified sites (skipStaticallyCovered). Defensive: only execution/tool-verified weaknesses; proof inputs redacted. Real LLM calls; single non-deterministic run."
+}

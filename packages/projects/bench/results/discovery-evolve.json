@@ -1,0 +1,43 @@
+{
+  "experiment": "Darwin policy evolution for discovery (synthetic, deterministic)",
+  "baseline": {
+    "policy": {
+      "cheapModel": "cheap-a",
+      "frontierModel": "z-ai/glm-5.2",
+      "maxEscalations": 8,
+      "skipStaticallyCovered": false,
+      "promptVariant": 0
+    },
+    "fitness": 0.182927
+  },
+  "champion": {
+    "policy": {
+      "cheapModel": "cheap-b",
+      "frontierModel": "frontier-a",
+      "maxEscalations": 1,
+      "skipStaticallyCovered": true,
+      "promptVariant": 1
+    },
+    "fitness": 2.857143
+  },
+  "learningCurve": [
+    2.857143,
+    2.857143,
+    2.857143,
+    2.857143,
+    2.857143,
+    2.857143,
+    2.857143,
+    2.857143,
+    2.857143,
+    2.857143,
+    2.857143,
+    2.857143
+  ],
+  "generations": 12,
+  "evaluations": 121,
+  "evaluatorCalls": 23,
+  "improvedOverBaseline": true,
+  "receiptHash": "9d8d0877",
+  "note": "verified-per-cost fitness; evaluator is a synthetic model of the real discovery tradeoff. Real evaluator wires zero-day-discovery.bench.mjs (budget-gated)."
+}

@@ -1,0 +1,28 @@
+{
+  "experiment": "real Darwin escalation acceptance test — cost per passing task",
+  "cheapModel": "qwen/qwen-2.5-7b-instruct",
+  "frontierModel": "qwen/qwen3-235b-a22b-2507",
+  "tasks": 10,
+  "lanes": {
+    "cheapOnly": {
+      "passed": 8,
+      "of": 10,
+      "costUSD": 0.000085,
+      "costPerPassingTaskUSD": 0.000011
+    },
+    "frontierOnly": {
+      "passed": 8,
+      "of": 10,
+      "costUSD": 0.000115,
+      "costPerPassingTaskUSD": 0.000014
+    },
+    "escalation": {
+      "passed": 8,
+      "of": 10,
+      "recoveredByFrontier": 0,
+      "costUSD": 0.000106,
+      "costPerPassingTaskUSD": 0.000013
+    }
+  },
+  "note": "Real LLM calls; single non-deterministic run. \"Passing\" = generated function passes hidden unit tests run in an isolated python subprocess. Cost from token usage x OpenRouter pricing."
+}

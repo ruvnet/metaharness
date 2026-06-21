@@ -1,0 +1,12 @@
+{
+  "labels": [
+    { "file": "vuln/eval.py", "vulnerable": true, "weakness": "CWE-94 eval" },
+    { "file": "vuln/exec.py", "vulnerable": true, "weakness": "CWE-94 exec" },
+    { "file": "vuln/shell.py", "vulnerable": true, "weakness": "CWE-78 shell=True" },
+    { "file": "vuln/load_yaml.py", "vulnerable": true, "weakness": "CWE-502 yaml.load" },
+    { "file": "vuln/load_pickle.py", "vulnerable": true, "weakness": "CWE-502 pickle.loads" },
+    { "file": "clean/math_ok.py", "vulnerable": false, "weakness": "clean" },
+    { "file": "clean/safe_yaml.py", "vulnerable": false, "weakness": "clean (safe_load)" },
+    { "file": "clean/evaluator.py", "vulnerable": false, "weakness": "decoy (evaluate)" }
+  ]
+}

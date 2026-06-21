@@ -49,3 +49,7 @@ packages/bench/draco-current.json
 ruvector.db
 **/agentdb.rvf
 **/agentdb.rvf.lock
+
+# Python bytecode (e.g. fuzz fixture compilation)
+__pycache__/
+*.pyc

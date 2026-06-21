@@ -46,3 +46,9 @@ export * from './evolve.js';
 // The benchmark + SOTA "Darwin Plus" layer (ADR-076…081) is namespaced to avoid
 // name collisions (e.g. scoreWeights) with the lightweight ADR-072 scorer.
 export * as bench from './bench/index.js';
+
+// Darwin Shield — the defensive vulnerability-discovery harness (ADR-155).
+// Namespaced to avoid collisions (e.g. mutate/evolve/fitness) with the kernel
+// loop above. The model is frozen; the security harness evolves; unsafe output
+// is rejected.
+export * as security from './security/index.js';

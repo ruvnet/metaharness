@@ -1,0 +1,79 @@
+{
+  "experiment": "frontier Chinese model bake-off — discovery proposer (verified per cost)",
+  "functions": 6,
+  "models": [
+    {
+      "model": "qwen/qwen3-235b-a22b-2507",
+      "verified": 6,
+      "of": 6,
+      "costMilliUSD": 0.1166,
+      "costPerVerifiedMilliUSD": 0.0194,
+      "classes": [
+        "ZeroDivisionError",
+        "ValueError",
+        "IndexError",
+        "ValueError",
+        "ValueError",
+        "IndexError"
+      ]
+    },
+    {
+      "model": "deepseek/deepseek-v3.2",
+      "verified": 6,
+      "of": 6,
+      "costMilliUSD": 0.3066,
+      "costPerVerifiedMilliUSD": 0.0511,
+      "classes": [
+        "ZeroDivisionError",
+        "ValueError",
+        "IndexError",
+        "ValueError",
+        "ValueError",
+        "IndexError"
+      ]
+    },
+    {
+      "model": "z-ai/glm-5.2",
+      "verified": 5,
+      "of": 6,
+      "costMilliUSD": 4.5686,
+      "costPerVerifiedMilliUSD": 0.9137,
+      "classes": [
+        "ZeroDivisionError",
+        "ValueError",
+        "ValueError",
+        "ValueError",
+        "ZeroDivisionError"
+      ]
+    },
+    {
+      "model": "moonshotai/kimi-k2.5",
+      "verified": 3,
+      "of": 6,
+      "costMilliUSD": 5.5487,
+      "costPerVerifiedMilliUSD": 1.8496,
+      "classes": [
+        "IndexError",
+        "ValueError",
+        "IndexError"
+      ]
+    },
+    {
+      "model": "minimax/minimax-m2.5",
+      "verified": 0,
+      "of": 6,
+      "costMilliUSD": 1.3829,
+      "costPerVerifiedMilliUSD": null,
+      "classes": []
+    },
+    {
+      "model": "z-ai/glm-4.7-flash",
+      "verified": 0,
+      "of": 6,
+      "costMilliUSD": 0.5993,
+      "costPerVerifiedMilliUSD": null,
+      "classes": []
+    }
+  ],
+  "note": "Real LLM calls, single non-deterministic run. \"verified\" = proposed input actually crashes the function (execution-confirmed). Cost from token usage × OpenRouter pricing."
+}

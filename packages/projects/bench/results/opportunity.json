@@ -1,0 +1,99 @@
+{
+  "portfolio": 25,
+  "top10": [
+    {
+      "taskClass": "task-23",
+      "rank": 1,
+      "estimatedMonthlyCost": 8177.706,
+      "expectedSaving": 3701.422574,
+      "verificationMethod": "unit-tests",
+      "riskScore": 0.1675,
+      "roi": 3267.430777
+    },
+    {
+      "taskClass": "task-18",
+      "rank": 2,
+      "estimatedMonthlyCost": 12213.97,
+      "expectedSaving": 3173.930988,
+      "verificationMethod": "unit-tests",
+      "riskScore": 0.2655,
+      "roi": 2584.055914
+    },
+    {
+      "taskClass": "task-20",
+      "rank": 3,
+      "estimatedMonthlyCost": 10500.408,
+      "expectedSaving": 1205.339548,
+      "verificationMethod": "none",
+      "riskScore": 0.4295,
+      "roi": 842.954213
+    },
+    {
+      "taskClass": "task-12",
+      "rank": 4,
+      "estimatedMonthlyCost": 2070.46,
+      "expectedSaving": 442.820682,
+      "verificationMethod": "real-oracle",
+      "riskScore": 0.207,
+      "roi": 378.655965
+    },
+    {
+      "taskClass": "task-19",
+      "rank": 5,
+      "estimatedMonthlyCost": 1405.44,
+      "expectedSaving": 381.694662,
+      "verificationMethod": "real-oracle",
+      "riskScore": 0.1925,
+      "roi": 330.261306
+    },
+    {
+      "taskClass": "task-01",
+      "rank": 6,
+      "estimatedMonthlyCost": 15360.84,
+      "expectedSaving": 559.700972,
+      "verificationMethod": "human-review",
+      "riskScore": 0.715,
+      "roi": 279.570636
+    },
+    {
+      "taskClass": "task-13",
+      "rank": 7,
+      "estimatedMonthlyCost": 1440.5,
+      "expectedSaving": 317.139231,
+      "verificationMethod": "unit-tests",
+      "riskScore": 0.195,
+      "roi": 273.849726
+    },
+    {
+      "taskClass": "task-11",
+      "rank": 8,
+      "estimatedMonthlyCost": 6153.496,
+      "expectedSaving": 302.610708,
+      "verificationMethod": "human-review",
+      "riskScore": 0.6245,
+      "roi": 170.324437
+    },
+    {
+      "taskClass": "task-22",
+      "rank": 9,
+      "estimatedMonthlyCost": 4892.25,
+      "expectedSaving": 277.668469,
+      "verificationMethod": "unit-tests",
+      "riskScore": 0.6315,
+      "roi": 154.925122
+    },
+    {
+      "taskClass": "task-24",
+      "rank": 10,
+      "estimatedMonthlyCost": 12333.254,
+      "expectedSaving": 230.894779,
+      "verificationMethod": "unit-tests",
+      "riskScore": 0.6075,
+      "roi": 132.706774
+    }
+  ],
+  "totalExpectedSaving": 10593.222613,
+  "naiveRealized": 9316.225115,
+  "roiRealized": 10593.222613,
+  "upliftPct": 13.71
+}

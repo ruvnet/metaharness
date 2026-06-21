@@ -2,6 +2,26 @@
 
 All notable changes to this package. Dates UTC.
 
+## 0.3.0 — 2026-06-21
+
+- **Darwin Shield (ADR-155): defensive zero-day discovery harness** (`src/security/`,
+  exported as `security`). The security application of the Darwin Plus stack —
+  same thesis (model frozen, harness evolves, proof in the replayable receipt),
+  changed task (defensive vulnerability discovery) and fitness function.
+  - Genome (planner/contextPolicy/reviewerCount/retryBudget/fuzzBudget/tools),
+    bounded mutation + crossover (`safetyProfile` immutable), three fixed
+    baselines (static / LLM single-pass / fixed agent).
+  - Safety layer: scope gate, exploit redactor, unsafe-output gate
+    (`exploitCodeAllowed` is a hard `false`; unsafe outputs are an immediate
+    −1.00 fitness term).
+  - ruVector security memory: 7 collections, hybrid + negative-memory ranking,
+    patch/genome reuse so runs compound.
+  - DARWIN-SHIELD-BENCH on a seeded corpus passes every ADR-155 gate at the
+    documented config (pop 16 × 50 cycles): TPR +150% vs fixed harness, FPR −100%,
+    patch-pass 100%, repro 100%, **0 unsafe outputs**, cost ≤ 2×. Fully
+    deterministic (byte-identical receipts). Run: `npm run bench:shield` or
+    `metaharness-darwin security bench`.
+
 ## 0.2.8 — 2026-06-21
 
 - **Agentic loop measured at scale (ADR-153)**: the ReAct loop (read/grep/ls/edit/run_tests/submit) on deepseek-v4-pro = **94/300 = 31.3%** [26.3,36.8] (275 attempted, official batch). Competitive with single-shot+repair (29.3%) and CHEAPER (~$0.04/inst vs $0.11) — conservative lower bound (budget-truncated). RESULTS §20.

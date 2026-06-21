@@ -1,0 +1,81 @@
+{
+  "oracle": "semgrep",
+  "version": "1.167.0",
+  "corpus": "bench/security/fixtures/cwe-bench",
+  "shape": "pre-fix/post-fix pairs + decoys (real-CVE-shaped)",
+  "counts": {
+    "files": 18,
+    "vulnerable": 8,
+    "fixedTwins": 8
+  },
+  "config": {
+    "generations": 10,
+    "population": 8,
+    "seed": 0,
+    "vocabulary": [
+      "eval",
+      "exec",
+      "shell-true",
+      "yaml-load",
+      "pickle-loads",
+      "os-system",
+      "weak-hash",
+      "mktemp"
+    ]
+  },
+  "baseline": {
+    "patterns": [
+      "eval"
+    ],
+    "mean": 0.611111,
+    "falsePositives": 0
+  },
+  "champion": {
+    "patterns": [
+      "eval",
+      "exec",
+      "shell-true",
+      "yaml-load",
+      "pickle-loads",
+      "os-system",
+      "weak-hash",
+      "mktemp"
+    ],
+    "mean": 1,
+    "falsePositives": 0
+  },
+  "learningCurve": [
+    0.666667,
+    0.722222,
+    0.777778,
+    0.833333,
+    0.888889,
+    0.944444,
+    1,
+    1,
+    1,
+    1
+  ],
+  "lineage": [
+    "baseline",
+    "g0-5",
+    "g1-6",
+    "g2-5",
+    "g3-3",
+    "g4-3",
+    "g5-5",
+    "g6-3"
+  ],
+  "evaluations": 80,
+  "realOracleCalls": 1,
+  "bootstrapVsBaseline": {
+    "meanDelta": 0.389811,
+    "lower95": 0.166667,
+    "upper95": 0.611111,
+    "promote": true,
+    "samples": 5000,
+    "pValue": 0
+  },
+  "promotedOverBaseline": true,
+  "receiptHash": "18b72713"
+}

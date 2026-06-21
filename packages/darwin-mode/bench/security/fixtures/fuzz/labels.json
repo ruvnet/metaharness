@@ -1,0 +1,8 @@
+{
+  "labels": [
+    { "file": "vuln/divide.py", "vulnerable": true, "weakness": "CWE-369 divide-by-zero" },
+    { "file": "vuln/index.py", "vulnerable": true, "weakness": "CWE-125 out-of-bounds read" },
+    { "file": "clean/safe_divide.py", "vulnerable": false, "weakness": "clean" },
+    { "file": "clean/safe_index.py", "vulnerable": false, "weakness": "clean" }
+  ]
+}

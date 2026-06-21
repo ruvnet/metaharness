@@ -16,6 +16,7 @@ import { evolve } from './evolve.js';
 import { RuvllmMutator } from './ruvllm-mutator.js';
 import { profileRepo } from './repo_profiler.js';
 import { loadSuite, makeSuite, saveSuite, verifySuite } from './bench/suite.js';
+import { runBenchmark, renderReport } from './security/index.js';
 function flag(name, fallback) {
     const i = process.argv.indexOf(name);
     return i === -1 ? fallback : (process.argv[i + 1] ?? fallback);
@@ -88,17 +89,39 @@ async function runBench() {
     process.stderr.write('usage: metaharness-darwin bench <create|verify> …\n');
     process.exit(1);
 }
+/** `security bench` (ADR-155, Darwin Shield). Runs DARWIN-SHIELD-BENCH. */
+function runSecurity() {
+    const sub = process.argv[3];
+    if (sub !== 'bench') {
+        process.stderr.write('usage: metaharness-darwin security bench [--population N] [--cycles N] [--seed N]\n');
+        process.exit(1);
+    }
+    const report = runBenchmark({
+        population: num('--population', 16),
+        cycles: num('--cycles', 50),
+        seed: num('--seed', 0),
+    });
+    process.stdout.write(renderReport(report));
+    process.stdout.write(`\nOverall: ${report.passed ? 'PASS' : 'FAIL'}\n`);
+    if (!report.passed)
+        process.exit(1);
+}
 async function main() {
     const command = process.argv[2];
+    if (command === 'security') {
+        runSecurity();
+        return;
+    }
     if (command === 'bench') {
         await runBench();
         return;
     }
     if (command !== 'evolve') {
-        process.stderr.write('usage: metaharness-darwin <evolve|bench> …\n' +
+        process.stderr.write('usage: metaharness-darwin <evolve|bench|security> …\n' +
             '  evolve <repo> [--generations N] [--children N] [--concurrency N] [--seed N] [--bench <suite.json>] [--tie faster] [--selection quality-diversity|behavioral-diversity|niche-steering|clade|pareto] [--crossover] [--epistasis] [--risk-budget N] [--fdr Q] [--curriculum] [--sandbox real|mock|agent] [--mutator deterministic|ruvllm] [--ruvllm-url URL] [--ruvllm-model M]\n' +
             '  bench create <repo> [--out <suite.json>]\n' +
-            '  bench verify <suite.json>\n');
+            '  bench verify <suite.json>\n' +
+            '  security bench [--population N] [--cycles N] [--seed N]   (ADR-155 Darwin Shield)\n');
         process.exit(1);
     }
     const repoRoot = resolve(process.argv[3] ?? process.cwd());

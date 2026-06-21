@@ -1,0 +1,8 @@
+{
+  "tasks": 200,
+  "seed": 7,
+  "costReductionPct": 88.18,
+  "allTerminated": true,
+  "naiveCost": 4690.04,
+  "boundedCost": 554.16
+}

@@ -1,0 +1,47 @@
+{
+  "cases": [
+    {
+      "id": "gp2-to-gp3",
+      "kind": "gp2-to-gp3",
+      "address": "aws_ebs_volume.data",
+      "requiresUtilizationEvidence": false,
+      "expect": "accept",
+      "note": "gp3 is cheaper than gp2 at equal capacity; build + compliance unchanged"
+    },
+    {
+      "id": "rds-rightsize",
+      "kind": "rightsize",
+      "address": "aws_db_instance.main",
+      "requiresUtilizationEvidence": true,
+      "utilization": { "cpuP95": 11, "windowDays": 14 },
+      "expect": "accept",
+      "note": "db.m5.2xlarge -> db.t3.medium; under-utilized per CloudWatch evidence"
+    },
+    {
+      "id": "trap-break-build",
+      "kind": "rightsize",
+      "address": "aws_instance.web",
+      "requiresUtilizationEvidence": false,
+      "expect": "reject",
+      "expectGate": "build",
+      "note": "typo'd argument (instance_typ) — terraform validate must fail"
+    },
+    {
+      "id": "trap-drop-encryption",
+      "kind": "drop-encryption",
+      "address": "aws_ebs_volume.data",
+      "requiresUtilizationEvidence": false,
+      "expect": "reject",
+      "expectGate": "compliance",
+      "note": "disabling encryption is 'cheaper' but introduces a new checkov failure (CKV_AWS_3)"
+    },
+    {
+      "id": "s3-lifecycle",
+      "kind": "s3-lifecycle",
+      "address": "aws_s3_bucket.logs",
+      "requiresUtilizationEvidence": false,
+      "expect": "accept",
+      "note": "add lifecycle expiration/transition; build + compliance unchanged"
+    }
+  ]
+}

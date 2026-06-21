@@ -1,0 +1,7 @@
+{
+  "labels": [
+    { "file": "vuln/inj.py", "vulnerable": true, "weakness": "CWE-94 code injection" },
+    { "file": "clean/safe.py", "vulnerable": false, "weakness": "clean" },
+    { "file": "clean/evaluator.py", "vulnerable": false, "weakness": "decoy (evaluate)" }
+  ]
+}

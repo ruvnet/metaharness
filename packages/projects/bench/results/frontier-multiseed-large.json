@@ -1,0 +1,110 @@
+{
+  "experiment": "SCALED multi-seed gate for ADR-167 frontier-lane selection (budget-capped real spend)",
+  "functions": 14,
+  "seedsPerFunction": 3,
+  "seedTemps": [
+    0.4,
+    0.85,
+    1.3
+  ],
+  "models": [
+    {
+      "id": "qwen/qwen-2.5-7b-instruct",
+      "pricePerMTokUSD": {
+        "in": 0.04,
+        "out": 0.1
+      }
+    },
+    {
+      "id": "qwen/qwen-2.5-72b-instruct",
+      "pricePerMTokUSD": {
+        "in": 0.12,
+        "out": 0.39
+      }
+    },
+    {
+      "id": "qwen/qwen3-235b-a22b-2507",
+      "pricePerMTokUSD": {
+        "in": 0.09,
+        "out": 0.1
+      }
+    },
+    {
+      "id": "deepseek/deepseek-v3.2",
+      "pricePerMTokUSD": {
+        "in": 0.23,
+        "out": 0.34
+      }
+    },
+    {
+      "id": "z-ai/glm-5.2",
+      "pricePerMTokUSD": {
+        "in": 1.2,
+        "out": 4.1
+      }
+    }
+  ],
+  "cellsPerModel": {
+    "qwen/qwen-2.5-7b-instruct": 42,
+    "qwen/qwen-2.5-72b-instruct": 42,
+    "qwen/qwen3-235b-a22b-2507": 42,
+    "deepseek/deepseek-v3.2": 42,
+    "z-ai/glm-5.2": 42
+  },
+  "pairedCellCount": 42,
+  "verifiedRate": {
+    "qwen/qwen-2.5-7b-instruct": 0.738095,
+    "qwen/qwen-2.5-72b-instruct": 0.904762,
+    "qwen/qwen3-235b-a22b-2507": 0.952381,
+    "deepseek/deepseek-v3.2": 0.833333,
+    "z-ai/glm-5.2": 0.857143
+  },
+  "costPerVerifiedMilliUSD": {
+    "qwen/qwen-2.5-7b-instruct": 0.021059,
+    "qwen/qwen-2.5-72b-instruct": 0.042865,
+    "qwen/qwen3-235b-a22b-2507": 0.028369,
+    "deepseek/deepseek-v3.2": 0.086803,
+    "z-ai/glm-5.2": 1.009117
+  },
+  "totalCostMilliUSD": {
+    "qwen/qwen-2.5-7b-instruct": 0.65284,
+    "qwen/qwen-2.5-72b-instruct": 1.62888,
+    "qwen/qwen3-235b-a22b-2507": 1.13476,
+    "deepseek/deepseek-v3.2": 3.0381,
+    "z-ai/glm-5.2": 36.3282
+  },
+  "pairedBootstrap_challengerMinusGlm": {
+    "qwen/qwen-2.5-7b-instruct": {
+      "meanDelta": -0.119048,
+      "lower95": -0.309524,
+      "upper95": 0.071429,
+      "pValue": 0.9258,
+      "samples": 42
+    },
+    "qwen/qwen-2.5-72b-instruct": {
+      "meanDelta": 0.047619,
+      "lower95": -0.047619,
+      "upper95": 0.142857,
+      "pValue": 0.214,
+      "samples": 42
+    },
+    "qwen/qwen3-235b-a22b-2507": {
+      "meanDelta": 0.095238,
+      "lower95": 0,
+      "upper95": 0.214286,
+      "pValue": 0.0634,
+      "samples": 42
+    },
+    "deepseek/deepseek-v3.2": {
+      "meanDelta": -0.02381,
+      "lower95": -0.142857,
+      "upper95": 0.095238,
+      "pValue": 0.7118,
+      "samples": 42
+    }
+  },
+  "budgetUSD": 5,
+  "actualSpendUSD": 0.042783,
+  "stoppedEarlyOnBudget": false,
+  "note": "Scaled axes (14 funcs × K seeds, temp sweep) over a fuller open-model cost curve. Paired by (function,seed) cell vs the GLM-5.2 incumbent; lower95 ≥ 0 ⇒ challenger not statistically worse. Budget-capped: the run self-limits and records ACTUAL spend, which is tiny by design — the harness is cost-disciplined, so a human-scale budget cannot be \"spent\" without redundant calls past statistical convergence."
+}

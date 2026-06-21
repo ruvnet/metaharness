@@ -1,0 +1,82 @@
+# Real-tool coverage gate (Tier 3 #9).
+#
+# The Darwin Shield real-tool oracles (semgrep, and the codeql shell) are written
+# to SKIP gracefully when the underlying CLI is absent — great for local dev, but
+# it means a "green" run can hide the real-tool suite entirely. This workflow
+# installs the real tools in CI and GUARDS that they are actually present, so the
+# real-tool tests run for real on every PR (they cannot silently skip here).
+#
+# Conventions match the other workflows in .github/workflows/ (checkout@v4,
+# setup-node@v4, node 20, least-privilege permissions).
+
+name: Real Tools
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  real-tools:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Install the REAL static analyzer the security suite probes for.
+      - name: Install semgrep
+        run: |
+          pip install semgrep
+          semgrep --version
+
+      # Install JS deps at the repo root (workspaces).
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      # Build the darwin package (tsc) so the dist/ entrypoints exist for the guard.
+      - name: Build @metaharness/darwin
+        run: npm run -w @metaharness/darwin build
+
+      # GUARD: fail the job if semgrep is NOT actually available to the oracle.
+      # This is what makes the real-tool suite REAL coverage in CI — if semgrep
+      # ever stops resolving, this step errors instead of letting the suite skip.
+      - name: Guard — semgrep must be available
+        run: |
+          # Point the probe at the absolute path of the installed semgrep.
+          export SEMGREP_BIN="$(command -v semgrep)"
+          node --input-type=module -e "
+            import { semgrepAvailability } from './packages/darwin-mode/dist/security/index.js';
+            const a = semgrepAvailability(process.env.SEMGREP_BIN);
+            console.log('semgrep availability:', JSON.stringify(a));
+            if (a.available !== true) {
+              console.error('GUARD FAILED: semgrep is not available — the real-tool suite would silently skip.');
+              process.exit(1);
+            }
+          "
+
+      # Run the darwin security suite with SEMGREP_BIN pointed at the real binary so
+      # the real-tool tests EXECUTE (not skip). `command -v semgrep` resolves the
+      # absolute path installed above.
+      - name: Test @metaharness/darwin (real-tool suite)
+        run: |
+          export SEMGREP_BIN="$(command -v semgrep)"
+          echo "Using SEMGREP_BIN=$SEMGREP_BIN"
+          npm run -w @metaharness/darwin test
+
+      # Deterministic projects suite (must NOT touch @metaharness/projects source).
+      - name: Build + test @metaharness/projects (deterministic)
+        run: |
+          npm run -w @metaharness/projects build
+          npm run -w @metaharness/projects test

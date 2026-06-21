@@ -1,0 +1,24 @@
+{
+  "oracle": "semgrep",
+  "version": "1.167.0",
+  "fixture": "bench/security/fixtures/semgrep",
+  "rule": "darwin-shield-py-eval (CWE-94)",
+  "labels": {
+    "vulnerable": 1,
+    "decoys": 2
+  },
+  "result": {
+    "truePositives": 1,
+    "falsePositives": 0,
+    "falseNegatives": 0,
+    "precision": 1,
+    "recall": 1
+  },
+  "findings": [
+    {
+      "path": "vuln/inj.py",
+      "line": 4,
+      "ruleId": "darwin-shield-py-eval"
+    }
+  ]
+}

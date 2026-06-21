@@ -1,0 +1,24 @@
+{
+  "experiment": "self-learning loop with metaharness capabilities (escalation router + TieredMemory)",
+  "cheapModel": "qwen/qwen-2.5-7b-instruct",
+  "frontierModel": "z-ai/glm-5.2",
+  "targets": 6,
+  "weaknessClass": "parsepair",
+  "memoryOff": {
+    "verified": 5,
+    "escalations": 2,
+    "totalCostMilliUSD": 1.261,
+    "costPerVerified": 0.252196
+  },
+  "memoryOn": {
+    "verified": 6,
+    "escalations": 0,
+    "totalCostMilliUSD": 0.0544,
+    "costPerVerified": 0.009063,
+    "memorySize": 1,
+    "costWithMemory": 0.00862,
+    "costWithoutMemory": 0.01128
+  },
+  "costReductionPct": 95.7,
+  "note": "Real LLM calls; single non-deterministic run. memory ON escalates once to learn the generalized cue (stored in the TieredMemory mutation tier) then the cheap lane reuses it — avoiding repeated frontier escalation."
+}

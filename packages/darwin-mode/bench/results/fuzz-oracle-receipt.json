@@ -1,0 +1,39 @@
+{
+  "oracle": "python-property-fuzzer",
+  "version": "Python 3.11.15",
+  "invariant": "totality (target never raises on bounded inputs)",
+  "fixture": "bench/security/fixtures/fuzz",
+  "result": {
+    "truePositives": 2,
+    "falsePositives": 0,
+    "falseNegatives": 0,
+    "precision": 1,
+    "recall": 1
+  },
+  "outcomes": [
+    {
+      "file": "clean/safe_divide.py",
+      "vulnerable": false,
+      "falsified": false,
+      "exceptionClass": null
+    },
+    {
+      "file": "clean/safe_index.py",
+      "vulnerable": false,
+      "falsified": false,
+      "exceptionClass": null
+    },
+    {
+      "file": "vuln/divide.py",
+      "vulnerable": true,
+      "falsified": true,
+      "exceptionClass": "ZeroDivisionError"
+    },
+    {
+      "file": "vuln/index.py",
+      "vulnerable": true,
+      "falsified": true,
+      "exceptionClass": "IndexError"
+    }
+  ]
+}

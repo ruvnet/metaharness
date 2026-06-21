@@ -1,0 +1,158 @@
+{
+  "experiment": "real-tool cost-oracle discrimination on a labeled Terraform corpus",
+  "tools": {
+    "terraform": "Terraform v1.9.8",
+    "checkov": "3.3.1",
+    "infracost": "present but unauthed (INFRACOST_API_KEY unset)"
+  },
+  "savingsOracle": "SKIPPED — synthetic delta; build+compliance+evidence gates are REAL",
+  "cases": 5,
+  "genuineAcceptedOnRealGates": "3/3",
+  "trapsRejectedAtCorrectGate": "2/2",
+  "falseNegatives": 0,
+  "trapsMissed": 0,
+  "allMatchExpectation": true,
+  "results": [
+    {
+      "id": "gp2-to-gp3",
+      "expect": "accept",
+      "expectGate": null,
+      "build": {
+        "baselineValid": true,
+        "patchedValid": true
+      },
+      "compliance": {
+        "baselineFailed": 1,
+        "patchedFailed": 1,
+        "newFailures": []
+      },
+      "savings": {
+        "source": "synthetic (no INFRACOST_API_KEY)",
+        "diffMonthlyUsd": null
+      },
+      "oracle": {
+        "accepted": true,
+        "rejectGate": null,
+        "reasons": [
+          "PASS build: terraform validate/plan ok",
+          "PASS compliance: no new checkov failures",
+          "PASS savings: modeled bill drops 1 USD/month"
+        ]
+      },
+      "matchesExpectation": true
+    },
+    {
+      "id": "rds-rightsize",
+      "expect": "accept",
+      "expectGate": null,
+      "build": {
+        "baselineValid": true,
+        "patchedValid": true
+      },
+      "compliance": {
+        "baselineFailed": 10,
+        "patchedFailed": 10,
+        "newFailures": []
+      },
+      "savings": {
+        "source": "synthetic (no INFRACOST_API_KEY)",
+        "diffMonthlyUsd": null
+      },
+      "oracle": {
+        "accepted": true,
+        "rejectGate": null,
+        "reasons": [
+          "PASS build: terraform validate/plan ok",
+          "PASS compliance: no new checkov failures",
+          "PASS evidence: p95 CPU 11% < 40% over 14d",
+          "PASS savings: modeled bill drops 1 USD/month"
+        ]
+      },
+      "matchesExpectation": true
+    },
+    {
+      "id": "trap-break-build",
+      "expect": "reject",
+      "expectGate": "build",
+      "build": {
+        "baselineValid": true,
+        "patchedValid": false
+      },
+      "compliance": {
+        "baselineFailed": 5,
+        "patchedFailed": 5,
+        "newFailures": []
+      },
+      "savings": {
+        "source": "synthetic (no INFRACOST_API_KEY)",
+        "diffMonthlyUsd": null
+      },
+      "oracle": {
+        "accepted": false,
+        "rejectGate": "build",
+        "reasons": [
+          "REJECT build: terraform validate/plan failed on patched template"
+        ]
+      },
+      "matchesExpectation": true
+    },
+    {
+      "id": "trap-drop-encryption",
+      "expect": "reject",
+      "expectGate": "compliance",
+      "build": {
+        "baselineValid": true,
+        "patchedValid": true
+      },
+      "compliance": {
+        "baselineFailed": 1,
+        "patchedFailed": 2,
+        "newFailures": [
+          "CKV_AWS_3@aws_ebs_volume.data"
+        ]
+      },
+      "savings": {
+        "source": "synthetic (no INFRACOST_API_KEY)",
+        "diffMonthlyUsd": null
+      },
+      "oracle": {
+        "accepted": false,
+        "rejectGate": "compliance",
+        "reasons": [
+          "PASS build: terraform validate/plan ok",
+          "REJECT compliance: patch introduces 1 new checkov failure(s): CKV_AWS_3@aws_ebs_volume.data"
+        ]
+      },
+      "matchesExpectation": true
+    },
+    {
+      "id": "s3-lifecycle",
+      "expect": "accept",
+      "expectGate": null,
+      "build": {
+        "baselineValid": true,
+        "patchedValid": true
+      },
+      "compliance": {
+        "baselineFailed": 6,
+        "patchedFailed": 5,
+        "newFailures": []
+      },
+      "savings": {
+        "source": "synthetic (no INFRACOST_API_KEY)",
+        "diffMonthlyUsd": null
+      },
+      "oracle": {
+        "accepted": true,
+        "rejectGate": null,
+        "reasons": [
+          "PASS build: terraform validate/plan ok",
+          "PASS compliance: no new checkov failures",
+          "PASS savings: modeled bill drops 1 USD/month"
+        ]
+      },
+      "matchesExpectation": true
+    }
+  ],
+  "note": "Build gate = terraform init+validate -json (REAL). Compliance gate = checkov -o json via parsePolicyReport/newFailures (REAL). Savings gate = infracost breakdown via parseCostReport/costDelta — REAL only with INFRACOST_API_KEY, else a synthetic -1 delta is used so the genuine cases still exercise the earlier real gates end-to-end (no real savings is claimed in that mode). Traps are rejected by the REAL build/compliance gates regardless of the savings source."
+}

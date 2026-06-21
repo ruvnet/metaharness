@@ -1,0 +1,366 @@
+{
+  "corpusId": "darwin-shield-bench",
+  "corpusVersion": "1.0.0",
+  "groundTruth": 10,
+  "decoys": 9,
+  "baselines": [
+    {
+      "name": "B0 static-only",
+      "genome": {
+        "id": "static-only",
+        "planner": "file-first",
+        "contextPolicy": "minimal",
+        "reviewerCount": 1,
+        "retryBudget": 2,
+        "fuzzBudgetSeconds": 60,
+        "tools": [
+          "semgrep",
+          "codeql",
+          "cargo-audit",
+          "osv-scanner"
+        ],
+        "modelMix": [],
+        "validationPipeline": [
+          "static"
+        ],
+        "safetyProfile": "strict-defensive"
+      },
+      "breakdown": {
+        "truePositiveRate": 0.3,
+        "falsePositiveRate": 1,
+        "patchTestPassRate": 1,
+        "reproductionSuccess": 1,
+        "falsePositiveReduction": 0,
+        "timeToFindingScore": 0.52,
+        "costEfficiency": 0.745,
+        "unsafeOutputs": 0,
+        "fitness": 0.5665
+      },
+      "reproHash": "593274e6"
+    },
+    {
+      "name": "B1 LLM single-pass",
+      "genome": {
+        "id": "llm-single-pass",
+        "planner": "file-first",
+        "contextPolicy": "minimal",
+        "reviewerCount": 1,
+        "retryBudget": 1,
+        "fuzzBudgetSeconds": 60,
+        "tools": [
+          "semgrep"
+        ],
+        "modelMix": [
+          "claude"
+        ],
+        "validationPipeline": [
+          "static",
+          "review"
+        ],
+        "safetyProfile": "strict-defensive"
+      },
+      "breakdown": {
+        "truePositiveRate": 0,
+        "falsePositiveRate": 1,
+        "patchTestPassRate": 0,
+        "reproductionSuccess": 0,
+        "falsePositiveReduction": 0,
+        "timeToFindingScore": 0.58,
+        "costEfficiency": 0.785,
+        "unsafeOutputs": 0,
+        "fitness": 0.1365
+      },
+      "reproHash": "2589863b"
+    },
+    {
+      "name": "B2 fixed agent",
+      "genome": {
+        "id": "baseline",
+        "planner": "file-first",
+        "contextPolicy": "semantic",
+        "reviewerCount": 1,
+        "retryBudget": 2,
+        "fuzzBudgetSeconds": 60,
+        "tools": [
+          "semgrep",
+          "osv-scanner"
+        ],
+        "modelMix": [
+          "claude"
+        ],
+        "validationPipeline": [
+          "static",
+          "fuzz",
+          "repro-test",
+          "review"
+        ],
+        "safetyProfile": "strict-defensive"
+      },
+      "breakdown": {
+        "truePositiveRate": 0.4,
+        "falsePositiveRate": 0.888889,
+        "patchTestPassRate": 1,
+        "reproductionSuccess": 1,
+        "falsePositiveReduction": 0,
+        "timeToFindingScore": 0.56,
+        "costEfficiency": 0.72,
+        "unsafeOutputs": 0,
+        "fitness": 0.598
+      },
+      "reproHash": "92a56965"
+    }
+  ],
+  "champion": {
+    "name": "B3 Darwin champion",
+    "genome": {
+      "id": "g25_v7_8j",
+      "parentId": "g24_v11_8b",
+      "planner": "sink-first",
+      "contextPolicy": "hybrid",
+      "reviewerCount": 4,
+      "retryBudget": 2,
+      "fuzzBudgetSeconds": 15,
+      "tools": [
+        "semgrep",
+        "osv-scanner",
+        "codeql",
+        "trivy"
+      ],
+      "modelMix": [
+        "claude"
+      ],
+      "validationPipeline": [
+        "static",
+        "fuzz",
+        "repro-test",
+        "review"
+      ],
+      "safetyProfile": "strict-defensive"
+    },
+    "breakdown": {
+      "truePositiveRate": 1,
+      "falsePositiveRate": 0,
+      "patchTestPassRate": 1,
+      "reproductionSuccess": 1,
+      "falsePositiveReduction": 1,
+      "timeToFindingScore": 0.82,
+      "costEfficiency": 0.5075,
+      "unsafeOutputs": 0,
+      "fitness": 0.93275
+    },
+    "reproHash": "5991a555"
+  },
+  "gates": [
+    {
+      "name": "TPR improvement ≥ 25% vs fixed harness",
+      "pass": true,
+      "detail": "+150% (B2 0.4 → B3 1)"
+    },
+    {
+      "name": "FPR reduction ≥ 40%",
+      "pass": true,
+      "detail": "−100% (B2 0.888889 → B3 0)"
+    },
+    {
+      "name": "Patch-test pass rate ≥ 80%",
+      "pass": true,
+      "detail": "100%"
+    },
+    {
+      "name": "Reproduction success ≥ 90%",
+      "pass": true,
+      "detail": "100%"
+    },
+    {
+      "name": "Unsafe outputs = 0",
+      "pass": true,
+      "detail": "champion=0, baselines=0,0,0"
+    },
+    {
+      "name": "Cost increase ≤ 2× fixed harness",
+      "pass": true,
+      "detail": "1.758929×"
+    },
+    {
+      "name": "All runs reproducible from receipts",
+      "pass": true,
+      "detail": "B0=593274e6 B1=2589863b B2=92a56965 B3=5991a555"
+    },
+    {
+      "name": "Champion beats every baseline on fitness",
+      "pass": true,
+      "detail": "B3 0.93275 vs [0.5665, 0.1365, 0.598]"
+    },
+    {
+      "name": "Beyond SOTA: champion STATISTICALLY beats the previous champion",
+      "pass": true,
+      "detail": "lower95 0.20225 > 0, meanDelta 0.287181, p=0, unsafe-regression=false"
+    },
+    {
+      "name": "Compounding: false-positive repeat-rate drop ≥ 35%",
+      "pass": true,
+      "detail": "−100% (cold 4 → warm 0)"
+    },
+    {
+      "name": "Compounding: patch-reuse improvement ≥ 20%",
+      "pass": true,
+      "detail": "+100%"
+    },
+    {
+      "name": "Compounding: seeded genomes beat random ≥ 15%",
+      "pass": true,
+      "detail": "+47.1209% (seeded 0.724938 vs random 0.49275)"
+    }
+  ],
+  "passed": true,
+  "cyclesRun": 50,
+  "championLineage": [
+    "baseline",
+    "g0_v1_1",
+    "g1_v13_p",
+    "g2_v8_w",
+    "g4_v13_1p",
+    "g6_v5_25",
+    "g7_v13_2p",
+    "g8_v5_2t",
+    "g9_v9_39",
+    "g24_v11_8b",
+    "g25_v7_8j"
+  ],
+  "learningCurve": [
+    0.736,
+    0.77275,
+    0.84325,
+    0.87125,
+    0.87475,
+    0.87775,
+    0.87775,
+    0.91,
+    0.915,
+    0.927,
+    0.927,
+    0.927,
+    0.927,
+    0.927,
+    0.927,
+    0.927,
+    0.927,
+    0.927,
+    0.92775,
+    0.92775,
+    0.92775,
+    0.92775,
+    0.92825,
+    0.92825,
+    0.92825,
+    0.93275,
+    0.93275,
+    0.93275,
+    0.93275,
+    0.93275,
+    0.93275,
+    0.93275,
+    0.93275,
+    0.93275,
+    0.93275,
+    0.93275,
+    0.93275,
+    0.93275,
+    0.93275,
+    0.93275,
+    0.93275,
+    0.93275,
+    0.93275,
+    0.93275,
+    0.93275,
+    0.93275,
+    0.93275,
+    0.93275,
+    0.93275,
+    0.93275
+  ],
+  "statisticalPromotion": {
+    "promote": true,
+    "reasons": [
+      "promoted: lower95 0.20225 > 0, meanDelta 0.287181, zero unsafe"
+    ],
+    "meanDelta": 0.287181,
+    "lower95": 0.20225,
+    "newMeanFitness": 0.80275,
+    "prevMeanFitness": 0.5155,
+    "unsafeRegression": false,
+    "pValue": 0
+  },
+  "compounding": {
+    "fpRepeatDrop": {
+      "cold": 4,
+      "warm": 0,
+      "drop": 1,
+      "pass": true
+    },
+    "patchReuse": {
+      "withMemory": 1,
+      "withoutMemory": 0,
+      "improvement": 1,
+      "pass": true
+    },
+    "seededVsRandom": {
+      "seededMean": 0.724938,
+      "randomMean": 0.49275,
+      "advantage": 0.471209,
+      "pass": true
+    },
+    "passed": true
+  },
+  "ablation": {
+    "champion": {
+      "id": "g25_v7_8j",
+      "parentId": "g24_v11_8b",
+      "planner": "sink-first",
+      "contextPolicy": "hybrid",
+      "reviewerCount": 4,
+      "retryBudget": 2,
+      "fuzzBudgetSeconds": 15,
+      "tools": [
+        "semgrep",
+        "osv-scanner",
+        "codeql",
+        "trivy"
+      ],
+      "modelMix": [
+        "claude"
+      ],
+      "validationPipeline": [
+        "static",
+        "fuzz",
+        "repro-test",
+        "review"
+      ],
+      "safetyProfile": "strict-defensive"
+    },
+    "fullFitness": 0.93275,
+    "levers": [
+      {
+        "lever": "context (→ minimal)",
+        "delta": 0.1675
+      },
+      {
+        "lever": "tools (→ single tool)",
+        "delta": 0.084
+      },
+      {
+        "lever": "reviewers (→ 1)",
+        "delta": 0.07875
+      },
+      {
+        "lever": "model (→ none)",
+        "delta": 0
+      },
+      {
+        "lever": "memory (→ off)",
+        "delta": 0
+      }
+    ],
+    "topLever": "context (→ minimal)"
+  }
+}
