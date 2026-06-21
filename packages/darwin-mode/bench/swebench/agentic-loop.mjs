@@ -124,10 +124,24 @@ export function makeTools(io) {
  * The loop tracks the last diff that made tests pass (resolvedInLoop) and always returns the final
  * working-tree diff as `patch` (submit finalizes; budget-exhaustion returns whatever was edited).
  */
+/** Cheap stable 32-bit string hash (FNV-1a) — for the anti-thrash state check. */
+export function stateHash(s) {
+  let h = 0x811c9dc5;
+  const str = String(s);
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+  return (h >>> 0).toString(36);
+}
+
 export async function agenticSolve({ problem, io, llm, maxSteps = 20, onStep }) {
   const tools = makeTools(io);
   const transcript = [];
-  let submitted = false; let resolvedInLoop = false; let cost = 0;
+  let submitted = false; let resolvedInLoop = false; let cost = 0; let thrash = 0;
+  // ADR-169 E4 (peer-review mitigation) — anti-thrash: a max-30 ReAct loop's
+  // primary failure mode is repeating the same read/grep/ls and burning budget.
+  // Hash each (action → observation) state; on an exact repeat, append a system
+  // warning so the model must change strategy or terminate. Keeps the per-instance
+  // cost projection realistic on extended step budgets.
+  const seenStates = new Set();
   const header = `--- problem statement ---\n${String(problem || '').slice(0, 6000)}\n--- begin. Output ONE JSON action. ---`;
   for (let step = 1; step <= maxSteps && !submitted; step++) {
     const convo = header + '\n' + transcript.map((t) => `>>> ${t.actionRaw}\n${t.obs}`).join('\n').slice(-12000);
@@ -140,9 +154,15 @@ export async function agenticSolve({ problem, io, llm, maxSteps = 20, onStep }) 
     else if (action.tool === 'noop') obs = `error: ${action.error}. Output ONE valid JSON tool action.`;
     else if (tools[action.tool]) { obs = tools[action.tool](action); if (action.tool === 'run_tests' && /ALL TARGET TESTS PASS/.test(obs)) resolvedInLoop = true; }
     else obs = `error: unknown tool "${action.tool}". Valid: ls, read, grep, edit, run_tests, submit.`;
+    // Anti-thrash: detect an exact repeat of a read-only navigation state.
+    if (['read', 'grep', 'ls'].includes(action.tool)) {
+      const h = stateHash(action.tool + '|' + JSON.stringify(action) + '|' + obs);
+      if (seenStates.has(h)) { thrash++; obs += '\n⚠️ SYSTEM: You already ran this exact action and got this exact result. Stop repeating — change your strategy (read a different file / edit / run_tests) or submit.'; }
+      else seenStates.add(h);
+    }
     const actionRaw = JSON.stringify(action.tool === 'noop' ? { raw: raw.slice(0, 200) } : action).slice(0, 400);
     transcript.push({ actionRaw, obs });
     if (onStep) onStep(step, action, obs);
   }
-  return { patch: io.gitDiff(), steps: transcript.length, submitted, resolvedInLoop, cost, transcript };
+  return { patch: io.gitDiff(), steps: transcript.length, submitted, resolvedInLoop, cost, thrash, transcript };
 }

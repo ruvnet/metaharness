@@ -17,6 +17,7 @@ import { fileURLToPath } from 'node:url';
 import { generateBaselineHarness } from '../../dist/generator.js';
 import { profileRepo } from '../../dist/repo_profiler.js';
 import { selectFiles } from '../swe-bench-runner.mjs';
+import { buildIndex, retrieveHybrid, formatExemplars } from './patch-memory.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -30,6 +31,24 @@ const MODEL = argv('--model', 'deepseek/deepseek-chat');
 const rel = (p) => (isAbsolute(p) ? p : join(HERE, p));
 const OUT = rel(argv('--out', 'predictions-repair.jsonl'));
 const REPORT = rel(argv('--report', 'solve-repair-report.json'));
+// ADR-169 (research E3) — persistent patch memory: retrieve prior resolved
+// (issue→patch) exemplars and inject as few-shot. `--patch-memory <corpus.json>`
+// enables it; `--pm-k`, `--pm-min-score` (the anti-negative-transfer gate). $0,
+// deterministic (BM25; dense rerank is opt-in via an embedder, not wired to a
+// paid model here). The corpus must EXCLUDE the eval set's own patches (we pass
+// excludeId per instance, but build from a disjoint resolved set to be safe).
+const PM_PATH = argv('--patch-memory', null);
+const PM_K = +argv('--pm-k', 3);
+const PM_MIN = +argv('--pm-min-score', 0.30);
+let pmIndex = null;
+if (PM_PATH) {
+  try {
+    const raw = JSON.parse(readFileSync(rel(PM_PATH), 'utf8'));
+    const entries = Array.isArray(raw) ? raw : raw.entries;
+    pmIndex = buildIndex(entries); // BM25 ($0); dense rerank opt-in later
+    console.error(`[patch-memory] loaded ${entries.length} resolved exemplars from ${PM_PATH} (k=${PM_K}, min-score=${PM_MIN})`);
+  } catch (e) { console.error(`[patch-memory] disabled — could not load ${PM_PATH}: ${String(e).slice(0, 120)}`); }
+}
 const VENV = '/tmp/swebench-venv';
 // ADR-150: configurable OpenAI-compatible endpoint (default OpenRouter; point --base-url at a
 // tailscale-served local model, e.g. http://ruv-mac-mini:8000/v1). --api-key-env names the env
@@ -142,6 +161,14 @@ async function runInstance(inst) {
     else selected = selectFiles(inst.problem_statement, work, allPy, buildContext, K);
     row.candidateFiles = allPy.length;
     const seen = selected.map((f) => `# ===== ${f} =====\n${readFileSync(join(work, f), 'utf8').slice(0, SLICE)}`).join('\n\n');
+    // ADR-169: gated patch-memory exemplars (empty string if nothing clears the
+    // similarity gate — never inject a misleading few-shot). Excludes self.
+    let pmBlock = '';
+    if (pmIndex) {
+      const hits = retrieveHybrid(pmIndex, inst.problem_statement, { k: PM_K, excludeId: inst.instance_id, minScore: PM_MIN });
+      pmBlock = formatExemplars(hits);
+      row.pmHits = hits.length;
+    }
     let feedback = '';
     for (let att = 1; att <= ATTEMPTS && !row.resolved; att++) {
       row.attempts = att;
@@ -149,7 +176,7 @@ async function runInstance(inst) {
       // ADR-150: system message carries the format contract + example (weak local models ignore an
       // inline spec and emit prose; deepseek already complies, so additive).
       const sys = 'You are a non-conversational code-patching tool. Output ONLY search/replace edit blocks. NEVER write prose, explanations, summaries, or markdown fences. Each edit is EXACTLY:\nFILE: path/to/file.py\n<<<SEARCH\n<lines copied verbatim from the file, incl. indentation>\n=======\n<replacement lines>\n>>>REPLACE\nExample:\nFILE: pkg/util.py\n<<<SEARCH\ndef add(a, b):\n    return a - b\n=======\ndef add(a, b):\n    return a + b\n>>>REPLACE';
-      const prompt = `Fix the bug by editing the selected real source files. Emit one or more edit blocks in the exact format from the system message. SEARCH must match the file character-for-character (indentation matters). No prose outside blocks.\n--- problem statement ---\n${inst.problem_statement.slice(0, 6000)}\n--- selected source files ---\n${seen}\n${feedback}`;
+      const prompt = `Fix the bug by editing the selected real source files. Emit one or more edit blocks in the exact format from the system message. SEARCH must match the file character-for-character (indentation matters). No prose outside blocks.\n--- problem statement ---\n${inst.problem_statement.slice(0, 6000)}\n--- selected source files ---\n${seen}\n${pmBlock}${feedback}`;
       const { raw, cost } = await llm(prompt, sys); totalCost += cost;
       let applied = 0; const re = /FILE:\s*([^\n]+)\n<<<SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)\n>>>REPLACE/g; const misses = [];
       for (let m; (m = re.exec(raw)); ) { const f = m[1].trim(); if (!selected.includes(f) || !existsSync(join(work, f))) { misses.push(`${f} (not a selected file)`); continue; } const cur = readFileSync(join(work, f), 'utf8'); const next = applyEdit(cur, m[2], m[3]); if (next && next !== cur) { writeFileSync(join(work, f), next); applied++; } else misses.push(`${f} (SEARCH text did not match the file)`); }
