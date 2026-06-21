@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/projects",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Borrowed-pattern integration program for Darwin Mode (ADR-156…166): durable checkpoints, cost-attributing traces, declarative HarnessSpec, bounded escalation scheduling, tiered memory, a dataset registry, typed handoffs, immutable safety rails, ROI opportunity scanning, and human review gates. The thesis: Darwin Mode mutates structured policies, not prompts. Dependency-free (Node built-ins).",
   "type": "module",
   "main": "./dist/index.js",
@@ -11,7 +11,11 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist/**", "README.md", "LICENSE"],
+  "files": [
+    "dist/**",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
