@@ -2,6 +2,10 @@
 
 All notable changes to this package. Dates UTC.
 
+## 0.2.8 — 2026-06-21
+
+- **Agentic loop measured at scale (ADR-153)**: the ReAct loop (read/grep/ls/edit/run_tests/submit) on deepseek-v4-pro = **94/300 = 31.3%** [26.3,36.8] (275 attempted, official batch). Competitive with single-shot+repair (29.3%) and CHEAPER (~$0.04/inst vs $0.11) — conservative lower bound (budget-truncated). RESULTS §20.
+
 ## 0.2.7 — 2026-06-20
 
 - LEARNINGS.md brought current with the full batch-verified arc: §5 N-tier ladder (29.3→40.3→**58.3%**), §6 capability floor now the rigorous local-14b full-300 number (4.7→6.7%), verdict updated (paradigm reaches 58.3%, both frontiers exhausted). Agentic loop (ADR-153) now implemented + unit-tested (`bench/swebench/agentic-loop.mjs` + `solve-agentic.mjs`) — the next-arc architecture, shipped as code.

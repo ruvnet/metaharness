@@ -419,3 +419,25 @@ but **n=25 is underpowered**: the CI [20.2, 55.5] overlaps the single-shot refer
 is **promising, not a significant win**. What it *does* establish: the agentic architecture works
 end-to-end on a real cheap base, resolves a competitive fraction, and is affordable. The decisive test
 is a full-300 agentic run (tight CI, directly comparable to 29.3%) — the natural next experiment.
+
+## 20. Agentic loop at scale (ADR-153): 94/300 = 31.3% on v4-pro — competitive + cheaper
+
+The agentic ReAct loop (`solve-agentic.mjs`, max-steps 15) on deepseek-v4-pro, 275/300 attempted
+(budget guard stopped the last 25 → counted unresolved), official batch eval:
+
+| solver (deepseek-v4-pro) | sample | resolved | Wilson 95% CI | $/inst |
+|---|---|---|---|---|
+| single-shot + repair (§15) | full-300 | 88/300 = 29.3% | [24.5, 34.7] | ~$0.11 |
+| **agentic loop (ADR-153)** | **275/300** | **94/300 = 31.3%** | **[26.3, 36.8]** | **~$0.04** |
+
+**Honest read:** the agentic point estimate (31.3%) is *above* single-shot (29.3%) **and** it is a
+**conservative lower bound** — 25 instances were never attempted (budget guard at $497.50/$500) and
+count as unresolved; at the ~34% rate of the 275 it did run, a full-300 pass extrapolates to ~34%. But
+the CIs overlap heavily, so this is **competitive, not a statistically significant win** at this n.
+The clean result is **cost**: the agentic loop resolved at-least-as-much at **~$0.04/instance vs
+~$0.11** for single-shot+repair — it converges in fewer tokens because run_tests is the free Docker
+oracle and the model stops once green. Combined with the pilot-25 (§19: 36%), the agentic approach
+consistently lands at-or-above single-shot at lower cost. The dramatic 65–88% agentic-SOTA tier would
+need stronger step models / richer tooling / more steps — this establishes the architecture is real,
+competitive, and cheap, not that it leaps the paradigm on a cheap base. Total agentic spend ~$10.50;
+final budget $497.55/$500 (exhausted).

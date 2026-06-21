@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/darwin",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "An LLM supercharger and cost optimizer: freeze the model class, evolve the harness. Measured on full SWE-bench Lite (300, official swebench Docker, verified): 7.7% open-loop -> 15.3% +repair -> 29.3% (v4-pro base) -> 40.3% 2-tier -> 58.3% 3-tier cheap->frontier escalation, ~$0.01-$0.74/instance (vs $1-20 for frontier agents). The harness, not the model, is the lever. Dependency-free (Node built-ins).",
   "type": "module",
   "main": "./dist/index.js",

@@ -1,6 +1,6 @@
 # ADR-153: Beyond escalation — the agentic-loop architecture for the 65–88% tier
 
-**Status**: Implemented + first empirical number (pilot-25 = 36%, ADR-153); full-300 is the decisive next test
+**Status**: Implemented + measured at scale — 275/300 = 31.3% on v4-pro (competitive with single-shot 29.3%, ~$0.04/inst vs $0.11; conservative lower bound, budget-truncated)
 **Date**: 2026-06-19
 **Project**: `ruvnet/agent-harness-generator`
 **Related**: ADR-149/151/152 (the 7.7→40.3% ladder), ADR-148 (tiering), issue #39
