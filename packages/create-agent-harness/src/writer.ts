@@ -5,10 +5,9 @@
 // then rename to the target on success. A failure mid-stream leaves the
 // target untouched.
 
-import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { tmpdir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import type { RenderedFile } from './walker.js';
 
@@ -32,7 +31,13 @@ export async function writeAtomic(
     throw new Error(`${targetDir} already exists. Pass --force to overwrite.`);
   }
 
-  const staging = join(tmpdir(), `create-agent-harness-${randomBytes(6).toString('hex')}`);
+  // GH #42: stage ADJACENT to the target (same parent dir), not in os.tmpdir().
+  // On Windows the temp dir is often on a different drive (C:) than the target
+  // (D:), and `rename` across devices throws EXDEV. Staging next to the target
+  // keeps the rename on one filesystem, so it stays atomic AND cross-drive-safe.
+  const parent = dirname(resolve(targetDir));
+  await mkdir(parent, { recursive: true });
+  const staging = join(parent, `.create-agent-harness-${randomBytes(6).toString('hex')}`);
   await mkdir(staging, { recursive: true });
 
   try {
@@ -45,8 +50,19 @@ export async function writeAtomic(
     if (existsSync(targetDir) && opts.force) {
       await rm(targetDir, { recursive: true, force: true });
     }
-    await mkdir(dirname(targetDir), { recursive: true });
-    await rename(staging, targetDir);
+    try {
+      await rename(staging, targetDir);
+    } catch (err) {
+      // Belt-and-suspenders: if the parent is itself a mount boundary (rename
+      // still EXDEV), fall back to a recursive copy + remove. Loses the atomic
+      // guarantee but completes the scaffold.
+      if ((err as NodeJS.ErrnoException)?.code === 'EXDEV') {
+        await cp(staging, targetDir, { recursive: true });
+        await rm(staging, { recursive: true, force: true }).catch(() => {});
+      } else {
+        throw err;
+      }
+    }
   } catch (err) {
     // Best-effort cleanup; ignore failures in the cleanup itself.
     await rm(staging, { recursive: true, force: true }).catch(() => {});
