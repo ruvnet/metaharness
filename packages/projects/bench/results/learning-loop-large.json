@@ -1,0 +1,70 @@
+{
+  "experiment": "large-corpus multi-seed self-learning loop",
+  "cheapModel": "qwen/qwen-2.5-7b-instruct",
+  "frontierModel": "qwen/qwen3-235b-a22b-2507",
+  "targets": 17,
+  "classes": 6,
+  "seeds": 3,
+  "perSeed": {
+    "off": [
+      {
+        "verified": 17,
+        "escalations": 3,
+        "costDefault": 0.388,
+        "costGlm": 1.689
+      },
+      {
+        "verified": 17,
+        "escalations": 1,
+        "costDefault": 0.323,
+        "costGlm": 0.752
+      },
+      {
+        "verified": 17,
+        "escalations": 1,
+        "costDefault": 0.33599999999999997,
+        "costGlm": 0.781
+      }
+    ],
+    "on": [
+      {
+        "verified": 17,
+        "escalations": 1,
+        "costDefault": 0.31,
+        "costGlm": 0.74
+      },
+      {
+        "verified": 17,
+        "escalations": 0,
+        "costDefault": 0.27599999999999997,
+        "costGlm": 0.27599999999999997
+      },
+      {
+        "verified": 17,
+        "escalations": 0,
+        "costDefault": 0.27599999999999997,
+        "costGlm": 0.27599999999999997
+      }
+    ]
+  },
+  "meanVerified": {
+    "off": 17,
+    "on": 17
+  },
+  "meanEscalations": {
+    "off": 1.666667,
+    "on": 0.333333
+  },
+  "escalationsAvoided_bootstrap_offMinusOn": {
+    "meanDelta": 1.333333,
+    "lower95": 1,
+    "upper95": 2,
+    "pValue": 0,
+    "samples": 3
+  },
+  "costReductionPct": {
+    "withCheapFrontier": 17.669628,
+    "projectedWithGlmFrontier": 59.900652
+  },
+  "note": "Multi-seed (temperature sweep). Model-agnostic signal is escalations avoided (paired bootstrap). Cost reduction shown for the cheap default frontier (modest) and projected for an expensive frontier (large) — the loop saves frontier CALLS; the $ saving scales with frontier price. Diverse corpus incl. easy + singleton classes where memory cannot help."
+}
