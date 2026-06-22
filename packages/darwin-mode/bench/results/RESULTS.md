@@ -666,3 +666,19 @@ fixed and swapping opus-4 → opus-4.8 (newer, *cheaper* ~$0.65/inst) moved 58.3
 + tiered escalation **scales with frontier Sage quality** — not exhausted. Next levers (ADR-172):
 opus-4.8 Sage-from-scratch, test-gated best-of-N, the stateful-PTY loop (ADR-170) → 70–80%+. Total arc
 spend ~$554 (the refilled $500 + ~$54 over; the in-solver `--max-cost` now prevents recurrence).
+
+## 31. ADR-173 L0 validated; L1 blocked on L0.5 (Docker conformant test signal)
+
+The conformant solver (`solve-agentic --no-test-oracle`) is **validated end-to-end**: a foreground run
+reports `leaderboardConformant=true` / `oracle-during-solve=false` — the leakage guard works, the gold
+harness is never touched in-loop, MiniMax M2.5 drives it (~$0.001/4-steps). No code bug.
+
+**But the in-loop test signal is non-functional for real repos:** `runRepoTests` runs `pytest` in the
+bare git clone, which lacks the repo's installed dependencies (the SWE-bench repos need their package +
+env, present only in the instance Docker image). So the agent gets errors instead of test feedback and
+flails to the step budget. **L1 (a competitive conformant run) is therefore blocked on L0.5:** run the
+agent's patch + the repo's *existing* tests **inside the instance's swebench Docker image** (deps
+present), explicitly NOT applying the gold test patch. That is the genuine conformant signal; the bare
+clone cannot produce one. Next build = L0.5; then L1 (conformant MiniMax-M2.5 full-300) is meaningful.
+(Process note: backgrounded solver launches are flaky in this sandbox — long runs need a resilient
+launcher or in-session supervision.)
