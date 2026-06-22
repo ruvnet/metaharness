@@ -514,3 +514,36 @@ tier, and the residual tail here is far harder (it already survived agentic max-
 Scholar's marginal yield is low. **Next: add the Sage (opus-4) tier on the remaining 148 tail** — the
 genuine 3-tier-on-agentic-base run, the lever designed to clear 58.3% (need +23/148 ≈ 15.5%). Arc spend
 +$124.89/$500.
+
+## 25. E6 — Sage (opus) on the 148 tail: +14 → FINAL agentic 3-tier 166/300 = 55.3%
+
+Added the Sage tier (anthropic/claude-opus-4, solve-repair, 2 attempts) on the E1+E4+E5 148-tail. This
+completes the agentic-base 3-tier arc and is the definitive comparison to the single-shot-base 3-tier.
+
+| stack | resolved | Wilson 95% CI | arc $ |
+|---|---|---|---|
+| E1 agentic (max-15) | 104/300 = 34.7% | [29.5, 40.2] | 9.76 |
+| + E4 (max-30 + anti-thrash) | 139/300 = 46.3% | [40.8, 52.0] | +17.03 |
+| + E5 Scholar (sonnet) | 152/300 = 50.7% | [45.0, 56.3] | +98.14 |
+| **+ E6 Sage (opus)** | **166/300 = 55.3%** | **[49.7, 60.9]** | +446.42 total arc |
+| single-shot 3-tier (ADR-154, headline) | 175/300 = 58.3% | [52.7, 63.8] | — |
+
+### Verdict — the agentic 3-tier did NOT beat the single-shot 3-tier
+**55.3% vs 58.3%, short by 9 instances.** The Wilson CIs overlap heavily ([49.7,60.9] vs [52.7,63.8]) →
+the two paradigms are **statistically indistinguishable**, but the agentic path did not clear the
+headline. Each escalation tier added less on the agentic base than it did on the single-shot base
+(E5 Scholar +13/161, E6 Sage +14/148) — far below the jumps escalation gave the single-shot base.
+
+**Why (the finding):** the agentic loop's failures are **correlated** with the escalation tiers'
+failures. The 134-instance tail that survived agentic max-15 → max-30 → Scholar → Sage is genuinely the
+hardest residue; the same instances that defeat a multi-step v4-pro loop also tend to defeat
+sonnet/opus single-shot+repair. Stacking more tiers of the *same paradigm* hits a shared ceiling.
+
+**Where the agentic arc DOES win: cost.** The agentic base reached 46.3% at ~$0.03–0.09/inst; the
+single-shot base reached comparable territory at ~$0.11/inst. Agentic is the cost-efficient frontier,
+not a higher ceiling — consistent with ADR-153.
+
+**Conclusion:** 58.3% (single-shot 3-tier) remains the headline. Crossing it is **architectural, not
+more-of-the-same** — the stateful-PTY agent loop (ADR-170) is the proposed next paradigm; an MCTS layer
+(ADR-170 §6) the one after. Arc spend $446.42/$500. Stop condition reached: no remaining resolve-rate
+lever fits the ~$54 left (an opus-4.8 full-tail retry needs ~$250). Idling on health + upkeep.
