@@ -28,11 +28,18 @@ export function runConformantTests(instanceId, patch, testCmd, opts = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'cfm-'));
   const pf = join(dir, 'patch.diff');
   writeFileSync(pf, patch || '');
-  // git apply the source patch (skip if empty); activate conda; run the conformant test cmd.
+  // ADR-173 L0.6: optional extraFiles (e.g. a self-written reproduce_bug.py) written
+  // into /testbed before the test runs — the conformant repro-test mechanism. Each is
+  // base64-staged into the container (no host bind needed beyond the patch mount).
+  const extra = opts.extraFiles && typeof opts.extraFiles === 'object' ? opts.extraFiles : {};
+  const writeExtra = Object.entries(extra).map(([p, c]) =>
+    `printf %s ${JSON.stringify(Buffer.from(String(c)).toString('base64'))} | base64 -d > ${JSON.stringify('/testbed/' + p)}`);
+  // git apply the source patch (skip if empty); activate conda; stage extra files; run the test cmd.
   const script = [
     'source /opt/miniconda3/bin/activate testbed',
     'cd /testbed',
     patch && patch.trim() ? 'git apply -v /tmp/patch.diff 2>&1 | tail -2 || echo "[apply-failed]"' : 'true',
+    ...writeExtra,
     `${testCmd} 2>&1 | tail -50`,
   ].join(' && ');
   try {
