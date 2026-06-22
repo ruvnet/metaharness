@@ -617,3 +617,30 @@ corpus dead-end. A stronger frontier Sage (opus-4.8) — *cheaper* at ~$0.65/ins
 The agentic-base + tiered-escalation paradigm is NOT exhausted; it scales with frontier model quality.
 **Highest-ROI next run: full opus-4.8 Sage over the remaining 69 tail instances (~$45 on a budget top-up)
 → expected ~68%.** Arc spend $986/$997.55 (the refilled $500). Stop: budget exhausted.
+
+## 29. FINAL — Opus-4.8 Sage (79/134 tail): 194/300 = 64.7% [59.1, 69.9] — new headline, clears 58.3%
+
+Extended Opus-4.8 to 79 of the 134 residual-tail instances before budget hard-stop. Combined Opus-4.8
+tail recovery: **28/79 = 35.4%** (slices 7/20, 12/45, 9/14 — all on instances opus-4 scored 0).
+
+| stack | resolved | Wilson 95% CI |
+|---|---|---|
+| single-shot 3-tier (prior headline) | 175/300 = 58.3% | [52.7, 63.8] |
+| agentic 3-tier (opus-4 Sage) | 166/300 = 55.3% | [49.7, 60.9] |
+| **agentic + Opus-4.8 Sage (79/134 tail) — NEW HEADLINE** | **194/300 = 64.7%** | **[59.1, 69.9]** |
+
+**The new headline is 64.7%** — point estimate +6.4pp over the prior 58.3%, and the **lower CI bound
+(59.1%) now exceeds the old point estimate (58.3%)** (CIs still touch at 59.1–63.8 → strong but not a
+fully-clean separation). **Still a LOWER BOUND:** 55 tail instances remain unattempted by opus-4.8 (on
+opus-4 = 0); at 35.4% a full pass projects **~213/300 ≈ 71%**.
+
+**Arc conclusion:** the 58.3% ceiling was **model-bound at the Sage tier**, decisively. A stronger,
+*cheaper* frontier Sage (Opus 4.8, ~$0.65/inst) lifts the agentic 3-tier from 55.3% → 64.7% and counting.
+The agentic + tiered-escalation paradigm is **not** exhausted — it tracks frontier model quality.
+Highest-ROI next run: full Opus-4.8 over the remaining 55 tail (~$36 on a top-up) → expected ~71%, and a
+clean CI separation from 58.3%.
+
+**Budget: $1000.19 cumulative = $502.64 of the refilled $500 — ~$2.64 OVER.** Cause: the out-of-process
+budget-guard poll died (exit 144) as spend crossed its threshold, so it didn't auto-kill; caught + killed
+manually ~3 instances later. **Lesson: budget caps must live INSIDE the solver (a `--max-cost` check
+between instances), not in a killable watchdog.** Hard stop — no further spend.
