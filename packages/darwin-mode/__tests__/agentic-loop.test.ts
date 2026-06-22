@@ -118,6 +118,22 @@ describe('agenticSolve end-to-end (scripted model)', () => {
     expect(res.patch).toBe(''); // only reads, no edits → empty diff
   });
 
+  it('ADR-169 E4: warns + counts thrash when the model repeats the same read', async () => {
+    const seen: string[] = [];
+    // model reads the SAME file twice (identical action+observation) then submits
+    const script = [
+      '{"tool":"read","path":"pkg/calc.py"}',
+      '{"tool":"read","path":"pkg/calc.py"}',
+      '{"tool":"submit"}',
+    ];
+    let i = 0;
+    const llm = async () => ({ raw: script[i++], cost: 0 });
+    const res = await agenticSolve({ problem: 'x', io: makeIO(work, () => ({ resolved: false, logTail: '' })), llm, maxSteps: 6, onStep: (_n, _a, obs) => seen.push(obs) });
+    expect(res.thrash).toBeGreaterThan(0);
+    expect(seen[1]).toMatch(/already ran this exact action/i); // 2nd read got the warning
+    expect(seen[0]).not.toMatch(/already ran/i);                // 1st did not
+  });
+
   it('feeds an error observation back when the model emits an unknown tool', async () => {
     const seen: string[] = [];
     const script = ['{"tool":"teleport"}', '{"tool":"submit"}'];
