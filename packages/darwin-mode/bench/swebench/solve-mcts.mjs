@@ -161,7 +161,7 @@ async function runBranch(instanceId, problem, snapshot, selected, model, temp, r
     if (!syn.ok) { feedback = `\n--- still a syntax error after retries:\n${syn.err}\nTry a different edit. ---`; continue; }
     lastPatch = patch;
     if (!repro) return { patch, passed: false, cost }; // no oracle to gate on → keep best-effort
-    const v = runConformantTests(instanceId, patch, `python -m pytest -q -p no:cacheprovider ${REPRO_PATH}`, { extraFiles: repro, timeoutMs: 300000 });
+    const v = runConformantTests(instanceId, patch, `python ${REPRO_PATH}`, { extraFiles: repro, timeoutMs: 300000 });
     if (v.ran && v.passed) return { patch, passed: true, cost }; // EARLY EXIT
     feedback = `\n--- patch applied + compiles but the reproduction test still FAILS:\n${(v.logTail || '').slice(-700)}\nFix the logic.\n--- numbered source ---\n${numberedSnapshot(work, changedFiles)}`;
   }
@@ -211,7 +211,7 @@ async function runInstance(inst) {
       }
       if (!best && cands.length) best = cands[0];
       if (repro) for (const patch of cands) {
-        const v = runConformantTests(inst.instance_id, patch, `python -m pytest -q -p no:cacheprovider ${REPRO_PATH}`, { extraFiles: repro, timeoutMs: 300000 });
+        const v = runConformantTests(inst.instance_id, patch, `python ${REPRO_PATH}`, { extraFiles: repro, timeoutMs: 300000 });
         if (v.ran && v.passed) { best = patch; row.branchesPassed++; break; }
       }
     }

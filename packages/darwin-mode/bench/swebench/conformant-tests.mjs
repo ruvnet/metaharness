@@ -35,26 +35,29 @@ export function runConformantTests(instanceId, patch, testCmd, opts = {}) {
   const writeExtra = Object.entries(extra).map(([p, c]) =>
     `printf %s ${JSON.stringify(Buffer.from(String(c)).toString('base64'))} | base64 -d > ${JSON.stringify('/testbed/' + p)}`);
   // git apply the source patch (skip if empty); activate conda; stage extra files; run the test cmd.
+  // `set -o pipefail` so the pipeline's exit code is testCmd's (not tail's) — lets us judge
+  // pass/fail by EXIT CODE, which works for plain `python repro.py` too (django/sympy testbeds
+  // ship no pytest). The apply step prints a sentinel we grep before trusting the exit code.
   const script = [
+    'set -o pipefail',
     'source /opt/miniconda3/bin/activate testbed',
     'cd /testbed',
-    patch && patch.trim() ? 'git apply -v /tmp/patch.diff 2>&1 | tail -2 || echo "[apply-failed]"' : 'true',
+    patch && patch.trim() ? '{ git apply -v /tmp/patch.diff 2>&1 | tail -2 || { echo "[apply-failed]"; exit 97; }; }' : 'true',
     ...writeExtra,
     `${testCmd} 2>&1 | tail -50`,
   ].join(' && ');
+  const run = () => execSync(`docker run --rm -v ${pf}:/tmp/patch.diff:ro ${img} bash -c ${JSON.stringify(script)}`,
+    { stdio: ['ignore', 'pipe', 'pipe'], timeout, maxBuffer: 1 << 27 });
   try {
-    const out = execSync(
-      `docker run --rm -v ${pf}:/tmp/patch.diff:ro ${img} bash -c ${JSON.stringify(script)}`,
-      { stdio: ['ignore', 'pipe', 'pipe'], timeout, maxBuffer: 1 << 27 },
-    ).toString();
-    if (/\[apply-failed\]/.test(out)) return { ran: false, passed: false, logTail: 'patch apply failed\n' + out.slice(-1500) };
-    // pytest summary: "N passed" with no "failed"/"error" → passed.
-    const passed = /\b\d+ passed\b/.test(out) && !/\b\d+ (failed|error)/i.test(out) && !/\berrors?\b/i.test(out.split('\n').slice(-3).join('\n'));
-    return { ran: true, passed, logTail: out.slice(-2500) };
+    const out = run().toString();          // exit 0 → testCmd passed
+    return { ran: true, passed: true, logTail: out.slice(-2500) };
   } catch (e) {
     const out = String(e.stdout || e.stderr || e.message || e);
-    // a nonzero exit with a real pytest summary is a test FAILURE (ran=true), not a harness error.
-    const ran = /\b\d+ (passed|failed|error)/i.test(out);
-    return { ran, passed: false, logTail: out.slice(-2500) };
+    const code = e.status;
+    if (code === 97 || /\[apply-failed\]/.test(out)) return { ran: false, passed: false, logTail: 'patch apply failed\n' + out.slice(-1500) };
+    // harness/env failure (image missing, docker error) = ran:false; anything else = the test
+    // executed and exited non-zero (failed/raised) = ran:true, passed:false.
+    const harness = /Unable to find image|docker: Error|no such image|Cannot connect to the Docker/i.test(out);
+    return { ran: !harness, passed: false, logTail: out.slice(-2500) };
   }
 }
