@@ -51,6 +51,38 @@ export const CATALOG_BY_KIND = {
   command: COMMANDS,
 } as const;
 
+/**
+ * Group a kind's catalog into categories for the searchable Compose picker.
+ * Catalog items don't carry a category, so we derive one: an item's category is
+ * the gallery category of the FIRST template (in catalog order) whose defaults
+ * include it. Items used by no template fall under "General". Returns groups in
+ * first-seen order, each with its items sorted by name.
+ */
+export function groupedCatalog(
+  kind: 'agent' | 'skill' | 'command',
+): { category: string; items: CatalogItem[] }[] {
+  const field = kind === 'agent' ? 'defaultAgents' : kind === 'skill' ? 'defaultSkills' : 'defaultCommands';
+  const catOf = new Map<string, string>();
+  for (const t of TEMPLATES) {
+    for (const id of (t[field] as string[]) ?? []) {
+      if (!catOf.has(id)) catOf.set(id, t.category);
+    }
+  }
+  const order: string[] = [];
+  const byCat = new Map<string, CatalogItem[]>();
+  for (const it of CATALOG_BY_KIND[kind]) {
+    const cat = catOf.get(it.id) ?? 'General';
+    if (!byCat.has(cat)) { byCat.set(cat, []); order.push(cat); }
+    byCat.get(cat)!.push(it);
+  }
+  // "General" sinks to the end if present.
+  order.sort((a, b) => (a === 'General' ? 1 : 0) - (b === 'General' ? 1 : 0));
+  return order.map((category) => ({
+    category,
+    items: byCat.get(category)!.slice().sort((a, b) => a.name.localeCompare(b.name)),
+  }));
+}
+
 export function findItem(kind: 'agent' | 'skill' | 'command', id: string): CatalogItem | undefined {
   return CATALOG_BY_KIND[kind].find((i) => i.id === id);
 }

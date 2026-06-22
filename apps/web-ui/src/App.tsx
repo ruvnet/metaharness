@@ -4,11 +4,12 @@ import { HarnessBuilder } from './components/HarnessBuilder';
 import { ArtifactBuilder } from './components/ArtifactBuilder';
 import { RepoImporter } from './components/RepoImporter';
 import { VerifyPanel } from './components/VerifyPanel';
+import { DarwinPanel } from './components/DarwinPanel';
 import { SegTabs } from './components/ui';
 import { OnboardingModal, clearOnboardingDismissal } from './components/OnboardingModal';
 import type { HarnessConfig } from './generator';
 
-type Mode = 'repo' | 'harness' | 'artifact' | 'verify';
+type Mode = 'repo' | 'harness' | 'artifact' | 'verify' | 'darwin';
 
 export default function App() {
   const [mode, setMode] = useState<Mode>('harness');
@@ -94,6 +95,7 @@ export default function App() {
               { id: 'harness', label: 'Create harness' },
               { id: 'artifact', label: 'Skill / Agent / Command' },
               { id: 'verify', label: 'Verify' },
+              { id: 'darwin', label: 'Darwin' },
             ]}
           />
         </div>
@@ -104,6 +106,7 @@ export default function App() {
         {mode === 'harness' && <HarnessBuilder key={seedKey} seed={seed} />}
         {mode === 'artifact' && <ArtifactBuilder />}
         {mode === 'verify' && <VerifyPanel />}
+        {mode === 'darwin' && <DarwinPanel />}
       </main>
 
       <OnboardingModal

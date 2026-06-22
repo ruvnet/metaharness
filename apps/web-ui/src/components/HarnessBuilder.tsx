@@ -2,10 +2,7 @@ import { useMemo, useState } from 'react';
 import { Download, Loader2, Package } from 'lucide-react';
 import { HostGuide } from './HostGuide';
 import {
-  AGENTS,
-  COMMANDS,
   HOSTS,
-  SKILLS,
   buildScaffold,
   downloadBlob,
   findTemplate,
@@ -19,6 +16,7 @@ import { DEFAULT_PRIMITIVES, SAFE_MCP_POLICY, DEFAULT_MODELS, DEFAULT_DARWIN, MO
 import type { McpMode, McpPolicy, ModelId, MutationSurface } from '../generator';
 import { Chip, Field, Section, SegTabs } from './ui';
 import { FileTree } from './FileTree';
+import { CatalogPicker } from './CatalogPicker';
 
 const DEFAULT_TEMPLATE = 'vertical:coding';
 
@@ -156,25 +154,22 @@ export function HarnessBuilder({ seed }: { seed?: HarnessConfig }) {
           </div>
         </Section>
 
-        <Section title="Compose" desc="Toggle the agents, skills, and slash-commands to include.">
+        <Section title="Compose" desc="Search and toggle the agents, skills, and slash-commands to include — grouped by domain.">
           <div className="space-y-4">
-            <CatalogRow
-              label="Agents"
-              items={AGENTS}
-              selected={cfg.agents}
+            <CatalogPicker
+              label="Agents" kind="agent" selected={cfg.agents}
               onToggle={(id) => patch({ agents: toggle(cfg.agents, id) })}
+              onClear={() => patch({ agents: [] })}
             />
-            <CatalogRow
-              label="Skills"
-              items={SKILLS}
-              selected={cfg.skills}
+            <CatalogPicker
+              label="Skills" kind="skill" selected={cfg.skills}
               onToggle={(id) => patch({ skills: toggle(cfg.skills, id) })}
+              onClear={() => patch({ skills: [] })}
             />
-            <CatalogRow
-              label="Commands"
-              items={COMMANDS}
-              selected={cfg.commands}
+            <CatalogPicker
+              label="Commands" kind="command" selected={cfg.commands}
               onToggle={(id) => patch({ commands: toggle(cfg.commands, id) })}
+              onClear={() => patch({ commands: [] })}
             />
           </div>
         </Section>
@@ -402,27 +397,3 @@ export function HarnessBuilder({ seed }: { seed?: HarnessConfig }) {
   );
 }
 
-function CatalogRow({
-  label,
-  items,
-  selected,
-  onToggle,
-}: {
-  label: string;
-  items: { id: string; name: string; description: string }[];
-  selected: string[];
-  onToggle: (id: string) => void;
-}) {
-  return (
-    <div>
-      <div className="field-label">{label}</div>
-      <div className="flex flex-wrap gap-2">
-        {items.map((it) => (
-          <Chip key={it.id} title={it.description} active={selected.includes(it.id)} onClick={() => onToggle(it.id)}>
-            {it.name}
-          </Chip>
-        ))}
-      </div>
-    </div>
-  );
-}
