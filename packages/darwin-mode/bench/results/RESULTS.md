@@ -458,3 +458,23 @@ over-counted 4→2). This is the §6 capability-floor finding confirmed for the 
 multi-step loop's value comes from the model being strong enough to *use* the tools — read the right
 file, copy SEARCH text exactly, interpret a traceback. Below that floor, more turns don't help. The
 harness is the lever; the model has to be able to pull it.
+
+## 22. E1 — full-300 agentic baseline (ADR-169/153): 104/300 = 34.7% (untruncated)
+
+The agentic ReAct loop (`solve-agentic.mjs`, max-steps 15, deepseek-v4-pro, concurrency 6) on the
+**complete** 300 (the prior agentic run was budget-truncated at 275; ADR-153 §20):
+
+| solver (deepseek-v4-pro) | resolved | Wilson 95% CI | $/inst |
+|---|---|---|---|
+| single-shot + repair (§15) | 88/300 = 29.3% | [24.5, 34.7] | ~$0.11 |
+| prior agentic (275 attempted, §20) | 94/300 = 31.3% | [26.3, 36.8] | ~$0.04 |
+| **E1 agentic, full-300** | **104/300 = 34.7%** | **[29.5, 40.2]** | **~$0.033** |
+
+**Honest read:** E1's point estimate (34.7%) is +5.4pp over single-shot and its CI lower bound (29.5)
+exceeds single-shot's mean, but the 95% CIs **overlap** (29.5–40.2 vs 24.5–34.7) — a clear directional
+improvement, not a clean non-overlapping separation. It decisively clears the 15.3% V3 floor, so
+**agentic-v4-pro is adopted as the new cheap full-300 baseline**, and lands in the predicted 33–40%
+band at **~3.3× lower cost than single-shot** (run total $9.76, 185/300 non-empty patches). It does
+NOT beat the 58.3% 3-tier blended ceiling — that is the target of E5 (Scholar escalation on E1's
+196-instance failure tail). Next: Phase 2 — E4 (max-30 + anti-thrash on the tail), E3 (patch-memory on
+the tail), then the E5 capstone.
