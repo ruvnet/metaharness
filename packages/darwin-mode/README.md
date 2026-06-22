@@ -22,6 +22,18 @@ fine-tuning — just a population, a benchmark, and an archive.
 This follows the **Darwin Gödel Machine** lineage: iteratively mutate the source of a
 coding agent, then *empirically validate* each variant.
 
+## Two repair modes (ADR-175) — you choose by whether a test exists
+
+| mode | when | signal | play |
+|------|------|--------|------|
+| **Test-Driven Repair** (default) | you have a failing/CI test | gate on **your** test | **CI Autofixer** — push a failing test, get a verified-fix PR for pennies |
+| **Conformant** (`--no-test-oracle`) | no test, just a ticket | agent writes its own `reproduce_bug.py`, then MCTS-searches the fix (ADR-174) | **Legacy Modernizer** — fix undocumented repos with no tests |
+
+Same engine, one flag. TDR is the high-margin product default and reaches **68.3%** on SWE-bench Lite
+*when given the acceptance test* (a product claim, not a leaderboard entry — those forbid the test
+in-loop). The conformant mode is the leaderboard-submittable variant **and** the no-test-given product
+capability — capabilities are additive.
+
 ```
 repo
   → profile      RepoProfile (pkg mgr, test cmd, source/risk files)
