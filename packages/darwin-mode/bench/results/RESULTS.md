@@ -592,3 +592,28 @@ agentic 3-tier past 58.3%; the point estimate (~47) projects ~71% (small-N, non-
 error, directional only). This reframes §25: stacking *same-generation* tiers hit a shared ceiling, but
 a *stronger* Sage model moves it. Next: spend remaining budget extending Opus-4.8 over more of the tail
 to fold real recoveries into the blended 300 and tighten the rate; a full re-tier needs a budget top-up.
+
+## 28. NEW BEST — Opus-4.8 Sage tier: blended 185/300 = 61.7% [56.1, 67.0] (clears 58.3%)
+
+Folding the Opus-4.8 recoveries (§27) into the agentic stack as a 4th escalation tier (Barbarian agentic
+→ Scholar sonnet → Sage opus-4 → Sage² opus-4.8 on the residual tail):
+
+| stack | resolved | Wilson 95% CI |
+|---|---|---|
+| E1+E4+E5+E6 (agentic 3-tier, opus-4 Sage) | 166/300 = 55.3% | [49.7, 60.9] |
+| prior single-shot 3-tier (headline) | 175/300 = 58.3% | [52.7, 63.8] |
+| **+ Opus-4.8 on 65/134 of the tail** | **185/300 = 61.7%** | **[56.1, 67.0]** |
+
+Opus-4.8 tail recovery: **19/65 = 29.2%** of instances opus-4 scored 0 on (slice1 7/20, slice2 12/45).
+
+**This is a new best — and it's a LOWER BOUND.** Budget exhausted with opus-4.8 covering only **65 of the
+134** residual-tail instances (the other 69 are still on opus-4 = 0). At the measured 29.2% rate a full
+opus-4.8 pass projects **~205/300 ≈ 68%**. Honest stats caveat: 61.7% clears the 58.3% *point estimate*,
+but the CIs overlap ([56.1,67.0] vs [52.7,63.8]) — not yet a clean statistical separation; the full
+pass (and its tighter CI) is what would separate it decisively.
+
+**Reframes the arc (vs §25's pessimism):** the 58.3% ceiling was **model-bound at the Sage tier**, not a
+corpus dead-end. A stronger frontier Sage (opus-4.8) — *cheaper* at ~$0.65/inst than opus-4 — moves it.
+The agentic-base + tiered-escalation paradigm is NOT exhausted; it scales with frontier model quality.
+**Highest-ROI next run: full opus-4.8 Sage over the remaining 69 tail instances (~$45 on a budget top-up)
+→ expected ~68%.** Arc spend $986/$997.55 (the refilled $500). Stop: budget exhausted.
