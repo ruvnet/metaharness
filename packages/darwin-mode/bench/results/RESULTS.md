@@ -478,3 +478,21 @@ band at **~3.3× lower cost than single-shot** (run total $9.76, 185/300 non-emp
 NOT beat the 58.3% 3-tier blended ceiling — that is the target of E5 (Scholar escalation on E1's
 196-instance failure tail). Next: Phase 2 — E4 (max-30 + anti-thrash on the tail), E3 (patch-memory on
 the tail), then the E5 capstone.
+
+## 23. E4 — max-30 + anti-thrash on the E1 tail: +35 recovered → combined 139/300 = 46.3%
+
+Re-ran the agentic loop at **max-steps 30** (vs E1's 15) with the ADR-169 state-hash **anti-thrash**
+guard active, on E1's 196-instance failure tail (deepseek-v4-pro, concurrency 6, $17.03).
+
+| stage | resolved | Wilson 95% CI | notes |
+|---|---|---|---|
+| E1 agentic (max-15), full-300 | 104/300 = 34.7% | [29.5, 40.2] | §22 baseline |
+| **E1 + E4 (max-30 tail recovery)** | **139/300 = 46.3%** | **[40.8, 52.0]** | +35 of 196 tail, 0 overlap |
+
+**Read:** doubling the step budget + anti-thrash recovered **35/196 (17.9%) of the hard tail** that
+max-15 missed — lifting the pure-agentic number from 34.7% → **46.3%**, a clean improvement (CIs
+barely touch). **0 thrash-runaways** across 196 max-30 runs — the state-hash guard held at the longer
+horizon exactly as designed. Cost ~$0.087/inst on the tail. Still below the 58.3% 3-tier blended
+ceiling (upper CI 52.0 < 58.3), as expected — pure agentic, no frontier escalation yet. The remaining
+**161-instance tail** now goes to the E5 capstone (Scholar escalation, optionally E3 patch-memory) —
+that is the lever designed to clear 58.3%. Arc spend +$26.77/$500.
