@@ -24,15 +24,17 @@ First-order model: overall-resolve ≈ **patch-attempt-rate × conditional-resol
 (DeepSeek-only k=5, Lite-25): 0.44 × 0.45 ≈ **20.0%**. The 45% conditional-resolve is a *separate
 ceiling* — filling empty patches alone caps ~45%; reaching 70%+ needs conditional-resolve to rise too.
 
-| target | threshold | odds (as of 2026-06-22, DeepSeek floor) |
+| target | threshold | odds (2026-06-22, post MiniMax-swap **falsified**) |
 |---|---|---|
-| **Pareto cost crown** (best resolve-per-$) | — | **~55–70%** — the realistic SOTA; 10–15× cheaper at any given resolve |
-| **Top-10 Lite** | ≥45% | **~35–45%** — needs attempt-rate↑ AND conditional-resolve held |
-| **#1 Lite** | >60.33% | **~15–20%** — needs conditional-resolve well past 45% |
-| **Absolute SOTA** | ~80–85% | **<5–10%** — far from the measured 45% conditional-resolve |
+| **Pareto cost crown** (competitive resolve at lowest $) | — | **~30–45%** ↓ — only if the applicator fix lifts resolve to ~40%+; a cheap 20% system is *dominated*, not a crown |
+| **Top-10 Lite** | ≥45% | **~20–30%** ↓ — needs the applicator fix AND k=10/sniper |
+| **#1 Lite** | >60.33% | **~8–12%** ↓ |
+| **Absolute SOTA** | ~80–85% | **<5%** ↓ |
 
-Recompute these from the latest conformant batch (attempt-rate + conditional-resolve), never hand-wave.
-The pending MiniMax-M2.7-patch batch is the next input. Only measured numbers move the odds.
+**Two conformant batches both = 5/25 = 20.0%.** Model swap (DeepSeek→MiniMax-M2.7 for patches) moved
+nothing → bottleneck is the **structural empty-patch applier** (~50% empty both models) + a ~42–45%
+conditional-resolve ceiling. Next input = the **robust-patch-applicator** experiment, not a bigger model.
+Recompute from each batch; only measured numbers move the odds.
 
 ## Tracking issues (reply EVERY tick with details)
 - **#45 — SWE-bench Lite** conformant run · **#46 — SWE-bench Verified** conformant run.

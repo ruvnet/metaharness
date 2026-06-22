@@ -68,6 +68,28 @@ extra dollars precisely to convert the 14 empty patches into real candidates. *I
 and the 45% conditional-resolve holds, the projected overall lands in the 70%+ zone. **Projection — gated
 on the next conformant batch + Wilson CI.** The 45% conditional rate is the load-bearing assumption.
 
+## L2′ result (2026-06-22): the asymmetric MiniMax swap is FALSIFIED
+
+Same 25-instance Lite pilot, DeepSeek-V4-Flash Test-Critic + **MiniMax M2.7 patch generation**, gold batch:
+
+| metric | DeepSeek floor | MiniMax-M2.7 patch | verdict |
+|------|------|------|------|
+| **Resolved/25** | 5/25 = **20.0%** | 5/25 = **20.0%** | **no change** |
+| Non-empty patches | 11/25 (44%) | 12/25 (48%) | marginal |
+| Conditional-resolve | 5/11 = 45% | 5/12 = 42% | flat/slightly down |
+| Cost | $0.59 | $1.29 (**2.2×**) | worse |
+
+**A stronger, 2.2×-pricier patch model did not move the conformant resolve rate.** The empty-patch
+bottleneck is therefore **structural, not model-bound**: the brittle single-shot search/replace applier
+(`applyEdit` exact/fuzzy match) drops ~50% of patches regardless of model, and the conditional-resolve
+sits at ~42–45%. **Decision: do NOT adopt MiniMax for patching** (no lift, higher cost); DeepSeek-V4-Flash
+stays the patch model too.
+
+**Next lever (structural, not a bigger model): a robust patch applicator.** Replace single-shot
+search/replace with the agentic read-then-edit loop per branch (or whole-function rewrite / unified-diff
+with fuzzy hunks). This lifts *attempt-rate* for both models at ~zero extra model cost — the only lever
+the data says can move the floor. Then re-measure conditional-resolve and decide on k=10 + Opus sniper.
+
 ## Honest ceiling (carried from ADR-170 §6 / ADR-172)
 Even at 85% this is an autonomous **Senior Staff Maintainer**, not an Architect. SWE-bench rewards
 exactly the maintainer task — which is why the stack can win it.
