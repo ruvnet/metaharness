@@ -573,3 +573,22 @@ features (and likely not by richer ones either — the signal is in the code/rep
 text). The cost win stays where it's real: the cheap agentic base itself (ADR-153), not routing. The
 peer-review mitigation (scalar-only + heavy L2, no 384-D embedding) was correct — it kept us from
 overfitting our way to a false-positive router; the honest CV simply shows there's no signal to fit.
+
+## 27. Opus 4.8 vs Opus 4 — head-to-head on the hard tail: 35% recovery (the ceiling was MODEL-bound)
+
+Ran **Opus 4.8** (solve-repair, 2 attempts) on 20 instances that **Opus 4 failed** in E6 (0/20 by
+construction — all from the E1–E6 residual tail). Clean A/B on identical inputs.
+
+| | resolved | Wilson 95% CI |
+|---|---|---|
+| Opus 4 (E6, these 20) | 0/20 | — (by construction) |
+| **Opus 4.8 (same 20)** | **7/20 = 35%** | **[18.1, 56.7]** |
+
+**Finding:** the newer frontier model recovers **35%** of the tail the prior Sage tier could not — at
+~$0.70/inst (cheaper than Opus 4's ~$1.85). The 58.3% headline ceiling was **at least partly
+model-bound at the Sage tier, not purely corpus/paradigm-bound** as §25 inferred from same-generation
+tiers. Even the CI lower bound (18%) extrapolated across the 134-tail (~24 instances) would push the
+agentic 3-tier past 58.3%; the point estimate (~47) projects ~71% (small-N, non-random slice — wide
+error, directional only). This reframes §25: stacking *same-generation* tiers hit a shared ceiling, but
+a *stronger* Sage model moves it. Next: spend remaining budget extending Opus-4.8 over more of the tail
+to fold real recoveries into the blended 300 and tighten the rate; a full re-tier needs a budget top-up.
