@@ -203,3 +203,21 @@ fixes from issue-understanding, submits its diff regardless). Full-300 ($0.005×
 Next: full-300 single-traj → then Best-of-N (selection-without-oracle is the open problem). This reopens
 the Pareto-crown path the MCTS ablation (ADR-177) had closed — supersede ADR-177's "scaffold is the
 ceiling" with "the MCTS scaffold was; the interactive scaffold is not."
+
+## 14. The selection answer (Sakana reverse-engineering, ADR-178) — LLM-judge discriminator, not a learned model
+
+Deep-research (docs/research/SAKANA_FUGU_REVERSE_ENGINEERING.md, cited papers) cracked our Best-of-N
+selection-without-gold-oracle gap:
+- **"Fugu" is a multi-model orchestrator (SWE-Bench *Pro* 73.7%), NOT a SWE-bench Lite/Verified agent.** The
+  real Sakana SWE system is the **Darwin-Gödel Machine (50% Verified)**, evolved from a base ~= our
+  solve-agentic; its evolved wins = line-edit (have it) + **multi-attempt + a 2nd FM selecting the best**.
+- **SWE-Search (ICLR 2025): an LLM Value/Discriminator that scores trajectories using the repo's EXISTING
+  tests + reasoning (no gold) selects the gold-correct trajectory 73% (single value-agent) → 84% (5-agent
+  debate).** Fully conformant. Top leaderboard 70%+ systems all = multi-model gen + LLM-judge selection.
+- **AB-MCTS:** uses public/visible tests as the conformant reward; modest gains; doesn't map to multi-step editing.
+
+**Decision:** the highest-leverage conformant lever is **N=3 parallel interactive ReAct trajectories + an
+LLM-judge discriminator** (~$0.017/inst, ~100 lines). From our 36% single-traj base → plausibly 44-52%.
+Build this FIRST (proven, no training). The Tiny-Dancer learned value-model (LEARNINGS note / +10-20 but
+needs training on our trajectory→resolve labels) is the later, $0-runtime upgrade. Measure honestly:
+union (oracle upper bound) vs discriminator pick vs a deterministic existing-tests baseline.
