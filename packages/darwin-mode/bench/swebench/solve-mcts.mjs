@@ -28,6 +28,7 @@ const K = +argv('--k', 5);
 const SLICE = +argv('--slice', 40000);
 const BRANCH_TURNS = +argv('--branch-turns', 5);          // hard cap per branch (backstop; early-exit on clean apply)
 const APPLICATOR = argv('--applicator', 'line');          // 'line' = robust line-range edits (SWE-agent primitive); 'search' = legacy search/replace
+const PLAN = args.includes('--plan');                       // ADR-176 L2: one shared root-cause diagnosis per instance, prepended to all branches
 const rel = (p) => (isAbsolute(p) ? p : join(HERE, p));
 const OUT = rel(argv('--out', 'predictions-mcts.jsonl'));
 const REPORT = rel(argv('--report', 'solve-mcts-report.json'));
@@ -197,10 +198,17 @@ async function runInstance(inst) {
         return;
       }
     }
+    // L2 plan-then-edit (ADR-176 scaffold lever): one shared root-cause diagnosis per instance, prepended
+    // to every branch's context. Targets the measured "passes repro but fails gold" mode (wrong root cause).
+    let plan = '';
+    if (PLAN) {
+      const pr = await llm(`Diagnose the ROOT CAUSE of this bug. Be concise. Output:\n1) root cause (the actual defect, not the symptom)\n2) exact file + line range to change\n3) what the corrected behavior must be (+ edge cases not to break)\n--- issue ---\n${inst.problem_statement.slice(0, 6000)}\n--- numbered source ---\n${seen}`, 'You are a senior debugger. Diagnose precisely; do not write code.', PATCH_MODEL, 0);
+      totalCost += pr.cost; plan = pr.raw ? `\n--- ROOT-CAUSE PLAN (follow it) ---\n${pr.raw}\n` : '';
+    }
     // 2+3) k diversified agentic branches — each a bounded read-then-edit loop, repro-gated, early-exit on pass.
     if (APPLICATOR === 'line') {
       for (let b = 0; b < K; b++) {
-        const br = await runBranch(inst.instance_id, inst.problem_statement, seen, selected, PATCH_MODEL, b === 0 ? 0 : 0.2 + 0.15 * b, repro, work, containerId);
+        const br = await runBranch(inst.instance_id, inst.problem_statement, plan + seen, selected, PATCH_MODEL, b === 0 ? 0 : 0.2 + 0.15 * b, repro, work, containerId);
         totalCost += br.cost;
         if (br.patch && !best) best = br.patch; // fallback: first applicable
         if (br.passed) { best = br.patch; row.branchesPassed++; break; } // EARLY EXIT — repro passed
@@ -233,5 +241,5 @@ let cursor = 0; let cappedAt = null;
 async function worker() { while (cursor < manifest.length) { if (totalCost >= MAX_COST) { if (cappedAt === null) { cappedAt = report.length; console.error(`[max-cost] $${totalCost.toFixed(2)} ≥ ${MAX_COST} — stop`); } return; } await runInstance(manifest[cursor++]); } }
 await Promise.all(Array.from({ length: Math.min(CONCURRENCY, manifest.length) }, () => worker()));
 const reproValid = report.filter((r) => r.reproValid).length, solved = report.filter((r) => r.branchesPassed > 0 || r.sniper).length, awaiting = report.filter((r) => r.awaitingReview).length;
-writeFileSync(REPORT, JSON.stringify({ model: MODEL, criticModel: CRITIC_MODEL, patchModel: PATCH_MODEL, sniper: SNIPER, k: K, n: report.length, reproValid, branchOrSniperSolved: solved, awaitingReview: awaiting, pauseForTestReview: PAUSE_REVIEW, leaderboardConformant: !usedOracle, cappedAtInstance: cappedAt, totalCost_usd: Math.round(totalCost * 1e4) / 1e4, instances: report }, null, 2));
+writeFileSync(REPORT, JSON.stringify({ model: MODEL, criticModel: CRITIC_MODEL, patchModel: PATCH_MODEL, plan: PLAN, sniper: SNIPER, k: K, n: report.length, reproValid, branchOrSniperSolved: solved, awaitingReview: awaiting, pauseForTestReview: PAUSE_REVIEW, leaderboardConformant: !usedOracle, cappedAtInstance: cappedAt, totalCost_usd: Math.round(totalCost * 1e4) / 1e4, instances: report }, null, 2));
 console.error(`\nDONE ${report.length} | repro-valid ${reproValid} | repro-passed ${solved} | conformant=${!usedOracle} | $${Math.round(totalCost * 1e4) / 1e4} | preds → ${OUT} (BATCH-eval for the authoritative number)`);
