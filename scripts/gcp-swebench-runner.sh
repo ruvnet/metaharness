@@ -30,8 +30,8 @@ fi
 if ! command -v node >/dev/null || [ "$(node -v | cut -dv -f2 | cut -d. -f1)" -lt 20 ]; then
   curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && apt-get install -y nodejs
 fi
-command -v python3 >/dev/null || apt-get install -y python3 python3-venv python3-pip
-apt-get install -y git >/dev/null 2>&1 || true
+apt-get update -y >/dev/null 2>&1 || true
+apt-get install -y python3 python3-venv python3-pip git >/dev/null 2>&1 || true   # python3-venv MUST be explicit (Ubuntu ships python3 without ensurepip)
 
 echo "=== [2/5] repo + solver ==="
 mkdir -p /opt/darwin && cd /opt/darwin
