@@ -7,12 +7,13 @@ Updated 2026-06-22 for the **ADR-176 SWE-Conductor ablation phase** (overnight a
 $1000 the Opus-coder arm + full-300 runs are affordable. Still `--max-cost` every paid run; never an
 external watchdog.
 
-## STATUS 2026-06-23: ablation COMPLETE — cheap-lever search exhausted, IDLING on health/upkeep (ADR-177)
-No conformant lever in this MCTS+self-repro scaffold reaches 45% top-10: cheap caps 12-16%, frontier
-(Opus best-of-3) 33%, scaffold-bound. Every cheap lever (oracle / qwen / Opus-sniper / plan-then-edit)
-is null — all resolve the same 4 easy instances. **Each tick now: health + upkeep only.** Do NOT launch
-new paid arms. Awaiting human go/no-go on ADR-177's 3 options (full-300 Opus ~$1000 → ~33% sub-top-10 /
-build mini-SWE-agent-v2 scaffold / ship dual-mode product). Resume active runs only on explicit instruction.
+## STATUS 2026-06-23: SOTA push CLOSED → PRODUCT PIVOT (ADR-177 Option 3 chosen)
+Decision locked: **ship the dual-mode product with Test-Driven Repair (68.3% with-test) as the hero**;
+the conformant ablation (cheap 12-16% / frontier 33%, scaffold-capped — no top-10 lever) is banked as a
+transparent research appendix. SOTA loops idled; **no new paid SWE-bench arms** (a full-300 conformant
+run or a mini-SWE-agent-v2 rewrite would need explicit re-authorization). Each tick now: **health +
+upkeep + product polish** (README/marketing on TDR, npm publish on material README changes, issue triage).
+Ablation conclusions: ADR-173–177, LEARNINGS §10-12, #45.
 
 ## (ARCHIVED) CONCURRENT ABLATION WORKFLOW
 Keep MULTIPLE conformant MCTS arms in flight at once (container-reuse bounds Docker load; box handled

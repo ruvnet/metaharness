@@ -2,6 +2,18 @@
 
 All notable changes to this package. Dates UTC.
 
+## 0.6.0 — 2026-06-23
+
+- **Product pivot (ADR-177): Test-Driven Repair (TDR) is the hero.** README now leads with the CI-Autofixer
+  workflow — hand Darwin a failing test, get a verified-fix PR for pennies; **68.3%** on SWE-bench Lite
+  *with the acceptance test* (official harness, Wilson CI).
+- **New research appendix — "where no-test autonomous repair tops out" (ADR-177).** Publishes the full
+  leaderboard-conformant ablation: the coder binds (not the oracle); every cheap lever is null; the
+  MCTS+self-repro scaffold caps even frontier at ~33%. "SOTA at pennies" via a no-test cheap pipeline is
+  falsified by our own clean data — banked transparently rather than buried. Conformant (no-test) repair
+  reframed as a real but bounded (~16–33%) capability, not a leaderboard entry.
+- No code change to the shipped library; documentation + positioning.
+
 ## 0.3.1 — 2026-06-21
 
 - Docs: README now covers the full SWE-bench ladder (incl. **58.3%** 3-tier + agentic 31.3%) and a **Darwin Shield** section (the v0.3.0 defensive security application); npm description updated to the dual-application story. No code change.

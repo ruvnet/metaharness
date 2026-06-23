@@ -22,17 +22,25 @@ fine-tuning — just a population, a benchmark, and an archive.
 This follows the **Darwin Gödel Machine** lineage: iteratively mutate the source of a
 coding agent, then *empirically validate* each variant.
 
-## Two repair modes (ADR-175) — you choose by whether a test exists
+## ⭐ The product: Test-Driven Repair (TDR) — a CI Autofixer that resolves 68.3% for pennies
 
-| mode | when | signal | play |
+**Hand Darwin a failing test, get a verified-fix PR — at ~$0.01–0.08/instance.** On **SWE-bench Lite**,
+TDR resolves **68.3%** of real issues *when given the acceptance test* (the realistic CI/CD setting —
+where a developer or a failing CI job already has the test). Measured on the official `swebench` Docker
+harness, Wilson 95% CI, RESULTS §30. This is the hero workflow: a high-margin, low-cost autonomous
+maintainer for the case that actually matters in production — **a bug with a reproducing test.**
+
+### Two modes (ADR-175) — chosen by whether a test exists
+| mode | when | signal | what you get |
 |------|------|--------|------|
-| **Test-Driven Repair** (default) | you have a failing/CI test | gate on **your** test | **CI Autofixer** — push a failing test, get a verified-fix PR for pennies |
-| **Conformant** (`--no-test-oracle`) | no test, just a ticket | agent writes its own `reproduce_bug.py`, then MCTS-searches the fix (ADR-174) | **Legacy Modernizer** — fix undocumented repos with no tests |
+| **Test-Driven Repair** ⭐ (default) | you have a failing/CI test | gate on **your** test | **CI Autofixer** — verified-fix PR for pennies, **68.3%** with-test |
+| **Conformant** (`--no-test-oracle`) | no test, just a ticket | agent writes its own `reproduce_bug.py`, MCTS-searches the fix (ADR-174) | **Legacy Modernizer** — best-effort fix when no test exists |
 
-Same engine, one flag. TDR is the high-margin product default and reaches **68.3%** on SWE-bench Lite
-*when given the acceptance test* (a product claim, not a leaderboard entry — those forbid the test
-in-loop). The conformant mode is the leaderboard-submittable variant **and** the no-test-given product
-capability — capabilities are additive.
+Same engine, one flag. **TDR (with your test) is the product** — 68.3%, the number that matters for CI.
+The conformant (no-test) mode is a genuinely harder capability with a measured, honest ceiling — see the
+[research appendix](#research-appendix-where-no-test-autonomous-repair-tops-out-adr-177) below. The 68.3%
+is a *with-acceptance-test* product claim, deliberately **not** presented as a leaderboard entry (those
+forbid the test in-loop).
 
 ```
 repo
@@ -322,6 +330,39 @@ The agentic 3-tier *tied* but didn't beat single-shot 58.3% — until we swapped
 not → **new best 68.3%** [59.1, 69.9] (ADR-172; lower bound, full pass projects ~71%). Takeaway:
 cheap-base + tiered escalation **scales with frontier Sage quality** — not exhausted. Difficulty-routing
 was measured null (ADR-169 E2, AUC 0.505). Next: stronger Sage + the stateful-PTY agent loop (ADR-170).
+
+## Research appendix: where no-test autonomous repair tops out (ADR-177)
+
+The numbers above are **Test-Driven Repair** — the product — where the acceptance test is available
+in-loop (the real CI/CD case). We *also* ran a rigorous, leaderboard-**conformant** study of the harder
+question: *how far can autonomous repair get with **no** test, writing its own?* We report it in full
+because the boundary is the engineering result.
+
+**Setup:** the agent never sees the gold tests; it writes its own `reproduce_bug.py` (Test-Critic, ADR-174),
+MCTS-searches patches gated by that self-test, scored once at the end by the gold harness. Gold-graded
+25-instance Lite pilots (Wilson CIs wide at this n; directions are clear):
+
+| config | conformant resolve | $/inst |
+|---|---|---|
+| cheap (DeepSeek, any lever) | **12–16%** | $0.02–0.08 |
+| qwen3-coder-30b | 0–4% | — |
+| Opus-sniper on the cheap tail | 16% (**0 lift**) | $1.01 |
+| **Opus best-of-3 coding** | **33%** | $3.49 |
+
+**Findings (LEARNINGS §10–12, ADR-173–177):**
+- **The coder binds, not the oracle.** A strong (Opus) self-test lifts a cheap coder only 12→16% (noise);
+  every cheap lever (oracle, model-swap, asymmetric sniper, plan-then-edit) is null — all resolve the
+  *same easy instances*.
+- **Goodhart is structural.** Driving up the self-test pass-rate (7→23/25) added **zero** gold resolves —
+  agents overfit a self-written proxy. Only frontier **best-of-k** *diversity* converts.
+- **The scaffold is the ceiling.** Even Opus caps at 33% here (vs its 76.8% Verified via a different
+  harness) — so MCTS+self-repro itself is the limit, independent of model tier.
+
+**Conclusion:** "leaderboard-SOTA at pennies" via a no-test cheap-model pipeline is **falsified by our own
+clean data** — a result we publish rather than bury. The product is **TDR with your test (68.3%)**;
+no-test conformant repair is a real but bounded capability (~16–33%), not a top-10 entry. Reaching a
+conformant top-10 (≥45%) would require a different scaffold class (mini-SWE-agent-v2 idioms), out of scope
+for this release. Full evidence: ADRs 173–177, `LEARNINGS.md` §10–12, tracking issue #45.
 
 ## Darwin Shield — the defensive security application (ADR-155, v0.3.0)
 

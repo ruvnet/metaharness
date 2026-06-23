@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/darwin",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Freeze the model, evolve the harness. Two measured applications: (1) SWE-bench Lite code-repair — 7.7% open-loop -> 58.3% via cheap->frontier tiering (official swebench Docker, verified), ~$0.01-$0.74/instance vs $1-20 for frontier agents; (2) Darwin Shield (v0.3.0) — a defensive zero-day discovery harness (Semgrep + fuzz oracles, safety-gated, deterministic replay). The harness, not the model, is the lever. Dependency-free (Node built-ins).",
   "type": "module",
   "main": "./dist/index.js",
