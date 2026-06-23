@@ -59,6 +59,19 @@
         { "name": "GPT-5.2 Codex", "scaffold": "vendor", "model": "GPT-5.2-Codex", "resolve": 41.0, "cost": 2.0, "kind": "official", "costEst": true, "note": "est: GPT-5.2 Codex" },
         { "name": "Qwen3 Coder 480B", "scaffold": "open-weights", "model": "Qwen3-Coder-480B", "resolve": 38.7, "cost": 0.4, "kind": "official", "costEst": true, "note": "est: only open-source SEAL top-12 entry" }
       ]
+    },
+    "draco": {
+      "label": "DRACO — Deep Research (quality)",
+      "denom": 1,
+      "metricNote": "Different metric: 'Resolve %' here = DRACO research-quality × 100 (0–100), NOT bug-resolve. 'Cost' is per full corpus run (MEASURED, not estimated); Run total = that run cost.",
+      "darwinNote": "DRACO is our own cross-domain research benchmark. The cheap model beats the frontier on BOTH quality and cost — the harness/cost-router is the lever. All numbers measured (qualityPerUSD).",
+      "entries": [
+        { "name": "Cost-router (cheap)", "scaffold": "always-cheapest route", "model": "Claude-Haiku-4.5", "resolve": 69.0, "cost": 0.129, "kind": "meas", "costEst": false, "note": "Darwin cost-router lands here: best quality-per-$ (5.36). Measured." },
+        { "name": "Router v2 (escalating)", "scaffold": "haiku→opus @ confidence", "model": "Haiku-4.5 → Opus-4", "resolve": 65.1, "cost": 0.377, "kind": "meas", "costEst": false, "note": "escalation router; measured" },
+        { "name": "Opus-4 (frontier baseline)", "scaffold": "always-frontier", "model": "Claude-Opus-4", "resolve": 70.0, "cost": 1.310, "kind": "official", "costEst": false, "note": "frontier baseline — barely beats cheap on quality at 10× cost. Measured." },
+        { "name": "GPT-5 (frontier baseline)", "scaffold": "always-frontier", "model": "GPT-5", "resolve": 74.6, "cost": 2.417, "kind": "official", "costEst": false, "note": "highest single-model quality; 19× the cost-router's price. Measured." },
+        { "name": "Oracle (cost-optimal)", "scaffold": "perfect routing (ceiling)", "model": "oracle", "resolve": 80.1, "cost": 1.445, "kind": "official", "costEst": false, "note": "upper bound: best achievable with perfect per-query routing" }
+      ]
     }
   }
 }
