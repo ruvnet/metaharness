@@ -4,6 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>SWE-bench Lite · Cost–Performance Pareto Frontier</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%234ade80'/%3E%3Cpath d='M7 22l5-12 4 8 2-4 7 8z' fill='%230a0e14'/%3E%3C/svg%3E" />
 <style>
   :root{
     --bg:#0a0e14; --panel:#121821; --panel2:#0e141c; --line:#1e2733;
@@ -70,6 +71,24 @@
     <span class="badge ok">● official swebench Docker harness</span>
     <span class="badge ok">● Wilson 95% CI</span>
     <span class="badge warn">● competitor figures: reported, not independently verified</span>
+  </div>
+
+  <div class="card" style="border-color:#1f3d2b;background:linear-gradient(180deg,rgba(74,222,128,.05),var(--panel2))">
+    <h2 style="color:var(--accent)">The headline is the denominator</h2>
+    <p style="font-size:15px;margin:0 0 12px">
+      <strong style="color:var(--accent);font-size:18px">~$0.005–$0.015 per instance.</strong>
+      A full sweep of all 300 SWE-bench Lite problems costs roughly <strong>$1.50</strong> in model spend for a
+      single conformant trajectory, and <strong>~$4.50</strong> for the Best-of-3 + judge pipeline
+      <span style="color:var(--dim)">(measured OpenRouter spend)</span>.
+    </p>
+    <p style="font-size:14px;color:var(--dim);margin:0">
+      The systems above it run an <em>estimated</em> $0.1–$2.5+ per instance; the heaviest multi-agent frontier
+      scaffolds are reported at $15–$30/instance — <strong>$4,500–$9,000 to evaluate the same 300 problems once.</strong>
+      That's a two-to-three-order-of-magnitude efficiency gap at comparable resolve, and it holds regardless of
+      minor percentage swings — because the lever here is the <strong>harness</strong> (a stateful interactive loop
+      gated by the repo's own tests), not brute-force MoE compute. Cost is the moat; resolve % is the table stakes.
+      <span style="color:#5b6675">(Darwin costs measured; competitor costs estimated from disclosed models — see notes below.)</span>
+    </p>
   </div>
 
   <div class="card">
@@ -165,7 +184,7 @@ function render(data){
   const tb=document.querySelector('#board tbody');
   const rows=E.map(e=>({...e,rpd:e.cost?e.resolve/e.cost:-1})).sort((a,b)=>b.rpd-a.rpd);
   for(const e of rows){
-    const tr=el('tr',ours(e)?{class:'ours'}:{});
+    const tr=document.createElement('tr'); if(ours(e))tr.className='ours';
     const costCell=e.cost==null?'<span style="color:var(--dim)">undisclosed</span>':`$${e.cost.toFixed(3)}${e.costEst?'<span style="color:var(--dim)"> est</span>':''}`;
     tr.innerHTML=`<td>${e.name}${e.src?` <a href="${e.src}" style="color:var(--dim);font-size:11px">↗</a>`:''}</td>
       <td style="color:var(--dim)">${e.model||e.scaffold}</td>
