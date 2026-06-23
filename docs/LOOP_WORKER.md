@@ -19,8 +19,13 @@ self-written proxy — this is what breaks Goodhart). Then **Best-of-N independe
   to ~single-traj). Measure Best-of-N gold uplift honestly.
 - **Models:** DeepSeek-V4-Flash / DeepSeek-V3.2 / Qwen-2.5-Coder-32B (strong at interactive terminal loops;
   qwen3-coder failed only on strict-format single-shot, not interactive). `--max-cost`, `--max-steps 15`.
-- **Goal:** conformant Lite ≥45% (top-10) at <$0.50/inst = the Pareto crown. Honest caveats throughout;
-  only batch-eval numbers. Product (TDR 68.3%, darwin 0.6.0) already shipped — this is the research push.
+- **Goal (RECALIBRATED 2026-06-23):** the defensible claim is the **cost-Pareto frontier** — highest
+  resolve-per-dollar — NOT absolute top-10. Our ADR-173 board snapshot (#1=60.33%, top-10≈45%) is likely
+  STALE: by mid-2026 the Lite board may have inflated (frontier 70%+, GPT-5-Mini ~56%), so 52% is ~rank-15
+  absolute, but cheapest-per-resolve by a wide margin (52% @ $0.015 vs others' $0.05-$50). **Re-fetch the
+  live leaderboard before ANY placement claim.** Pipeline result (pilot): Best-of-3 interactive + env-filter
+  + LLM-judge = 13/25=52% [33.5,70] @ $0.015/inst (LEARNINGS §15-16). Full-300 confirming. Only batch
+  numbers; never claim a rank we haven't verified against the live board.
 
 ## (SUPERSEDED) STATUS: SOTA push CLOSED → PRODUCT PIVOT (ADR-177 Option 3 chosen)
 Decision locked: **ship the dual-mode product with Test-Driven Repair (68.3% with-test) as the hero**;
