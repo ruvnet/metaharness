@@ -70,7 +70,7 @@ Recompute from each batch; only measured numbers move the odds.
   current too. Real measured numbers only.
 
 ## Each 5-min tick
-1. **HEALTH** — prune docker + `/tmp/sbrepo-*` >30min; `docker kill` sweb.eval >12min (requests-2317 hangs); warn disk<50G/RAM<10G.
+1. **HEALTH** — prune docker + `/tmp/sbrepo-*` >30min; `docker kill` sweb.eval >12min **but `grep -v 'sleep infinity'`** (requests-2317 hangs) — the ADR-176 container-reuse holders run `sleep infinity` for the WHOLE instance (up to ~19min on hard Opus-critic instances); killing them mid-instance breaks the repro checks. Only kill genuine eval/test hangs, never reuse holders. Warn disk<50G/RAM<10G.
 2. **RUN** — if a conformant solve/eval is in flight, check it + **reply to #45/#46 with the numbers**; on completion → official batch eval → resolve-rate + Wilson CI + **assert `leaderboardConformant:true`** → commit RESULTS + post to the issue. Only batch numbers are authoritative.
 3. **ADVANCE** — pilot → full-300 → next phase, each gated on the prior batch clearing its threshold. Every paid run carries `--max-cost` (in-solver cap; never an external watchdog — $2.64 overage lesson).
 4. **UPKEEP** — branch+main sync; #39 + gist + README current; publish darwin when a *conformant* number materially changes the story.
