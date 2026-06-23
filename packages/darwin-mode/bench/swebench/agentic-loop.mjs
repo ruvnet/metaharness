@@ -19,7 +19,8 @@
 /** The system prompt: defines the tool protocol. One JSON action per turn, nothing else. */
 export const AGENTIC_SYSTEM =
   'You are an autonomous bug-fixing agent working inside a real repository. Each turn, output EXACTLY '
-  + 'ONE JSON object on a single line — a tool call — and NOTHING else (no prose, no markdown). Tools:\n'
+  + 'ONE JSON object on a single line — a tool call — and NOTHING else (no prose, no markdown, no XML). '
+  + 'Do NOT use <invoke> XML syntax. Do NOT prefix with >>>. Just the raw JSON object. Tools:\n'
   + '{"tool":"ls","dir":"path/"}            list a directory\n'
   + '{"tool":"read","path":"f.py","start":1,"end":80}  read a file (range optional; omit for whole file)\n'
   + '{"tool":"grep","pattern":"reg","glob":"*.py"}     search the repo (glob optional)\n'
@@ -33,14 +34,20 @@ export const AGENTIC_SYSTEM =
 /** Parse the model's turn into a single action object, tolerating stray prose/fences around the JSON. */
 export function parseAction(raw) {
   if (!raw || typeof raw !== 'string') return { tool: 'noop', error: 'empty model output' };
+  // Strip transcript-echo prefixes that thinking models sometimes reproduce (e.g. ">>> {..}").
+  const stripped = raw.replace(/^>>>\s*/gm, '');
   // Prefer a fenced block, else the first {...} that parses.
-  const fence = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const fence = stripped.match(/```(?:json)?\s*([\s\S]*?)```/);
   const candidates = [];
   if (fence) candidates.push(fence[1]);
-  candidates.push(raw);
-  // also try each {...} span greedily-then-shrinking
-  const spanRe = /\{[\s\S]*\}/g;
-  for (let m; (m = spanRe.exec(raw)); ) candidates.push(m[0]);
+  candidates.push(stripped);
+  // Depth-aware extraction: collect ALL top-level {...} objects so multi-action outputs don't
+  // prevent the first (correct) action from being found (the old greedy regex merged them all).
+  let depth = 0, start = -1;
+  for (let i = 0; i < stripped.length; i++) {
+    if (stripped[i] === '{') { if (!depth) start = i; depth++; }
+    else if (stripped[i] === '}' && depth) { depth--; if (!depth && start >= 0) candidates.push(stripped.slice(start, i + 1)); }
+  }
   for (const c of candidates) {
     const t = c.trim();
     try { const o = JSON.parse(t); if (o && typeof o.tool === 'string') return o; } catch { /* try next */ }

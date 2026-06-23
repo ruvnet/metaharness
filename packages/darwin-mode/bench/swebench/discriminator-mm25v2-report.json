@@ -1,0 +1,207 @@
+{
+  "judgeModel": "deepseek/deepseek-v4-flash",
+  "nSets": 3,
+  "judgeCost_usd": 0.0004,
+  "instances": [
+    {
+      "instance_id": "django__django-14534",
+      "nCandidates": 2,
+      "nNonEmptyTotal": 2,
+      "envPruned": 0,
+      "how": "judge",
+      "pickIdx": 0
+    },
+    {
+      "instance_id": "sympy__sympy-18057",
+      "nCandidates": 1,
+      "nNonEmptyTotal": 2,
+      "envPruned": 0,
+      "how": "env-sole",
+      "pickIdx": 2
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-23314",
+      "nCandidates": 0,
+      "nNonEmptyTotal": 0,
+      "envPruned": 0,
+      "how": "none",
+      "pickIdx": -1
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13439",
+      "nCandidates": 1,
+      "nNonEmptyTotal": 3,
+      "envPruned": 0,
+      "how": "env-sole",
+      "pickIdx": 2
+    },
+    {
+      "instance_id": "pytest-dev__pytest-6116",
+      "nCandidates": 0,
+      "nNonEmptyTotal": 0,
+      "envPruned": 0,
+      "how": "none",
+      "pickIdx": -1
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-7738",
+      "nCandidates": 0,
+      "nNonEmptyTotal": 0,
+      "envPruned": 0,
+      "how": "none",
+      "pickIdx": -1
+    },
+    {
+      "instance_id": "pylint-dev__pylint-7080",
+      "nCandidates": 0,
+      "nNonEmptyTotal": 0,
+      "envPruned": 0,
+      "how": "none",
+      "pickIdx": -1
+    },
+    {
+      "instance_id": "astropy__astropy-12907",
+      "nCandidates": 1,
+      "nNonEmptyTotal": 2,
+      "envPruned": 0,
+      "how": "env-sole",
+      "pickIdx": 1
+    },
+    {
+      "instance_id": "mwaskom__seaborn-3010",
+      "nCandidates": 3,
+      "nNonEmptyTotal": 3,
+      "envPruned": 0,
+      "how": "judge",
+      "pickIdx": 0
+    },
+    {
+      "instance_id": "pydata__xarray-4094",
+      "nCandidates": 0,
+      "nNonEmptyTotal": 0,
+      "envPruned": 0,
+      "how": "none",
+      "pickIdx": -1
+    },
+    {
+      "instance_id": "psf__requests-3362",
+      "nCandidates": 0,
+      "nNonEmptyTotal": 0,
+      "envPruned": 0,
+      "how": "none",
+      "pickIdx": -1
+    },
+    {
+      "instance_id": "pallets__flask-4045",
+      "nCandidates": 2,
+      "nNonEmptyTotal": 3,
+      "envPruned": 0,
+      "how": "judge",
+      "pickIdx": 2
+    },
+    {
+      "instance_id": "django__django-15061",
+      "nCandidates": 0,
+      "nNonEmptyTotal": 0,
+      "envPruned": 0,
+      "how": "none",
+      "pickIdx": -1
+    },
+    {
+      "instance_id": "sympy__sympy-17139",
+      "nCandidates": 1,
+      "nNonEmptyTotal": 3,
+      "envPruned": 0,
+      "how": "env-sole",
+      "pickIdx": 2
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-25433",
+      "nCandidates": 0,
+      "nNonEmptyTotal": 0,
+      "envPruned": 0,
+      "how": "none",
+      "pickIdx": -1
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13779",
+      "nCandidates": 2,
+      "nNonEmptyTotal": 3,
+      "envPruned": 0,
+      "how": "judge",
+      "pickIdx": 0
+    },
+    {
+      "instance_id": "pytest-dev__pytest-5227",
+      "nCandidates": 1,
+      "nNonEmptyTotal": 3,
+      "envPruned": 0,
+      "how": "env-sole",
+      "pickIdx": 2
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-8721",
+      "nCandidates": 2,
+      "nNonEmptyTotal": 3,
+      "envPruned": 0,
+      "how": "judge",
+      "pickIdx": 2
+    },
+    {
+      "instance_id": "pylint-dev__pylint-7993",
+      "nCandidates": 0,
+      "nNonEmptyTotal": 0,
+      "envPruned": 0,
+      "how": "none",
+      "pickIdx": -1
+    },
+    {
+      "instance_id": "astropy__astropy-6938",
+      "nCandidates": 1,
+      "nNonEmptyTotal": 3,
+      "envPruned": 0,
+      "how": "env-sole",
+      "pickIdx": 2
+    },
+    {
+      "instance_id": "mwaskom__seaborn-3190",
+      "nCandidates": 0,
+      "nNonEmptyTotal": 0,
+      "envPruned": 0,
+      "how": "none",
+      "pickIdx": -1
+    },
+    {
+      "instance_id": "pydata__xarray-4248",
+      "nCandidates": 0,
+      "nNonEmptyTotal": 0,
+      "envPruned": 0,
+      "how": "none",
+      "pickIdx": -1
+    },
+    {
+      "instance_id": "django__django-14411",
+      "nCandidates": 0,
+      "nNonEmptyTotal": 0,
+      "envPruned": 0,
+      "how": "none",
+      "pickIdx": -1
+    },
+    {
+      "instance_id": "sympy__sympy-20212",
+      "nCandidates": 0,
+      "nNonEmptyTotal": 0,
+      "envPruned": 0,
+      "how": "none",
+      "pickIdx": -1
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-23476",
+      "nCandidates": 0,
+      "nNonEmptyTotal": 0,
+      "envPruned": 0,
+      "how": "none",
+      "pickIdx": -1
+    }
+  ]
+}

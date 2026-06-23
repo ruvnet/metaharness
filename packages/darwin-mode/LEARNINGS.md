@@ -258,3 +258,31 @@ Set A (DeepSeek-V4-Flash, temp 0, interactive ReAct, conformant, repo's-own-test
 (§13) held at scale — single-trajectory is the real, scale-invariant baseline (CI now tight). A standalone
 cost-Pareto point: 34% conformant at half a cent/instance. Next: full-300 Best-of-3 (temp 0/0.3/0.5) +
 discriminator → the >45% submittable target (union math from §15: ~60% ceiling).
+
+## 18. MiniMax M2.5 pivot — patch quality is elite (82%) but step-budget coverage kills the score
+
+Full experiment: 3 × 25-instance interactive ReAct trajectories, `minimax/minimax-m2.5`, temp 0.6, 15 steps,
+LLM-judge discriminator (no env-filter), gold harness.
+
+| config | coverage | accuracy/patch | gold resolved |
+|---|---|---|---|
+| MM25-v1 (broken parser) | 48% (12/25) | 67% (8/12) | 8/25 = 32% |
+| MM25-v2 (fixed parser) | 44% (11/25) | 82% (9/11) | **9/25 = 36%** |
+| DS §16 (3×BO discriminated) | ~72%+ | ~72% | 13/25 = **52%** |
+
+**Root cause:** MiniMax M2.5 is exploration-heavy. It burns 12+ steps on `read/grep/ls` before attempting
+an edit; 56% of instances exhaust the 15-step budget without producing any diff. DS-Flash edits earlier.
+
+**Per-patch quality IS elite.** 82% of submitted patches pass the gold harness (8/11 in-loop confirmed + 2
+bonus non-in-loop passes). For the 8 in-loop resolutions, avg steps to submit = 7-10. When MM25 reaches an
+edit, it is correct 82% of the time — +10pp over DS (~72%). The V8-engine hypothesis holds in **quality**
+but not in **step-efficiency**: DS reaches an edit faster and covers more instances in the same 15-step budget.
+
+**parseAction fix (ADR-178 follow-on):** depth-aware JSON extraction (replaces greedy span regex) + `>>>`
+transcript-echo stripping + explicit "no XML/invoke" system-prompt instruction. Lifted per-trajectory in-loop
+5-6 → 7-8 (Δ+2) and the gold score 32% → 36%. The fix is model-agnostic and should stay in the harness.
+
+**Next lever:** MM25 at 25-30 steps. At 25 steps, projected coverage jumps to 60-70% (extrapolating the
+exploration pattern); 60% × 82% = 49% per trajectory; union of 3 → ~65% oracle ceiling. That would beat DS's
+60% ceiling from §15 — but at ~2× the cost and time per instance. Validate with a 25-step pilot before
+launching full-300.
