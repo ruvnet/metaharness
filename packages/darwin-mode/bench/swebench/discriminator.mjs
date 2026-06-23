@@ -10,6 +10,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, dirname, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { runConformantTests } from './conformant-tests.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -20,7 +21,25 @@ const OUT = rel(argv('--out', 'predictions-bestof-judged.jsonl'));
 const REPORT = rel(argv('--report', 'discriminator-report.json'));
 const BASE_URL = (argv('--base-url', 'https://openrouter.ai/api/v1')).replace(/\/$/, '');
 const key = (process.env.OPENROUTER_API_KEY || (() => { try { return readFileSync('/tmp/.orkey', 'utf8'); } catch { return ''; } })()).trim();
+const ENV_FILTER = !args.includes('--no-env-filter'); // Signal A: prune candidates whose repo existing tests RAN and FAILED (conformant), before the judge
 const manifest = JSON.parse(readFileSync(rel(argv('--manifest', 'pilot-sample-25.json')), 'utf8')).instances;
+
+// Existing tests in the changed file's package (conformant regression signal) — same rule as solve-agentic.
+function existingTestTargets(diff) {
+  const files = [...diff.matchAll(/^\+\+\+ b\/(.+\.py)$/gm)].map((m) => m[1]).filter((f) => !/(^|\/)(test_|tests?\/|conftest)/i.test(f));
+  const dirs = new Set();
+  for (const f of files) { const parts = f.split('/'); for (let i = parts.length - 1; i >= 1; i--) dirs.add(parts.slice(0, i).join('/') + '/tests'); }
+  return [...dirs].slice(0, 4);
+}
+// Returns 'pass' (ran clean) | 'fail' (ran + regressed → prune) | 'nosignal' (couldn't run → keep, abstain).
+function envSignal(instanceId, patch) {
+  const targets = existingTestTargets(patch);
+  if (!targets.length) return 'nosignal';
+  const cmd = `python -m pytest -q -p no:cacheprovider ${targets.map((t) => `'${t}'`).join(' ')}`;
+  const r = runConformantTests(instanceId, patch, cmd, { timeoutMs: 300000 });
+  if (!r.ran) return 'nosignal';
+  return r.passed ? 'pass' : 'fail';
+}
 const predFiles = (argv('--preds', '')).split(',').filter(Boolean).map(rel);
 if (predFiles.length < 2) { console.error('need --preds with >=2 comma-separated prediction files'); process.exit(1); }
 
@@ -49,13 +68,23 @@ for (const inst of manifest) {
   const id = inst.instance_id;
   const all = sets.map((s) => s[id] || '');
   const nonEmpty = [...new Map(all.map((p, i) => [p, { i, patch: p }])).values()].filter((c) => c.patch.trim()); // unique non-empty
-  let picked = '';
-  let pickIdx = -1;
-  if (nonEmpty.length === 1) { picked = nonEmpty[0].patch; pickIdx = nonEmpty[0].i; }
-  else if (nonEmpty.length > 1) { const r = await judge(inst.problem_statement, nonEmpty); cost += r.cost; picked = nonEmpty[r.idx].patch; pickIdx = nonEmpty[r.idx].i; }
+  // Signal A — environment filter: prune candidates whose repo existing tests RAN and FAILED (conformant).
+  let pool = nonEmpty; let pruned = 0;
+  if (ENV_FILTER && nonEmpty.length > 1) {
+    const scored = nonEmpty.map((c) => ({ ...c, sig: envSignal(id, c.patch) }));
+    const survivors = scored.filter((c) => c.sig !== 'fail');
+    pruned = scored.length - survivors.length;
+    pool = survivors.length ? survivors : nonEmpty; // if all pruned, fall back to full set (let the judge decide)
+    // prefer the ones that actively PASSED if any cleanly did
+    const passers = pool.filter((c) => c.sig === 'pass');
+    if (passers.length) pool = passers;
+  }
+  let picked = ''; let pickIdx = -1; let how = 'none';
+  if (pool.length === 1) { picked = pool[0].patch; pickIdx = pool[0].i; how = 'env-sole'; }
+  else if (pool.length > 1) { const r = await judge(inst.problem_statement, pool); cost += r.cost; picked = pool[r.idx].patch; pickIdx = pool[r.idx].i; how = 'judge'; }
   writeFileSync(OUT, JSON.stringify({ instance_id: id, model_name_or_path: 'darwin-bestof-judged', model_patch: picked }) + '\n', { flag: 'a' });
-  report.push({ instance_id: id, nCandidates: nonEmpty.length, nNonEmptyTotal: all.filter((p) => p.trim()).length, pickIdx });
-  console.error(`${id}: ${nonEmpty.length} unique cand → pick set#${pickIdx}`);
+  report.push({ instance_id: id, nCandidates: nonEmpty.length, nNonEmptyTotal: all.filter((p) => p.trim()).length, envPruned: pruned, how, pickIdx });
+  console.error(`${id}: ${nonEmpty.length} cand, env-pruned ${pruned} → ${how} set#${pickIdx}`);
 }
 writeFileSync(REPORT, JSON.stringify({ judgeModel: MODEL, nSets: predFiles.length, judgeCost_usd: Math.round(cost * 1e4) / 1e4, instances: report }, null, 2));
 console.error(`\nDONE judged ${report.length} | judge cost $${Math.round(cost * 1e4) / 1e4} | → ${OUT} (gold-eval this; also union-eval each --preds for the oracle upper bound)`);
