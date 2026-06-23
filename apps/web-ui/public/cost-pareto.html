@@ -67,11 +67,12 @@
     <p>Resolve rate vs. cost per instance. The frontier is defined by resolve-per-dollar — not raw score.</p>
   </header>
   <div class="badges">
-    <span class="badge ok">● conformant (no gold tests in-loop)</span>
-    <span class="badge ok">● official swebench Docker harness</span>
-    <span class="badge ok">● Wilson 95% CI</span>
-    <span class="badge warn">● competitor figures: reported, not independently verified</span>
+    <span class="badge ok">● real leaderboard scores</span>
+    <span class="badge ok">● official harness · Wilson 95% CI</span>
+    <span class="badge warn">● competitor costs: estimated from disclosed models</span>
   </div>
+
+  <div id="tabs" style="display:flex;gap:8px;margin:0 0 22px"></div>
 
   <div class="card" style="border-color:#1f3d2b;background:linear-gradient(180deg,rgba(74,222,128,.05),var(--panel2))">
     <h2 style="color:var(--accent)">The headline is the denominator</h2>
@@ -92,7 +93,8 @@
   </div>
 
   <div class="card">
-    <h2>The frontier</h2>
+    <h2 id="chartTitle">The frontier</h2>
+    <div id="darwinNote" style="display:none;font-size:12.5px;color:var(--warn);background:rgba(251,191,36,.07);border:1px solid #3d3320;border-radius:8px;padding:8px 11px;margin-bottom:12px"></div>
     <svg id="chart" viewBox="0 0 900 460" preserveAspectRatio="xMidYMid meet" aria-label="cost vs resolve scatter"></svg>
     <div class="legend">
       <span><i class="sw" style="background:var(--accent)"></i> Darwin (measured, conformant)</span>
@@ -163,8 +165,20 @@ function axes(){
   const yt=el('text',{x:18,y:(y0+y1)/2,class:'axtitle','text-anchor':'middle',transform:`rotate(-90 18 ${(y0+y1)/2})`});yt.textContent='Resolve rate (SWE-bench Lite)';svg.appendChild(yt);
 }
 
-function render(data){
-  const E=data.entries;
+let DATA, CUR='lite';
+function render(key){
+  CUR=key;
+  const bm=DATA.benchmarks[key];
+  const E=bm.entries;
+  svg.innerHTML='';
+  document.querySelector('#board tbody').innerHTML='';
+  document.getElementById('chartTitle').textContent='The frontier · '+bm.label;
+  document.querySelector('header h1').innerHTML=bm.label+' · <span class="hl">Cost–Performance Pareto Frontier</span>';
+  const dn=document.getElementById('darwinNote');
+  if(bm.darwinNote){dn.style.display='block';dn.textContent='⚠ '+bm.darwinNote;}else{dn.style.display='none';}
+  // active tab styling
+  [...document.querySelectorAll('#tabs button')].forEach(b=>{const on=b.dataset.k===key;
+    b.style.background=on?'var(--accent)':'var(--panel)';b.style.color=on?'#0a0e14':'var(--dim)';b.style.borderColor=on?'var(--accent)':'var(--line)';b.style.fontWeight=on?'600':'400';});
   axes();
   // cost-Pareto frontier: lowest-cost system achieving each resolve level (plotted points only)
   const plot=E.filter(e=>e.cost!=null);
@@ -195,10 +209,21 @@ function render(data){
     tb.appendChild(tr);
   }
   const sl=document.getElementById('srcline');
-  if(sl)sl.innerHTML=`Data: <code>assets/swe-pareto.json</code> · resolve % from <a href="${data.sources[0]}" style="color:var(--accent2)">swe-bench/experiments</a> · updated ${data.updated}`;
+  if(sl)sl.innerHTML=`Data: <code>assets/swe-pareto.json</code> · sources: <a href="${DATA.sources[0]}" style="color:var(--accent2)">swe-bench/experiments</a>, <a href="${DATA.sources[2]}" style="color:var(--accent2)">SEAL Pro</a> · updated ${DATA.updated}`;
 }
 
-fetch('assets/swe-pareto.json').then(r=>r.json()).then(render).catch(e=>{
+function buildTabs(){
+  const t=document.getElementById('tabs');
+  for(const [k,bm] of Object.entries(DATA.benchmarks)){
+    const b=document.createElement('button');
+    b.dataset.k=k; b.textContent=bm.label.replace(/ \(.*\)/,'');
+    b.style.cssText='font-family:var(--mono);font-size:12px;padding:7px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--dim);cursor:pointer;transition:all .12s';
+    b.onclick=()=>render(k);
+    t.appendChild(b);
+  }
+}
+
+fetch('assets/swe-pareto.json?v='+Date.now()).then(r=>r.json()).then(d=>{DATA=d;buildTabs();render('lite');}).catch(e=>{
   document.getElementById('srcline').textContent='Failed to load assets/swe-pareto.json: '+e.message;
 });
 </script>
