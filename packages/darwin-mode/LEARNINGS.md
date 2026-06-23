@@ -235,3 +235,18 @@ whole game is now the SELECTOR: capture as much of the 60% union as possible. Ev
 single set* (~45%) = top-10. The LLM-judge discriminator (env-filter + judge, LEARNINGS §14) is measuring now.
 Caveat: n=25, wide CIs; full-300 single-traj (running) confirms the firm base rate. But three independent
 sets at 40-52% is a strong, consistent signal — NOT a single lucky draw.
+
+## 16. 🎯 Best-of-3 + LLM-judge discriminator = 52% conformant @ $0.015/inst (Pareto-crown signal)
+
+The full pipeline (3 interactive trajectories temp 0.4 → Signal-A env-filter → LLM-judge), conformant,
+25-instance Lite pilot:
+- **DISCRIMINATOR PICK (submittable): 13/25 = 52.0% [Wilson 33.5, 70.0]** @ ~$0.015/inst.
+- Captured **13 of the 15 union resolves = 87% selection efficiency** (SWE-Search reports 73-84%; ours is in range/above).
+- Pipeline cost: 3×$0.005 traj + $0.0002 judge + $0 env-filter ≈ **$0.015/inst — 33× under the $0.50 Pareto target.**
+
+This is the arc's payoff: a CONFORMANT top-10-to-top-5-territory result (≥45%) at pennies, validating the
+interactive-loop + Best-of-N + judge architecture (vs the MCTS dead end, ADR-177).
+
+**HONEST GATES (do not over-claim):** n=25, Wilson [33.5, 70.0] is too wide to assert top-10 (lower bound
+33.5% < 45%), AND the temps/judge-prompt were tuned on these 25 (overfit risk). The **full-300 Best-of-3**
+is required before any placement claim or submission. Running now. Only the full-300 batch number counts.
