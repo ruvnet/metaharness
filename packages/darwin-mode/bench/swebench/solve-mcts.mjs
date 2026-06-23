@@ -20,8 +20,9 @@ import { runConformantTests, startInstanceContainer, stopInstanceContainer } fro
 const HERE = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
 const argv = (f, d) => { const i = args.indexOf(f); return i >= 0 ? args[i + 1] : d; };
-const MODEL = argv('--model', 'deepseek/deepseek-v4-flash');         // Test-Critic / repro driver (cheap)
-const PATCH_MODEL = argv('--patch-model', MODEL);                    // MCTS candidate-patch model (the heavy-lifter, e.g. minimax/minimax-m2.7)
+const MODEL = argv('--model', 'deepseek/deepseek-v4-flash');         // default model (coder, and critic unless overridden)
+const CRITIC_MODEL = argv('--critic-model', MODEL);                  // ADR-176 two-tiered oracle: Opus authors a bulletproof repro; cheap coders run against it (breaks the measured Goodhart trap)
+const PATCH_MODEL = argv('--patch-model', MODEL);                    // MCTS candidate-patch model (the coder)
 const SNIPER = argv('--sniper', 'anthropic/claude-opus-4.8');        // L3 escalation model
 const K = +argv('--k', 5);
 const SLICE = +argv('--slice', 40000);
@@ -179,7 +180,7 @@ async function runInstance(inst) {
     const selected = selectFiles(inst.problem_statement, work, allPy, buildContext, 15);
     const seen = APPLICATOR === 'line' ? numberedSnapshot(work, selected) : selected.map((f) => `# ===== ${f} =====\n${readFileSync(join(work, f), 'utf8').slice(0, SLICE)}`).join('\n\n');
     // 1) conformant oracle
-    const critic = await buildReproTest(inst.instance_id, inst.problem_statement, (p, s) => llm(p, s), { maxAttempts: 3, containerId });
+    const critic = await buildReproTest(inst.instance_id, inst.problem_statement, (p, s) => llm(p, s, CRITIC_MODEL), { maxAttempts: 3, containerId });
     totalCost += critic.cost; row.reproValid = critic.valid;
     let repro = critic.valid ? { [REPRO_PATH]: critic.repro } : null;
     // ADR-175 #47 human-in-the-loop test review
@@ -232,5 +233,5 @@ let cursor = 0; let cappedAt = null;
 async function worker() { while (cursor < manifest.length) { if (totalCost >= MAX_COST) { if (cappedAt === null) { cappedAt = report.length; console.error(`[max-cost] $${totalCost.toFixed(2)} ≥ ${MAX_COST} — stop`); } return; } await runInstance(manifest[cursor++]); } }
 await Promise.all(Array.from({ length: Math.min(CONCURRENCY, manifest.length) }, () => worker()));
 const reproValid = report.filter((r) => r.reproValid).length, solved = report.filter((r) => r.branchesPassed > 0 || r.sniper).length, awaiting = report.filter((r) => r.awaitingReview).length;
-writeFileSync(REPORT, JSON.stringify({ model: MODEL, patchModel: PATCH_MODEL, sniper: SNIPER, k: K, n: report.length, reproValid, branchOrSniperSolved: solved, awaitingReview: awaiting, pauseForTestReview: PAUSE_REVIEW, leaderboardConformant: !usedOracle, cappedAtInstance: cappedAt, totalCost_usd: Math.round(totalCost * 1e4) / 1e4, instances: report }, null, 2));
+writeFileSync(REPORT, JSON.stringify({ model: MODEL, criticModel: CRITIC_MODEL, patchModel: PATCH_MODEL, sniper: SNIPER, k: K, n: report.length, reproValid, branchOrSniperSolved: solved, awaitingReview: awaiting, pauseForTestReview: PAUSE_REVIEW, leaderboardConformant: !usedOracle, cappedAtInstance: cappedAt, totalCost_usd: Math.round(totalCost * 1e4) / 1e4, instances: report }, null, 2));
 console.error(`\nDONE ${report.length} | repro-valid ${reproValid} | repro-passed ${solved} | conformant=${!usedOracle} | $${Math.round(totalCost * 1e4) / 1e4} | preds → ${OUT} (BATCH-eval for the authoritative number)`);
