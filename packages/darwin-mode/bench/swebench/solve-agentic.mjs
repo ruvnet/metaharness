@@ -74,19 +74,26 @@ function fetchRepo(repo, sha) {
   g(work, 'git config user.email b@b'); g(work, 'git config user.name b'); g(work, 'git commit -qam base --allow-empty');
   return work;
 }
-async function llm(prompt, system) {
-  const messages = system ? [{ role: 'system', content: system }, { role: 'user', content: prompt }] : [{ role: 'user', content: prompt }];
-  let lastErr;
-  for (let attempt = 0; attempt < 5; attempt++) {
-    if (attempt) await new Promise((r) => setTimeout(r, 2000 * 2 ** (attempt - 1)));
-    try {
-      const res = await fetch(CHAT_URL, { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, messages, max_tokens: 4096, temperature: TEMP }) });
-      if (!res.ok && (res.status === 429 || res.status >= 500)) { lastErr = new Error(`http ${res.status}`); continue; }
-      const j = await res.json(); return { raw: j.choices?.[0]?.message?.content ?? '', cost: j.usage?.cost ?? 0 };
-    } catch (e) { lastErr = e; }
-  }
-  throw lastErr ?? new Error('llm failed');
+function mkLlm(model) {
+  return async function (prompt, system) {
+    const messages = system ? [{ role: 'system', content: system }, { role: 'user', content: prompt }] : [{ role: 'user', content: prompt }];
+    let lastErr;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      if (attempt) await new Promise((r) => setTimeout(r, 2000 * 2 ** (attempt - 1)));
+      try {
+        const res = await fetch(CHAT_URL, { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model, messages, max_tokens: 4096, temperature: TEMP }) });
+        if (!res.ok && (res.status === 429 || res.status >= 500)) { lastErr = new Error(`http ${res.status}`); continue; }
+        const j = await res.json(); return { raw: j.choices?.[0]?.message?.content ?? '', cost: j.usage?.cost ?? 0 };
+      } catch (e) { lastErr = e; }
+    }
+    throw lastErr ?? new Error('llm failed');
+  };
 }
+const llm = mkLlm(MODEL);
+// ADR-182 — cost cascade: cheap tier-1; escalate ONLY instances whose patch fails the repo's own tests
+// (conformant gate). Tier-2 starts COLD (fresh work tree) to preserve trajectory diversity (the union ceiling).
+const ESCALATE = argv('--cascade', null);
+const llmEsc = ESCALATE ? mkLlm(ESCALATE) : null;
 function evalOne(instanceId, patch, runId) {
   const preds = `/tmp/agentic-${runId}.jsonl`;
   writeFileSync(preds, JSON.stringify({ instance_id: instanceId, model_name_or_path: 'darwin-agentic', model_patch: patch }) + '\n');
@@ -129,38 +136,53 @@ function runRepoTests(instanceId, diff) {
 }
 
 writeFileSync(OUT, ''); const report = []; let totalCost = 0;
+// One agentic attempt in a FRESH work tree (cold). Returns {res, work}; caller cleans up.
+async function solveTier(inst, llmFn) {
+  const work = fetchRepo(inst.repo, inst.base_commit); let evalCount = 0;
+  const io = {
+    work, path: { join },
+    readFile: (p) => readFileSync(p, 'utf8'),
+    listDir: (p) => readdirSync(p, { withFileTypes: true }).map((d) => d.isDirectory() ? d.name + '/' : d.name),
+    writeFile: (p, c) => writeFileSync(p, c),
+    exists: (p) => existsSync(p),
+    gitDiff: () => g(work, 'git diff').toString(),
+    grepRepo: (pattern, glob) => { try { const gl = glob ? `-- '${glob}'` : "-- '*.py'"; return g(work, `git grep -n -e ${JSON.stringify(pattern)} ${gl} | head -60 || true`).toString(); } catch { return ''; } },
+    applyEdit, isTestPath,
+    runTests: () => {
+      if (NO_ORACLE) return runRepoTests(inst.instance_id, g(work, 'git diff').toString()); // conformant gate
+      usedOracleDuringSolve = true;
+      return evalOne(inst.instance_id, g(work, 'git diff').toString(), `ag_${inst.instance_id}_${++evalCount}`.replace(/[^a-zA-Z0-9_]/g, '_'));
+    },
+    MAX_OUT: 4000,
+  };
+  const res = await agenticSolve({ problem: inst.problem_statement, io, llm: llmFn, maxSteps: MAX_STEPS });
+  return { res, work };
+}
+// Cascade tie-break: neither tier passed the repo gate — judge picks the likelier fix (cheap, conformant).
+async function judgePick(inst, pA, pB) {
+  if (!pA.trim()) return pB; if (!pB.trim()) return pA;
+  try { const { raw, cost } = await llm(`A GitHub issue and TWO candidate patches, neither verified by tests. Pick the one more likely to correctly fix it.\n\nISSUE:\n${String(inst.problem_statement).slice(0, 4000)}\n\nPATCH A:\n${pA.slice(0, 5000)}\n\nPATCH B:\n${pB.slice(0, 5000)}\n\nReply ONLY 'A' or 'B'.`); totalCost += cost; return /^\s*B/i.test(raw) ? pB : pA; } catch { return pA; }
+}
 async function runInstance(inst) {
-  const t0 = Date.now(); const row = { instance_id: inst.instance_id, repo: inst.repo, steps: 0, resolved: false };
-  let patch = ''; let work; let evalCount = 0;
+  const t0 = Date.now(); const row = { instance_id: inst.instance_id, repo: inst.repo, tier: 'T1', resolved: false };
+  let patch = '';
   try {
-    work = fetchRepo(inst.repo, inst.base_commit);
-    const io = {
-      work, path: { join },
-      readFile: (p) => readFileSync(p, 'utf8'),
-      listDir: (p) => readdirSync(p, { withFileTypes: true }).map((d) => d.isDirectory() ? d.name + '/' : d.name),
-      writeFile: (p, c) => writeFileSync(p, c),
-      exists: (p) => existsSync(p),
-      gitDiff: () => g(work, 'git diff').toString(),
-      grepRepo: (pattern, glob) => { try { const gl = glob ? `-- '${glob}'` : "-- '*.py'"; return g(work, `git grep -n -e ${JSON.stringify(pattern)} ${gl} | head -60 || true`).toString(); } catch { return ''; } },
-      applyEdit, isTestPath,
-      runTests: () => {
-        if (NO_ORACLE) return runRepoTests(inst.instance_id, g(work, 'git diff').toString()); // conformant: existing tests in Docker, never the gold harness
-        usedOracleDuringSolve = true;
-        const cur = g(work, 'git diff').toString();
-        return evalOne(inst.instance_id, cur, `ag_${inst.instance_id}_${++evalCount}`.replace(/[^a-zA-Z0-9_]/g, '_'));
-      },
-      MAX_OUT: 4000,
-    };
-    const res = await agenticSolve({ problem: inst.problem_statement, io, llm, maxSteps: MAX_STEPS });
+    const { res, work } = await solveTier(inst, llm);
     patch = res.patch; totalCost += res.cost; row.steps = res.steps; row.submitted = res.submitted; row.resolvedInLoop = res.resolvedInLoop;
-    // tool-call histogram + the per-step trace (capped) — debuggability for the next-arc tuning.
-    row.toolHist = res.transcript.reduce((h, t) => { const k = (t.actionRaw.match(/"tool":"(\w+)"|"raw"/) || [])[1] || 'noop'; h[k] = (h[k] || 0) + 1; return h; }, {});
-    row.trace = res.transcript.map((t) => `${t.actionRaw} => ${t.obs.slice(0, 120)}`);
+    try { rmSync(work, { recursive: true, force: true }); } catch { /**/ }
+    if (ESCALATE && !res.resolvedInLoop) {                       // escalate ONLY the hard tail
+      row.escalated = true;
+      const { res: r2, work: w2 } = await solveTier(inst, llmEsc); // COLD tier-2
+      totalCost += r2.cost; row.steps2 = r2.steps; row.resolvedInLoop2 = r2.resolvedInLoop;
+      try { rmSync(w2, { recursive: true, force: true }); } catch { /**/ }
+      if (r2.resolvedInLoop) { patch = r2.patch; row.tier = 'T2'; }
+      else { patch = await judgePick(inst, res.patch, r2.patch); row.tier = 'judge'; }
+      row.resolved = !!(res.resolvedInLoop || r2.resolvedInLoop);
+    } else row.resolved = !!res.resolvedInLoop;
   } catch (e) { row.error = String(e).split('\n')[0].slice(0, 200); }
-  finally { if (work) try { rmSync(work, { recursive: true, force: true }); } catch { /**/ } }
   appendFileSync(OUT, JSON.stringify({ instance_id: inst.instance_id, model_name_or_path: 'darwin-agentic', model_patch: patch }) + '\n');
-  row.sec = Math.round((Date.now() - t0) / 1000); row.resolved = !!row.resolvedInLoop; report.push(row);
-  console.error(`[${report.length}/${manifest.length}] ${inst.instance_id} steps=${row.steps} submit=${row.submitted} inloop=${row.resolvedInLoop} ${row.sec}s ${row.error ? 'ERR:' + row.error : ''}`);
+  row.sec = Math.round((Date.now() - t0) / 1000); report.push(row);
+  console.error(`[${report.length}/${manifest.length}] ${inst.instance_id} tier=${row.tier} esc=${!!row.escalated} inloop=${row.resolvedInLoop}/${row.resolvedInLoop2 ?? '-'} ${row.sec}s ${row.error ? 'ERR:' + row.error : ''}`);
 }
 
 let cursor = 0; let cappedAt = null;
@@ -173,9 +195,11 @@ async function worker() {
 }
 await Promise.all(Array.from({ length: Math.min(CONCURRENCY, manifest.length) }, () => worker()));
 
-const inloop = report.filter((r) => r.resolvedInLoop).length;
+const inloop = report.filter((r) => r.resolved).length;
+const escalated = report.filter((r) => r.escalated).length;
+const byTier = report.reduce((h, r) => { h[r.tier] = (h[r.tier] || 0) + 1; return h; }, {});
 // ADR-173 leakage guard: in conformant mode the gold harness must NEVER have run during solving.
 const conformant = NO_ORACLE && !usedOracleDuringSolve;
 if (NO_ORACLE && usedOracleDuringSolve) console.error('⚠️ LEAKAGE: gold harness was called during solve despite --no-test-oracle — run is NON-conformant.');
-writeFileSync(REPORT, JSON.stringify({ model: MODEL, maxSteps: MAX_STEPS, n: report.length, resolvedInLoop: inloop, noTestOracle: NO_ORACLE, leaderboardConformant: conformant, cappedAtInstance: cappedAt, maxCost: MAX_COST===Infinity?null:MAX_COST, totalCost_usd: Math.round(totalCost * 10000) / 10000, instances: report }, null, 2));
-console.error(`\nDONE ${report.length} | in-loop ${inloop}/${report.length} | conformant=${conformant} (oracle-during-solve=${usedOracleDuringSolve}) | $${Math.round(totalCost * 10000) / 10000} | preds → ${OUT}`);
+writeFileSync(REPORT, JSON.stringify({ model: MODEL, escalateModel: ESCALATE, cascade: !!ESCALATE, maxSteps: MAX_STEPS, n: report.length, resolvedInLoop: inloop, escalated, byTier, noTestOracle: NO_ORACLE, leaderboardConformant: conformant, cappedAtInstance: cappedAt, maxCost: MAX_COST===Infinity?null:MAX_COST, totalCost_usd: Math.round(totalCost * 10000) / 10000, blendedCostPerInst_usd: report.length ? Math.round(totalCost / report.length * 1e5) / 1e5 : 0, instances: report }, null, 2));
+console.error(`\nDONE ${report.length} | in-loop ${inloop}/${report.length} | cascade=${!!ESCALATE} escalated=${escalated} tiers=${JSON.stringify(byTier)} | $${Math.round(totalCost * 10000) / 10000} (${report.length?(totalCost/report.length).toFixed(4):0}/inst) | preds → ${OUT}`);
