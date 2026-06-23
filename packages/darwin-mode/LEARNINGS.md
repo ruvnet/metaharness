@@ -299,3 +299,20 @@ Honest batch-eval correction to §15-16 (n=25 pilot). Full-300 Lite, gold, confo
 NOT hold — it used env-filter (dropped at scale for speed) + n=25 luck. Levers to recover toward the 45%
 ceiling: (a) a fast/parallel env-filter (it added ~12 pts on the pilot), (b) a stronger judge (Opus). This is
 the "only batch numbers authoritative; pilots drift 1.5-5×" rule — predicted ~35-40% judge-only, landed 39.7%.
+
+## 19. Cost cascade REFUTED with the repo-test gate — gate fires 3.7% vs 34% gold (regression guard ≠ resolution detector)
+
+ADR-182 cascade (cheap → repo-test gate → cold escalate → judge) was implemented + validated end-to-end. But
+the gate signal is too weak to make it pay:
+- Single-traj full-300: in-loop **gate-pass = 11/300 = 3.7%** vs **gold resolve = 102/300 = 34%**.
+- The `resolvedInLoop` gate runs the changed module's EXISTING tests — it confirms "no regression", NOT "bug
+  fixed" (the fix-validating test is in the gold test_patch, conformantly unseen). So it under-fires ~9×.
+- 3-instance astropy cascade: 0/3 gate-pass → 3/3 escalate → judge → **$0.067/inst** (13× single-traj), no
+  cheap exits. Cascade degenerates to expensive Best-of-2+judge — strictly WORSE cost-Pareto than the parallel
+  Best-of-3 judge-only (39.7% @ $0.015, §18). **Cost-ranking NOT improved.** Did not run full-300 (known-negative).
+
+**Why it matters:** any conformant early-exit/cascade needs a gate that PROXIES RESOLUTION, not regression. The
+candidate: the agent's self-written reproduce_bug.py (test-critic.mjs) gated to fail-on-base/pass-on-fix — but
+that re-introduces the MCTS Goodhart risk (§10), so it needs careful validation, not a blind deploy. Net: the
+env-filter + LLM-judge discriminator (88% union capture, §18) remains the better conformant selector; the
+cascade structure only helps if/when a strong resolution-proxy gate exists.
