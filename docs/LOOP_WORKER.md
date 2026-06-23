@@ -7,18 +7,28 @@ Updated 2026-06-22 for the **ADR-176 SWE-Conductor ablation phase** (overnight a
 $1000 the Opus-coder arm + full-300 runs are affordable. Still `--max-cost` every paid run; never an
 external watchdog.
 
-## STATUS 2026-06-23 (re-opened): EXPLORE the STATEFUL INTERACTIVE LOOP until SOTA (the SWE-agent paradigm)
-New architecture to break the Goodhart trap that capped MCTS+self-repro: a **stateful interactive ReAct
-loop** (`solve-agentic.mjs --no-test-oracle`, already built — read/grep/ls/edit/run_tests/submit) where
-`run_tests` runs the **repository's OWN existing tests in Docker** (conformant; regression-guard, NOT a
-self-written proxy — this is what breaks Goodhart). Then **Best-of-N independent trajectories**.
-- **Step 1 (now): measure the SINGLE-trajectory conformant resolve rate** — the whole Best-of-N→45% math
-  hinges on it (~25% target). Gold batch eval, Wilson CI.
-- **Step 2:** if single-traj ≥~20%, add Best-of-N (5 independent sequential runs); the hard part is
-  **selection without a fix-oracle** (clean-exit heuristic is weak — needs a real selector or it regresses
-  to ~single-traj). Measure Best-of-N gold uplift honestly.
-- **Models:** DeepSeek-V4-Flash / DeepSeek-V3.2 / Qwen-2.5-Coder-32B (strong at interactive terminal loops;
-  qwen3-coder failed only on strict-format single-shot, not interactive). `--max-cost`, `--max-steps 15`.
+## STATUS 2026-06-23: PROVEN ARCHITECTURE → confirm cost-Pareto SOTA at full-300 (SERIALIZED)
+The interactive ReAct loop (`solve-agentic.mjs --no-test-oracle`; `run_tests` = repo's OWN tests in Docker,
+conformant) broke the MCTS Goodhart trap. **Measured (25-pilot, gold, conformant):** single-traj 36-52%,
+union-of-3 **60%** ceiling, **Best-of-3 + env-filter + LLM-judge = 13/25 = 52% @ ~$0.015/inst** (87% union
+capture). Strong cost-Pareto-SOTA signal — but n=25 CIs are wide. **The job now is the FULL-300 confirmation.**
+
+### ⚠️ HARD OPS RULES (learned the hard way 2026-06-23 — a load-180 incident)
+1. **SERIALIZE.** At most ONE full-300 generation AND at most ONE gold eval running at a time. Never 3
+   concurrent full-300 + eval — it caused a git-clone storm + an 800%-CPU sklearn-pytest storm → load 180.
+2. **Total concurrent git clones ≤ 3** (the GitHub-rate-limit cap; `--concurrency 2-3`, never stack runs).
+3. **env-filter / run_tests must target the SPECIFIC changed test file** (`-x`, capped), NEVER a whole
+   package suite — `sklearn/tests` etc. spawn multi-hundred-%-CPU pytest. (Fix in discriminator.mjs + solve-agentic existingTestTargets before re-running.)
+4. **Orphaned containers outlive killed host procs** — after killing any run, `docker ps -q | xargs docker kill`.
+5. **MULTI-SESSION SAFETY:** another Claude session may share this box (seen 2026-06-23: foreign ppid running
+   mm25-* runs). **NEVER mass-`pkill -f` by pattern** — it kills the other session's work. Check `ps -o ppid`
+   and only kill procs whose ancestry is THIS session's run_in_background tasks.
+
+### Serialized path to the confirmed number
+1. Fix the env-filter (rule 3). Re-run **Set A gold eval ALONE** → firm full-300 single-traj base rate.
+2. Complete **B/C tails** (200→300) one at a time → full-300 Best-of-3.
+3. Run discriminator (env-filter + judge) on the 3 full-300 sets → gold + union → the **submittable number**.
+4. **Models:** DeepSeek-V4-Flash (proven cheap coder); MiniMax-M2.5 is the higher-tier ceiling test (pilot first).
 - **Goal (RECALIBRATED 2026-06-23):** the defensible claim is the **cost-Pareto frontier** — highest
   resolve-per-dollar — NOT absolute top-10. Our ADR-173 board snapshot (#1=60.33%, top-10≈45%) is likely
   STALE: by mid-2026 the Lite board may have inflated (frontier 70%+, GPT-5-Mini ~56%), so 52% is ~rank-15
