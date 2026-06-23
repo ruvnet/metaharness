@@ -59,7 +59,7 @@ async function judge(issue, cands) {
   for (let a = 0; a < 4; a++) {
     if (a) await new Promise((r) => setTimeout(r, 1500 * 2 ** a));
     try {
-      const res = await fetch(`${BASE_URL}/chat/completions`, { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, messages: [{ role: 'user', content: prompt }], max_tokens: 8, temperature: 0 }) });
+      const res = await fetch(`${BASE_URL}/chat/completions`, { method: 'POST', signal: AbortSignal.timeout(45000), headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, messages: [{ role: 'user', content: prompt }], max_tokens: 8, temperature: 0 }) });
       if (!res.ok && (res.status === 429 || res.status >= 500)) continue;
       const j = await res.json(); const raw = j.choices?.[0]?.message?.content ?? '';
       const m = raw.match(/\d+/); const idx = m ? +m[0] : 0;
