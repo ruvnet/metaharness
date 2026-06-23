@@ -3,6 +3,10 @@
 Versioned source of truth for the cron/`/loop` worker. **Cadence: every 10 min, CONCURRENT workflow, until SOTA.**
 Updated 2026-06-22 for the **ADR-176 SWE-Conductor ablation phase** (overnight autonomous).
 
+**Budget: $1000 SOTA (raised from $500, 2026-06-22).** Track real spend vs the session baseline; with
+$1000 the Opus-coder arm + full-300 runs are affordable. Still `--max-cost` every paid run; never an
+external watchdog.
+
 ## CONCURRENT ABLATION WORKFLOW (run until SOTA — conformant Lite ≥45% top-10, ideally >60.33% #1)
 Keep MULTIPLE conformant MCTS arms in flight at once (container-reuse bounds Docker load; box handled
 3 arms at load <1). Each arm = `solve-mcts.mjs` with a model combo. On each arm completion → gold batch
