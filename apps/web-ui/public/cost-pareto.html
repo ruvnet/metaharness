@@ -57,17 +57,83 @@
   footer code{font-family:var(--mono);color:var(--accent2);background:var(--panel);padding:1px 5px;border-radius:4px}
   .tip{position:fixed;pointer-events:none;background:#0b1117;border:1px solid var(--line);border-radius:8px;
     padding:8px 10px;font-family:var(--mono);font-size:11px;color:var(--txt);opacity:0;transition:opacity .12s;z-index:10;max-width:240px}
-  .legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--dim)}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;font-size:13.5px;color:var(--dim)}
   .legend span{display:inline-flex;align-items:center;gap:6px}
-  .sw{width:10px;height:10px;border-radius:3px;display:inline-block}
+  .sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+
+  /* bigger, more legible type across the board */
+  table{font-size:15px}
+  th{font-size:12px}
+  td.num{font-size:14.5px}
+  .badge{font-size:12px}
+  footer{font-size:14px}
+  .tag{font-size:11px}
+  header p{font-size:16px}
+  .axlabel{font-size:12px}
+
+  /* weight slider */
+  .scorebar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px;padding:14px 16px;
+    border:1px solid var(--line);border-radius:12px;background:var(--panel2)}
+  .scorebar label{font-size:13px;color:var(--dim);font-family:var(--mono)}
+  .scorebar input[type=range]{flex:1;min-width:160px;accent-color:var(--accent);height:5px}
+  .scorebar .val{font-family:var(--mono);font-size:13px;color:var(--accent);min-width:170px;text-align:right}
+  td.score{font-family:var(--mono);font-weight:700;color:var(--accent2);text-align:right;font-size:15px}
+  .scorebadge{display:inline-block;min-width:40px;padding:2px 8px;border-radius:6px;background:rgba(56,189,248,.12)}
+
+  .howbtn{cursor:pointer;font-family:var(--mono);font-size:13px;padding:7px 14px;border-radius:9px;
+    border:1px solid var(--accent2);background:rgba(56,189,248,.12);color:var(--accent2);transition:all .15s}
+  .howbtn:hover{background:rgba(56,189,248,.22)}
+
+  /* ── workbook modal ── */
+  .modal{position:fixed;inset:0;background:rgba(4,7,11,.82);backdrop-filter:blur(4px);z-index:50;
+    display:none;opacity:0;transition:opacity .25s}
+  .modal.open{display:flex;opacity:1}
+  .book{margin:auto;width:min(960px,94vw);height:min(86vh,820px);background:var(--panel);
+    border:1px solid var(--line);border-radius:18px;display:flex;overflow:hidden;
+    box-shadow:0 30px 80px rgba(0,0,0,.6);transform:translateY(12px);transition:transform .25s}
+  .modal.open .book{transform:translateY(0)}
+  .booknav{width:230px;flex-shrink:0;background:var(--panel2);border-right:1px solid var(--line);
+    padding:22px 0;overflow-y:auto}
+  .booknav h3{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin:0 0 12px;padding:0 22px}
+  .booknav a{display:block;padding:10px 22px;font-size:14px;color:var(--dim);cursor:pointer;border-left:3px solid transparent;transition:all .12s}
+  .booknav a:hover{color:var(--txt);background:rgba(255,255,255,.03)}
+  .booknav a.active{color:var(--accent);border-left-color:var(--accent);background:rgba(74,222,128,.06)}
+  .bookmain{flex:1;overflow-y:auto;padding:34px 40px;scroll-behavior:smooth}
+  .bookmain section{margin-bottom:48px;animation:fadein .4s ease both}
+  .bookmain h2{font-size:13px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin:0 0 4px}
+  .bookmain h1{font-size:26px;margin:0 0 16px;letter-spacing:-.01em}
+  .bookmain p{font-size:16px;line-height:1.7;color:#cdd6e0;margin:0 0 14px}
+  .bookmain .step{display:flex;gap:14px;margin:0 0 14px;align-items:flex-start}
+  .bookmain .step .n{flex-shrink:0;width:30px;height:30px;border-radius:50%;background:var(--accent);
+    color:#0a0e14;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:15px}
+  .bookmain .step p{margin:3px 0 0}
+  .bookmain .illo{margin:18px 0;padding:18px;border:1px solid var(--line);border-radius:12px;background:var(--panel2)}
+  .bookmain .fx{font-family:var(--mono);font-size:15px;color:var(--accent);background:#0b1117;border:1px solid var(--line);
+    border-radius:10px;padding:14px 16px;margin:14px 0;line-height:1.8}
+  .bookmain .key{color:var(--accent2);font-family:var(--mono)}
+  .bookclose{position:absolute;top:18px;right:22px;cursor:pointer;color:var(--dim);font-size:26px;
+    line-height:1;background:none;border:none;z-index:2}
+  .bookclose:hover{color:var(--txt)}
+  @keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes growbar{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+  @keyframes dash{to{stroke-dashoffset:0}}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+  .anim-bar{transform-origin:bottom;animation:growbar 1s ease both}
+  .anim-line{stroke-dasharray:300;stroke-dashoffset:300;animation:dash 1.6s ease forwards}
+  .anim-pulse{animation:pulse 1.8s ease-in-out infinite}
+  @media(max-width:640px){.booknav{display:none}.bookmain{padding:24px 20px}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <a href="./" style="display:inline-block;margin-bottom:14px;font-family:var(--mono);font-size:12px;color:var(--accent2);text-decoration:none;border:1px solid var(--line);border-radius:8px;padding:5px 11px;background:var(--panel)">← MetaHarness Studio</a>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+      <a href="./" style="font-family:var(--mono);font-size:13px;color:var(--accent2);text-decoration:none;border:1px solid var(--line);border-radius:8px;padding:6px 12px;background:var(--panel)">← MetaHarness Studio</a>
+      <button class="howbtn" onclick="document.getElementById('book').classList.add('open')">📖 How it works — explained simply</button>
+    </div>
     <h1>SWE-bench Lite · <span class="hl">Cost–Performance Pareto Frontier</span></h1>
-    <p>Resolve rate vs. cost per instance. The frontier is defined by resolve-per-dollar — not raw score.</p>
+    <p>Resolve rate vs. cost per instance, scored by a single tunable <strong>Value Score</strong> that blends
+      capability and price. New here? Hit <em>“How it works”</em> for a plain-language walkthrough.</p>
   </header>
   <div class="badges">
     <span class="badge ok">● real leaderboard scores</span>
@@ -108,10 +174,15 @@
   </div>
 
   <div class="card">
-    <h2>Leaderboard — sorted by resolve-per-dollar</h2>
+    <h2>Leaderboard — sorted by Value Score</h2>
+    <div class="scorebar">
+      <label>cost ◀ priorities ▶ capability</label>
+      <input type="range" id="wslider" min="0" max="100" value="50" />
+      <span class="val" id="wval"></span>
+    </div>
     <table id="board">
       <thead><tr>
-        <th>System</th><th>Scaffold</th><th class="num">Resolve %</th>
+        <th class="num">Value</th><th>System</th><th>Scaffold</th><th class="num">Resolve %</th>
         <th class="num">$ / inst</th><th class="num">Run total</th><th class="num">Resolve / $</th><th>Evidence</th>
       </tr></thead>
       <tbody></tbody>
@@ -135,6 +206,141 @@
   </footer>
 </div>
 <div class="tip" id="tip"></div>
+
+<!-- ── Workbook explainer modal ──────────────────────────────────────────── -->
+<div class="modal" id="book">
+  <div class="book">
+    <button class="bookclose" onclick="document.getElementById('book').classList.remove('open')" aria-label="close">×</button>
+    <nav class="booknav">
+      <h3>The Workbook</h3>
+      <a data-s="s1" class="active">1 · The big picture</a>
+      <a data-s="s2">2 · What's a "resolve"?</a>
+      <a data-s="s3">3 · Capability (resolve %)</a>
+      <a data-s="s4">4 · Price (cost / instance)</a>
+      <a data-s="s5">5 · The real bill (run total)</a>
+      <a data-s="s6">6 · The Value Score ✦</a>
+      <a data-s="s7">7 · Reading the chart</a>
+      <a data-s="s8">8 · Honesty &amp; proof</a>
+    </nav>
+    <main class="bookmain" id="bookmain">
+
+      <section id="s1">
+        <h2>Start here</h2><h1>The big picture 🗺️</h1>
+        <p>Every AI here is trying to <strong>fix real bugs</strong> in real open-source projects. Two things matter:
+          <strong>how many bugs it fixes</strong> (capability) and <strong>how much that costs</strong> (price).</p>
+        <p>Most leaderboards only show the first. This page shows <em>both</em>, and combines them into one number — the
+          <span class="key">Value Score</span> — so you can see who gives the most fixing-power per dollar.</p>
+        <div class="illo">
+          <svg viewBox="0 0 460 90" width="100%">
+            <text x="10" y="30" fill="#8b98a9" font-size="13" font-family="monospace">expensive + good</text>
+            <circle class="anim-pulse" cx="380" cy="25" r="9" fill="#f472b6"/>
+            <text x="10" y="72" fill="#4ade80" font-size="13" font-family="monospace">cheap + good = the prize</text>
+            <circle class="anim-pulse" cx="380" cy="66" r="9" fill="#4ade80"/>
+          </svg>
+        </div>
+      </section>
+
+      <section id="s2">
+        <h2>The test</h2><h1>What's a "resolve"? 🐛→✅</h1>
+        <p>SWE-bench gives the AI a real GitHub issue (a bug report) and the project's code. The AI writes a patch.
+          The patch is <strong>"resolved"</strong> only if, after applying it, the project's hidden tests <strong>pass</strong>.</p>
+        <div class="step"><div class="n">1</div><p>Read the bug ticket + the code.</p></div>
+        <div class="step"><div class="n">2</div><p>Write a code change (a patch).</p></div>
+        <div class="step"><div class="n">3</div><p>Run the project's tests. All green → <strong style="color:var(--accent)">resolved ✅</strong>. Any red → not resolved.</p></div>
+        <p>SWE-bench <strong>Lite</strong> = 300 bugs · <strong>Verified</strong> = 500 · <strong>Pro</strong> = 731 (harder). The score is "% of bugs resolved".</p>
+      </section>
+
+      <section id="s3">
+        <h2>Axis 1</h2><h1>Capability = Resolve % 📊</h1>
+        <p>The share of bugs the AI actually fixed. Higher is better. A model at 50% fixed half the bugs it was given.</p>
+        <div class="illo">
+          <svg viewBox="0 0 300 120" width="60%">
+            <line x1="30" y1="100" x2="280" y2="100" stroke="#1e2733"/>
+            <rect class="anim-bar" x="50" y="66" width="40" height="34" rx="3" fill="#4ade80" style="animation-delay:.1s"/>
+            <rect class="anim-bar" x="120" y="40" width="40" height="60" rx="3" fill="#38bdf8" style="animation-delay:.3s"/>
+            <rect class="anim-bar" x="190" y="20" width="40" height="80" rx="3" fill="#f472b6" style="animation-delay:.5s"/>
+            <text x="70" y="116" fill="#8b98a9" font-size="11" text-anchor="middle" font-family="monospace">34%</text>
+            <text x="140" y="116" fill="#8b98a9" font-size="11" text-anchor="middle" font-family="monospace">52%</text>
+            <text x="210" y="116" fill="#8b98a9" font-size="11" text-anchor="middle" font-family="monospace">79%</text>
+          </svg>
+        </div>
+        <p>But capability alone hides the catch: the 79% model might cost <em>500×</em> more to run. That's why we need price.</p>
+      </section>
+
+      <section id="s4">
+        <h2>Axis 2</h2><h1>Price = Cost per instance 💵</h1>
+        <p>What it costs the AI to attempt <strong>one</strong> bug — mostly the price of the tokens the model reads and writes.
+          Big "frontier" models charge a lot per token and use huge contexts; small/cheap models cost cents.</p>
+        <div class="fx">Darwin single-trajectory = <span class="key">$0.005</span> / bug  ·  a frontier agent ≈ <span class="key">$2–$3</span> / bug</div>
+        <p>That's a <strong>400–600×</strong> difference for one bug. It compounds fast — which is the next page.</p>
+      </section>
+
+      <section id="s5">
+        <h2>Why price really matters</h2><h1>The real bill = Run total 🧾</h1>
+        <p>You rarely fix one bug. To run the <em>whole</em> benchmark you pay <strong>cost × number-of-bugs</strong>.</p>
+        <div class="fx">Run total = cost/instance × benchmark size<br>
+          Darwin Lite: $0.005 × 300 = <span class="key">$1.50</span><br>
+          Frontier Lite: $2.50 × 300 = <span class="key">$750</span></div>
+        <div class="illo">
+          <svg viewBox="0 0 460 70" width="100%">
+            <rect class="anim-bar" x="10" y="46" width="20" height="18" fill="#4ade80" style="animation-delay:.1s"/>
+            <text x="40" y="60" fill="#4ade80" font-size="13" font-family="monospace">$1.50  — Darwin, full 300-bug run</text>
+            <rect class="anim-bar" x="10" y="14" width="300" height="18" fill="#f472b6" style="animation-delay:.3s"/>
+            <text x="318" y="28" fill="#f472b6" font-size="13" font-family="monospace">$750 — frontier</text>
+          </svg>
+        </div>
+        <p>Same benchmark. One costs a coffee; the other costs a week of groceries — for a similar number of fixes.</p>
+      </section>
+
+      <section id="s6">
+        <h2>The calculus</h2><h1>The Value Score ✦</h1>
+        <p>To rank by <em>both</em> at once, we turn each axis into a 0–100 number and blend them:</p>
+        <div class="step"><div class="n">1</div><p><strong>Capability</strong> = the resolve % directly (0–100).</p></div>
+        <div class="step"><div class="n">2</div><p><strong>Cheapness</strong> = price on a log scale, mapped so <span class="key">$5/bug → 0</span> and <span class="key">$0.005/bug → 100</span>. (Log, because going $2→$1 matters as much as $0.02→$0.01.)</p></div>
+        <div class="step"><div class="n">3</div><p><strong>Blend</strong> them with a weight <span class="key">w</span> you choose:</p></div>
+        <div class="fx">Value Score = w · Capability + (1 − w) · Cheapness</div>
+        <p>The slider above the table <em>is</em> <span class="key">w</span>. Drag it toward <strong>capability</strong> and frontier
+          models rise; drag toward <strong>cost</strong> and the cheap-but-capable systems win. At the middle (50/50),
+          you're asking "who's the best all-rounder per dollar?"</p>
+        <div class="illo">
+          <svg viewBox="0 0 460 60" width="100%">
+            <text x="10" y="20" fill="#8b98a9" font-size="12" font-family="monospace">cost</text>
+            <text x="410" y="20" fill="#8b98a9" font-size="12" font-family="monospace">capability</text>
+            <line x1="10" y1="38" x2="450" y2="38" stroke="#1e2733" stroke-width="4" stroke-linecap="round"/>
+            <circle class="anim-pulse" cx="230" cy="38" r="9" fill="#38bdf8"/>
+          </svg>
+        </div>
+      </section>
+
+      <section id="s7">
+        <h2>The picture</h2><h1>Reading the chart 📈</h1>
+        <p>Each dot is one system. <strong>Left = cheaper</strong>, <strong>up = more capable</strong>. So the
+          <strong style="color:var(--accent)">top-left is the dream</strong> (cheap <em>and</em> good).</p>
+        <div class="illo">
+          <svg viewBox="0 0 300 160" width="70%">
+            <line x1="30" y1="130" x2="280" y2="130" stroke="#1e2733"/><line x1="30" y1="130" x2="30" y2="20" stroke="#1e2733"/>
+            <text x="150" y="152" fill="#8b98a9" font-size="11" text-anchor="middle">cheaper →</text>
+            <path class="anim-line" d="M55 60 L120 95 L230 40" fill="none" stroke="#4ade80" stroke-width="2" stroke-dasharray="5 4"/>
+            <circle cx="55" cy="60" r="6" fill="#4ade80"/><circle cx="120" cy="95" r="5" fill="#38bdf8"/><circle cx="230" cy="40" r="5" fill="#f472b6"/>
+            <text x="50" y="48" fill="#4ade80" font-size="10" font-family="monospace">Darwin</text>
+          </svg>
+        </div>
+        <p>The dashed green line is the <strong>cost-Pareto frontier</strong>: the best resolve achievable at each price.
+          Nothing beats a system sitting on it without paying more. Darwin anchors the cheap end.</p>
+      </section>
+
+      <section id="s8">
+        <h2>Trust</h2><h1>Honesty &amp; proof 🔍</h1>
+        <p>We separate what's <strong>measured</strong> from what's <strong>estimated</strong>:</p>
+        <div class="step"><div class="n">✓</div><p><strong>Resolve %</strong> (all systems) are <em>real</em> — from the official SWE-bench results.</p></div>
+        <div class="step"><div class="n">~</div><p><strong>Competitor costs</strong> are <em>estimated</em> from each system's disclosed model × public token prices (marked <span class="tag rep">est</span>). "Undisclosed" where no model is public.</p></div>
+        <div class="step"><div class="n">★</div><p><strong>Darwin's numbers</strong> are <em>measured</em>: resolve via the official harness, cost from real API spend. Darwin is also <strong>conformant</strong> — it never sees the answer tests while solving.</p></div>
+        <p style="color:var(--dim)">Sources: SWE-bench experiments repo · swebench.com · Scale SEAL (Pro). All linked at the bottom of the page.</p>
+      </section>
+
+    </main>
+  </div>
+</div>
 
 <script>
 // chart geometry
@@ -169,6 +375,13 @@ function axes(){
 }
 
 let DATA, CUR='lite';
+// ── the Value Score calculus ──────────────────────────────────────────────
+// Capability = resolve % (0–100). CostEfficiency = how cheap on a log scale,
+// mapped so $5/inst → 0 and $0.005/inst → 100. Value = w·capability + (1−w)·cheapness.
+// The slider sets w (default 0.5 = weight cost and capability equally).
+const costEff=c=>{const hi=Math.log10(5),lo=Math.log10(0.005);return Math.max(0,Math.min(100,100*(hi-Math.log10(c))/(hi-lo)));};
+const weight=()=>{const s=document.getElementById('wslider');return s?(+s.value)/100:0.5;};
+const valueScore=e=>e.cost==null?null:weight()*e.resolve+(1-weight())*costEff(e.cost);
 function render(key){
   CUR=key;
   const bm=DATA.benchmarks[key];
@@ -197,15 +410,17 @@ function render(key){
     svg.appendChild(dot);
     if(ours(e)){const lab=el('text',{x:cx+11,y:cy-9,class:'dotlabel'});lab.textContent=e.resolve+'%';svg.appendChild(lab);}
   }
-  // table — resolve-per-dollar (undisclosed cost sorts last)
+  // table — sorted by Value Score (blend of capability + cheapness; undisclosed cost sorts last)
   const tb=document.querySelector('#board tbody');
-  const rows=E.map(e=>({...e,rpd:e.cost?e.resolve/e.cost:-1})).sort((a,b)=>b.rpd-a.rpd);
+  const rows=E.map(e=>({...e,rpd:e.cost?e.resolve/e.cost:-1,vs:valueScore(e)})).sort((a,b)=>(b.vs??-1)-(a.vs??-1));
   for(const e of rows){
     const tr=document.createElement('tr'); if(ours(e))tr.className='ours';
     const costCell=e.cost==null?'<span style="color:var(--dim)">undisclosed</span>':`$${e.cost.toFixed(3)}${e.costEst?'<span style="color:var(--dim)"> est</span>':''}`;
     const fmtTot=v=>v<100?'$'+v.toFixed(2):'$'+Math.round(v).toLocaleString();
     const totCell=e.cost==null?'<span style="color:var(--dim)">—</span>':`${fmtTot(e.cost*bm.denom)}${ours(e)?'':'<span style="color:var(--dim)"> est</span>'}`;
-    tr.innerHTML=`<td>${e.name}${e.src?` <a href="${e.src}" style="color:var(--dim);font-size:11px">↗</a>`:''}</td>
+    const vsCell=e.vs==null?'<span style="color:var(--dim)">—</span>':`<span class="scorebadge">${e.vs.toFixed(1)}</span>`;
+    tr.innerHTML=`<td class="score">${vsCell}</td>
+      <td>${e.name}${e.src?` <a href="${e.src}" style="color:var(--dim);font-size:11px">↗</a>`:''}</td>
       <td style="color:var(--dim)">${e.model||e.scaffold}</td>
       <td class="num">${e.resolve.toFixed(1)}${e.ci?`<span style="color:var(--dim);font-size:11px"> [${e.ci[0]}–${e.ci[1]}]</span>`:''}</td>
       <td class="num">${costCell}</td>
@@ -229,7 +444,22 @@ function buildTabs(){
   }
 }
 
-fetch('assets/swe-pareto.json?v='+Date.now()).then(r=>r.json()).then(d=>{DATA=d;buildTabs();render('lite');}).catch(e=>{
+// workbook nav: click → smooth-scroll + active state; backdrop/Esc closes
+document.querySelectorAll('.booknav a').forEach(a=>{a.onclick=()=>{
+  const t=document.getElementById(a.dataset.s); if(t)t.scrollIntoView({behavior:'smooth',block:'start'});
+  document.querySelectorAll('.booknav a').forEach(x=>x.classList.remove('active')); a.classList.add('active');
+};});
+document.getElementById('book').addEventListener('click',e=>{if(e.target.id==='book')e.target.classList.remove('open');});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.getElementById('book').classList.remove('open');});
+// scrollspy: highlight nav as you scroll the workbook
+const bm2=document.getElementById('bookmain');
+if(bm2){const spy=new IntersectionObserver(es=>{es.forEach(en=>{if(en.isIntersecting){
+  document.querySelectorAll('.booknav a').forEach(x=>x.classList.toggle('active',x.dataset.s===en.target.id));}});},{root:bm2,rootMargin:'-30% 0px -60% 0px'});
+  document.querySelectorAll('.bookmain section').forEach(s=>spy.observe(s));}
+function updW(){const w=weight();document.getElementById('wval').textContent=`${Math.round((1-w)*100)}% cost · ${Math.round(w*100)}% capability`;}
+document.getElementById('wslider').addEventListener('input',()=>{updW();if(DATA)render(CUR);});
+
+fetch('assets/swe-pareto.json?v='+Date.now()).then(r=>r.json()).then(d=>{DATA=d;buildTabs();updW();render('lite');}).catch(e=>{
   document.getElementById('srcline').textContent='Failed to load assets/swe-pareto.json: '+e.message;
 });
 </script>
