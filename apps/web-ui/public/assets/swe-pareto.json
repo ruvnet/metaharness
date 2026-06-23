@@ -15,18 +15,149 @@
       "label": "SWE-bench Lite (300)",
       "denom": 300,
       "entries": [
-        { "name": "Darwin · single-traj", "scaffold": "interactive ReAct", "model": "DeepSeek-V4-Flash", "resolve": 34.0, "ci": [28.9, 39.5], "cost": 0.005, "kind": "meas", "costEst": false, "note": "102/300 full-300, gold, conformant; cost = measured" },
-        { "name": "Darwin · Best-of-3 + judge", "scaffold": "N=3 + env-filter + LLM-judge", "model": "DeepSeek-V4-Flash ×3 + judge", "resolve": 52.0, "ci": [33.5, 70.0], "cost": 0.015, "kind": "pilot", "costEst": false, "note": "13/25 pilot (87% union capture); full-300 pending; cost = measured" },
-        { "name": "ExpeRepair-v1.0", "scaffold": "repair, 2+ attempts", "model": "Claude-4-Sonnet + o3/o4-mini", "resolve": 60.3, "cost": 2.5, "kind": "official", "costEst": true, "note": "est: frontier + reasoning models, 2+ attempts", "src": "https://github.com/ExpeRepair/ExpeRepair" },
-        { "name": "KGCompass", "scaffold": "knowledge-graph repair", "model": "Claude-4-Sonnet", "resolve": 58.3, "cost": 1.5, "kind": "official", "costEst": true, "note": "est: Claude-4-Sonnet $3/$15" },
-        { "name": "SWE-agent", "scaffold": "interactive ReAct", "model": "Claude-4-Sonnet", "resolve": 56.7, "cost": 2.0, "kind": "official", "costEst": true, "note": "est: long multi-turn agentic trace" },
-        { "name": "SemAgent Multi-v1", "scaffold": "multi-agent", "model": "Claude-3.7 + Gemini-2.5-Pro", "resolve": 51.7, "cost": 1.8, "kind": "official", "costEst": true, "note": "est: two frontier models" },
-        { "name": "devlo", "scaffold": "commercial agent", "model": "undisclosed", "resolve": 47.3, "cost": null, "kind": "official", "costEst": true, "note": "commercial; model + cost undisclosed" },
-        { "name": "EntroPO R2E", "scaffold": "RL-trained, TTS", "model": "Qwen-Coder-30B", "resolve": 45.0, "cost": 0.12, "kind": "official", "costEst": true, "note": "est: cheap 30B OSS. (Scored 0-4% in OUR scaffold — harness-specific, doesn't transfer.)" },
-        { "name": "Agentless-1.5", "scaffold": "agentless", "model": "Claude-3.5-Sonnet", "resolve": 40.7, "cost": 0.4, "kind": "official", "costEst": true, "note": "est: ~3 calls × Claude-3.5" },
-        { "name": "Agentless-lite", "scaffold": "agentless", "model": "o3-mini", "resolve": 32.3, "cost": 0.15, "kind": "official", "costEst": true, "note": "est: o3-mini × few calls" },
-        { "name": "Moatless", "scaffold": "search + edit", "model": "DeepSeek-V3", "resolve": 30.7, "cost": 0.1, "kind": "official", "costEst": true, "note": "est: DeepSeek-V3" },
-        { "name": "Agentless MCTS-Refine", "scaffold": "agentless + MCTS", "model": "7B (self-hosted)", "resolve": 16.3, "cost": 0.05, "kind": "official", "costEst": true, "note": "est: small 7B model" }
+        {
+          "name": "Darwin · single-traj",
+          "scaffold": "interactive ReAct",
+          "model": "DeepSeek-V4-Flash",
+          "resolve": 34,
+          "ci": [
+            28.9,
+            39.5
+          ],
+          "cost": 0.005,
+          "kind": "meas",
+          "costEst": false,
+          "note": "102/300 full-300, gold, conformant; cost = measured"
+        },
+        {
+          "name": "Darwin · Best-of-3 + judge",
+          "scaffold": "N=3 + LLM-judge (full-300)",
+          "model": "DeepSeek-V4-Flash ×3 + judge",
+          "resolve": 39.7,
+          "ci": [
+            34.3,
+            45.3
+          ],
+          "cost": 0.015,
+          "kind": "meas",
+          "costEst": false,
+          "note": "119/300 full-300 judge-only (measured); union ceiling 45%; env-filter (faster impl) is the lever toward 45%"
+        },
+        {
+          "name": "ExpeRepair-v1.0",
+          "scaffold": "repair, 2+ attempts",
+          "model": "Claude-4-Sonnet + o3/o4-mini",
+          "resolve": 60.3,
+          "cost": 2.5,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: frontier + reasoning models, 2+ attempts",
+          "src": "https://github.com/ExpeRepair/ExpeRepair"
+        },
+        {
+          "name": "KGCompass",
+          "scaffold": "knowledge-graph repair",
+          "model": "Claude-4-Sonnet",
+          "resolve": 58.3,
+          "cost": 1.5,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: Claude-4-Sonnet $3/$15"
+        },
+        {
+          "name": "SWE-agent",
+          "scaffold": "interactive ReAct",
+          "model": "Claude-4-Sonnet",
+          "resolve": 56.7,
+          "cost": 2,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: long multi-turn agentic trace"
+        },
+        {
+          "name": "SemAgent Multi-v1",
+          "scaffold": "multi-agent",
+          "model": "Claude-3.7 + Gemini-2.5-Pro",
+          "resolve": 51.7,
+          "cost": 1.8,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: two frontier models"
+        },
+        {
+          "name": "devlo",
+          "scaffold": "commercial agent",
+          "model": "undisclosed",
+          "resolve": 47.3,
+          "cost": null,
+          "kind": "official",
+          "costEst": true,
+          "note": "commercial; model + cost undisclosed"
+        },
+        {
+          "name": "EntroPO R2E",
+          "scaffold": "RL-trained, TTS",
+          "model": "Qwen-Coder-30B",
+          "resolve": 45,
+          "cost": 0.12,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: cheap 30B OSS. (Scored 0-4% in OUR scaffold — harness-specific, doesn't transfer.)"
+        },
+        {
+          "name": "Agentless-1.5",
+          "scaffold": "agentless",
+          "model": "Claude-3.5-Sonnet",
+          "resolve": 40.7,
+          "cost": 0.4,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: ~3 calls × Claude-3.5"
+        },
+        {
+          "name": "Agentless-lite",
+          "scaffold": "agentless",
+          "model": "o3-mini",
+          "resolve": 32.3,
+          "cost": 0.15,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: o3-mini × few calls"
+        },
+        {
+          "name": "Moatless",
+          "scaffold": "search + edit",
+          "model": "DeepSeek-V3",
+          "resolve": 30.7,
+          "cost": 0.1,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: DeepSeek-V3"
+        },
+        {
+          "name": "Agentless MCTS-Refine",
+          "scaffold": "agentless + MCTS",
+          "model": "7B (self-hosted)",
+          "resolve": 16.3,
+          "cost": 0.05,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: small 7B model"
+        },
+        {
+          "name": "Darwin · union-of-3 (ceiling)",
+          "scaffold": "best achievable selection",
+          "model": "DeepSeek-V4-Flash ×3",
+          "resolve": 45,
+          "ci": [
+            39.5,
+            50.7
+          ],
+          "cost": 0.015,
+          "kind": "pilot",
+          "costEst": false,
+          "note": "oracle upper bound: any-of-3 resolves; a perfect selector would hit this"
+        }
       ]
     },
     "verified": {
@@ -34,14 +165,86 @@
       "denom": 500,
       "darwinNote": "Darwin not yet run on Verified — board shown for context. Our Lite cost-efficiency (~$0.005–0.015/inst) is the transferable result.",
       "entries": [
-        { "name": "LiveSWEAgent", "scaffold": "agentic", "model": "Claude-Opus-4.5", "resolve": 79.2, "cost": 3.0, "kind": "official", "costEst": true, "note": "est: Opus-4.5 $5/$25 × long agentic" },
-        { "name": "OpenHands", "scaffold": "agentic", "model": "Claude-Opus-4.5", "resolve": 77.6, "cost": 3.0, "kind": "official", "costEst": true, "note": "est: Opus-4.5 heavy" },
-        { "name": "LiveSWEAgent", "scaffold": "agentic", "model": "Gemini-3-Pro", "resolve": 77.4, "cost": 2.0, "kind": "official", "costEst": true, "note": "est: Gemini-3-Pro" },
-        { "name": "SAGE (bash-only)", "scaffold": "minimal bash agent", "model": "frontier (Salesforce)", "resolve": 73.0, "cost": 1.5, "kind": "official", "costEst": true, "note": "est: bash-only is lighter than full scaffolds" },
-        { "name": "Prometheus v1.2", "scaffold": "agentic", "model": "GPT-5", "resolve": 71.2, "cost": 2.0, "kind": "official", "costEst": true, "note": "est: GPT-5" },
-        { "name": "zai GLM-4.6", "scaffold": "agentic", "model": "GLM-4.6 (OSS)", "resolve": 68.2, "cost": 0.5, "kind": "official", "costEst": true, "note": "est: cheaper OSS frontier" },
-        { "name": "frogboss-32b", "scaffold": "agentic", "model": "32B (self-hosted)", "resolve": 53.6, "cost": 0.1, "kind": "official", "costEst": true, "note": "est: cheap 32B OSS model" },
-        { "name": "frogmini-14b", "scaffold": "agentic", "model": "14B (self-hosted)", "resolve": 45.0, "cost": 0.05, "kind": "official", "costEst": true, "note": "est: cheap 14B OSS model" }
+        {
+          "name": "LiveSWEAgent",
+          "scaffold": "agentic",
+          "model": "Claude-Opus-4.5",
+          "resolve": 79.2,
+          "cost": 3,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: Opus-4.5 $5/$25 × long agentic"
+        },
+        {
+          "name": "OpenHands",
+          "scaffold": "agentic",
+          "model": "Claude-Opus-4.5",
+          "resolve": 77.6,
+          "cost": 3,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: Opus-4.5 heavy"
+        },
+        {
+          "name": "LiveSWEAgent",
+          "scaffold": "agentic",
+          "model": "Gemini-3-Pro",
+          "resolve": 77.4,
+          "cost": 2,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: Gemini-3-Pro"
+        },
+        {
+          "name": "SAGE (bash-only)",
+          "scaffold": "minimal bash agent",
+          "model": "frontier (Salesforce)",
+          "resolve": 73,
+          "cost": 1.5,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: bash-only is lighter than full scaffolds"
+        },
+        {
+          "name": "Prometheus v1.2",
+          "scaffold": "agentic",
+          "model": "GPT-5",
+          "resolve": 71.2,
+          "cost": 2,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: GPT-5"
+        },
+        {
+          "name": "zai GLM-4.6",
+          "scaffold": "agentic",
+          "model": "GLM-4.6 (OSS)",
+          "resolve": 68.2,
+          "cost": 0.5,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: cheaper OSS frontier"
+        },
+        {
+          "name": "frogboss-32b",
+          "scaffold": "agentic",
+          "model": "32B (self-hosted)",
+          "resolve": 53.6,
+          "cost": 0.1,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: cheap 32B OSS model"
+        },
+        {
+          "name": "frogmini-14b",
+          "scaffold": "agentic",
+          "model": "14B (self-hosted)",
+          "resolve": 45,
+          "cost": 0.05,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: cheap 14B OSS model"
+        }
       ]
     },
     "pro": {
@@ -49,15 +252,96 @@
       "denom": 731,
       "darwinNote": "Darwin not yet run on Pro (a harder, separate benchmark by Scale AI). Board shown for context.",
       "entries": [
-        { "name": "GPT-5.4 (xHigh)", "scaffold": "vendor", "model": "GPT-5.4", "resolve": 59.1, "cost": 3.0, "kind": "official", "costEst": true, "note": "est: reasoning-heavy xHigh" },
-        { "name": "Muse Spark", "scaffold": "vendor", "model": "undisclosed", "resolve": 55.0, "cost": null, "kind": "official", "costEst": true, "note": "undisclosed model/cost" },
-        { "name": "Claude Opus 4.6 (thinking)", "scaffold": "vendor", "model": "Claude-Opus-4.6", "resolve": 51.9, "cost": 4.0, "kind": "official", "costEst": true, "note": "est: Opus thinking" },
-        { "name": "Gemini 3.1 Pro (thinking)", "scaffold": "vendor", "model": "Gemini-3.1-Pro", "resolve": 46.1, "cost": 2.0, "kind": "official", "costEst": true, "note": "est: Gemini-3.1-Pro" },
-        { "name": "Claude Opus 4.5", "scaffold": "vendor", "model": "Claude-Opus-4.5", "resolve": 45.9, "cost": 3.0, "kind": "official", "costEst": true, "note": "est: Opus-4.5" },
-        { "name": "Claude Sonnet 4.5", "scaffold": "vendor", "model": "Claude-Sonnet-4.5", "resolve": 43.6, "cost": 1.5, "kind": "official", "costEst": true, "note": "est: Sonnet-4.5" },
-        { "name": "Gemini 3 Pro", "scaffold": "vendor", "model": "Gemini-3-Pro", "resolve": 43.3, "cost": 1.5, "kind": "official", "costEst": true, "note": "est: Gemini-3-Pro" },
-        { "name": "GPT-5.2 Codex", "scaffold": "vendor", "model": "GPT-5.2-Codex", "resolve": 41.0, "cost": 2.0, "kind": "official", "costEst": true, "note": "est: GPT-5.2 Codex" },
-        { "name": "Qwen3 Coder 480B", "scaffold": "open-weights", "model": "Qwen3-Coder-480B", "resolve": 38.7, "cost": 0.4, "kind": "official", "costEst": true, "note": "est: only open-source SEAL top-12 entry" }
+        {
+          "name": "GPT-5.4 (xHigh)",
+          "scaffold": "vendor",
+          "model": "GPT-5.4",
+          "resolve": 59.1,
+          "cost": 3,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: reasoning-heavy xHigh"
+        },
+        {
+          "name": "Muse Spark",
+          "scaffold": "vendor",
+          "model": "undisclosed",
+          "resolve": 55,
+          "cost": null,
+          "kind": "official",
+          "costEst": true,
+          "note": "undisclosed model/cost"
+        },
+        {
+          "name": "Claude Opus 4.6 (thinking)",
+          "scaffold": "vendor",
+          "model": "Claude-Opus-4.6",
+          "resolve": 51.9,
+          "cost": 4,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: Opus thinking"
+        },
+        {
+          "name": "Gemini 3.1 Pro (thinking)",
+          "scaffold": "vendor",
+          "model": "Gemini-3.1-Pro",
+          "resolve": 46.1,
+          "cost": 2,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: Gemini-3.1-Pro"
+        },
+        {
+          "name": "Claude Opus 4.5",
+          "scaffold": "vendor",
+          "model": "Claude-Opus-4.5",
+          "resolve": 45.9,
+          "cost": 3,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: Opus-4.5"
+        },
+        {
+          "name": "Claude Sonnet 4.5",
+          "scaffold": "vendor",
+          "model": "Claude-Sonnet-4.5",
+          "resolve": 43.6,
+          "cost": 1.5,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: Sonnet-4.5"
+        },
+        {
+          "name": "Gemini 3 Pro",
+          "scaffold": "vendor",
+          "model": "Gemini-3-Pro",
+          "resolve": 43.3,
+          "cost": 1.5,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: Gemini-3-Pro"
+        },
+        {
+          "name": "GPT-5.2 Codex",
+          "scaffold": "vendor",
+          "model": "GPT-5.2-Codex",
+          "resolve": 41,
+          "cost": 2,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: GPT-5.2 Codex"
+        },
+        {
+          "name": "Qwen3 Coder 480B",
+          "scaffold": "open-weights",
+          "model": "Qwen3-Coder-480B",
+          "resolve": 38.7,
+          "cost": 0.4,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: only open-source SEAL top-12 entry"
+        }
       ]
     },
     "draco": {
@@ -66,11 +350,56 @@
       "metricNote": "Different metric: 'Resolve %' here = DRACO research-quality × 100 (0–100), NOT bug-resolve. 'Cost' is per full corpus run (MEASURED, not estimated); Run total = that run cost.",
       "darwinNote": "DRACO is our own cross-domain research benchmark. The cheap model beats the frontier on BOTH quality and cost — the harness/cost-router is the lever. All numbers measured (qualityPerUSD).",
       "entries": [
-        { "name": "Cost-router (cheap)", "scaffold": "always-cheapest route", "model": "Claude-Haiku-4.5", "resolve": 69.0, "cost": 0.129, "kind": "meas", "costEst": false, "note": "Darwin cost-router lands here: best quality-per-$ (5.36). Measured." },
-        { "name": "Router v2 (escalating)", "scaffold": "haiku→opus @ confidence", "model": "Haiku-4.5 → Opus-4", "resolve": 65.1, "cost": 0.377, "kind": "meas", "costEst": false, "note": "escalation router; measured" },
-        { "name": "Opus-4 (frontier baseline)", "scaffold": "always-frontier", "model": "Claude-Opus-4", "resolve": 70.0, "cost": 1.310, "kind": "official", "costEst": false, "note": "frontier baseline — barely beats cheap on quality at 10× cost. Measured." },
-        { "name": "GPT-5 (frontier baseline)", "scaffold": "always-frontier", "model": "GPT-5", "resolve": 74.6, "cost": 2.417, "kind": "official", "costEst": false, "note": "highest single-model quality; 19× the cost-router's price. Measured." },
-        { "name": "Oracle (cost-optimal)", "scaffold": "perfect routing (ceiling)", "model": "oracle", "resolve": 80.1, "cost": 1.445, "kind": "official", "costEst": false, "note": "upper bound: best achievable with perfect per-query routing" }
+        {
+          "name": "Cost-router (cheap)",
+          "scaffold": "always-cheapest route",
+          "model": "Claude-Haiku-4.5",
+          "resolve": 69,
+          "cost": 0.129,
+          "kind": "meas",
+          "costEst": false,
+          "note": "Darwin cost-router lands here: best quality-per-$ (5.36). Measured."
+        },
+        {
+          "name": "Router v2 (escalating)",
+          "scaffold": "haiku→opus @ confidence",
+          "model": "Haiku-4.5 → Opus-4",
+          "resolve": 65.1,
+          "cost": 0.377,
+          "kind": "meas",
+          "costEst": false,
+          "note": "escalation router; measured"
+        },
+        {
+          "name": "Opus-4 (frontier baseline)",
+          "scaffold": "always-frontier",
+          "model": "Claude-Opus-4",
+          "resolve": 70,
+          "cost": 1.31,
+          "kind": "official",
+          "costEst": false,
+          "note": "frontier baseline — barely beats cheap on quality at 10× cost. Measured."
+        },
+        {
+          "name": "GPT-5 (frontier baseline)",
+          "scaffold": "always-frontier",
+          "model": "GPT-5",
+          "resolve": 74.6,
+          "cost": 2.417,
+          "kind": "official",
+          "costEst": false,
+          "note": "highest single-model quality; 19× the cost-router's price. Measured."
+        },
+        {
+          "name": "Oracle (cost-optimal)",
+          "scaffold": "perfect routing (ceiling)",
+          "model": "oracle",
+          "resolve": 80.1,
+          "cost": 1.445,
+          "kind": "official",
+          "costEst": false,
+          "note": "upper bound: best achievable with perfect per-query routing"
+        }
       ]
     }
   }

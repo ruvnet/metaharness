@@ -286,3 +286,16 @@ transcript-echo stripping + explicit "no XML/invoke" system-prompt instruction. 
 exploration pattern); 60% × 82% = 49% per trajectory; union of 3 → ~65% oracle ceiling. That would beat DS's
 60% ceiling from §15 — but at ~2× the cost and time per instance. Validate with a 25-step pilot before
 launching full-300.
+
+## 18. FULL-300 Best-of-3 = 39.7% submittable / 45% union ceiling (pilot 52%/60% was small-n optimism)
+
+Honest batch-eval correction to §15-16 (n=25 pilot). Full-300 Lite, gold, conformant, DeepSeek-V4-Flash:
+- single-traj: A(temp0) 34.0%, B(0.3) 36.0%, C(0.5) 36.3% — diversity adds little per-set.
+- **UNION ceiling (any-of-3): 135/300 = 45.0% [39.5, 50.7]** (pilot extrapolated 60% — small-n optimism).
+- **DISCRIMINATOR (judge-only, --no-env-filter): 119/300 = 39.7% [34.3, 45.3]** @ ~$0.015/inst.
+- Judge captured 119/135 = **88% of the union** even WITHOUT the env-filter (selection is efficient).
+
+**Verdict:** Best-of-3+judge = +5.7 pts over single-traj (34→39.7) at 3× cost. Real, but the 52% pilot did
+NOT hold — it used env-filter (dropped at scale for speed) + n=25 luck. Levers to recover toward the 45%
+ceiling: (a) a fast/parallel env-filter (it added ~12 pts on the pilot), (b) a stronger judge (Opus). This is
+the "only batch numbers authoritative; pilots drift 1.5-5×" rule — predicted ~35-40% judge-only, landed 39.7%.
