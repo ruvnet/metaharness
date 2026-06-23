@@ -12,6 +12,7 @@
 # Result artifacts land in /opt/darwin/out/ for retrieval via `gcloud compute scp`.
 set -euo pipefail
 BENCH="${BENCH:-verified}"; MODE="${MODE:-single}"; CONC="${CONCURRENCY:-3}"
+MODEL="${MODEL:-deepseek/deepseek-v4-flash}"; SLUG="$(echo "$MODEL" | tr '/:.' '-' )"
 BRANCH="${BRANCH:-claude/darwin-mode-evolve-polyglot}"
 ORKEY="${ORKEY:-$(curl -s -H 'Metadata-Flavor: Google' 'http://metadata/computeMetadata/v1/instance/attributes/orkey' 2>/dev/null || true)}"
 [ -n "$ORKEY" ] || { echo "FATAL: ORKEY not set"; exit 1; }
@@ -47,7 +48,7 @@ echo "=== [4/5] SOLVE ($BENCH, $MODE) — interactive ReAct, conformant ==="
 OUT=/opt/darwin/out; mkdir -p "$OUT"
 solve() { # temp out
   OPENROUTER_API_KEY="$ORKEY" node --experimental-strip-types --no-warnings solve-agentic.mjs \
-    --manifest "$MANIFEST" --no-test-oracle --model deepseek/deepseek-v4-flash \
+    --manifest "$MANIFEST" --no-test-oracle --model "$MODEL" \
     --temperature "$1" --max-steps 15 --concurrency "$CONC" --max-cost 20 \
     --out "$OUT/$2" --report "$OUT/${2%.jsonl}-report.json"
 }
@@ -66,6 +67,6 @@ echo "=== [5/5] GOLD EVAL (official harness) ==="
 cd /tmp
 /opt/sweb-venv/bin/python -m swebench.harness.run_evaluation \
   --dataset_name "$DS" --predictions_path "$PREDS" \
-  --run_id "darwin-$BENCH-$MODE" --max_workers "$CONC" --cache_level instance --timeout 1200 || true
-cp -f /tmp/*darwin-$BENCH-$MODE*.json "$OUT/" 2>/dev/null || true
+  --run_id "darwin-$BENCH-$SLUG-$MODE" --max_workers "$CONC" --cache_level instance --timeout 1200 || true
+cp -f /tmp/*darwin-$BENCH-$SLUG-$MODE*.json "$OUT/" 2>/dev/null || true
 echo "=== DONE — results in $OUT ; retrieve with: gcloud compute scp --recurse VM:$OUT ./ ==="
