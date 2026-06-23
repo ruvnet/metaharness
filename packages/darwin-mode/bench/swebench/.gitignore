@@ -3,3 +3,6 @@ predictions-*.jsonl
 solve-*.json
 mcts-repros/
 !*-eval-report.json
+raw-*.txt
+refetch-manifest.json
+remaining-manifest.json
