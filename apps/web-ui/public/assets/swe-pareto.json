@@ -1,0 +1,28 @@
+{
+  "benchmark": "SWE-bench Lite (300)",
+  "updated": "2026-06-23",
+  "notes": {
+    "resolve": "Resolve % for official entries are REAL, taken from the swe-bench/experiments repo (results/results.json, resolved/300). Darwin entries are our own gold-graded runs with the official swebench Docker harness.",
+    "cost": "Cost per instance for official entries is ESTIMATED from each system's DISCLOSED model(s) + scaffold shape × public token pricing — not a figure those teams published; treat as order-of-magnitude. 'undisclosed' = no public model/cost. Darwin costs are MEASURED from actual OpenRouter spend.",
+    "conformant": "Darwin solver never sees gold FAIL_TO_PASS/PASS_TO_PASS during solving; gold used only for scoring."
+  },
+  "sources": [
+    "https://github.com/swe-bench/experiments/tree/main/evaluation/lite",
+    "https://www.swebench.com/"
+  ],
+  "entries": [
+    { "name": "Darwin · single-traj", "scaffold": "interactive ReAct", "model": "DeepSeek-V4-Flash", "resolve": 34.0, "ci": [28.9, 39.5], "cost": 0.005, "kind": "meas", "n": 300, "costEst": false, "note": "102/300 full-300, gold, conformant; cost = measured OpenRouter spend" },
+    { "name": "Darwin · Best-of-3 + judge", "scaffold": "N=3 + env-filter + LLM-judge", "model": "DeepSeek-V4-Flash ×3 + judge", "resolve": 52.0, "ci": [33.5, 70.0], "cost": 0.015, "kind": "pilot", "n": 25, "costEst": false, "note": "13/25 pilot (87% union capture); full-300 pending; cost = measured" },
+
+    { "name": "ExpeRepair-v1.0", "scaffold": "repair, 2+ attempts", "model": "Claude-4-Sonnet + o3/o4-mini", "resolve": 60.3, "cost": 2.5, "kind": "official", "costEst": true, "note": "est: Claude-4-Sonnet $3/$15 + reasoning models, 2+ attempts × heavy context", "src": "https://github.com/ExpeRepair/ExpeRepair" },
+    { "name": "KGCompass", "scaffold": "knowledge-graph repair", "model": "Claude-4-Sonnet", "resolve": 58.3, "cost": 1.5, "kind": "official", "costEst": true, "note": "est: Claude-4-Sonnet $3/$15 × moderate agentic context" },
+    { "name": "SWE-agent", "scaffold": "interactive ReAct (long-horizon)", "model": "Claude-4-Sonnet", "resolve": 56.7, "cost": 2.0, "kind": "official", "costEst": true, "note": "est: Claude-4-Sonnet $3/$15 × long multi-turn agentic trace (~hundreds of K tokens)" },
+    { "name": "SemAgent Multi-v1", "scaffold": "multi-agent", "model": "Claude-3.7-Sonnet + Gemini-2.5-Pro", "resolve": 51.7, "cost": 1.8, "kind": "official", "costEst": true, "note": "est: two frontier models, multi-agent fan-out" },
+    { "name": "devlo", "scaffold": "commercial agent", "model": "undisclosed", "resolve": 47.3, "cost": null, "kind": "official", "costEst": true, "note": "commercial; model + cost undisclosed" },
+    { "name": "EntroPO R2E", "scaffold": "RL-trained, test-time scaling", "model": "Qwen-Coder-30B-A3B", "resolve": 45.0, "cost": 0.12, "kind": "official", "costEst": true, "note": "est: cheap 30B OSS model; closest cost-thesis peer. (Note: this model scored 0-4% in OUR scaffold — it does not transfer; harness-specific.)" },
+    { "name": "Agentless-1.5", "scaffold": "agentless (few calls)", "model": "Claude-3.5-Sonnet", "resolve": 40.7, "cost": 0.4, "kind": "official", "costEst": true, "note": "est: agentless ~3 LLM calls × Claude-3.5-Sonnet $3/$15" },
+    { "name": "Agentless-lite", "scaffold": "agentless (few calls)", "model": "o3-mini", "resolve": 32.3, "cost": 0.15, "kind": "official", "costEst": true, "note": "est: o3-mini ~$1.1/$4.4 × few agentless calls" },
+    { "name": "Moatless", "scaffold": "search + edit", "model": "DeepSeek-V3", "resolve": 30.7, "cost": 0.1, "kind": "official", "costEst": true, "note": "est: DeepSeek-V3 ~$0.27/$1.10 × moatless context" },
+    { "name": "Agentless MCTS-Refine", "scaffold": "agentless + MCTS", "model": "7B (self-hosted)", "resolve": 16.3, "cost": 0.05, "kind": "official", "costEst": true, "note": "est: small 7B model, low per-token cost" }
+  ]
+}
