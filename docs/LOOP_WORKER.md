@@ -32,6 +32,10 @@ artifacts → report. The fleet is self-managing (AUTOSTOP + controller auto-del
 - **Report the champion across `w`, not one `w`.** w=0.7 (capability-leaning) is for SOTA hunting; the honest
   deliverable is the cost-Pareto *frontier* (which config wins at each w), not a single "the SOTA" cherry-picked at one w.
 - **Spend guard every tick**: `curSpend() > 800` → abort all provisions + `down all`. n=300 is the only verdict — never claim on n=25.
+- **PUSH TO BOTH `branch` AND `main` every commit** — the GCP VMs `git clone -b claude/darwin-mode-evolve-polyglot`,
+  so a `main`-only push leaves every VM on **stale code**. (This bit hard: the branch sat at `9811414` a whole
+  session → VMs lacked `discriminator.mjs` (bo3/xbo crashed) + the `curl -f` fix (full-300 crashed). Always
+  `git push origin HEAD:claude/darwin-mode-evolve-polyglot && git push origin HEAD:main`.)
 
 ---
 
