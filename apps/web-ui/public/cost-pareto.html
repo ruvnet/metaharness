@@ -20,7 +20,8 @@
   body{margin:0;background:radial-gradient(1200px 600px at 70% -10%,#10202a 0%,var(--bg) 55%);
     color:var(--txt);font-family:var(--sans);line-height:1.5;-webkit-font-smoothing:antialiased}
   .wrap{max-width:1080px;margin:0 auto;padding:48px 24px 80px}
-  header h1{font-size:30px;margin:0 0 6px;letter-spacing:-.02em}
+  .kicker{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin:0 0 8px}
+  header h1{font-size:32px;margin:0 0 8px;letter-spacing:-.02em}
   header h1 .hl{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
   header p{color:var(--dim);margin:0;font-size:15px}
   .badges{margin:18px 0 28px;display:flex;gap:8px;flex-wrap:wrap}
@@ -173,9 +174,11 @@
       <a href="./" style="font-family:var(--mono);font-size:13px;color:var(--accent2);text-decoration:none;border:1px solid var(--line);border-radius:8px;padding:6px 12px;background:var(--panel)">← MetaHarness Studio</a>
       <button class="howbtn" onclick="document.getElementById('book').classList.add('open')">📖 How it works — explained simply</button>
     </div>
-    <h1>SWE-bench Lite · <span class="hl">Cost–Performance Pareto Frontier</span></h1>
-    <p>Resolve rate vs. cost per instance, scored by a single tunable <strong>Value Score</strong> that blends
-      capability and price. New here? Hit <em>“How it works”</em> for a plain-language walkthrough.</p>
+    <div class="kicker" id="benchKicker">SWE-bench Lite · 300 instances</div>
+    <h1>The <span class="hl">Cost–Performance Pareto Frontier</span></h1>
+    <p>The cheapest system that reaches each level of capability — ranked by <strong>resolve-per-dollar</strong>,
+      not raw score. One tunable <strong>Value Score</strong> blends capability and price; drag the slider to set
+      your cost-vs-capability tradeoff. Benchmarks are tabs below. New here? Hit <em>“How it works”</em>.</p>
   </header>
   <div class="badges">
     <span class="badge ok">● real leaderboard scores</span>
@@ -186,7 +189,7 @@
   <div id="tabs" style="display:flex;gap:8px;margin:0 0 22px"></div>
 
   <div class="card" style="border-color:#1f3d2b;background:linear-gradient(180deg,rgba(74,222,128,.05),var(--panel2))">
-    <h2 style="color:var(--accent)">The headline is the denominator</h2>
+    <h2 style="color:var(--accent)">The real story is the price, not the score</h2>
     <p style="font-size:15px;margin:0 0 12px">
       <strong style="color:var(--accent);font-size:18px">~$0.005–$0.015 per instance.</strong>
       A full sweep of all 300 SWE-bench Lite problems costs roughly <strong>$1.50</strong> in model spend for a
@@ -433,7 +436,7 @@ function render(key){
   svg.innerHTML='';
   document.querySelector('#board tbody').innerHTML='';
   document.getElementById('chartTitle').textContent='The frontier · '+bm.label;
-  document.querySelector('header h1').innerHTML=bm.label+' · <span class="hl">Cost–Performance Pareto Frontier</span>';
+  const bk=document.getElementById('benchKicker'); if(bk)bk.textContent=bm.label+(bm.denom?` · ${bm.denom} instances`:'');
   const dn=document.getElementById('darwinNote');
   if(bm.darwinNote){dn.style.display='block';dn.textContent='⚠ '+bm.darwinNote;}else{dn.style.display='none';}
   // active tab styling
