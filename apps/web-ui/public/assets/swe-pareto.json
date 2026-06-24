@@ -429,6 +429,195 @@
           "note": "upper bound: best achievable with perfect per-query routing"
         }
       ]
+    },
+    "ultralite": {
+      "label": "SWE-ultralite (n=25)",
+      "denom": 25,
+      "entries": [
+        {
+          "name": "Darwin · Opus-4.8 single",
+          "scaffold": "interactive ReAct",
+          "model": "Opus-4.8",
+          "resolve": 60,
+          "ci": [
+            40.7,
+            76.6
+          ],
+          "cost": 0.5,
+          "kind": "meas",
+          "costEst": false,
+          "note": "15/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · V3.2+GLM-5.2 xbo",
+          "scaffold": "cross-model Best-of-N",
+          "model": "V3.2+GLM-5.2",
+          "resolve": 52,
+          "ci": [
+            33.5,
+            70
+          ],
+          "cost": 0.0302,
+          "kind": "meas",
+          "costEst": false,
+          "note": "13/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · DeepSeek-V4 cascade",
+          "scaffold": "repo-test cascade",
+          "model": "DeepSeek-V4",
+          "resolve": 52,
+          "ci": [
+            33.5,
+            70
+          ],
+          "cost": 0.0236,
+          "kind": "meas",
+          "costEst": false,
+          "note": "13/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · GLM-5.2 cascade",
+          "scaffold": "repo-test cascade",
+          "model": "GLM-5.2",
+          "resolve": 48,
+          "ci": [
+            30,
+            66.5
+          ],
+          "cost": 0.085,
+          "kind": "meas",
+          "costEst": false,
+          "note": "12/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · GLM-5.2 single",
+          "scaffold": "interactive ReAct",
+          "model": "GLM-5.2",
+          "resolve": 44,
+          "ci": [
+            26.7,
+            62.9
+          ],
+          "cost": 0.018,
+          "kind": "meas",
+          "costEst": false,
+          "note": "11/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · V3.2 single",
+          "scaffold": "interactive ReAct",
+          "model": "V3.2",
+          "resolve": 44,
+          "ci": [
+            26.7,
+            62.9
+          ],
+          "cost": 0.012,
+          "kind": "meas",
+          "costEst": false,
+          "note": "11/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · DeepSeek-V4 single",
+          "scaffold": "interactive ReAct",
+          "model": "DeepSeek-V4",
+          "resolve": 40,
+          "ci": [
+            23.4,
+            59.3
+          ],
+          "cost": 0.005,
+          "kind": "meas",
+          "costEst": false,
+          "note": "10/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · V3.2 cascade",
+          "scaffold": "repo-test cascade",
+          "model": "V3.2",
+          "resolve": 40,
+          "ci": [
+            23.4,
+            59.3
+          ],
+          "cost": 0.0566,
+          "kind": "meas",
+          "costEst": false,
+          "note": "10/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · Kimi single",
+          "scaffold": "interactive ReAct",
+          "model": "Kimi",
+          "resolve": 36,
+          "ci": [
+            20.2,
+            55.5
+          ],
+          "cost": 0.02,
+          "kind": "meas",
+          "costEst": false,
+          "note": "9/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · DeepSeek-V4+GLM-5.2+Kimi xbo",
+          "scaffold": "cross-model Best-of-N",
+          "model": "DeepSeek-V4+GLM-5.2+Kimi",
+          "resolve": 36,
+          "ci": [
+            20.2,
+            55.5
+          ],
+          "cost": 0.0432,
+          "kind": "meas",
+          "costEst": false,
+          "note": "9/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · Nemotron single",
+          "scaffold": "interactive ReAct",
+          "model": "Nemotron",
+          "resolve": 32,
+          "ci": [
+            17.2,
+            51.6
+          ],
+          "cost": 0.0005,
+          "kind": "meas",
+          "costEst": false,
+          "note": "8/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · MiniMax single",
+          "scaffold": "interactive ReAct",
+          "model": "MiniMax",
+          "resolve": 32,
+          "ci": [
+            17.2,
+            51.6
+          ],
+          "cost": 0.012,
+          "kind": "meas",
+          "costEst": false,
+          "note": "8/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · Kimi cascade",
+          "scaffold": "repo-test cascade",
+          "model": "Kimi",
+          "resolve": 28,
+          "ci": [
+            14.3,
+            47.6
+          ],
+          "cost": 0.0944,
+          "kind": "meas",
+          "costEst": false,
+          "note": "7/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        }
+      ],
+      "darwinNote": "Fast n=25 model×mode Pareto map — directional scouting, not a verdict. n=300 (Lite tab) confirms champions."
     }
   }
 }
