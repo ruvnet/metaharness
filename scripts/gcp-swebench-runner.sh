@@ -95,7 +95,7 @@ if [ -n "$REPORT" ]; then
   TOKEN=$(curl -s -H 'Metadata-Flavor: Google' 'http://metadata/computeMetadata/v1/instance/service-accounts/default/token' | node -pe 'JSON.parse(require("fs").readFileSync(0)).access_token' 2>/dev/null)
   PROJECT_ID=$(curl -s -H 'Metadata-Flavor: Google' 'http://metadata/computeMetadata/v1/project/project-id')
   RESOLVED=$(node -pe "(JSON.parse(require('fs').readFileSync('$REPORT')).resolved_ids||[]).length" 2>/dev/null || echo 0)
-  case "$BENCH" in verified) TOTAL=500;; multilingual) TOTAL=300;; *) TOTAL=300;; esac
+  if [ -n "$SAMPLE" ]; then TOTAL=$SAMPLE; else case "$BENCH" in verified) TOTAL=500;; multilingual) TOTAL=300;; *) TOTAL=300;; esac; fi  # denom = actual instances run (SAMPLE-aware)
   PCT=$(node -pe "($RESOLVED/$TOTAL*100).toFixed(1)")
   curl -s -X POST "https://firestore.googleapis.com/v1/projects/$PROJECT_ID/databases/(default)/documents/darwin_runs" \
     -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
