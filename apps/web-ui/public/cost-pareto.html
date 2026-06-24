@@ -88,9 +88,14 @@
   .modal{position:fixed;inset:0;background:rgba(4,7,11,.82);backdrop-filter:blur(4px);z-index:50;
     display:none;opacity:0;transition:opacity .25s}
   .modal.open{display:flex;opacity:1}
-  .book{margin:auto;width:min(960px,94vw);height:min(86vh,820px);background:var(--panel);
+  .book{margin:auto;width:min(1000px,94vw);height:min(88vh,860px);background:var(--panel);
     border:1px solid var(--line);border-radius:18px;display:flex;overflow:hidden;
     box-shadow:0 30px 80px rgba(0,0,0,.6);transform:translateY(12px);transition:transform .25s}
+  .bookmain::-webkit-scrollbar{width:10px}
+  .bookmain::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px;border:2px solid var(--panel)}
+  .bookmain::-webkit-scrollbar-thumb:hover{background:#2b3947}
+  .booknav::-webkit-scrollbar{width:8px;height:8px}
+  .booknav::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px}
   .modal.open .book{transform:translateY(0)}
   .booknav{width:230px;flex-shrink:0;background:var(--panel2);border-right:1px solid var(--line);
     padding:22px 0;overflow-y:auto}
@@ -121,7 +126,44 @@
   .anim-bar{transform-origin:bottom;animation:growbar 1s ease both}
   .anim-line{stroke-dasharray:300;stroke-dashoffset:300;animation:dash 1.6s ease forwards}
   .anim-pulse{animation:pulse 1.8s ease-in-out infinite}
-  @media(max-width:640px){.booknav{display:none}.bookmain{padding:24px 20px}}
+  .tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  /* ── mobile ── */
+  @media(max-width:640px){
+    .wrap{padding:26px 13px 56px}
+    header h1{font-size:23px}
+    header p{font-size:14px}
+    .badges{margin:14px 0 20px;gap:6px}
+    .badge{font-size:10.5px;padding:4px 8px}
+    .card{padding:15px;border-radius:13px;margin-bottom:18px}
+    .card h2{font-size:12px;margin-bottom:12px}
+    table{font-size:13px}
+    th,td{padding:8px 9px}
+    th{font-size:10.5px}
+    td.num,td.score{font-size:13px}
+    /* drop the two lowest-value columns on phones so the primary data fits without squinting */
+    #board th:nth-child(3),#board td:nth-child(3){display:none}  /* Scaffold */
+    #board th:nth-child(6),#board td:nth-child(6){display:none}  /* Run total */
+    .tscroll{margin:0 -3px}
+    .scorebar{padding:11px 12px;gap:9px}
+    .scorebar label{font-size:12px;flex-basis:100%}
+    .scorebar input[type=range]{min-width:120px}
+    .scorebar .val{min-width:0;text-align:left;font-size:12px}
+    .legend{gap:12px;font-size:12.5px}
+    footer{font-size:13px}
+    /* modal → full-bleed sheet with the section nav as a horizontal tab strip (was hidden) */
+    .book{width:96vw;height:92vh;flex-direction:column}
+    .booknav{width:auto;flex-direction:row;overflow-x:auto;overflow-y:hidden;border-right:none;
+      border-bottom:1px solid var(--line);padding:9px 8px;gap:4px;flex-shrink:0}
+    .booknav h3{display:none}
+    .booknav a{white-space:nowrap;border-left:none;border-bottom:2px solid transparent;
+      padding:7px 12px;font-size:13px;border-radius:8px 8px 0 0}
+    .booknav a.active{border-left:none;border-bottom-color:var(--accent)}
+    .bookmain{padding:22px 18px}
+    .bookmain h1{font-size:21px}
+    .bookmain p{font-size:14.5px}
+    .bookmain .fx,.bookmain .step .n{font-size:13.5px}
+    .bookclose{top:12px;right:14px;font-size:30px;padding:4px}
+  }
 </style>
 </head>
 <body>
@@ -180,6 +222,7 @@
       <input type="range" id="wslider" min="0" max="100" value="50" />
       <span class="val" id="wval"></span>
     </div>
+    <div class="tscroll">
     <table id="board">
       <thead><tr>
         <th class="num">Value</th><th>System</th><th>Scaffold</th><th class="num">Resolve %</th>
@@ -187,6 +230,7 @@
       </tr></thead>
       <tbody></tbody>
     </table>
+    </div>
   </div>
 
   <footer>
