@@ -491,6 +491,20 @@
           "note": "12/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
         },
         {
+          "name": "Darwin · GLM-5.2 bo3",
+          "scaffold": "N=3 + LLM-judge",
+          "model": "GLM-5.2",
+          "resolve": 48,
+          "ci": [
+            30,
+            66.5
+          ],
+          "cost": 0.0542,
+          "kind": "meas",
+          "costEst": false,
+          "note": "12/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
           "name": "Darwin · GLM-5.2 single",
           "scaffold": "interactive ReAct",
           "model": "GLM-5.2",
