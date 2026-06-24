@@ -465,3 +465,12 @@ The composed structure (§23 cross-model diversity + §25 empty-patch escalation
 So the Fugu architecture — *diversity for breadth, frontier escalation only where everything failed* — is the best
 cheap-frontier structure found. n=25 caveat (14 vs the cascade's scaled ~13/25 — directional); **the next n=300 run
 to confirm should be xcascade, not glm-cascade.** It's the new top of the cost-Pareto Performance tier.
+
+## 31. Strong-trio xbo = 44% (n=25) — the "pair the two strongest" rule generalizes (3 models hurts even when all strong)
+
+Tested xbo of the 3 STRONGEST singles (V3.2+GLM+DeepSeek-V4, no Kimi): **44% (n=25)** — below xbo-bo2 (V3.2+GLM,
+52%) and even below the individual singles. §23 found the Kimi-trio (36%) lost to bo2; this confirms it was NOT
+Kimi-specific — **adding a 3rd model degrades the judge's selection faster than the wider union helps**, regardless
+of member strength. The discriminator's accuracy drops as the candidate pool grows (more ways to pick wrong). So
+cross-model BoN's sweet spot is firmly **N=2, the two strongest orthogonal models**. Practical upshot: the xcascade
+(§30) correctly uses a 2-model base; a 3-model base would have hurt it.
