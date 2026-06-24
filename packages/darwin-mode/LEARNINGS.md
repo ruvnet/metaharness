@@ -505,3 +505,11 @@ GCP full-500 on the fixed runner (cache_level=env), official harness, conformant
 "definitely-solvable" subset → cleaner, higher base rates). First Darwin row on the Verified leaderboard tab. The
 GCP full-500 eval completing cleanly also CONFIRMS the cache_level=env + 300GB disk fix works end-to-end on GCP at
 n=500 (no disk-starve). Next: bo3/cascade on Verified for the cost-Pareto frontier there.
+
+## 35b. ecascade n=300 = 50.7% — independent replication of the 51.3% cascade
+
+A second, independent GCP run of the GLM→Opus empty-patch cascade (ecascade structure: cheap GLM solve → escalate
+empty patches to Opus) = **152/300 = 50.7%** (Wilson [45.1, 56.3]). The original cascade (§28) measured 51.3%
+(154/300). Two independent n=300 runs of the same structure, 50.7% vs 51.3% → CIs almost fully overlap; pooled
+306/600 ≈ 51.0%. **The empty-patch cascade is a robust ~51% conformant result, not a lucky single draw.** The
+leaderboard headline stays 51.3% (within noise); this is the replication that earns it confidence.
