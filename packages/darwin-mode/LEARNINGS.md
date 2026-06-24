@@ -513,3 +513,22 @@ empty patches to Opus) = **152/300 = 50.7%** (Wilson [45.1, 56.3]). The original
 (154/300). Two independent n=300 runs of the same structure, 50.7% vs 51.3% → CIs almost fully overlap; pooled
 306/600 ≈ 51.0%. **The empty-patch cascade is a robust ~51% conformant result, not a lucky single draw.** The
 leaderboard headline stays 51.3% (within noise); this is the replication that earns it confidence.
+
+## 37. Chebyshev step-depth temperature A/B (n=25): +1 instance (48% vs 44%) — weak positive, within noise
+
+ADR-189 isolated A/B, same 25 Lite instances, GLM-5.2, conformant, official gold eval:
+- **Control** (static greedy, temp 0 throughout): **11/25 = 44%**
+- **Treatment** (`--cheb-temp`, hot 0.8 → greedy 0 over step depth): **12/25 = 48%**
+- **Δ = +1 instance (+4%).**
+
+Honest read: **directional-only, NOT a confirmation.** At n=25 a 1-instance delta is fully inside Wilson noise
+(CIs overlap almost entirely) — it cannot distinguish +1 from 0. But two things are worth keeping:
+1. **It did not hurt.** Annealing to greedy at the edit/submit steps lost nothing — the downside risk of the schedule
+   is empirically ~zero, consistent with the "kill end-of-trajectory syntax hallucination" mechanism.
+2. **It trended the predicted direction** (+4%, inside the hypothesized +2-5% band).
+
+Verdict: a **weak positive that earns an n=300 confirm but not promotion to default on n=25 alone**. The n=300 cheb
+run is **deferred under the spend freeze**. The schedule stays available (`--cheb-temp`, off by default). The
+higher-value form of this lever is the **entropy-gated** version (ADR-189 Phase-3 / ADR-185 #2) — Chebyshev applied to
+the escalation threshold, not just temperature — which should be built/tested before committing to the temperature
+schedule. Net: temperature scheduling is a real-but-small lever; localization (ADR-190) remains the larger floor-lifter.
