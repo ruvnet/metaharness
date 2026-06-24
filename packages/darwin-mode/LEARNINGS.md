@@ -351,3 +351,13 @@ the cheap-union as intelligence-bound; mixing distinct pre-training distribution
 (v3.2 $0.012 + glm $0.018) — 2× the single-model bo3 ($0.015), so the Value verdict is w-dependent.
 **Caveats:** n=25, wide CI; scale-corrected (~−6pt from the §17 calibration) lands ~46% — *promising* but NOT a
 claim. The xbo TRIO (DeepSeek-V4 + GLM + Kimi) is still solving; n=300 confirmation gates any SOTA call.
+
+## 23. xbo trio (36%) < xbo bo2 (52%) — pair the STRONGEST orthogonal models, don't maximize count
+
+Both n=25, conformant, GCP: xbo TRIO (DeepSeek-V4 + GLM + Kimi) = **36%** vs xbo BO2 (V3.2 + GLM) = **52%** —
+the trio scored *below* even its best single (v4 40%). Mechanism: the discriminator picks ONE patch per instance;
+adding a weak member (Kimi single=36%) + a 3rd candidate DEGRADES judge selection faster than the wider union
+helps (cf. §C: discriminator precision drops as the candidate pool dilutes). So cross-model BoN is not "more models =
+more union captured" — it's **pair the two strongest orthogonal models** (V3.2+GLM, both 44% single). The bo2 is the
+standout cheap-frontier candidate; dispatching its **full-300 confirmation** to test vs the 39.7% champion on Value.
+(n=25 — the 16pt gap likely exceeds noise, but n=300 is the verdict.)
