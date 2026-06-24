@@ -435,6 +435,20 @@
       "denom": 25,
       "entries": [
         {
+          "name": "Darwin · Opus-4.8+GLM-5.2 xbo",
+          "scaffold": "cross-model Best-of-N",
+          "model": "Opus-4.8+GLM-5.2",
+          "resolve": 72,
+          "ci": [
+            52.4,
+            85.7
+          ],
+          "cost": 0.5182,
+          "kind": "meas",
+          "costEst": false,
+          "note": "18/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
           "name": "Darwin · Opus-4.8 single",
           "scaffold": "interactive ReAct",
           "model": "Opus-4.8",
