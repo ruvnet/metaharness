@@ -341,3 +341,13 @@ high-cost top-right, not the Value winner). Implications: (a) the cheap models' 
 intelligence bottleneck, not an orchestration one; (b) even a frontier SINGLE caps ~60% on Lite (n=25), so 80%
 needs frontier ensembling (very expensive) or a strong resolution-gate cascade (§20 gate still only moderate).
 n=25 — wide CI, directional only; no claim without n=300. The Value-optimal track stays a cheap model.
+
+## 22. Cross-model Best-of-N (xbo) — orthogonality raises the union (directional, n=25)
+
+First cross-model result, GCP prove-25, conformant: **xbo bo2 (DeepSeek-V3.2 + GLM-5.2) = 52% (n=25)** vs each
+model's single **44% (n=25)** → **+8pt** from mixing two orthogonal cheap models (the §16 single-model bo3 was
++5.7pt from temperature alone). This is the first empirical support for the orthogonality hypothesis (§21 framed
+the cheap-union as intelligence-bound; mixing distinct pre-training distributions widens it). Cost ≈ $0.030/inst
+(v3.2 $0.012 + glm $0.018) — 2× the single-model bo3 ($0.015), so the Value verdict is w-dependent.
+**Caveats:** n=25, wide CI; scale-corrected (~−6pt from the §17 calibration) lands ~46% — *promising* but NOT a
+claim. The xbo TRIO (DeepSeek-V4 + GLM + Kimi) is still solving; n=300 confirmation gates any SOTA call.
