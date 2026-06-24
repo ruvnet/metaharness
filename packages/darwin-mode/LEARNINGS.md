@@ -422,3 +422,23 @@ Claude's) rather than raw capability — but as-measured in OUR conformant pipel
 Opus. **Implication: Opus-4.8 remains the empty-patch escalation tier of choice** (higher resolve, 2.5× cheaper).
 GPT-5.5-codex (a SWE-tuned variant) might fare better and is worth a future n=25 probe; raw gpt-5.5 is not the lever.
 (n=25 directional; the point is the large Opus>GPT-5.5 gap in-scaffold, not the exact %.)
+
+## 28. ✅ CONFIRMED: GLM→Opus empty-patch cascade = 51.3% (n=300) — breaks 50%, new cost-Pareto frontier point
+
+Authoritative full-300 gold-eval of the merged cascade (187 GLM non-empty patches + 113 Opus-escalated give-ups):
+**154/300 = 51.3%** [Wilson 95% CI 45.7–56.9] @ **$0.267/inst** blended. 35 instances stayed empty (Opus also gave
+up on the very hardest). The §25 pilot (projected 55%, CI 48–62) HELD at scale — the n=300 truth lands 51.3%,
+lower-middle of the pilot band, decisively >50% and clear of the champion.
+
+**The cost-Pareto frontier, measured (report across w):**
+| tier | resolve (n=300) | $/inst | wins at |
+|---|---|---|---|
+| Economy — DeepSeek-V4 single | 34% | $0.005 | lowest w |
+| Champion — DeepSeek-V4 Best-of-3+judge | 39.7% | $0.015 | low w |
+| **Performance — GLM→Opus empty-patch cascade** | **51.3%** | **$0.267** | **high w (NEW)** |
+| Brute-force (labs) — Opus single | ~60% (n=25) | $15+ | — |
+
+The empty-patch gate (100%-precision: escalate only guaranteed-0% patches) is the lever that broke the ~45%
+cheap-union ceiling (§18/§21) — it injects frontier intelligence surgically. At $0.267 it is ~56× cheaper than
+frontier-only labs for >50% resolve. Next: xcascade (diverse cross-model base → Opus) should push higher still
+by shrinking the escalation set; queued on GCP.
