@@ -41,7 +41,7 @@ const key = () => readFileSync('/tmp/.orkey', 'utf8').trim();
 // self-running startup script: install deps, fetch the fixed runner from main, solve+eval, leave results.
 const STARTUP = `#!/bin/bash
 M(){ curl -s -H 'Metadata-Flavor: Google' "http://metadata/computeMetadata/v1/instance/attributes/$1"; }
-export ORKEY=$(M orkey) BENCH=$(M bench) MODE=$(M mode) MODEL=$(M model) ESCALATE=$(M escalate) SAMPLE=$(M sample) CONCURRENCY=4
+export ORKEY=$(M orkey) BENCH=$(M bench) MODE=$(M mode) MODEL=$(M model) ESCALATE=$(M escalate) SAMPLE=$(M sample) XMODELS=$(M xmodels) CONCURRENCY=4
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -y >/dev/null 2>&1; apt-get install -y python3-venv python3-pip git >/dev/null 2>&1
 mkdir -p /opt
@@ -60,14 +60,14 @@ function usedVCPU() { return listVMs().filter(v => v.status === 'RUNNING' || v.s
 function vmExists(name) { return listVMs().some(v => v.name === name); }
 
 function provision(o) {
-  const { board, model, tag, mode = 'single', sample = '', escalate = '', machine = MACHINE } = o;
+  const { board, model, tag, mode = 'single', sample = '', escalate = '', xmodels = '', machine = MACHINE } = o;
   if (!BOARDS[board]) throw new Error(`unknown board ${board} (have: ${Object.keys(BOARDS).join(',')})`);
   const vcpu = +(machine.match(/-(\d+)$/)?.[1]) || VCPU;
   if (usedVCPU() + vcpu > CPU_QUOTA) { console.error(`SKIP ${tag}: would exceed CPU quota (${usedVCPU()}+${vcpu}/${CPU_QUOTA}) — down some VMs first`); return false; }
   const name = `${PREFIX}${board}-${tag}`;
   if (vmExists(name)) { console.error(`SKIP ${tag}: ${name} already exists`); return false; }
   const tmp = `/tmp/startup-${name}.sh`; writeFileSync(tmp, STARTUP);
-  const meta = `orkey=${key()},bench=${board},mode=${mode},model=${model}` + (escalate ? `,escalate=${escalate}` : '') + (sample ? `,sample=${sample}` : '');
+  const meta = `orkey=${key()},bench=${board},mode=${mode},model=${model}` + (escalate ? `,escalate=${escalate}` : '') + (sample ? `,sample=${sample}` : '') + (xmodels ? `,xmodels=${xmodels}` : '');
   console.error(`provisioning ${name}  (${model} · ${mode}${sample ? ` · n=${sample}` : ''} · ${BOARDS[board]})`);
   try {
     gq(['compute', 'instances', 'create', name, `--project=${PROJECT}`, `--zone=${ZONE}`,
@@ -227,6 +227,7 @@ if (cmd === 'up') provision({ board: a, model: b, tag: c || b.split('/').pop().r
 else if (cmd === 'matrix') { for (const [board, model, tag] of MATRIX) try { provision({ board, model, tag }); } catch (e) { console.error(e.message); } }
 else if (cmd === 'prove') prove(a);
 else if (cmd === 'proveone') provision({ board: 'lite', model: a, mode: b || 'single', sample: c || '25', machine: 'e2-standard-4', tag: 'x-' + a.split('/').pop().replace(/[.:]/g, '-') + '-' + (b || 'single') });
+else if (cmd === 'provexbo') provision({ board: 'lite', model: 'xbo', mode: 'xbo', xmodels: a, sample: b || '25', machine: 'e2-standard-4', tag: 'xbo-' + a.split(',').map((m) => m.split('/').pop().slice(0, 6)).join('-').replace(/[.:]/g, '-').slice(0, 34) });
 else if (cmd === 'evolve') {  // auto-tune: evolve on REAL Firestore data → dispatch unmeasured genomes as prove jobs
   const w = +(a || 0.7);
   const lookup = fetchFirestoreLookup(PROJECT);

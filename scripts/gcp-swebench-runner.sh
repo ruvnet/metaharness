@@ -15,6 +15,7 @@ BENCH="${BENCH:-verified}"; MODE="${MODE:-single}"; CONC="${CONCURRENCY:-3}"
 MODEL="${MODEL:-deepseek/deepseek-v4-flash}"; SLUG="$(echo "$MODEL" | tr '/:.' '-' )"
 ESCALATE="${ESCALATE:-}"          # tier-2 model for MODE=cascade
 SAMPLE="${SAMPLE:-}"              # if set, run only the first N instances (early proving)
+XMODELS="${XMODELS:-}"           # MODE=xbo: comma-separated DIFFERENT models for cross-model Best-of-N (union-raiser)
 BRANCH="${BRANCH:-claude/darwin-mode-evolve-polyglot}"
 ORKEY="${ORKEY:-$(curl -s -H 'Metadata-Flavor: Google' 'http://metadata/computeMetadata/v1/instance/attributes/orkey' 2>/dev/null || true)}"
 [ -n "$ORKEY" ] || { echo "FATAL: ORKEY not set"; exit 1; }
@@ -78,6 +79,15 @@ if [ "$MODE" = bo3 ]; then
     --judge-model deepseek/deepseek-v4-flash --no-env-filter \
     --out "$OUT/preds-judged.jsonl" --report "$OUT/disc-report.json"
   PREDS="$OUT/preds-judged.jsonl"
+elif [ "$MODE" = xbo ]; then
+  # cross-model Best-of-N: solve once with each DIFFERENT model (orthogonal failure modes → higher union), then judge.
+  IFS=',' read -ra MS <<< "$XMODELS"; PLIST=""; i=0
+  for m in "${MS[@]}"; do MODEL="$m" solve 0 "preds-x$i.jsonl"; PLIST="$PLIST,$OUT/preds-x$i.jsonl"; i=$((i+1)); done
+  PLIST="${PLIST#,}"
+  OPENROUTER_API_KEY="$ORKEY" node --experimental-strip-types --no-warnings discriminator.mjs \
+    --manifest "$MANIFEST" --preds "$PLIST" --judge-model deepseek/deepseek-v4-flash --no-env-filter \
+    --out "$OUT/preds-judged.jsonl" --report "$OUT/disc-report.json"
+  PREDS="$OUT/preds-judged.jsonl"; MODEL="xbo:$XMODELS"   # label for self-report
 else
   solve 0 "preds-single.jsonl"; PREDS="$OUT/preds-single.jsonl"   # MODE=single or cascade
 fi
