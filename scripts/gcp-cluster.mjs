@@ -74,7 +74,7 @@ function provision(o) {
   try {
     gq(['compute', 'instances', 'create', name, `--project=${PROJECT}`, `--zone=${ZONE}`,
       `--machine-type=${machine}`, '--image-family=ubuntu-2204-lts', '--image-project=ubuntu-os-cloud',
-      '--boot-disk-size=200GB', '--boot-disk-type=pd-standard', '--no-address', // no external IP (egress via Cloud NAT) — dodges IN_USE_ADDRESSES quota (8)
+      '--boot-disk-size=300GB', '--boot-disk-type=pd-standard', '--no-address', // no external IP (egress via Cloud NAT) — dodges IN_USE_ADDRESSES quota (8)
       `--metadata=${meta}`, `--metadata-from-file=${mff}`, '--scopes=cloud-platform']);
   } catch (e) { console.error(`SKIP ${tag}: create failed — ${(e.message || '').split('\n').find((l) => /ERROR|Quota|exceeded/.test(l)) || 'error'}`); return false; }
   console.log(`✓ ${name} provisioning (self-runs on boot)`); return true;

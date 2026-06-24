@@ -96,7 +96,9 @@ echo "=== [5/5] GOLD EVAL (official harness) ==="
 cd /tmp
 /opt/sweb-venv/bin/python -m swebench.harness.run_evaluation \
   --dataset_name "$DS" --predictions_path "$PREDS" \
-  --run_id "darwin-$BENCH-$SLUG-$MODE" --max_workers "$CONC" --cache_level instance --timeout 1200 || true
+  --run_id "darwin-$BENCH-$SLUG-$MODE" --max_workers "$CONC" --cache_level env --timeout 1200 || true
+  # cache_level=env (NOT instance): keeps shared base/env images, removes the 300 per-instance images after each —
+  # `instance` filled the 200GB disk on full-300 (300×~1GB) → most instances failed to build → artifactual ~14%.
 cp -f /tmp/*darwin-$BENCH-$SLUG-$MODE*.json "$OUT/" 2>/dev/null || true
 
 echo "=== [6/6] self-report to Firestore (via VM service-account token) ==="
