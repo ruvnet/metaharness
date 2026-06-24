@@ -26,6 +26,9 @@ artifacts → report. The fleet is self-managing (AUTOSTOP + controller auto-del
 - **Idle tick** (no new `rank` row, no phase change, spend flat): emit **ONE line** — `spend $X/$800 · N VMs · waiting on <what>`.
   Do NOT re-explain the standings or re-derive analysis every heartbeat. Substantive output only when something lands.
 - **A verdict lands** (new n=25 or n=300 row): record it (LEARNINGS if material), commit, and report the delta only.
+- **Auto-refresh the leaderboard from Firestore each tick**: `node scripts/pareto-from-firestore.mjs --n=25 --write`
+  regenerates the SWE-ultralite tab from `darwin_runs`; `git add assets/swe-pareto.json` + commit+push BOTH only if it
+  changed (the dashboard is static-JSON-driven because Firestore is IAM-gated — this is how it "auto-populates").
 - **Phase-4 trigger** (explicit): when the **xbo** results AND **≥1 full-300 verdict** (glm-5.2 or deepseek-v3.2) are in
   Firestore → run `node scripts/gcp-cluster.mjs autotune 3 0.7` ONCE (guarded), then promote the highest-Value
   genome to ONE full-300 confirm. Codify the metaharness default ONLY if that full-300 beats 39.7% @ $0.015 on Value.
