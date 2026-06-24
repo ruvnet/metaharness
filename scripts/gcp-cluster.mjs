@@ -64,7 +64,7 @@ function provision(o) {
   if (!BOARDS[board]) throw new Error(`unknown board ${board} (have: ${Object.keys(BOARDS).join(',')})`);
   const vcpu = +(machine.match(/-(\d+)$/)?.[1]) || VCPU;
   if (usedVCPU() + vcpu > CPU_QUOTA) { console.error(`SKIP ${tag}: would exceed CPU quota (${usedVCPU()}+${vcpu}/${CPU_QUOTA}) — down some VMs first`); return false; }
-  const name = `${PREFIX}${board}-${tag}`;
+  const name = `${PREFIX}${board}-${tag}`.replace(/-+$/, '').slice(0, 62).replace(/-+$/, ''); // GCP names must end alphanumeric
   if (vmExists(name)) { console.error(`SKIP ${tag}: ${name} already exists`); return false; }
   const tmp = `/tmp/startup-${name}.sh`; writeFileSync(tmp, STARTUP);
   const meta = `orkey=${key()},bench=${board},mode=${mode},model=${model}` + (escalate ? `,escalate=${escalate}` : '') + (sample ? `,sample=${sample}` : '');
