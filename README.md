@@ -325,6 +325,18 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 - [**ruvector**](https://github.com/ruvnet/ruvector) — vector + agentic database (memory backend)
 - [**@ruvector/emergent-time**](https://www.npmjs.com/package/@ruvector/emergent-time) — memory-decay clock the kernel uses
 
+## Cost-Pareto Leaderboard
+
+**[→ Live leaderboard — the cost-performance Pareto frontier](https://ruvnet.github.io/agent-harness-generator/cost-pareto.html)**
+
+Which harness resolves the most benchmark per **dollar**, not just the highest raw score — ranked by a tunable
+**Value Score** that blends capability and price. Tabs: SWE-bench **Lite** / **Verified** / **Pro** / **DRACO** /
+**SWE-ultralite** (a fast n=25 model×mode scouting map). Every Darwin row is fully conformant (the solver never
+sees gold tests during solving) and measured with the official `swebench` Docker harness, with Wilson 95% CIs.
+
+**Run your own harness and put it on the board** — fork, add a measured row, open a PR.
+Conformance rules, the entry schema, and a step-by-step walkthrough are in **[SUBMISSIONS.md](SUBMISSIONS.md)**.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
