@@ -134,6 +134,14 @@ ADR-006 (memory + learning) and ADR-008 (drift detection) cut across all phases.
 
 > **ADR-156…167 implementation note:** the ADR-156 program and its ten patterns (ADR-157…166) plus ADR-167 are implemented in `packages/projects` (`@metaharness/projects`) — dependency-free, deterministic, 117+ tests, with benchmark receipts under `bench/results/`. Each carries a `## Reference implementation` section. Real-LLM benches are optional/key-gated and excluded from the deterministic suite.
 
+## Darwin applied to game-theoretic solving (`crates/poker-darwin`)
+
+| ADR | Title | Status | Summary |
+|-----|-------|--------|---------|
+| [ADR-186](./ADR-186-poker-darwin-cfr-solver.md) | poker-darwin: CFR solver with exact exploitability + ruvector/candle/rs_poker | Implemented | A workspace crate proving Darwin's *mutate-structured-policies* thesis on a hard, non-gameable oracle: a CFR/CFR+/DCFR solver for Kuhn (12 infosets) and Leduc (288 infosets, 9,451 histories) scored by **exact exploitability**. Reaches Kuhn's known −1/18 value. Feature-gated `ruvector` (infoset abstraction, 86.8% compression), `candle` (Deep-CFR policy distillation), `rs_poker` (real Hold'em equity). |
+| [ADR-187](./ADR-187-darwin-nonstationary-cfr-genome.md) | Non-stationary Darwin: time-variant schedules, predictive momentum, regret pruning | Implemented | Generalizes the genome from scalars to a non-stationary solver: α/β anneal over the run, predictive (optimistic) momentum ω extrapolates regret trends, and a pruning threshold P trades ε/iteration for ε/second. Darwin autonomously rediscovers "α aggressive→stable" (3.81→1.79) and its dynamic champion beats the best static one by **68.8%** (94% vs vanilla) on Leduc. |
+| [ADR-188](./ADR-188-chebyshev-functional-schedule-genome.md) | Chebyshev functional-schedule genome, lineage tracking, domain-agnostic hook | Implemented | The genome emits **Chebyshev polynomial trajectories** (Clenshaw recurrence, bounded, zero-alloc) for α/ω/P — smooth, non-monotone curves a ramp can't express; pushes the dynamic edge to **79.2%** over best static. Adds parent-child **lineage tracking** (champion ancestry) and an `optimize` module proving the per-iteration hook is decoupled from regret-matching (same `Schedule` drives a gradient optimizer with magnitude pruning). |
+
 ## Conventions used across the series
 
 - **"Kernel"** = `@metaharness/kernel`, the package extracted from ruflo that contains primitives a harness needs regardless of identity or content (MCP wiring, hooks runtime, memory bridge, routing). Defined in ADR-002.

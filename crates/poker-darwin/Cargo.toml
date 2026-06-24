@@ -1,0 +1,64 @@
+# SPDX-License-Identifier: MIT
+#
+# poker-darwin — a poker trainer/solver built on three pillars:
+#   1. A CFR / CFR+ counterfactual-regret solver that converges to Nash on
+#      extensive-form poker games (Kuhn, Leduc), measured by *exact*
+#      exploitability — the real game-theoretic benchmark.
+#   2. Darwin Mode: an evolutionary search over the solver's policy genome
+#      (mirrors @metaharness/projects discovery-evolve — mutate structured
+#      policies, not prompts; fitness = -exploitability).
+#   3. Optional, feature-gated integrations:
+#        - `ruvector`  : ruvnet/ruvector vector DB for infoset state
+#                        abstraction + episodic experience memory.
+#        - `neural`    : candle Deep-CFR advantage network.
+#        - `realgames` : rs_poker real Texas Hold'em hand evaluation + equity.
+#
+# The default build is pure Rust (no heavy/native deps) so the workspace stays
+# fast and wasm-safe; the integrations are opt-in.
+[package]
+name = "poker-darwin"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+description = "Poker trainer/solver: CFR/CFR+ equilibrium solver, Darwin evolutionary policy tuning, ruvector state abstraction, candle Deep-CFR value net, rs_poker real-game benchmarking."
+keywords = ["poker", "cfr", "game-theory", "evolution", "darwin"]
+categories = ["algorithms", "science"]
+
+[lib]
+name = "poker_darwin"
+crate-type = ["lib"]
+
+[[bin]]
+name = "poker-darwin"
+path = "src/bin/poker-darwin.rs"
+
+[features]
+default = []
+# ruvnet/ruvector vector DB — infoset abstraction + experience memory.
+ruvector = ["dep:ruvector-core"]
+# candle Deep-CFR advantage network.
+neural = ["dep:candle-core", "dep:candle-nn"]
+# rs_poker real Texas Hold'em hand evaluation + Monte Carlo equity.
+realgames = ["dep:rs_poker"]
+# Everything on.
+full = ["ruvector", "neural", "realgames"]
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+ruvector-core = { version = "0.1.31", default-features = false, features = ["hnsw", "memory-only", "parallel"], optional = true }
+candle-core = { version = "0.8", optional = true }
+candle-nn = { version = "0.8", optional = true }
+rs_poker = { version = "5", optional = true }
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "cfr_bench"
+harness = false

@@ -4,6 +4,7 @@ members = [
     "crates/kernel-wasm",
     "crates/kernel-napi",
     "crates/template-catalog",
+    "crates/poker-darwin",
 ]
 resolver = "2"
 
