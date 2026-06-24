@@ -449,6 +449,20 @@
           "note": "15/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
         },
         {
+          "name": "Darwin · V3.2+Opus-4.8 xcascade",
+          "scaffold": "xcascade",
+          "model": "V3.2+Opus-4.8",
+          "resolve": 56,
+          "ci": [
+            37.1,
+            73.3
+          ],
+          "cost": 0.5,
+          "kind": "meas",
+          "costEst": false,
+          "note": "14/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
           "name": "Darwin · DeepSeek-V4 bo3",
           "scaffold": "N=3 + LLM-judge",
           "model": "DeepSeek-V4",
