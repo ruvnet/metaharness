@@ -70,35 +70,3 @@ on full-300, and **batch-verify it beats the current best comparable number** (t
 31.3% on the same base, and ultimately the 58.3% blended ceiling). Only batch-eval numbers are
 authoritative; in-loop drifts 1.5–5×. Sequence after the in-flight E1 (full-300 agentic baseline) and
 the Phase-2 E4/E3/E5 plan (ADR-169 / research report) land their batch numbers.
-
-## 6. Trajectory & ceilings (projected — roadmap, NOT measured)
-
-Where this paradigm maxes out, so we invest with eyes open. **These are projections informed by
-external SOTA + reasoning, not our batch numbers — held to the same "measure before claiming" rule.**
-
-1. **PTY ceiling ≈ 65–75%.** A stateful single-threaded bash agent reliably reaches the 60%+ tier but
-   likely hard-stops ~70–75%. Failure mode: **contextual collapse / tool-thrash** — ~turn 35, after a
-   dozen greps / file reads / failed pytests, attention degrades; the agent forgets *why* it changed
-   the base class and starts hallucinating local fixes that break downstream deps. ADR-169's state-hash
-   anti-thrash + the 50-turn cap blunt this but don't remove it (they bound *repetition*, not *drift*).
-
-2. **Past 75% needs search-over-execution (MCTS).** Stop treating the LLM as one developer typing;
-   treat it as a **search algorithm**. On a hard bug, fork the container state into N parallel PTY
-   branches (e.g. schema change vs UI patch vs parser fix), run each loop, score by test outcome, prune
-   losers, compound winners. Pushes toward 80%+ — but converts inference cost from **pennies to dollars
-   per instance** (the cost-per-resolve objective must gate how often forking is triggered — likely
-   only on the difficulty-router's high-uncertainty tail, ADR-169 E2).
-
-3. **The absolute limit — Maintainer, not Architect.** Every variant here (single-shot, PTY, MCTS
-   swarm) is an **optimizer over an existing graph**, not an **originator**. Given a 100k-line codebase
-   with established patterns + a failing test, the agent traverses, isolates, and synthesizes a fix
-   (the Maintainer — where it excels). Asked to invent a novel architecture / abstractions from zero,
-   it returns generic boilerplate (the Architect — where it fails; the "zero-to-one" spatial reasoning
-   isn't in the weights). **We can automate the maintenance lifecycle to ~85% by brute-forcing parallel
-   PTY containers; we are building the ultimate Senior Staff Maintainer, not the CTO.** SWE-bench
-   measures exactly the Maintainer task — which is *why* it is tractable, and why a high score on it is
-   not a claim about origination.
-
-**Implication for sequencing:** ADR-170 (PTY) is the next ceiling-raiser; an MCTS layer is the one
-after, gated hard on cost-per-resolve (fork only the tail). Neither changes the qualitative limit in
-(3) — so the durable product framing is "autonomous maintainer," not "autonomous architect."
