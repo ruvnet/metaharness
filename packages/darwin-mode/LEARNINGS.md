@@ -331,3 +331,13 @@ ADR-183 pilot (n=25, reused patches+gold): agent self-writes reproduce_bug.py �
 Conclusion of the cascade/gate arc (§19-20): conformant early-exit needs a strong resolution proxy; neither the
 repo regression-tests (3.7%) nor the self-repro gate (67%/44%) is strong enough to beat parallel Best-of-3.
 The LLM-judge discriminator remains the best conformant selector.
+
+## 21. Frontier ceiling probe: Opus-4.8 single = 60% (n=25) — directional, NOT a SOTA claim
+
+GCP prove-25, claude-opus-4.8 single, interactive conformant: **60% (n=25)** vs cheap singles 40-44% (n=25).
+A ~16-20pt jump confirms frontier intelligence raises *resolve* substantially — but at ~$0.50/inst (≈100× the
+cheap models), so on the cost-Pareto Value Score (resolve + cheapness) Opus ranks LOW (it's the high-resolve/
+high-cost top-right, not the Value winner). Implications: (a) the cheap models' ~45% union ceiling (§18) is an
+intelligence bottleneck, not an orchestration one; (b) even a frontier SINGLE caps ~60% on Lite (n=25), so 80%
+needs frontier ensembling (very expensive) or a strong resolution-gate cascade (§20 gate still only moderate).
+n=25 — wide CI, directional only; no claim without n=300. The Value-optimal track stays a cheap model.
