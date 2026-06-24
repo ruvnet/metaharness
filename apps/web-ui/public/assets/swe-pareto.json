@@ -157,6 +157,34 @@
           "kind": "pilot",
           "costEst": false,
           "note": "oracle upper bound: any-of-3 resolves; a perfect selector would hit this"
+        },
+        {
+          "name": "Darwin · GLM-5.2 single",
+          "scaffold": "interactive ReAct",
+          "model": "GLM-5.2",
+          "resolve": 37,
+          "ci": [
+            31.4,
+            42.3
+          ],
+          "cost": 0.018,
+          "kind": "meas",
+          "costEst": false,
+          "note": "111/300 full-300 gold, conformant; 113 empty patches @conc4 → lower bound"
+        },
+        {
+          "name": "Darwin · GLM→Opus empty-patch cascade",
+          "scaffold": "cheap solve → escalate EMPTY patches to Opus (100%-precision gate)",
+          "model": "GLM-5.2 → Claude-Opus-4.8",
+          "resolve": 55,
+          "ci": [
+            48,
+            62
+          ],
+          "cost": 0.267,
+          "kind": "pilot",
+          "costEst": false,
+          "note": "§25 pilot: Opus resolved 12/25 of GLM give-ups → projected blended n=25; n=300 confirming (local+GCP). Breaks the ~45% cheap-union ceiling."
         }
       ]
     },
