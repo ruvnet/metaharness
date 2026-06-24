@@ -40,7 +40,7 @@ const key = () => readFileSync('/tmp/.orkey', 'utf8').trim();
 
 // self-running startup script: install deps, fetch the fixed runner from main, solve+eval, leave results.
 const STARTUP = `#!/bin/bash
-M(){ curl -s -H 'Metadata-Flavor: Google' "http://metadata/computeMetadata/v1/instance/attributes/$1"; }
+M(){ curl -sf -H 'Metadata-Flavor: Google' "http://metadata/computeMetadata/v1/instance/attributes/$1" 2>/dev/null || true; } # -f: missing attr → empty, NOT the 404 HTML (which broke SAMPLE on non-sample runs)
 export ORKEY=$(M orkey) BENCH=$(M bench) MODE=$(M mode) MODEL=$(M model) ESCALATE=$(M escalate) SAMPLE=$(M sample) XMODELS=$(M xmodels) CONCURRENCY=4
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -y >/dev/null 2>&1; apt-get install -y python3-venv python3-pip git >/dev/null 2>&1
