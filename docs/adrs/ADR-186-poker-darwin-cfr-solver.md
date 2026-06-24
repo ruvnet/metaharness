@@ -55,3 +55,16 @@ integrations, so default builds stay fast and wasm-safe:
   The crate is native-only (candle + redb don't target wasm) and excluded from the wasm matrix.
 - **Validated integrations.** AA vs 72o equity = 87.4% (rs_poker); ruvector stores all 288 Leduc
   infosets and reaches 86.8% bucket compression; the candle net fits the Kuhn policy (loss 0.26→0.02).
+
+## Reference implementation
+
+`crates/poker-darwin` — dependency-light core, native-only, excluded from the wasm matrix.
+
+- `game.rs` (the `Game` trait + `tree_stats`), `games/{kuhn,leduc}.rs`, `cfr.rs` (solver),
+  `exploit.rs` (exact best-response), `rng.rs` (deterministic SplitMix64/xoshiro256**).
+- Feature modules: `abstraction.rs` (`ruvector`), `neural.rs` (`neural`), `realgames.rs` (`realgames`),
+  with shared `features.rs`.
+- CLI eval harness `src/bin/poker-darwin.rs`: `info | solve | exploit | evolve` (+ feature demos).
+- Tests: 35 passing (29 unit + 5 `tests/convergence.rs` + 1 doc); criterion benches in `benches/cfr_bench.rs`.
+- Environment sizes (`poker-darwin info --game all`): Kuhn 12 infosets / 55 histories / depth 4;
+  Leduc 288 infosets / 3,780 decision nodes / 9,451 histories / depth 10. Utility unit: chips (1 ante).

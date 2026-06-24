@@ -46,3 +46,15 @@ its per-iteration hook should accept arbitrary signals (e.g. gradients), not onl
   evolution). The poker solver is the first application of the engine, not its boundary.
 - **Cost.** Evaluating Chebyshev curves is a handful of FMA per iteration (Clenshaw, order ≤ 8) — negligible
   next to a tree traversal.
+
+## Reference implementation
+
+- `Schedule` (Clenshaw recurrence, fixed `[f64; 8]`, `[lo,hi]` clamp) and the `omega_schedule` /
+  `prune_schedule` config fields are in `cfr.rs`; the kind-5 genome (α/ω/P Chebyshev coefficient arrays)
+  and `LineageNode` / `trace_ancestry` are in `darwin.rs`.
+- `optimize.rs` (`NonStationaryOptimizer`, `minimize`) is the domain-agnostic hook: the same `Schedule`
+  driving a gradient optimizer with magnitude pruning — no CFR/regret concepts, proving decoupling.
+- The CLI `evolve` prints the champion's seed→champion lineage and `evaluated genomes` count.
+- **Parallelism note:** per-generation scoring is embarrassingly parallel, but scoring stays sequential to
+  preserve the deterministic receipt; a Rayon pass over the pure `score()` map (RNG/selection kept
+  sequential) is the intended opt-in if eval cost grows. Tests pin same-seed reproducibility.

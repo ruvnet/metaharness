@@ -50,3 +50,13 @@ non-stationary edge is reported explicitly. Fitness remains exact exploitability
 - **Risk.** Pruning can, in principle, prune an action that later matters; the re-entry mechanism (regret
   discount lifting it back above P) plus the `sigma == 0` guard keeps best-response convergence intact —
   asserted by tests (dynamic ≤ best static on Leduc; exploitability still falls).
+
+## Reference implementation
+
+- The three levers live on one per-iteration hook in `cfr.rs`: `Schedule`-typed `alpha_schedule` /
+  `beta_schedule` on `SolverConfig`, predictive momentum in `prepare_node` (`regret + ω · last_instant`),
+  and regret pruning in `cfr_rec` (with a `SolveStats` prune-rate counter).
+- The kind-4 genome and the static/dynamic-aware `evolve` are in `darwin.rs`; `DarwinReport` exposes
+  `best_static_exploitability` / `best_dynamic_exploitability`, surfaced by the CLI `evolve` "dynamic edge".
+- Reproduce: `poker-darwin evolve --game leduc --generations 12 --population 18 --eval-iters 500`
+  (deterministic for a fixed seed).
