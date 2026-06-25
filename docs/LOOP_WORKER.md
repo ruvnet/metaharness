@@ -2,11 +2,24 @@
 
 Versioned source of truth for the cron/`/loop` worker. **Cadence: self-paced, until SOTA or budget.**
 
-## ▶ CURRENT DIRECTIVE (2026-06-24): TimesFM completion arc — SWE-bench freeze still on
+## ▶ CURRENT DIRECTIVE (2026-06-24): 3-benchmark cost-Pareto submission — budget UNLOCKED
 
-**🧊 SWE-BENCH SPEND FREEZE STILL IN EFFECT.** Spend ~$590/$1000 (raised 2026-06-24 for TimesFM testing). **NO new paid OpenRouter SWE-bench runs** (no GCP
-provisions for cascade/xbo, no new Opus solver runs). The freeze is on **paid OpenRouter solver spend only**.
-Empirical only — n=300 is the only SWE-bench verdict; n=25 is directional scouting, never a claim.
+**🔓 FREEZE LIFTED — budget unlocked to $1000 (user 2026-06-24).** Spend ~$590/$1000. New mandate: **run our best
+cost-efficient config (GLM→Opus empty-patch cascade, the §35 winner @ 51.3% Lite / $0.27) on all three SWE benchmarks
+(Lite / Verified / Pro) and prepare official verification submissions** — the cost-Pareto story (≈$0.27 vs labs' $15+).
+**Start with n=25 tests on GCP** (de-risk before full runs). Empirical only — n=300/500/731 is the verdict; n=25 is
+directional. **Cost-cap discipline (§36): full Verified/Pro runs MUST set MAXCOST/ESCCOST high enough** (runner now
+env-configurable: `MAXCOST` base default 20, `ESCCOST` escalation default 120) or the Opus arm silently truncates.
+
+### ★ ACTIVE: 3-benchmark cascade submission (work concurrently in workflows)
+- **Lite:** cascade 51.3% n=300 DONE (preds `/tmp/salvage/cascade-300.jsonl`, logs `glm-opus-cascade-300`) → package for submission.
+- **Verified:** n=25 cascade IN FLIGHT (`darwin-verified-veri-ec-glm-5-2-claude-o`, GCP); if good → full Verified-500 cascade (MAXCOST≈40, ESCCOST≈120, ~$70).
+- **Pro:** NOT a board yet — needs harness integration (scaleapi/SWE-bench_Pro-os dataset + `jefzda/sweap-images` eval; add `pro` to BOARDS/DENOM, build a pro-25 manifest). Concurrent workflow builds it → then dispatch Pro n=25.
+- **Submission framing (HONEST):** official boards rank by RESOLVE%, where cascade 51.3% Lite is mid-pack — our contribution is the COST at that resolve, not topping the board. Submit resolve to swe-bench/experiments + present cost-Pareto in metadata. Public submission PRs are outward-facing → prepare packages, confirm framing before opening them.
+
+### TimesFM arc — DONE (ADR-191 IMPLEMENTED+VALIDATED); optional free local follow-up
+Parity 8.58e-6, bench 45/168ms, Darwin pruning, 24-case GCP test (PR #603). Open: optimization pass (KV-cache for
+autoregressive decode + MKL/SIMD accel) — free local, can run parallel to the SWE submission work.
 
 ### ★ ACTIVE MANDATE (user 2026-06-24): drive TimesFM→ruvector to DONE
 Per the user: *"continue until fully benchmarked and optimized with timesfm-1.0-200m weights and integrated in darwin and
