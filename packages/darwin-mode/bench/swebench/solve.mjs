@@ -17,6 +17,7 @@ import { fileURLToPath } from 'node:url';
 import { generateBaselineHarness } from '../../dist/generator.js';
 import { profileRepo } from '../../dist/repo_profiler.js';
 import { selectFiles } from '../swe-bench-runner.mjs';
+import { langProfile } from './lang-profile.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -83,11 +84,13 @@ function fetchRepo(repo, sha) {
 // on huge repos (gold-file paths barely overlap the bug report). This adds a cheap localization
 // call: lexically pre-prune to `pre` candidates, show the model only PATHS + def/class signatures
 // (not full content → cheap), and let it pick the top `k` files to edit. Returns ranked paths.
-async function localize(problem, work, files, buildContext, k, pre = 120) {
+async function localize(problem, work, files, buildContext, k, prof, pre = 120) {
   const lexTop = selectFiles(problem, work, files, buildContext, pre); // cheap prune 800→60
+  // Per-language signature extraction (ADR-192): the sig regex + post-processor come from the
+  // resolved language profile (py: def/class + trailing-`:` strip; js: function/const/=>; go: func/type; …).
   const sigOf = (f) => {
     const lines = readFileSync(join(work, f), 'utf8').split('\n');
-    const sigs = lines.filter((l) => /^\s*(class|def|async def)\s+\w/.test(l)).map((l) => l.trim().replace(/:\s*$/, '')).slice(0, 8);
+    const sigs = lines.filter((l) => prof.sigRegex.test(l)).map((l) => prof.sigPostproc(l)).slice(0, 8);
     return sigs.length ? `${f}\n    ${sigs.join('\n    ')}` : f;
   };
   const listing = lexTop.map(sigOf).join('\n');
@@ -109,12 +112,15 @@ for (const inst of manifest) {
   const t0 = Date.now(); let row = { instance_id: inst.instance_id, repo: inst.repo };
   try {
     const work = fetchRepo(inst.repo, inst.base_commit);
-    // candidate source files: tracked .py, excluding tests/vendored, size-bounded
-    const all = g(work, "git ls-files '*.py'").toString().split('\n').filter(Boolean)
-      .filter((f) => !/(^|\/)(tests?|testing|_pytest\/_.*|site-packages|node_modules|\.tox|build|dist)\//i.test(f) && !/(^|\/)(test_|conftest)/i.test(f) && !/_test\.py$/.test(f))
+    // Resolve the per-instance language profile (explicit inst.lang wins; else detect from repo root).
+    const prof = langProfile(inst, work); row.lang = prof.lang;
+    // candidate source files: tracked source in this language's globs, excluding tests/vendored, size-bounded
+    const globArgs = prof.srcGlobs.map((g2) => `'${g2}'`).join(' ');
+    const all = g(work, `git ls-files ${globArgs}`).toString().split('\n').filter(Boolean)
+      .filter((f) => !prof.genericExclude.test(f) && !prof.testPathRegex(f))
       .filter((f) => { try { return statSync(join(work, f)).size <= 100_000; } catch { return false; } });
     let selected;
-    if (LOCALIZE) { const lz = await localize(inst.problem_statement, work, all, buildContext, K); selected = lz.selected; totalCost += lz.cost; row.localizeCost = lz.cost; }
+    if (LOCALIZE) { const lz = await localize(inst.problem_statement, work, all, buildContext, K, prof); selected = lz.selected; totalCost += lz.cost; row.localizeCost = lz.cost; }
     else selected = selectFiles(inst.problem_statement, work, all, buildContext, K);
     row.candidateFiles = all.length; row.selected = selected;
     const seen = selected.map((f) => `# ===== ${f} =====\n${readFileSync(join(work, f), 'utf8').slice(0, SLICE)}`).join('\n\n');
@@ -122,7 +128,10 @@ for (const inst of manifest) {
     // ignore an inline format spec and emit a prose code-summary instead of edit blocks (0/25
     // applied). A system role + worked example lifts format adherence; deepseek already complies
     // so this is additive (no change to the hosted baseline's output shape).
-    const sys = 'You are a non-conversational code-patching tool. Output ONLY search/replace edit blocks. NEVER write prose, explanations, summaries, or markdown fences. Each edit is EXACTLY:\nFILE: path/to/file.py\n<<<SEARCH\n<lines copied verbatim from the file, incl. indentation>\n=======\n<replacement lines>\n>>>REPLACE\nExample of a valid response:\nFILE: pkg/util.py\n<<<SEARCH\ndef add(a, b):\n    return a - b\n=======\ndef add(a, b):\n    return a + b\n>>>REPLACE';
+    // ADR-192: the FILE: path extension and worked example are templated to the instance's language
+    // so a weak model is shown an in-language pattern (js example for a js instance, etc.).
+    const ext = prof.exampleExt;
+    const sys = `You are a non-conversational code-patching tool. Output ONLY search/replace edit blocks. NEVER write prose, explanations, summaries, or markdown fences. Each edit is EXACTLY:\nFILE: path/to/file.${ext}\n<<<SEARCH\n<lines copied verbatim from the file, incl. indentation>\n=======\n<replacement lines>\n>>>REPLACE\nExample of a valid response:\nFILE: pkg/util.${ext}\n<<<SEARCH\n${prof.exampleSnippet}\n>>>REPLACE`;
     const prompt = `Fix the bug described below by editing the selected real source files. Emit one or more edit blocks in the exact format from the system message. The SEARCH text must match the file character-for-character (incl. indentation). No prose outside blocks.\n--- problem statement ---\n${inst.problem_statement.slice(0, 6000)}\n--- selected source files ---\n${seen}\n`;
     const res = await fetch(CHAT_URL, { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, messages: [{ role: 'system', content: sys }, { role: 'user', content: prompt }], max_tokens: 4096, temperature: 0 }) });
     const j = await res.json();

@@ -16,22 +16,33 @@
 // maxSteps + the same edit safety gate. Darwin's mutation surfaces become the loop's *policy*
 // (planner = step strategy, toolPolicy = ordering/budget, contextBuilder = what to read next).
 
-/** The system prompt: defines the tool protocol. One JSON action per turn, nothing else. */
-export const AGENTIC_SYSTEM =
-  'You are an autonomous bug-fixing agent working inside a real repository. Each turn, output EXACTLY '
-  + 'ONE JSON object on a single line — a tool call — and NOTHING else (no prose, no markdown, no XML). '
-  + 'Do NOT use <invoke> XML syntax. Do NOT prefix with >>>. Just the raw JSON object. Tools:\n'
-  + '{"tool":"ls","dir":"path/"}            list a directory\n'
-  + '{"tool":"read","path":"f.py","start":1,"end":80}  read a file (range optional; omit for whole file)\n'
-  + '{"tool":"grep","pattern":"reg","glob":"*.py"}     search the repo (glob optional)\n'
-  + '{"tool":"edit","path":"f.py","search":"<exact lines incl. indentation>","replace":"<new lines>"}  apply a search/replace edit\n'
-  + '{"tool":"line_edit","path":"f.py","start":12,"end":15,"replace":"<new text for lines 12-15>"}  replace an inclusive LINE RANGE (robust — line numbers come from `read`)\n'
-  + '{"tool":"run_tests"}                   run the failing tests against your current edits; returns the trace\n'
-  + '{"tool":"submit"}                      finalize your patch and stop\n'
-  + 'Strategy: explore (read/grep/ls) to locate the fix, make minimal edit(s), run_tests, iterate on '
-  + 'the trace, then submit once tests pass. PREFER line_edit (use the line numbers from `read`) — it is far '
-  + 'more reliable than search/replace, which must match the file character-for-character. If an `edit` fails '
-  + 'to match, switch to line_edit. Never edit test files. Output ONE JSON action per turn.';
+/**
+ * Build the system prompt that defines the tool protocol. One JSON action per turn, nothing else.
+ * ADR-192 (polyglot): the tool-call EXAMPLES embed a file extension + grep glob. Those are now
+ * templated to the instance's language (`ext`/`glob`) so the model is shown its real extension
+ * (e.g. `f.go` / `*.go` for a Go instance). Nothing in the loop logic is language-specific — only
+ * the example strings. `ext`/`glob` default to Python, so the exported AGENTIC_SYSTEM constant is
+ * byte-identical to before for Python instances and all existing tests.
+ */
+export function buildAgenticSystem(ext = 'py', glob = '*.py') {
+  return 'You are an autonomous bug-fixing agent working inside a real repository. Each turn, output EXACTLY '
+    + 'ONE JSON object on a single line — a tool call — and NOTHING else (no prose, no markdown, no XML). '
+    + 'Do NOT use <invoke> XML syntax. Do NOT prefix with >>>. Just the raw JSON object. Tools:\n'
+    + '{"tool":"ls","dir":"path/"}            list a directory\n'
+    + `{"tool":"read","path":"f.${ext}","start":1,"end":80}  read a file (range optional; omit for whole file)\n`
+    + `{"tool":"grep","pattern":"reg","glob":"${glob}"}     search the repo (glob optional)\n`
+    + `{"tool":"edit","path":"f.${ext}","search":"<exact lines incl. indentation>","replace":"<new lines>"}  apply a search/replace edit\n`
+    + `{"tool":"line_edit","path":"f.${ext}","start":12,"end":15,"replace":"<new text for lines 12-15>"}  replace an inclusive LINE RANGE (robust — line numbers come from \`read\`)\n`
+    + '{"tool":"run_tests"}                   run the failing tests against your current edits; returns the trace\n'
+    + '{"tool":"submit"}                      finalize your patch and stop\n'
+    + 'Strategy: explore (read/grep/ls) to locate the fix, make minimal edit(s), run_tests, iterate on '
+    + 'the trace, then submit once tests pass. PREFER line_edit (use the line numbers from `read`) — it is far '
+    + 'more reliable than search/replace, which must match the file character-for-character. If an `edit` fails '
+    + 'to match, switch to line_edit. Never edit test files. Output ONE JSON action per turn.';
+}
+
+/** The default (Python) system prompt — kept as a stable export for backward compatibility. */
+export const AGENTIC_SYSTEM = buildAgenticSystem();
 
 /** Parse the model's turn into a single action object, tolerating stray prose/fences around the JSON. */
 export function parseAction(raw) {
@@ -166,7 +177,7 @@ export function chebTemp(step, maxSteps, tHi = 0.8, tLo = 0.0, gamma = 2) {
   return +(tLo + (tHi - tLo) * w).toFixed(3);
 }
 
-export async function agenticSolve({ problem, io, llm, maxSteps = 20, onStep, tempSchedule }) {
+export async function agenticSolve({ problem, io, llm, maxSteps = 20, onStep, tempSchedule, system = AGENTIC_SYSTEM }) {
   const tools = makeTools(io);
   const transcript = [];
   let submitted = false; let resolvedInLoop = false; let cost = 0; let thrash = 0;
@@ -180,7 +191,7 @@ export async function agenticSolve({ problem, io, llm, maxSteps = 20, onStep, te
   for (let step = 1; step <= maxSteps && !submitted; step++) {
     const convo = header + '\n' + transcript.map((t) => `>>> ${t.actionRaw}\n${t.obs}`).join('\n').slice(-12000);
     let raw = '';
-    try { const r = await llm(convo, AGENTIC_SYSTEM, tempSchedule ? tempSchedule(step, maxSteps) : undefined); raw = r.raw; cost += r.cost || 0; }
+    try { const r = await llm(convo, system, tempSchedule ? tempSchedule(step, maxSteps) : undefined); raw = r.raw; cost += r.cost || 0; }
     catch (e) { transcript.push({ actionRaw: '(model error)', obs: String(e.message || e) }); break; }
     const action = parseAction(raw);
     let obs;

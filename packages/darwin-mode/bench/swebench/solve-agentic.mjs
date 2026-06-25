@@ -14,8 +14,9 @@ import { execSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join, dirname, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { agenticSolve, chebTemp } from './agentic-loop.mjs';
+import { agenticSolve, chebTemp, buildAgenticSystem } from './agentic-loop.mjs';
 import { runConformantTests } from './conformant-tests.mjs';
+import { langProfile } from './lang-profile.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -104,7 +105,10 @@ function evalOne(instanceId, patch, runId) {
   let logTail = ''; try { const lp = `/tmp/logs/run_evaluation/${runId}/darwin-agentic/${instanceId}/test_output.txt`; if (existsSync(lp)) { const t = readFileSync(lp, 'utf8'); logTail = t.split('\n').filter((l) => /FAIL|Error|assert|Traceback|^E |raise |\.py:[0-9]/.test(l)).slice(-40).join('\n').slice(-2500); } } catch { /**/ }
   return { resolved, logTail };
 }
-const isTestPath = (r) => /(^|\/)(tests?|testing)\//i.test(r) || /(^|\/)(test_|conftest)/i.test(r) || /_test\.py$/.test(r);
+// ADR-192: test-path guard is now language-aware (driven by the per-instance profile). Default
+// stays Python so the bare module-level constant matches the prior behaviour.
+const PY_PROFILE = langProfile({ lang: 'py' });
+const isTestPath = (r) => PY_PROFILE.testPathRegex(r);
 
 // ADR-173 — LEADERBOARD-CONFORMANT mode. `--no-test-oracle` forbids any in-loop
 // call to the gold FAIL_TO_PASS harness; the agent's only feedback is the repo's
@@ -118,21 +122,23 @@ let usedOracleDuringSolve = false;
 // changed file's package, inside the instance Docker image (deps present), with
 // the agent's SOURCE patch applied but NEVER the gold test patch. Robust rule:
 // for a changed `a/b/c.py`, run the nearest `tests/` dir under the package root.
-function existingTestTargets(diff) {
-  const files = [...diff.matchAll(/^\+\+\+ b\/(.+\.py)$/gm)].map((m) => m[1]).filter((f) => !/(^|\/)(test_|tests?\/|conftest)/i.test(f));
-  // SPECIFIC test file per changed module (test_<mod>.py) — NOT whole package tests/ dirs (sklearn-pytest storm, 2026-06-23).
+// ADR-192: changed-file extraction + test-target seeding are now driven by the per-instance
+// profile (default Python). The diff-file regex accepts the language's source extensions; the
+// seeded test paths follow the language's layout (py: tests/test_<mod>.py; js: <mod>.test.js /
+// __tests__; go: <mod>_test.go; rust: tests/; java: src/test/...Test.java).
+function existingTestTargets(diff, prof = PY_PROFILE) {
+  const extAlt = prof.srcGlobs.map((g2) => g2.replace(/^\*\./, '').replace(/\./g, '\\.')).join('|');
+  const re = new RegExp(`^\\+\\+\\+ b/(.+\\.(?:${extAlt}))$`, 'gm');
+  const files = [...diff.matchAll(re)].map((m) => m[1]).filter((f) => !prof.testPathRegex(f));
+  // SPECIFIC test file per changed module — NOT whole package tests/ dirs (sklearn-pytest storm, 2026-06-23).
   const targets = new Set();
-  for (const f of files) {
-    const parts = f.split('/'); const base = parts[parts.length - 1].replace(/\.py$/, ''); const dir = parts.slice(0, -1).join('/');
-    targets.add(`${dir}/tests/test_${base}.py`);
-    targets.add(`${dir}/test_${base}.py`);
-  }
+  for (const f of files) for (const t of prof.testTargets(f)) targets.add(t);
   return [...targets].slice(0, 4);
 }
-function runRepoTests(instanceId, diff) {
-  const targets = existingTestTargets(diff);
+function runRepoTests(instanceId, diff, prof = PY_PROFILE) {
+  const targets = existingTestTargets(diff, prof);
   if (targets.length === 0) return { resolved: false, logTail: 'no source files changed yet — write a fix, then tests run' };
-  const cmd = `python -m pytest -q -x -p no:cacheprovider ${targets.map((t) => `'${t}'`).join(' ')}`;
+  const cmd = prof.testRunnerCmd(targets);
   const r = runConformantTests(instanceId, diff, cmd, { timeoutMs: 420000 });
   return { resolved: r.ran && r.passed, logTail: (r.ran ? '' : '[tests could not run] ') + r.logTail };
 }
@@ -141,6 +147,11 @@ writeFileSync(OUT, ''); const report = []; let totalCost = 0;
 // One agentic attempt in a FRESH work tree (cold). Returns {res, work}; caller cleans up.
 async function solveTier(inst, llmFn) {
   const work = fetchRepo(inst.repo, inst.base_commit); let evalCount = 0;
+  // ADR-192: resolve the per-instance language profile once (explicit inst.lang wins; else detect
+  // from repo root). It drives the grep default glob, the test-path guard, the conformant test
+  // runner, and the tool-call examples in the system prompt. Default degrades to Python.
+  const prof = langProfile(inst, work);
+  const defGlob = prof.srcGlobs[0];
   const io = {
     work, path: { join },
     readFile: (p) => readFileSync(p, 'utf8'),
@@ -148,16 +159,17 @@ async function solveTier(inst, llmFn) {
     writeFile: (p, c) => writeFileSync(p, c),
     exists: (p) => existsSync(p),
     gitDiff: () => g(work, 'git diff').toString(),
-    grepRepo: (pattern, glob) => { try { const gl = glob ? `-- '${glob}'` : "-- '*.py'"; return g(work, `git grep -n -e ${JSON.stringify(pattern)} ${gl} | head -60 || true`).toString(); } catch { return ''; } },
-    applyEdit, isTestPath,
+    grepRepo: (pattern, glob) => { try { const gl = glob ? `-- '${glob}'` : `-- '${defGlob}'`; return g(work, `git grep -n -e ${JSON.stringify(pattern)} ${gl} | head -60 || true`).toString(); } catch { return ''; } },
+    applyEdit, isTestPath: (r) => prof.testPathRegex(r),
     runTests: () => {
-      if (NO_ORACLE) return runRepoTests(inst.instance_id, g(work, 'git diff').toString()); // conformant gate
+      if (NO_ORACLE) return runRepoTests(inst.instance_id, g(work, 'git diff').toString(), prof); // conformant gate
       usedOracleDuringSolve = true;
       return evalOne(inst.instance_id, g(work, 'git diff').toString(), `ag_${inst.instance_id}_${++evalCount}`.replace(/[^a-zA-Z0-9_]/g, '_'));
     },
     MAX_OUT: 4000,
   };
-  const res = await agenticSolve({ problem: inst.problem_statement, io, llm: llmFn, maxSteps: MAX_STEPS, tempSchedule: CHEB_TEMP ? ((s, n) => chebTemp(s, n, CHEB_HI)) : undefined });
+  const system = buildAgenticSystem(prof.exampleExt, defGlob);
+  const res = await agenticSolve({ problem: inst.problem_statement, io, llm: llmFn, maxSteps: MAX_STEPS, system, tempSchedule: CHEB_TEMP ? ((s, n) => chebTemp(s, n, CHEB_HI)) : undefined });
   return { res, work };
 }
 // Cascade tie-break: neither tier passed the repo gate — judge picks the likelier fix (cheap, conformant).
