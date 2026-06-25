@@ -30,6 +30,11 @@ Thumbs.db
 .env.*.local
 !.env.example
 
+# Darwin nightly service-account key — NEVER commit (stored in GCP Secret Manager as DARWIN_SA_KEY)
+.config/darwin-nightly-sa.json
+*-sa.json
+darwin-nightly-sa.json
+
 coverage/
 *.lcov
 .nyc_output/
