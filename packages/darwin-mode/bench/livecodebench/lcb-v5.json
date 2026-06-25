@@ -1,0 +1,589 @@
+{
+ "release": "release_v5",
+ "window": {
+  "start": "2024-12-01",
+  "end": null
+ },
+ "instances": [
+  {
+   "question_id": "abc383_a",
+   "question_content": "There is one humidifier in the AtCoder company office. The current time is 0, and the humidifier has no water inside.\nYou will add water to this humidifier N times. The i-th addition of water (1 \\leq i \\leq N) takes place at time T_i, and you add V_i liters of water. It is guaranteed that T_i < T_{i+1} for all 1 \\leq i \\leq N-1.\nHowever, the humidifier has a leak, and as long as there is water inside, the amount of water decreases by 1 liter per unit time.\nFind the amount of water remaining in the humidifier immediately after you finish adding water at time T_N.\n\nInput\n\nThe input is given from Standard Input in the following format:\nN\r\nT_1 V_1\r\nT_2 V_2\r\n\\vdots\r\nT_N V_N\n\nOutput\n\nPrint the answer.\n\nConstraints\n\n\n- 1 \\leq N \\leq 100\n- 1 \\leq T_i \\leq 100 (1 \\leq i \\leq N)\n- 1 \\leq V_i \\leq 100 (1 \\leq i \\leq N)\n- T_i < T_{i+1} (1 \\leq i \\leq N-1)\n- All input values are integers.\n\nSample Input 1\n\n4\r\n1 3\r\n3 1\r\n4 4\r\n7 1\n\nSample Output 1\n\n3\r\n\nAt each point in time, water is added as follows:\n\n- Time 1: Before adding, the humidifier has 0 liters. After adding 3 liters, it has 3 liters.\n- Time 3: Before adding, it has 1 liter. After adding 1 liter, it has 2 liters total.\n- Time 4: Before adding, it has 1 liter. After adding 4 liters, it has 5 liters total.\n- Time 7: Before adding, it has 2 liters. After adding 1 liter, it has 3 liters total.\n\nAfter finishing the addition at time 7, the humidifier contains 3 liters. Thus, the answer is 3.\n\nSample Input 2\n\n3\r\n1 8\r\n10 11\r\n21 5\n\nSample Output 2\n\n5\n\nSample Input 3\n\n10\r\n2 1\r\n22 10\r\n26 17\r\n29 2\r\n45 20\r\n47 32\r\n72 12\r\n75 1\r\n81 31\r\n97 7\n\nSample Output 3\n\n57",
+   "starter_code": "",
+   "platform": "atcoder",
+   "difficulty": "easy",
+   "contest_date": "2024-12-07T00:00:00",
+   "public_test_cases": [
+    {
+     "input": "4\n1 3\n3 1\n4 4\n7 1",
+     "output": "3",
+     "testtype": "stdin"
+    },
+    {
+     "input": "3\n1 8\n10 11\n21 5",
+     "output": "5",
+     "testtype": "stdin"
+    },
+    {
+     "input": "10\n2 1\n22 10\n26 17\n29 2\n45 20\n47 32\n72 12\n75 1\n81 31\n97 7",
+     "output": "57",
+     "testtype": "stdin"
+    }
+   ]
+  },
+  {
+   "question_id": "abc383_e",
+   "question_content": "You are given a simple connected undirected graph with N vertices and M edges, where vertices are numbered 1 to N and edges are numbered 1 to M. Edge i (1 \\leq i \\leq M) connects vertices u_i and v_i bidirectionally and has weight w_i.\nFor a path, define its weight as the maximum weight of an edge in the path.\nDefine f(x, y) as the minimum possible path weight of a path from vertex x to vertex y.\nYou are given two sequences of length K: (A_1, A_2, \\ldots, A_K) and (B_1, B_2, \\ldots, B_K). It is guaranteed that A_i \\neq B_j (1 \\leq i,j \\leq K).\nPermute the sequence B freely so that \\displaystyle \\sum_{i=1}^{K} f(A_i, B_i) is minimized.\n\nInput\n\nThe input is given from Standard Input in the following format:\nN M K\nu_1 v_1 w_1\nu_2 v_2 w_2\n\\vdots\nu_M v_M w_M\nA_1 A_2 \\ldots A_K\nB_1 B_2 \\ldots B_K\n\nOutput\n\nPrint the minimum value of \\displaystyle \\sum_{i=1}^{K} f(A_i, B_i).\n\nConstraints\n\n\n- 2 \\leq N  \\leq 2 \\times 10^5\n- N-1 \\leq M  \\leq \\min(\\frac{N \\times (N-1)}{2},2 \\times 10^5)\n- 1 \\leq K \\leq N\n- 1 \\leq u_i<v_i \\leq N (1 \\leq i \\leq M) \n- 1 \\leq w_i \\leq 10^9\n- 1 \\leq A_i,B_i \\leq N (1 \\leq i \\leq K)\n- The given graph is simple and connected.\n- All input values are integers.\n\nSample Input 1\n\n4 4 3\n1 3 2\n3 4 1\n2 4 5\n1 4 4\n1 1 3\n4 4 2\n\nSample Output 1\n\n8\n\nIf we rearrange B as (2,4,4):\n\n- f(1,2) = 5: The path from vertex 1 to vertex 2 passing through vertex 4 contains edge 3 with a maximum edge weight of 5. There is no path with a maximum edge weight less than or equal to 4, so 5 is the minimum possible.\n- f(1,4) = 2: The path from vertex 1 to vertex 4 passing through vertex 3 contains edge 1 with a maximum edge weight of 2. There is no path with a maximum edge weight less than or equal to 1, so 2 is the minimum possible.\n- f(3,4) = 1: The path from vertex 3 to vertex 4 passing through the direct edge contains an edge with a maximum edge weight of 1. No path can have a maximum weight 0 or less, so 1 is the minimum possible.\n\nThus, \\displaystyle \\sum_{i=1}^{3} f(A_i, B_i) = 5+2+1=8. No permutation of B yields 7 or less, so the answer is 8.\n\nSample Input 2\n\n3 3 2\n1 2 5\n2 3 2\n1 3 1\n1 1\n2 3\n\nSample Output 2\n\n3",
+   "starter_code": "",
+   "platform": "atcoder",
+   "difficulty": "hard",
+   "contest_date": "2024-12-07T00:00:00",
+   "public_test_cases": [
+    {
+     "input": "4 4 3\n1 3 2\n3 4 1\n2 4 5\n1 4 4\n1 1 3\n4 4 2",
+     "output": "8",
+     "testtype": "stdin"
+    },
+    {
+     "input": "3 3 2\n1 2 5\n2 3 2\n1 3 1\n1 1\n2 3",
+     "output": "3",
+     "testtype": "stdin"
+    }
+   ]
+  },
+  {
+   "question_id": "abc383_b",
+   "question_content": "The AtCoder company office can be represented as a grid of H rows and W columns. Let (i, j) denote the cell at the i-th row from the top and j-th column from the left.\nThe state of each cell is represented by a character S_{i,j}. If S_{i,j} is #, that cell contains a desk; if S_{i,j} is ., that cell is a floor. It is guaranteed that there are at least two floor cells.\nYou will choose two distinct floor cells and place a humidifier on each.\nAfter placing the humidifiers, a cell (i,j) is humidified if and only if it is within a Manhattan distance D from at least one of the humidifier cells (i',j'). The Manhattan distance between (i,j) and (i',j') is defined as |i - i'| + |j - j'|.\r\nNote that any floor cell on which a humidifier is placed is always humidified.\nFind the maximum possible number of humidified floor cells.\n\nInput\n\nThe input is given from Standard Input in the following format:\nH W D\r\nS_{1,1}S_{1,2}\\cdotsS_{1,W}\r\nS_{2,1}S_{2,2}\\cdotsS_{2,W}\r\n\\vdots\r\nS_{H,1}S_{H,2}\\cdotsS_{H,W}\n\nOutput\n\nPrint the answer.\n\nConstraints\n\n\n- 1 \\leq H \\leq 10\n- 1 \\leq W \\leq 10\n- 2 \\leq H \\times W\n- 0 \\leq D \\leq H+W-2\n- H,W,D are integers.\n- S_{i,j} is # or .. (1 \\leq i \\leq H, 1 \\leq j \\leq W)\n- There are at least two floor cells.\n\nSample Input 1\n\n2 5 1\r\n.###.\r\n.#.##\n\nSample Output 1\n\n3\r\n\nWhen placing humidifiers on (1,1) and (1,5):\n\n- From the humidifier on (1,1), two cells (1,1) and (2,1) are humidified.\n- From the humidifier on (1,5), one cell (1,5) is humidified.\n\nIn total, three cells are humidified. No configuration can humidify four or more floor cells, so the answer is 3.\n\nSample Input 2\n\n5 5 2\r\n.#.#.\r\n.....\r\n.#.#.\r\n#.#.#\r\n.....\n\nSample Output 2\n\n15\r\n\nWhen placing humidifiers on (2,4) and (5,3), 15 floor cells are humidified.\n\nSample Input 3\n\n4 4 2\r\n....\r\n.##.\r\n.##.\r\n....\n\nSample Output 3\n\n10",
+   "starter_code": "",
+   "platform": "atcoder",
+   "difficulty": "medium",
+   "contest_date": "2024-12-07T00:00:00",
+   "public_test_cases": [
+    {
+     "input": "2 5 1\n.###.\n.#.##",
+     "output": "3",
+     "testtype": "stdin"
+    },
+    {
+     "input": "5 5 2\n.#.#.\n.....\n.#.#.\n#.#.#\n.....",
+     "output": "15",
+     "testtype": "stdin"
+    },
+    {
+     "input": "4 4 2\n....\n.##.\n.##.\n....",
+     "output": "10",
+     "testtype": "stdin"
+    }
+   ]
+  },
+  {
+   "question_id": "3621",
+   "question_content": "You are given an integer array nums and an integer k.\nAn integer h is called valid if all values in the array that are strictly greater than h are identical.\nFor example, if nums = [10, 8, 10, 8], a valid integer is h = 9 because all nums[i] > 9 are equal to 10, but 5 is not a valid integer.\nYou are allowed to perform the following operation on nums:\n\nSelect an integer h that is valid for the current values in nums.\nFor each index i where nums[i] > h, set nums[i] to h.\n\nReturn the minimum number of operations required to make every element in nums equal to k. If it is impossible to make all elements equal to k, return -1.\n \nExample 1:\n\nInput: nums = [5,2,5,4,5], k = 2\nOutput: 2\nExplanation:\nThe operations can be performed in order using valid integers 4 and then 2.\n\nExample 2:\n\nInput: nums = [2,1,2], k = 2\nOutput: -1\nExplanation:\nIt is impossible to make all the values equal to 2.\n\nExample 3:\n\nInput: nums = [9,7,5,3], k = 1\nOutput: 4\nExplanation:\nThe operations can be performed using valid integers in the order 7, 5, 3, and 1.\n\n \nConstraints:\n\n1 <= nums.length <= 100 \n1 <= nums[i] <= 100\n1 <= k <= 100",
+   "starter_code": "class Solution:\n    def minOperations(self, nums: List[int], k: int) -> int:\n        ",
+   "platform": "leetcode",
+   "difficulty": "easy",
+   "contest_date": "2024-12-07T06:30:00",
+   "public_test_cases": [
+    {
+     "input": "[5, 2, 5, 4, 5]\n2",
+     "output": "2",
+     "testtype": "functional"
+    },
+    {
+     "input": "[2, 1, 2]\n2",
+     "output": "-1",
+     "testtype": "functional"
+    },
+    {
+     "input": "[9, 7, 5, 3]\n1",
+     "output": "4",
+     "testtype": "functional"
+    }
+   ]
+  },
+  {
+   "question_id": "3562",
+   "question_content": "You are given a 2D integer array intervals, where intervals[i] = [l_i, r_i, weight_i]. Interval i starts at position l_i and ends at r_i, and has a weight of weight_i. You can choose up to 4 non-overlapping intervals. The score of the chosen intervals is defined as the total sum of their weights.\nReturn the lexicographically smallest array of at most 4 indices from intervals with maximum score, representing your choice of non-overlapping intervals.\nTwo intervals are said to be non-overlapping if they do not share any points. In particular, intervals sharing a left or right boundary are considered overlapping.\nAn array a is lexicographically smaller than an array b if in the first position where a and b differ, array a has an element that is less than the corresponding element in b.\nIf the first min(a.length, b.length) elements do not differ, then the shorter array is the lexicographically smaller one.\n \nExample 1:\n\nInput: intervals = [[1,3,2],[4,5,2],[1,5,5],[6,9,3],[6,7,1],[8,9,1]]\nOutput: [2,3]\nExplanation:\nYou can choose the intervals with indices 2, and 3 with respective weights of 5, and 3.\n\nExample 2:\n\nInput: intervals = [[5,8,1],[6,7,7],[4,7,3],[9,10,6],[7,8,2],[11,14,3],[3,5,5]]\nOutput: [1,3,5,6]\nExplanation:\nYou can choose the intervals with indices 1, 3, 5, and 6 with respective weights of 7, 6, 3, and 5.\n\n \nConstraints:\n\n1 <= intevals.length <= 5 * 10^4\nintervals[i].length == 3\nintervals[i] = [l_i, r_i, weight_i]\n1 <= l_i <= r_i <= 10^9\n1 <= weight_i <= 10^9",
+   "starter_code": "class Solution:\n    def maximumWeight(self, intervals: List[List[int]]) -> List[int]:\n        ",
+   "platform": "leetcode",
+   "difficulty": "hard",
+   "contest_date": "2025-01-04T18:30:00",
+   "public_test_cases": [
+    {
+     "input": "[[1, 3, 2], [4, 5, 2], [1, 5, 5], [6, 9, 3], [6, 7, 1], [8, 9, 1]]",
+     "output": "[2, 3]",
+     "testtype": "functional"
+    },
+    {
+     "input": "[[5, 8, 1], [6, 7, 7], [4, 7, 3], [9, 10, 6], [7, 8, 2], [11, 14, 3], [3, 5, 5]]",
+     "output": "[1, 3, 5, 6]",
+     "testtype": "functional"
+    }
+   ]
+  },
+  {
+   "question_id": "3613",
+   "question_content": "You are given a string initialCurrency, and you start with 1.0 of initialCurrency.\nYou are also given four arrays with currency pairs (strings) and rates (real numbers):\n\npairs1[i] = [startCurrency_i, targetCurrency_i] denotes that you can convert from startCurrency_i to targetCurrency_i at a rate of rates1[i] on day 1.\npairs2[i] = [startCurrency_i, targetCurrency_i] denotes that you can convert from startCurrency_i to targetCurrency_i at a rate of rates2[i] on day 2.\nAlso, each targetCurrency can be converted back to its corresponding startCurrency at a rate of 1 / rate.\n\nYou can perform any number of conversions, including zero, using rates1 on day 1, followed by any number of additional conversions, including zero, using rates2 on day 2.\nReturn the maximum amount of initialCurrency you can have after performing any number of conversions on both days in order.\nNote: Conversion rates are valid, and there will be no contradictions in the rates for either day. The rates for the days are independent of each other.\n \nExample 1:\n\nInput: initialCurrency = \"EUR\", pairs1 = [[\"EUR\",\"USD\"],[\"USD\",\"JPY\"]], rates1 = [2.0,3.0], pairs2 = [[\"JPY\",\"USD\"],[\"USD\",\"CHF\"],[\"CHF\",\"EUR\"]], rates2 = [4.0,5.0,6.0]\nOutput: 720.00000\nExplanation:\nTo get the maximum amount of EUR, starting with 1.0 EUR:\n\nOn Day 1:\n\t\nConvert EUR to USD to get 2.0 USD.\nConvert USD to JPY to get 6.0 JPY.\n\n\nOn Day 2:\n\t\nConvert JPY to USD to get 24.0 USD.\nConvert USD to CHF to get 120.0 CHF.\nFinally, convert CHF to EUR to get 720.0 EUR.\n\n\n\n\nExample 2:\n\nInput: initialCurrency = \"NGN\", pairs1 = [[\"NGN\",\"EUR\"]], rates1 = [9.0], pairs2 = [[\"NGN\",\"EUR\"]], rates2 = [6.0]\nOutput: 1.50000\nExplanation:\nConverting NGN to EUR on day 1 and EUR to NGN using the inverse rate on day 2 gives the maximum amount.\n\nExample 3:\n\nInput: initialCurrency = \"USD\", pairs1 = [[\"USD\",\"EUR\"]], rates1 = [1.0], pairs2 = [[\"EUR\",\"JPY\"]], rates2 = [10.0]\nOutput: 1.00000\nExplanation:\nIn this example, there is no need to make any conversions on either day.\n\n \nConstraints:\n\n1 <= initialCurrency.length <= 3\ninitialCurrency consists only of uppercase English letters.\n1 <= n == pairs1.length <= 10\n1 <= m == pairs2.length <= 10\npairs1[i] == [startCurrency_i, targetCurrency_i]\npairs2[i] == [startCurrency_i, targetCurrency_i]\n1 <= startCurrency_i.length, targetCurrency_i.length <= 3\nstartCurrency_i and targetCurrency_i consist only of uppercase English letters.\nrates1.length == n\nrates2.length == m\n1.0 <= rates1[i], rates2[i] <= 10.0\nThe input is generated such that there are no contradictions or cycles in the conversion graphs for either day.\nThe input is generated such that the output is at most 5 * 10^10.",
+   "starter_code": "class Solution:\n    def maxAmount(self, initialCurrency: str, pairs1: List[List[str]], rates1: List[float], pairs2: List[List[str]], rates2: List[float]) -> float:\n        ",
+   "platform": "leetcode",
+   "difficulty": "medium",
+   "contest_date": "2024-12-14T18:30:00",
+   "public_test_cases": [
+    {
+     "input": "\"EUR\"\n[[\"EUR\", \"USD\"], [\"USD\", \"JPY\"]]\n[2.0, 3.0]\n[[\"JPY\", \"USD\"], [\"USD\", \"CHF\"], [\"CHF\", \"EUR\"]]\n[4.0, 5.0, 6.0]",
+     "output": "720.0",
+     "testtype": "functional"
+    },
+    {
+     "input": "\"NGN\"\n[[\"NGN\", \"EUR\"]]\n[9.0]\n[[\"NGN\", \"EUR\"]]\n[6.0]",
+     "output": "1.5",
+     "testtype": "functional"
+    },
+    {
+     "input": "\"USD\"\n[[\"USD\", \"EUR\"]]\n[1.0]\n[[\"EUR\", \"JPY\"]]\n[10.0]",
+     "output": "1.0",
+     "testtype": "functional"
+    }
+   ]
+  },
+  {
+   "question_id": "abc384_a",
+   "question_content": "You are given a string S of length N consisting of lowercase English letters, along with lowercase English letters c_1 and c_2.\nFind the string obtained by replacing every character of S that is not c_1 with c_2.\n\nInput\n\nThe input is given in the following format from Standard Input:\nN c_1 c_2\nS\n\nOutput\n\nPrint the answer.\n\nConstraints\n\n\n- 1\\le N\\le 100\n- N is an integer.\n- c_1 and c_2 are lowercase English letters.\n- S is a string of length N consisting of lowercase English letters.\n\nSample Input 1\n\n3 b g\nabc\n\nSample Output 1\n\ngbg\n\nReplacing a and c (which are not b) with g in S= abc results in gbg, so print gbg.\n\nSample Input 2\n\n1 s h\ns\n\nSample Output 2\n\ns\n\nIt is possible that the resulting string after replacement is the same as the original string.\n\nSample Input 3\n\n7 d a\natcoder\n\nSample Output 3\n\naaaadaa\n\nSample Input 4\n\n10 b a\nacaabcabba\n\nSample Output 4\n\naaaabaabba",
+   "starter_code": "",
+   "platform": "atcoder",
+   "difficulty": "easy",
+   "contest_date": "2024-12-14T00:00:00",
+   "public_test_cases": [
+    {
+     "input": "3 b g\nabc",
+     "output": "gbg",
+     "testtype": "stdin"
+    },
+    {
+     "input": "1 s h\ns",
+     "output": "s",
+     "testtype": "stdin"
+    },
+    {
+     "input": "7 d a\natcoder",
+     "output": "aaaadaa",
+     "testtype": "stdin"
+    },
+    {
+     "input": "10 b a\nacaabcabba",
+     "output": "aaaabaabba",
+     "testtype": "stdin"
+    }
+   ]
+  },
+  {
+   "question_id": "abc384_e",
+   "question_content": "There is a grid with H horizontal rows and W vertical columns.\r\nLet (i, j) denote the cell at the i-th row (1\\leq i\\leq H) from the top and j-th column (1\\leq j\\leq W) from the left.\nInitially, there is a slime with strength S _ {i,j} in cell (i,j), and Takahashi is the slime in the cell (P,Q).\nFind the maximum possible strength of Takahashi after performing the following action any number of times (possibly zero):\n\n- Among the slimes adjacent to him, choose one whose strength is strictly less than \\dfrac{1}{X} times his strength and absorb it.\r\n  As a result, the absorbed slime disappears, and Takahashi's strength increases by the strength of the absorbed slime.\n\nWhen performing the above action, the gap left by the disappeared slime is immediately filled by Takahashi, and the slimes that were adjacent to the disappeared one (if any) become newly adjacent to Takahashi (refer to the explanation in sample 1).\n\nInput\n\nThe input is given in the following format from Standard Input:\nH W X \r\nP Q\r\nS _ {1,1} S _ {1,2} \\ldots S _ {1,W}\r\nS _ {2,1} S _ {2,2} \\ldots S _ {2,W}\r\n\\vdots\r\nS _ {H,1} S _ {H,2} \\ldots S _ {H,W}\n\nOutput\n\nPrint the maximum possible strength of Takahashi after performing the action.\n\nConstraints\n\n\n- 1\\leq H,W\\leq500\n- 1\\leq P\\leq H\n- 1\\leq Q\\leq W\n- 1\\leq X\\leq10^9\n- 1\\leq S _ {i,j}\\leq10^{12}\n- All input values are integers.\n\nSample Input 1\n\n3 3 2\r\n2 2\r\n14 6 9\r\n4 9 20\r\n17 15 7\n\nSample Output 1\n\n28\r\n\nInitially, the strength of the slime in each cell is as follows:\n\nFor example, Takahashi can act as follows:\n\n\n- Absorb the slime in cell (2,1). His strength becomes 9+4=13, and the slimes in cells (1,1) and (3,1) become newly adjacent to him.\n- Absorb the slime in cell (1,2). His strength becomes 13+6=19, and the slime in cell (1,3) becomes newly adjacent to him.\n- Absorb the slime in cell (1,3). His strength becomes 19+9=28.\n\nAfter these actions, his strength is 28.\nNo matter how he acts, it is impossible to get a strength greater than 28, so print 28.\nNote that Takahashi can only absorb slimes whose strength is strictly less than half of his strength. For example, in the figure on the right above, he cannot absorb the slime in cell (1,1).\n\nSample Input 2\n\n3 4 1\r\n1 1\r\n5 10 1 1\r\n10 1 1 1\r\n1 1 1 1\n\nSample Output 2\n\n5\r\n\nHe cannot absorb any slimes.\n\nSample Input 3\n\n8 10 2\r\n1 5\r\n388 130 971 202 487 924 247 286 237 316\r\n117 166 918 106 336 928 493 391 235 398\r\n124 280 425 955 212 988 227 222 307 226\r\n336 302 478 246 950 368 291 236 170 101\r\n370 200 204 141 287 410 388 314 205 460\r\n291 104 348 337 404 399 416 263 415 339\r\n105 420 302 334 231 481 466 366 401 452\r\n119 432 292 403 371 417 351 231 482 184\n\nSample Output 3\n\n1343",
+   "starter_code": "",
+   "platform": "atcoder",
+   "difficulty": "hard",
+   "contest_date": "2024-12-14T00:00:00",
+   "public_test_cases": [
+    {
+     "input": "3 3 2\n2 2\n14 6 9\n4 9 20\n17 15 7",
+     "output": "28",
+     "testtype": "stdin"
+    },
+    {
+     "input": "3 4 1\n1 1\n5 10 1 1\n10 1 1 1\n1 1 1 1",
+     "output": "5",
+     "testtype": "stdin"
+    },
+    {
+     "input": "8 10 2\n1 5\n388 130 971 202 487 924 247 286 237 316\n117 166 918 106 336 928 493 391 235 398\n124 280 425 955 212 988 227 222 307 226\n336 302 478 246 950 368 291 236 170 101\n370 200 204 141 287 410 388 314 205 460\n291 104 348 337 404 399 416 263 415 339\n105 420 302 334 231 481 466 366 401 452\n119 432 292 403 371 417 351 231 482 184",
+     "output": "1343",
+     "testtype": "stdin"
+    }
+   ]
+  },
+  {
+   "question_id": "abc383_c",
+   "question_content": "The AtCoder company office is represented as a grid of H rows and W columns. Let (i, j) denote the cell at the i-th row from the top and j-th column from the left.\nThe state of each cell is represented by a character S_{i,j}. If S_{i,j} is #, that cell has a wall; if S_{i,j} is ., that cell is a floor; if S_{i,j} is H, that cell has a humidifier placed on a floor cell.\nA certain cell is considered humidified if it can be reached from at least one humidifier cell by at most D moves up, down, left, or right without passing through a wall. Note that any cell with a humidifier is always humidified.\nFind the number of humidified floor cells.\n\nInput\n\nThe input is given from Standard Input in the following format:\nH W D\r\nS_{1,1}S_{1,2}\\cdotsS_{1,W}\r\nS_{2,1}S_{2,2}\\cdotsS_{2,W}\r\n\\vdots\r\nS_{H,1}S_{H,2}\\cdotsS_{H,W}\n\nOutput\n\nPrint the answer.\n\nConstraints\n\n\n- 1 \\leq H \\leq 1000\n- 1 \\leq W \\leq 1000\n- 0 \\leq D \\leq H\\times W\n- S_{i,j} is #, ., or H. (1 \\leq i \\leq H, 1 \\leq j \\leq W)\n- All input numbers are integers.\n\nSample Input 1\n\n3 4 1\r\nH...\r\n#..H\r\n.#.#\n\nSample Output 1\n\n5\r\n\nFive cells (1,1), (1,2), (1,4), (2,3), (2,4) are humidified.\n\nSample Input 2\n\n5 6 2\r\n##...H\r\nH.....\r\n..H.#.\r\n.HH...\r\n.###..\n\nSample Output 2\n\n21\n\nSample Input 3\n\n1 6 3\r\n...#..\n\nSample Output 3\n\n0\r\n\nIt is possible that no cells are humidified.",
+   "starter_code": "",
+   "platform": "atcoder",
+   "difficulty": "medium",
+   "contest_date": "2024-12-07T00:00:00",
+   "public_test_cases": [
+    {
+     "input": "3 4 1\nH...\n#..H\n.#.#",
+     "output": "5",
+     "testtype": "stdin"
+    },
+    {
+     "input": "5 6 2\n##...H\nH.....\n..H.#.\n.HH...\n.###..",
+     "output": "21",
+     "testtype": "stdin"
+    },
+    {
+     "input": "1 6 3\n...#..",
+     "output": "0",
+     "testtype": "stdin"
+    }
+   ]
+  },
+  {
+   "question_id": "3632",
+   "question_content": "You are given a 2D array events which represents a sequence of events where a child pushes a series of buttons on a keyboard.\nEach events[i] = [index_i, time_i] indicates that the button at index index_i was pressed at time time_i.\n\nThe array is sorted in increasing order of time.\nThe time taken to press a button is the difference in time between consecutive button presses. The time for the first button is simply the time at which it was pressed.\n\nReturn the index of the button that took the longest time to push. If multiple buttons have the same longest time, return the button with the smallest index.\n \nExample 1:\n\nInput: events = [[1,2],[2,5],[3,9],[1,15]]\nOutput: 1\nExplanation:\n\nButton with index 1 is pressed at time 2.\nButton with index 2 is pressed at time 5, so it took 5 - 2 = 3 units of time.\nButton with index 3 is pressed at time 9, so it took 9 - 5 = 4 units of time.\nButton with index 1 is pressed again at time 15, so it took 15 - 9 = 6 units of time.\n\n\nExample 2:\n\nInput: events = [[10,5],[1,7]]\nOutput: 10\nExplanation:\n\nButton with index 10 is pressed at time 5.\nButton with index 1 is pressed at time 7, so it took 7 - 5 = 2 units of time.\n\n\n \nConstraints:\n\n1 <= events.length <= 1000\nevents[i] == [index_i, time_i]\n1 <= index_i, time_i <= 10^5\nThe input is generated such that events is sorted in increasing order of time_i.",
+   "starter_code": "class Solution:\n    def buttonWithLongestTime(self, events: List[List[int]]) -> int:\n        ",
+   "platform": "leetcode",
+   "difficulty": "easy",
+   "contest_date": "2024-12-14T18:30:00",
+   "public_test_cases": [
+    {
+     "input": "[[1, 2], [2, 5], [3, 9], [1, 15]]",
+     "output": "1",
+     "testtype": "functional"
+    },
+    {
+     "input": "[[10, 5], [1, 7]]",
+     "output": "10",
+     "testtype": "functional"
+    }
+   ]
+  },
+  {
+   "question_id": "3638",
+   "question_content": "You are given a string s.\nA string t is called good if all characters of t occur the same number of times.\nYou can perform the following operations any number of times:\n\nDelete a character from s.\nInsert a character in s.\nChange a character in s to its next letter in the alphabet.\n\nNote that you cannot change 'z' to 'a' using the third operation.\nReturn the minimum number of operations required to make s good.\n \nExample 1:\n\nInput: s = \"acab\"\nOutput: 1\nExplanation:\nWe can make s good by deleting one occurrence of character 'a'.\n\nExample 2:\n\nInput: s = \"wddw\"\nOutput: 0\nExplanation:\nWe do not need to perform any operations since s is initially good.\n\nExample 3:\n\nInput: s = \"aaabc\"\nOutput: 2\nExplanation:\nWe can make s good by applying these operations:\n\nChange one occurrence of 'a' to 'b'\nInsert one occurrence of 'c' into s\n\n\n \nConstraints:\n\n3 <= s.length <= 2 * 10^4\ns contains only lowercase English letters.",
+   "starter_code": "class Solution:\n    def makeStringGood(self, s: str) -> int:\n        ",
+   "platform": "leetcode",
+   "difficulty": "hard",
+   "contest_date": "2024-12-14T18:30:00",
+   "public_test_cases": [
+    {
+     "input": "\"acab\"",
+     "output": "1",
+     "testtype": "functional"
+    },
+    {
+     "input": "\"wddw\"",
+     "output": "0",
+     "testtype": "functional"
+    },
+    {
+     "input": "\"aaabc\"",
+     "output": "2",
+     "testtype": "functional"
+    }
+   ]
+  },
+  {
+   "question_id": "3620",
+   "question_content": "You are given an integer array nums and an integer k.\nYou are allowed to perform the following operation on each element of the array at most once:\n\nAdd an integer in the range [-k, k] to the element.\n\nReturn the maximum possible number of distinct elements in nums after performing the operations.\n \nExample 1:\n\nInput: nums = [1,2,2,3,3,4], k = 2\nOutput: 6\nExplanation:\nnums changes to [-1, 0, 1, 2, 3, 4] after performing operations on the first four elements.\n\nExample 2:\n\nInput: nums = [4,4,4,4], k = 1\nOutput: 3\nExplanation:\nBy adding -1 to nums[0] and 1 to nums[1], nums changes to [3, 5, 4, 4].\n\n \nConstraints:\n\n1 <= nums.length <= 10^5\n1 <= nums[i] <= 10^9\n0 <= k <= 10^9",
+   "starter_code": "class Solution:\n    def maxDistinctElements(self, nums: List[int], k: int) -> int:\n        ",
+   "platform": "leetcode",
+   "difficulty": "medium",
+   "contest_date": "2024-12-21T18:30:00",
+   "public_test_cases": [
+    {
+     "input": "[1, 2, 2, 3, 3, 4]\n2",
+     "output": "6",
+     "testtype": "functional"
+    },
+    {
+     "input": "[4, 4, 4, 4]\n1",
+     "output": "3",
+     "testtype": "functional"
+    }
+   ]
+  },
+  {
+   "question_id": "abc384_b",
+   "question_content": "AtCoder Regular Contest (ARC) is divided into two divisions.\n\n- In ARC Div. 1, participants whose rating at the start of the contest is between 1600 and 2799, inclusive, are subject to rating updates.\n- In ARC Div. 2, participants whose rating at the start of the contest is between 1200 and 2399, inclusive, are subject to rating updates.\n\nTakahashi decided to participate in N ARCs.\nInitially, his rating is R.\nThe i-th (1\\leq i\\leq N) ARC is Div. D _ i, and his performance in that contest is represented by an integer A _ i.\nIf he is subject to a rating update in the i-th ARC, let T be his rating at the start of that contest. Then, after the contest, his rating becomes T+A _ i.\nIf his is not subject to a rating update, his rating does not change.\nRating updates for ARCs are performed immediately after the contest ends, and whether he is subject to rating updates in the next contest is determined based on his rating after the update.\nFind his rating after finishing the N ARCs.\nHe does not participate in any contests other than these N ARCs, and his rating does not change in other ways.\n\nInput\n\nThe input is given in the following format from Standard Input:\nN R\r\nD _ 1 A _ 1\r\nD _ 2 A _ 2\r\n\\vdots\r\nD _ N A _ N\n\nOutput\n\nPrint Takahashi's rating after finishing the N ARCs.\n\nConstraints\n\n\n- 1\\leq N\\leq 100\n- 0\\leq R\\leq 4229\n- 1\\leq D _ i\\leq 2\\ (1\\leq i\\leq N)\n- -1000\\leq A _ i\\leq 1000\\ (1\\leq i\\leq N)\n- All input values are integers.\n\nSample Input 1\n\n4 1255\r\n2 900\r\n1 521\r\n2 600\r\n1 52\n\nSample Output 1\n\n2728\r\n\nInitially, Takahashi's rating is 1255.\nFor each contest, Takahashi's rating changes as follows:\n\n- The 1st ARC is Div. 2. He is subject to rating updates, so his rating becomes 1255+900=2155.\n- The 2nd ARC is Div. 1. He is subject to rating updates, so his rating becomes 2155+521=2676.\n- The 3rd ARC is Div. 2. He is not subject to rating updates, so his rating does not change.\n- The 4th ARC is Div. 1. He is subject to rating updates, so his rating becomes 2676+52=2728.\n\nAfter the four ARCs, his rating is 2728, so print 2728.\n\nSample Input 2\n\n2 3031\r\n1 1000\r\n2 -1000\n\nSample Output 2\n\n3031\r\n\nHe is a Red coder, so his rating does not change upon his performance in ARC.\n\nSample Input 3\n\n15 2352\r\n2 -889\r\n2 420\r\n2 -275\r\n1 957\r\n1 -411\r\n1 -363\r\n1 151\r\n2 -193\r\n2 289\r\n2 -770\r\n2 109\r\n1 345\r\n2 551\r\n1 -702\r\n1 355\n\nSample Output 3\n\n1226",
+   "starter_code": "",
+   "platform": "atcoder",
+   "difficulty": "easy",
+   "contest_date": "2024-12-14T00:00:00",
+   "public_test_cases": [
+    {
+     "input": "4 1255\n2 900\n1 521\n2 600\n1 52",
+     "output": "2728",
+     "testtype": "stdin"
+    },
+    {
+     "input": "2 3031\n1 1000\n2 -1000",
+     "output": "3031",
+     "testtype": "stdin"
+    },
+    {
+     "input": "15 2352\n2 -889\n2 420\n2 -275\n1 957\n1 -411\n1 -363\n1 151\n2 -193\n2 289\n2 -770\n2 109\n1 345\n2 551\n1 -702\n1 355",
+     "output": "1226",
+     "testtype": "stdin"
+    }
+   ]
+  },
+  {
+   "question_id": "abc384_f",
+   "question_content": "For a positive integer x, define f(x) as follows: \"While x is even, keep dividing it by 2. The final value of x after these divisions is f(x).\" For example, f(4)=f(2)=f(1)=1, and f(12)=f(6)=f(3)=3.\nGiven an integer sequence A=(A_1,A_2,\\ldots,A_N) of length N, find \\displaystyle \\sum_{i=1}^N \\sum_{j=i}^N f(A_i+A_j).\n\nInput\n\nThe input is given in the following format from Standard Input:\nN\r\nA_1 A_2 \\ldots A_N\n\nOutput\n\nPrint the answer.\n\nConstraints\n\n\n- 1\\le N\\le 2\\times 10^5\n- 1\\le A_i\\le 10^7\n- All input values are integers.\n\nSample Input 1\n\n2\r\n4 8\n\nSample Output 1\n\n5\r\n\nf(A_1+A_1)=f(8)=1, f(A_1+A_2)=f(12)=3, f(A_2+A_2)=f(16)=1. Thus, Print 1+3+1=5.\n\nSample Input 2\n\n3\r\n51 44 63\n\nSample Output 2\n\n384\n\nSample Input 3\n\n8\r\n577752 258461 183221 889769 278633 577212 392309 326001\n\nSample Output 3\n\n20241214",
+   "starter_code": "",
+   "platform": "atcoder",
+   "difficulty": "hard",
+   "contest_date": "2024-12-14T00:00:00",
+   "public_test_cases": [
+    {
+     "input": "2\n4 8",
+     "output": "5",
+     "testtype": "stdin"
+    },
+    {
+     "input": "3\n51 44 63",
+     "output": "384",
+     "testtype": "stdin"
+    },
+    {
+     "input": "8\n577752 258461 183221 889769 278633 577212 392309 326001",
+     "output": "20241214",
+     "testtype": "stdin"
+    }
+   ]
+  },
+  {
+   "question_id": "abc383_d",
+   "question_content": "Find the number of positive integers not greater than N that have exactly 9 positive divisors.\n\nInput\n\nThe input is given from Standard Input in the following format:\nN\n\nOutput\n\nPrint the answer.\n\nConstraints\n\n\n- 1 \\leq N \\leq 4 \\times 10^{12}\n- All input values are integers.\n\nSample Input 1\n\n200\n\nSample Output 1\n\n3\r\n\nThree positive integers 36,100,196 satisfy the condition.\n\nSample Input 2\n\n4000000000000\n\nSample Output 2\n\n407073",
+   "starter_code": "",
+   "platform": "atcoder",
+   "difficulty": "medium",
+   "contest_date": "2024-12-07T00:00:00",
+   "public_test_cases": [
+    {
+     "input": "200",
+     "output": "3",
+     "testtype": "stdin"
+    },
+    {
+     "input": "4000000000000",
+     "output": "407073",
+     "testtype": "stdin"
+    }
+   ]
+  },
+  {
+   "question_id": "3651",
+   "question_content": "You are given an integer array nums that represents a circular array. Your task is to create a new array result of the same size, following these rules:\nFor each index i (where 0 <= i < nums.length), perform the following independent actions:\n\n\nIf nums[i] > 0: Start at index i and move nums[i] steps to the right in the circular array. Set result[i] to the value of the index where you land.\nIf nums[i] < 0: Start at index i and move abs(nums[i]) steps to the left in the circular array. Set result[i] to the value of the index where you land.\nIf nums[i] == 0: Set result[i] to nums[i].\n\nReturn the new array result.\nNote: Since nums is circular, moving past the last element wraps around to the beginning, and moving before the first element wraps back to the end.\n \nExample 1:\n\nInput: nums = [3,-2,1,1]\nOutput: [1,1,1,3]\nExplanation:\n\nFor nums[0] that is equal to 3, If we move 3 steps to right, we reach nums[3]. So result[0] should be 1.\nFor nums[1] that is equal to -2, If we move 2 steps to left, we reach nums[3]. So result[1] should be 1.\nFor nums[2] that is equal to 1, If we move 1 step to right, we reach nums[3]. So result[2] should be 1.\nFor nums[3] that is equal to 1, If we move 1 step to right, we reach nums[0]. So result[3] should be 3.\n\n\nExample 2:\n\nInput: nums = [-1,4,-1]\nOutput: [-1,-1,4]\nExplanation:\n\nFor nums[0] that is equal to -1, If we move 1 step to left, we reach nums[2]. So result[0] should be -1.\nFor nums[1] that is equal to 4, If we move 4 steps to right, we reach nums[2]. So result[1] should be -1.\nFor nums[2] that is equal to -1, If we move 1 step to left, we reach nums[1]. So result[2] should be 4.\n\n\n \nConstraints:\n\n1 <= nums.length <= 100\n-100 <= nums[i] <= 100",
+   "starter_code": "class Solution:\n    def constructTransformedArray(self, nums: List[int]) -> List[int]:\n        ",
+   "platform": "leetcode",
+   "difficulty": "easy",
+   "contest_date": "2024-12-07T18:30:00",
+   "public_test_cases": [
+    {
+     "input": "[3, -2, 1, 1]",
+     "output": "[1, 1, 1, 3]",
+     "testtype": "functional"
+    },
+    {
+     "input": "[-1, 4, -1]",
+     "output": "[-1, -1, 4]",
+     "testtype": "functional"
+    }
+   ]
+  },
+  {
+   "question_id": "3680",
+   "question_content": "You are given an array of integers nums of size n and a positive integer threshold.\nThere is a graph consisting of n nodes with the i^th node having a value of nums[i]. Two nodes i and j in the graph are connected via an undirected edge if lcm(nums[i], nums[j]) <= threshold.\nReturn the number of connected components in this graph.\nA connected component is a subgraph of a graph in which there exists a path between any two vertices, and no vertex of the subgraph shares an edge with a vertex outside of the subgraph.\nThe term lcm(a, b) denotes the least common multiple of a and b.\n \nExample 1:\n\nInput: nums = [2,4,8,3,9], threshold = 5\nOutput: 4\nExplanation: \n\n \nThe four connected components are (2, 4), (3), (8), (9).\n\nExample 2:\n\nInput: nums = [2,4,8,3,9,12], threshold = 10\nOutput: 2\nExplanation: \n\nThe two connected components are (2, 3, 4, 8, 9), and (12).\n\n \nConstraints:\n\n1 <= nums.length <= 10^5\n1 <= nums[i] <= 10^9\nAll elements of nums are unique.\n1 <= threshold <= 2 * 10^5",
+   "starter_code": "class Solution:\n    def countComponents(self, nums: List[int], threshold: int) -> int:\n        ",
+   "platform": "leetcode",
+   "difficulty": "hard",
+   "contest_date": "2024-12-07T06:30:00",
+   "public_test_cases": [
+    {
+     "input": "[2, 4, 8, 3, 9]\n5",
+     "output": "4",
+     "testtype": "functional"
+    },
+    {
+     "input": "[2, 4, 8, 3, 9, 12]\n10",
+     "output": "2",
+     "testtype": "functional"
+    }
+   ]
+  },
+  {
+   "question_id": "3634",
+   "question_content": "You are given a string s.\nWe define the mirror of a letter in the English alphabet as its corresponding letter when the alphabet is reversed. For example, the mirror of 'a' is 'z', and the mirror of 'y' is 'b'.\nInitially, all characters in the string s are unmarked.\nYou start with a score of 0, and you perform the following process on the string s:\n\nIterate through the string from left to right.\nAt each index i, find the closest unmarked index j such that j < i and s[j] is the mirror of s[i]. Then, mark both indices i and j, and add the value i - j to the total score.\nIf no such index j exists for the index i, move on to the next index without making any changes.\n\nReturn the total score at the end of the process.\n \nExample 1:\n\nInput: s = \"aczzx\"\nOutput: 5\nExplanation:\n\ni = 0. There is no index j that satisfies the conditions, so we skip.\ni = 1. There is no index j that satisfies the conditions, so we skip.\ni = 2. The closest index j that satisfies the conditions is j = 0, so we mark both indices 0 and 2, and then add 2 - 0 = 2 to the score.\ni = 3. There is no index j that satisfies the conditions, so we skip.\ni = 4. The closest index j that satisfies the conditions is j = 1, so we mark both indices 1 and 4, and then add 4 - 1 = 3 to the score.\n\n\nExample 2:\n\nInput: s = \"abcdef\"\nOutput: 0\nExplanation:\nFor each index i, there is no index j that satisfies the conditions.\n\n \nConstraints:\n\n1 <= s.length <= 10^5\ns consists only of lowercase English letters.",
+   "starter_code": "class Solution:\n    def calculateScore(self, s: str) -> int:\n        ",
+   "platform": "leetcode",
+   "difficulty": "medium",
+   "contest_date": "2025-01-04T18:30:00",
+   "public_test_cases": [
+    {
+     "input": "\"aczzx\"",
+     "output": "5",
+     "testtype": "functional"
+    },
+    {
+     "input": "\"abcdef\"",
+     "output": "0",
+     "testtype": "functional"
+    }
+   ]
+  },
+  {
+   "question_id": "abc385_a",
+   "question_content": "You are given three integers A,B,C. Determine whether it is possible to divide these three integers into two or more groups so that these groups have equal sums.\n\nInput\n\nThe input is given from Standard Input in the following format:\nA B C\n\nOutput\n\nIf it is possible to divide A,B,C into two or more groups with equal sums, print Yes; otherwise, print No.\n\nConstraints\n\n\n- 1 \\leq A,B,C \\leq 1000\n- All input values are integers.\n\nSample Input 1\n\n3 8 5\n\nSample Output 1\n\nYes\r\n\nFor example, by dividing into two groups (3,5) and (8), each group can have the sum 8.\n\nSample Input 2\n\n2 2 2\n\nSample Output 2\n\nYes\r\n\nBy dividing into three groups (2),(2),(2), each group can have the sum 2.\n\nSample Input 3\n\n1 2 4\n\nSample Output 3\n\nNo\r\n\nNo matter how you divide them into two or more groups, it is not possible to make the sums equal.",
+   "starter_code": "",
+   "platform": "atcoder",
+   "difficulty": "easy",
+   "contest_date": "2024-12-21T00:00:00",
+   "public_test_cases": [
+    {
+     "input": "3 8 5",
+     "output": "Yes",
+     "testtype": "stdin"
+    },
+    {
+     "input": "2 2 2",
+     "output": "Yes",
+     "testtype": "stdin"
+    },
+    {
+     "input": "1 2 4",
+     "output": "No",
+     "testtype": "stdin"
+    }
+   ]
+  },
+  {
+   "question_id": "abc384_g",
+   "question_content": "You are given integer sequences A=(A_1,A_2,\\ldots,A_N) and B=(B_1,B_2,\\ldots,B_N) of length N, and integer sequences X=(X_1,X_2,\\ldots,X_K) and Y=(Y_1,Y_2,\\ldots,Y_K) of length K.\nFor each k=1,2,\\ldots,K, find \\displaystyle \\sum_{i=1}^{X_k} \\sum_{j=1}^{Y_k} |A_i-B_j|.\n\nInput\n\nThe input is given from Standard Input in the following format:\nN\nA_1 A_2 \\ldots A_N\nB_1 B_2 \\ldots B_N\nK\nX_1 Y_1\nX_2 Y_2\n\\vdots\nX_K Y_K\n\nOutput\n\nPrint K lines.\nThe i-th line (1\\le i\\le K) should contain the answer for k=i.\n\nConstraints\n\n\n- 1\\le N\\le 10^5\n- 0\\le A_i,B_j\\le 2\\times 10^8\n- 1\\le K\\le 10^4\n- 1\\le X_k,Y_k\\le N\n- All input values are integers.\n\nSample Input 1\n\n2\n2 4\n3 5\n4\n1 1\n1 2\n2 1\n2 2\n\nSample Output 1\n\n1\n4\n2\n6\n\nFor k=1, the answer is |A_1-B_1|=1, so print 1 on the first line.\nFor k=2, the answer is |A_1-B_1|+|A_1-B_2|=1+3=4, so print 4 on the second line.\nFor k=3, the answer is |A_1-B_1|+|A_2-B_1|=1+1=2, so print 2 on the third line.\nFor k=4, the answer is |A_1-B_1|+|A_1-B_2|+|A_2-B_1|+|A_2-B_2|=1+3+1+1=6, so print 6 on the fourth line.\n\nSample Input 2\n\n5\n1163686 28892 1263085 2347878 520306\n1332157 1202905 2437161 1291976 563395\n5\n5 3\n1 5\n2 3\n1 2\n5 5\n\nSample Output 2\n\n13331322\n2209746\n6366712\n207690\n20241215",
+   "starter_code": "",
+   "platform": "atcoder",
+   "difficulty": "hard",
+   "contest_date": "2024-12-14T00:00:00",
+   "public_test_cases": [
+    {
+     "input": "2\n2 4\n3 5\n4\n1 1\n1 2\n2 1\n2 2",
+     "output": "1\n4\n2\n6",
+     "testtype": "stdin"
+    },
+    {
+     "input": "5\n1163686 28892 1263085 2347878 520306\n1332157 1202905 2437161 1291976 563395\n5\n5 3\n1 5\n2 3\n1 2\n5 5",
+     "output": "13331322\n2209746\n6366712\n207690\n20241215",
+     "testtype": "stdin"
+    }
+   ]
+  },
+  {
+   "question_id": "abc384_c",
+   "question_content": "Takahashi decided to hold a programming contest.\nThe contest consists of five problems: A, B, C, D, E, with scores a, b, c, d, e, respectively.\nThere are 31 participants, and all of them solved at least one problem.\nMore specifically, for every non-empty subsequence (not necessarily contiguous) of the string ABCDE, there is a participant named after that subsequence who solved the problems corresponding to the letters in their name and did not solve the other problems.\nFor example, participant A solved only problem A, and participant BCE solved problems B, C, and E.\nPrint the names of the participants in order of their obtained scores, from the largest to the smallest.\r\nThe score obtained by a participant is the sum of the scores of the problems they solved.\nIf two participants obtained the same score, print the one whose name is lexicographically smaller first.\nWhat does \"lexicographically smaller\" mean?\nIn short, \"lexicographically smaller\" refers to the order in which words would appear in a dictionary.\nMore precisely, for distinct strings S,T consisting of uppercase English letters, S is lexicographically smaller than T if either of the following conditions holds:\n\n- The length |S| of S is less than the length of T, and the first |S| characters of T match S.\n- There exists an integer 1\\leq i\\leq\\min\\{ |S|,|T|\\} that satisfy both of the following two conditions:\n- For every integer j with 1\\leq j\\lt i, the j-th character of S equals the j-th character of T.\n- The i-th character of S is alphabetically smaller than the i-th character of T.\n\n\nFor example, if S= AB and T= ABC, the first condition holds, so S is lexicographically smaller than T.\r\nIf S= ABD and T= ACD, the second condition holds for i=2, so S is lexicographically smaller than T.\n\nInput\n\nThe input is given from Standard Input in the following format:\na b c d e\n\nOutput\n\nPrint 31 lines.\r\nThe i-th line (1\\leq i\\leq 31) should contain the name of the participant who obtained the i-th highest score.\r\nIf multiple participants have the same score, print them in lexicographical order.\n\nConstraints\n\n\n- 100\\leq a\\leq b\\leq c\\leq d\\leq e\\leq 2718\n- All input values are integers.\n\nSample Input 1\n\n400 500 600 700 800\n\nSample Output 1\n\nABCDE\r\nBCDE\r\nACDE\r\nABDE\r\nABCE\r\nABCD\r\nCDE\r\nBDE\r\nADE\r\nBCE\r\nACE\r\nBCD\r\nABE\r\nACD\r\nABD\r\nABC\r\nDE\r\nCE\r\nBE\r\nCD\r\nAE\r\nBD\r\nAD\r\nBC\r\nAC\r\nAB\r\nE\r\nD\r\nC\r\nB\r\nA\r\n\nThe score of each participant is as follows:\n\nFor example, ADE and BCE obtained the same score, and ADE is lexicographically smaller, so print ADE before BCE.\n\nSample Input 2\n\n800 800 900 900 1000\n\nSample Output 2\n\nABCDE\r\nACDE\r\nBCDE\r\nABCE\r\nABDE\r\nABCD\r\nCDE\r\nACE\r\nADE\r\nBCE\r\nBDE\r\nABE\r\nACD\r\nBCD\r\nABC\r\nABD\r\nCE\r\nDE\r\nAE\r\nBE\r\nCD\r\nAC\r\nAD\r\nBC\r\nBD\r\nAB\r\nE\r\nC\r\nD\r\nA\r\nB\n\nSample Input 3\n\n128 256 512 1024 2048\n\nSample Output 3\n\nABCDE\r\nBCDE\r\nACDE\r\nCDE\r\nABDE\r\nBDE\r\nADE\r\nDE\r\nABCE\r\nBCE\r\nACE\r\nCE\r\nABE\r\nBE\r\nAE\r\nE\r\nABCD\r\nBCD\r\nACD\r\nCD\r\nABD\r\nBD\r\nAD\r\nD\r\nABC\r\nBC\r\nAC\r\nC\r\nAB\r\nB\r\nA",
+   "starter_code": "",
+   "platform": "atcoder",
+   "difficulty": "medium",
+   "contest_date": "2024-12-14T00:00:00",
+   "public_test_cases": [
+    {
+     "input": "400 500 600 700 800",
+     "output": "ABCDE\nBCDE\nACDE\nABDE\nABCE\nABCD\nCDE\nBDE\nADE\nBCE\nACE\nBCD\nABE\nACD\nABD\nABC\nDE\nCE\nBE\nCD\nAE\nBD\nAD\nBC\nAC\nAB\nE\nD\nC\nB\nA",
+     "testtype": "stdin"
+    },
+    {
+     "input": "800 800 900 900 1000",
+     "output": "ABCDE\nACDE\nBCDE\nABCE\nABDE\nABCD\nCDE\nACE\nADE\nBCE\nBDE\nABE\nACD\nBCD\nABC\nABD\nCE\nDE\nAE\nBE\nCD\nAC\nAD\nBC\nBD\nAB\nE\nC\nD\nA\nB",
+     "testtype": "stdin"
+    },
+    {
+     "input": "128 256 512 1024 2048",
+     "output": "ABCDE\nBCDE\nACDE\nCDE\nABDE\nBDE\nADE\nDE\nABCE\nBCE\nACE\nCE\nABE\nBE\nAE\nE\nABCD\nBCD\nACD\nCD\nABD\nBD\nAD\nD\nABC\nBC\nAC\nC\nAB\nB\nA",
+     "testtype": "stdin"
+    }
+   ]
+  },
+  {
+   "question_id": "3656",
+   "question_content": "You are given an integer array nums. You need to ensure that the elements in the array are distinct. To achieve this, you can perform the following operation any number of times:\n\nRemove 3 elements from the beginning of the array. If the array has fewer than 3 elements, remove all remaining elements.\n\nNote that an empty array is considered to have distinct elements. Return the minimum number of operations needed to make the elements in the array distinct.\n \nExample 1:\n\nInput: nums = [1,2,3,4,2,3,3,5,7]\nOutput: 2\nExplanation:\n\nIn the first operation, the first 3 elements are removed, resulting in the array [4, 2, 3, 3, 5, 7].\nIn the second operation, the next 3 elements are removed, resulting in the array [3, 5, 7], which has distinct elements.\n\nTherefore, the answer is 2.\n\nExample 2:\n\nInput: nums = [4,5,6,4,4]\nOutput: 2\nExplanation:\n\nIn the first operation, the first 3 elements are removed, resulting in the array [4, 4].\nIn the second operation, all remaining elements are removed, resulting in an empty array.\n\nTherefore, the answer is 2.\n\nExample 3:\n\nInput: nums = [6,7,8,9]\nOutput: 0\nExplanation:\nThe array already contains distinct elements. Therefore, the answer is 0.\n\n \nConstraints:\n\n1 <= nums.length <= 100\n1 <= nums[i] <= 100",
+   "starter_code": "class Solution:\n    def minimumOperations(self, nums: List[int]) -> int:\n        ",
+   "platform": "leetcode",
+   "difficulty": "easy",
+   "contest_date": "2024-12-21T18:30:00",
+   "public_test_cases": [
+    {
+     "input": "[1, 2, 3, 4, 2, 3, 3, 5, 7]",
+     "output": "2",
+     "testtype": "functional"
+    },
+    {
+     "input": "[4, 5, 6, 4, 4]",
+     "output": "2",
+     "testtype": "functional"
+    },
+    {
+     "input": "[6, 7, 8, 9]",
+     "output": "0",
+     "testtype": "functional"
+    }
+   ]
+  },
+  {
+   "question_id": "3682",
+   "question_content": "You are given three integers n, m, k. A good array arr of size n is defined as follows:\n\nEach element in arr is in the inclusive range [1, m].\nExactly k indices i (where 1 <= i < n) satisfy the condition arr[i - 1] == arr[i].\n\nReturn the number of good arrays that can be formed.\nSince the answer may be very large, return it modulo 10^9 + 7.\n \nExample 1:\n\nInput: n = 3, m = 2, k = 1\nOutput: 4\nExplanation:\n\nThere are 4 good arrays. They are [1, 1, 2], [1, 2, 2], [2, 1, 1] and [2, 2, 1].\nHence, the answer is 4.\n\n\nExample 2:\n\nInput: n = 4, m = 2, k = 2\nOutput: 6\nExplanation:\n\nThe good arrays are [1, 1, 1, 2], [1, 1, 2, 2], [1, 2, 2, 2], [2, 1, 1, 1], [2, 2, 1, 1] and [2, 2, 2, 1].\nHence, the answer is 6.\n\n\nExample 3:\n\nInput: n = 5, m = 2, k = 0\nOutput: 2\nExplanation:\n\nThe good arrays are [1, 2, 1, 2, 1] and [2, 1, 2, 1, 2]. Hence, the answer is 2.\n\n\n \nConstraints:\n\n1 <= n <= 10^5\n1 <= m <= 10^5\n0 <= k <= n - 1",
+   "starter_code": "class Solution:\n    def countGoodArrays(self, n: int, m: int, k: int) -> int:\n        ",
+   "platform": "leetcode",
+   "difficulty": "hard",
+   "contest_date": "2024-12-28T18:30:00",
+   "public_test_cases": [
+    {
+     "input": "3\n2\n1",
+     "output": "4",
+     "testtype": "functional"
+    },
+    {
+     "input": "4\n2\n2",
+     "output": "6",
+     "testtype": "functional"
+    },
+    {
+     "input": "5\n2\n0",
+     "output": "2",
+     "testtype": "functional"
+    }
+   ]
+  },
+  {
+   "question_id": "3649",
+   "question_content": "Bob is stuck in a dungeon and must break n locks, each requiring some amount of energy to break. The required energy for each lock is stored in an array called strength where strength[i] indicates the energy needed to break the i^th lock.\nTo break a lock, Bob uses a sword with the following characteristics:\n\nThe initial energy of the sword is 0.\nThe initial factor X by which the energy of the sword increases is 1.\nEvery minute, the energy of the sword increases by the current factor X.\nTo break the i^th lock, the energy of the sword must reach at least strength[i].\nAfter breaking a lock, the energy of the sword resets to 0, and the factor X increases by a given value K.\n\nYour task is to determine the minimum time in minutes required for Bob to break all n locks and escape the dungeon.\nReturn the minimum time required for Bob to break all n locks.\n \nExample 1:\n\nInput: strength = [3,4,1], K = 1\nOutput: 4\nExplanation:\n\n\n\nTime\nEnergy\nX\nAction\nUpdated X\n\n\n0\n0\n1\nNothing\n1\n\n\n1\n1\n1\nBreak 3^rd Lock\n2\n\n\n2\n2\n2\nNothing\n2\n\n\n3\n4\n2\nBreak 2^nd Lock\n3\n\n\n4\n3\n3\nBreak 1^st Lock\n3\n\n\n\nThe locks cannot be broken in less than 4 minutes; thus, the answer is 4.\n\nExample 2:\n\nInput: strength = [2,5,4], K = 2\nOutput: 5\nExplanation:\n\n\n\nTime\nEnergy\nX\nAction\nUpdated X\n\n\n0\n0\n1\nNothing\n1\n\n\n1\n1\n1\nNothing\n1\n\n\n2\n2\n1\nBreak 1^st Lock\n3\n\n\n3\n3\n3\nNothing\n3\n\n\n4\n6\n3\nBreak 2^n^d Lock\n5\n\n\n5\n5\n5\nBreak 3^r^d Lock\n7\n\n\n\nThe locks cannot be broken in less than 5 minutes; thus, the answer is 5.\n\n \nConstraints:\n\nn == strength.length\n1 <= n <= 8\n1 <= K <= 10\n1 <= strength[i] <= 10^6",
+   "starter_code": "class Solution:\n    def findMinimumTime(self, strength: List[int], K: int) -> int:\n        ",
+   "platform": "leetcode",
+   "difficulty": "medium",
+   "contest_date": "2024-12-07T06:30:00",
+   "public_test_cases": [
+    {
+     "input": "[3, 4, 1]\n1",
+     "output": "4",
+     "testtype": "functional"
+    },
+    {
+     "input": "[2, 5, 4]\n2",
+     "output": "5",
+     "testtype": "functional"
+    }
+   ]
+  },
+  {
+   "question_id": "abc385_b",
+   "question_content": "There is a grid with H rows and W columns. Let (i,j) denote the cell at the i-th row from the top and the j-th column from the left.\nIf S_{i,j} is #, the cell (i,j) is impassable; if it is ., the cell is passable and contains no house; if it is @, the cell is passable and contains a house.\nInitially, Santa Claus is in cell (X,Y). He will act according to the string T as follows.\n\n- Let |T| be the length of the string T. For i=1,2,\\ldots,|T|, he moves as follows.\n- Let (x,y) be the cell he is currently in.\n- If T_i is U and cell (x-1,y) is passable, move to cell (x-1,y).\n- If T_i is D and cell (x+1,y) is passable, move to cell (x+1,y).\n- If T_i is L and cell (x,y-1) is passable, move to cell (x,y-1).\n- If T_i is R and cell (x,y+1) is passable, move to cell (x,y+1).\n- Otherwise, stay in cell (x,y).\n\n\n\n\n\nFind the cell where he is after completing all actions, and the number of distinct houses that he passed through or arrived at during his actions. If the same house is passed multiple times, it is only counted once.\n\nInput\n\nThe Input is given from Standard Input in the following format:\nH W X Y\nS_{1,1}S_{1,2}\\ldots S_{1,W}\n\\dots\nS_{H,1}S_{H,2}\\ldots S_{H,W}\nT\n\nOutput\n\nLet (X,Y) be the cell where he is after completing all actions, and C be the number of distinct houses he passed through or arrived at during his actions. Print X,Y,C in this order separated by spaces.\n\nConstraints\n\n\n- 3 \\leq H,W \\leq 100\n- 1 \\leq X \\leq H\n- 1 \\leq Y \\leq W\n- All given numbers are integers.\n- Each S_{i,j} is one of #, ., @.\n- S_{i,1} and S_{i,W} are # for every 1 \\leq i \\leq H.\n- S_{1,j} and S_{H,j} are # for every 1 \\leq j \\leq W.\n- S_{X,Y}= .\n- T is a string of length at least 1 and at most 10^4, consisting of U, D, L, R.\n\nSample Input 1\n\n5 5 3 4\n#####\n#...#\n#.@.#\n#..@#\n#####\nLLLDRUU\n\nSample Output 1\n\n2 3 1\n\nSanta Claus behaves as follows:\n\n\n- T_1= L, so he moves from (3,4) to (3,3). A house is passed.\n- T_2= L, so he moves from (3,3) to (3,2).\n- T_3= L, but cell (3,1) is impassable, so he stays at (3,2).\n- T_4= D, so he moves from (3,2) to (4,2).\n- T_5= R, so he moves from (4,2) to (4,3).\n- T_6= U, so he moves from (4,3) to (3,3). A house is passed, but it has already been passed.\n- T_7= U, so he moves from (3,3) to (2,3).\n\nThe number of houses he passed or arrived during his actions is 1.\n\nSample Input 2\n\n6 13 4 6\n#############\n#@@@@@@@@@@@#\n#@@@@@@@@@@@#\n#@@@@.@@@@@@#\n#@@@@@@@@@@@#\n#############\nUURUURLRLUUDDURDURRR\n\nSample Output 2\n\n3 11 11\n\nSample Input 3\n\n12 35 7 10\n###################################\n#.................................#\n#..........@......................#\n#......@................@.........#\n#.............##............@.....#\n#...##........##....##............#\n#...##........##....##.......##...#\n#....##......##......##....##.....#\n#....##......##......##..##.......#\n#.....#######.........###.........#\n#.................................#\n###################################\nLRURRRUUDDULUDUUDLRLRDRRLULRRUDLDRU\n\nSample Output 3\n\n4 14 1",
+   "starter_code": "",
+   "platform": "atcoder",
+   "difficulty": "easy",
+   "contest_date": "2024-12-21T00:00:00",
+   "public_test_cases": [
+    {
+     "input": "5 5 3 4\n#####\n#...#\n#.@.#\n#..@#\n#####\nLLLDRUU",
+     "output": "2 3 1",
+     "testtype": "stdin"
+    },
+    {
+     "input": "6 13 4 6\n#############\n#@@@@@@@@@@@#\n#@@@@@@@@@@@#\n#@@@@.@@@@@@#\n#@@@@@@@@@@@#\n#############\nUURUURLRLUUDDURDURRR",
+     "output": "3 11 11",
+     "testtype": "stdin"
+    },
+    {
+     "input": "12 35 7 10\n###################################\n#.................................#\n#..........@......................#\n#......@................@.........#\n#.............##............@.....#\n#...##........##....##............#\n#...##........##....##.......##...#\n#....##......##......##....##.....#\n#....##......##......##..##.......#\n#.....#######.........###.........#\n#.................................#\n###################################\nLRURRRUUDDULUDUUDLRLRDRRLULRRUDLDRU",
+     "output": "4 14 1",
+     "testtype": "stdin"
+    }
+   ]
+  }
+ ]
+}

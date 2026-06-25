@@ -783,3 +783,43 @@ fundamentally **turn-budget × enterprise-repo difficulty** — not eval, not mo
 
 Honest caveats: the VM terminated before I could inspect its eval log directly; the fail-loud design + the
 recurring-exactly-1/25 consistency are the basis for treating 4% as real. n=25 CI is enormous — directional, not precise.
+
+## 46. LiveCodeBench — single-shot deepseek = 16/25 (64%); TDR repair gives NO lift (public-test overfits)
+
+First real measurement on a *contamination-resistant* code-generation benchmark (LiveCodeBench, the contest-recency
+analogue of SWE-bench). Validated end-to-end against the OFFICIAL `lcb_runner` harness; scoped to `bench/livecodebench/`.
+
+**The eval-validation gate (the §42 lesson, applied first — before trusting any number).** Before scoring the run, fed
+the official `codegen_metrics` scorer (via a thin question_id-subset wrapper around `custom_evaluator`, scorer untouched)
+a KNOWN-CORRECT solution and a known-empty/wrong one:
+- known-correct (1 stdin AtCoder + 1 functional LeetCode) → **PASS, pass@1 = 1.0** ✓
+- empty + deliberately-wrong → **FAIL, pass@1 = 0.0** ✓
+Both I/O modes (stdin and functional) discriminate correctly, so a real score is trustworthy. (This is exactly why the
+Pro number was garbage for days in §42 — never trust a pass-rate from an eval you haven't proven can score a correct
+solution as passing.)
+
+**Dataset (contamination knob honoured).** Balanced n=25 subset of release_v5's **≥2024-12-01** window (Dec 2024–Jan 2025
+contests) — *after* deepseek-chat's training cutoff, the whole point of LCB's recency design. Mix: 13 AtCoder / 12
+LeetCode, easy 9 / medium 8 / hard 8, stdin 13 / functional 12.
+
+**Single-shot result (the leaderboard-comparable baseline):** **16/25 = 64.0%**, Wilson 95% CI **[44.5%, 79.8%]**,
+**$0.0307 total / $0.00123 per problem / $0.0019 per solved**. By difficulty: **easy 8/9, medium 6/8, hard 2/8** — the
+expected gradient (cheap model cracks easy/med, struggles on hard). 2 of the 9 misses were **empty extractions**: on two
+hard problems deepseek emitted a long reasoning preamble and the final code wasn't in the last fenced block, so the
+extractor (byte-identical to the official `extract_code`, last ```...``` pair) grabbed prose — a *model-formatting*
+failure the official leaderboard scores the same way, not an eval bug.
+
+**TDR-style verify-and-repair arm (the test-is-the-verifier hypothesis): NO lift.** Ran candidate → public sample tests
+in a throwaway `python3` subprocess (private tests gold-held, leakage-free) → 1 repair attempt on failure. Result:
+**still 16/25 = 64%.** The deltas tell the story: only stdin/AtCoder problems get repair signal (LeetCode functional
+tests aren't safely runnable without a harness), 3 triggered repair, and **abc384_g went PASS→FAIL** — the repair made
+it pass the *visible* sample but **regressed on the hidden tests** (classic overfit-the-visible-test). The one net +1
+(3634) was an unrelated temp-0 nondeterminism flip, not from repair. **Verdict: public-sample-only feedback does NOT
+lift cheap candidates on LCB** — passing the one visible example ≠ passing the hidden suite, and can actively regress.
+This is the §44 conclusion reached from a different benchmark: a weak/partial verifier doesn't beat the base.
+
+**Contamination caveat (honest).** The window is post-cutoff so it's *contamination-resistant by construction*, but (a)
+"deepseek-chat" on OpenRouter is a moving snapshot (V3.x) whose exact training cutoff isn't pinned, so I can't *prove*
+zero overlap — only that the window is later than the disclosed cutoff; (b) n=25 is a **directional** sample with a wide
+CI and is **easy/medium-skewed**, so the 64% is NOT 1:1 comparable to the official whole-release_v5 leaderboard (DeepSeek-V3
+~34% on the harder, larger full set). Both facts are flagged on the board's `livecodebench` tab. n=25 — directional, not precise.

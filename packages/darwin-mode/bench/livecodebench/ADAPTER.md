@@ -1,7 +1,26 @@
 # LiveCodeBench adapter — Darwin cost-Pareto leaderboard
 
 Board: **LiveCodeBench** — contamination-free competitive-programming code generation.
-Status: **needs-adapter** (our SWE-bench agentic harness does NOT transfer directly; see §1).
+Status: **BUILT + MEASURED** (single-shot deepseek-chat = 16/25 = 64% on the official harness; see §7).
+The SWE-bench agentic harness does NOT transfer directly (see §1); the single-shot solver below is purpose-built.
+
+## 7. Validated result (ADR-LCB, measured)
+
+- **Solver**: `solve-lcb.mjs` (single-shot, mirrors the official `code_generation.py` prompt + `extract_code`).
+- **Manifest**: `build-manifest.py` → `lcb-v5.json` (n=25, balanced subset of release_v5 ≥2024-12-01, post-cutoff).
+- **Eval**: `eval-subset.py` — thin question_id-subset wrapper around `lcb_runner.runner.custom_evaluator`; the
+  scorer (`codegen_metrics`) is the OFFICIAL one, untouched. (`custom_evaluator` asserts len(outputs)==len(benchmark),
+  so we align the windowed benchmark to our 25 by question_id; this is problem-selection, not a reimplemented scorer.)
+- **Eval validation (done first)**: known-correct (stdin+functional) → PASS (1.0); empty/wrong → FAIL (0.0). Trustworthy.
+- **Result**: single-shot **16/25 = 64.0%**, Wilson 95% CI [44.5%, 79.8%], $0.00123/problem. By difficulty: easy 8/9,
+  medium 6/8, hard 2/8. TDR-style public-test repair (`--repair`): **no lift** (overfits the visible sample).
+
+### Setup notes (official harness on a fresh box)
+- `git clone --depth 1 https://github.com/LiveCodeBench/LiveCodeBench` + `uv venv --python 3.11`.
+- Do NOT `uv pip install -e .` (pulls vllm+torch, GBs). Minimal eval deps: `attrs tqdm numpy pebble pandas anthropic`
+  + **`datasets==3.2.0`** (datasets ≥4 dropped loading-script support that LCB's HF dataset needs).
+- `parser.py` imports `torch` only for `cuda.device_count()` — a 5-line `torch` stub suffices for the eval path.
+- Run eval with `cwd=~/LiveCodeBench` and `PYTHONPATH=~/LiveCodeBench` (lcb_runner is not installed as a package).
 
 ## 0. The official harness (verified, not invented)
 

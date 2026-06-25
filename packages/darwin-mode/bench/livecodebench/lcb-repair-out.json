@@ -1,0 +1,152 @@
+[
+  {
+    "question_id": "abc383_a",
+    "code_list": [
+      "# Read the number of additions\nN = int(input())\n\n# Initialize the current time and the amount of water\ncurrent_time = 0\nwater_amount = 0\n\n# Process each addition\nfor _ in range(N):\n    T_i, V_i = map(int, input().split())\n    # Calculate the time elapsed since the last addition\n    elapsed_time = T_i - current_time\n    # Update the water amount by subtracting the leaked amount\n    water_amount = max(0, water_amount - elapsed_time)\n    # Add the new water\n    water_amount += V_i\n    # Update the current time\n    current_time = T_i\n\n# Output the final amount of water\nprint(water_amount)\n\n"
+    ]
+  },
+  {
+    "question_id": "abc383_e",
+    "code_list": [
+      ""
+    ]
+  },
+  {
+    "question_id": "abc383_b",
+    "code_list": [
+      "h, w, d = map(int, input().split())\ngrid = [input().strip() for _ in range(h)]\n\nfloor_cells = []\nfor i in range(h):\n    for j in range(w):\n        if grid[i][j] == '.':\n            floor_cells.append((i, j))\n\nmax_humidified = 0\n\nn = len(floor_cells)\nfor i in range(n):\n    for j in range(i + 1, n):\n        humidified = set()\n        x1, y1 = floor_cells[i]\n        x2, y2 = floor_cells[j]\n        # Check all floor cells to see if they are within D of either cell\n        count = 0\n        for (x, y) in floor_cells:\n            dist1 = abs(x - x1) + abs(y - y1)\n            dist2 = abs(x - x2) + abs(y - y2)\n            if dist1 <= d or dist2 <= d:\n                count += 1\n        if count > max_humidified:\n            max_humidified = count\n\nprint(max_humidified)"
+    ]
+  },
+  {
+    "question_id": "3621",
+    "code_list": [
+      "class Solution:\n    def minOperations(self, nums: List[int], k: int) -> int:\n        operations = 0\n        while True:\n            # Check if all elements are already equal to k\n            if all(num == k for num in nums):\n                return operations\n            # Find the maximum element greater than k\n            max_num = max(num for num in nums if num > k)\n            # Check if it's possible to reduce max_num to k\n            # All elements greater than max_num must be equal to max_num\n            # Otherwise, it's impossible\n            greater_than_max = [num for num in nums if num > max_num]\n            if greater_than_max:\n                return -1\n            # Perform the operation: set all elements greater than max_num to max_num\n            # But since max_num is the maximum, we need to set all elements greater than max_num to max_num\n            # Wait, no. We need to set all elements greater than h to h, where h is valid.\n            # So, h should be such that all elements greater than h are equal to some value.\n            # In this case, h is max_num - 1, but we need to ensure that all elements greater than h are equal to max_num.\n            # So, h should be max_num - 1, but we need to check if all elements greater than h are equal to max_num.\n            h = max_num - 1\n            # Check if h is valid\n            # All elements greater than h must be equal to max_num\n            greater_than_h = [num for num in nums if num > h]\n            if not all(num == max_num for num in greater_than_h):\n                return -1\n            # Perform the operation: set all elements greater than h to h\n            nums = [h if num > h else num for num in nums]\n            operations += 1\n            # Check if all elements are now equal to k\n            if all(num == k for num in nums):\n                return operations\n\n"
+    ]
+  },
+  {
+    "question_id": "3562",
+    "code_list": [
+      "from bisect import bisect_left\n\nclass Solution:\n    def maximumWeight(self, intervals: List[List[int]]) -> List[int]:\n        # Sort intervals by end time\n        intervals_sorted = sorted([(interval[1], interval[0], idx, interval[2]) for idx, interval in enumerate(intervals)], key=lambda x: x[0])\n        n = len(intervals_sorted)\n        \n        # Preprocess to find the last non-overlapping interval\n        end_times = [x[0] for x in intervals_sorted]\n        last_non_overlap = [0] * n\n        for i in range(n):\n            l = intervals_sorted[i][1]\n            # Find the latest interval that ends before l\n            idx = bisect_left(end_times, l) - 1\n            last_non_overlap[i] = idx\n        \n        # DP table: dp[i][k] represents the maximum weight using up to the i-th interval and selecting up to k intervals\n        # Initialize DP table\n        dp = [[-1] * 5 for _ in range(n)]\n        dp[0][1] = intervals_sorted[0][3]\n        for i in range(1, n):\n            for k in range(1, 5):\n                # Option 1: Do not take the current interval\n                if dp[i-1][k] != -1:\n                    dp[i][k] = max(dp[i][k], dp[i-1][k])\n                # Option 2: Take the current interval\n                if k > 0:\n                    prev_idx = last_non_overlap[i]\n                    if prev_idx >= 0 and dp[prev_idx][k-1] != -1:\n                        dp[i][k] = max(dp[i][k], dp[prev_idx][k-1] + intervals_sorted[i][3])\n        \n        # Find the maximum weight\n        max_weight = -1\n        best_k = 0\n        for k in range(1, 5):\n            for i in range(n):\n                if dp[i][k] > max_weight:\n                    max_weight = dp[i][k]\n                    best_k = k\n        \n        # Reconstruct the indices\n        result = []\n        current_weight = max_weight\n        current_k = best_k\n        i = n - 1\n        while current_k > 0 and i >= 0:\n            if dp[i][current_k] == current_weight:\n                # Check if the current interval is part of the solution\n                prev_idx = last_non_overlap[i]\n                if prev_idx >= 0 and dp[prev_idx][current_k-1] + intervals_sorted[i][3] == current_weight:\n                    result.append(intervals_sorted[i][2])\n                    current_weight -= intervals_sorted[i][3]\n                    current_k -= 1\n                    i = prev_idx\n                else:\n                    i -= 1\n            else:\n                i -= 1\n        \n        # Sort the result lexicographically\n        result.sort()\n        return result\n\n"
+    ]
+  },
+  {
+    "question_id": "3613",
+    "code_list": [
+      "import collections\n\nclass Solution:\n    def maxAmount(self, initialCurrency: str, pairs1: List[List[str]], rates1: List[float], pairs2: List[List[str]], rates2: List[float]) -> float:\n        def build_graph(pairs, rates):\n            graph = collections.defaultdict(dict)\n            for (u, v), rate in zip(pairs, rates):\n                graph[u][v] = rate\n                graph[v][u] = 1.0 / rate\n            return graph\n        \n        def compute_max_amounts(graph, start_currency):\n            max_amounts = {start_currency: 1.0}\n            queue = collections.deque()\n            queue.append(start_currency)\n            \n            while queue:\n                current_currency = queue.popleft()\n                current_amount = max_amounts[current_currency]\n                for neighbor in graph.get(current_currency, {}):\n                    new_amount = current_amount * graph[current_currency][neighbor]\n                    if neighbor not in max_amounts or new_amount > max_amounts[neighbor]:\n                        max_amounts[neighbor] = new_amount\n                        queue.append(neighbor)\n            return max_amounts\n        \n        # Process Day 1\n        graph1 = build_graph(pairs1, rates1)\n        day1_amounts = compute_max_amounts(graph1, initialCurrency)\n        \n        # Process Day 2\n        graph2 = build_graph(pairs2, rates2)\n        max_final = 1.0  # default is no conversion\n        \n        for currency in day1_amounts:\n            amount_day1 = day1_amounts[currency]\n            day2_amounts = compute_max_amounts(graph2, currency)\n            if initialCurrency in day2_amounts:\n                potential_amount = amount_day1 * day2_amounts[initialCurrency]\n                if potential_amount > max_final:\n                    max_final = potential_amount\n        return max_final"
+    ]
+  },
+  {
+    "question_id": "abc384_a",
+    "code_list": [
+      "n, c1, c2 = input().split()\nS = input().strip()\nresult = []\nfor char in S:\n    if char == c1:\n        result.append(char)\n    else:\n        result.append(c2)\nprint(''.join(result))"
+    ]
+  },
+  {
+    "question_id": "abc384_e",
+    "code_list": [
+      "import heapq\n\ndef solve():\n    H, W, X = map(int, input().split())\n    P, Q = map(int, input().split())\n    grid = []\n    for _ in range(H):\n        row = list(map(int, input().split()))\n        grid.append(row)\n    \n    # Adjust to 0-based indexing\n    start_i = P - 1\n    start_j = Q - 1\n    initial_strength = grid[start_i][start_j]\n    \n    # Priority queue will store negative values to simulate max-heap\n    heap = []\n    heapq.heappush(heap, (-initial_strength, start_i, start_j))\n    grid[start_i][start_j] = 0  # Mark as absorbed\n    \n    total_strength = initial_strength\n    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]\n    \n    while heap:\n        neg_str, i, j = heapq.heappop(heap)\n        current_str = -neg_str\n        \n        # Skip if already absorbed or invalid\n        if current_str == 0:\n            continue\n        \n        # Check if the current slime can be absorbed\n        if (i == start_i and j == start_j) or (current_str < total_strength / X):\n            # Absorb the slime\n            total_strength += current_str\n            grid[i][j] = 0  # Mark as absorbed\n            \n            # Add neighboring slimes to the heap\n            for di, dj in directions:\n                ni, nj = i + di, j + dj\n                if 0 <= ni < H and 0 <= nj < W and grid[ni][nj] > 0:\n                    heapq.heappush(heap, (-grid[ni][nj], ni, nj))\n    \n    print(total_strength)\n\nsolve()"
+    ]
+  },
+  {
+    "question_id": "abc383_c",
+    "code_list": [
+      "import sys\nfrom collections import deque\n\ndef solve():\n    H, W, D = map(int, sys.stdin.readline().split())\n    grid = []\n    humidifiers = []\n    for i in range(H):\n        line = sys.stdin.readline().strip()\n        grid.append(line)\n        for j in range(W):\n            if line[j] == 'H':\n                humidifiers.append((i, j))\n    \n    visited = [[False for _ in range(W)] for __ in range(H)]\n    q = deque()\n    \n    for i, j in humidifiers:\n        if not visited[i][j]:\n            visited[i][j] = True\n            q.append((i, j, 0))\n    \n    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]\n    \n    while q:\n        i, j, dist = q.popleft()\n        if dist >= D:\n            continue\n        for di, dj in directions:\n            ni = i + di\n            nj = j + dj\n            if 0 <= ni < H and 0 <= nj < W and grid[ni][nj] != '#' and not visited[ni][nj]:\n                visited[ni][nj] = True\n                q.append((ni, nj, dist + 1))\n    \n    count = 0\n    for i in range(H):\n        for j in range(W):\n            if (grid[i][j] == '.' or grid[i][j] == 'H') and visited[i][j]:\n                count += 1\n    print(count)\n\nsolve()"
+    ]
+  },
+  {
+    "question_id": "3632",
+    "code_list": [
+      "class Solution:\n    def buttonWithLongestTime(self, events: List[List[int]]) -> int:\n        if not events:\n            return -1\n        \n        max_time = -1\n        button_index = -1\n        \n        # Initialize the previous time with the time of the first event\n        prev_time = events[0][1]\n        # Initialize the first button's time\n        first_button_time = events[0][1]\n        # Initialize a dictionary to keep track of the total time for each button\n        button_time = {}\n        \n        # Iterate through the events starting from the first event\n        for i in range(len(events)):\n            index, time = events[i]\n            if i == 0:\n                # For the first event, the time is the time itself\n                current_time = time\n            else:\n                # For subsequent events, the time is the difference between current and previous time\n                current_time = time - prev_time\n            # Update the previous time\n            prev_time = time\n            # Update the total time for the button\n            if index in button_time:\n                button_time[index] += current_time\n            else:\n                button_time[index] = current_time\n        \n        # Find the button with the maximum time\n        for key, value in button_time.items():\n            if value > max_time:\n                max_time = value\n                button_index = key\n            elif value == max_time and key < button_index:\n                button_index = key\n        \n        return button_index\n\n"
+    ]
+  },
+  {
+    "question_id": "3638",
+    "code_list": [
+      "from collections import defaultdict\n\nclass Solution:\n    def makeStringGood(self, s: str) -> int:\n        freq = defaultdict(int)\n        for c in s:\n            freq[c] += 1\n        counts = sorted(freq.values())\n        min_operations = float('inf')\n        max_possible_target = max(counts) if counts else 0\n        \n        for target in range(1, max_possible_target + 1):\n            operations = 0\n            for cnt in counts:\n                if cnt < target:\n                    # Need to add (target - cnt) occurrences: either insert or change others into this character.\n                    # Changing a letter (each operation can turn one occurrence of another character into this one).\n                    # Each insertion is +1 operation. Each change is +1 per converted character.\n                    # So the minimal for this would be (target - cnt).\n                    operations += (target - cnt)\n                elif cnt > target:\n                    # Need to reduce (cnt - target) occurrences: either delete or change to another.\n                    operations += (cnt - target)\n            if operations < min_operations:\n                min_operations = operations\n        \n        # Also consider targets beyond the original max count, but it won't be beneficial unless counts allow.\n        # For example, target max_original + k, requires increasing all others via inserts or changes.\n        # For target T, sum for all counts: operations sum is (T * number_of_chars - sum_counts)\n        # So total insert operations (since T > original counts for others).\n        # Hence checking up to some reasonable T, but no higher than (sum_counts + len(counts) - 1) // len(counts) ? Or maybe not.\n        # Alternatively, perhaps any target above max_original will only require operations >= ((target * k - sum_counts)), where k is new number of characters (possibly higher than original)\n        # But the minimal operations for such targets would likely be higher.\n        # So no need to check beyond max_original.\n        \n        \n        return min_operations if min_operations != float('inf') else 0"
+    ]
+  },
+  {
+    "question_id": "3620",
+    "code_list": [
+      "class Solution:\n    def maxDistinctElements(self, nums: List[int], k: int) -> int:\n        nums.sort()\n        res = 0\n        prev = -float('inf')\n        \n        for num in nums:\n            # The minimal candidate is max(prev + 1, num - k)\n            candidate = max(prev + 1, num - k)\n            if candidate <= num + k:\n                res += 1\n                prev = candidate\n        return res"
+    ]
+  },
+  {
+    "question_id": "abc384_b",
+    "code_list": [
+      "N, R = map(int, input().split())\ncurrent_rating = R\n\nfor _ in range(N):\n    D_i, A_i = map(int, input().split())\n    if D_i == 1:\n        lower, upper = 1600, 2799\n    else:\n        lower, upper = 1200, 2399\n    if lower <= current_rating <= upper:\n        current_rating += A_i\n    # else: pass no change\n    \nprint(current_rating)"
+    ]
+  },
+  {
+    "question_id": "abc384_f",
+    "code_list": [
+      ""
+    ]
+  },
+  {
+    "question_id": "abc383_d",
+    "code_list": [
+      "import math\n\ndef count_numbers_with_9_divisors(N):\n    count = 0\n    # Case 1: p^8 where p is a prime\n    max_p = int(math.pow(N, 1/8)) + 1\n    for p in range(2, max_p):\n        if is_prime(p):\n            if p ** 8 <= N:\n                count += 1\n    # Case 2: p^2 * q^2 where p and q are distinct primes\n    max_p = int(math.pow(N, 1/2)) + 1\n    primes = []\n    for p in range(2, max_p):\n        if is_prime(p):\n            primes.append(p)\n    for i in range(len(primes)):\n        p = primes[i]\n        if p ** 2 > N:\n            break\n        for j in range(i+1, len(primes)):\n            q = primes[j]\n            if p ** 2 * q ** 2 > N:\n                break\n            count += 1\n    return count\n\ndef is_prime(n):\n    if n < 2:\n        return False\n    for i in range(2, int(math.sqrt(n)) + 1):\n        if n % i == 0:\n            return False\n    return True\n\n# Read input\nN = int(input())\n# Compute and print the result\nprint(count_numbers_with_9_divisors(N))\n\n"
+    ]
+  },
+  {
+    "question_id": "3651",
+    "code_list": [
+      "from typing import List\n\nclass Solution:\n    def constructTransformedArray(self, nums: List[int]) -> List[int]:\n        n = len(nums)\n        result = []\n        for i in range(n):\n            current_num = nums[i]\n            if current_num == 0:\n                result.append(0)\n            else:\n                steps = current_num\n                if steps > 0:\n                    new_pos = (i + steps) % n\n                else:\n                    new_pos = (i + steps) % n\n                result.append(nums[new_pos])\n        return result"
+    ]
+  },
+  {
+    "question_id": "3680",
+    "code_list": [
+      "from math import gcd\nfrom collections import defaultdict\n\nclass Solution:\n    def countComponents(self, nums: List[int], threshold: int) -> int:\n        def lcm(a, b):\n            return a * b // gcd(a, b)\n        \n        # Create a mapping from each number to its index\n        num_to_index = {num: i for i, num in enumerate(nums)}\n        n = len(nums)\n        parent = [i for i in range(n)]\n        \n        def find(u):\n            while parent[u] != u:\n                parent[u] = parent[parent[u]]  # Path compression\n                u = parent[u]\n            return u\n        \n        def union(u, v):\n            u_root = find(u)\n            v_root = find(v)\n            if u_root != v_root:\n                parent[v_root] = u_root\n        \n        # Iterate through all pairs of numbers\n        for i in range(n):\n            for j in range(i+1, n):\n                if lcm(nums[i], nums[j]) <= threshold:\n                    union(i, j)\n        \n        # Count the number of unique roots\n        unique_roots = set()\n        for i in range(n):\n            unique_roots.add(find(i))\n        \n        return len(unique_roots)\n\n"
+    ]
+  },
+  {
+    "question_id": "3634",
+    "code_list": [
+      "class Solution:\n    def calculateScore(self, s: str) -> int:\n        from collections import defaultdict\n        \n        # Create a mirror mapping for each character\n        mirror_map = {}\n        for c in 'abcdefghijklmnopqrstuvwxyz':\n            mirror_c = chr(ord('z') - (ord(c) - ord('a')))\n            mirror_map[c] = mirror_c\n        \n        score = 0\n        char_indices = defaultdict(list)\n        marked = [False] * len(s)\n        \n        for i in range(len(s)):\n            if marked[i]:\n                continue\n            current_char = s[i]\n            mirror_char = mirror_map[current_char]\n            # Check if there are any unmarked mirror characters before i\n            if char_indices[mirror_char]:\n                # The rightmost j is the last element in the list\n                j = char_indices[mirror_char].pop()\n                marked[i] = True\n                marked[j] = True\n                score += (i - j)\n            else:\n                char_indices[current_char].append(i)\n                \n        return score"
+    ]
+  },
+  {
+    "question_id": "abc385_a",
+    "code_list": [
+      "A, B, C = map(int, input().split())\n\nif A == B + C or B == A + C or C == A + B or A == B == C:\n    print(\"Yes\")\nelse:\n    print(\"No\")"
+    ]
+  },
+  {
+    "question_id": "abc384_g",
+    "code_list": [
+      "import sys\nimport bisect\n\ndef main():\n    input = sys.stdin.read\n    data = input().split()\n    idx = 0\n    N = int(data[idx])\n    idx += 1\n    A = list(map(int, data[idx:idx+N]))\n    idx += N\n    B = list(map(int, data[idx:idx+N]))\n    idx += N\n    K = int(data[idx])\n    idx += 1\n    queries = []\n    for _ in range(K):\n        X = int(data[idx])\n        Y = int(data[idx+1])\n        queries.append((X, Y))\n        idx += 2\n    \n    # Precompute prefix sums for sorted A and B\n    A_sorted = sorted(A)\n    B_sorted = sorted(B)\n    \n    # Prefix sums for A_sorted\n    prefix_A = [0] * (N + 1)\n    for i in range(N):\n        prefix_A[i+1] = prefix_A[i] + A_sorted[i]\n    \n    # Prefix sums for B_sorted\n    prefix_B = [0] * (N + 1)\n    for i in range(N):\n        prefix_B[i+1] = prefix_B[i] + B_sorted[i]\n    \n    for x, y in queries:\n        # Get the first x elements of A and first y elements of B\n        A_sub = A_sorted[:x]\n        B_sub = B_sorted[:y]\n        \n        total = 0\n        for a in A_sub:\n            # Find the number of B_j <= a\n            cnt = bisect.bisect_right(B_sub, a)\n            # Sum of B_j <= a\n            sum_le = prefix_B[cnt]\n            # Sum of B_j > a\n            sum_gt = prefix_B[y] - sum_le\n            # Count of B_j > a\n            cnt_gt = y - cnt\n            # Add a * cnt - sum_le + sum_gt - a * cnt_gt\n            total += a * cnt - sum_le + sum_gt - a * cnt_gt\n        print(total)\n\nif __name__ == \"__main__\":\n    main()\n\n"
+    ]
+  },
+  {
+    "question_id": "abc384_c",
+    "code_list": [
+      "# Read the input scores for problems A, B, C, D, E\na, b, c, d, e = map(int, input().split())\n\n# Generate all possible non-empty subsequences of 'ABCDE'\nfrom itertools import combinations\n\nsubsequences = []\nfor r in range(1, 6):\n    for combo in combinations('ABCDE', r):\n        subsequences.append(''.join(combo))\n\n# Calculate the score for each subsequence\nscores = []\nfor sub in subsequences:\n    score = 0\n    if 'A' in sub:\n        score += a\n    if 'B' in sub:\n        score += b\n    if 'C' in sub:\n        score += c\n    if 'D' in sub:\n        score += d\n    if 'E' in sub:\n        score += e\n    scores.append((-score, sub))  # Negative score for descending sort\n\n# Sort the subsequences first by negative score (ascending), then lexicographically in descending lex?\n# Wait, need to sort by score descending, then lex ascending.\n# So using -score as key reverse False is same as score reverse True?\n# Then sort again lex if score is same.\nscores.sort()\n\n# Now, we first prepare the list of tuples (score, sub), sorted by (-score, sub)\n# So since we stored (-score, sub), scores are sorted in ascending order of -score (descending of score), and ascending lex for same score.\n# So now, we print the sub in order.\nfor s in scores:\n    print(s[1])"
+    ]
+  },
+  {
+    "question_id": "3656",
+    "code_list": [
+      "class Solution:\n    def minimumOperations(self, nums: List[int]) -> int:\n        operations = 0\n        n = len(nums)\n        while True:\n            # Check if current remaining elements are distinct\n            remaining = nums[3 * operations :]\n            if len(set(remaining)) == len(remaining):\n                return operations\n            operations += 1\n            # Check if after this operation, the array is empty which is distinct\n            if 3 * operations >= n:\n                return operations"
+    ]
+  },
+  {
+    "question_id": "3682",
+    "code_list": [
+      "MOD = 10**9 + 7\n\nclass Solution:\n    def countGoodArrays(self, n: int, m: int, k: int) -> int:\n        if k > n - 1:\n            return 0\n        \n        # Precompute factorials and inverse factorials modulo MOD\n        max_n = n\n        fact = [1] * (max_n + 1)\n        inv_fact = [1] * (max_n + 1)\n        \n        for i in range(1, max_n + 1):\n            fact[i] = fact[i-1] * i % MOD\n        \n        inv_fact[max_n] = pow(fact[max_n], MOD-2, MOD)\n        for i in range(max_n - 1, -1, -1):\n            inv_fact[i] = inv_fact[i+1] * (i+1) % MOD\n        \n        def comb(n, k):\n            if k < 0 or k > n:\n                return 0\n            return fact[n] * inv_fact[k] % MOD * inv_fact[n - k] % MOD\n        \n        # The number of ways to choose k positions out of n-1 to have arr[i-1] == arr[i]\n        ways_to_choose = comb(n-1, k)\n        \n        # The number of ways to assign values to the array such that the chosen positions are equal\n        # For the first element, there are m choices\n        # For each of the k chosen positions, the value must be the same as the previous\n        # For the remaining n-1 - k positions, the value must be different from the previous\n        # So, the total number of ways is m * (1)^k * (m-1)^(n-1 - k)\n        total = ways_to_choose * m % MOD\n        total = total * pow(m-1, n-1 - k, MOD) % MOD\n        \n        return total\n\n"
+    ]
+  },
+  {
+    "question_id": "3649",
+    "code_list": [
+      "from itertools import permutations\n\nclass Solution:\n    def findMinimumTime(self, strength: List[int], K: int) -> int:\n        n = len(strength)\n        min_time = float('inf')\n        \n        # Try all possible orders of breaking the locks\n        for order in permutations(strength):\n            current_time = 0\n            energy = 0\n            X = 1\n            for s in order:\n                # Calculate the minimal t where energy accumulated >= s\n                # energy accumulates X each minute after previous time step\n                # need to find t such that t_current + 1... t_current + t steps accumulate s energy\n                # which is t steps: X * t >= s => t >= s / X\n                required_t = (s + X - 1) // X  # Equivalent to math.ceil(s / X)\n                current_time += required_t\n                X += K\n                energy = 0  # though not necessary as next lock starts afresh\n            if current_time < min_time:\n                min_time = current_time\n        return min_time"
+    ]
+  },
+  {
+    "question_id": "abc385_b",
+    "code_list": [
+      "h, w, x, y = map(int, input().split())\ngrid = []\nfor _ in range(h):\n    row = input().strip()\n    grid.append(row)\nT = input().strip()\n\ncurrent_x = x - 1  # converting to 0-based index\ncurrent_y = y - 1\n\nvisited_houses = set()\nif grid[current_x][current_y] == '@':\n    visited_houses.add((current_x, current_y))\n\ndirections = {\n    'U': (-1, 0),\n    'D': (1, 0),\n    'L': (0, -1),\n    'R': (0, 1)\n}\n\nfor move in T:\n    dx, dy = directions[move]\n    new_x = current_x + dx\n    new_y = current_y + dy\n    if 0 <= new_x < h and 0 <= new_y < w:\n        if grid[new_x][new_y] != '#':\n            current_x, current_y = new_x, new_y\n            if grid[current_x][current_y] == '@':\n                visited_houses.add((current_x, current_y))\n\nprint(current_x + 1, current_y + 1, len(visited_houses))"
+    ]
+  }
+]

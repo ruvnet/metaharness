@@ -1,0 +1,261 @@
+{
+  "model": "deepseek/deepseek-chat",
+  "n": 25,
+  "repair": false,
+  "totalCost_usd": 0.030741,
+  "costPerProblem_usd": 0.00123,
+  "emptyCount": 2,
+  "repairedCount": 0,
+  "perProblem": [
+    {
+      "question_id": "abc383_a",
+      "cost_usd": 0.000622,
+      "tokens": 1291,
+      "repaired": false,
+      "difficulty": "easy",
+      "platform": "atcoder",
+      "mode": "stdin",
+      "empty": false
+    },
+    {
+      "question_id": "abc383_e",
+      "cost_usd": 0.00389,
+      "tokens": 4982,
+      "repaired": false,
+      "difficulty": "hard",
+      "platform": "atcoder",
+      "mode": "stdin",
+      "empty": true
+    },
+    {
+      "question_id": "abc383_b",
+      "cost_usd": 0.000793,
+      "tokens": 1549,
+      "repaired": false,
+      "difficulty": "medium",
+      "platform": "atcoder",
+      "mode": "stdin",
+      "empty": false
+    },
+    {
+      "question_id": "3621",
+      "cost_usd": 0.001046,
+      "tokens": 1112,
+      "repaired": false,
+      "difficulty": "easy",
+      "platform": "leetcode",
+      "mode": "functional",
+      "empty": false
+    },
+    {
+      "question_id": "3562",
+      "cost_usd": 0.003349,
+      "tokens": 4637,
+      "repaired": false,
+      "difficulty": "hard",
+      "platform": "leetcode",
+      "mode": "functional",
+      "empty": false
+    },
+    {
+      "question_id": "3613",
+      "cost_usd": 0.000762,
+      "tokens": 1427,
+      "repaired": false,
+      "difficulty": "medium",
+      "platform": "leetcode",
+      "mode": "functional",
+      "empty": false
+    },
+    {
+      "question_id": "abc384_a",
+      "cost_usd": 0.0002,
+      "tokens": 467,
+      "repaired": false,
+      "difficulty": "easy",
+      "platform": "atcoder",
+      "mode": "stdin",
+      "empty": false
+    },
+    {
+      "question_id": "abc384_e",
+      "cost_usd": 0.001023,
+      "tokens": 2052,
+      "repaired": false,
+      "difficulty": "hard",
+      "platform": "atcoder",
+      "mode": "stdin",
+      "empty": false
+    },
+    {
+      "question_id": "abc383_c",
+      "cost_usd": 0.000846,
+      "tokens": 1510,
+      "repaired": false,
+      "difficulty": "medium",
+      "platform": "atcoder",
+      "mode": "stdin",
+      "empty": false
+    },
+    {
+      "question_id": "3632",
+      "cost_usd": 0.000302,
+      "tokens": 737,
+      "repaired": false,
+      "difficulty": "easy",
+      "platform": "leetcode",
+      "mode": "functional",
+      "empty": false
+    },
+    {
+      "question_id": "3638",
+      "cost_usd": 0.003302,
+      "tokens": 4418,
+      "repaired": false,
+      "difficulty": "hard",
+      "platform": "leetcode",
+      "mode": "functional",
+      "empty": false
+    },
+    {
+      "question_id": "3620",
+      "cost_usd": 0.000829,
+      "tokens": 869,
+      "repaired": false,
+      "difficulty": "medium",
+      "platform": "leetcode",
+      "mode": "functional",
+      "empty": false
+    },
+    {
+      "question_id": "abc384_b",
+      "cost_usd": 0.00025,
+      "tokens": 958,
+      "repaired": false,
+      "difficulty": "easy",
+      "platform": "atcoder",
+      "mode": "stdin",
+      "empty": false
+    },
+    {
+      "question_id": "abc384_f",
+      "cost_usd": 0.003328,
+      "tokens": 4537,
+      "repaired": false,
+      "difficulty": "hard",
+      "platform": "atcoder",
+      "mode": "stdin",
+      "empty": true
+    },
+    {
+      "question_id": "abc383_d",
+      "cost_usd": 0.001152,
+      "tokens": 1631,
+      "repaired": false,
+      "difficulty": "medium",
+      "platform": "atcoder",
+      "mode": "stdin",
+      "empty": false
+    },
+    {
+      "question_id": "3651",
+      "cost_usd": 0.000224,
+      "tokens": 751,
+      "repaired": false,
+      "difficulty": "easy",
+      "platform": "leetcode",
+      "mode": "functional",
+      "empty": false
+    },
+    {
+      "question_id": "3680",
+      "cost_usd": 0.00331,
+      "tokens": 4474,
+      "repaired": false,
+      "difficulty": "hard",
+      "platform": "leetcode",
+      "mode": "functional",
+      "empty": false
+    },
+    {
+      "question_id": "3634",
+      "cost_usd": 0.000353,
+      "tokens": 720,
+      "repaired": false,
+      "difficulty": "medium",
+      "platform": "leetcode",
+      "mode": "functional",
+      "empty": false
+    },
+    {
+      "question_id": "abc385_a",
+      "cost_usd": 0.000517,
+      "tokens": 915,
+      "repaired": false,
+      "difficulty": "easy",
+      "platform": "atcoder",
+      "mode": "stdin",
+      "empty": false
+    },
+    {
+      "question_id": "abc384_g",
+      "cost_usd": 0.001963,
+      "tokens": 2995,
+      "repaired": false,
+      "difficulty": "hard",
+      "platform": "atcoder",
+      "mode": "stdin",
+      "empty": false
+    },
+    {
+      "question_id": "abc384_c",
+      "cost_usd": 0.000547,
+      "tokens": 1291,
+      "repaired": false,
+      "difficulty": "medium",
+      "platform": "atcoder",
+      "mode": "stdin",
+      "empty": false
+    },
+    {
+      "question_id": "3656",
+      "cost_usd": 0.000216,
+      "tokens": 523,
+      "repaired": false,
+      "difficulty": "easy",
+      "platform": "leetcode",
+      "mode": "functional",
+      "empty": false
+    },
+    {
+      "question_id": "3682",
+      "cost_usd": 0.000931,
+      "tokens": 1549,
+      "repaired": false,
+      "difficulty": "hard",
+      "platform": "leetcode",
+      "mode": "functional",
+      "empty": false
+    },
+    {
+      "question_id": "3649",
+      "cost_usd": 0.000407,
+      "tokens": 838,
+      "repaired": false,
+      "difficulty": "medium",
+      "platform": "leetcode",
+      "mode": "functional",
+      "empty": false
+    },
+    {
+      "question_id": "abc385_b",
+      "cost_usd": 0.000578,
+      "tokens": 1378,
+      "repaired": false,
+      "difficulty": "easy",
+      "platform": "atcoder",
+      "mode": "stdin",
+      "empty": false
+    }
+  ]
+}

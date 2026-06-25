@@ -1,0 +1,14 @@
+[
+ {
+  "question_id": "abc383_a",
+  "code_list": [
+   "import sys\ndef main():\n    data = sys.stdin.read().split()\n    idx=0\n    n=int(data[idx]); idx+=1\n    water=0; prev=0\n    for _ in range(n):\n        t=int(data[idx]); v=int(data[idx+1]); idx+=2\n        water=max(0, water-(t-prev))+v\n        prev=t\n    print(water)\nmain()\n"
+  ]
+ },
+ {
+  "question_id": "3621",
+  "code_list": [
+   "from typing import List\nclass Solution:\n    def minOperations(self, nums: List[int], k: int) -> int:\n        if min(nums) < k:\n            return -1\n        return len(set(x for x in nums if x > k))\n"
+  ]
+ }
+]

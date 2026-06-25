@@ -1,0 +1,14 @@
+[
+ {
+  "question_id": "abc383_a",
+  "code_list": [
+   ""
+  ]
+ },
+ {
+  "question_id": "3621",
+  "code_list": [
+   "from typing import List\nclass Solution:\n    def minOperations(self, nums: List[int], k: int) -> int:\n        return 0\n"
+  ]
+ }
+]
