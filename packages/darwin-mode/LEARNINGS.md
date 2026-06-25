@@ -557,3 +557,24 @@ why we measure before building.
   *escalation routing* (which instances to escalate) and *selection* among candidates — ADR-185 #2 (entropy gate) and #3
   (diverse-edit BoN), not #1 (localization). Caveat: n=25; the 7 empties are ambiguous (give-up could be reasoning- or
   search-driven) but produce no wrong-file signal. Re-measure on a larger sample when the freeze lifts.
+
+## 36. ⚠️ opus+GLM xbo n=300 SOTA confirm FAILED to complete — Opus arm cost-capped at 63/300 (silent degradation)
+
+The opus+GLM xbo full-300 run (the conformant SOTA shot, 72% @ n=25 §32) self-reported **38.3% (115/300)** — but this
+is **NOT a valid opus+GLM xbo n=300**. The Opus arm hit the runner's **default $20 `--max-cost` cap at 63/300** and
+stopped (`[max-cost] cumulative $20.23 ≥ cap $20`); the discriminator then built 300 judged preds from **opus+GLM
+best-of-2 on 63 instances + GLM-alone on the other 237**. So the number is ≈ GLM-300 baseline (37%) + a +1.3pt lift
+from the 63 Opus-augmented cases — dominated by glm-alone, NOT the cross-model best-of-2 the run was meant to measure.
+
+**This number is NOT placed on the leaderboard** (it would misrepresent opus+GLM xbo). The **72% remains an n=25 result
+only**; a clean opus+GLM xbo n=300 confirm needs ~300×$0.50 ≈ **$150 of Opus**, which the spend freeze forbids — so the
+clean SOTA confirm is not achievable right now.
+
+**Process lessons (baked into LOOP_WORKER):**
+1. **The $20 default cost cap cannot fund an Opus-heavy full-300 arm** (~$0.35-0.50/inst → only ~57-63 instances). Any
+   Opus n=300 (or opus-arm xbo n=300) run MUST set an explicit `--max-cost ≥ ~$160` or it silently produces a
+   glm-dominated blend with no error.
+2. **Silent degradation, not a crash:** the cap stopped one arm but the pipeline completed + self-reported a
+   plausible-looking 38.3%. Always cross-check the per-arm pred counts (preds-x0 vs preds-x1) before trusting an xbo
+   n=300 number — equal counts are required for a true best-of-2.
+3. The cost guard *did* protect the budget (the shot cost ~$22, not ~$150) — good hygiene, wrong outcome for the goal.
