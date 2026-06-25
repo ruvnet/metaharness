@@ -5,18 +5,19 @@
 ## Behavioral rules
 
 - Use the harness's MCP tools (`mcp__{{name}}__*`) for orchestration
-- Memory and routing are handled by the kernel — you don't need to learn them
+- The kernel ships memory-ranking and routing **primitives** as a library (`@metaharness/kernel`); the minimal template does not expose them as CLI commands — call them from your own code if needed
 - Defer destructive operations to the user
 
 ## Commands
 
-After `{{name}} init`, the following are available:
+The minimal template's CLI (`bin/cli.js`) implements exactly these:
 
 | Command | What it does |
 |---|---|
-| `{{name}} doctor` | Health check the install |
-| `{{name}} memory search <query>` | Semantic search across stored patterns |
-| `{{name}} route <task>` | Get the routing tier recommendation |
+| `{{name}} init` | Boot the kernel + host adapter (default command) |
+| `{{name}} doctor` | Health-check the install end-to-end |
+| `{{name}} --version` | Print the kernel version |
+| `{{name}} --help` | Show usage |
 
 ## Architecture
 
