@@ -823,3 +823,18 @@ This is the §44 conclusion reached from a different benchmark: a weak/partial v
 zero overlap — only that the window is later than the disclosed cutoff; (b) n=25 is a **directional** sample with a wide
 CI and is **easy/medium-skewed**, so the 64% is NOT 1:1 comparable to the official whole-release_v5 leaderboard (DeepSeek-V3
 ~34% on the harder, larger full set). Both facts are flagged on the board's `livecodebench` tab. n=25 — directional, not precise.
+
+## 47. ✅ Verified-500 cascade = 55.6% (278/500) — the cheap cascade generalizes, and beats Lite
+
+The GLM→Opus empty-patch cascade run on the FULL SWE-bench **Verified (500)**, official `swebench` gold eval:
+**278/500 resolved = 55.6%**, Wilson 95% CI **[51.2%, 59.9%]** (Total 500, completed 447, resolved 278, ~53 empty
+even after Opus escalation). Cost ~**$0.15/instance** (estimate: GLM-5.2 base on 500 + Opus-4.8 escalation on the 167
+empty-patch tail; per-instance cost not captured in preds — flagged). Run: local on ruvultra (gcloud-independent),
+cheap solve 500/500 → 167 empties → Opus escalate → merge → gold eval (run_id verified-500-cascade-local).
+
+**This beats the Lite cascade (51.3%)** — consistent with Verified being human-validated/cleaner than Lite (no broken
+instances). The empty-patch-cascade pattern (§28) is now confirmed on BOTH Lite and Verified at n=300/n=500, conformant,
+at ~56×-cheaper cost than frontier-only systems. It lifts our Verified board placement from the old single-traj 46.4%
+(§34) to a competitive **55.6%** — still below the frontier leaders (70-79%) on raw resolve, but the cheapest path to
+the ~55% tier. A second publicly-submittable conformant result alongside the Lite PR (#453).
+Authoritative per the loop rule (BATCH-eval only). Cost accounting to be tightened before any Verified submission.

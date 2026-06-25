@@ -288,6 +288,21 @@
           "kind": "meas",
           "costEst": false,
           "note": "232/500 SWE-bench Verified, gold, conformant; cost = measured. First Darwin Verified row."
+        },
+        {
+          "name": "Darwin · GLM→Opus empty-patch cascade",
+          "scaffold": "Darwin cascade",
+          "model": "glm-5.2 → claude-opus-4.8",
+          "resolve": 55.6,
+          "cost": 0.15,
+          "ci": [
+            51.2,
+            59.9
+          ],
+          "kind": "meas",
+          "costEst": true,
+          "note": "278/500, official gold eval, conformant. Cost ~$0.15/inst (est). Beats Lite cascade. §47",
+          "src": "LEARNINGS §47"
         }
       ]
     },
