@@ -708,3 +708,50 @@ full continuous bet-sizing. "Exploitability → 0 here" means "Nash of this buck
 "unexploitable at a real table". The exact-exploitability oracle is the runtime bottleneck (each call walks the full
 ~94k-history tree twice), so the largest comfortably-exact size is the 2-street/6-bucket default; pushing buckets or
 adding the turn grows the tree super-linearly and would need MCCFR sampling rather than exact CFR.
+
+## 44. Reproduction-test SELECTION (ADR-193) = +1 (52% vs 48%, n=25) — but the lift is NOT the repro signal, and the union ceiling is the real wall
+
+The conformant, Goodhart-free analog of Test-Driven Repair: keep N candidates **independent** of the repro test
+(no candidate optimizes against it → no self-grading trap of §10/ADR-174), then SELECT among them by which one makes
+a **model-written** `reproduce_bug.py` pass. Built `repro-select.mjs` (selector), `repro-select-eval.mjs` (gold
+scoring), `repro-select-ab.mjs` (A/B). Clean A/B on the **same** first-25 Lite, cheap base (deepseek-v4-flash bo3 at
+temps 0.2/0.5/0.8, `--no-test-oracle` so candidates never saw gold either), official `swebench` 4.1.0 gold eval:
+
+| selector (same 3 candidate sets) | resolve | Wilson 95% |
+|---|---:|---|
+| **bo3 + LLM judge (baseline, discriminator.mjs)** | **12/25 = 48%** | [30.0, 66.5] |
+| **bo3 + repro-test select (repro-select.mjs)** | **13/25 = 52%** | [33.5, 70.0] |
+| oracle union (any-of-3 candidates) | 13/25 = 52% | [33.5, 70.0] |
+| Δ (repro − baseline) | **+1 instance (+4%)** | inside n=25 noise |
+
+**Why this is a NEGATIVE-leaning result despite the +1 (the honest read):**
+1. **The +1 is an artifact, not the repro signal.** The one gained instance (`django-10924`) was a
+   `judge-fallback-norepro` case — *no* candidate passed the repro, so repro-select fell back to the plain judge.
+   It resolved only because the two selectors **index the candidate pool differently** in the fallback path
+   (discriminator's env-filter reorders/dedups; repro-select keeps original set order) and happened to land on the
+   good patch (set#1, 603-byte) where the baseline judge picked set#0 (1040-byte, wrong). Pure plumbing luck.
+2. **The repro signal changed selection on exactly 1/18 multi-candidate instances** (astropy-14995) — and there both
+   the repro pick and the baseline pick already resolved, so the change was net-zero. `changedSelectionVsJudge = 1/18`.
+3. **The limiter the task predicted is real and dominant: `reproPassedSomeCandidate = 3/18`.** Even when the repro
+   test is valid (15/25 = 60% FAIL-on-base, matching §13/§20's ~76%), a *candidate* almost never makes it PASS —
+   the weak cheap candidates rarely fix the bug well enough to flip a self-written test. So the selector has nothing
+   to select on for 15/18 multi-candidate instances and degenerates to the baseline judge (`judge-fallback-norepro`
+   12×, `judge-fallback-invalid` 3×).
+4. **The real wall is the candidate UNION (52%), not selection.** Baseline already captures 12/13 = 92% of the union;
+   repro-select 13/13 = 100%. With only a 4-pt gap between baseline and the oracle ceiling, **no** selector can lift
+   much — the bottleneck is candidate *generation* (cheap-model capability, §21/§38 "reasoning-miss"), not the picker.
+
+**Conformance held (asserted, not asserted-on-faith):** the `first25.json` manifest carries **zero** gold fields
+(`test_patch`/`FAIL_TO_PASS`/`PASS_TO_PASS` literally absent), the repro test is built from `problem_statement` only,
+`conformant-tests.mjs` stages only `candidate + reproduce_bug.py` into the BASE image and never applies the gold
+test_patch, and `repro-select.mjs`'s `assertConformant` guard threw **0** violations across the run. Gold tests touch
+the pipeline ONLY in the final `swebench` scoring — same as every other Darwin run.
+
+**Honest ceiling note (matches the prediction):** a self-written repro can be wrong/weak and you can't verify it
+without the gold test. Here it reproduced 60% of the time but a candidate *passed* it only 3/18 times — so it bought
+a *partial* lift toward TDR's 68.3% only on paper; in practice the lift was 0 once you discount the indexing artifact.
+**Verdict: repro-test SELECTION does not beat bo3+judge on cheap candidates** — same conclusion as the §19-20 gate
+arc, reached from the selection side. It would only matter if (a) candidates were strong enough to often pass a
+self-written test, and (b) the candidate union were well above the judge's capture rate. Neither holds for the cheap
+base. Cost was trivial ($0.018 writer+judge LLM; Docker repro/regression runs dominate wall-clock, ~5-9 exec rounds/
+instance). Scoped to `bench/swebench/` (`repro-select*.mjs`); not promoted to default. n=25 — directional only.

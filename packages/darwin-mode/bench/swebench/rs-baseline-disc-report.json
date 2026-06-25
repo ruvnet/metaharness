@@ -1,0 +1,207 @@
+{
+  "judgeModel": "deepseek/deepseek-v4-flash",
+  "nSets": 3,
+  "judgeCost_usd": 0.0034,
+  "instances": [
+    {
+      "instance_id": "astropy__astropy-12907",
+      "nCandidates": 1,
+      "nNonEmptyTotal": 3,
+      "envPruned": 0,
+      "how": "env-sole",
+      "pickIdx": 2
+    },
+    {
+      "instance_id": "astropy__astropy-14182",
+      "nCandidates": 2,
+      "nNonEmptyTotal": 3,
+      "envPruned": 2,
+      "how": "judge",
+      "pickIdx": 0
+    },
+    {
+      "instance_id": "astropy__astropy-14365",
+      "nCandidates": 3,
+      "nNonEmptyTotal": 3,
+      "envPruned": 3,
+      "how": "judge",
+      "pickIdx": 1
+    },
+    {
+      "instance_id": "astropy__astropy-14995",
+      "nCandidates": 3,
+      "nNonEmptyTotal": 3,
+      "envPruned": 3,
+      "how": "judge",
+      "pickIdx": 0
+    },
+    {
+      "instance_id": "astropy__astropy-6938",
+      "nCandidates": 2,
+      "nNonEmptyTotal": 3,
+      "envPruned": 2,
+      "how": "judge",
+      "pickIdx": 1
+    },
+    {
+      "instance_id": "astropy__astropy-7746",
+      "nCandidates": 3,
+      "nNonEmptyTotal": 3,
+      "envPruned": 3,
+      "how": "judge",
+      "pickIdx": 0
+    },
+    {
+      "instance_id": "django__django-10914",
+      "nCandidates": 1,
+      "nNonEmptyTotal": 3,
+      "envPruned": 0,
+      "how": "env-sole",
+      "pickIdx": 2
+    },
+    {
+      "instance_id": "django__django-10924",
+      "nCandidates": 2,
+      "nNonEmptyTotal": 2,
+      "envPruned": 2,
+      "how": "judge",
+      "pickIdx": 0
+    },
+    {
+      "instance_id": "django__django-11001",
+      "nCandidates": 1,
+      "nNonEmptyTotal": 3,
+      "envPruned": 0,
+      "how": "env-sole",
+      "pickIdx": 2
+    },
+    {
+      "instance_id": "django__django-11019",
+      "nCandidates": 3,
+      "nNonEmptyTotal": 3,
+      "envPruned": 3,
+      "how": "judge",
+      "pickIdx": 1
+    },
+    {
+      "instance_id": "django__django-11039",
+      "nCandidates": 1,
+      "nNonEmptyTotal": 3,
+      "envPruned": 0,
+      "how": "env-sole",
+      "pickIdx": 2
+    },
+    {
+      "instance_id": "django__django-11049",
+      "nCandidates": 2,
+      "nNonEmptyTotal": 3,
+      "envPruned": 2,
+      "how": "judge",
+      "pickIdx": 0
+    },
+    {
+      "instance_id": "django__django-11099",
+      "nCandidates": 1,
+      "nNonEmptyTotal": 3,
+      "envPruned": 0,
+      "how": "env-sole",
+      "pickIdx": 2
+    },
+    {
+      "instance_id": "django__django-11133",
+      "nCandidates": 3,
+      "nNonEmptyTotal": 3,
+      "envPruned": 3,
+      "how": "judge",
+      "pickIdx": 2
+    },
+    {
+      "instance_id": "django__django-11179",
+      "nCandidates": 2,
+      "nNonEmptyTotal": 3,
+      "envPruned": 2,
+      "how": "judge",
+      "pickIdx": 2
+    },
+    {
+      "instance_id": "django__django-11283",
+      "nCandidates": 3,
+      "nNonEmptyTotal": 3,
+      "envPruned": 3,
+      "how": "judge",
+      "pickIdx": 1
+    },
+    {
+      "instance_id": "django__django-11422",
+      "nCandidates": 2,
+      "nNonEmptyTotal": 2,
+      "envPruned": 2,
+      "how": "judge",
+      "pickIdx": 0
+    },
+    {
+      "instance_id": "django__django-11564",
+      "nCandidates": 3,
+      "nNonEmptyTotal": 3,
+      "envPruned": 3,
+      "how": "judge",
+      "pickIdx": 0
+    },
+    {
+      "instance_id": "django__django-11583",
+      "nCandidates": 3,
+      "nNonEmptyTotal": 3,
+      "envPruned": 3,
+      "how": "judge",
+      "pickIdx": 0
+    },
+    {
+      "instance_id": "django__django-11620",
+      "nCandidates": 1,
+      "nNonEmptyTotal": 1,
+      "envPruned": 0,
+      "how": "env-sole",
+      "pickIdx": 0
+    },
+    {
+      "instance_id": "django__django-11630",
+      "nCandidates": 3,
+      "nNonEmptyTotal": 3,
+      "envPruned": 3,
+      "how": "judge",
+      "pickIdx": 1
+    },
+    {
+      "instance_id": "django__django-11742",
+      "nCandidates": 2,
+      "nNonEmptyTotal": 2,
+      "envPruned": 2,
+      "how": "judge",
+      "pickIdx": 0
+    },
+    {
+      "instance_id": "django__django-11797",
+      "nCandidates": 0,
+      "nNonEmptyTotal": 0,
+      "envPruned": 0,
+      "how": "none",
+      "pickIdx": -1
+    },
+    {
+      "instance_id": "django__django-11815",
+      "nCandidates": 3,
+      "nNonEmptyTotal": 3,
+      "envPruned": 3,
+      "how": "judge",
+      "pickIdx": 0
+    },
+    {
+      "instance_id": "django__django-11848",
+      "nCandidates": 2,
+      "nNonEmptyTotal": 3,
+      "envPruned": 2,
+      "how": "judge",
+      "pickIdx": 0
+    }
+  ]
+}

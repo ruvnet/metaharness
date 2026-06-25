@@ -1,0 +1,53 @@
+{
+  "experiment": "ADR-193 — reproduction-test SELECTION vs bo3+judge baseline (same 25 Lite, conformant)",
+  "n": 25,
+  "baseline_bo3_judge": {
+    "resolved": 12,
+    "resolveRate": 48,
+    "wilson95": [
+      30,
+      66.5
+    ]
+  },
+  "repro_select": {
+    "resolved": 13,
+    "resolveRate": 52,
+    "wilson95": [
+      33.5,
+      70
+    ]
+  },
+  "delta_instances": 1,
+  "delta_pct": 4,
+  "oracle_union_anyOfN": {
+    "resolved": 13,
+    "resolveRate": 52,
+    "wilson95": [
+      33.5,
+      70
+    ]
+  },
+  "reproSelectOnly_ids": [
+    "django__django-10924"
+  ],
+  "baselineOnly_ids": [],
+  "repro_diagnostics": {
+    "writerModel": "deepseek/deepseek-v4-flash",
+    "judgeModel": "deepseek/deepseek-v4-flash",
+    "nSets": 3,
+    "n": 25,
+    "multiCandidate": 18,
+    "reproValidRate": "15/25",
+    "reproPassedSomeCandidate": "3/18",
+    "changedSelectionVsJudge": "1/18",
+    "how": {
+      "sole": 6,
+      "repro-tiebreak-judge": 3,
+      "judge-fallback-norepro": 12,
+      "judge-fallback-invalid": 3,
+      "none": 1
+    },
+    "cost_usd": 0.018
+  },
+  "noise_flag": "n=25 is DIRECTIONAL ONLY — a single-instance delta is inside Wilson noise; not a confirmation."
+}
