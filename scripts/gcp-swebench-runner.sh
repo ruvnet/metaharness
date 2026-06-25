@@ -146,29 +146,61 @@ if [ "$BENCH" = pro ]; then
   [ -d SWE-bench_Pro-os ] || git clone --depth 1 https://github.com/scaleapi/SWE-bench_Pro-os.git || true
   if [ -d SWE-bench_Pro-os ]; then
     /opt/sweb-venv/bin/pip install -q pandas docker 2>/dev/null || true
-    # export the raw Pro sample columns the eval reads, from the HF dataset, to the CSV the harness wants
+    # export the raw Pro sample columns the eval reads, from the HF dataset, to the CSV the harness wants.
+    # Also emit /tmp/pro-image-uris.txt: the DERIVED jefzda/sweap-images URI per instance (same derivation
+    # the eval uses, via helper_code/image_uri.get_dockerhub_image_uri) so we can PRE-PULL them sequentially.
     /opt/sweb-venv/bin/python -c "
-import json, pandas as pd
+import json, sys, pandas as pd
+sys.path.insert(0, '/tmp/SWE-bench_Pro-os')
+from helper_code.image_uri import get_dockerhub_image_uri
 from datasets import load_dataset
 d=load_dataset('$DS', split='test')
 ids=set(i['instance_id'] for i in json.load(open('/opt/darwin/agent-harness-generator/packages/darwin-mode/bench/swebench/pro-25.json'))['instances'])
 cols=('instance_id','repo','base_commit','fail_to_pass','pass_to_pass','before_repo_set_cmd','selected_test_files_to_run')
 rows=[{k:r[k] for k in cols} for r in d if r['instance_id'] in ids]
-pd.DataFrame(rows).to_csv('/tmp/pro-sample.csv', index=False); print('pro sample rows:', len(rows))
+pd.DataFrame(rows).to_csv('/tmp/pro-sample.csv', index=False)
+uris=[get_dockerhub_image_uri(r['instance_id'],'jefzda',r['repo']) for r in rows]
+open('/tmp/pro-image-uris.txt','w').write('\n'.join(uris)+'\n')
+print('pro sample rows:', len(rows), '/ image uris:', len(uris))
 " || true
     cd SWE-bench_Pro-os
     # remap predictions jsonl → Pro patch-array format (array of {instance_id, patch, prefix})
     node -e 'const fs=require("fs");const P=fs.readFileSync(process.argv[1],"utf8").split("\n").filter(Boolean).map(l=>JSON.parse(l));const out=P.map(p=>({instance_id:p.instance_id,patch:p.model_patch||"",prefix:"darwin"}));fs.writeFileSync("/tmp/patches.json",JSON.stringify(out));console.error("gather: "+out.length+" patches")' "$PREDS"
-    # ensure ANONYMOUS Docker Hub pulls of the public jefzda/sweap-images (drop any stale/private login on the VM).
-    docker logout >/dev/null 2>&1 || true
-    # run the Pro Docker eval (public images; --dockerhub_username=jefzda); --scripts_dir is REQUIRED;
-    # parallelism flag is --num_workers (NOT --max_workers); --use_local_docker runs on the VM's Docker
-    # (not Modal); writes $OUT/eval_results.json {id: bool}. A missing/un-pullable image is skipped
-    # (scored False) per-instance by eval_with_docker — it does NOT wedge the whole run.
-    [ -f swe_bench_pro_eval.py ] && /opt/sweb-venv/bin/python swe_bench_pro_eval.py \
+    # === RELIABILITY FIX (§41): PRE-PULL all images SEQUENTIALLY before scoring ===
+    # The eval pulls one multi-GB jefzda/sweap-images per instance inside each worker thread; N concurrent
+    # ANONYMOUS pulls trip Docker Hub's rate limit, the pull returns None, and main() silently scores that
+    # instance False — the artifactual ~4% floor. We pre-pull every image ONCE, SEQUENTIALLY, with
+    # retry+backoff (and an optional free Docker Hub login via DOCKERHUB_USER/DOCKERHUB_TOKEN to raise the
+    # anon limit). Validated 2026-06-25: gold patches → 5/5 once images are present.
+    PREPULL_SH=/opt/darwin/agent-harness-generator/scripts/pro-prepull-images.sh
+    PREPULL_OK=1
+    if [ -f "$PREPULL_SH" ] && [ -f /tmp/pro-image-uris.txt ]; then
+      bash "$PREPULL_SH" /tmp/pro-image-uris.txt || PREPULL_OK=0
+    else
+      echo "WARN: prepull script or uri list missing — eval will pull in-worker (rate-limit risk)"
+    fi
+    # HARD-ERROR on un-pullable images: a missing image MUST NOT silently become a False.
+    # Verify every required image is present locally before scoring; abort the Pro eval if any is missing
+    # (the predictions remain in $PREDS for an offline re-score once the image situation is resolved).
+    MISSING=$(while IFS= read -r u; do u=$(echo "$u"|tr -d '[:space:]'); [ -z "$u" ] && continue; docker image inspect "$u" >/dev/null 2>&1 || echo "$u"; done < /tmp/pro-image-uris.txt)
+    if [ -n "$MISSING" ]; then
+      echo "FATAL: Pro eval images NOT present after pre-pull (would score these False silently):"
+      echo "$MISSING" | sed 's/^/  /'
+      echo "These are either Docker Hub rate-limit casualties (retry / add DOCKERHUB_USER+DOCKERHUB_TOKEN)"
+      echo "or genuinely absent from the registry (a dataset/registry issue, not the runner's)."
+      echo "Refusing to emit a misleading score. Predictions are in $PREDS for offline re-scoring."
+    else
+      echo "prepull: all Pro images present locally — eval pulls become no-op cache hits, no rate-limit exposure."
+    fi
+    # run the Pro Docker eval (public images already cached locally; --dockerhub_username=jefzda);
+    # --scripts_dir is REQUIRED; parallelism flag is --num_workers (NOT --max_workers); --use_local_docker
+    # runs on the VM's Docker (not Modal); writes $OUT/eval_results.json {id: bool}. Because every image is
+    # pre-pulled, the in-worker pull is a cache hit, so --num_workers can parallelize the CONTAINER RUNS
+    # safely without re-triggering the anon rate limit.
+    [ -z "$MISSING" ] && [ -f swe_bench_pro_eval.py ] && /opt/sweb-venv/bin/python swe_bench_pro_eval.py \
       --patch_path /tmp/patches.json --raw_sample_path /tmp/pro-sample.csv \
       --scripts_dir run_scripts --dockerhub_username jefzda --use_local_docker \
-      --output_dir "$OUT" --num_workers "$CONC" 2>&1 || echo "Pro eval script not found / failed — predictions are in $PREDS (re-score offline with scaleapi/SWE-bench_Pro-os)"
+      --output_dir "$OUT" --num_workers "$CONC" 2>&1 || echo "Pro eval not run (missing images) / failed — predictions are in $PREDS (re-score offline with scaleapi/SWE-bench_Pro-os)"
     # normalize Pro's flat {instance_id: bool} eval_results.json into a {resolved_ids:[...]} report
     # so the [6/6] Firestore self-report (which reads .resolved_ids) works for Pro too.
     [ -f "$OUT/eval_results.json" ] && node -e 'const fs=require("fs");const m=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));const resolved_ids=Object.keys(m).filter(k=>m[k]===true);fs.writeFileSync(process.argv[2],JSON.stringify({resolved_ids,total_instances:Object.keys(m).length}));console.error("pro report: "+resolved_ids.length+"/"+Object.keys(m).length+" resolved")' "$OUT/eval_results.json" "$OUT/darwin-$BENCH-$SLUG-$MODE.report.json"
