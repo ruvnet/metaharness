@@ -1,0 +1,16 @@
+name: "Darwin — GLM→Opus empty-patch cascade"
+oss: true
+verified: false
+site: "https://github.com/ruvnet/agent-harness-generator"
+# Cost-Pareto submission: the contribution is the COST at this resolve, not topping the board.
+resolve_rate: 51.33   # 154/300, SWE-bench Lite, official harness, conformant
+cost_per_instance_usd: 0.267
+wilson_ci_95: [45.7, 56.9]
+conformant: true       # solver never sees gold tests during solving; repo's own tests only
+architecture: >
+  Cheap interactive ReAct base (z-ai/glm-5.2) solves all instances; ONLY instances where the
+  cheap model emits an empty patch (a deterministic 100%-precision give-up signal) escalate to
+  anthropic/claude-opus-4.8. Breaks the cheap-model union ceiling at a fraction of frontier cost.
+note: >
+  Independently replicated (ecascade 50.7% n=300, pooled ~51.0%/600). The story is cost-efficiency:
+  ~51% at $0.267/instance vs frontier-only systems at $15+/instance (~56x cheaper at this resolve tier).
