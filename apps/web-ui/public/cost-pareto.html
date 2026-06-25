@@ -89,6 +89,32 @@
   .modal{position:fixed;inset:0;background:rgba(4,7,11,.82);backdrop-filter:blur(4px);z-index:50;
     display:none;opacity:0;transition:opacity .25s}
   .modal.open{display:flex;opacity:1}
+  /* cost calculator */
+  #calcBtn{font-family:var(--mono);font-size:12px;padding:6px 12px;border-radius:8px;border:1px solid var(--accent);
+    background:rgba(108,209,255,.08);color:var(--accent);cursor:pointer;transition:all .12s;margin-left:auto}
+  #calcBtn:hover{background:var(--accent);color:#0a0e14}
+  .calcpanel{margin:auto;width:min(880px,94vw);max-height:90vh;overflow:auto;background:var(--panel);
+    border:1px solid var(--line);border-radius:18px;padding:26px 28px;box-shadow:0 30px 80px rgba(0,0,0,.6);
+    transform:translateY(12px);transition:transform .25s}
+  .modal.open .calcpanel{transform:translateY(0)}
+  .calcpanel h2{margin:0 0 4px;font-size:20px}
+  .calcpanel .sub{color:var(--dim);font-size:13px;margin-bottom:18px}
+  .calcgrid{display:flex;gap:22px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px}
+  .calcgrid label{display:flex;flex-direction:column;gap:5px;font-family:var(--mono);font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
+  .calcgrid input{font-family:var(--mono);font-size:15px;background:var(--panel2);border:1px solid var(--line);
+    border-radius:8px;padding:8px 10px;color:var(--fg);width:130px}
+  .calcgrid input:focus{outline:none;border-color:var(--accent)}
+  .calchead{background:linear-gradient(90deg,rgba(108,209,255,.10),transparent);border:1px solid var(--accent);
+    border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:14px;line-height:1.5}
+  .calchead b{color:var(--accent)}
+  table.calctbl{width:100%;border-collapse:collapse;font-size:12.5px}
+  table.calctbl th{text-align:right;color:var(--dim);font-weight:500;font-size:11px;padding:6px 8px;border-bottom:1px solid var(--line);text-transform:uppercase;letter-spacing:.04em}
+  table.calctbl th:nth-child(2){text-align:left}
+  table.calctbl td{text-align:right;padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.04)}
+  table.calctbl td:nth-child(2){text-align:left}
+  table.calctbl tr.best td{background:rgba(108,209,255,.07)}
+  table.calctbl .pareto{color:var(--accent2)}
+  .calcclose{position:absolute;top:18px;right:24px;font-size:24px;color:var(--dim);cursor:pointer;background:none;border:none}
   .book{margin:auto;width:min(1000px,94vw);height:min(88vh,860px);background:var(--panel);
     border:1px solid var(--line);border-radius:18px;display:flex;overflow:hidden;
     box-shadow:0 30px 80px rgba(0,0,0,.6);transform:translateY(12px);transition:transform .25s}
@@ -244,6 +270,7 @@
       <label>cost ◀ priorities ▶ capability</label>
       <input type="range" id="wslider" min="0" max="100" value="50" />
       <span class="val" id="wval"></span>
+      <button id="calcBtn" type="button">🧮 Cost calculator</button>
     </div>
     <div class="tscroll">
     <table id="board">
@@ -439,6 +466,23 @@
     </div>
   </div>
 </div>
+<div class="modal" id="calc">
+  <div class="calcpanel" style="position:relative">
+    <button class="calcclose" id="calcClose">×</button>
+    <h2>🧮 Cost / performance calculator</h2>
+    <div class="sub" id="calcSub">How many bugs can your budget fix — and at what $/bug? Live for the selected benchmark.</div>
+    <div class="calcgrid">
+      <label>Budget (USD)<input type="number" id="calcBudget" value="50" min="1" step="10"></label>
+      <label>Instances to fix<input type="number" id="calcN" value="300" min="1" step="25"></label>
+      <label>Value weight (w)<input type="range" id="calcW" min="0" max="100" value="50" style="width:150px;accent-color:var(--accent)"></label>
+    </div>
+    <div class="calchead" id="calcHead"></div>
+    <table class="calctbl"><thead><tr>
+      <th>Value</th><th>Config</th><th>Resolve</th><th>$/inst</th><th>$/bug</th><th>Bugs fixed in budget</th><th>Total for N</th><th>Pareto</th>
+    </tr></thead><tbody id="calcBody"></tbody></table>
+    <div class="sub" style="margin:14px 0 0">$/bug = cost ÷ resolve-rate (true efficiency). "Bugs fixed in budget" = how many of N you solve before the budget runs out. <span class="pareto">●</span> Pareto = not dominated (nothing is both cheaper AND higher-resolve). Official costs are estimated.</div>
+  </div>
+</div>
 <script>
 // chart geometry
 const W=900,H=460,L=64,R=24,T=24,B=56;
@@ -566,6 +610,55 @@ document.getElementById('wslider').addEventListener('input',()=>{updW();if(DATA)
   document.getElementById('wHow').onclick=()=>{close();document.getElementById('book').classList.add('open');};
   w.addEventListener('click',e=>{if(e.target===w)close();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
+})();
+// ── Cost / performance calculator ─────────────────────────────────────────
+function isPareto(e,plot){return !plot.some(f=>f!==e&&f.cost<=e.cost&&f.resolve>=e.resolve&&(f.cost<e.cost||f.resolve>e.resolve));}
+function renderCalc(){
+  if(!DATA)return; const bm=DATA.benchmarks[CUR];
+  // deployable configs only — exclude pilot "ceiling"/oracle rows (not selectable in practice)
+  const plot=bm.entries.filter(e=>e.cost!=null&&e.resolve>0&&e.kind!=='pilot');
+  const B=Math.max(0,+document.getElementById('calcBudget').value||0);
+  const N=Math.max(1,+document.getElementById('calcN').value||1);
+  const w=(+document.getElementById('calcW').value||0)/100;
+  document.getElementById('calcSub').textContent=`${bm.label} — how many of ${N} bugs your $${B} fixes, and the $/bug.`;
+  const rows=plot.map(e=>{
+    const rate=e.resolve/100;
+    const costPerBug=e.cost/rate;
+    const instancesRun=Math.min(N,B/e.cost);
+    const bugsFixed=instancesRun*rate;
+    const totalForN=N*e.cost;
+    const value=w*e.resolve+(1-w)*costEff(e.cost);
+    return {...e,costPerBug,bugsFixed,instancesRun,totalForN,value,pareto:isPareto(e,plot)};
+  }).sort((a,b)=>b.bugsFixed-a.bugsFixed || a.costPerBug-b.costPerBug);
+  const best=rows[0];
+  const cheapestBug=[...rows].sort((a,b)=>a.costPerBug-b.costPerBug)[0];
+  const fmt$=v=>v<100?'$'+v.toFixed(2):'$'+Math.round(v).toLocaleString();
+  let head=`With <b>$${B}</b> on <b>${bm.label.replace(/ \(.*/,'')}</b>: best value is <b>${best.name}</b> — fixes <b>~${best.bugsFixed.toFixed(0)} of ${N}</b> bugs at <b>${fmt$(best.costPerBug)}/bug</b>`;
+  if(cheapestBug.name!==best.name) head+=`. Cheapest per bug: <b>${cheapestBug.name}</b> (${fmt$(cheapestBug.costPerBug)}/bug, ${cheapestBug.resolve}%)`;
+  if(best.totalForN>B) head+=`. <span style="color:var(--warn)">Solving all ${N} with ${best.name} needs ${fmt$(best.totalForN)}.</span>`;
+  document.getElementById('calcHead').innerHTML=head+'.';
+  const tb=document.getElementById('calcBody'); tb.innerHTML='';
+  for(const e of [...rows].sort((a,b)=>b.value-a.value)){
+    const tr=document.createElement('tr'); if(e===best)tr.className='best';
+    tr.innerHTML=`<td><span class="scorebadge">${e.value.toFixed(0)}</span></td>
+      <td>${e.name}${e.kind==='official'?'':' <span style="color:var(--accent);font-size:10px">OURS</span>'}</td>
+      <td>${e.resolve.toFixed(1)}%</td>
+      <td>${fmt$(e.cost)}${e.costEst?'<span style="color:var(--dim)"> est</span>':''}</td>
+      <td><b>${fmt$(e.costPerBug)}</b></td>
+      <td>${e.bugsFixed.toFixed(0)}<span style="color:var(--dim)"> /${N}</span></td>
+      <td style="color:var(--dim)">${fmt$(e.totalForN)}</td>
+      <td>${e.pareto?'<span class="pareto">● optimal</span>':'<span style="color:var(--dim)">—</span>'}</td>`;
+    tb.appendChild(tr);
+  }
+}
+(function(){const m=document.getElementById('calc');
+  const open=()=>{const bm=DATA&&DATA.benchmarks[CUR];if(bm&&bm.denom)document.getElementById('calcN').value=bm.denom;
+    document.getElementById('calcW').value=Math.round(weight()*100);renderCalc();m.classList.add('open');};
+  document.getElementById('calcBtn').onclick=open;
+  document.getElementById('calcClose').onclick=()=>m.classList.remove('open');
+  m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')m.classList.remove('open');});
+  ['calcBudget','calcN','calcW'].forEach(id=>document.getElementById(id).addEventListener('input',renderCalc));
 })();
 fetch('assets/swe-pareto.json?v='+Date.now()).then(r=>r.json()).then(d=>{DATA=d;buildTabs();updW();render('lite');}).catch(e=>{
   document.getElementById('srcline').textContent='Failed to load assets/swe-pareto.json: '+e.message;
