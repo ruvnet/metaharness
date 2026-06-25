@@ -460,7 +460,7 @@
           "cost": 0.5182,
           "kind": "meas",
           "costEst": false,
-          "note": "18/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+          "note": "18/25 n=25 GCP fleet, gold, conformant. DIRECTIONAL — n=300 confirm cost-blocked (§36: Opus arm needs ~$150, frozen). Not a SOTA claim."
         },
         {
           "name": "Darwin · Opus-4.8 single",
