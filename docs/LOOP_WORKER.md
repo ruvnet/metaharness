@@ -2,34 +2,42 @@
 
 Versioned source of truth for the cron/`/loop` worker. **Cadence: self-paced, until SOTA or budget.**
 
-## ▶ CURRENT DIRECTIVE (2026-06-24): FREEZE — finish committed n=300, then free local levers
+## ▶ CURRENT DIRECTIVE (2026-06-24): TimesFM completion arc — SWE-bench freeze still on
 
-**🧊 SPEND FREEZE IN EFFECT (user ruling 2026-06-24).** Spend ~$496/$800. **NO new paid runs** (no GCP provisions,
-no new Opus/cascade/xbo runs). Let the two committed n=300 runs finish gracefully, then idle on health + **free local
-levers only**. A future heartbeat must NOT dispatch a paid run — if tempted, stop. Empirical only — n=300 is the only
-verdict; n=25 is directional scouting, never a claim.
+**🧊 SWE-BENCH SPEND FREEZE STILL IN EFFECT.** Spend ~$590/$800. **NO new paid OpenRouter SWE-bench runs** (no GCP
+provisions for cascade/xbo, no new Opus solver runs). The freeze is on **paid OpenRouter solver spend only**.
+Empirical only — n=300 is the only SWE-bench verdict; n=25 is directional scouting, never a claim.
 
-### The conformant frontier (measured, on the live leaderboard)
-- **n=300:** DeepSeek-V4 single 34% @ $0.005 · DeepSeek-V4 Best-of-3+judge (champion) 39.7% @ $0.015 · GLM 37% ·
-  **GLM→Opus empty-patch cascade 51.3%** @ $0.267 — **independently replicated by ecascade 50.7%** (§35b, pooled ~51%/600).
-- **n=500 Verified:** DeepSeek-V4 single 46.4% (§34).
-- **n=25 scouting:** xcascade FUGU 56% @ ~$0.215 · Opus single 60% · **Opus+GLM xbo 72%** (§32) = opus-bo3 72% but 3× cheaper (§33);
-  cross-model BoN sweet spot is **N=2** (3 models hurt judge selection, §31).
+### ★ ACTIVE MANDATE (user 2026-06-24): drive TimesFM→ruvector to DONE
+Per the user: *"continue until fully benchmarked and optimized with timesfm-1.0-200m weights and integrated in darwin and
+tested on 24-instance GCP deployments."* This is FREE local engineering (no OpenRouter spend) + a GCP timesfm test
+(GCP compute, separate from the OpenRouter freeze). Shipped so far: ADR-191; `crates/timesfm` candle port (RuVector
+**PR #603**, 12 shape-tests green, fmt/clippy clean, RevIN bug caught+fixed §verify); weight-bridge `convert_weights.py`;
+chunked-synthesis harness here. **Remaining phases (drive in order, gate each honestly):**
+1. **Weights + PARITY (gating, free/local):** download `google/timesfm-1.0-200m` (retry in `/tmp/tfm-venv`; first attempt
+   failed — `huggingface_hub` wasn't installed → use a venv; weights → `/tmp/timesfm-weights`). Run `convert_weights.py`
+   → load via candle VarBuilder → reproduce ONE forecast within tolerance of the Python `timesfm` reference. **Until
+   this passes, NO accuracy/forecasting claims** (crate runs on dummy weights = noise). Record pass/fail honestly.
+2. **Benchmark + optimize (free/local):** wire a real criterion bench (crate has none yet); measure forward-pass latency
+   at 200M config; optimize (accel features / contiguity / fewer allocs). Report real ns/µs numbers.
+3. **Darwin integration:** wire timesfm forecasting into Darwin predictive-pruning — forecast a genome's
+   exploitability/loss curve from its first K iters → kill doomed runs early (ties to `crates/poker-darwin`).
+4. **24-instance GCP test:** deploy the timesfm-integrated path on a GCP instance and validate at n=24.
 
-### Committed n=300 runs (let finish — do NOT kill)
-- **🎯 opus+GLM xbo FULL-300** `darwin-lite-xbo-claude-glm-5` — the conformant SOTA shot: 72% n=25 → if n=300 ≥60% it
-  BEATS every official board entry (ExpeRepair 60.3%) at ~$0.52/inst. Record §36 + leaderboard when eval done; if GCP
-  eval looks artifact-low (<50%) → salvage preds + local-eval.
-- **xcascade FULL-300** `darwin-lite-xc-deeps-glm-5-claude` → §35 vs cascade 51.3%.
+### SWE-bench frontier (measured, on the live leaderboard) — for context, DO NOT re-run under freeze
+- **n=300:** ds-v4 single 34% · ds-v4 bo3+judge (champion) 39.7% · GLM 37% · **GLM→Opus cascade 51.3%** (ecascade 50.7% replicates, §35b).
+- **n=500 Verified:** ds-v4 single 46.4% (§34).
+- **n=25 scouting:** xcascade FUGU 56% · Opus single 60% · **Opus+GLM xbo 72%** (§32, N=2 sweet spot §31).
+- **⚠️ §36: opus+GLM xbo n=300 SOTA confirm FAILED** — Opus arm cost-capped at 63/300 ($20 cap) → 38.3% is a glm-dominated
+  blend, **kept OFF the board**; 72% stays n=25-only; clean confirm needs ~$150 Opus (frozen). Lesson: opus n=300 needs
+  `--max-cost ≥ $160` + cross-check per-arm pred counts.
+- **xcascade-300** `darwin-lite-xc-deeps-glm-5-claude` — STILL IN GOLD-EVAL → record §35 + leaderboard when its
+  firestore total=300 row lands (this one's cost profile fits the cap, so it's the clean n=300 result worth waiting on).
 
-### Free local levers (allowed under freeze — $0 / trivial)
-- **ADR-189 Chebyshev temperature** — n=25 A/B in-flight (`/tmp/salvage/cheb-glm-25.log`): control static-greedy
-  **11/25 (44%)** locked vs treatment hot→greedy. When `CHEB-AB-COMPLETE`, count
-  `grep -rl '"resolved": true' packages/darwin-mode/bench/swebench/logs/run_evaluation/cheb-glm-cheb-25/ | wc -l`,
-  compute Δ, record §37. If Δ≥+1 → queue ADR-189 Phase-3 (entropy gate); if flat → ruled-out, pivot to ADR-190.
-- **ADR-190 AST-fused mincut localization** — the next big lever (attacks the 50% BM25 miss, ADR-185 #1). M-effort,
-  local, free — build when the Chebyshev A/B settles. tree-sitter AST → `ruvector` mincut → step-1 context hint.
-- **Guards**: spend>$800 → hard abort (we are frozen well below). `down all` only on a crash, never the committed runs.
+### Other free local levers (lower priority than the TimesFM mandate)
+- ADR-189 Chebyshev temp: DONE — +1/25 weak positive (§37), entropy-gate version deferred (needs paid n=25).
+- ADR-190 mincut: **declined** — §38 measured localization is NOT our bottleneck (ReAct self-localizes 7/7).
+- **Guards**: OpenRouter spend>$800 → hard abort. `down all` only on a crash. Never kill xcascade-300.
 
 Each loop tick: HEALTH (prune, kill >12min hangs) → check `rank` + fleet → advance the current phase → commit
 artifacts → report. The fleet is self-managing (AUTOSTOP + controller auto-delete); never leave VMs billing idle.
