@@ -219,7 +219,10 @@ fn run_evolve<G: Game + Clone>(game: G, cfg: DarwinConfig) {
         "baseline (vanilla CFR @ {h} it): exploitability = {:.6}\n",
         report.baseline_exploitability
     );
-    println!("{:>4}  {:>14}  {:>14}  champion", "gen", "champ_exploit", "mean_exploit");
+    println!(
+        "{:>4}  {:>14}  {:>14}  champion",
+        "gen", "champ_exploit", "mean_exploit"
+    );
     for g in &report.generations {
         println!(
             "{:>4}  {:>14.6}  {:>14.6}  {}",
