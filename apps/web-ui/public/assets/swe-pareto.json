@@ -292,7 +292,7 @@
     "pro": {
       "label": "SWE-bench Pro (Scale SEAL, 731)",
       "denom": 731,
-      "darwinNote": "Darwin not yet run on Pro (a harder, separate benchmark by Scale AI). Board shown for context.",
+      "darwinNote": "Darwin Pro n=25 cascade = 4% (1/25, directional): the cheap-base + empty-patch-cascade that wins on Lite (51.3%) does NOT transfer to Pro — enterprise multi-language repos leave the cheap tier 23/25 empty → Opus-dominated → ~$0.41/inst for 4%. Pro needs a stronger base/scaffold, not cheap+escalation (§39). Pipeline validated end-to-end (ADR-192).",
       "entries": [
         {
           "name": "GPT-5.4 (xHigh)",
@@ -383,6 +383,20 @@
           "kind": "official",
           "costEst": true,
           "note": "est: only open-source SEAL top-12 entry"
+        },
+        {
+          "name": "Darwin · GLM→Opus cascade",
+          "scaffold": "interactive ReAct + empty-patch cascade",
+          "model": "GLM-5.2→Opus-4.8",
+          "resolve": 4,
+          "ci": [
+            0.7,
+            19.5
+          ],
+          "cost": 0.415,
+          "kind": "meas",
+          "costEst": false,
+          "note": "1/25 n=25 DIRECTIONAL (not full 731). Cheap base 23/25 empty on enterprise repos → Opus-dominated → cost-Pareto thesis collapses on Pro (LEARNINGS §39). eval-infra validity unverified. Honest floor."
         }
       ]
     },
