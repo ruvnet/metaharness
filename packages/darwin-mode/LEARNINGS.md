@@ -597,3 +597,24 @@ Performance-tier winner; adding cross-model diversity to the *base* of an escala
 ### Confirmed n=300 frontier (SWE-bench Lite, conformant) — arc closed
 ds-v4 single 34% · GLM 37% · ds-v4 bo3+judge 39.7% · xcascade 49.0% · **GLM→Opus cascade 51.3% (winner)**.
 Verified: ds-v4 46.4% (n=500). opus+GLM xbo 72% is n=25-only (no clean n=300 — cost-blocked, §36).
+
+## 39. SWE-bench Pro n=25 cascade = 4% (1/25) — the cheap-cascade thesis does NOT hold on enterprise repos
+
+First real end-to-end SWE-bench Pro run (polyglot solver + corrected Scale eval, ADR-192). GLM→Opus cascade on the
+first-25 Pro instances = **1/25 = 4%** (Wilson [0.7, 20%] — wide, n=25 directional).
+
+**The honest story (a real finding, not just a low number):**
+- **The cheap GLM base mostly FAILS on Pro: 23/25 empty patches** (vs ~30% empty on Lite). Enterprise multi-language
+  repos (teleport, element-web, NodeBB, qutebrowser, ansible, openlibrary, navidrome, vuls) overwhelm the cheap tier's
+  localization even with the polyglot fix (ADR-192) — the repos are large and the bugs subtle.
+- All 23 empties escalated to **Opus** → the run is **Opus-dominated** → the cost-Pareto advantage that defines our Lite
+  story (cheap base, surgical escalation) **collapses on Pro**: we pay ~full-Opus cost for a 4% result.
+- **The cascade structure is Lite/Verified-shaped, not Pro-shaped.** Pro needs a fundamentally stronger base (or a
+  Pro-specific scaffold), not cheap-base + escalation.
+
+**Caveats (do not over-trust the 4%):** n=25, very wide CI; first-25 slice; and — the Pro eval's missing-image→score-False
+fallback means some of the 24 fails could be Docker-pull/eval-infra failures rather than solver misses (the VM went
+SSH-unresponsive post-eval so I could NOT verify how many of the 8 enterprise images actually pulled). So 4% is a noisy
+FLOOR, possibly understated by eval-infra. **What IS validated: the Pro pipeline now runs end-to-end** (polyglot
+solve → Opus escalate → real Scale `swe_bench_pro_eval` → self-report) — that plumbing is the deliverable; the resolve
+number is directional and Pro is confirmed genuinely hard for this approach.
