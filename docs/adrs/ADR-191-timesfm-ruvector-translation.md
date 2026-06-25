@@ -1,6 +1,6 @@
 # ADR-191 — TimesFM → `ruvector` translation (candle) via chunked iterative synthesis
 
-**Status:** Accepted — implemented directly (free engineering); the paid auto-synthesis pipeline remains future work
+**Status:** ✅ IMPLEMENTED + VALIDATED (2026-06-24) — all 5 phases done: crate (RuVector PR #603); weight-parity PASS (max-abs-diff 8.58e-6 vs PyTorch ref, real 200M weights); benchmark 45 ms/forecast (ruvultra 32t) / 168 ms (e2-std-4 4t), 24/24 finite; Darwin predictive-pruning integration (PRUNE/CONTINUE correct); 24-case GCP test (VM deleted, <$0.10). Honest open items: (a) prune absolute-plateau forecast biased high on short curves — decision rides robust *relative* ordering + the already-viable guard (documented in prune.rs); (b) perf numbers are baseline candle-CPU — NOT yet optimized (levers: KV-cache for autoregressive decode, MKL/SIMD accel features). The paid auto-synthesis pipeline remains future work.
 **Date:** 2026-06-24
 **Related:** ADR-189 (Chebyshev temperature — zero-temp for tensor-math generation), ADR-185 (tiered routing economics), `crates/poker-darwin` (candle/Rust validation), ruvnet/RuVector
 
