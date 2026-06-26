@@ -1,8 +1,18 @@
 # LiveCodeBench adapter — Darwin cost-Pareto leaderboard
 
 Board: **LiveCodeBench** — contamination-free competitive-programming code generation.
-Status: **BUILT + MEASURED** (single-shot deepseek-chat = 16/25 = 64% on the official harness; see §7).
-The SWE-bench agentic harness does NOT transfer directly (see §1); the single-shot solver below is purpose-built.
+Status: **BUILT + MEASURED (n=100)**. At a balanced n=100 (release_v5 ≥2024-11-01): single-shot deepseek-chat
+(robust extractor) = **44/100 = 44%**; cost-cascade (escalate to deepseek-r1-0528 on empty/public-test-failure)
+= **62/100 = 62%** (attributable cascade lift +8 on the 27 escalated problems; the rest of the raw +18 is temp-0
+nondeterminism — see LEARNINGS §46b). The older easy-skewed n=25 single-shot was 64%; n=100 is balanced and harder.
+The SWE-bench agentic harness does NOT transfer directly (see §1); the solver below is purpose-built.
+
+Two arms (same instances, run via `solve-lcb.mjs`):
+- (A) single-shot:  `--model deepseek/deepseek-chat`
+- (B) cost-cascade: `--cascade --escalate-model deepseek/deepseek-r1-0528` (escalates ONLY on empty extraction or
+  PUBLIC-example-test failure; hidden grading tests are NEVER run during solving — they stay with custom_evaluator).
+  NOTE: the OpenRouter reasoner id is `deepseek/deepseek-r1-0528` (the DeepSeek-native `deepseek-reasoner` name does
+  NOT route on OpenRouter).
 
 ## 7. Validated result (ADR-LCB, measured)
 

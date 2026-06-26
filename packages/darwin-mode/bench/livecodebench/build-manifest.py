@@ -52,6 +52,9 @@ for p in picked:
         "platform": p.platform.value,
         "difficulty": p.difficulty.value,
         "contest_date": p.contest_date.isoformat(),
+        # metadata carries func_name for functional (LeetCode) problems; the public-test gate in
+        # solve-lcb.mjs uses it to call the right Solution method (mirrors the official testing_util).
+        "metadata": (json.loads(p.metadata) if isinstance(p.metadata, str) else (p.metadata or {})),
         "public_test_cases": [
             {"input": t.input, "output": t.output, "testtype": t.testtype.value}
             for t in p.public_test_cases

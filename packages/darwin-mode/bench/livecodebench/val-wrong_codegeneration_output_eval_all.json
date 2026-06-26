@@ -1,0 +1,48 @@
+[
+  {
+    "question_title": "minimum-operations-to-make-array-values-equal-to-k",
+    "question_content": "You are given an integer array nums and an integer k.\nAn integer h is called valid if all values in the array that are strictly greater than h are identical.\nFor example, if nums = [10, 8, 10, 8], a valid integer is h = 9 because all nums[i] > 9 are equal to 10, but 5 is not a valid integer.\nYou are allowed to perform the following operation on nums:\n\nSelect an integer h that is valid for the current values in nums.\nFor each index i where nums[i] > h, set nums[i] to h.\n\nReturn the minimum number of operations required to make every element in nums equal to k. If it is impossible to make all elements equal to k, return -1.\n \nExample 1:\n\nInput: nums = [5,2,5,4,5], k = 2\nOutput: 2\nExplanation:\nThe operations can be performed in order using valid integers 4 and then 2.\n\nExample 2:\n\nInput: nums = [2,1,2], k = 2\nOutput: -1\nExplanation:\nIt is impossible to make all the values equal to 2.\n\nExample 3:\n\nInput: nums = [9,7,5,3], k = 1\nOutput: 4\nExplanation:\nThe operations can be performed using valid integers in the order 7, 5, 3, and 1.\n\n \nConstraints:\n\n1 <= nums.length <= 100 \n1 <= nums[i] <= 100\n1 <= k <= 100",
+    "platform": "leetcode",
+    "question_id": "3621",
+    "contest_id": "biweekly-contest-145",
+    "contest_date": "2024-12-07T06:30:00",
+    "starter_code": "class Solution:\n    def minOperations(self, nums: List[int], k: int) -> int:\n        ",
+    "difficulty": "easy",
+    "output_list": [
+      "from typing import List\nclass Solution:\n    def minOperations(self, nums: List[int], k: int) -> int:\n        return 0\n"
+    ],
+    "code_list": [
+      "from typing import List\nclass Solution:\n    def minOperations(self, nums: List[int], k: int) -> int:\n        return 0\n"
+    ],
+    "graded_list": [
+      false
+    ],
+    "pass@1": 0.0,
+    "metadata": [
+      "{\"output\": \"0\", \"inputs\": \"[[5, 2, 5, 4, 5], 2]\", \"expected\": \"2\", \"error_code\": -2, \"error_message\": \"Wrong Answer\"}"
+    ]
+  },
+  {
+    "question_title": "Humidifier 1",
+    "question_content": "There is one humidifier in the AtCoder company office. The current time is 0, and the humidifier has no water inside.\nYou will add water to this humidifier N times. The i-th addition of water (1 \\leq i \\leq N) takes place at time T_i, and you add V_i liters of water. It is guaranteed that T_i < T_{i+1} for all 1 \\leq i \\leq N-1.\nHowever, the humidifier has a leak, and as long as there is water inside, the amount of water decreases by 1 liter per unit time.\nFind the amount of water remaining in the humidifier immediately after you finish adding water at time T_N.\n\nInput\n\nThe input is given from Standard Input in the following format:\nN\r\nT_1 V_1\r\nT_2 V_2\r\n\\vdots\r\nT_N V_N\n\nOutput\n\nPrint the answer.\n\nConstraints\n\n\n- 1 \\leq N \\leq 100\n- 1 \\leq T_i \\leq 100 (1 \\leq i \\leq N)\n- 1 \\leq V_i \\leq 100 (1 \\leq i \\leq N)\n- T_i < T_{i+1} (1 \\leq i \\leq N-1)\n- All input values are integers.\n\nSample Input 1\n\n4\r\n1 3\r\n3 1\r\n4 4\r\n7 1\n\nSample Output 1\n\n3\r\n\nAt each point in time, water is added as follows:\n\n- Time 1: Before adding, the humidifier has 0 liters. After adding 3 liters, it has 3 liters.\n- Time 3: Before adding, it has 1 liter. After adding 1 liter, it has 2 liters total.\n- Time 4: Before adding, it has 1 liter. After adding 4 liters, it has 5 liters total.\n- Time 7: Before adding, it has 2 liters. After adding 1 liter, it has 3 liters total.\n\nAfter finishing the addition at time 7, the humidifier contains 3 liters. Thus, the answer is 3.\n\nSample Input 2\n\n3\r\n1 8\r\n10 11\r\n21 5\n\nSample Output 2\n\n5\n\nSample Input 3\n\n10\r\n2 1\r\n22 10\r\n26 17\r\n29 2\r\n45 20\r\n47 32\r\n72 12\r\n75 1\r\n81 31\r\n97 7\n\nSample Output 3\n\n57",
+    "platform": "atcoder",
+    "question_id": "abc383_a",
+    "contest_id": "abc383",
+    "contest_date": "2024-12-07T00:00:00",
+    "starter_code": "",
+    "difficulty": "easy",
+    "output_list": [
+      ""
+    ],
+    "code_list": [
+      ""
+    ],
+    "graded_list": [
+      false
+    ],
+    "pass@1": 0.0,
+    "metadata": [
+      "{\"error_code\": -4, \"error_message\": \"Error during testing: expected an indented block after function definition on line 38 (<string>, line 38)\"}"
+    ]
+  }
+]

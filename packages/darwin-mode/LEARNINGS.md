@@ -838,3 +838,67 @@ at ~56×-cheaper cost than frontier-only systems. It lifts our Verified board pl
 (§34) to a competitive **55.6%** — still below the frontier leaders (70-79%) on raw resolve, but the cheapest path to
 the ~55% tier. A second publicly-submittable conformant result alongside the Lite PR (#453).
 Authoritative per the loop rule (BATCH-eval only). Cost accounting to be tightened before any Verified submission.
+
+### 46b. LCB at honest n=100 — robust extractor + cost-cascade to a reasoner (+8 attributable, +18 raw with temp-0 noise)
+
+Re-ran LCB at a **larger, balanced n=100** (the §46 n=25 was easy-skewed) with two measured levers: a **robust code
+extractor** and a **cost-cascade to a reasoning model**. The two failure modes §46 diagnosed (extraction misses;
+public-test repair overfit) drove both fixes.
+
+**Manifest (contamination knob intact, no easy-skew).** Balanced n=100 from release_v5's **≥2024-11-01** window
+(113 problems; the strict ≥2024-12-01 window has only **56**, so n=100 is impossible there — Nov is still post-cutoff
+for deepseek's disclosed cutoff). Mix: **easy 31 / med 35 / hard 34**, 53 AtCoder / 47 LeetCode, 53 stdin / 47
+functional. Far more representative than the n=25's 9/8/8 easy-lean. `build-manifest.py` now also persists `metadata`
+(carries `func_name`) so the functional public-test gate is faithful. `lcb-v5-n100.json`.
+
+**Eval validated FIRST (§42/§46 discipline).** Against the ≥2024-11-01 window: known-correct (1 stdin + 1 functional)
+→ **pass@1 = 1.0**, empty + wrong → **pass@1 = 0.0**. Both I/O modes discriminate. Number is trustworthy.
+
+**Fix 1 — robust extractor (the cheap §46 win).** Old extractor took the *last* fenced block; 2 of the n=25 misses had
+the real code in an *earlier* block (reasoning-prose trailing). New extractor prefers **the largest python block that
+parses** (py_compile), with a solution-shape score (`class Solution` for functional / `input()`/`stdin`/`print` for
+stdin), falling back to the official last-fenced rule — **byte-identical to the official `extract_code` on the common
+single-trailing-block case**. Cut empty extractions to **4/100** single-shot; the cascade's reasoner recovered 2 of
+those 4 to PASS. 89/96 non-empty single-shot extractions parse cleanly (the 7 that don't are genuinely broken model
+output, not extraction bugs). 5/5 extractor unit tests pass (incl. the §46 code-not-in-last-block case).
+
+**Fix 2 — cost-cascade (the SWE-bench-winning pattern, applied to LCB).** Cheap `deepseek-chat` base on ALL problems;
+escalate to **`deepseek/deepseek-r1-0528`** (reasoner) ONLY when the base (a) emits empty/no-code, OR (b) **fails the
+PUBLIC example tests** (the ones shipped IN the problem statement). CONFORMANCE: the hidden grading tests are NEVER run
+during solving/selection — they stay with `custom_evaluator` for final scoring. The public-test gate now runs **both**
+modes (stdin via subprocess; functional via a harness mirroring the official `grade_call`: `fn_name` from starter,
+args = `[json.loads(line) for line in input.split("\n")]`, tuple→list normalize) — so functional/LeetCode problems
+finally get an escalation signal (§46's repair arm had none). Note OpenRouter's reasoner id is **`deepseek-r1-0528`**;
+`deepseek/deepseek-reasoner` is NOT a valid OpenRouter model id (the DeepSeek-native name doesn't route).
+
+**Result (SAME instances, official harness):**
+| arm | pass@1 | Wilson 95% | $/problem | $/solved | escalation |
+|---|---|---|---|---|---|
+| **A** single-shot (robust extractor) | **44/100 = 44.0%** | [34.7, 53.8] | $0.00163 | $0.0037 | — |
+| **B** cost-cascade (→r1-0528) | **62/100 = 62.0%** | [52.2, 70.9] | $0.01144 | $0.0185 | **27%** |
+
+By difficulty — A: easy 27/31, med 12/35, hard **5/34**. B: easy 27/31, med 19/35, hard **16/34** (gains concentrate
+on med+hard, exactly where escalation fires; easy unchanged since the base passes public there).
+
+**Is the delta real? Yes — but the raw +18 is inflated by temp-0 noise (the honest part).** Paired (same instances):
+McNemar exact two-sided **p = 1.4e-3**; paired delta **+18.0pp, 95% CI [7.9, 28.1]** (excludes 0). BUT **temp-0 is NOT
+deterministic on OpenRouter** — all **73/73** non-escalated problems got *different* code between the two runs. So the
+raw 44→62 conflates the cascade lever with run-to-run variance. Decomposed: on the **27 escalated** problems (the only
+DESIGNED difference), single-shot solved **4**, the reasoner solved **12** → **+8 net attributable to escalation**
+(reasoner cracked 12/27 = 44% of the hard tail the cheap base couldn't); the remaining ~+10 of the +18 is temp-0 noise
+on the non-escalated 73. **Honest headline: the cascade's attributable lift is +8 on the escalated tail (≈+8pp on
+n=100), at ~7× the per-problem cost; the rest of the observed gap is nondeterminism.** To get a fully clean total delta
+you'd freeze the base completions (one base run feeding both arms) — a cheap follow-up if precision matters.
+
+**Cascade recovered the §46 failure classes.** The 2 extraction-failures that survived the robust extractor → PASS via
+the reasoner; hard problems lifted 5→16. Unlike §46's public-test *repair* (which overfit the visible sample and
+regressed), public-test *escalation to a stronger model* doesn't overfit — it swaps in a better prior rather than
+hill-climbing the one visible case. 6 problems regressed (single PASS → cascade FAIL); 4 of those 6 were non-escalated
+(temp-0 flips), only 2 were escalation-caused.
+
+**Contamination/comparability caveat (unchanged, honest).** Window post-cutoff so contamination-resistant by
+construction, but the deepseek snapshot's exact cutoff is unpinned. n=100 is **directional** (wide-ish CI) but now
+**balanced, not easy-skewed**, so the 44% single-shot sits much closer to the official whole-release_v5 ~34% population
+than the old 64% — still NOT 1:1 (different window + sampling). Budget: both arms together $1.31 (A $0.16 + B $1.14),
+well under the $12 cap. Files: `solve-lcb.mjs` (robust extractor + `--cascade`), `lcb-v5-n100.json`,
+`lcb-single-n100*.json`, `lcb-cascade-n100*.json`. Board `livecodebench` tab updated to the n=100 points.

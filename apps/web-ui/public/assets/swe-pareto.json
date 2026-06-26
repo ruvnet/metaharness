@@ -4,7 +4,7 @@
     "resolve": "Lite & Verified resolve % are REAL, from swe-bench/experiments (results/results.json, resolved/denom). Pro % are from the Scale SEAL public standardized set (morphllm.com/swe-bench-pro). Darwin entries are our own gold-graded runs on the official swebench harness. LiveCodeBench pass@1 is REAL, scored by the official lcb_runner codegen_metrics harness (private tests, never seen during generation).",
     "cost": "Official entries' cost/instance is ESTIMATED from each system's DISCLOSED model(s) + scaffold shape × public token pricing — not a figure those teams published; order-of-magnitude only (marked 'est'). 'undisclosed' = no public model/cost. Darwin costs are MEASURED from actual OpenRouter spend.",
     "darwin": "Darwin is measured on SWE-bench Lite (conformant: solver never sees gold tests in-loop). Verified/Pro runs are not done yet — those boards are shown for competitive context.",
-    "livecodebench": "Darwin LCB point: single-shot deepseek-chat on a balanced n=25 SUBSET of release_v5's >=2024-12-01 window (post-cutoff, contamination-resistant). Scored by the OFFICIAL lcb_runner harness (eval validated end-to-end: known-correct→PASS, empty/wrong→FAIL). n=25 is DIRECTIONAL (wide CI) and skews easy/medium vs the full release_v5 average — NOT directly comparable to the leaderboard's whole-set numbers. Official reference points shown are whole-release_v5 (or vendor-disclosed window) for context only."
+    "livecodebench": "Darwin LCB points: balanced n=100 SUBSET of release_v5's >=2024-11-01 window (post-cutoff for deepseek's disclosed cutoff, contamination-resistant). Difficulty mix easy31/med35/hard34, 53 AtCoder/47 LeetCode, 53 stdin/47 functional. Scored by the OFFICIAL lcb_runner codegen_metrics harness (eval validated end-to-end: known-correct stdin+functional->PASS, empty/wrong->FAIL). Two arms on the SAME instances: (A) single-shot deepseek-chat with a ROBUST extractor (prefers the largest python block that parses, not just the last fenced block -- fixes the empty-extraction misses); (B) a cost-cascade that escalates to deepseek-r1-0528 (reasoner) ONLY when the cheap base emits no code OR fails the PUBLIC example tests (hidden grading tests NEVER touched during solving). HONESTY: temp-0 is NOT deterministic on OpenRouter, so the raw 44->62 delta conflates the cascade lever with run-to-run noise. Attributable cascade lift (on the 27 escalated problems, the only DESIGNED difference): reasoner solved 12/27 vs single-shot's 4/27 = +8 net on the hard tail; the rest of the observed +18 is temp-0 variance on the 73 non-escalated problems. n=100 with a balanced (not easy-skewed) mix -- closer to the official ~34% full-set population than the old n=25; still not 1:1 (sampling + unpinned deepseek snapshot cutoff)."
   },
   "sources": [
     "https://github.com/swe-bench/experiments",
@@ -652,36 +652,36 @@
       "darwinNote": "Fast n=25 model×mode Pareto map — directional scouting, not a verdict. n=300 (Lite tab) confirms champions."
     },
     "livecodebench": {
-      "label": "LiveCodeBench (n=25, release_v5 ≥2024-12)",
-      "denom": 25,
+      "label": "LiveCodeBench (n=100, release_v5 >=2024-11)",
+      "denom": 100,
       "entries": [
         {
-          "name": "Darwin · single-shot",
-          "scaffold": "single-shot codegen",
+          "name": "Darwin · single-shot (robust extractor)",
+          "scaffold": "single-shot codegen, robust extractor",
           "model": "DeepSeek-chat (V3.x)",
-          "resolve": 64,
+          "resolve": 44.0,
           "ci": [
-            44.5,
-            79.8
+            34.7,
+            53.8
           ],
-          "cost": 0.00123,
+          "cost": 0.00163,
           "kind": "meas",
           "costEst": false,
-          "note": "16/25 (easy 8/9, med 6/8, hard 2/8). OFFICIAL lcb_runner harness; eval validated (correct→PASS, empty/wrong→FAIL). Contamination-resistant window (post-cutoff). n=25 DIRECTIONAL; skews easy/med vs full-set — not 1:1 with leaderboard."
+          "note": "44/100 (easy 27/31, med 12/35, hard 5/34). OFFICIAL lcb_runner harness; eval validated. Robust extractor (largest parsing python block) cut empty extractions to 4/100. Balanced n=100 (not easy-skewed) -> harder population than old n=25's 64%. $0.0037/solved."
         },
         {
-          "name": "Darwin · +TDR repair (public-test)",
-          "scaffold": "single-shot + 1 public-test repair",
-          "model": "DeepSeek-chat (V3.x)",
-          "resolve": 64,
+          "name": "Darwin · cost-cascade (->r1-0528)",
+          "scaffold": "cheap base + reasoner escalation on empty/public-fail",
+          "model": "DeepSeek-chat -> DeepSeek-R1-0528",
+          "resolve": 62.0,
           "ci": [
-            44.5,
-            79.8
+            52.2,
+            70.9
           ],
-          "cost": 0.001,
+          "cost": 0.01144,
           "kind": "meas",
           "costEst": false,
-          "note": "16/25 — NO net lift. Public-sample-only feedback overfits (abc384_g PASS→FAIL after repair; one unrelated +1 was temp-0 nondeterminism). Passing the visible sample ≠ passing hidden tests on cheap candidates."
+          "note": "62/100 (easy 27/31, med 19/35, hard 16/34). Escalated 27% to the reasoner on public-test failure/empty extraction (hidden tests gold-held). Paired delta vs single-shot +18pp [7.9,28.1], McNemar p=1.4e-3. BUT temp-0 is nondeterministic on OpenRouter: ATTRIBUTABLE cascade lift is +8 (reasoner 12/27 vs base 4/27 on the escalated tail); ~+10 of the +18 is run-to-run noise. $0.0114/problem, $0.0185/solved."
         },
         {
           "name": "DeepSeek-V3 (official, full release_v5)",
@@ -691,11 +691,11 @@
           "cost": 0.001,
           "kind": "official",
           "costEst": true,
-          "note": "Vendor-disclosed LCB pass@1 (08.01–12.01 window, whole set) — full-set average over harder/older problems; NOT 1:1 with our balanced n=25 sample.",
+          "note": "Vendor-disclosed LCB pass@1 (08.01-12.01 window, whole set) -- full-set average over harder/older problems. Our balanced n=100 (44% single-shot) is closer to this population than the old easy-skewed n=25 (64%), but still NOT 1:1 (different window + sampling).",
           "src": "https://api-docs.deepseek.com/updates"
         }
       ],
-      "darwinNote": "Single-shot deepseek-chat on a balanced n=25 SUBSET of release_v5's ≥2024-12-01 (post-cutoff) window. Scored by the OFFICIAL lcb_runner codegen_metrics harness; eval validated end-to-end before trusting the number. n=25 is directional (Wilson CI [44.5,79.8]) and easy/med-skewed — the official whole-set reference (~34%) is a different, harder population, shown for context only. TDR-style public-test repair gave NO lift here (overfits the visible sample)."
+      "darwinNote": "Balanced n=100 SUBSET of release_v5's >=2024-11-01 (post-cutoff) window, scored by the OFFICIAL lcb_runner harness (eval validated before trusting any number). Single-shot (robust extractor) = 44/100; cost-cascade (escalate to deepseek-r1-0528 on empty/public-test-failure) = 62/100. The raw +18pp is REAL on paired data (McNemar p=1.4e-3) but conflated with temp-0 nondeterminism; the ATTRIBUTABLE cascade lift is +8 on the 27 escalated problems (reasoner 12/27 vs base 4/27). Cascade costs ~7x more per problem ($0.0114 vs $0.0016) for the reasoning tail. n=100 directional; official ~34% full-set shown for context (different population)."
     }
   }
 }
