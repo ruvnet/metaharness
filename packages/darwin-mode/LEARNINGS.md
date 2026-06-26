@@ -1022,3 +1022,15 @@ a ranked directive; (3) validate on held-out conformant n≥300 — n=5 with one
 distinguish a real regression from agentic variance. Consistent with §35/§38/§44: simple
 selection/localization levers keep coming back null on this tail; the residual blocker is the
 generator's reasoning on plumbing-level fixes, not a missing file-finder.
+
+## 53. Field SOTA research — our findings confirmed; one untried lever; the contamination reframe
+
+Deep research on 2025-2026 SWE-bench harness SOTA (sources: arXiv 2506.17208 architecture survey, ORACLE-SWE 2604.07789, CoSIL 2503.22424, UTBoost 2506.09289, 2512.10218 memory-vs-ability, SEAL Pro leaderboard).
+
+**Our harness findings are FIELD-CONFIRMED:** frontier BoN ceiling (bounded by diversity not count); naive single-pass HNSW localization anchors on "symptom distractors" (CoSIL names this exact failure — matches §52); turn-budget diminishing returns (2602.16069); cheaper escalation worse (model capability dominates). Every lever we exhausted, the field also finds insufficient.
+
+**The hard tail is a SHARED model-reasoning ceiling:** even with ALL oracle signals (repro test + edit location + exec context + API + regression), ~3% remain unsolved; oracle *localization alone* leaves ~57% of the localization-headroom non-recoverable. No published technique cracks multi-file/symptom-distant bugs beyond raw model capability. Our reasoning-ceiling conclusion is validated.
+
+**THE CONTAMINATION REFRAME (big):** the 80-95% Verified headlines are inflated — vendor-self-reported, contamination + weak tests (OpenAI deprecated Verified after finding verbatim gold-patch reproduction; UTBoost + ICSE-2026 find false-positive patches; 4-6x gap vs decontaminated BeetleBox/SWE-rebench). The CLEAN frontier (SEAL-standardized Pro) is **~47-59%** (Opus 4.5: 80.9% Verified → 45.9% Pro). **Our Verified cascade 55.6% is squarely IN the clean-frontier band** — we may already be matching *clean* SOTA, far below the inflated headline but at the real ceiling. Cost: our $0.15-0.27/inst is at the cheap end (Agentless $0.12-0.34, AutoCodeRover $0.70, SWE-agent $1.05, the 87%+ Verified runs ~$5-15+).
+
+**The ONE untried high-impact lever — execution-trace localization (reproduction-first):** generate a repro test → RUN it → use the EXECUTION TRACE as the localization signal (fix-site is in the trace; symptom sits on top) → navigate trace→fix-site. This is the field's clearest hard-tail mechanism (bypasses semantic symptom-anchoring). Our repro-gate (§ADR-195) has the repro-WRITE half but NOT the trace-as-localization half. Plus CoSIL multi-pass graph-expansion-from-symptom + rerank (40-50% localization-accuracy gain). This is the real "localization done right" — distinct from the naive HNSW that failed (§52).
