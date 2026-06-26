@@ -1,0 +1,167 @@
+{
+  "instance_id": "sympy__sympy-13895",
+  "repo": "sympy/sympy",
+  "engine": "ruvector-hnsw (native)",
+  "embed_model": "openai/text-embedding-3-small",
+  "k": 12,
+  "files": [
+    {
+      "file": "sympy/functions/elementary/hyperbolic.py",
+      "score": 0.4658,
+      "symbols": [
+        "taylor_term",
+        "expansion_term"
+      ]
+    },
+    {
+      "file": "sympy/functions/special/bessel.py",
+      "score": 0.4644,
+      "symbols": [
+        "_eval_simplify",
+        "_eval_expand_func",
+        "taylor_term"
+      ]
+    },
+    {
+      "file": "sympy/functions/elementary/trigonometric.py",
+      "score": 0.4632,
+      "symbols": [
+        "f2"
+      ]
+    },
+    {
+      "file": "sympy/core/numbers.py",
+      "score": 0.4614,
+      "symbols": [
+        "_sage_",
+        "_eval_power",
+        "Exp1"
+      ]
+    },
+    {
+      "file": "sympy/core/mul.py",
+      "score": 0.4604,
+      "symbols": [
+        "_eval_expand_mul"
+      ]
+    },
+    {
+      "file": "sympy/core/add.py",
+      "score": 0.4581,
+      "symbols": [
+        "_eval_power"
+      ]
+    },
+    {
+      "file": "examples/beginner/substitution.py",
+      "score": 0.458,
+      "symbols": [
+        "main"
+      ]
+    },
+    {
+      "file": "sympy/core/expr.py",
+      "score": 0.458,
+      "symbols": [
+        "as_coeff_exponent",
+        "simplify"
+      ]
+    },
+    {
+      "file": "sympy/functions/elementary/complexes.py",
+      "score": 0.4576,
+      "symbols": [
+        "_eval_simplify",
+        "polarify"
+      ]
+    },
+    {
+      "file": "sympy/functions/elementary/exponential.py",
+      "score": 0.4555,
+      "symbols": [
+        "_eval_simplify",
+        "exp",
+        "_eval_refine"
+      ]
+    },
+    {
+      "file": "sympy/core/sympify.py",
+      "score": 0.4548,
+      "symbols": [
+        "sympify",
+        "that"
+      ]
+    },
+    {
+      "file": "sympy/concrete/summations.py",
+      "score": 0.4524,
+      "symbols": [
+        "_eval_simplify",
+        "eval_sum_symbolic"
+      ]
+    }
+  ],
+  "snippets": [
+    {
+      "file": "sympy/codegen/cfunctions.py",
+      "sym": "_expm1",
+      "start": 22,
+      "end": 25,
+      "score": 0.3944,
+      "text": "def _expm1(x):\n    return exp(x) - S.One\n\n"
+    },
+    {
+      "file": "sympy/functions/special/delta_functions.py",
+      "sym": "simplify",
+      "start": 214,
+      "end": 216,
+      "score": 0.416,
+      "text": "    def simplify(self, x):\n        return self.expand(diracdelta=True, wrt=x)\n"
+    },
+    {
+      "file": "sympy/core/power.py",
+      "sym": "_eval_nseries",
+      "start": 1231,
+      "end": 1430,
+      "score": 0.4287,
+      "text": "    def _eval_nseries(self, x, n, logx):\n        # NOTE! This function is an important part of the gruntz algorithm\n        #       for computing limits. It has to return a generalized power\n        #       series with coefficients in C(log, log(x)). In more detail:\n        # It has to return an expression\n        #     c_0*x**e_0 + c_1*x**e_1 + ... (finitely many terms)\n        # where e_i are numbers (not necessarily integers) and c_i are\n        # expressions involving only numbers, the log function, and log(x).\n        from sympy import ceiling, collect, exp, log, O, Order, powsimp\n        b, e = self.args\n        if e.is_Integer:\n            if e > 0:\n                # positive integer powers are easy to expand, e.g.:\n                # sin(x)**4 = (x-x**3/3+...)**4 = ...\n                return expand_multinomial(self.func(b._eval_nseries(x, n=n,\n                    logx=logx), e), deep=False)\n            elif e is S.NegativeOne:\n                # this is also easy to expand using the formula:\n                # 1/(1 + x) = 1 - x + x**2 - x**3 ...\n                # so we need to rewrite base to the form \"1+x\"\n\n                nuse = n\n                cf = 1\n\n                try:"
+    },
+    {
+      "file": "sympy/core/expr.py",
+      "sym": "as_coeff_exponent",
+      "start": 2932,
+      "end": 2943,
+      "score": 0.4334,
+      "text": "    def as_coeff_exponent(self, x):\n        \"\"\" ``c*x**e -> c,e`` where x can be any symbolic expression.\n        \"\"\"\n        from sympy import collect\n        s = collect(self, x)\n        c, p = s.as_coeff_mul(x)\n        if len(p) == 1:\n            b, e = p[0].as_base_exp()\n            if b == x:\n                return c, e\n        return s, S.Zero\n"
+    },
+    {
+      "file": "sympy/core/sympify.py",
+      "sym": "sympify",
+      "start": 76,
+      "end": 275,
+      "score": 0.4375,
+      "text": "def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,\n        evaluate=None):\n    \"\"\"Converts an arbitrary expression to a type that can be used inside SymPy.\n\n    For example, it will convert Python ints into instances of sympy.Integer,\n    floats into instances of sympy.Float, etc. It is also able to coerce symbolic\n    expressions which inherit from Basic. This can be useful in cooperation\n    with SAGE.\n\n    It currently accepts as arguments:\n       - any object defined in sympy\n       - standard numeric python types: int, long, float, Decimal\n       - strings (like \"0.09\" or \"2e-19\")\n       - booleans, including ``None`` (will leave ``None`` unchanged)\n       - lists, sets or tuples containing any of the above\n\n    .. warning::\n        Note that this function uses ``eval``, and thus shouldn't be used on\n        unsanitized input.\n\n    If the argument is already a type that SymPy understands, it will do\n    nothing but return that value. This can be used at the beginning of a\n    function to ensure you are working with the correct type.\n\n    >>> from sympy import sympify\n\n    >>> sympify(2).is_integer\n    True\n    >>> sympify(2).is_real\n    True\n\n    >>> s"
+    },
+    {
+      "file": "sympy/core/power.py",
+      "sym": "e2int",
+      "start": 1343,
+      "end": 1455,
+      "score": 0.4403,
+      "text": "        def e2int(e):\n            \"\"\"return the integer value (if possible) of e and a\n            flag indicating whether it is bounded or not.\"\"\"\n            n = e.limit(x, 0)\n            infinite = n.is_infinite\n            if not infinite:\n                # XXX was int or floor intended? int used to behave like floor\n                # so int(-Rational(1, 2)) returned -1 rather than int's 0\n                try:\n                    n = int(n)\n                except TypeError:\n                    #well, the n is something more complicated (like 1+log(2))\n                    try:\n                        n = int(n.evalf()) + 1  # XXX why is 1 being added?\n                    except TypeError:\n                        pass  # hope that base allows this to be resolved\n                n = _sympify(n)\n            return n, infinite\n\n        order = O(x**n, x)\n        ei, infinite = e2int(e)\n        b0 = b.limit(x, 0)\n        if infinite and (b0 is S.One or b0.has(Symbol)):\n            # XXX what order\n            if b0 is S.One:\n                resid = (b - 1)\n                if resid.is_positive:\n                    return S.Infinity\n                elif resid.is_negative:\n             "
+    }
+  ],
+  "stats": {
+    "n_files_indexed": 665,
+    "n_chunks": 4000,
+    "embed_calls": 64,
+    "embed_tokens_approx": 959252,
+    "ms_clone": 3244,
+    "ms_chunk": 14,
+    "ms_embed_index": 109385,
+    "ms_build_hnsw": 102,
+    "ms_search": 509,
+    "ms_total": 113254,
+    "embed_cost_usd": 0.01919
+  }
+}

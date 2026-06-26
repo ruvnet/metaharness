@@ -1,0 +1,162 @@
+{
+  "instance_id": "django__django-11564",
+  "repo": "django/django",
+  "engine": "ruvector-hnsw (native)",
+  "embed_model": "openai/text-embedding-3-small",
+  "k": 12,
+  "files": [
+    {
+      "file": "django/contrib/staticfiles/management/commands/collectstatic.py",
+      "score": 0.5803,
+      "symbols": [
+        "Command"
+      ]
+    },
+    {
+      "file": "django/contrib/staticfiles/finders.py",
+      "score": 0.5793,
+      "symbols": [
+        "__init__",
+        "FileSystemFinder",
+        "DefaultStorageFinder"
+      ]
+    },
+    {
+      "file": "django/contrib/staticfiles/management/commands/runserver.py",
+      "score": 0.5774,
+      "symbols": [
+        "add_arguments"
+      ]
+    },
+    {
+      "file": "django/contrib/staticfiles/storage.py",
+      "score": 0.5763,
+      "symbols": [
+        "path",
+        "__init__",
+        "StaticFilesStorage",
+        "clean_name",
+        "_setup",
+        "_stored_name"
+      ]
+    },
+    {
+      "file": "django/core/handlers/wsgi.py",
+      "score": 0.5721,
+      "symbols": [
+        "get_script_name",
+        "WSGIRequest"
+      ]
+    },
+    {
+      "file": "django/contrib/staticfiles/testing.py",
+      "score": 0.572,
+      "symbols": [
+        "StaticLiveServerTestCase"
+      ]
+    },
+    {
+      "file": "django/core/files/storage.py",
+      "score": 0.5709,
+      "symbols": [
+        "base_url",
+        "_save",
+        "url",
+        "base_location",
+        "__init__"
+      ]
+    },
+    {
+      "file": "django/contrib/staticfiles/handlers.py",
+      "score": 0.5693,
+      "symbols": [
+        "StaticFilesHandler",
+        "StaticFilesHandlerMixin",
+        "get_base_url"
+      ]
+    },
+    {
+      "file": "django/contrib/admin/options.py",
+      "score": 0.5643,
+      "symbols": [
+        "media"
+      ]
+    },
+    {
+      "file": "django/contrib/staticfiles/apps.py",
+      "score": 0.5635,
+      "symbols": [
+        "StaticFilesConfig",
+        "ready"
+      ]
+    },
+    {
+      "file": "django/contrib/staticfiles/__init__.py",
+      "score": 0.5625,
+      "symbols": []
+    }
+  ],
+  "snippets": [
+    {
+      "file": "django/contrib/staticfiles/storage.py",
+      "sym": "path",
+      "start": 36,
+      "end": 43,
+      "score": 0.4868,
+      "text": "    def path(self, name):\n        if not self.location:\n            raise ImproperlyConfigured(\"You're using the staticfiles app \"\n                                       \"without having set the STATIC_ROOT \"\n                                       \"setting to a filesystem path.\")\n        return super().path(name)\n\n"
+    },
+    {
+      "file": "django/contrib/staticfiles/storage.py",
+      "sym": "__init__",
+      "start": 23,
+      "end": 35,
+      "score": 0.4909,
+      "text": "    def __init__(self, location=None, base_url=None, *args, **kwargs):\n        if location is None:\n            location = settings.STATIC_ROOT\n        if base_url is None:\n            base_url = settings.STATIC_URL\n        check_settings(base_url)\n        super().__init__(location, base_url, *args, **kwargs)\n        # FileSystemStorage fallbacks to MEDIA_ROOT when location\n        # is empty, so we restore the empty value.\n        if not location:\n            self.base_location = None\n            self.location = None\n"
+    },
+    {
+      "file": "django/contrib/staticfiles/storage.py",
+      "sym": "StaticFilesStorage",
+      "start": 16,
+      "end": 43,
+      "score": 0.5207,
+      "text": "class StaticFilesStorage(FileSystemStorage):\n    \"\"\"\n    Standard file system storage for static files.\n\n    The defaults for ``location`` and ``base_url`` are\n    ``STATIC_ROOT`` and ``STATIC_URL``.\n    \"\"\"\n    def __init__(self, location=None, base_url=None, *args, **kwargs):\n        if location is None:\n            location = settings.STATIC_ROOT\n        if base_url is None:\n            base_url = settings.STATIC_URL\n        check_settings(base_url)\n        super().__init__(location, base_url, *args, **kwargs)\n        # FileSystemStorage fallbacks to MEDIA_ROOT when location\n        # is empty, so we restore the empty value.\n        if not location:\n            self.base_location = None\n            self.location = None\n\n    def path(self, name):\n        if not self.location:\n            raise ImproperlyConfigured(\"You're using the staticfiles app \"\n                                       \"without having set the STATIC_ROOT \"\n                                       \"setting to a filesystem path.\")\n        return super().path(name)\n\n"
+    },
+    {
+      "file": "django/contrib/staticfiles/storage.py",
+      "sym": "clean_name",
+      "start": 324,
+      "end": 326,
+      "score": 0.5243,
+      "text": "    def clean_name(self, name):\n        return name.replace('\\\\', '/')\n"
+    },
+    {
+      "file": "django/contrib/staticfiles/apps.py",
+      "sym": "StaticFilesConfig",
+      "start": 7,
+      "end": 14,
+      "score": 0.5299,
+      "text": "class StaticFilesConfig(AppConfig):\n    name = 'django.contrib.staticfiles'\n    verbose_name = _(\"Static Files\")\n    ignore_patterns = ['CVS', '.*', '*~']\n\n    def ready(self):\n        checks.register(check_finders, 'staticfiles')\n"
+    },
+    {
+      "file": "django/contrib/staticfiles/storage.py",
+      "sym": "_setup",
+      "start": 437,
+      "end": 442,
+      "score": 0.5311,
+      "text": "    def _setup(self):\n        self._wrapped = get_storage_class(settings.STATICFILES_STORAGE)()\n\n\nstaticfiles_storage = ConfiguredStorage()\n"
+    }
+  ],
+  "stats": {
+    "n_files_indexed": 859,
+    "n_chunks": 4000,
+    "embed_calls": 64,
+    "embed_tokens_approx": 621441,
+    "ms_clone": 2823,
+    "ms_chunk": 23,
+    "ms_embed_index": 98627,
+    "ms_build_hnsw": 85,
+    "ms_search": 406,
+    "ms_total": 101964,
+    "embed_cost_usd": 0.01243
+  }
+}

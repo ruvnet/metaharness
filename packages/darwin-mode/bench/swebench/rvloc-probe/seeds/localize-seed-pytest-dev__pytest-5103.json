@@ -1,0 +1,170 @@
+{
+  "instance_id": "pytest-dev__pytest-5103",
+  "repo": "pytest-dev/pytest",
+  "engine": "ruvector-hnsw (native)",
+  "embed_model": "openai/text-embedding-3-small",
+  "k": 12,
+  "files": [
+    {
+      "file": "src/_pytest/stepwise.py",
+      "score": 0.5226,
+      "symbols": [
+        "pytest_collectreport"
+      ]
+    },
+    {
+      "file": "src/_pytest/assertion/util.py",
+      "score": 0.5207,
+      "symbols": [
+        "_compare_eq_iterable"
+      ]
+    },
+    {
+      "file": "src/_pytest/terminal.py",
+      "score": 0.5187,
+      "symbols": [
+        "pytest_runtest_logreport",
+        "pytest_report_teststatus",
+        "short_test_summary",
+        "report_collect",
+        "summary_failures",
+        "TerminalReporter"
+      ]
+    },
+    {
+      "file": "src/_pytest/doctest.py",
+      "score": 0.518,
+      "symbols": [
+        "report_unexpected_exception",
+        "collect",
+        "str"
+      ]
+    },
+    {
+      "file": "src/_pytest/pytester.py",
+      "score": 0.5176,
+      "symbols": [
+        "listoutcomes",
+        "getreports",
+        "assert_outcomes",
+        "LsofFdLeakChecker"
+      ]
+    },
+    {
+      "file": "src/_pytest/python.py",
+      "score": 0.5165,
+      "symbols": [
+        "collect",
+        "reportinfo"
+      ]
+    },
+    {
+      "file": "src/_pytest/reports.py",
+      "score": 0.5148,
+      "symbols": [
+        "BaseReport",
+        "disassembled_report",
+        "It"
+      ]
+    },
+    {
+      "file": "src/pytest.py",
+      "score": 0.5123,
+      "symbols": []
+    },
+    {
+      "file": "src/_pytest/resultlog.py",
+      "score": 0.5108,
+      "symbols": [
+        "pytest_collectreport"
+      ]
+    },
+    {
+      "file": "src/_pytest/junitxml.py",
+      "score": 0.5106,
+      "symbols": [
+        "pytest_collectreport"
+      ]
+    },
+    {
+      "file": "src/_pytest/runner.py",
+      "score": 0.5099,
+      "symbols": [
+        "pytest_report_teststatus",
+        "pytest_make_collect_report",
+        "call_and_report",
+        "pytest_terminal_summary"
+      ]
+    },
+    {
+      "file": "src/_pytest/nose.py",
+      "score": 0.5089,
+      "symbols": [
+        "pytest_runtest_makereport"
+      ]
+    }
+  ],
+  "snippets": [
+    {
+      "file": "src/pytest.py",
+      "sym": "(file)",
+      "start": 1,
+      "end": 80,
+      "score": 0.4355,
+      "text": "# PYTHON_ARGCOMPLETE_OK\n\"\"\"\npytest: unit and functional testing with Python.\n\"\"\"\n# else we are imported\nfrom _pytest import __version__\nfrom _pytest.assertion import register_assert_rewrite\nfrom _pytest.config import cmdline\nfrom _pytest.config import hookimpl\nfrom _pytest.config import hookspec\nfrom _pytest.config import main\nfrom _pytest.config import UsageError\nfrom _pytest.debugging import pytestPDB as __pytestPDB\nfrom _pytest.fixtures import fillfixtures as _fillfuncargs\nfrom _pytest.fixtures import fixture\nfrom _pytest.fixtures import yield_fixture\nfrom _pytest.freeze_support import freeze_includes\nfrom _pytest.main import Session\nfrom _pytest.mark import MARK_GEN as mark\nfrom _pytest.mark import param\nfrom _pytest.nodes import Collector\nfrom _pytest.nodes import File\nfrom _pytest.nodes import Item\nfrom _pytest.outcomes import exit\nfrom _pytest.outcomes import fail\nfrom _pytest.outcomes import importorskip\nfrom _pytest.outcomes import skip\nfrom _pytest.outcomes import xfail\nfrom _pytest.python import Class\nfrom _pytest.python import Function\nfrom _pytest.python import Instance\nfrom _pytest.python import Module\nfrom _pytest.python import Package\nfrom _pytest.python_api import "
+    },
+    {
+      "file": "src/_pytest/skipping.py",
+      "sym": "pytest_runtest_makereport",
+      "start": 126,
+      "end": 180,
+      "score": 0.4486,
+      "text": "def pytest_runtest_makereport(item, call):\n    outcome = yield\n    rep = outcome.get_result()\n    evalxfail = getattr(item, \"_evalxfail\", None)\n    # unitttest special case, see setting of _unexpectedsuccess\n    if hasattr(item, \"_unexpectedsuccess\") and rep.when == \"call\":\n        from _pytest.compat import _is_unittest_unexpected_success_a_failure\n\n        if item._unexpectedsuccess:\n            rep.longrepr = \"Unexpected success: {}\".format(item._unexpectedsuccess)\n        else:\n            rep.longrepr = \"Unexpected success\"\n        if _is_unittest_unexpected_success_a_failure():\n            rep.outcome = \"failed\"\n        else:\n            rep.outcome = \"passed\"\n            rep.wasxfail = rep.longrepr\n    elif item.config.option.runxfail:\n        pass  # don't interefere\n    elif call.excinfo and call.excinfo.errisinstance(xfail.Exception):\n        rep.wasxfail = \"reason: \" + call.excinfo.value.msg\n        rep.outcome = \"skipped\"\n    elif evalxfail and not rep.skipped and evalxfail.wasvalid() and evalxfail.istrue():\n        if call.excinfo:\n            if evalxfail.invalidraise(call.excinfo.value):\n                rep.outcome = \"failed\"\n            else:\n                rep.out"
+    },
+    {
+      "file": "src/_pytest/pytester.py",
+      "sym": "listoutcomes",
+      "start": 305,
+      "end": 319,
+      "score": 0.4543,
+      "text": "    def listoutcomes(self):\n        passed = []\n        skipped = []\n        failed = []\n        for rep in self.getreports(\"pytest_collectreport pytest_runtest_logreport\"):\n            if rep.passed:\n                if rep.when == \"call\":\n                    passed.append(rep)\n            elif rep.skipped:\n                skipped.append(rep)\n            else:\n                assert rep.failed, \"Unexpected outcome: {!r}\".format(rep)\n                failed.append(rep)\n        return passed, skipped, failed\n"
+    },
+    {
+      "file": "src/_pytest/unittest.py",
+      "sym": "pytest_runtest_makereport",
+      "start": 238,
+      "end": 251,
+      "score": 0.4543,
+      "text": "def pytest_runtest_makereport(item, call):\n    if isinstance(item, TestCaseFunction):\n        if item._excinfo:\n            call.excinfo = item._excinfo.pop(0)\n            try:\n                del call.result\n            except AttributeError:\n                pass\n\n\n# twisted trial support\n\n\n@hookimpl(hookwrapper=True)"
+    },
+    {
+      "file": "src/_pytest/runner.py",
+      "sym": "pytest_report_teststatus",
+      "start": 156,
+      "end": 170,
+      "score": 0.4667,
+      "text": "def pytest_report_teststatus(report):\n    if report.when in (\"setup\", \"teardown\"):\n        if report.failed:\n            #      category, shortletter, verbose-word\n            return \"error\", \"E\", \"ERROR\"\n        elif report.skipped:\n            return \"skipped\", \"s\", \"SKIPPED\"\n        else:\n            return \"\", \"\", \"\"\n\n\n#\n# Implementation\n\n"
+    },
+    {
+      "file": "src/_pytest/runner.py",
+      "sym": "pytest_make_collect_report",
+      "start": 251,
+      "end": 276,
+      "score": 0.4802,
+      "text": "def pytest_make_collect_report(collector):\n    call = CallInfo.from_call(lambda: list(collector.collect()), \"collect\")\n    longrepr = None\n    if not call.excinfo:\n        outcome = \"passed\"\n    else:\n        from _pytest import nose\n\n        skip_exceptions = (Skipped,) + nose.get_skip_exceptions()\n        if call.excinfo.errisinstance(skip_exceptions):\n            outcome = \"skipped\"\n            r = collector._repr_failure_py(call.excinfo, \"line\").reprcrash\n            longrepr = (str(r.path), r.lineno, r.message)\n        else:\n            outcome = \"failed\"\n            errorinfo = collector.repr_failure(call.excinfo)\n            if not hasattr(errorinfo, \"toterminal\"):\n                errorinfo = CollectErrorRepr(errorinfo)\n            longrepr = errorinfo\n    rep = CollectReport(\n        collector.nodeid, outcome, longrepr, getattr(call, \"result\", None)\n    )\n    rep.call = call  # see collect_one_node\n    return rep\n\n"
+    }
+  ],
+  "stats": {
+    "n_files_indexed": 65,
+    "n_chunks": 1648,
+    "embed_calls": 27,
+    "embed_tokens_approx": 267521,
+    "ms_clone": 898,
+    "ms_chunk": 4,
+    "ms_embed_index": 41936,
+    "ms_build_hnsw": 63,
+    "ms_search": 448,
+    "ms_total": 43349,
+    "embed_cost_usd": 0.00535
+  }
+}

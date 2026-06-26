@@ -1,0 +1,70 @@
+{
+  "model": "anthropic/claude-opus-4.8",
+  "escalateModel": null,
+  "cascade": false,
+  "maxSteps": 20,
+  "n": 5,
+  "resolvedInLoop": 0,
+  "escalated": 0,
+  "byTier": {
+    "T1": 5
+  },
+  "noTestOracle": true,
+  "leaderboardConformant": true,
+  "cappedAtInstance": null,
+  "maxCost": 9,
+  "totalCost_usd": 4.7416,
+  "blendedCostPerInst_usd": 0.94833,
+  "instances": [
+    {
+      "instance_id": "psf__requests-2674",
+      "repo": "psf/requests",
+      "tier": "T1",
+      "resolved": false,
+      "steps": 20,
+      "submitted": false,
+      "resolvedInLoop": false,
+      "sec": 230
+    },
+    {
+      "instance_id": "django__django-11564",
+      "repo": "django/django",
+      "tier": "T1",
+      "resolved": false,
+      "steps": 20,
+      "submitted": false,
+      "resolvedInLoop": false,
+      "sec": 357
+    },
+    {
+      "instance_id": "pydata__xarray-3364",
+      "repo": "pydata/xarray",
+      "tier": "T1",
+      "resolved": false,
+      "steps": 20,
+      "submitted": false,
+      "resolvedInLoop": false,
+      "sec": 187
+    },
+    {
+      "instance_id": "pytest-dev__pytest-5103",
+      "repo": "pytest-dev/pytest",
+      "tier": "T1",
+      "resolved": false,
+      "steps": 20,
+      "submitted": false,
+      "resolvedInLoop": false,
+      "sec": 176
+    },
+    {
+      "instance_id": "sympy__sympy-13895",
+      "repo": "sympy/sympy",
+      "tier": "T1",
+      "resolved": false,
+      "steps": 20,
+      "submitted": false,
+      "resolvedInLoop": false,
+      "sec": 297
+    }
+  ]
+}

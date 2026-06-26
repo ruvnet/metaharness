@@ -937,3 +937,58 @@ GLM-5.2 base cascade, escalation tier varied, same 25 instances:
 **No cheaper escalation tier matches Opus** — not a cheaper Claude (Sonnet/Haiku), not a frontier GPT, not a reasoning model. Opus-4.8 has a unique agentic-repo-repair edge on the hard tail. The cost-Pareto-cheaper-escalation question (M2) is now FULLY closed: Opus stays.
 
 **The ONLY config that beats single-Opus is test-time compute:** `xbo:opus+glm = 18/25` (Best-of-N + conformant judge) > Opus-cascade 16/25. So the SOTA-breaking lever is **BoN/ensemble, not model choice** — which is exactly what the Darwin config-evolution (§51, in flight) is now searching: the best frontier-combination BoN on the hard tail. Conformant throughout (Best@k judge, no gold tests). n=25 directional; winner → n=300 validate.
+
+## 52. RuVector-HNSW retrieval-seeded localization (feasibility probe, n=5) — did NOT help; plausibly hurt
+
+Hypothesis: the HARD-25 (Opus give-ups) fail on **localization** — the ReAct agent never finds the
+fix site in a big repo before its step budget runs out. Candidate fix: seed the agent's starting
+"localization surface" with a retrieval engine. Built a prototype (`bench/swebench/ruvector-localize.mjs`):
+clone repo @base_commit → chunk source at def/class granularity → embed chunks + issue with
+`openai/text-embedding-3-small` → build a **RuVector HNSW index** (native `ruvector` npm 0.1.100 addon)
+→ retrieve top-k → emit ranked {files, symbols} → prepend to the problem statement via
+`solve-agentic.mjs --localize-seed`. Conformant (issue text + repo source only; test dirs excluded
+from the index; gold tests never touched).
+
+**A/B on 5 diverse hard instances, Opus-4.8, conformant (`--no-test-oracle`), maxsteps=20, one run/arm:**
+
+| instance | gold-fix file | seed rank (recall@12) | baseline patch | seeded patch |
+|---|---|---|---|---|
+| psf__requests-2674 | requests/adapters.py | **MISS** | empty | empty |
+| django__django-11564 | django/conf/__init__.py | **MISS** (seed→staticfiles/) | **665 ch** | empty |
+| pydata__xarray-3364 | xarray/core/concat.py | #4 (3 distractors above) | **1309 ch** | empty |
+| pytest-dev__pytest-5103 | src/_pytest/assertion/rewrite.py | **MISS** | empty | empty |
+| sympy__sympy-13895 | sympy/core/numbers.py | #4 | empty | empty |
+
+- **Retrieval recall@12 = 2/5** (gold file present); 0/5 resolved either arm (all genuine give-ups).
+- **Patches-generated: baseline 2/5 → seeded 0/5.** The seed made it *strictly worse*, not better.
+- **Why the misses cluster:** every MISS has a gold-fix file that is *infrastructure/plumbing*
+  (`adapters.py` wraps exceptions the issue names; `conf/__init__.py` is settings machinery;
+  `rewrite.py` is assertion-rewrite internals). The issue text describes a **symptom**; the fix lives
+  in a file that *uses/wraps* the named symbols but isn't lexically described. Pure semantic
+  similarity retrieves the **symptom's definitions** (e.g. urllib3 `exceptions.py`), not the **fix
+  site** that catches them. This is precisely the case for graph-based reranking
+  (`ruvector-gnn-rerank` score-diffusion over the import/call graph: a 1-hop walk from the retrieved
+  exceptions.py → adapters.py that imports it would recover the miss). The prototype did NOT wire the
+  GNN reranker — that's the obvious next step.
+- **Why a partial-hit seed still hurt (django, xarray):** presenting a confident "LIKELY-RELEVANT
+  FILES" hint **anchors** the agent on the listed files (distractors ranked above gold) and it burns
+  its step budget there instead of finding the fix via its own grep/import-following. A wrong/buried
+  hint is worse than no hint — the agent's native exploration already outperformed a 2/5-recall seed.
+
+**Cost/latency (engine works fine):** indexing 1k–4k chunks = 26–113 s/instance, **dominated by remote
+embedding** (HNSW *search* is ~0.4–0.5 s — fast as advertised). Embedding cost ~$0.005–0.02/instance
+(text-embedding-3-small). RuVector native HNSW: zero friction to wire from Node (`new VectorDB({dimensions, distanceMetric:'Cosine'})` + `insertBatch` + `search` — clean). Solve A/B self-cost ~$10.8
+(baseline $4.74 + seeded $6.03), within the $20 cap. (Note: the shared OpenRouter key also carries the
+concurrent evolution agents' traffic — `usage` delta is not a clean per-task meter here.)
+
+**Verdict (honest, n=5 — a feasibility probe, NOT a benchmark):** RuVector-HNSW localization as a
+**raw-embedding, top-k, authoritative-hint** seed **does not unblock the Opus give-ups and plausibly
+hurts**, because (a) recall on the hard tail is low (symptom≠fix-site), and (b) a confident wrong hint
+anchors the agent. The engine is fast and trivially Node-wireable — the bottleneck is **retrieval
+quality on the hard tail**, not the index. **If pursued as a Phase-2 capability, the build-out must:**
+(1) add `ruvector-gnn-rerank` (graph score-diffusion to hop symptom→fix-site); (2) present the seed as
+*low-confidence/exploratory* (not authoritative) or only inject it as extra grep-able context, never as
+a ranked directive; (3) validate on held-out conformant n≥300 — n=5 with one run/arm cannot
+distinguish a real regression from agentic variance. Consistent with §35/§38/§44: simple
+selection/localization levers keep coming back null on this tail; the residual blocker is the
+generator's reasoning on plumbing-level fixes, not a missing file-finder.

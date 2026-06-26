@@ -1,0 +1,131 @@
+{
+  "instance_id": "psf__requests-2674",
+  "repo": "psf/requests",
+  "engine": "ruvector-hnsw (native)",
+  "embed_model": "openai/text-embedding-3-small",
+  "k": 12,
+  "files": [
+    {
+      "file": "requests/packages/urllib3/exceptions.py",
+      "score": 0.5327,
+      "symbols": [
+        "ProxyError",
+        "DecodeError",
+        "ReadTimeoutError",
+        "ProtocolError",
+        "RequestError",
+        "ResponseError"
+      ]
+    },
+    {
+      "file": "requests/packages/urllib3/contrib/__init__.py",
+      "score": 0.5316,
+      "symbols": []
+    },
+    {
+      "file": "requests/packages/urllib3/connectionpool.py",
+      "score": 0.5274,
+      "symbols": [
+        "_raise_timeout"
+      ]
+    },
+    {
+      "file": "requests/packages/urllib3/response.py",
+      "score": 0.5263,
+      "symbols": [
+        "GzipDecoder"
+      ]
+    },
+    {
+      "file": "requests/packages/urllib3/util/timeout.py",
+      "score": 0.5254,
+      "symbols": [
+        "self",
+        "__str__"
+      ]
+    },
+    {
+      "file": "requests/packages/urllib3/util/retry.py",
+      "score": 0.519,
+      "symbols": [
+        "_is_read_error",
+        "__init__"
+      ]
+    },
+    {
+      "file": "requests/packages/urllib3/__init__.py",
+      "score": 0.5167,
+      "symbols": [
+        "NullHandler"
+      ]
+    },
+    {
+      "file": "requests/packages/urllib3/util/__init__.py",
+      "score": 0.5056,
+      "symbols": []
+    }
+  ],
+  "snippets": [
+    {
+      "file": "requests/packages/urllib3/exceptions.py",
+      "sym": "ProxyError",
+      "start": 41,
+      "end": 45,
+      "score": 0.3934,
+      "text": "class ProxyError(HTTPError):\n    \"Raised when the connection to a proxy fails.\"\n    pass\n\n"
+    },
+    {
+      "file": "requests/packages/urllib3/exceptions.py",
+      "sym": "DecodeError",
+      "start": 46,
+      "end": 50,
+      "score": 0.4264,
+      "text": "class DecodeError(HTTPError):\n    \"Raised when automatic decoding based on Content-Type fails.\"\n    pass\n\n"
+    },
+    {
+      "file": "requests/packages/urllib3/exceptions.py",
+      "sym": "ReadTimeoutError",
+      "start": 104,
+      "end": 110,
+      "score": 0.437,
+      "text": "class ReadTimeoutError(TimeoutError, RequestError):\n    \"Raised when a socket timeout occurs while receiving data from a server\"\n    pass\n\n\n# This timeout error does not have a URL attached and needs to inherit from the\n# base HTTPError"
+    },
+    {
+      "file": "requests/packages/urllib3/exceptions.py",
+      "sym": "ProtocolError",
+      "start": 51,
+      "end": 61,
+      "score": 0.4488,
+      "text": "class ProtocolError(HTTPError):\n    \"Raised when something unexpected happens mid-request/response.\"\n    pass\n\n\n#: Renamed to ProtocolError but aliased for backwards compatibility.\nConnectionError = ProtocolError\n\n\n## Leaf Exceptions\n"
+    },
+    {
+      "file": "requests/packages/urllib3/exceptions.py",
+      "sym": "RequestError",
+      "start": 25,
+      "end": 35,
+      "score": 0.4532,
+      "text": "class RequestError(PoolError):\n    \"Base exception for PoolErrors that have associated URLs.\"\n    def __init__(self, pool, url, message):\n        self.url = url\n        PoolError.__init__(self, pool, message)\n\n    def __reduce__(self):\n        # For pickling purposes.\n        return self.__class__, (None, self.url, None)\n\n"
+    },
+    {
+      "file": "requests/packages/urllib3/exceptions.py",
+      "sym": "ResponseError",
+      "start": 141,
+      "end": 146,
+      "score": 0.4631,
+      "text": "class ResponseError(HTTPError):\n    \"Used as a container for an error reason supplied in a MaxRetryError.\"\n    GENERIC_ERROR = 'too many error responses'\n    SPECIFIC_ERROR = 'too many {status_code} error responses'\n\n"
+    }
+  ],
+  "stats": {
+    "n_files_indexed": 81,
+    "n_chunks": 961,
+    "embed_calls": 17,
+    "embed_tokens_approx": 369514,
+    "ms_clone": 1345,
+    "ms_chunk": 4,
+    "ms_embed_index": 24201,
+    "ms_build_hnsw": 31,
+    "ms_search": 423,
+    "ms_total": 26004,
+    "embed_cost_usd": 0.00739
+  }
+}

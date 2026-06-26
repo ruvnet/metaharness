@@ -1,0 +1,143 @@
+{
+  "instance_id": "pydata__xarray-3364",
+  "repo": "pydata/xarray",
+  "engine": "ruvector-hnsw (native)",
+  "embed_model": "openai/text-embedding-3-small",
+  "k": 12,
+  "files": [
+    {
+      "file": "xarray/core/dataset.py",
+      "score": 0.5431,
+      "symbols": [
+        "merge_indexes",
+        "DataVariables",
+        "_drop_vars",
+        "_replace_with_new_dims",
+        "assign",
+        "func"
+      ]
+    },
+    {
+      "file": "xarray/conventions.py",
+      "score": 0.542,
+      "symbols": [
+        "_encode_coordinates",
+        "stackable"
+      ]
+    },
+    {
+      "file": "xarray/core/merge.py",
+      "score": 0.5385,
+      "symbols": [
+        "merge",
+        "append_all",
+        "merge_coordinates_without_align",
+        "merge_coords",
+        "_assert_compat_valid"
+      ]
+    },
+    {
+      "file": "xarray/core/concat.py",
+      "score": 0.5272,
+      "symbols": [
+        "ensure_common_dims",
+        "_calc_concat_over",
+        "_dataset_concat",
+        "_parse_datasets",
+        "process_subset_opt",
+        "_dataarray_concat"
+      ]
+    },
+    {
+      "file": "xarray/core/variable.py",
+      "score": 0.5235,
+      "symbols": [
+        "concat",
+        "func"
+      ]
+    },
+    {
+      "file": "asv_bench/benchmarks/combine.py",
+      "score": 0.5177,
+      "symbols": [
+        "setup",
+        "Combine"
+      ]
+    },
+    {
+      "file": "xarray/core/combine.py",
+      "score": 0.5067,
+      "symbols": [
+        "_auto_concat",
+        "_requires_concat_and_merge",
+        "_old_auto_combine",
+        "_nested_combine",
+        "combine_by_coords",
+        "_combine_1d"
+      ]
+    }
+  ],
+  "snippets": [
+    {
+      "file": "xarray/core/concat.py",
+      "sym": "ensure_common_dims",
+      "start": 344,
+      "end": 387,
+      "score": 0.3699,
+      "text": "    def ensure_common_dims(vars):\n        # ensure each variable with the given name shares the same\n        # dimensions and the same shape for all of them except along the\n        # concat dimension\n        common_dims = tuple(pd.unique([d for v in vars for d in v.dims]))\n        if dim not in common_dims:\n            common_dims = (dim,) + common_dims\n        for var, dim_len in zip(vars, concat_dim_lengths):\n            if var.dims != common_dims:\n                common_shape = tuple(dims_sizes.get(d, dim_len) for d in common_dims)\n                var = var.set_dims(common_dims, common_shape)\n            yield var\n\n    # stack up each variable to fill-out the dataset (in order)\n    # n.b. this loop preserves variable order, needed for groupby.\n    for k in datasets[0].variables:\n        if k in concat_over:\n            try:\n                vars = ensure_common_dims([ds.variables[k] for ds in datasets])\n            except KeyError:\n                raise ValueError(\"%r is not present in all datasets.\" % k)\n            combined = concat_vars(vars, dim, positions)\n            assert isinstance(combined, Variable)\n            result_vars[k] = combined\n\n    result = Dataset(result_va"
+    },
+    {
+      "file": "xarray/core/concat.py",
+      "sym": "_calc_concat_over",
+      "start": 158,
+      "end": 241,
+      "score": 0.4024,
+      "text": "def _calc_concat_over(datasets, dim, dim_names, data_vars, coords, compat):\n    \"\"\"\n    Determine which dataset variables need to be concatenated in the result,\n    \"\"\"\n    # Return values\n    concat_over = set()\n    equals = {}\n\n    if dim in dim_names:\n        concat_over_existing_dim = True\n        concat_over.add(dim)\n    else:\n        concat_over_existing_dim = False\n\n    concat_dim_lengths = []\n    for ds in datasets:\n        if concat_over_existing_dim:\n            if dim not in ds.dims:\n                if dim in ds:\n                    ds = ds.set_coords(dim)\n        concat_over.update(k for k, v in ds.variables.items() if dim in v.dims)\n        concat_dim_lengths.append(ds.dims.get(dim, 1))\n\n    def process_subset_opt(opt, subset):\n        if isinstance(opt, str):\n            if opt == \"different\":\n                if compat == \"override\":\n                    raise ValueError(\n                        \"Cannot specify both %s='different' and compat='override'.\"\n                        % subset\n                    )\n                # all nonindexes that are not the same in each dataset\n                for k in getattr(datasets[0], subset):\n                    if k not in conca"
+    },
+    {
+      "file": "xarray/core/concat.py",
+      "sym": "_dataset_concat",
+      "start": 263,
+      "end": 387,
+      "score": 0.4224,
+      "text": "def _dataset_concat(\n    datasets,\n    dim,\n    data_vars,\n    coords,\n    compat,\n    positions,\n    fill_value=dtypes.NA,\n    join=\"outer\",\n):\n    \"\"\"\n    Concatenate a sequence of datasets along a new or existing dimension\n    \"\"\"\n    from .dataset import Dataset\n\n    dim, coord = _calc_concat_dim_coord(dim)\n    # Make sure we're working on a copy (we'll be loading variables)\n    datasets = [ds.copy() for ds in datasets]\n    datasets = align(\n        *datasets, join=join, copy=False, exclude=[dim], fill_value=fill_value\n    )\n\n    dim_coords, dims_sizes, coord_names, data_names = _parse_datasets(datasets)\n    dim_names = set(dim_coords)\n    unlabeled_dims = dim_names - coord_names\n\n    both_data_and_coords = coord_names & data_names\n    if both_data_and_coords:\n        raise ValueError(\n            \"%r is a coordinate in some datasets but not others.\" % both_data_and_coords\n        )\n    # we don't want the concat dimension in the result dataset yet\n    dim_coords.pop(dim, None)\n    dims_sizes.pop(dim, None)\n\n    # case where concat dimension is a coordinate or data_var but not a dimension\n    if (dim in coord_names or dim in data_names) and dim not in dim_names:\n        dataset"
+    },
+    {
+      "file": "xarray/core/variable.py",
+      "sym": "concat",
+      "start": 1990,
+      "end": 2027,
+      "score": 0.4348,
+      "text": "    def concat(cls, variables, dim=\"concat_dim\", positions=None, shortcut=False):\n        \"\"\"Specialized version of Variable.concat for IndexVariable objects.\n\n        This exists because we want to avoid converting Index objects to NumPy\n        arrays, if possible.\n        \"\"\"\n        if not isinstance(dim, str):\n            dim, = dim.dims\n\n        variables = list(variables)\n        first_var = variables[0]\n\n        if any(not isinstance(v, cls) for v in variables):\n            raise TypeError(\n                \"IndexVariable.concat requires that all input \"\n                \"variables be IndexVariable objects\"\n            )\n\n        indexes = [v._data.array for v in variables]\n\n        if not indexes:\n            data = []\n        else:\n            data = indexes[0].append(indexes[1:])\n\n            if positions is not None:\n                indices = nputils.inverse_permutation(np.concatenate(positions))\n                data = data.take(indices)\n\n        attrs = dict(first_var.attrs)\n        if not shortcut:\n            for var in variables:\n                if var.dims != first_var.dims:\n                    raise ValueError(\"inconsistent dimensions\")\n                utils.remove_"
+    },
+    {
+      "file": "xarray/core/concat.py",
+      "sym": "_parse_datasets",
+      "start": 242,
+      "end": 262,
+      "score": 0.4357,
+      "text": "def _parse_datasets(datasets):\n\n    dims = set()\n    all_coord_names = set()\n    data_vars = set()  # list of data_vars\n    dim_coords = {}  # maps dim name to variable\n    dims_sizes = {}  # shared dimension sizes to expand variables\n\n    for ds in datasets:\n        dims_sizes.update(ds.dims)\n        all_coord_names.update(ds.coords)\n        data_vars.update(ds.data_vars)\n\n        for dim in set(ds.dims) - dims:\n            if dim not in dim_coords:\n                dim_coords[dim] = ds.coords[dim].variable\n        dims = dims | set(ds.dims)\n\n    return dim_coords, dims_sizes, all_coord_names, data_vars\n\n"
+    },
+    {
+      "file": "xarray/core/combine.py",
+      "sym": "_auto_concat",
+      "start": 925,
+      "end": 966,
+      "score": 0.4396,
+      "text": "def _auto_concat(\n    datasets,\n    dim=None,\n    data_vars=\"all\",\n    coords=\"different\",\n    fill_value=dtypes.NA,\n    join=\"outer\",\n    compat=\"no_conflicts\",\n):\n    if len(datasets) == 1 and dim is None:\n        # There is nothing more to combine, so kick out early.\n        return datasets[0]\n    else:\n        if dim is None:\n            ds0 = datasets[0]\n            ds1 = datasets[1]\n            concat_dims = set(ds0.dims)\n            if ds0.dims != ds1.dims:\n                dim_tuples = set(ds0.dims.items()) - set(ds1.dims.items())\n                concat_dims = {i for i, _ in dim_tuples}\n            if len(concat_dims) > 1:\n                concat_dims = {d for d in concat_dims if not ds0[d].equals(ds1[d])}\n            if len(concat_dims) > 1:\n                raise ValueError(\n                    \"too many different dimensions to \" \"concatenate: %s\" % concat_dims\n                )\n            elif len(concat_dims) == 0:\n                raise ValueError(\n                    \"cannot infer dimension to concatenate: \"\n                    \"supply the ``concat_dim`` argument \"\n                    \"explicitly\"\n                )\n            dim, = concat_dims\n        return concat(\n  "
+    }
+  ],
+  "stats": {
+    "n_files_indexed": 88,
+    "n_chunks": 2178,
+    "embed_calls": 36,
+    "embed_tokens_approx": 441087,
+    "ms_clone": 1174,
+    "ms_chunk": 7,
+    "ms_embed_index": 55183,
+    "ms_build_hnsw": 77,
+    "ms_search": 411,
+    "ms_total": 56852,
+    "embed_cost_usd": 0.00882
+  }
+}

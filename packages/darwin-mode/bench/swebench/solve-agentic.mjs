@@ -118,6 +118,26 @@ const isTestPath = (r) => PY_PROFILE.testPathRegex(r);
 // the end as an automated leakage guard.
 const NO_ORACLE = args.includes('--no-test-oracle');
 let usedOracleDuringSolve = false;
+
+// RuVector-HNSW localization seed (prototype). `--localize-seed <dir>` points at a directory of
+// `localize-seed-<instance_id>.json` files (produced by ruvector-localize.mjs). When present for an
+// instance, the retrieved ranked files/symbols are prepended to the problem statement as a starting
+// localization surface. CONFORMANT: the seed is built from issue text + repo source only (never gold
+// tests) — see ruvector-localize.mjs. No-op when the flag is absent or no seed exists for an instance.
+const SEED_DIR = argv('--localize-seed', null);
+function loadSeedBlock(instanceId) {
+  if (!SEED_DIR) return '';
+  try {
+    const s = JSON.parse(readFileSync(join(rel(SEED_DIR), `localize-seed-${instanceId}.json`), 'utf8'));
+    const lines = (s.files || []).slice(0, 12).map((f, i) =>
+      `  ${i + 1}. ${f.file}${f.symbols?.length ? `  (symbols: ${f.symbols.slice(0, 5).join(', ')})` : ''}`);
+    if (!lines.length) return '';
+    return `--- LIKELY-RELEVANT FILES (retrieval hint; verify before editing — may be incomplete) ---\n`
+      + `A code-search ranked these source files as most relevant to the issue. Start your exploration here, `
+      + `but follow imports/call-sites — the actual fix site may be a file that USES one of these:\n`
+      + lines.join('\n') + '\n--- end hint ---\n\n';
+  } catch { return ''; }
+}
 // ADR-173 L0.5/L0.6 — conformant in-loop signal: run the EXISTING tests in the
 // changed file's package, inside the instance Docker image (deps present), with
 // the agent's SOURCE patch applied but NEVER the gold test patch. Robust rule:
@@ -169,7 +189,8 @@ async function solveTier(inst, llmFn) {
     MAX_OUT: 4000,
   };
   const system = buildAgenticSystem(prof.exampleExt, defGlob);
-  const res = await agenticSolve({ problem: inst.problem_statement, io, llm: llmFn, maxSteps: MAX_STEPS, system, tempSchedule: CHEB_TEMP ? ((s, n) => chebTemp(s, n, CHEB_HI)) : undefined });
+  const problem = loadSeedBlock(inst.instance_id) + inst.problem_statement; // RuVector localization seed (no-op if absent)
+  const res = await agenticSolve({ problem, io, llm: llmFn, maxSteps: MAX_STEPS, system, tempSchedule: CHEB_TEMP ? ((s, n) => chebTemp(s, n, CHEB_HI)) : undefined });
   return { res, work };
 }
 // Cascade tie-break: neither tier passed the repo gate — judge picks the likelier fix (cheap, conformant).
