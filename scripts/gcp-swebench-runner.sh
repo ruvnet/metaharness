@@ -61,8 +61,13 @@ inst=[{'instance_id':r['instance_id'],'repo':r['repo'],'base_commit':r['base_com
 json.dump({'instances':inst}, open('$MANIFEST','w')); print('generated', len(inst), 'instances')
 "
 fi
-# Early proving: slice the manifest to the first SAMPLE instances for a fast architecture pilot.
-if [ -n "$SAMPLE" ]; then
+# HARD set: filter the manifest to the curated hard-<board> instance IDs (the cascade's known failures).
+# Fetches hard-<BENCH>-ids.json from main; overrides SAMPLE slicing. Used for SOTA-break scouting on the hard tail.
+if [ "${HARD:-}" = "1" ]; then
+  curl -fsSL "https://raw.githubusercontent.com/ruvnet/agent-harness-generator/main/packages/darwin-mode/bench/swebench/hard-${BENCH}-ids.json" -o /tmp/hard-ids.json 2>/dev/null || echo "WARN: hard-ids fetch failed"
+  node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync('$MANIFEST','utf8'));const ids=new Set(JSON.parse(fs.readFileSync('/tmp/hard-ids.json','utf8')));const inst=m.instances.filter(i=>ids.has(i.instance_id));fs.writeFileSync('/tmp/hard.json',JSON.stringify({instances:inst}));console.error('HARD set: '+inst.length+'/'+ids.size+' instances matched')"
+  MANIFEST=/tmp/hard.json; echo "using HARD set (hard-${BENCH}-ids.json)"
+elif [ -n "$SAMPLE" ]; then
   node -e "const m=JSON.parse(require('fs').readFileSync('$MANIFEST','utf8'));require('fs').writeFileSync('/tmp/sample.json',JSON.stringify({instances:m.instances.slice(0,$SAMPLE)}))"
   MANIFEST=/tmp/sample.json; echo "sampled first $SAMPLE instances"
 fi
