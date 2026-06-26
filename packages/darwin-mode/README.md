@@ -340,6 +340,33 @@ not → **new best 68.3%** [59.1, 69.9] (ADR-172; lower bound, full pass project
 cheap-base + tiered escalation **scales with frontier Sage quality** — not exhausted. Difficulty-routing
 was measured null (ADR-169 E2, AUC 0.505). Next: stronger Sage + the stateful-PTY agent loop (ADR-170).
 
+### Conformant cascade — Verified-500 + LiveCodeBench (2026-06-26)
+
+These two are **fully conformant** (the solver never sees gold/acceptance tests in-loop; official
+harnesses for scoring only) and live on the [Cost-Pareto leaderboard](https://ruvnet.github.io/agent-harness-generator/cost-pareto.html).
+
+| benchmark | config | resolve | n | Wilson 95% CI | cost |
+|---|---|---|---|---|---|
+| **SWE-bench Verified** | GLM→Opus empty-patch cascade | **55.6%** (278/500) | 500 | **[51.2, 59.9]** | ~$0.15/inst (est.) |
+| SWE-bench Lite | GLM→Opus empty-patch cascade | 51.3% | 300 | — | ~$0.27/inst |
+| **LiveCodeBench** (release_v5 ≥2024-12-01) | single-shot | **44%** | 100 | — | — |
+| **LiveCodeBench** (release_v5 ≥2024-12-01) | cost-cascade (→reasoner) | **62%** | 100 | — | — |
+
+**The cheap cascade generalizes.** The GLM→Opus empty-patch cascade (escalate only the empties to a
+frontier model) measured **55.6%** on the full **SWE-bench Verified (500)** — official `swebench` gold
+eval, Wilson 95% CI [51.2, 59.9], conformant — which **beats** the Lite cascade's 51.3%, consistent with
+Verified being human-validated/cleaner than Lite. The same pattern now holds on **both** splits at ~56×
+cheaper than frontier-on-everything. Still below frontier leaders (70–79%) on raw resolve; this is the
+cheapest path to the ~55% tier. Cost ~$0.15/instance is an **estimate** (per-instance cost not captured
+in predictions). (LEARNINGS §47.)
+
+**LiveCodeBench (contamination-resistant codegen).** On a balanced n=100 from release_v5's ≥2024-12-01
+window (post-cutoff by construction), eval-validated against the official `lcb_runner`: **single-shot 44%**,
+**cost-cascade 62%** (escalate the hard tail to a reasoning model). Honest caveats: the deepseek snapshot's
+exact cutoff is **unpinned**; the cascade lift is **partly run-to-run (temp-0) variance** — the clean
+attributable lift is **+8** on the escalated tail; n=100 is **directional, not 1:1** with the official
+whole-release figure (~34%). (LEARNINGS §46b.)
+
 ## Research appendix: where no-test autonomous repair tops out (ADR-177)
 
 The numbers above are **Test-Driven Repair** — the product — where the acceptance test is available

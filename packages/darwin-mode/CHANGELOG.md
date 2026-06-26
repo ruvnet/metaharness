@@ -2,6 +2,27 @@
 
 All notable changes to this package. Dates UTC.
 
+## 0.7.1 — 2026-06-26
+
+- **SWE-bench Verified (500) — conformant GLM→Opus empty-patch cascade: 55.6% (278/500),
+  Wilson 95% CI [51.2, 59.9].** Official `swebench` gold eval; solver never sees gold tests
+  in-loop (conformant). Cost ~$0.15/instance (**ESTIMATED** — per-instance cost not captured
+  in predictions; GLM-5.2 base on 500 + Opus-4.8 escalation on the empty-patch tail). This
+  **beats the Lite cascade (51.3%)** — the same cheap→frontier empty-patch cascade now confirmed
+  on **both** splits (Lite n=300, Verified n=500), conformant, at ~56× cheaper than frontier-only
+  systems. Still below frontier leaders (70–79%) on raw resolve; the cheapest path to the ~55% tier.
+  (LEARNINGS §47; artifacts in `submissions/swe-bench-verified/`.)
+- **LiveCodeBench (n=100, release_v5 ≥2024-12-01) — single-shot 44% / cost-cascade 62%.**
+  Eval-validated against the official `lcb_runner` (known-correct → PASS, empty → FAIL).
+  Honest caveats: contamination-resistant window by construction, but the deepseek snapshot's
+  exact cutoff is **unpinned**; the cascade lift is **partly run-to-run (temp-0) variance** —
+  the clean attributable lift is **+8** on the escalated hard tail. n=100 is **directional, not
+  1:1** with the official whole-release figure (~34%). (LEARNINGS §46b.) The honest number is the
+  balanced n=100; an easy-skewed n=25 had read higher and is not used.
+- Docs only (package.json/README/CHANGELOG/RESULTS); shipped library unchanged. No new features —
+  only these two measured-this-session results were added; research-stage work (config-evolution,
+  crack-the-tail, RuVector) is intentionally **not** shipped.
+
 ## 0.7.0 — 2026-06-23
 
 - **Conformant (leaderboard-legal) SWE-bench Lite results — the interactive arc.** The stateful interactive

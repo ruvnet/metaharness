@@ -334,6 +334,25 @@ Which harness resolves the most benchmark per **dollar**, not just the highest r
 **SWE-ultralite** (a fast n=25 model×mode scouting map). Every Darwin row is fully conformant (the solver never
 sees gold tests during solving) and measured with the official `swebench` Docker harness, with Wilson 95% CIs.
 
+**Latest validated, conformant results (2026-06-26):**
+
+| benchmark | config | resolve | n | Wilson 95% CI | cost |
+|---|---|---|---|---|---|
+| **SWE-bench Verified** | GLM→Opus empty-patch cascade | **55.6%** (278/500) | 500 | **[51.2, 59.9]** | ~$0.15/inst (est.) |
+| SWE-bench Lite | GLM→Opus empty-patch cascade | 51.3% | 300 | — | ~$0.27/inst |
+| **LiveCodeBench** (release_v5 ≥2024-12-01) | single-shot | **44%** | 100 | — | — |
+| **LiveCodeBench** (release_v5 ≥2024-12-01) | cost-cascade | **62%** | 100 | — | — |
+
+The same cheap→frontier **empty-patch cascade** (escalate only the empties to Opus) measures **55.6% on the full
+SWE-bench Verified (500)** — official `swebench` gold eval, conformant, ~56× cheaper than frontier-only — which
+**beats** the Lite cascade (51.3%); the pattern generalizes across both splits. SWE-bench Verified cost is an
+**estimate** (per-instance cost not captured in predictions). LiveCodeBench (n=100, contamination-resistant
+post-cutoff window) lifts **44% → 62%** via cost-cascade; caveats are honest: deepseek snapshot cutoff unpinned,
+part of the lift is run-to-run variance (clean attributable lift +8 on the escalated tail), n=100 is directional
+(not 1:1 with the official whole-release ~34%). Details in
+[`packages/darwin-mode/bench/results/RESULTS.md`](packages/darwin-mode/bench/results/RESULTS.md) (§33) and
+[`LEARNINGS.md`](packages/darwin-mode/LEARNINGS.md) (§46b/§47).
+
 **Run your own harness and put it on the board** — fork, add a measured row, open a PR.
 Conformance rules, the entry schema, and a step-by-step walkthrough are in **[SUBMISSIONS.md](SUBMISSIONS.md)**.
 

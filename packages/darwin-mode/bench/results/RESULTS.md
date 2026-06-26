@@ -715,3 +715,36 @@ frontier tier, Opus+GLM xbo 72% = Opus-bo3 72% but 3× cheaper.
 **The conformant SOTA shot:** Opus+GLM xbo **72% (n=25)** would, if confirmed at n=300, **beat every official board
 entry** (top is ExpeRepair 60.3%) — at ~$0.52/inst vs labs' $15+. That n=300 confirm (or the xcascade-300 now
 running) is the decisive next measurement. Until then it is n=25 scouting, not a claim.
+
+## 33. Verified-500 cascade = 55.6% (278/500) + LiveCodeBench n=100 (44% / 62%) — measured 2026-06-26
+
+Two validated conformant results added in the 0.7.1 bump. Both are leaderboard-legal (the solver never sees
+gold/acceptance tests in-loop; official harnesses for scoring only) and on the live cost-Pareto leaderboard.
+
+**SWE-bench Verified (500) — GLM→Opus empty-patch cascade:**
+| metric | value |
+|---|---|
+| resolved | **278/500 = 55.6%** |
+| Wilson 95% CI | **[51.2%, 59.9%]** |
+| eval | official `swebench` gold eval (conformant) |
+| cost | ~**$0.15/instance (ESTIMATE)** — per-instance cost not captured in predictions |
+| run | GLM-5.2 base on 500 → 167 empty-patch tail → Opus-4.8 escalate → merge → gold eval (run_id verified-500-cascade-local) |
+
+The cheap empty-patch cascade (§32) **generalizes from Lite to Verified** — and **beats** the Lite cascade
+(51.3% → 55.6%), consistent with Verified being human-validated/cleaner than Lite. The pattern is now confirmed on
+**both** splits (Lite n=300, Verified n=500), conformant, at ~56× cheaper than frontier-only systems. Still below
+frontier leaders (70–79%) on raw resolve; the cheapest path to the ~55% tier. Cost accounting to be tightened before
+any Verified submission. (LEARNINGS §47; artifacts in `submissions/swe-bench-verified/`.)
+
+**LiveCodeBench (n=100, release_v5 ≥2024-12-01) — single-shot vs cost-cascade:**
+| config | pass | n |
+|---|---|---|
+| single-shot | **44%** | 100 |
+| cost-cascade (escalate hard tail → reasoner) | **62%** | 100 |
+
+Eval-validated against the official `lcb_runner` (known-correct → PASS, empty → FAIL), balanced n=100 from
+release_v5's ≥2024-12-01 window (post-cutoff → contamination-resistant by construction). **Honest caveats:**
+the deepseek snapshot's exact cutoff is **unpinned**; the cascade lift is **partly run-to-run (temp-0) variance**
+— the clean attributable lift is **+8** on the escalated hard tail; n=100 is **directional, not 1:1** with the
+official whole-release figure (~34%). The earlier easy-skewed n=25 read higher (64%) and is **not** used — the
+balanced n=100 is the honest number. (LEARNINGS §46b.)
