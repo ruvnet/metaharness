@@ -1,0 +1,20 @@
+assets:
+  logs: s3://swe-bench-submissions/verified/20260626_darwin_metaharness_glm-opus-cascade/logs
+  trajs: s3://swe-bench-submissions/verified/20260626_darwin_metaharness_glm-opus-cascade/trajs
+info:
+  logo: https://avatars.githubusercontent.com/u/2934394?s=200&v=4
+  name: "Darwin Cascade (GLM-5.2 → Claude Opus 4.8) — Metaharness / ruvnet"
+  site: https://github.com/ruvnet/agent-harness-generator
+  report: https://raw.githubusercontent.com/ruvnet/agent-harness-generator/main/submissions/swe-bench-verified/darwin-glm-opus-cascade/REPORT.md
+  authors: "ruvnet (rUv, ruv@ruv.net, https://github.com/ruvnet)"
+tags:
+  checked: false
+  model:
+  - glm-5.2
+  - claude-opus-4.8
+  org:
+  - ruvnet
+  os_model: false
+  os_system: true
+  system:
+    attempts: "1"
