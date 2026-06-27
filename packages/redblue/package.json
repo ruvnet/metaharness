@@ -1,7 +1,7 @@
 {
   "name": "@metaharness/redblue",
-  "version": "0.1.0",
-  "description": "MetaHarness Adversarial Operators — a safety-gated Red/Blue team harness. Uncensored OpenRouter models act as adversarial SYSTEM ACTORS (simulated insiders/attackers/careless operators) against a target agent/workflow/prompt/toolchain you own; the HARNESS stays controlled. Operationalizes NIST AI RMF + OWASP LLM Top-10 as repeatable tests: red team finds failures -> blue team patches -> retest -> measure the delta. Defensive only: no real credentials, no live external targets, no shell, no arbitrary network. Dependency-free (Node built-ins).",
+  "version": "0.1.1",
+  "description": "AI red-teaming for the AI agents & LLM apps you own: stress-test them with adversarial models to find security failures (prompt injection, tool misuse / excessive agency, data leakage, jailbreaks, denial-of-wallet), auto-patch (blue team), retest, and get a board-ready report. Operationalizes NIST AI RMF + OWASP LLM Top-10 as repeatable tests. Safe by design — capability-contained: no real credentials, no live external targets, no shell, no arbitrary network. Dependency-free (Node built-ins).",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -13,6 +13,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./cli": {
+      "types": "./dist/cli/index.d.ts",
+      "import": "./dist/cli/index.js"
     }
   },
   "files": [
@@ -31,17 +35,34 @@
     "blue-team",
     "adversarial",
     "ai-security",
+    "ai-red-teaming",
+    "llm-security",
+    "agent-security",
+    "llm-evaluation",
+    "llm-testing",
+    "security-testing",
+    "penetration-testing",
     "owasp-llm",
     "nist-ai-rmf",
     "prompt-injection",
-    "agent-harness",
-    "metaharness",
+    "jailbreak",
+    "tool-misuse",
+    "excessive-agency",
+    "data-leakage",
+    "llm-vulnerability",
+    "guardrails",
+    "llm-safety",
     "ai-safety",
-    "defensive-security"
+    "ai-agents",
+    "agentic",
+    "agent-harness",
+    "defensive-security",
+    "openrouter",
+    "metaharness"
   ],
   "author": "rUv <ruv@ruv.net>",
   "license": "MIT",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator",
+  "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/packages/redblue#readme",
   "repository": {
     "type": "git",
     "url": "https://github.com/ruvnet/agent-harness-generator",

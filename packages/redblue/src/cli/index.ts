@@ -5,6 +5,12 @@
 //
 // Live commands gate on OPENROUTER_API_KEY (no key -> offline mock-judge mode,
 // $0). The cost cap (limits.max_cost_usd) is enforced inside the runner.
+//
+// This module exports an async `dispatch(sub, args): Promise<CliResult>` so the
+// umbrella `metaharness` package can forward `metaharness redblue <...>` here
+// and print the collected lines + propagate the exit code (mirrors
+// @metaharness/weight-eft/cli). The `redblue` / `metaharness-redblue` bins call
+// dispatch and then print / exit — behavior is unchanged for direct CLI use.
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -18,6 +24,11 @@ import { HttpTargetDriver } from '../attacks/sandbox.js';
 import { runBaseline, patchAndRetest } from '../runner.js';
 import { buildReport, renderMarkdown } from '../reports/report.js';
 import type { TargetDriver } from '../types.js';
+
+export interface CliResult {
+  code: number;
+  lines: string[];
+}
 
 const SAMPLE_CONFIG = `# MetaHarness redblue engagement config
 # SAFETY: allow_network / allow_shell / allow_real_credentials are HARD-OFF.
@@ -80,18 +91,25 @@ function makeTarget(cfg: RedBlueConfig): TargetDriver {
  * The REAL judge is a model (requires OPENROUTER_API_KEY) — this is THE default
  * and the product path. `--mock-judge` opts into a TEST-ONLY marker fixture for
  * $0 smoke runs; it is explicitly not the product judge.
+ *
+ * Returns a structured result instead of `process.exit`-ing so it composes into
+ * `dispatch` (the umbrella forwarder needs an exit code, not a hard exit).
  */
-function makeJudgeClient(mockJudge: boolean): { client: ModelClient; live: boolean } {
+function makeJudgeClient(
+  mockJudge: boolean,
+): { client: ModelClient; live: boolean } | { error: string[]; code: number } {
   if (mockJudge) {
     return { client: mockMarkerJudge(0), live: false };
   }
   if (!hasApiKey()) {
-    console.error(
-      'redblue: the real judge is a model and requires OPENROUTER_API_KEY.\n' +
-        '         Set the key for a live engagement, or pass --mock-judge for a $0 TEST-ONLY run\n' +
+    return {
+      code: 2,
+      error: [
+        'redblue: the real judge is a model and requires OPENROUTER_API_KEY.',
+        '         Set the key for a live engagement, or pass --mock-judge for a $0 TEST-ONLY run',
         '         (the mock judge is a marker fixture, NOT the product adjudication path).',
-    );
-    process.exit(2);
+      ],
+    };
   }
   return { client: new OpenRouterClient(), live: true };
 }
@@ -101,11 +119,16 @@ function arg(name: string, argv: string[]): string | undefined {
   return i >= 0 ? argv[i + 1] : undefined;
 }
 
-async function cmdInit(argv: string[]): Promise<void> {
+async function cmdInit(argv: string[]): Promise<CliResult> {
   const out = arg('--out', argv) ?? 'redblue.yaml';
   writeFileSync(out, SAMPLE_CONFIG);
-  console.log(`Wrote sample config to ${resolve(out)}`);
-  console.log('SAFETY: network/shell/real-credentials are hard-off; target must be a loopback/test host.');
+  return {
+    code: 0,
+    lines: [
+      `Wrote sample config to ${resolve(out)}`,
+      'SAFETY: network/shell/real-credentials are hard-off; target must be a loopback/test host.',
+    ],
+  };
 }
 
 function attackFamilyForCategory(cat: string): AttackFamily[] {
@@ -121,21 +144,23 @@ function attackFamilyForCategory(cat: string): AttackFamily[] {
   }
 }
 
-async function cmdAttack(argv: string[]): Promise<void> {
+async function cmdAttack(argv: string[]): Promise<CliResult> {
   const category = argv[0] ?? 'all';
   const families = attackFamilyForCategory(category);
   const count = Number(arg('--count', argv) ?? 10);
   resetIds();
   const cases: TestCase[] = generateSuite(families, count);
-  console.log(JSON.stringify({ category, families, cases }, null, 2));
+  return { code: 0, lines: [JSON.stringify({ category, families, cases }, null, 2)] };
 }
 
 async function runEngagement(
   cfg: RedBlueConfig,
   opts: { doPatch: boolean; mockJudge: boolean; numTests?: number },
-): Promise<{ json: any; md: string }> {
+): Promise<{ json: any; md: string } | { error: string[]; code: number }> {
   const target = makeTarget(cfg);
-  const { client: judgeClient, live } = makeJudgeClient(opts.mockJudge);
+  const judge = makeJudgeClient(opts.mockJudge);
+  if ('error' in judge) return judge;
+  const { client: judgeClient, live } = judge;
   const redClient = live ? new OpenRouterClient() : undefined;
   const blueClient = live ? new OpenRouterClient() : undefined;
 
@@ -171,42 +196,53 @@ function wantsMockJudge(argv: string[]): boolean {
   return argv.includes('--mock-judge') || argv.includes('--offline');
 }
 
-async function cmdRun(argv: string[]): Promise<void> {
+async function cmdRun(argv: string[]): Promise<CliResult> {
   const cfg = loadConfig(arg('--config', argv));
   const mockJudge = wantsMockJudge(argv);
   const numTests = arg('--tests', argv) ? Number(arg('--tests', argv)) : undefined;
   const doPatch = argv.includes('--patch');
+  const lines: string[] = [];
   if (mockJudge) {
-    console.log('# --mock-judge: using the $0 TEST-ONLY marker fixture, NOT the real model judge.\n');
+    lines.push('# --mock-judge: using the $0 TEST-ONLY marker fixture, NOT the real model judge.\n');
   }
-  const { json, md } = await runEngagement(cfg, { doPatch, mockJudge, numTests });
+  const result = await runEngagement(cfg, { doPatch, mockJudge, numTests });
+  if ('error' in result) return { code: result.code, lines: [...lines, ...result.error] };
+  const { json, md } = result;
   const outJson = arg('--out', argv);
   if (outJson) writeFileSync(outJson, JSON.stringify(json, null, 2));
-  console.log(md);
-  console.log('\n```json\n' + JSON.stringify(json, null, 2) + '\n```');
+  lines.push(md);
+  lines.push('\n```json\n' + JSON.stringify(json, null, 2) + '\n```');
+  return { code: 0, lines };
 }
 
-async function cmdPatchRetest(argv: string[], _which: 'patch' | 'retest'): Promise<void> {
+async function cmdPatchRetest(argv: string[], _which: 'patch' | 'retest'): Promise<CliResult> {
   // patch and retest are folded into the run pipeline; here we run the full
   // baseline->patch->retest and print the delta.
   const cfg = loadConfig(arg('--config', argv));
   const mockJudge = wantsMockJudge(argv);
-  const { json } = await runEngagement(cfg, { doPatch: true, mockJudge });
-  console.log(JSON.stringify({ patch_reduction_rate: json.patch_reduction_rate, gates_passed: json.gates_passed }, null, 2));
+  const result = await runEngagement(cfg, { doPatch: true, mockJudge });
+  if ('error' in result) return { code: result.code, lines: result.error };
+  const { json } = result;
+  return {
+    code: 0,
+    lines: [JSON.stringify({ patch_reduction_rate: json.patch_reduction_rate, gates_passed: json.gates_passed }, null, 2)],
+  };
 }
 
-async function cmdReport(argv: string[]): Promise<void> {
+async function cmdReport(argv: string[]): Promise<CliResult> {
   const path = arg('--in', argv);
   if (!path || !existsSync(path)) {
-    console.error('report: --in <report.json> required');
-    process.exit(1);
+    return { code: 1, lines: ['report: --in <report.json> required'] };
   }
-  const json = JSON.parse(readFileSync(path!, 'utf8'));
-  console.log(renderMarkdown(json));
+  const json = JSON.parse(readFileSync(path, 'utf8'));
+  return { code: 0, lines: [renderMarkdown(json)] };
 }
 
-function usage(): void {
-  console.log(`metaharness redblue — Adversarial Operators (Red/Blue Team Harness)
+function usage(): CliResult {
+  return {
+    code: 0,
+    lines: [
+      `metaharness redblue — Adversarial Operators (Red/Blue Team Harness)
 
 Usage:
   redblue init   [--out redblue.yaml]
@@ -220,31 +256,53 @@ The REAL judge is a model and requires OPENROUTER_API_KEY (the default/product
 path). --mock-judge selects a $0 TEST-ONLY marker fixture — NOT the product judge.
 
 SAFETY: red actors are uncontrolled in behavior, not capability. No real
-credentials, live external targets, or shell access — enforced at config load.`);
+credentials, live external targets, or shell access — enforced at config load.`,
+    ],
+  };
 }
 
-async function main(): Promise<void> {
-  const [cmd, ...rest] = process.argv.slice(2);
-  switch (cmd) {
+/**
+ * Dispatch a redblue subcommand and collect its output.
+ *
+ * Returns `{ lines, code }` (mirrors @metaharness/weight-eft/cli) so the umbrella
+ * `metaharness` package can forward `metaharness redblue <...>` here, print the
+ * lines, and exit with `code`. Never calls `process.exit` itself.
+ */
+export async function dispatch(sub: string | undefined, args: string[]): Promise<CliResult> {
+  switch (sub) {
     case 'init':
-      return cmdInit(rest);
+      return cmdInit(args);
     case 'run':
-      return cmdRun(rest);
+      return cmdRun(args);
     case 'attack':
-      return cmdAttack(rest);
+      return cmdAttack(args);
     case 'patch':
-      return cmdPatchRetest(rest, 'patch');
+      return cmdPatchRetest(args, 'patch');
     case 'retest':
-      return cmdPatchRetest(rest, 'retest');
+      return cmdPatchRetest(args, 'retest');
     case 'report':
-      return cmdReport(rest);
+      return cmdReport(args);
+    case undefined:
+    case 'help':
+    case '--help':
+    case '-h':
+      return usage();
     default:
-      usage();
-      if (cmd && cmd !== 'help' && cmd !== '--help') process.exit(1);
+      return { code: 1, lines: usage().lines };
   }
 }
 
-main().catch((e) => {
-  console.error(`redblue: ${(e as Error).message}`);
-  process.exit(1);
-});
+// Direct CLI entry (when invoked as the `redblue` / `metaharness-redblue` bin).
+const isMain = import.meta.url === `file://${process.argv[1]}`;
+if (isMain) {
+  const [, , sub, ...rest] = process.argv;
+  dispatch(sub, rest)
+    .then((r) => {
+      for (const l of r.lines) console.log(l);
+      process.exit(r.code);
+    })
+    .catch((e: unknown) => {
+      console.error(`redblue: ${e instanceof Error ? e.message : String(e)}`);
+      process.exit(1);
+    });
+}

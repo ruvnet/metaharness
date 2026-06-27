@@ -595,6 +595,18 @@ async function runMetaHarnessSubcommand(sub: string, rest: string[]): Promise<nu
       for (const line of r.lines) console.log(line);
       return r.code;
     }
+    case 'redblue': {
+      // `metaharness redblue <init|run|attack|patch|retest|report>` — delegates to
+      // @metaharness/redblue: defensive red/blue adversarial testing of an AI
+      // agent/workflow/prompt/toolchain you own. Operationalizes NIST AI RMF +
+      // OWASP LLM Top-10 as repeatable tests; capability-contained (no real
+      // creds / live targets / shell / network). $0 with --mock-judge; the real
+      // model judge gates on OPENROUTER_API_KEY.
+      const { dispatch } = await import('@metaharness/redblue/cli');
+      const r = await dispatch(rest[0], rest.slice(1));
+      for (const line of r.lines) console.log(line);
+      return r.code;
+    }
     default:
       return null; // not a known subcommand
   }

@@ -1,13 +1,40 @@
-# @metaharness/redblue — MetaHarness Adversarial Operators
+# @metaharness/redblue — AI Red/Blue Team Harness
 
-A safety-gated **Red/Blue team harness** for testing AI agents, workflows,
-prompts, and toolchains **that you own**. Uncensored OpenRouter models act as
-adversarial *system actors* (simulated insiders / attackers / careless
-operators) against your target; the **harness stays controlled**.
+> **Stress-test the AI agents & LLM apps you own with adversarial models, find security failures (prompt injection, tool misuse, data leakage, jailbreaks), auto-patch them, retest, and get a board-ready report — safely (capability-contained).** For AI/ML engineers, app developers, and security teams shipping LLM-powered products.
 
-It operationalizes **NIST AI RMF** + **OWASP LLM Top-10** categories as
-**repeatable tests**, not one-off jailbreaks: the red team finds failures →
-the blue team patches → retest → measure the delta.
+[![npm version](https://img.shields.io/npm/v/@metaharness/redblue.svg)](https://www.npmjs.com/package/@metaharness/redblue)
+[![license: MIT](https://img.shields.io/npm/l/@metaharness/redblue.svg)](./LICENSE)
+[![node](https://img.shields.io/node/v/@metaharness/redblue.svg)](https://nodejs.org)
+
+```bash
+npm i @metaharness/redblue
+```
+
+## What is this? (plain language)
+
+If you ship an **AI agent or LLM app**, attackers (and careless users) will try
+to make it misbehave: **smuggle instructions in via prompt injection**, **trick
+it into misusing its tools** (excessive agency), **make it leak data**, or **run
+up your bill** (denial-of-wallet). `redblue` lets you **find those failures
+before they do.**
+
+It runs a repeatable **red team → blue team** loop against a target *you own*:
+
+1. **Red team** — adversarial models generate attacks across OWASP LLM Top-10 /
+   NIST AI RMF categories and run them at your agent.
+2. **Judge** — a model adjudicates each result (compromised vs. robust) and
+   scores severity.
+3. **Blue team** — auto-patches the vulnerable families with declarative rules.
+4. **Retest** — re-runs the attacks and measures the **failure reduction**.
+5. **Report** — emits a board-readable summary with pass/fail gates.
+
+It's **defensive and capability-contained**: the red actors are uncontrolled in
+*behavior* but **not in capability** — no real credentials, no live external
+targets, no shell, no arbitrary network (all hard-enforced in code, see below).
+Point it at a local copy of your system, not production.
+
+You can run the whole pipeline **for $0** with `--mock-judge` (a TEST-ONLY
+marker fixture); the real model judge gates on `OPENROUTER_API_KEY`.
 
 ---
 
