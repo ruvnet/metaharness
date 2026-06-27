@@ -155,3 +155,34 @@ Per the explicit project directive, `redblue hackerone submit` remains a deliber
 
 ### Validation
 Offline suite **91 passed, 3 skipped** (was 72/2 — adds `__tests__/hackerone-tune.test.ts`: mapping-validity, cursor pagination, cache hit/miss/TTL/degradation order, `retryAfterMs` + 429-retry-then-succeed + give-up-after-maxRetries, capability probe). All prior tests stay green; `tsc --noEmit` clean. Test isolation: mocked clients use `cache:false` and an in-memory cache fs; the live test uses an OS-temp cache path — a test run never mutates the user's real cache. Live read-only smoke **PASS**: auth ok, full taxonomy paginated (>1000 entries, totalCount>1000, multi-request), every mapped CWE validated against the live set, cache written + second fetch served 0-request from cache, capability probe confirmed (`weaknesses`=data, `me`=null) — counts only, **no secret/body printed, no report ever submitted**. Published as **`@metaharness/redblue@0.1.3`**.
+
+## HackerOne integration — human-gated submission (0.1.4)
+
+0.1.4 replaces the hard-disabled submit no-op with an **explicitly human-gated** submission path, per the repo owner's directive: *"A human-gated submit … that (a) verifies the asset is in the program's live scope, (b) requires the confirmed-repro flag, (c) requires explicit per-report `--confirm`, (d) refuses batch/autonomous mode. You remain the submitter of record."* The gates **are** the safety — this is not a relaxation of the posture but a controlled, auditable path that still cannot submit autonomously.
+
+### The four gates (ALL required to actually POST)
+
+`redblue hackerone submit --report <draft.json> --program <handle>`:
+
+1. **Scope gate (FAIL CLOSED).** Fetches the program's **live** in-scope assets read-only and hard-rejects if the report's asset isn't an in-scope, *submission-eligible* asset. If scope can't be read (no token, error, unreadable team) it refuses — never submits without a verified scope match.
+2. **Verification gate (AI-slop guard).** Requires `draft.repro.confirmed === true` (set only by a real redblue run via `toHackerOneReports`, which marks judge-adjudicated `compromised` findings). Hand-built / raw-model drafts default to `confirmed:false` and are refused.
+3. **Per-report confirm.** Requires **both** `--confirm` and `--i-am-submitter` on the invocation. The human is the submitter of record; no implicit submit.
+4. **No batch / no autonomous.** Exactly **one** report per invocation (a `{reports:[...]}` file with ≠1 entry, or an array, is refused); the real (non-dry-run) path is refused in a **CI / non-interactive** environment (no TTY or a CI marker).
+
+**Default = `--dry-run`:** prints program, matched in-scope asset, weakness/CWE, CVSS, and the **redacted** body, plus the per-gate verdicts — and submits nothing. A real POST happens only with `--no-dry-run` on top of all four gates.
+
+### The scope path (directive's open question, RESOLVED live)
+
+Earlier probing showed `structured_scopes` is **not** a top-level `Query` field for this token. The correct read path is the structured-scope connection hanging off the **team**: `team(handle:"<h>"){structured_scopes(first:N){edges{node{asset_identifier asset_type eligible_for_submission instruction}}}}`. Confirmed live (read-only, no submit): `security` → **72 assets / 56 eligible**, `gitlab` → **63 / 24**, a non-existent handle → `readable:false` ("Team does not exist") → gate **fails closed**. So the scope gate is genuinely backed by live data, not a stub.
+
+### Write scope: PROBED, and this token lacks it
+
+The write path is HackerOne's `createReport` GraphQL mutation (write limit 25 req/20s, behind the existing 429 backoff), sitting **behind** all four gates + dry-run. We probe write capability **without creating a report** (`createReport(input:{})` — an intentionally invalid empty input H1 must reject; we read only the rejection class). **Live result: `absent` — this token lacks report-write permission.** So even past all four gates, a real submit **fails closed with a clear message** ("token lacks report-write scope") — not a crash, never a partial submit. (Provisioning a write-scoped token is out of scope for this change; the gating + mechanism are complete and verified.)
+
+### Secrets & safety (unchanged posture)
+- Token read at runtime (`HACKERONE_API_KEY`, GraphQL `X-Auth-Token`) — never logged, committed, or printed.
+- **No real report was POSTed at any point** during build or testing. All submit-path tests are mocked (a `submitReport` spy that never touches the network); the happy path reaches the **mocked** submit only when all four gates pass. The live verification was strictly read-only (scope reads + a write-*probe* that creates nothing).
+- **Fully-autonomous mass-submit is deliberately NOT built** — consistent with HackerOne's CoC, scope, and quality expectations.
+
+### Validation
+Offline suite **117 passed, 3 skipped** (was 91/3 — adds `__tests__/hackerone-submit.test.ts`, 25 tests: each gate's rejection in isolation [out-of-scope→refuse, ineligible-asset→refuse, scope-unreadable→fail-closed, no-key→fail-closed, unverified→refuse, missing `--confirm`/`--i-am-submitter`→refuse, >1/0 reports→refuse, CI/non-interactive real-path→refuse], the dry-run-submits-nothing contract, asset-match scheme/case-insensitivity + eligibility, CI detection, the happy path reaching the **mocked** submit, the write-scope-absent refusal, and a clean no-partial-submit on a failed mocked POST; plus CLI dry-run-default + batch-refusal). `tsc --noEmit` clean. Live read-only verification: scope gate reads real programs (security 72/56, gitlab 63/24), fails closed on a bad handle, write-scope probed `absent` (no report created). Published as **`@metaharness/redblue@0.1.4`**.

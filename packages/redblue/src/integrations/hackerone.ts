@@ -256,6 +256,66 @@ export interface WeaknessFetchResult {
   requests: number;
 }
 
+/**
+ * A program's LIVE in-scope asset, as read (read-only) from HackerOne.
+ *
+ * Modeled on HackerOne's `structured_scope` node. Only the fields the scope
+ * gate needs are kept — enough to match a report's asset and verify it is
+ * submission-eligible. Never carries account data beyond the public scope.
+ */
+export interface ScopeAsset {
+  /** The asset identifier HackerOne shows (e.g. a domain, URL, package, repo). */
+  identifier: string;
+  /** Asset type, e.g. "URL", "CIDR", "SOURCE_CODE", "OTHER". */
+  assetType?: string;
+  /** True when this asset is currently in scope (eligible to submit against). */
+  eligibleForSubmission: boolean;
+  /** HackerOne's instruction text for the asset (informational). */
+  instruction?: string;
+}
+
+/**
+ * Result of a LIVE program-scope fetch (read-only). `readable` distinguishes
+ * "this token genuinely cannot read scope" (gate must FAIL CLOSED) from "scope
+ * read and the asset is/ isn't present". Never surfaces account secrets.
+ */
+export interface ProgramScopeResult {
+  /** The program handle queried. */
+  handle: string;
+  /** True iff the token could actually read the program's structured scopes. */
+  readable: boolean;
+  /** The live in-scope assets (empty when not readable). */
+  assets: ScopeAsset[];
+  /** A schema-level note when scope could not be read (never account data). */
+  note?: string;
+}
+
+/**
+ * Outcome of a probe of the token's WRITE capability (read-only itself — it
+ * NEVER creates a report). We cannot create a report to test the write path
+ * without actually submitting, so write scope is inferred from the schema /
+ * permission errors a dry introspection surfaces, and otherwise reported as
+ * `unverified`. Used to fail a real submit CLOSED when write is known-absent.
+ */
+export interface WriteScopeProbe {
+  /** 'present' = a write path is exposed; 'absent' = denied; 'unverified' = unknown. */
+  status: 'present' | 'absent' | 'unverified';
+  /** Schema-level note (never account data, never the token). */
+  note?: string;
+}
+
+/** Result of a (gated) report-creation attempt. */
+export interface SubmitResult {
+  /** True when HackerOne accepted the report. */
+  ok: boolean;
+  /** The created report id (when ok). */
+  reportId?: string;
+  /** HTTP status of the mutation. */
+  status: number;
+  /** Schema-level error note on failure (never account data / never the token). */
+  note?: string;
+}
+
 /** A single capability-probe outcome (for the read-surface matrix). */
 export interface CapabilityProbe {
   /** Short label for the probed field. */
@@ -546,6 +606,227 @@ export class HackerOneClient {
     }
     return out;
   }
+
+  /**
+   * Fetch a program's LIVE in-scope assets (READ-ONLY) — the scope gate's data.
+   *
+   * IMPORTANT (path discovery): `structured_scopes` is NOT a top-level Query
+   * field for this token (confirmed by `probeCapabilities`). The correct path is
+   * the structured-scope connection hanging off the TEAM:
+   * `team(handle:){structured_scopes(first:N){edges{node{...}}}}`. We read only
+   * the public scope shape (asset identifier/type/eligibility/instruction).
+   *
+   * FAIL CLOSED: any failure to read scope (no token, HTTP/GraphQL error, or a
+   * team that resolves null) returns `{ readable:false }` so the caller refuses
+   * to submit. A genuine empty scope (team readable, zero in-scope assets) is
+   * `{ readable:true, assets:[] }` — also a refusal, but for a different reason.
+   *
+   * Never surfaces account secrets; the token is never logged.
+   */
+  async programScope(
+    handle: string,
+    opts: { pageSize?: number } = {},
+  ): Promise<ProgramScopeResult> {
+    if (!this.creds) {
+      return { handle, readable: false, assets: [], note: 'no credentials' };
+    }
+    const safeHandle = sanitizeHandle(handle);
+    if (!safeHandle) {
+      return { handle, readable: false, assets: [], note: 'invalid handle' };
+    }
+    const pageSize = Math.max(1, Math.min(100, Math.trunc(opts.pageSize ?? 100)));
+    const all: ScopeAsset[] = [];
+    let after: string | null = null;
+    const MAX_PAGES = 20; // generous; scopes are typically < a few hundred.
+    try {
+      for (let page = 0; page < MAX_PAGES; page++) {
+        const afterArg = after ? `,after:"${after}"` : '';
+        const query =
+          `query{team(handle:"${safeHandle}"){handle ` +
+          `structured_scopes(first:${pageSize}${afterArg}){pageInfo{hasNextPage endCursor} ` +
+          `edges{node{asset_identifier asset_type eligible_for_submission instruction}}}}}`;
+        const { ok, body } = await this.graphql(query);
+        if (!ok || body.errors) {
+          return {
+            handle,
+            readable: false,
+            assets: [],
+            note: firstErrorMessage(body.errors) ?? 'scope query errored',
+          };
+        }
+        const team = (body.data as { team?: TeamScopeNode } | undefined)?.team;
+        // Team resolved null → token cannot read this program's scope → FAIL CLOSED.
+        if (!team) {
+          return { handle, readable: false, assets: [], note: 'team not readable' };
+        }
+        const conn = team.structured_scopes;
+        // Team readable but no structured_scopes connection → readable, empty.
+        if (!conn || !Array.isArray(conn.edges)) {
+          return { handle, readable: true, assets: all };
+        }
+        for (const edge of conn.edges) {
+          const a = normalizeScopeAsset(edge);
+          if (a) all.push(a);
+        }
+        if (!conn.pageInfo?.hasNextPage || !conn.pageInfo.endCursor) break;
+        after = conn.pageInfo.endCursor;
+      }
+      return { handle, readable: true, assets: all };
+    } catch {
+      // Network/transport failure → FAIL CLOSED (never assume in-scope).
+      return { handle, readable: false, assets: [], note: 'scope request failed' };
+    }
+  }
+
+  /**
+   * Probe whether this token has a report-creation (WRITE) path — WITHOUT
+   * creating a report. We CANNOT confirm write by actually submitting (that is
+   * the very action gated). Instead we issue a deliberately invalid/empty
+   * `createReport`-shaped mutation and read the GraphQL error: a
+   * permission/authorization error ⇒ write is `absent`; a validation error
+   * (missing fields) ⇒ the mutation EXISTS for this token ⇒ `present`; anything
+   * else ⇒ `unverified`. This never creates a report (the input is invalid by
+   * construction). Read-only in effect.
+   *
+   * No token → `unverified`.
+   */
+  async probeWriteScope(): Promise<WriteScopeProbe> {
+    if (!this.creds) return { status: 'unverified', note: 'no credentials' };
+    // Intentionally-empty input: HackerOne MUST reject this (missing required
+    // fields) — so no report is ever created. We only read the rejection class.
+    const mutation =
+      'mutation{createReport(input:{}){report{id} errors{message}}}';
+    try {
+      const { ok, status, body } = await this.graphql(mutation);
+      const msg = (firstErrorMessage(body.errors) ?? '').toLowerCase();
+      if (msg) {
+        if (
+          msg.includes('not authorized') ||
+          msg.includes('unauthorized') ||
+          msg.includes('permission') ||
+          msg.includes('access') ||
+          (status === 401 || status === 403)
+        ) {
+          return { status: 'absent', note: 'token lacks report-write permission' };
+        }
+        if (
+          msg.includes('argument') ||
+          msg.includes('required') ||
+          msg.includes('invalid') ||
+          msg.includes('expected') ||
+          msg.includes('input')
+        ) {
+          // The mutation exists for this token; it just rejected the empty input.
+          return { status: 'present', note: 'createReport exists; empty input rejected' };
+        }
+        if (msg.includes("doesn't exist") || msg.includes('does not exist') || msg.includes('undefined field')) {
+          return { status: 'absent', note: 'createReport not exposed to this token' };
+        }
+      }
+      if (status === 401 || status === 403) {
+        return { status: 'absent', note: `HTTP ${status}` };
+      }
+      // A 200 with no error on an empty input is unexpected — do NOT assume write.
+      return { status: 'unverified', note: ok ? 'inconclusive response' : `HTTP ${status}` };
+    } catch {
+      return { status: 'unverified', note: 'write probe request failed' };
+    }
+  }
+
+  /**
+   * Create a report via HackerOne's GraphQL write mutation.
+   *
+   * SAFETY: this is the ONE method on this client that performs a WRITE. It is
+   * called ONLY by the CLI submit path AFTER all four human gates pass and the
+   * operator has NOT requested a dry-run. The CLI is responsible for the gates;
+   * this method just performs the (already-authorized) POST. It honors the same
+   * throttle + 429 backoff as reads (HackerOne's write limit is 25 req / 20s).
+   *
+   * The token is never logged. On any error a schema-level note is returned —
+   * never account data, never the token.
+   */
+  async submitReport(input: {
+    teamHandle: string;
+    title: string;
+    vulnerabilityInformation: string;
+    severityRating?: 'none' | 'low' | 'medium' | 'high' | 'critical';
+    weaknessId?: string;
+    structuredScopeId?: string;
+  }): Promise<SubmitResult> {
+    if (!this.creds) return { ok: false, status: 0, note: 'no credentials' };
+    const fields: string[] = [
+      `team_handle:${jsonStr(input.teamHandle)}`,
+      `title:${jsonStr(input.title)}`,
+      `vulnerability_information:${jsonStr(input.vulnerabilityInformation)}`,
+    ];
+    if (input.severityRating) fields.push(`severity_rating:${input.severityRating}`);
+    if (input.weaknessId) fields.push(`weakness_id:${jsonStr(input.weaknessId)}`);
+    if (input.structuredScopeId) {
+      fields.push(`structured_scope_id:${jsonStr(input.structuredScopeId)}`);
+    }
+    const mutation =
+      `mutation{createReport(input:{${fields.join(',')}}){report{id} errors{message}}}`;
+    try {
+      const { ok, status, body } = await this.graphql(mutation);
+      const data = body.data as { createReport?: { report?: { id?: unknown }; errors?: unknown } } | undefined;
+      const cr = data?.createReport;
+      const reportId =
+        cr?.report && typeof cr.report.id === 'string' ? cr.report.id : undefined;
+      const mutationErr = firstErrorMessage(cr?.errors) ?? firstErrorMessage(body.errors);
+      if (ok && status === 200 && reportId && !mutationErr) {
+        return { ok: true, reportId, status };
+      }
+      return { ok: false, status, note: mutationErr ?? `HTTP ${status}` };
+    } catch {
+      return { ok: false, status: 0, note: 'submit request failed' };
+    }
+  }
+}
+
+/** Team node shape for the structured-scope query (only fields we read). */
+interface TeamScopeNode {
+  handle?: string;
+  structured_scopes?: {
+    pageInfo?: { hasNextPage?: boolean; endCursor?: string | null };
+    edges?: unknown[];
+  };
+}
+
+/** Normalize a structured_scope GraphQL edge into a ScopeAsset. */
+function normalizeScopeAsset(edge: unknown): ScopeAsset | null {
+  if (typeof edge !== 'object' || edge === null) return null;
+  const node = (edge as { node?: unknown }).node;
+  if (typeof node !== 'object' || node === null) return null;
+  const obj = node as {
+    asset_identifier?: unknown;
+    asset_type?: unknown;
+    eligible_for_submission?: unknown;
+    instruction?: unknown;
+  };
+  const identifier = typeof obj.asset_identifier === 'string' ? obj.asset_identifier : undefined;
+  if (!identifier) return null;
+  return {
+    identifier,
+    assetType: typeof obj.asset_type === 'string' ? obj.asset_type : undefined,
+    // Default to NOT eligible unless HackerOne explicitly says true (fail closed).
+    eligibleForSubmission: obj.eligible_for_submission === true,
+    instruction: typeof obj.instruction === 'string' ? obj.instruction : undefined,
+  };
+}
+
+/**
+ * Sanitize a program handle for safe inline interpolation into a GraphQL string.
+ * HackerOne handles are `[a-z0-9_-]`. Anything else → empty (caller fails closed).
+ */
+function sanitizeHandle(handle: unknown): string | null {
+  if (typeof handle !== 'string') return null;
+  const t = handle.trim().toLowerCase();
+  return /^[a-z0-9][a-z0-9_-]{0,62}$/.test(t) ? t : null;
+}
+
+/** JSON-string-escape a value for safe inline GraphQL (quotes, newlines, etc.). */
+function jsonStr(v: string): string {
+  return JSON.stringify(v);
 }
 
 /** GraphQL weakness connection shape (only the fields we read). */

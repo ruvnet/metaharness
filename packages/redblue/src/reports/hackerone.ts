@@ -52,6 +52,24 @@ export interface HackerOneReportDraft {
   /** Redacted evidence strings (redact() applied). */
   evidence: string[];
   recommendedFix?: string;
+  /**
+   * The asset the finding is against — matched against the program's LIVE
+   * in-scope assets by the scope gate before any submission. A draft WITHOUT an
+   * asset can never pass the scope gate (it cannot be matched to live scope).
+   */
+  asset?: string;
+  /**
+   * Reproduction provenance. The verification gate requires `confirmed === true`
+   * (a real redblue run / PoC produced this finding) before a submit is allowed.
+   * Unverified / raw-model drafts have `confirmed: false` and are refused
+   * (AI-slop guard). `confirmed` defaults to false unless the producing run sets
+   * it, so a hand-built or model-generated draft cannot accidentally qualify.
+   */
+  repro: {
+    confirmed: boolean;
+    /** Optional human note on how the repro was confirmed. */
+    method?: string;
+  };
   /** Explicit, machine-readable safety marker. */
   submission: {
     auto_submit: false;
@@ -64,6 +82,20 @@ export interface ToHackerOneReportOptions {
   testCase?: TestCase;
   /** Override the program handle for the draft (informational only). */
   program?: string;
+  /**
+   * The asset this finding is against (used by the scope gate to verify it is in
+   * the program's live scope). Drafts produced by a redblue run should carry the
+   * target asset; without it, the scope gate cannot match and submission fails.
+   */
+  asset?: string;
+  /**
+   * Mark the repro as confirmed. The verification gate requires this to be true
+   * before a submit. It MUST come from a real redblue run / PoC — defaults to
+   * false so a hand-built or raw-model draft cannot pass the gate by omission.
+   */
+  reproConfirmed?: boolean;
+  /** Optional note describing how the repro was confirmed. */
+  reproMethod?: string;
 }
 
 /**
@@ -126,6 +158,15 @@ export function toHackerOneReport(
     stepsToReproduce: steps,
     evidence: redactAll(result.evidence),
     recommendedFix: result.recommendedFix ? redact(result.recommendedFix) : undefined,
+    asset: options.asset ? redact(options.asset) : undefined,
+    repro: {
+      // A finding came from a real redblue run when its result is `compromised`
+      // (the judge confirmed the forbidden outcome) — but the verification gate
+      // only trusts an EXPLICIT confirmation. Default false unless set; a real
+      // run sets reproConfirmed:true. Never auto-true from a hand-built result.
+      confirmed: options.reproConfirmed === true,
+      method: options.reproMethod,
+    },
     submission: {
       auto_submit: false,
       note:
@@ -157,6 +198,13 @@ export function renderHackerOneMarkdown(draft: HackerOneReportDraft): string {
   lines.push(`| CVSS vector | \`${draft.severity.cvssVector}\` |`);
   lines.push(`| HackerOne severity | ${draft.severity.hackeroneSeverity} |`);
   lines.push('');
+  if (draft.asset) {
+    lines.push('## Asset');
+    lines.push('');
+    lines.push(`- **Asset:** \`${draft.asset}\``);
+    lines.push(`- **Repro confirmed:** ${draft.repro.confirmed ? 'yes' : 'no'}${draft.repro.method ? ` (${draft.repro.method})` : ''}`);
+    lines.push('');
+  }
   lines.push('## Impact');
   lines.push('');
   lines.push(draft.impact);
@@ -183,16 +231,32 @@ export function renderHackerOneMarkdown(draft: HackerOneReportDraft): string {
   return lines.join('\n');
 }
 
-/** Build drafts for every compromised finding in a result set. */
+/**
+ * Build drafts for every compromised finding in a result set.
+ *
+ * These drafts come from a REAL redblue run: each `compromised` result was
+ * adjudicated by the judge against the safe taxonomy, so they are marked
+ * `repro.confirmed: true` (the verification gate trusts a real run, not a
+ * hand-built or raw-model draft). `asset` can be threaded through `opts.asset`
+ * (e.g. the configured target) so the scope gate can match against live scope.
+ */
 export function toHackerOneReports(
   results: TestResult[],
   testCases?: TestCase[],
+  opts: { asset?: string } = {},
 ): HackerOneReportDraft[] {
   const byId = new Map<string, TestCase>();
   if (testCases) for (const tc of testCases) byId.set(tc.id, tc);
   return results
     .filter((r) => r.compromised)
-    .map((r) => toHackerOneReport(r, { testCase: byId.get(r.testId) }));
+    .map((r) =>
+      toHackerOneReport(r, {
+        testCase: byId.get(r.testId),
+        asset: opts.asset,
+        reproConfirmed: true,
+        reproMethod: 'redblue baseline run (judge-adjudicated forbidden outcome)',
+      }),
+    );
 }
 
 function humanizeFamily(family: AttackFamily): string {

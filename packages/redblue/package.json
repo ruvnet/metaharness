@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/redblue",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "AI red-teaming for the AI agents & LLM apps you own: stress-test them with adversarial models to find security failures (prompt injection, tool misuse / excessive agency, data leakage, jailbreaks, denial-of-wallet), auto-patch (blue team), retest, and get a board-ready report. Operationalizes NIST AI RMF + OWASP LLM Top-10 as repeatable tests. Safe by design — capability-contained: no real credentials, no live external targets, no shell, no arbitrary network. Dependency-free (Node built-ins).",
   "type": "module",
   "main": "./dist/index.js",

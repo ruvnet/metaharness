@@ -321,22 +321,37 @@ describe('CLI: hackerone subcommand is read-only / submit gated', () => {
     expect(ws.every((w) => /^CWE-\d+$/.test(w.externalId ?? ''))).toBe(true);
   });
 
-  it('submit refuses by default (no flags)', async () => {
+  it('submit refuses with no --report/--program (cannot submit without a draft)', async () => {
     const r = await dispatch('hackerone', ['submit']);
     expect(r.code).toBe(2);
-    expect(r.lines.join('\n')).toContain('DISABLED by design');
+    // requires an explicit report + program; nothing is submitted.
+    expect(r.lines.join('\n')).toMatch(/--program|--report/);
   });
 
-  it('submit never performs a live POST even when fully flagged', async () => {
+  it('submit is dry-run by default — even fully flagged, it submits nothing in this env', async () => {
+    // Build a single-draft file. With no HACKERONE_API_KEY in the test env, the
+    // scope gate fails closed; the default dry-run prints + submits nothing.
+    const { mkdtempSync, writeFileSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = mkdtempSync(join(tmpdir(), 'h1-cli-submit-'));
+    const reportPath = join(dir, 'draft.json');
+    const { toHackerOneReport } = await import('../src/reports/hackerone.js');
+    const draft = toHackerOneReport(mkResult({}), { asset: 'app.example.com', reproConfirmed: true });
+    writeFileSync(reportPath, JSON.stringify({ reports: [draft] }, null, 2));
     const r = await dispatch('hackerone', [
       'submit',
-      '--submit',
+      '--report',
+      reportPath,
       '--program',
       'acme',
       '--confirm',
+      '--i-am-submitter',
     ]);
-    // gate acknowledged, but live submit is intentionally a no-op
-    expect(r.lines.join('\n')).toContain('intentionally a no-op');
+    const text = r.lines.join('\n');
+    // dry-run is the default (no --no-dry-run) → nothing submitted.
+    expect(text).toContain('DRY-RUN');
+    expect(text).not.toContain('submitter of record\n> Submitted');
   });
 });
 

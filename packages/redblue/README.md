@@ -297,15 +297,53 @@ policy:
   cache/static rather than retrying tightly.
 - **HTTPS only**, token in the `X-Auth-Token` header per request, **never logged**.
 
-### ⚠️ Safety: never auto-submits
+### Human-gated submission (`redblue hackerone submit`)
 
-The HackerOne API is used **READ-ONLY** (weakness taxonomy + capability probe).
-redblue **never auto-submits reports to live HackerOne programs.**
-`--format hackerone` produces a **draft/dry-run** only. `redblue hackerone submit`
-is **disabled by design** — even when fully flagged
-(`--submit --program <handle> --confirm`) it is a hard no-op that tells you to
-review and submit manually. Submitting to a live bounty program is an outward
-action you must trigger deliberately, in HackerOne's own UI, outside this tool.
+`--format hackerone` produces a **draft** only. To submit a single draft, redblue
+provides a **human-gated** command whose **default is `--dry-run`** — it prints
+exactly what *would* be submitted and submits nothing. A real report is POSTed
+**only** when a human runs the command with **all four gates** satisfied and
+explicitly opts out of dry-run (`--no-dry-run`). **You remain the submitter of
+record** — there is no autonomous or batch path.
+
+```bash
+# 1) Produce a confirmed draft from a real run (carries repro.confirmed + the asset):
+redblue run --format hackerone --asset app.example.com --out draft.json
+
+# 2) DRY-RUN (default) — prints program, in-scope asset, CWE/CVSS, redacted body, gates:
+redblue hackerone submit --report draft.json --program acme
+
+# 3) Real submit — ALL gates + explicit opt-out, in an interactive (non-CI) terminal:
+redblue hackerone submit --report draft.json --program acme \
+  --no-dry-run --confirm --i-am-submitter
+```
+
+**The four gates (ALL required to actually POST):**
+
+1. **Scope gate** — fetches the program's **live** in-scope assets (read-only, via
+   `team(handle:){structured_scopes}`) and **hard-rejects** if the report's asset
+   is not an in-scope, *submission-eligible* asset. **Fails closed** if scope can't
+   be read (no key, error, or an unreadable team) — never submits without a verified
+   scope match.
+2. **Verification gate** — requires `repro.confirmed === true` on the draft (from a
+   real redblue run / PoC). Unverified or raw-model findings are refused (AI-slop
+   guard).
+3. **Per-report confirm** — requires **both** `--confirm` and `--i-am-submitter` on
+   the invocation. The human is the submitter of record; no implicit submit.
+4. **No batch / no autonomous** — exactly **one** report per invocation (globs /
+   lists / loops are refused), and the real (non-dry-run) path is refused when a
+   **CI / non-interactive** environment is detected.
+
+The underlying write (HackerOne's `createReport` GraphQL mutation, behind the same
+429 backoff as reads) sits **behind** all four gates and the dry-run default. The
+token is read at runtime (`HACKERONE_API_KEY`), never logged or committed. If the
+token lacks report-write scope, the command **fails with a clear message** — not a
+crash and never a partial submit.
+
+> **Deliberately NOT built:** there is no fully-autonomous mass-submit. Submitting
+> to a live bounty program is a deliberate human action, in compliance with
+> HackerOne's Code of Conduct, scope rules, and report-quality expectations. The
+> gates are the safety.
 
 ## Severity scoring
 

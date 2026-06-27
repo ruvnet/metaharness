@@ -86,7 +86,18 @@ export type {
   HeadersLike,
   WeaknessFetchResult,
   CapabilityProbe,
+  ScopeAsset,
+  ProgramScopeResult,
+  WriteScopeProbe,
+  SubmitResult,
 } from './integrations/hackerone.js';
+// Human-gated HackerOne submission (ADR-197): 4 gates + dry-run default.
+export { gatedSubmit, isNonInteractive, matchAssetInScope } from './integrations/h1-submit.js';
+export type {
+  GateVerdict,
+  GatedSubmitInput,
+  GatedSubmitResult,
+} from './integrations/h1-submit.js';
 export {
   readCache,
   writeCache,

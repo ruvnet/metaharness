@@ -70,4 +70,28 @@ describe.skipIf(!LIVE)('LIVE HackerOne read-only smoke', () => {
     // me is null for this limited-scope token (confirmed 2026-06-27).
     expect(byField.get('me')).toBe('null');
   }, 60_000);
+
+  // READ-ONLY scope gate verification against real public programs. NEVER
+  // submits anything: programScope() and probeWriteScope() are read-only (the
+  // write probe sends a deliberately-invalid empty createReport that H1 MUST
+  // reject, so no report is ever created). Only counts/booleans are asserted.
+  it('reads live program scope via team(handle) and fails closed on a bad handle', async () => {
+    const client = new HackerOneClient();
+    // A real, public program exposes in-scope assets (read-only).
+    const sec = await client.programScope('security', { pageSize: 100 });
+    expect(sec.readable).toBe(true);
+    expect(sec.assets.length).toBeGreaterThan(0);
+    expect(sec.assets.some((a) => a.eligibleForSubmission)).toBe(true);
+    // A non-existent team → fail closed (never assume in-scope).
+    const bad = await client.programScope('this-team-should-not-exist-xyz-987');
+    expect(bad.readable).toBe(false);
+    expect(bad.assets.length).toBe(0);
+  }, 60_000);
+
+  it('probes write scope WITHOUT creating a report (read-only effect)', async () => {
+    // Empty-input createReport is rejected by H1 → no report created. We only
+    // read the rejection class. Never asserts on a token or account data.
+    const ws = await new HackerOneClient().probeWriteScope();
+    expect(['present', 'absent', 'unverified']).toContain(ws.status);
+  }, 60_000);
 });

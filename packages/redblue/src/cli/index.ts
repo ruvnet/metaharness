@@ -28,6 +28,8 @@ import {
   renderHackerOneMarkdown,
 } from '../reports/hackerone.js';
 import { HackerOneClient, hasHackerOneKey } from '../integrations/hackerone.js';
+import { gatedSubmit } from '../integrations/h1-submit.js';
+import type { HackerOneReportDraft } from '../reports/hackerone.js';
 import type { TargetDriver, TestCase, TestResult } from '../types.js';
 
 export interface CliResult {
@@ -225,7 +227,11 @@ async function cmdRun(argv: string[]): Promise<CliResult> {
 
   // `--format hackerone` emits bounty-report DRAFTS (never auto-submitted).
   if (arg('--format', argv) === 'hackerone') {
-    const drafts = toHackerOneReports(results, cases);
+    // Thread the configured target as the draft asset so a later (human-gated)
+    // submit can match it against the program's live scope. http targets carry a
+    // url; the in-proc example target has no external asset (left undefined).
+    const asset = cfg.target.kind === 'http' ? cfg.target.url : arg('--asset', argv);
+    const drafts = toHackerOneReports(results, cases, { asset });
     if (outJson) writeFileSync(outJson, JSON.stringify({ draft: true, reports: drafts }, null, 2));
     lines.push('# HackerOne report DRAFTS (NOT submitted — review before any manual submission)\n');
     if (drafts.length === 0) {
@@ -280,9 +286,13 @@ async function cmdReport(argv: string[]): Promise<CliResult> {
  * an honest capability matrix (data / null / error per field). No-key → static
  * note.
  *
- * `submit` is HARD-DISABLED by design — it is intentionally a no-op that never
- * performs a live POST. This CLI only ever produces drafts; submitting to a
- * live program is a manual action the human takes in HackerOne's own UI.
+ * `submit` is HUMAN-GATED (ADR-197). Default mode is `--dry-run`: it prints
+ * exactly what WOULD be submitted and submits nothing. A real POST happens ONLY
+ * when a human passes every gate — an in-scope/eligible asset (scope read live,
+ * FAIL CLOSED), a confirmed repro (repro.confirmed), `--confirm` AND
+ * `--i-am-submitter`, exactly one report, and an interactive (non-CI) terminal —
+ * AND explicitly opts out of dry-run with `--no-dry-run`. The human is the
+ * submitter of record; there is no autonomous / batch path.
  */
 async function cmdHackerOne(argv: string[]): Promise<CliResult> {
   const action = argv[0] ?? 'weaknesses';
@@ -342,23 +352,113 @@ async function cmdHackerOne(argv: string[]): Promise<CliResult> {
     return { code: 0, lines };
   }
   if (action === 'submit') {
-    // HARD GATE — never a default action, and not implemented as a live POST.
-    const confirmed =
-      argv.includes('--submit') && !!arg('--program', argv) && argv.includes('--confirm');
+    return cmdHackerOneSubmit(argv);
+  }
+  return { code: 1, lines: ['redblue hackerone <weaknesses|capabilities|submit>'] };
+}
+
+/**
+ * `redblue hackerone submit --report <draft.json> --program <handle>` — the
+ * HUMAN-GATED submit (ADR-197). Default = `--dry-run` (prints what WOULD be
+ * submitted, submits nothing). A real POST requires all four gates + an explicit
+ * `--no-dry-run` opt-out. The human is the submitter of record.
+ *
+ * Loads exactly ONE report draft (a glob/list/loop is refused). The draft may be
+ * a single-draft JSON or a `{ reports: [...] }` envelope with exactly one entry.
+ */
+async function cmdHackerOneSubmit(argv: string[]): Promise<CliResult> {
+  const reportPath = arg('--report', argv);
+  const program = arg('--program', argv);
+
+  // Dry-run is the DEFAULT. It is only disabled by an explicit opt-out flag.
+  const dryRun = !(argv.includes('--no-dry-run') || argv.includes('--live'));
+  const confirm = argv.includes('--confirm');
+  const iAmSubmitter = argv.includes('--i-am-submitter');
+
+  if (!program) {
+    return { code: 2, lines: ['redblue hackerone submit: --program <handle> is required.'] };
+  }
+  if (!reportPath) {
     return {
-      code: confirmed ? 0 : 2,
+      code: 2,
       lines: [
-        'redblue hackerone submit: live submission is DISABLED by design.',
-        'This tool produces DRAFTS only (redblue run --format hackerone). It will',
-        'never auto-submit a report to a live bounty program. Review the draft and',
-        'submit it manually through HackerOne if appropriate.',
-        ...(confirmed
-          ? ['(--submit --program --confirm acknowledged, but live submit is intentionally a no-op.)']
-          : []),
+        'redblue hackerone submit: --report <draft.json> is required.',
+        'Produce a draft with: redblue run --format hackerone --out drafts.json',
       ],
     };
   }
-  return { code: 1, lines: ['redblue hackerone <weaknesses|capabilities|submit>'] };
+  if (!existsSync(reportPath)) {
+    return { code: 2, lines: [`redblue hackerone submit: report file not found: ${reportPath}`] };
+  }
+
+  // Parse the draft. Accept a single draft or a one-entry { reports: [...] }
+  // envelope. MORE than one report is a hard refusal (no batch).
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(readFileSync(reportPath, 'utf8'));
+  } catch (e) {
+    return {
+      code: 2,
+      lines: [`redblue hackerone submit: could not parse ${reportPath}: ${e instanceof Error ? e.message : String(e)}`],
+    };
+  }
+  const { draft, reportCount, error } = extractSingleDraft(parsed);
+  if (error || !draft) {
+    return { code: 2, lines: [`redblue hackerone submit: ${error ?? 'no draft found in report file.'}`] };
+  }
+
+  const client = new HackerOneClient();
+  const result = await gatedSubmit({
+    draft,
+    program,
+    client,
+    flags: { dryRun, confirm, iAmSubmitter },
+    reportCount,
+  });
+
+  // Exit code: 0 when a dry-run ran cleanly OR a real submit succeeded; 2 when a
+  // gate failed or a real submission failed.
+  const ok = result.dryRun
+    ? true
+    : result.allGatesPassed && result.submit?.ok === true;
+  return { code: ok ? 0 : 2, lines: result.lines };
+}
+
+/**
+ * Extract EXACTLY ONE draft from a parsed report file.
+ *
+ * Accepts: a bare draft object, or a `{ reports: [draft] }` envelope. Returns the
+ * draft + the count of reports seen (so the no-batch gate can refuse > 1). A file
+ * with 0 or >1 reports yields an error (and a reportCount the gate will refuse).
+ */
+function extractSingleDraft(parsed: unknown): {
+  draft?: HackerOneReportDraft;
+  reportCount: number;
+  error?: string;
+} {
+  if (Array.isArray(parsed)) {
+    return {
+      reportCount: parsed.length,
+      error: `report file is an array of ${parsed.length} drafts — exactly one report per invocation (no batch).`,
+    };
+  }
+  if (parsed && typeof parsed === 'object') {
+    const obj = parsed as { reports?: unknown; draft?: unknown };
+    if (Array.isArray(obj.reports)) {
+      if (obj.reports.length !== 1) {
+        return {
+          reportCount: obj.reports.length,
+          error: `report file contains ${obj.reports.length} reports — exactly one report per invocation (no batch).`,
+        };
+      }
+      return { draft: obj.reports[0] as HackerOneReportDraft, reportCount: 1 };
+    }
+    // A bare single draft object.
+    if (obj.draft === true || 'weakness' in (parsed as object)) {
+      return { draft: parsed as HackerOneReportDraft, reportCount: 1 };
+    }
+  }
+  return { reportCount: 0, error: 'no recognizable report draft (expected a draft object or { reports: [draft] }).' };
 }
 
 function usage(): CliResult {
@@ -377,14 +477,20 @@ Usage:
   redblue report --in report.json
   redblue hackerone weaknesses [--refresh]   # read-only CWE taxonomy (cache→live→static)
   redblue hackerone capabilities             # read-only probe of the token's read surface
-  redblue hackerone submit ...               # DISABLED — drafts only, never auto-submits
+  redblue hackerone submit --report <draft.json> --program <handle>
+                 # HUMAN-GATED submit. Default = --dry-run (prints, submits nothing).
+                 # Real POST requires ALL gates: in-scope/eligible asset (scope read
+                 # live, FAIL CLOSED), repro.confirmed, --confirm AND --i-am-submitter,
+                 # exactly one report, an interactive (non-CI) terminal, and --no-dry-run.
+                 # You remain the submitter of record. No autonomous / batch path.
 
 HackerOne: --format hackerone exports bounty-report DRAFTS (CWE + CVSS, redacted
 evidence). Auth is a single API token (GraphQL X-Auth-Token) from HACKERONE_API_KEY
 read at runtime; with no key, the static CWE fallback keeps it offline/$0. The full
 taxonomy (~1631 entries) is fetched cache-first and persisted to
 ~/.claude/redblue/h1-weaknesses.json (7-day TTL) to respect HackerOne's read rate
-limit. The tool NEVER auto-submits to a live program.
+limit. Submission is human-gated and dry-run by default — a fully-autonomous
+mass-submit path is deliberately NOT built.
 
 The REAL judge is a model and requires OPENROUTER_API_KEY (the default/product
 path). --mock-judge selects a $0 TEST-ONLY marker fixture — NOT the product judge.
