@@ -311,6 +311,11 @@ async function buildTraceHint(inst, llmFn) {
         // tail; without a wider tail the TRACE_BEGIN sentinel is truncated and parseTrace silently
         // returns ok:false (every trace seed becomes null → the lever is a no-op). 200 KB is ample.
         tailBytes: 200_000,
+        // ADR-196 fix #2 (§59): ALSO widen the in-container `| tail -N` LINE cap. A chatty repro emits
+        // many lines BEFORE the tracer sentinels; the default `tail -50` drops TRACE_BEGIN → null seed.
+        // This was the silent 0/82 fire-rate on the full-300 escalated set (django/sympy/sphinx are
+        // verbose) despite the byte-tail being ample. 5000 lines captures the repro output + the block.
+        tailLines: 5000,
       });
       return { ran: rr.ran, logTail: rr.logTail };
     },

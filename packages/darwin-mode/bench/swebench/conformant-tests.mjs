@@ -42,6 +42,13 @@ export function runConformantTests(instanceId, patch, testCmd, opts = {}) {
   // TRACE_BEGIN sentinel and silently breaks parseTrace) can opt into a bigger tail. Default is
   // unchanged (2500) so every other caller's behaviour is identical.
   const TAIL = Math.max(2500, opts.tailBytes ?? 2500);
+  // ADR-196 fix #2 (§59): the in-container `| tail -50` LINE cap (below) is a SECOND, independent
+  // truncation that the byte-tail fix above never touched. A chatty repro (django/sympy/sphinx emit
+  // many lines of their own output before the tracer's sentinels) pushes TRACE_BEGIN out of the last
+  // 50 lines → parseTrace finds no block → silent null seed → trace-localize is a no-op. This is why
+  // it fired 8/10 on the quiet HARD-25 repros (§56) but 0/82 on the full-300 escalated set (§59).
+  // Callers needing the full machine-readable block opt into a large LINE tail too (default unchanged).
+  const TAILLINES = Math.max(50, opts.tailLines ?? 50);
   // optional extraFiles (e.g. reproduce_bug.py) base64-staged into /testbed before the test.
   const extra = opts.extraFiles && typeof opts.extraFiles === 'object' ? opts.extraFiles : {};
   const writeExtra = Object.entries(extra).map(([p, c]) =>
@@ -59,7 +66,7 @@ export function runConformantTests(instanceId, patch, testCmd, opts = {}) {
       ? `{ printf %s ${JSON.stringify(b64)} | base64 -d > /tmp/patch.diff && git apply -v /tmp/patch.diff 2>&1 | tail -2 || { echo "[apply-failed]"; exit 97; }; }`
       : 'true',
     ...writeExtra,
-    `${testCmd} 2>&1 | tail -50`,
+    `${testCmd} 2>&1 | tail -${TAILLINES}`,
   ].join(' && ');
   const cmd = reuse
     ? `docker exec ${opts.containerId} bash -c ${JSON.stringify(script)}`
