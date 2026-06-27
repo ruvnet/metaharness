@@ -241,10 +241,44 @@ if [ -n "$REPORT" ]; then
   RESOLVED=$(node -pe "(JSON.parse(require('fs').readFileSync('$REPORT')).resolved_ids||[]).length" 2>/dev/null || echo 0)
   if [ -n "$SAMPLE" ]; then TOTAL=$SAMPLE; else case "$BENCH" in verified) TOTAL=500;; multilingual) TOTAL=300;; pro) TOTAL=25;; *) TOTAL=300;; esac; fi  # denom = actual instances run (SAMPLE-aware)
   PCT=$(node -pe "($RESOLVED/$TOTAL*100).toFixed(1)")
+  # ── ADR-196 trace-localize provenance (the §56 fire-check, GCP-path-safe) ──
+  # The worker disk is NOT scp-retrievable from outside the VPC (IAP/IAM blocks it), so a trace A/B that
+  # only self-reports the aggregate resolve % is UN-VALIDATABLE downstream — you can't confirm traces fired,
+  # and §56 says "if traces don't fire the run is meaningless". Fix: when TRACE=1, compute the per-instance
+  # trace-fire + escalation + resolved-ids breakdown HERE (artifacts are local on the VM) and ship it to
+  # Firestore so the matched comparison (§56) is fully reproducible from the self-report alone.
+  TRACE_FIELDS=""
+  if [ "${TRACE:-}" = "1" ]; then
+    TRACE_FIELDS=$(node -e '
+      const fs=require("fs"),O=process.env.OUT;
+      const jl=p=>fs.existsSync(p)?fs.readFileSync(p,"utf8").split("\n").filter(Boolean).map(l=>{try{return JSON.parse(l)}catch{return null}}).filter(Boolean):[];
+      const esc=jl(O+"/preds-esc.jsonl"), cheap=jl(O+"/preds-cheap.jsonl");
+      const isEmpty=p=>!((p.model_patch||p.patch||"").trim());
+      const glmEmpty=cheap.filter(isEmpty).map(p=>p.instance_id);
+      const escIds=esc.map(p=>p.instance_id);
+      const fired=esc.filter(p=>p.traceLocalized===true).map(p=>p.instance_id);
+      const rep=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));
+      const resolved=rep.resolved_ids||[];
+      const arr=a=>`{"arrayValue":{"values":[${a.map(x=>`{"stringValue":${JSON.stringify(x)}}`).join(",")}]}}`;
+      // emit Firestore field fragments (leading comma; values capped to keep the doc < 1MB Firestore limit)
+      const cap=a=>a.slice(0,300);
+      process.stdout.write(
+        `,"trace_localize":{"booleanValue":true}`+
+        `,"glm_empty_n":{"integerValue":"${glmEmpty.length}"}`+
+        `,"escalated_n":{"integerValue":"${escIds.length}"}`+
+        `,"trace_fired_n":{"integerValue":"${fired.length}"}`+
+        `,"truncated_escalation":{"booleanValue":${escIds.length<glmEmpty.length}}`+
+        `,"escalated_ids":${arr(cap(escIds))}`+
+        `,"trace_fired_ids":${arr(cap(fired))}`+
+        `,"resolved_ids":${arr(cap(resolved))}`
+      );
+    ' "$REPORT" 2>/dev/null || echo "")
+    echo "trace-fire summary: $(echo "$TRACE_FIELDS" | grep -oE '"(glm_empty_n|escalated_n|trace_fired_n)":\{"integerValue":"[0-9]+"' | sed 's/.*"\([a-z_]*\)":{"integerValue":"\([0-9]*\)/\1=\2/' | tr '\n' ' ')"
+  fi
   curl -s -X POST "https://firestore.googleapis.com/v1/projects/$PROJECT_ID/databases/(default)/documents/darwin_runs" \
     -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
-    -d "{\"fields\":{\"benchmark\":{\"stringValue\":\"$BENCH\"},\"model\":{\"stringValue\":\"$MODEL\"},\"mode\":{\"stringValue\":\"$MODE\"},\"resolved\":{\"integerValue\":\"$RESOLVED\"},\"total\":{\"integerValue\":\"$TOTAL\"},\"resolve_pct\":{\"doubleValue\":$PCT},\"conformant\":{\"booleanValue\":true},\"source\":{\"stringValue\":\"gcp-fleet\"},\"ts\":{\"stringValue\":\"$(date -I)\"}}}" >/dev/null \
-    && echo "self-reported $RESOLVED/$TOTAL = $PCT% to Firestore darwin_runs" || echo "Firestore self-report failed (results still in $OUT)"
+    -d "{\"fields\":{\"benchmark\":{\"stringValue\":\"$BENCH\"},\"model\":{\"stringValue\":\"$MODEL\"},\"mode\":{\"stringValue\":\"$MODE\"},\"resolved\":{\"integerValue\":\"$RESOLVED\"},\"total\":{\"integerValue\":\"$TOTAL\"},\"resolve_pct\":{\"doubleValue\":$PCT},\"conformant\":{\"booleanValue\":true},\"source\":{\"stringValue\":\"gcp-fleet\"},\"ts\":{\"stringValue\":\"$(date -I)\"}$TRACE_FIELDS}}" >/dev/null \
+    && echo "self-reported $RESOLVED/$TOTAL = $PCT% to Firestore darwin_runs${TRACE_FIELDS:+ (+ trace-fire provenance)}" || echo "Firestore self-report failed (results still in $OUT)"
 fi
 echo "=== DONE — results in $OUT ==="
 # Cost-saver: halt the VM after a short grace (results already self-reported to Firestore). AUTOSTOP=0 to keep alive for debugging.
