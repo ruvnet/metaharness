@@ -1,846 +1,846 @@
 {
- "updated": "2026-06-27",
- "notes": {
-  "resolve": "Lite & Verified resolve % are REAL, from swe-bench/experiments (results/results.json, resolved/denom). Pro % are from the Scale SEAL public standardized set (morphllm.com/swe-bench-pro). Darwin entries are our own gold-graded runs on the official swebench harness. LiveCodeBench pass@1 is REAL, scored by the official lcb_runner codegen_metrics harness (private tests, never seen during generation).",
-  "cost": "Official entries' cost/instance is ESTIMATED from each system's DISCLOSED model(s) + scaffold shape \u00d7 public token pricing \u2014 not a figure those teams published; order-of-magnitude only (marked 'est'). 'undisclosed' = no public model/cost. Darwin costs are MEASURED from actual OpenRouter spend.",
-  "darwin": "Darwin is measured on SWE-bench Lite (conformant: solver never sees gold tests in-loop). Verified/Pro runs are not done yet \u2014 those boards are shown for competitive context.",
-  "livecodebench": "Darwin LCB points: balanced n=100 SUBSET of release_v5's >=2024-11-01 window (post-cutoff for deepseek's disclosed cutoff, contamination-resistant). Difficulty mix easy31/med35/hard34, 53 AtCoder/47 LeetCode, 53 stdin/47 functional. Scored by the OFFICIAL lcb_runner codegen_metrics harness (eval validated end-to-end: known-correct stdin+functional->PASS, empty/wrong->FAIL). Two arms on the SAME instances: (A) single-shot deepseek-chat with a ROBUST extractor (prefers the largest python block that parses, not just the last fenced block -- fixes the empty-extraction misses); (B) a cost-cascade that escalates to deepseek-r1-0528 (reasoner) ONLY when the cheap base emits no code OR fails the PUBLIC example tests (hidden grading tests NEVER touched during solving). HONESTY: temp-0 is NOT deterministic on OpenRouter, so the raw 44->62 delta conflates the cascade lever with run-to-run noise. Attributable cascade lift (on the 27 escalated problems, the only DESIGNED difference): reasoner solved 12/27 vs single-shot's 4/27 = +8 net on the hard tail; the rest of the observed +18 is temp-0 variance on the 73 non-escalated problems. n=100 with a balanced (not easy-skewed) mix -- closer to the official ~34% full-set population than the old n=25; still not 1:1 (sampling + unpinned deepseek snapshot cutoff).",
-  "terminalbench": "Terminal-Bench resolve % are REAL, scored by the OFFICIAL terminal-bench harness (terminal-bench-core==0.1.1, 80 tasks): the harness builds each task's Docker container, runs the Darwin 1-tool (bash) ReAct shell agent inside it, then runs the task's OWN hidden tests \u2014 the agent NEVER sees or runs the tests (leakage-free by construction). Eval-validated: oracle agent \u2192 100% PASS on hello-world (the harness scores a known-good solution correctly). Hardest-first ladder (hard\u2192medium\u2192easy). Darwin costs MEASURED from OpenRouter usage.cost. Cheap base = deepseek-chat (full-80); ceiling probe = Claude-Sonnet-4.5 on the 24-task hard band only. Small-n bands are directional (Wilson 95% CI shown). Some heavy ML/qemu tasks failed for HARNESS/ENVIRONMENT reasons (test runner produced no summary, or agent/test exceeded the 60-600s time budgets) rather than genuine solver misses \u2014 see entry notes. Official TB-1.0 leaderboard refs (Apex2/Ante/Droid 58-64.5% on Sonnet-4.5/Opus-4.1; Terminus baseline mean 34.7%) shown for context.",
-  "swerebench": "SWE-rebench (nebius/SWE-rebench, arxiv 2505.20411) is the DECONTAMINATED clean test (post-cutoff repos, continuously updated). Darwin entries are gold-eval'd on the official SWE-rebench fork harness (--namespace swerebench), \u00a742-validated (gold resolves 51/65, empty 0/65). n=51 is a directional sample. The clean cascade (37.3%) lands below our contaminated Lite 51.3%/Verified 55.6% \u2014 consistent with contamination inflation, with the honest caveat that SWE-rebench is a different/harder distribution (drop is confounded, not cleanly attributable)."
- },
- "sources": [
-  "https://github.com/swe-bench/experiments",
-  "https://www.swebench.com/",
-  "https://livecodebench.github.io/leaderboard.html",
-  "https://github.com/LiveCodeBench/LiveCodeBench",
-  "https://www.tbench.ai/leaderboard/terminal-bench/1.0"
- ],
- "benchmarks": {
-  "lite": {
-   "label": "SWE-bench Lite (300)",
-   "denom": 300,
-   "entries": [
-    {
-     "name": "Darwin \u00b7 single-traj",
-     "scaffold": "interactive ReAct",
-     "model": "DeepSeek-V4-Flash",
-     "resolve": 34,
-     "ci": [
-      28.9,
-      39.5
-     ],
-     "cost": 0.005,
-     "kind": "meas",
-     "costEst": false,
-     "note": "102/300 full-300, gold, conformant; cost = measured"
-    },
-    {
-     "name": "Darwin \u00b7 Best-of-3 + judge",
-     "scaffold": "N=3 + LLM-judge (full-300)",
-     "model": "DeepSeek-V4-Flash \u00d73 + judge",
-     "resolve": 39.7,
-     "ci": [
-      34.3,
-      45.3
-     ],
-     "cost": 0.015,
-     "kind": "meas",
-     "costEst": false,
-     "note": "119/300 full-300 judge-only (measured); union ceiling 45%; env-filter (faster impl) is the lever toward 45%"
-    },
-    {
-     "name": "ExpeRepair-v1.0",
-     "scaffold": "repair, 2+ attempts",
-     "model": "Claude-4-Sonnet + o3/o4-mini",
-     "resolve": 60.3,
-     "cost": 2.5,
-     "kind": "official",
-     "costEst": true,
-     "note": "est: frontier + reasoning models, 2+ attempts",
-     "src": "https://github.com/ExpeRepair/ExpeRepair"
-    },
-    {
-     "name": "KGCompass",
-     "scaffold": "knowledge-graph repair",
-     "model": "Claude-4-Sonnet",
-     "resolve": 58.3,
-     "cost": 1.5,
-     "kind": "official",
-     "costEst": true,
-     "note": "est: Claude-4-Sonnet $3/$15"
-    },
-    {
-     "name": "SWE-agent",
-     "scaffold": "interactive ReAct",
-     "model": "Claude-4-Sonnet",
-     "resolve": 56.7,
-     "cost": 2,
-     "kind": "official",
-     "costEst": true,
-     "note": "est: long multi-turn agentic trace"
-    },
-    {
-     "name": "SemAgent Multi-v1",
-     "scaffold": "multi-agent",
-     "model": "Claude-3.7 + Gemini-2.5-Pro",
-     "resolve": 51.7,
-     "cost": 1.8,
-     "kind": "official",
-     "costEst": true,
-     "note": "est: two frontier models"
-    },
-    {
-     "name": "devlo",
-     "scaffold": "commercial agent",
-     "model": "undisclosed",
-     "resolve": 47.3,
-     "cost": null,
-     "kind": "official",
-     "costEst": true,
-     "note": "commercial; model + cost undisclosed"
-    },
-    {
-     "name": "EntroPO R2E",
-     "scaffold": "RL-trained, TTS",
-     "model": "Qwen-Coder-30B",
-     "resolve": 45,
-     "cost": 0.12,
-     "kind": "official",
-     "costEst": true,
-     "note": "est: cheap 30B OSS. (Scored 0-4% in OUR scaffold \u2014 harness-specific, doesn't transfer.)"
-    },
-    {
-     "name": "Agentless-1.5",
-     "scaffold": "agentless",
-     "model": "Claude-3.5-Sonnet",
-     "resolve": 40.7,
-     "cost": 0.4,
-     "kind": "official",
-     "costEst": true,
-     "note": "est: ~3 calls \u00d7 Claude-3.5"
-    },
-    {
-     "name": "Agentless-lite",
-     "scaffold": "agentless",
-     "model": "o3-mini",
-     "resolve": 32.3,
-     "cost": 0.15,
-     "kind": "official",
-     "costEst": true,
-     "note": "est: o3-mini \u00d7 few calls"
-    },
-    {
-     "name": "Moatless",
-     "scaffold": "search + edit",
-     "model": "DeepSeek-V3",
-     "resolve": 30.7,
-     "cost": 0.1,
-     "kind": "official",
-     "costEst": true,
-     "note": "est: DeepSeek-V3"
-    },
-    {
-     "name": "Agentless MCTS-Refine",
-     "scaffold": "agentless + MCTS",
-     "model": "7B (self-hosted)",
-     "resolve": 16.3,
-     "cost": 0.05,
-     "kind": "official",
-     "costEst": true,
-     "note": "est: small 7B model"
-    },
-    {
-     "name": "Darwin \u00b7 union-of-3 (ceiling)",
-     "scaffold": "best achievable selection",
-     "model": "DeepSeek-V4-Flash \u00d73",
-     "resolve": 45,
-     "ci": [
-      39.5,
-      50.7
-     ],
-     "cost": 0.015,
-     "kind": "pilot",
-     "costEst": false,
-     "note": "oracle upper bound: any-of-3 resolves; a perfect selector would hit this"
-    },
-    {
-     "name": "Darwin \u00b7 GLM-5.2 single",
-     "scaffold": "interactive ReAct",
-     "model": "GLM-5.2",
-     "resolve": 37,
-     "ci": [
-      31.4,
-      42.3
-     ],
-     "cost": 0.018,
-     "kind": "meas",
-     "costEst": false,
-     "note": "111/300 full-300 gold, conformant; 113 empty patches @conc4 \u2192 lower bound"
-    },
-    {
-     "name": "Darwin \u00b7 GLM\u2192Opus empty-patch cascade",
-     "scaffold": "cheap solve \u2192 escalate EMPTY patches to Opus (100%-precision gate)",
-     "model": "GLM-5.2 \u2192 Claude-Opus-4.8",
-     "resolve": 51.3,
-     "ci": [
-      45.7,
-      56.9
-     ],
-     "cost": 0.267,
-     "kind": "meas",
-     "costEst": false,
-     "note": "154/300 full-300 gold, conformant (\u00a728); 187 GLM non-empty + 113 Opus-escalated empties; blended measured cost. Breaks 50%, clears the ~45% cheap-union ceiling."
-    }
-   ]
+  "updated": "2026-06-27",
+  "notes": {
+    "resolve": "Lite & Verified resolve % are REAL, from swe-bench/experiments (results/results.json, resolved/denom). Pro % are from the Scale SEAL public standardized set (morphllm.com/swe-bench-pro). Darwin entries are our own gold-graded runs on the official swebench harness. LiveCodeBench pass@1 is REAL, scored by the official lcb_runner codegen_metrics harness (private tests, never seen during generation).",
+    "cost": "Official entries' cost/instance is ESTIMATED from each system's DISCLOSED model(s) + scaffold shape × public token pricing — not a figure those teams published; order-of-magnitude only (marked 'est'). 'undisclosed' = no public model/cost. Darwin costs are MEASURED from actual OpenRouter spend.",
+    "darwin": "Darwin is measured on SWE-bench Lite (conformant: solver never sees gold tests in-loop). Verified/Pro runs are not done yet — those boards are shown for competitive context.",
+    "livecodebench": "Darwin LCB points: balanced n=100 SUBSET of release_v5's >=2024-11-01 window (post-cutoff for deepseek's disclosed cutoff, contamination-resistant). Difficulty mix easy31/med35/hard34, 53 AtCoder/47 LeetCode, 53 stdin/47 functional. Scored by the OFFICIAL lcb_runner codegen_metrics harness (eval validated end-to-end: known-correct stdin+functional->PASS, empty/wrong->FAIL). Two arms on the SAME instances: (A) single-shot deepseek-chat with a ROBUST extractor (prefers the largest python block that parses, not just the last fenced block -- fixes the empty-extraction misses); (B) a cost-cascade that escalates to deepseek-r1-0528 (reasoner) ONLY when the cheap base emits no code OR fails the PUBLIC example tests (hidden grading tests NEVER touched during solving). HONESTY: temp-0 is NOT deterministic on OpenRouter, so the raw 44->62 delta conflates the cascade lever with run-to-run noise. Attributable cascade lift (on the 27 escalated problems, the only DESIGNED difference): reasoner solved 12/27 vs single-shot's 4/27 = +8 net on the hard tail; the rest of the observed +18 is temp-0 variance on the 73 non-escalated problems. n=100 with a balanced (not easy-skewed) mix -- closer to the official ~34% full-set population than the old n=25; still not 1:1 (sampling + unpinned deepseek snapshot cutoff).",
+    "terminalbench": "Terminal-Bench resolve % are REAL, scored by the OFFICIAL terminal-bench harness (terminal-bench-core==0.1.1, 80 tasks): the harness builds each task's Docker container, runs the Darwin 1-tool (bash) ReAct shell agent inside it, then runs the task's OWN hidden tests — the agent NEVER sees or runs the tests (leakage-free by construction). Eval-validated: oracle agent → 100% PASS on hello-world (the harness scores a known-good solution correctly). Hardest-first ladder (hard→medium→easy). Darwin costs MEASURED from OpenRouter usage.cost. Cheap base = deepseek-chat (full-80); ceiling probe = Claude-Sonnet-4.5 on the 24-task hard band only. Small-n bands are directional (Wilson 95% CI shown). Some heavy ML/qemu tasks failed for HARNESS/ENVIRONMENT reasons (test runner produced no summary, or agent/test exceeded the 60-600s time budgets) rather than genuine solver misses — see entry notes. Official TB-1.0 leaderboard refs (Apex2/Ante/Droid 58-64.5% on Sonnet-4.5/Opus-4.1; Terminus baseline mean 34.7%) shown for context.",
+    "swerebench": "SWE-rebench (nebius/SWE-rebench, arxiv 2505.20411) is the DECONTAMINATED clean test (post-cutoff repos, continuously updated). Darwin entries are gold-eval'd on the official SWE-rebench fork harness (--namespace swerebench), §42-validated (gold resolves 51/65, empty 0/65). n=51 is a directional sample. The clean cascade (37.3%) lands below our contaminated Lite 51.3%/Verified 55.6% — consistent with contamination inflation, with the honest caveat that SWE-rebench is a different/harder distribution (drop is confounded, not cleanly attributable)."
   },
-  "verified": {
-   "label": "SWE-bench Verified (500)",
-   "denom": 500,
-   "darwinNote": "Darwin not yet run on Verified \u2014 board shown for context. Our Lite cost-efficiency (~$0.005\u20130.015/inst) is the transferable result.",
-   "entries": [
-    {
-     "name": "LiveSWEAgent",
-     "scaffold": "agentic",
-     "model": "Claude-Opus-4.5",
-     "resolve": 79.2,
-     "cost": 3,
-     "kind": "official",
-     "costEst": true,
-     "note": "est: Opus-4.5 $5/$25 \u00d7 long agentic"
+  "sources": [
+    "https://github.com/swe-bench/experiments",
+    "https://www.swebench.com/",
+    "https://livecodebench.github.io/leaderboard.html",
+    "https://github.com/LiveCodeBench/LiveCodeBench",
+    "https://www.tbench.ai/leaderboard/terminal-bench/1.0"
+  ],
+  "benchmarks": {
+    "lite": {
+      "label": "SWE-bench Lite (300)",
+      "denom": 300,
+      "entries": [
+        {
+          "name": "Darwin · single-traj",
+          "scaffold": "interactive ReAct",
+          "model": "DeepSeek-V4-Flash",
+          "resolve": 34,
+          "ci": [
+            28.9,
+            39.5
+          ],
+          "cost": 0.005,
+          "kind": "meas",
+          "costEst": false,
+          "note": "102/300 full-300, gold, conformant; cost = measured"
+        },
+        {
+          "name": "Darwin · Best-of-3 + judge",
+          "scaffold": "N=3 + LLM-judge (full-300)",
+          "model": "DeepSeek-V4-Flash ×3 + judge",
+          "resolve": 39.7,
+          "ci": [
+            34.3,
+            45.3
+          ],
+          "cost": 0.015,
+          "kind": "meas",
+          "costEst": false,
+          "note": "119/300 full-300 judge-only (measured); union ceiling 45%; env-filter (faster impl) is the lever toward 45%"
+        },
+        {
+          "name": "ExpeRepair-v1.0",
+          "scaffold": "repair, 2+ attempts",
+          "model": "Claude-4-Sonnet + o3/o4-mini",
+          "resolve": 60.3,
+          "cost": 2.5,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: frontier + reasoning models, 2+ attempts",
+          "src": "https://github.com/ExpeRepair/ExpeRepair"
+        },
+        {
+          "name": "KGCompass",
+          "scaffold": "knowledge-graph repair",
+          "model": "Claude-4-Sonnet",
+          "resolve": 58.3,
+          "cost": 1.5,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: Claude-4-Sonnet $3/$15"
+        },
+        {
+          "name": "SWE-agent",
+          "scaffold": "interactive ReAct",
+          "model": "Claude-4-Sonnet",
+          "resolve": 56.7,
+          "cost": 2,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: long multi-turn agentic trace"
+        },
+        {
+          "name": "SemAgent Multi-v1",
+          "scaffold": "multi-agent",
+          "model": "Claude-3.7 + Gemini-2.5-Pro",
+          "resolve": 51.7,
+          "cost": 1.8,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: two frontier models"
+        },
+        {
+          "name": "devlo",
+          "scaffold": "commercial agent",
+          "model": "undisclosed",
+          "resolve": 47.3,
+          "cost": null,
+          "kind": "official",
+          "costEst": true,
+          "note": "commercial; model + cost undisclosed"
+        },
+        {
+          "name": "EntroPO R2E",
+          "scaffold": "RL-trained, TTS",
+          "model": "Qwen-Coder-30B",
+          "resolve": 45,
+          "cost": 0.12,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: cheap 30B OSS. (Scored 0-4% in OUR scaffold — harness-specific, doesn't transfer.)"
+        },
+        {
+          "name": "Agentless-1.5",
+          "scaffold": "agentless",
+          "model": "Claude-3.5-Sonnet",
+          "resolve": 40.7,
+          "cost": 0.4,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: ~3 calls × Claude-3.5"
+        },
+        {
+          "name": "Agentless-lite",
+          "scaffold": "agentless",
+          "model": "o3-mini",
+          "resolve": 32.3,
+          "cost": 0.15,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: o3-mini × few calls"
+        },
+        {
+          "name": "Moatless",
+          "scaffold": "search + edit",
+          "model": "DeepSeek-V3",
+          "resolve": 30.7,
+          "cost": 0.1,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: DeepSeek-V3"
+        },
+        {
+          "name": "Agentless MCTS-Refine",
+          "scaffold": "agentless + MCTS",
+          "model": "7B (self-hosted)",
+          "resolve": 16.3,
+          "cost": 0.05,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: small 7B model"
+        },
+        {
+          "name": "Darwin · union-of-3 (ceiling)",
+          "scaffold": "best achievable selection",
+          "model": "DeepSeek-V4-Flash ×3",
+          "resolve": 45,
+          "ci": [
+            39.5,
+            50.7
+          ],
+          "cost": 0.015,
+          "kind": "pilot",
+          "costEst": false,
+          "note": "oracle upper bound: any-of-3 resolves; a perfect selector would hit this"
+        },
+        {
+          "name": "Darwin · GLM-5.2 single",
+          "scaffold": "interactive ReAct",
+          "model": "GLM-5.2",
+          "resolve": 37,
+          "ci": [
+            31.4,
+            42.3
+          ],
+          "cost": 0.018,
+          "kind": "meas",
+          "costEst": false,
+          "note": "111/300 full-300 gold, conformant; 113 empty patches @conc4 → lower bound"
+        },
+        {
+          "name": "Darwin · GLM→Opus empty-patch cascade",
+          "scaffold": "cheap solve → escalate EMPTY patches to Opus (100%-precision gate)",
+          "model": "GLM-5.2 → Claude-Opus-4.8",
+          "resolve": 51.3,
+          "ci": [
+            45.7,
+            56.9
+          ],
+          "cost": 0.267,
+          "kind": "meas",
+          "costEst": false,
+          "note": "154/300 full-300 gold, conformant (§28); 187 GLM non-empty + 113 Opus-escalated empties; blended measured cost. Breaks 50%, clears the ~45% cheap-union ceiling."
+        }
+      ]
     },
-    {
-     "name": "OpenHands",
-     "scaffold": "agentic",
-     "model": "Claude-Opus-4.5",
-     "resolve": 77.6,
-     "cost": 3,
-     "kind": "official",
-     "costEst": true,
-     "note": "est: Opus-4.5 heavy"
+    "verified": {
+      "label": "SWE-bench Verified (500)",
+      "denom": 500,
+      "darwinNote": "Darwin not yet run on Verified — board shown for context. Our Lite cost-efficiency (~$0.005–0.015/inst) is the transferable result.",
+      "entries": [
+        {
+          "name": "LiveSWEAgent",
+          "scaffold": "agentic",
+          "model": "Claude-Opus-4.5",
+          "resolve": 79.2,
+          "cost": 3,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: Opus-4.5 $5/$25 × long agentic"
+        },
+        {
+          "name": "OpenHands",
+          "scaffold": "agentic",
+          "model": "Claude-Opus-4.5",
+          "resolve": 77.6,
+          "cost": 3,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: Opus-4.5 heavy"
+        },
+        {
+          "name": "LiveSWEAgent",
+          "scaffold": "agentic",
+          "model": "Gemini-3-Pro",
+          "resolve": 77.4,
+          "cost": 2,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: Gemini-3-Pro"
+        },
+        {
+          "name": "SAGE (bash-only)",
+          "scaffold": "minimal bash agent",
+          "model": "frontier (Salesforce)",
+          "resolve": 73,
+          "cost": 1.5,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: bash-only is lighter than full scaffolds"
+        },
+        {
+          "name": "Prometheus v1.2",
+          "scaffold": "agentic",
+          "model": "GPT-5",
+          "resolve": 71.2,
+          "cost": 2,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: GPT-5"
+        },
+        {
+          "name": "zai GLM-4.6",
+          "scaffold": "agentic",
+          "model": "GLM-4.6 (OSS)",
+          "resolve": 68.2,
+          "cost": 0.5,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: cheaper OSS frontier"
+        },
+        {
+          "name": "frogboss-32b",
+          "scaffold": "agentic",
+          "model": "32B (self-hosted)",
+          "resolve": 53.6,
+          "cost": 0.1,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: cheap 32B OSS model"
+        },
+        {
+          "name": "frogmini-14b",
+          "scaffold": "agentic",
+          "model": "14B (self-hosted)",
+          "resolve": 45,
+          "cost": 0.05,
+          "kind": "official",
+          "costEst": true,
+          "note": "est: cheap 14B OSS model"
+        },
+        {
+          "name": "Darwin · single-traj",
+          "scaffold": "interactive ReAct",
+          "model": "DeepSeek-V4-Flash",
+          "resolve": 46.4,
+          "ci": [
+            42.1,
+            50.8
+          ],
+          "cost": 0.005,
+          "kind": "meas",
+          "costEst": false,
+          "note": "232/500 SWE-bench Verified, gold, conformant; cost = measured. First Darwin Verified row."
+        },
+        {
+          "name": "Darwin · GLM→Opus empty-patch cascade",
+          "scaffold": "Darwin cascade",
+          "model": "glm-5.2 → claude-opus-4.8",
+          "resolve": 55.6,
+          "cost": 0.15,
+          "ci": [
+            51.2,
+            59.9
+          ],
+          "kind": "meas",
+          "costEst": true,
+          "note": "278/500, official gold eval, conformant. Cost ~$0.15/inst (est). Beats Lite cascade. §47",
+          "src": "LEARNINGS §47"
+        }
+      ]
     },
-    {
-     "name": "LiveSWEAgent",
-     "scaffold": "agentic",
-     "model": "Gemini-3-Pro",
-     "resolve": 77.4,
-     "cost": 2,
-     "kind": "official",
-     "costEst": true,
-     "note": "est: Gemini-3-Pro"
+    "draco": {
+      "label": "DRACO — Deep Research (quality)",
+      "denom": 1,
+      "metricNote": "Different metric: 'Resolve %' here = DRACO research-quality × 100 (0–100), NOT bug-resolve. 'Cost' is per full corpus run (MEASURED, not estimated); Run total = that run cost.",
+      "darwinNote": "DRACO is our own cross-domain research benchmark. The cheap model beats the frontier on BOTH quality and cost — the harness/cost-router is the lever. All numbers measured (qualityPerUSD).",
+      "entries": [
+        {
+          "name": "Cost-router (cheap)",
+          "scaffold": "always-cheapest route",
+          "model": "Claude-Haiku-4.5",
+          "resolve": 69,
+          "cost": 0.129,
+          "kind": "meas",
+          "costEst": false,
+          "note": "Darwin cost-router lands here: best quality-per-$ (5.36). Measured."
+        },
+        {
+          "name": "Router v2 (escalating)",
+          "scaffold": "haiku→opus @ confidence",
+          "model": "Haiku-4.5 → Opus-4",
+          "resolve": 65.1,
+          "cost": 0.377,
+          "kind": "meas",
+          "costEst": false,
+          "note": "escalation router; measured"
+        },
+        {
+          "name": "Opus-4 (frontier baseline)",
+          "scaffold": "always-frontier",
+          "model": "Claude-Opus-4",
+          "resolve": 70,
+          "cost": 1.31,
+          "kind": "official",
+          "costEst": false,
+          "note": "frontier baseline — barely beats cheap on quality at 10× cost. Measured."
+        },
+        {
+          "name": "GPT-5 (frontier baseline)",
+          "scaffold": "always-frontier",
+          "model": "GPT-5",
+          "resolve": 74.6,
+          "cost": 2.417,
+          "kind": "official",
+          "costEst": false,
+          "note": "highest single-model quality; 19× the cost-router's price. Measured."
+        },
+        {
+          "name": "Oracle (cost-optimal)",
+          "scaffold": "perfect routing (ceiling)",
+          "model": "oracle",
+          "resolve": 80.1,
+          "cost": 1.445,
+          "kind": "official",
+          "costEst": false,
+          "note": "upper bound: best achievable with perfect per-query routing"
+        }
+      ]
     },
-    {
-     "name": "SAGE (bash-only)",
-     "scaffold": "minimal bash agent",
-     "model": "frontier (Salesforce)",
-     "resolve": 73,
-     "cost": 1.5,
-     "kind": "official",
-     "costEst": true,
-     "note": "est: bash-only is lighter than full scaffolds"
+    "ultralite": {
+      "label": "SWE-ultralite (n=25)",
+      "denom": 25,
+      "entries": [
+        {
+          "name": "Darwin · Opus-4.8+GLM-5.2 xbo",
+          "scaffold": "cross-model Best-of-N",
+          "model": "Opus-4.8+GLM-5.2",
+          "resolve": 72,
+          "ci": [
+            52.4,
+            85.7
+          ],
+          "cost": 0.5182,
+          "kind": "meas",
+          "costEst": false,
+          "note": "18/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · Opus-4.8 single",
+          "scaffold": "interactive ReAct",
+          "model": "Opus-4.8",
+          "resolve": 60,
+          "ci": [
+            40.7,
+            76.6
+          ],
+          "cost": 0.5,
+          "kind": "meas",
+          "costEst": false,
+          "note": "15/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · V3.2+Opus-4.8 xcascade",
+          "scaffold": "xcascade",
+          "model": "V3.2+Opus-4.8",
+          "resolve": 56,
+          "ci": [
+            37.1,
+            73.3
+          ],
+          "cost": 0.5,
+          "kind": "meas",
+          "costEst": false,
+          "note": "14/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · DeepSeek-V4 bo3",
+          "scaffold": "N=3 + LLM-judge",
+          "model": "DeepSeek-V4",
+          "resolve": 52,
+          "ci": [
+            33.5,
+            70
+          ],
+          "cost": 0.0152,
+          "kind": "meas",
+          "costEst": false,
+          "note": "13/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · V3.2+GLM-5.2 xbo",
+          "scaffold": "cross-model Best-of-N",
+          "model": "V3.2+GLM-5.2",
+          "resolve": 52,
+          "ci": [
+            33.5,
+            70
+          ],
+          "cost": 0.0302,
+          "kind": "meas",
+          "costEst": false,
+          "note": "13/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · GLM-5.2 single",
+          "scaffold": "interactive ReAct",
+          "model": "GLM-5.2",
+          "resolve": 52,
+          "ci": [
+            33.5,
+            70
+          ],
+          "cost": 0.018,
+          "kind": "meas",
+          "costEst": false,
+          "note": "13/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · DeepSeek-V4 cascade",
+          "scaffold": "repo-test cascade",
+          "model": "DeepSeek-V4",
+          "resolve": 52,
+          "ci": [
+            33.5,
+            70
+          ],
+          "cost": 0.0236,
+          "kind": "meas",
+          "costEst": false,
+          "note": "13/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · GLM-5.2 cascade",
+          "scaffold": "repo-test cascade",
+          "model": "GLM-5.2",
+          "resolve": 48,
+          "ci": [
+            30,
+            66.5
+          ],
+          "cost": 0.085,
+          "kind": "meas",
+          "costEst": false,
+          "note": "12/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · GLM-5.2 bo3",
+          "scaffold": "N=3 + LLM-judge",
+          "model": "GLM-5.2",
+          "resolve": 48,
+          "ci": [
+            30,
+            66.5
+          ],
+          "cost": 0.0542,
+          "kind": "meas",
+          "costEst": false,
+          "note": "12/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · V3.2 single",
+          "scaffold": "interactive ReAct",
+          "model": "V3.2",
+          "resolve": 44,
+          "ci": [
+            26.7,
+            62.9
+          ],
+          "cost": 0.012,
+          "kind": "meas",
+          "costEst": false,
+          "note": "11/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · V3.2+GLM-5.2+DeepSeek-V4 xbo",
+          "scaffold": "cross-model Best-of-N",
+          "model": "V3.2+GLM-5.2+DeepSeek-V4",
+          "resolve": 44,
+          "ci": [
+            26.7,
+            62.9
+          ],
+          "cost": 0.0352,
+          "kind": "meas",
+          "costEst": false,
+          "note": "11/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · DeepSeek-V4 single",
+          "scaffold": "interactive ReAct",
+          "model": "DeepSeek-V4",
+          "resolve": 40,
+          "ci": [
+            23.4,
+            59.3
+          ],
+          "cost": 0.005,
+          "kind": "meas",
+          "costEst": false,
+          "note": "10/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · V3.2 cascade",
+          "scaffold": "repo-test cascade",
+          "model": "V3.2",
+          "resolve": 40,
+          "ci": [
+            23.4,
+            59.3
+          ],
+          "cost": 0.0566,
+          "kind": "meas",
+          "costEst": false,
+          "note": "10/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · Kimi single",
+          "scaffold": "interactive ReAct",
+          "model": "Kimi",
+          "resolve": 36,
+          "ci": [
+            20.2,
+            55.5
+          ],
+          "cost": 0.02,
+          "kind": "meas",
+          "costEst": false,
+          "note": "9/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · DeepSeek-V4+GLM-5.2+Kimi xbo",
+          "scaffold": "cross-model Best-of-N",
+          "model": "DeepSeek-V4+GLM-5.2+Kimi",
+          "resolve": 36,
+          "ci": [
+            20.2,
+            55.5
+          ],
+          "cost": 0.0432,
+          "kind": "meas",
+          "costEst": false,
+          "note": "9/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · Opus-4.8 ecascade",
+          "scaffold": "empty-patch → Opus escalation",
+          "model": "Opus-4.8",
+          "resolve": 32,
+          "ci": [
+            17.2,
+            51.6
+          ],
+          "cost": 0.5,
+          "kind": "meas",
+          "costEst": false,
+          "note": "8/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · Nemotron single",
+          "scaffold": "interactive ReAct",
+          "model": "Nemotron",
+          "resolve": 32,
+          "ci": [
+            17.2,
+            51.6
+          ],
+          "cost": 0.0005,
+          "kind": "meas",
+          "costEst": false,
+          "note": "8/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · MiniMax single",
+          "scaffold": "interactive ReAct",
+          "model": "MiniMax",
+          "resolve": 32,
+          "ci": [
+            17.2,
+            51.6
+          ],
+          "cost": 0.012,
+          "kind": "meas",
+          "costEst": false,
+          "note": "8/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · GPT-5.5 single",
+          "scaffold": "interactive ReAct",
+          "model": "GPT-5.5",
+          "resolve": 28,
+          "ci": [
+            14.3,
+            47.6
+          ],
+          "cost": 1.25,
+          "kind": "meas",
+          "costEst": false,
+          "note": "7/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        },
+        {
+          "name": "Darwin · Kimi cascade",
+          "scaffold": "repo-test cascade",
+          "model": "Kimi",
+          "resolve": 28,
+          "ci": [
+            14.3,
+            47.6
+          ],
+          "cost": 0.0944,
+          "kind": "meas",
+          "costEst": false,
+          "note": "7/25 n=25 GCP fleet, gold, conformant (directional — n=300 confirms)"
+        }
+      ],
+      "darwinNote": "Fast n=25 model×mode Pareto map — directional scouting, not a verdict. n=300 (Lite tab) confirms champions."
     },
-    {
-     "name": "Prometheus v1.2",
-     "scaffold": "agentic",
-     "model": "GPT-5",
-     "resolve": 71.2,
-     "cost": 2,
-     "kind": "official",
-     "costEst": true,
-     "note": "est: GPT-5"
+    "livecodebench": {
+      "label": "LiveCodeBench (n=100, release_v5 >=2024-11)",
+      "denom": 100,
+      "entries": [
+        {
+          "name": "Darwin · single-shot (robust extractor)",
+          "scaffold": "single-shot codegen, robust extractor",
+          "model": "DeepSeek-chat (V3.x)",
+          "resolve": 44,
+          "ci": [
+            34.7,
+            53.8
+          ],
+          "cost": 0.00163,
+          "kind": "meas",
+          "costEst": false,
+          "note": "44/100 (easy 27/31, med 12/35, hard 5/34). OFFICIAL lcb_runner harness; eval validated. Robust extractor (largest parsing python block) cut empty extractions to 4/100. Balanced n=100 (not easy-skewed) -> harder population than old n=25's 64%. $0.0037/solved."
+        },
+        {
+          "name": "Darwin · cost-cascade (->r1-0528)",
+          "scaffold": "cheap base + reasoner escalation on empty/public-fail",
+          "model": "DeepSeek-chat -> DeepSeek-R1-0528",
+          "resolve": 62,
+          "ci": [
+            52.2,
+            70.9
+          ],
+          "cost": 0.01144,
+          "kind": "meas",
+          "costEst": false,
+          "note": "62/100 (easy 27/31, med 19/35, hard 16/34). Escalated 27% to the reasoner on public-test failure/empty extraction (hidden tests gold-held). Paired delta vs single-shot +18pp [7.9,28.1], McNemar p=1.4e-3. BUT temp-0 is nondeterministic on OpenRouter: ATTRIBUTABLE cascade lift is +8 (reasoner 12/27 vs base 4/27 on the escalated tail); ~+10 of the +18 is run-to-run noise. $0.0114/problem, $0.0185/solved."
+        },
+        {
+          "name": "DeepSeek-V3 (official, full release_v5)",
+          "scaffold": "single-shot codegen",
+          "model": "DeepSeek-V3",
+          "resolve": 34.4,
+          "cost": 0.001,
+          "kind": "official",
+          "costEst": true,
+          "note": "Vendor-disclosed LCB pass@1 (08.01-12.01 window, whole set) -- full-set average over harder/older problems. Our balanced n=100 (44% single-shot) is closer to this population than the old easy-skewed n=25 (64%), but still NOT 1:1 (different window + sampling).",
+          "src": "https://api-docs.deepseek.com/updates"
+        }
+      ],
+      "darwinNote": "Balanced n=100 SUBSET of release_v5's >=2024-11-01 (post-cutoff) window, scored by the OFFICIAL lcb_runner harness (eval validated before trusting any number). Single-shot (robust extractor) = 44/100; cost-cascade (escalate to deepseek-r1-0528 on empty/public-test-failure) = 62/100. The raw +18pp is REAL on paired data (McNemar p=1.4e-3) but conflated with temp-0 nondeterminism; the ATTRIBUTABLE cascade lift is +8 on the 27 escalated problems (reasoner 12/27 vs base 4/27). Cascade costs ~7x more per problem ($0.0114 vs $0.0016) for the reasoning tail. n=100 directional; official ~34% full-set shown for context (different population)."
     },
-    {
-     "name": "zai GLM-4.6",
-     "scaffold": "agentic",
-     "model": "GLM-4.6 (OSS)",
-     "resolve": 68.2,
-     "cost": 0.5,
-     "kind": "official",
-     "costEst": true,
-     "note": "est: cheaper OSS frontier"
+    "terminalbench": {
+      "label": "Terminal-Bench (terminal-bench-core 0.1.1, 80)",
+      "denom": 80,
+      "entries": [
+        {
+          "name": "Darwin · cheap base (full-80)",
+          "scaffold": "ReAct shell, 1 tool (bash), maxSteps 30",
+          "model": "DeepSeek-V3.x (deepseek-chat)",
+          "resolve": 21.2,
+          "ci": [
+            13.7,
+            31.4
+          ],
+          "cost": 0.0158,
+          "kind": "meas",
+          "costEst": false,
+          "note": "17/80 full-80 conformant (official tb harness builds each task container, runs our 1-tool shell agent, then the task's OWN hidden tests score). By band: hard 2/24 (8.3%), medium 9/44 (20.5%), easy 6/12 (50.0%). Cost MEASURED from OpenRouter usage.cost. eval-validated (oracle→100% PASS)."
+        },
+        {
+          "name": "Darwin · Sonnet-4.5 (hard band)",
+          "scaffold": "ReAct shell, 1 tool (bash), maxSteps 40",
+          "model": "Claude-Sonnet-4.5",
+          "resolve": 25,
+          "ci": [
+            12,
+            44.9
+          ],
+          "cost": 0.7722,
+          "kind": "meas",
+          "costEst": false,
+          "note": "6/24 HARD band ceiling probe (small-n, directional). 3× the cheap base's 2/24 on the same band: Sonnet cracks cartpole-rl-training, configure-git-webserver, git-multibranch, path-tracing, pytorch-model-cli.hard, swe-bench-astropy-1. CAVEAT: Sonnet FAILED organization-json-generator + prove-plus-comm (which the cheap base passed) due to 60s TEST-COMMAND timeouts (harness limit, not a solver miss) — true ceiling likely 8/24. Heavy ML tasks (pytorch/qemu/hf-model) also lost to agent/test timeouts."
+        },
+        {
+          "name": "Apex2 (official TB-1.0 #1)",
+          "scaffold": "official leaderboard",
+          "model": "Claude-Sonnet-4.5",
+          "resolve": 64.5,
+          "cost": null,
+          "kind": "ref",
+          "costEst": true,
+          "note": "tbench.ai/leaderboard/terminal-bench/1.0 — reference (cost not disclosed)"
+        },
+        {
+          "name": "Ante (official TB-1.0)",
+          "scaffold": "official leaderboard",
+          "model": "Claude-Sonnet-4.5",
+          "resolve": 60.3,
+          "cost": null,
+          "kind": "ref",
+          "costEst": true,
+          "note": "tbench.ai/leaderboard/terminal-bench/1.0 — reference (cost not disclosed)"
+        },
+        {
+          "name": "Droid (official TB-1.0)",
+          "scaffold": "official leaderboard",
+          "model": "Claude-Opus-4.1",
+          "resolve": 58.8,
+          "cost": null,
+          "kind": "ref",
+          "costEst": true,
+          "note": "tbench.ai/leaderboard/terminal-bench/1.0 — reference (cost not disclosed)"
+        },
+        {
+          "name": "Terminus (official baseline avg)",
+          "scaffold": "official leaderboard",
+          "model": "various (25 models)",
+          "resolve": 34.7,
+          "cost": null,
+          "kind": "ref",
+          "costEst": true,
+          "note": "tbench.ai/leaderboard/terminal-bench/1.0 mean across 25 models — reference (cost not disclosed)"
+        }
+      ]
     },
-    {
-     "name": "frogboss-32b",
-     "scaffold": "agentic",
-     "model": "32B (self-hosted)",
-     "resolve": 53.6,
-     "cost": 0.1,
-     "kind": "official",
-     "costEst": true,
-     "note": "est: cheap 32B OSS model"
+    "swerebench": {
+      "label": "SWE-rebench (DECONTAMINATED, gold-validated 51)",
+      "denom": 51,
+      "entries": [
+        {
+          "name": "Darwin · GLM-5.2 alone",
+          "scaffold": "interactive ReAct, maxSteps 20, conformant",
+          "model": "z-ai/glm-5.2",
+          "resolve": 19.6,
+          "ci": [
+            11,
+            32.5
+          ],
+          "cost": 0.083,
+          "kind": "meas",
+          "costEst": false,
+          "note": "10/51 decontaminated (created 2025-01..04), gold-eval via SWE-rebench fork harness. Cheap-base constituent of the cascade."
+        },
+        {
+          "name": "Darwin · GLM→Opus cascade (coordinator)",
+          "scaffold": "GLM base → Opus-4.8 escalate on give-ups, conformant",
+          "model": "z-ai/glm-5.2 → anthropic/claude-opus-4.8",
+          "resolve": 37.3,
+          "ci": [
+            25.3,
+            51
+          ],
+          "cost": 0.85,
+          "kind": "meas",
+          "costEst": false,
+          "note": "19/51 decontaminated, gold-eval. DOWN from contaminated Lite 51.3%/Verified 55.6% — headline was contamination-inflated (partly) + SWE-rebench is a harder/different distribution (confounded). The shipped cascade, zero per-instance tuning."
+        },
+        {
+          "name": "Darwin · Opus-4.8 alone (matched-15)",
+          "scaffold": "interactive ReAct, maxSteps 20, conformant",
+          "model": "anthropic/claude-opus-4.8",
+          "resolve": 40,
+          "ci": [
+            19.8,
+            64.3
+          ],
+          "cost": 0.73,
+          "kind": "meas",
+          "costEst": false,
+          "note": "6/15 on the matched subset Opus covered before the +$60 cap (full-51 not run). On matched-15: Opus 40% > cascade 33.3% > GLM 20% — coordinator does NOT beat its best constituent on clean data; orchestration buys cost, not resolve-rate. n=15 directional."
+        }
+      ]
     },
-    {
-     "name": "frogmini-14b",
-     "scaffold": "agentic",
-     "model": "14B (self-hosted)",
-     "resolve": 45,
-     "cost": 0.05,
-     "kind": "official",
-     "costEst": true,
-     "note": "est: cheap 14B OSS model"
-    },
-    {
-     "name": "Darwin \u00b7 single-traj",
-     "scaffold": "interactive ReAct",
-     "model": "DeepSeek-V4-Flash",
-     "resolve": 46.4,
-     "ci": [
-      42.1,
-      50.8
-     ],
-     "cost": 0.005,
-     "kind": "meas",
-     "costEst": false,
-     "note": "232/500 SWE-bench Verified, gold, conformant; cost = measured. First Darwin Verified row."
-    },
-    {
-     "name": "Darwin \u00b7 GLM\u2192Opus empty-patch cascade",
-     "scaffold": "Darwin cascade",
-     "model": "glm-5.2 \u2192 claude-opus-4.8",
-     "resolve": 55.6,
-     "cost": 0.15,
-     "ci": [
-      51.2,
-      59.9
-     ],
-     "kind": "meas",
-     "costEst": true,
-     "note": "278/500, official gold eval, conformant. Cost ~$0.15/inst (est). Beats Lite cascade. \u00a747",
-     "src": "LEARNINGS \u00a747"
+    "cveSecurity": {
+      "label": "CVE-fix Security (§42-validated, n=5)",
+      "denom": 5,
+      "entries": [
+        {
+          "name": "Darwin · conformant cascade (CVE n=5)",
+          "scaffold": "open-loop single-shot, localize→search/replace, no in-loop oracle (conformant)",
+          "model": "deepseek-chat → Claude-Opus-4 (cascade)",
+          "resolve": 20,
+          "ci": [
+            3.6,
+            62.4
+          ],
+          "cost": 0.418,
+          "kind": "meas",
+          "costEst": false,
+          "note": "1/5 §42-validated CVE-fix instances (base+test FAIL → gold+test PASS), public OSV.dev CVEs + OSS fix commits, SWE-bench format, FROM-SCRATCH per-instance Docker eval (no prebuilt images). Dataset grown 4→5 via a 10-shard GCP fleet validation campaign (2026-06-27, $0 LLM): 45 candidates into §42 → 1 new validated (CVE-2016-2512 django, ~2% yield; the from-scratch env-build is the limiter). Cascade: deepseek 0/5, Opus 1/5 (psf/requests CVE-2023-32681 proxy-auth leak); CVE-2016-2512 unresolved. Conformant: gold never applied during solve or grade. Cost=$2.09 total/5, account-gated on auth/key meter (+$2.09 of +$35 cap). Honest n. ADR-199."
+        }
+      ]
     }
-   ]
-  },
-  "draco": {
-   "label": "DRACO \u2014 Deep Research (quality)",
-   "denom": 1,
-   "metricNote": "Different metric: 'Resolve %' here = DRACO research-quality \u00d7 100 (0\u2013100), NOT bug-resolve. 'Cost' is per full corpus run (MEASURED, not estimated); Run total = that run cost.",
-   "darwinNote": "DRACO is our own cross-domain research benchmark. The cheap model beats the frontier on BOTH quality and cost \u2014 the harness/cost-router is the lever. All numbers measured (qualityPerUSD).",
-   "entries": [
-    {
-     "name": "Cost-router (cheap)",
-     "scaffold": "always-cheapest route",
-     "model": "Claude-Haiku-4.5",
-     "resolve": 69,
-     "cost": 0.129,
-     "kind": "meas",
-     "costEst": false,
-     "note": "Darwin cost-router lands here: best quality-per-$ (5.36). Measured."
-    },
-    {
-     "name": "Router v2 (escalating)",
-     "scaffold": "haiku\u2192opus @ confidence",
-     "model": "Haiku-4.5 \u2192 Opus-4",
-     "resolve": 65.1,
-     "cost": 0.377,
-     "kind": "meas",
-     "costEst": false,
-     "note": "escalation router; measured"
-    },
-    {
-     "name": "Opus-4 (frontier baseline)",
-     "scaffold": "always-frontier",
-     "model": "Claude-Opus-4",
-     "resolve": 70,
-     "cost": 1.31,
-     "kind": "official",
-     "costEst": false,
-     "note": "frontier baseline \u2014 barely beats cheap on quality at 10\u00d7 cost. Measured."
-    },
-    {
-     "name": "GPT-5 (frontier baseline)",
-     "scaffold": "always-frontier",
-     "model": "GPT-5",
-     "resolve": 74.6,
-     "cost": 2.417,
-     "kind": "official",
-     "costEst": false,
-     "note": "highest single-model quality; 19\u00d7 the cost-router's price. Measured."
-    },
-    {
-     "name": "Oracle (cost-optimal)",
-     "scaffold": "perfect routing (ceiling)",
-     "model": "oracle",
-     "resolve": 80.1,
-     "cost": 1.445,
-     "kind": "official",
-     "costEst": false,
-     "note": "upper bound: best achievable with perfect per-query routing"
-    }
-   ]
-  },
-  "ultralite": {
-   "label": "SWE-ultralite (n=25)",
-   "denom": 25,
-   "entries": [
-    {
-     "name": "Darwin \u00b7 Opus-4.8+GLM-5.2 xbo",
-     "scaffold": "cross-model Best-of-N",
-     "model": "Opus-4.8+GLM-5.2",
-     "resolve": 72,
-     "ci": [
-      52.4,
-      85.7
-     ],
-     "cost": 0.5182,
-     "kind": "meas",
-     "costEst": false,
-     "note": "18/25 n=25 GCP fleet, gold, conformant (directional \u2014 n=300 confirms)"
-    },
-    {
-     "name": "Darwin \u00b7 Opus-4.8 single",
-     "scaffold": "interactive ReAct",
-     "model": "Opus-4.8",
-     "resolve": 60,
-     "ci": [
-      40.7,
-      76.6
-     ],
-     "cost": 0.5,
-     "kind": "meas",
-     "costEst": false,
-     "note": "15/25 n=25 GCP fleet, gold, conformant (directional \u2014 n=300 confirms)"
-    },
-    {
-     "name": "Darwin \u00b7 V3.2+Opus-4.8 xcascade",
-     "scaffold": "xcascade",
-     "model": "V3.2+Opus-4.8",
-     "resolve": 56,
-     "ci": [
-      37.1,
-      73.3
-     ],
-     "cost": 0.5,
-     "kind": "meas",
-     "costEst": false,
-     "note": "14/25 n=25 GCP fleet, gold, conformant (directional \u2014 n=300 confirms)"
-    },
-    {
-     "name": "Darwin \u00b7 DeepSeek-V4 bo3",
-     "scaffold": "N=3 + LLM-judge",
-     "model": "DeepSeek-V4",
-     "resolve": 52,
-     "ci": [
-      33.5,
-      70
-     ],
-     "cost": 0.0152,
-     "kind": "meas",
-     "costEst": false,
-     "note": "13/25 n=25 GCP fleet, gold, conformant (directional \u2014 n=300 confirms)"
-    },
-    {
-     "name": "Darwin \u00b7 V3.2+GLM-5.2 xbo",
-     "scaffold": "cross-model Best-of-N",
-     "model": "V3.2+GLM-5.2",
-     "resolve": 52,
-     "ci": [
-      33.5,
-      70
-     ],
-     "cost": 0.0302,
-     "kind": "meas",
-     "costEst": false,
-     "note": "13/25 n=25 GCP fleet, gold, conformant (directional \u2014 n=300 confirms)"
-    },
-    {
-     "name": "Darwin \u00b7 GLM-5.2 single",
-     "scaffold": "interactive ReAct",
-     "model": "GLM-5.2",
-     "resolve": 52,
-     "ci": [
-      33.5,
-      70
-     ],
-     "cost": 0.018,
-     "kind": "meas",
-     "costEst": false,
-     "note": "13/25 n=25 GCP fleet, gold, conformant (directional \u2014 n=300 confirms)"
-    },
-    {
-     "name": "Darwin \u00b7 DeepSeek-V4 cascade",
-     "scaffold": "repo-test cascade",
-     "model": "DeepSeek-V4",
-     "resolve": 52,
-     "ci": [
-      33.5,
-      70
-     ],
-     "cost": 0.0236,
-     "kind": "meas",
-     "costEst": false,
-     "note": "13/25 n=25 GCP fleet, gold, conformant (directional \u2014 n=300 confirms)"
-    },
-    {
-     "name": "Darwin \u00b7 GLM-5.2 cascade",
-     "scaffold": "repo-test cascade",
-     "model": "GLM-5.2",
-     "resolve": 48,
-     "ci": [
-      30,
-      66.5
-     ],
-     "cost": 0.085,
-     "kind": "meas",
-     "costEst": false,
-     "note": "12/25 n=25 GCP fleet, gold, conformant (directional \u2014 n=300 confirms)"
-    },
-    {
-     "name": "Darwin \u00b7 GLM-5.2 bo3",
-     "scaffold": "N=3 + LLM-judge",
-     "model": "GLM-5.2",
-     "resolve": 48,
-     "ci": [
-      30,
-      66.5
-     ],
-     "cost": 0.0542,
-     "kind": "meas",
-     "costEst": false,
-     "note": "12/25 n=25 GCP fleet, gold, conformant (directional \u2014 n=300 confirms)"
-    },
-    {
-     "name": "Darwin \u00b7 V3.2 single",
-     "scaffold": "interactive ReAct",
-     "model": "V3.2",
-     "resolve": 44,
-     "ci": [
-      26.7,
-      62.9
-     ],
-     "cost": 0.012,
-     "kind": "meas",
-     "costEst": false,
-     "note": "11/25 n=25 GCP fleet, gold, conformant (directional \u2014 n=300 confirms)"
-    },
-    {
-     "name": "Darwin \u00b7 V3.2+GLM-5.2+DeepSeek-V4 xbo",
-     "scaffold": "cross-model Best-of-N",
-     "model": "V3.2+GLM-5.2+DeepSeek-V4",
-     "resolve": 44,
-     "ci": [
-      26.7,
-      62.9
-     ],
-     "cost": 0.0352,
-     "kind": "meas",
-     "costEst": false,
-     "note": "11/25 n=25 GCP fleet, gold, conformant (directional \u2014 n=300 confirms)"
-    },
-    {
-     "name": "Darwin \u00b7 DeepSeek-V4 single",
-     "scaffold": "interactive ReAct",
-     "model": "DeepSeek-V4",
-     "resolve": 40,
-     "ci": [
-      23.4,
-      59.3
-     ],
-     "cost": 0.005,
-     "kind": "meas",
-     "costEst": false,
-     "note": "10/25 n=25 GCP fleet, gold, conformant (directional \u2014 n=300 confirms)"
-    },
-    {
-     "name": "Darwin \u00b7 V3.2 cascade",
-     "scaffold": "repo-test cascade",
-     "model": "V3.2",
-     "resolve": 40,
-     "ci": [
-      23.4,
-      59.3
-     ],
-     "cost": 0.0566,
-     "kind": "meas",
-     "costEst": false,
-     "note": "10/25 n=25 GCP fleet, gold, conformant (directional \u2014 n=300 confirms)"
-    },
-    {
-     "name": "Darwin \u00b7 Kimi single",
-     "scaffold": "interactive ReAct",
-     "model": "Kimi",
-     "resolve": 36,
-     "ci": [
-      20.2,
-      55.5
-     ],
-     "cost": 0.02,
-     "kind": "meas",
-     "costEst": false,
-     "note": "9/25 n=25 GCP fleet, gold, conformant (directional \u2014 n=300 confirms)"
-    },
-    {
-     "name": "Darwin \u00b7 DeepSeek-V4+GLM-5.2+Kimi xbo",
-     "scaffold": "cross-model Best-of-N",
-     "model": "DeepSeek-V4+GLM-5.2+Kimi",
-     "resolve": 36,
-     "ci": [
-      20.2,
-      55.5
-     ],
-     "cost": 0.0432,
-     "kind": "meas",
-     "costEst": false,
-     "note": "9/25 n=25 GCP fleet, gold, conformant (directional \u2014 n=300 confirms)"
-    },
-    {
-     "name": "Darwin \u00b7 Opus-4.8 ecascade",
-     "scaffold": "empty-patch \u2192 Opus escalation",
-     "model": "Opus-4.8",
-     "resolve": 32,
-     "ci": [
-      17.2,
-      51.6
-     ],
-     "cost": 0.5,
-     "kind": "meas",
-     "costEst": false,
-     "note": "8/25 n=25 GCP fleet, gold, conformant (directional \u2014 n=300 confirms)"
-    },
-    {
-     "name": "Darwin \u00b7 Nemotron single",
-     "scaffold": "interactive ReAct",
-     "model": "Nemotron",
-     "resolve": 32,
-     "ci": [
-      17.2,
-      51.6
-     ],
-     "cost": 0.0005,
-     "kind": "meas",
-     "costEst": false,
-     "note": "8/25 n=25 GCP fleet, gold, conformant (directional \u2014 n=300 confirms)"
-    },
-    {
-     "name": "Darwin \u00b7 MiniMax single",
-     "scaffold": "interactive ReAct",
-     "model": "MiniMax",
-     "resolve": 32,
-     "ci": [
-      17.2,
-      51.6
-     ],
-     "cost": 0.012,
-     "kind": "meas",
-     "costEst": false,
-     "note": "8/25 n=25 GCP fleet, gold, conformant (directional \u2014 n=300 confirms)"
-    },
-    {
-     "name": "Darwin \u00b7 GPT-5.5 single",
-     "scaffold": "interactive ReAct",
-     "model": "GPT-5.5",
-     "resolve": 28,
-     "ci": [
-      14.3,
-      47.6
-     ],
-     "cost": 1.25,
-     "kind": "meas",
-     "costEst": false,
-     "note": "7/25 n=25 GCP fleet, gold, conformant (directional \u2014 n=300 confirms)"
-    },
-    {
-     "name": "Darwin \u00b7 Kimi cascade",
-     "scaffold": "repo-test cascade",
-     "model": "Kimi",
-     "resolve": 28,
-     "ci": [
-      14.3,
-      47.6
-     ],
-     "cost": 0.0944,
-     "kind": "meas",
-     "costEst": false,
-     "note": "7/25 n=25 GCP fleet, gold, conformant (directional \u2014 n=300 confirms)"
-    }
-   ],
-   "darwinNote": "Fast n=25 model\u00d7mode Pareto map \u2014 directional scouting, not a verdict. n=300 (Lite tab) confirms champions."
-  },
-  "livecodebench": {
-   "label": "LiveCodeBench (n=100, release_v5 >=2024-11)",
-   "denom": 100,
-   "entries": [
-    {
-     "name": "Darwin \u00b7 single-shot (robust extractor)",
-     "scaffold": "single-shot codegen, robust extractor",
-     "model": "DeepSeek-chat (V3.x)",
-     "resolve": 44,
-     "ci": [
-      34.7,
-      53.8
-     ],
-     "cost": 0.00163,
-     "kind": "meas",
-     "costEst": false,
-     "note": "44/100 (easy 27/31, med 12/35, hard 5/34). OFFICIAL lcb_runner harness; eval validated. Robust extractor (largest parsing python block) cut empty extractions to 4/100. Balanced n=100 (not easy-skewed) -> harder population than old n=25's 64%. $0.0037/solved."
-    },
-    {
-     "name": "Darwin \u00b7 cost-cascade (->r1-0528)",
-     "scaffold": "cheap base + reasoner escalation on empty/public-fail",
-     "model": "DeepSeek-chat -> DeepSeek-R1-0528",
-     "resolve": 62,
-     "ci": [
-      52.2,
-      70.9
-     ],
-     "cost": 0.01144,
-     "kind": "meas",
-     "costEst": false,
-     "note": "62/100 (easy 27/31, med 19/35, hard 16/34). Escalated 27% to the reasoner on public-test failure/empty extraction (hidden tests gold-held). Paired delta vs single-shot +18pp [7.9,28.1], McNemar p=1.4e-3. BUT temp-0 is nondeterministic on OpenRouter: ATTRIBUTABLE cascade lift is +8 (reasoner 12/27 vs base 4/27 on the escalated tail); ~+10 of the +18 is run-to-run noise. $0.0114/problem, $0.0185/solved."
-    },
-    {
-     "name": "DeepSeek-V3 (official, full release_v5)",
-     "scaffold": "single-shot codegen",
-     "model": "DeepSeek-V3",
-     "resolve": 34.4,
-     "cost": 0.001,
-     "kind": "official",
-     "costEst": true,
-     "note": "Vendor-disclosed LCB pass@1 (08.01-12.01 window, whole set) -- full-set average over harder/older problems. Our balanced n=100 (44% single-shot) is closer to this population than the old easy-skewed n=25 (64%), but still NOT 1:1 (different window + sampling).",
-     "src": "https://api-docs.deepseek.com/updates"
-    }
-   ],
-   "darwinNote": "Balanced n=100 SUBSET of release_v5's >=2024-11-01 (post-cutoff) window, scored by the OFFICIAL lcb_runner harness (eval validated before trusting any number). Single-shot (robust extractor) = 44/100; cost-cascade (escalate to deepseek-r1-0528 on empty/public-test-failure) = 62/100. The raw +18pp is REAL on paired data (McNemar p=1.4e-3) but conflated with temp-0 nondeterminism; the ATTRIBUTABLE cascade lift is +8 on the 27 escalated problems (reasoner 12/27 vs base 4/27). Cascade costs ~7x more per problem ($0.0114 vs $0.0016) for the reasoning tail. n=100 directional; official ~34% full-set shown for context (different population)."
-  },
-  "terminalbench": {
-   "label": "Terminal-Bench (terminal-bench-core 0.1.1, 80)",
-   "denom": 80,
-   "entries": [
-    {
-     "name": "Darwin \u00b7 cheap base (full-80)",
-     "scaffold": "ReAct shell, 1 tool (bash), maxSteps 30",
-     "model": "DeepSeek-V3.x (deepseek-chat)",
-     "resolve": 21.2,
-     "ci": [
-      13.7,
-      31.4
-     ],
-     "cost": 0.0158,
-     "kind": "meas",
-     "costEst": false,
-     "note": "17/80 full-80 conformant (official tb harness builds each task container, runs our 1-tool shell agent, then the task's OWN hidden tests score). By band: hard 2/24 (8.3%), medium 9/44 (20.5%), easy 6/12 (50.0%). Cost MEASURED from OpenRouter usage.cost. eval-validated (oracle\u2192100% PASS)."
-    },
-    {
-     "name": "Darwin \u00b7 Sonnet-4.5 (hard band)",
-     "scaffold": "ReAct shell, 1 tool (bash), maxSteps 40",
-     "model": "Claude-Sonnet-4.5",
-     "resolve": 25,
-     "ci": [
-      12,
-      44.9
-     ],
-     "cost": 0.7722,
-     "kind": "meas",
-     "costEst": false,
-     "note": "6/24 HARD band ceiling probe (small-n, directional). 3\u00d7 the cheap base's 2/24 on the same band: Sonnet cracks cartpole-rl-training, configure-git-webserver, git-multibranch, path-tracing, pytorch-model-cli.hard, swe-bench-astropy-1. CAVEAT: Sonnet FAILED organization-json-generator + prove-plus-comm (which the cheap base passed) due to 60s TEST-COMMAND timeouts (harness limit, not a solver miss) \u2014 true ceiling likely 8/24. Heavy ML tasks (pytorch/qemu/hf-model) also lost to agent/test timeouts."
-    },
-    {
-     "name": "Apex2 (official TB-1.0 #1)",
-     "scaffold": "official leaderboard",
-     "model": "Claude-Sonnet-4.5",
-     "resolve": 64.5,
-     "cost": null,
-     "kind": "ref",
-     "costEst": true,
-     "note": "tbench.ai/leaderboard/terminal-bench/1.0 \u2014 reference (cost not disclosed)"
-    },
-    {
-     "name": "Ante (official TB-1.0)",
-     "scaffold": "official leaderboard",
-     "model": "Claude-Sonnet-4.5",
-     "resolve": 60.3,
-     "cost": null,
-     "kind": "ref",
-     "costEst": true,
-     "note": "tbench.ai/leaderboard/terminal-bench/1.0 \u2014 reference (cost not disclosed)"
-    },
-    {
-     "name": "Droid (official TB-1.0)",
-     "scaffold": "official leaderboard",
-     "model": "Claude-Opus-4.1",
-     "resolve": 58.8,
-     "cost": null,
-     "kind": "ref",
-     "costEst": true,
-     "note": "tbench.ai/leaderboard/terminal-bench/1.0 \u2014 reference (cost not disclosed)"
-    },
-    {
-     "name": "Terminus (official baseline avg)",
-     "scaffold": "official leaderboard",
-     "model": "various (25 models)",
-     "resolve": 34.7,
-     "cost": null,
-     "kind": "ref",
-     "costEst": true,
-     "note": "tbench.ai/leaderboard/terminal-bench/1.0 mean across 25 models \u2014 reference (cost not disclosed)"
-    }
-   ]
-  },
-  "swerebench": {
-   "label": "SWE-rebench (DECONTAMINATED, gold-validated 51)",
-   "denom": 51,
-   "entries": [
-    {
-     "name": "Darwin \u00b7 GLM-5.2 alone",
-     "scaffold": "interactive ReAct, maxSteps 20, conformant",
-     "model": "z-ai/glm-5.2",
-     "resolve": 19.6,
-     "ci": [
-      11,
-      32.5
-     ],
-     "cost": 0.083,
-     "kind": "meas",
-     "costEst": false,
-     "note": "10/51 decontaminated (created 2025-01..04), gold-eval via SWE-rebench fork harness. Cheap-base constituent of the cascade."
-    },
-    {
-     "name": "Darwin \u00b7 GLM\u2192Opus cascade (coordinator)",
-     "scaffold": "GLM base \u2192 Opus-4.8 escalate on give-ups, conformant",
-     "model": "z-ai/glm-5.2 \u2192 anthropic/claude-opus-4.8",
-     "resolve": 37.3,
-     "ci": [
-      25.3,
-      51
-     ],
-     "cost": 0.85,
-     "kind": "meas",
-     "costEst": false,
-     "note": "19/51 decontaminated, gold-eval. DOWN from contaminated Lite 51.3%/Verified 55.6% \u2014 headline was contamination-inflated (partly) + SWE-rebench is a harder/different distribution (confounded). The shipped cascade, zero per-instance tuning."
-    },
-    {
-     "name": "Darwin \u00b7 Opus-4.8 alone (matched-15)",
-     "scaffold": "interactive ReAct, maxSteps 20, conformant",
-     "model": "anthropic/claude-opus-4.8",
-     "resolve": 40,
-     "ci": [
-      19.8,
-      64.3
-     ],
-     "cost": 0.73,
-     "kind": "meas",
-     "costEst": false,
-     "note": "6/15 on the matched subset Opus covered before the +$60 cap (full-51 not run). On matched-15: Opus 40% > cascade 33.3% > GLM 20% \u2014 coordinator does NOT beat its best constituent on clean data; orchestration buys cost, not resolve-rate. n=15 directional."
-    }
-   ]
-  },
-  "cveSecurity": {
-   "label": "CVE-fix Security (ADR-199 seed, \u00a742-validated, 4)",
-   "denom": 4,
-   "entries": [
-    {
-     "name": "Darwin \u00b7 conformant cascade (CVE seed)",
-     "scaffold": "open-loop single-shot, localize\u2192search/replace, no in-loop oracle (conformant)",
-     "model": "deepseek-chat \u2192 Claude-Opus-4 (cascade)",
-     "resolve": 25.0,
-     "ci": [
-      4.6,
-      69.9
-     ],
-     "cost": 0.2837,
-     "kind": "meas",
-     "costEst": false,
-     "note": "1/4 \u00a742-eval-validated CVE-fix instances (base+test FAIL \u2192 gold+test PASS). Built from public OSV.dev CVEs + public OSS fix commits, SWE-bench format, FROM-SCRATCH per-instance Docker eval (no prebuilt images). deepseek 0/4, Opus 1/4 (psf/requests CVE-2023-32681 proxy-auth leak). Conformant: gold never applied during solve or grade. SEED \u2014 n=4 directional; cost = total probe $1.13 / 4. ADR-199."
-    }
-   ]
   }
- }
 }
