@@ -1,20 +1,28 @@
 {
   "title": "Per-instance config-evolution — FINAL coverage map (HARD-25 SWE-bench tail, ADR-194)",
-  "status": "WOUND DOWN (coordinator directive): config-only Phase-1 levers diagnosed; budget/quota redirected to trace-localize n=300 validation (§56).",
-  "firewall": "DIAGNOSIS ONLY. Per-instance gold-tuned configs are OVERFIT (HV-1), NOT claimable. Solver ran --no-test-oracle; gold scored finished patches only.",
-  "finishedAt": "2026-06-27T01:34:54.381Z",
+  "status": "WOUND DOWN (coordinator directive) — config-only Phase-1 levers diagnosed; budget/quota redirected to ADR-196 trace-localize n=300 validation (LEARNINGS §56).",
+  "firewall": "DIAGNOSIS ONLY. Per-instance gold-tuned configs are OVERFIT (HV-1), NOT claimable. Solver ran --no-test-oracle; gold scored finished patches only (leakage guard clean).",
+  "finishedAt": "2026-06-27T01:45:15.954Z",
   "total": 25,
   "probed": 25,
   "cracked": 0,
   "robust": 0,
   "uncracked": 25,
+  "probesMeasured": 49,
+  "capabilityProbeCounts": {
+    "single": 33,
+    "cascade": 16
+  },
   "capabilityTally": {},
   "capabilitiesActuallyMeasured": [
     "single",
     "cascade"
   ],
-  "SCOPE_CAVEAT": "Cheapest-first dispatch + early wind-down means ONLY the cheap-single (z-ai/glm-5.2) and cheap->frontier cascade (glm-5.2>claude-opus-4.8) capabilities completed. The DIRECT frontier-single (claude-opus-4.8), +turn-budget (s20), Best-of-N width (bo3|opus), and cross-model BoN (xbo|opus+glm) genomes were QUEUED but NOT measured before wind-down. So this map proves cheap-single + cheap->Opus-cascade crack 0/25 — it does NOT fully prove all config-only levers fail (direct-Opus/BoN undiagnosed).",
-  "conclusion": "On the 25 Opus-give-ups, the two completed config-only capabilities — cheap-single AND cheap->Opus cold-escalation cascade — crack 0/25 (0 robust). The cascade routes failures to Opus and Opus still yields 0/15 conformant resolves, strong evidence the give-ups are reasoning/localization-ceiling-bound, not cheap-model-bound. Consistent with §56: the lever that cracked a give-up was trace-localize (a NEW harness capability), not a config toggle.",
+  "spend": {
+    "note": "OpenRouter incremental from base 1052.01 was ~1159.70 at wind-down; ~107 attributable to this run (shared window with concurrent experiments). Budget gating on account auth/key delta, not solver self-report (Opus undercounts ~1.7x, see §56)."
+  },
+  "SCOPE_CAVEAT": "Cheapest-first dispatch + early wind-down means ONLY cheap-single (z-ai/glm-5.2) and cheap->frontier cascade (glm-5.2>claude-opus-4.8) completed. The DIRECT frontier-single (claude-opus-4.8), +turn-budget (s20), Best-of-N width (bo3|opus), and cross-model BoN (xbo|opus+glm) genomes were QUEUED but NOT measured. So this proves cheap-single + cheap->Opus-cascade crack 0/25; it does NOT alone prove ALL config toggles fail (LEARNINGS §50 separately measured xbo:opus+glm=18/25 in aggregate on the same hard-25 — BoN cracks SOME, but config-only cannot CLOSE the tail).",
+  "conclusion": "On the 25 Opus-give-ups, both completed config-only capabilities — cheap-single AND cheap->Opus cold-escalation cascade — crack 0/25 (0 robust). The cascade routes every cheap-base miss to Opus (cold) and Opus still yields 0/16 conformant resolves → the give-ups are reasoning/localization-ceiling-bound, not cheap-model-bound. Matches LEARNINGS §56: the ONLY hard-tail lever to convert a confirmed give-up was ADR-196 execution-trace localization (+1 crack), a NEW harness capability, not a config toggle.",
   "rows": [
     {
       "instance_id": "django__django-11564",
@@ -314,11 +322,16 @@
     {
       "instance_id": "sphinx-doc__sphinx-8474",
       "cracked": false,
-      "probesRun": 1,
+      "probesRun": 2,
       "probes": [
         {
           "capability": "single",
           "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        },
+        {
+          "capability": "cascade",
+          "gkey": "cascade|glm-5.2>claude-opus-4.8|s15",
           "rate": "0/2"
         }
       ]
@@ -432,13 +445,13 @@
       ]
     }
   ],
-  "capabilityRoadmap_ADR195": {
-    "finding": "Config-only (model/escalation/turn-budget/BoN-width) is insufficient for the diagnosed cheap+cascade levers; the hard tail needs NEW harness capabilities.",
+  "capabilityRoadmap_ADR195_196": {
+    "finding": "Config-only (model/escalation/turn-budget/BoN-width) cannot CLOSE the Opus-give-up tail; the hard tail needs NEW harness capabilities (built per ADR-195/196).",
     "priority": [
-      "trace-localize (the §56 lever that cracked a give-up — validate at n=300)",
-      "reproduction/repro-script generation",
-      "self-review/reviewer pass"
+      "ADR-196 execution-trace localization — n=300 conformant validation (the §56 lever that cracked a give-up; fire-rate 8/10, account-level budget gating)",
+      "reproduction/repro-script generation (repro-gate.mjs, §51)",
+      "self-review/reviewer pass (reviewer.mjs, §51)"
     ],
-    "note": "Complete the undiagnosed direct-Opus/bo3/xbo probes ONLY if a cheap follow-up is wanted; the §56 trace-localize n=300 validation is the higher-value next spend."
+    "note": "The direct-Opus/bo3/xbo per-instance probes remain undiagnosed — a cheap optional follow-up, but lower value than the trace-localize n=300 validation."
   }
 }
