@@ -42,6 +42,7 @@ export { generatePatches, resetPatchIds, BLUE_ROLES } from './actors/blue.js';
 
 // Judges + severity
 export { judge, parseVerdict, extractJson, validateVerdict } from './judges/judge.js';
+export { mockMarkerJudge } from './judges/mock-judge.js';
 export {
   severityScore,
   severityBand,
@@ -62,5 +63,10 @@ export type { RunOptions, BaselineRun, PatchRetestResult } from './runner.js';
 // Reports
 export { buildReport, renderMarkdown } from './reports/report.js';
 
-// Demo target
-export { vulnerableMockTarget } from './mock-target.js';
+// Example targets
+export {
+  exampleAgentTarget,
+  alwaysVulnerableFixture,
+  vulnerableMockTarget,
+  EXAMPLE_AGENT_SYSTEM_PROMPT,
+} from './mock-target.js';

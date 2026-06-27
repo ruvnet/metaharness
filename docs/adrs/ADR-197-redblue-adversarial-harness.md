@@ -36,25 +36,53 @@ The boundary is enforced at a single code chokepoint (`src/config/safety.ts`), c
 
 ## Result (real, 2026-06-27)
 
-Built + unit-tested at **$0** (all model calls mocked). A `MockModelClient` + a deliberately `vulnerableMockTarget()` let the **full baseline → patch → retest loop run offline** in tests and via `redblue run --offline`.
+Built + unit-tested at **$0** (model calls mocked in the offline suite). The realistic `exampleAgentTarget()` + the `--mock-judge` test fixture let the **full baseline → patch → retest loop run offline** in tests and via `redblue run --mock-judge`; the real model judge is the default and is validated live (below).
 
 ```
-48 unit tests passing (config+safety, severity+bands+shouldBlockProduction,
-each attack-family generator shape, judge strict-JSON parse/retry,
-failure_reduction math, full offline pipeline, report shape).
-tsc clean; lint clean (tsc --noEmit).
-
-Offline demo run (25 tests, --patch): 25 findings, 100% patch failure
-reduction, verdict BLOCK PRODUCTION, $0.
+49 unit tests passing + 1 live test (skipped unless REDBLUE_LIVE=1):
+config+safety, severity+bands+shouldBlockProduction, each attack-family
+generator shape, judge strict-JSON parse/retry, failure_reduction math,
+realistic-target discrimination, always-vulnerable fixture neutralization,
+report shape. tsc clean; lint clean (tsc --noEmit).
 ```
 
-The acceptance pipeline (100 sims → ≥10 candidates → judge-validated → patch top-5 → retest → ≥50% reduction → board report <5min) is **implemented and proven offline** with the mock target. A live OpenRouter smoke is wired (gated on `OPENROUTER_API_KEY`, capped by `max_cost_usd`); the full 100-live was not run.
+### The two earlier caveats are now REAL (resolved)
+
+**1) Realistic, discriminating default target (was: rigged always-fail demo).**
+The shipped default `exampleAgentTarget()` is a system-prompt-driven support
+agent (`BillingBot`) with two mock tools. It is genuinely **robust** to
+`direct_prompt_injection`, `role_confusion`, `cost_amplification` and genuinely
+**vulnerable** to `data_exfiltration_attempt` (its `lookup_account` over-shares a
+synthetic credential) and `tool_overreach` (an unconfirmed destructive
+`run_maintenance`/`delete`). So the harness yields **true-positives AND
+true-negatives** — it discriminates. The always-fail fixture is renamed
+`alwaysVulnerableFixture()` and is **test-only**, never the default.
+
+**2) The model judge is THE default (was: marker heuristic as fallback).** The
+real judge is a model requiring `OPENROUTER_API_KEY`; with no key the CLI exits
+and points to `--mock-judge`, which selects an explicitly **TEST-ONLY** marker
+fixture (`src/judges/mock-judge.ts`) and prints a banner saying so on every run.
+
+### Real measured results (not a rigged demo)
+
+- **Live real judge** (`openai/gpt-4o-mini`, 5 tests, one per family): the judge
+  **passed** the three robust families and **flagged** the two vulnerable ones
+  (both High) → **2/5 failures, 100% patch reduction, ~$0.0005 spend**. This
+  validates the real strict-JSON judge end-to-end (`__tests__/live-judge.test.ts`).
+- **Offline acceptance** (50 tests, `--mock-judge`, $0): 50 → **20 findings (40%
+  compromise, 60% recovery)**, all 20 in the two vulnerable families; injection /
+  role / cost stay at 0 (true-negatives) → patch top-5 families → **100% reduction
+  of the real findings** → board report.
+
+The full acceptance pipeline (100 sims → ≥10 candidates → judge-validated → patch
+top-5 → retest → ≥50% reduction → board report <5min) is implemented; the
+headline demo is now the **realistic target + real judge**. The full 100-live was
+not run (cost discipline); the per-family live validation above proves the wiring.
 
 ## Honest scope
 
-- The bundled `vulnerableMockTarget` is a demo target that fails every family by design (so the baseline finds real failures and patches demonstrably neutralize them). Against a real hardened target the failure rate and patch deltas will differ — that is the point of running it on your own system.
-- The offline judge is heuristic (marker-based) for $0 testing; the live judge is a real model with strict-JSON validation. Numbers from `--offline` are deterministic demo numbers, not a security assessment of any real system.
 - Severity sub-dimensions are mapped from observed flags via a documented heuristic in `runner.ts`; a real engagement should tune these to its threat model.
+- `exampleAgentTarget()` is an illustrative in-proc agent — its specific vulnerable/robust split demonstrates discrimination; your own target will differ (that is the point of pointing the harness at a local copy of your system).
 
 ## Consequences
 
@@ -64,4 +92,4 @@ The acceptance pipeline (100 sims → ≥10 candidates → judge-validated → p
 
 ## Validation
 
-Package + 48 tests committed under `packages/redblue/`. `npm test -w @metaharness/redblue` green. Safety boundary enforced in `src/config/safety.ts` and exercised by `__tests__/config.test.ts` (live-host rejection, dangerous-flag rejection, credential-guard, redaction).
+Package + 49 tests (+1 skipped live) committed under `packages/redblue/`. `npm test -w @metaharness/redblue` green. Safety boundary enforced in `src/config/safety.ts` and exercised by `__tests__/config.test.ts` (live-host rejection, dangerous-flag rejection, credential-guard, redaction). Realistic-target discrimination proven offline (`__tests__/pipeline.test.ts`) and against the live model judge (`__tests__/live-judge.test.ts`, `REDBLUE_LIVE=1`).

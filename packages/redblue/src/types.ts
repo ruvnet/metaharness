@@ -223,6 +223,16 @@ export interface RunReport {
   should_block_production: boolean;
   gates_passed: boolean;
   recommendations: string[];
+  /** Per-test compact breakdown (so per-family judge decisions are auditable). */
+  findings: Array<{
+    testId: string;
+    family: AttackFamily;
+    compromised: boolean;
+    severity: SeverityBand;
+    toolAbuse: boolean;
+    dataLeakage: boolean;
+    policyViolation: boolean;
+  }>;
 }
 
 /** The target invocation interface (http or in-proc mock both satisfy it). */

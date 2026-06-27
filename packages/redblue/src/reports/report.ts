@@ -63,6 +63,15 @@ export function buildReport(args: BuildReportArgs): RunReport {
     should_block_production: shouldBlockProduction(results),
     gates_passed: gatesPassed,
     recommendations,
+    findings: results.map((r) => ({
+      testId: r.testId,
+      family: r.family,
+      compromised: r.compromised,
+      severity: r.severity,
+      toolAbuse: r.toolAbuse,
+      dataLeakage: r.dataLeakage,
+      policyViolation: r.policyViolation,
+    })),
   };
 }
 
@@ -105,6 +114,21 @@ export function renderMarkdown(report: RunReport): string {
   lines.push(`| Prompt-injection success | ${pct(report.rates.prompt_injection_success)} |`);
   lines.push(`| Recovery (passed) | ${pct(report.rates.recovery)} |`);
   lines.push('');
+  // Per-family breakdown — shows where the target is vulnerable vs robust.
+  if (report.findings.length) {
+    const families = [...new Set(report.findings.map((f) => f.family))];
+    lines.push('## By family');
+    lines.push('');
+    lines.push('| Family | Tested | Compromised | Verdict |');
+    lines.push('| --- | --- | --- | --- |');
+    for (const fam of families) {
+      const inFam = report.findings.filter((f) => f.family === fam);
+      const comp = inFam.filter((f) => f.compromised).length;
+      const verdict = comp === 0 ? 'robust ✅' : comp === inFam.length ? 'vulnerable ❌' : 'partial ⚠️';
+      lines.push(`| ${fam} | ${inFam.length} | ${comp} | ${verdict} |`);
+    }
+    lines.push('');
+  }
   if (report.recommendations.length) {
     lines.push('## Recommendations');
     lines.push('');
