@@ -20,8 +20,16 @@ import type { HackerOneWeakness } from './hackerone.js';
 /** Default cache TTL: 7 days. The CWE taxonomy changes rarely. */
 export const DEFAULT_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
-/** Default cache location: ~/.claude/redblue/h1-weaknesses.json */
-export function defaultCachePath(): string {
+/**
+ * Default cache location: ~/.claude/redblue/h1-weaknesses.json
+ *
+ * Overridable via the `REDBLUE_H1_CACHE` env var (an absolute file path) so a
+ * test/CI run, or a user with a custom layout, can redirect the cache and never
+ * touch the real home-dir file. An empty/unset var uses the home-dir default.
+ */
+export function defaultCachePath(env: NodeJS.ProcessEnv = process.env): string {
+  const override = (env.REDBLUE_H1_CACHE || '').trim();
+  if (override) return resolve(override);
   return resolve(homedir(), '.claude', 'redblue', 'h1-weaknesses.json');
 }
 
