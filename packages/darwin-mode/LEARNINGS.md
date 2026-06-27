@@ -1080,3 +1080,38 @@ The §54 "validation pending budget" A/B was run **locally on ruvultra** (Opus 4
 **VERDICT — it moves the hard tail, but modestly and the tail is still mostly a reasoning ceiling.** This is the FIRST hard-tail lever in this whole arc to convert a confirmed Opus give-up into a gold-resolved fix (every prior localization/BoN/cascade lever returned ~0 on the hard tail). So the §53 hypothesis is **directionally confirmed**: observed-execution localization is qualitatively different from the §52 symptom-anchoring naive HNSW — it doesn't just fail differently, it actually helped. BUT: 1/10 is not a transformation; 8 instances still produced no patch even with the trace fired; 2 instances couldn't be traced at all. The bulk of the tail remains the shared model-reasoning ceiling §53 describes. Trace-localize is a *targeted* lever (it helps when the fix-site is on the repro's execution path but outside the agent's native search), exactly as predicted — not a silver bullet.
 
 **COST NOTE (a real budget-enforcement bug, banked):** Arm A's solver-internal cost meter reported $22.07 for 24 instances, but the OpenRouter **account** billed ~$38.84 over the same window — Opus 4.8's true cost is **undercounted ~1.7-1.8x** in the `usage.cost` field the solver reads, so the in-solver `--max-cost` cap does NOT enforce the real dollar budget. The ~$40 session cap was consequently overshot to **$58.78 total** (Arm A $22 + Arm B $9 internal). Two consequences: (1) `--max-cost` is unreliable as a hard budget guard with Opus on OpenRouter — gate on the account `auth/key` usage delta, not the solver's self-report; (2) Arm B had to be cut to 10 instances (not the full 25) to bound the overshoot, so the A/B is n=10 matched, not n=25. **Recommendation:** the +1 crack on a confirmed give-up is enough signal to justify a **conformant n=300 validation** of `--trace-localize` (now that the truncation bug is fixed and the fire-rate is 8/10) — but only with account-level budget gating and a per-instance trace-fire assertion in the harness.
+
+## 57. Per-instance config-evolution (ADR-194) — the diagnosed config-only levers crack 0/25 of the Opus-give-ups
+
+Built `evolve-perinstance.mjs` + `gcp-perinstance-runner.sh`: each of the 25 hard Lite instances
+(`hard-lite-ids.json`, the Opus give-ups) gets its OWN tiny Darwin evolution over a CAPABILITY genome;
+fitness = k-sample (k=2) **conformant** resolve on that ONE instance (gold scores only the finished
+patches, never seen while solving — solver runs `--no-test-oracle`). Per-(instance,genome) probes were
+dispatched as real GCP e2-standard-4 VMs self-reporting `resolved_k/k` to a new Firestore collection
+`darwin_inst_runs`. **Conformance firewall (central):** per-instance gold-tuned configs are TUNING ON
+THE TEST (HV-1) → OVERFIT, NOT claimable. The deliverable is the COVERAGE MAP + the generalizable
+capability set, to be validated as ONE conformant harness / non-gold router on held-out n=300.
+
+**COVERAGE MAP (real Firestore numbers, n=25 instances, k=2): 0/25 cracked, 0 robust.**
+The run was WOUND DOWN (coordinator directive) once the signal was clear, redirecting budget/quota to the
+§56 trace-localize n=300 validation. Cheapest-first dispatch + early stop means **two** config-only
+capabilities completed across all instances measured:
+- **cheap-single** (`single|z-ai/glm-5.2`): 25/25 instances → **0/2 every one**.
+- **cheap→Opus cold-escalation cascade** (`cascade|glm-5.2>claude-opus-4.8`): 15/25 instances → **0/2 every one**.
+
+The cascade routes every cheap-base repo-gate miss to Opus (cold, fresh work tree) and **Opus still yields
+0/15 conformant resolves** on these give-ups — strong evidence the hard tail is **reasoning/localization-
+ceiling-bound, not cheap-model-bound**. ~46 probes, ~$107 incremental (budget went $1052→~$1159 over the
+run, shared with live experiments).
+
+**HONEST SCOPE CAVEAT (do not overclaim):** the DIRECT frontier-single (`single|claude-opus-4.8`),
++turn-budget (`s20`), Best-of-N width (`bo3|opus`), and cross-model BoN (`xbo|opus+glm`) genomes were
+QUEUED but NOT measured before wind-down. So this proves **cheap-single + cheap→Opus-cascade crack 0/25**
+— it does NOT by itself prove ALL config toggles fail (direct-Opus / BoN on the hard tail remain
+undiagnosed here; note §50 separately measured `xbo:opus+glm = 18/25` on the SAME hard-25 in aggregate,
+i.e. BoN DOES crack ~some of them — consistent with "config-only is partial, not zero, but cannot close
+the tail"). The defensible conclusion: **config-only levers cannot close the Opus-give-up tail; the
+levers that move it are NEW harness capabilities** — exactly §56's trace-localize (the one give-up that
+cracked did so via trace-localization, a new capability, not a config toggle). → ADR-195 Phase-2
+capability stack: priority (1) trace-localize n=300 validation, (2) reproduction/repro-script generation,
+(3) self-review/reviewer pass. Full coverage artifact: `bench/swebench/evolve-perinstance-coverage.json`.

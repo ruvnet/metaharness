@@ -261,6 +261,7 @@ WebSearch: site:openrouter.ai new models pricing
 | Session | Date | Milestone Active | Accomplished | Next Action |
 |---------|------|-----------------|--------------|-------------|
 | 1 — Init | 2026-06-22 | M1 | Horizon initialized. SOTA research pass. ADRs 173-176 loaded. Lever list drafted. SOTA_HORIZON.md written. Ruflo memory persisted. | Await combined pilot (line+repro-gap fix, k=5) gold result; implement Opus-4.8 Sniper per ADR-176; begin SWE Conductor state machine |
+| 2 — Per-instance diagnosis | 2026-06-26 | M1/M2 | Built per-instance config-evolution (ADR-194): `evolve-perinstance.mjs` + `gcp-perinstance-runner.sh`, k-sample conformant per-instance fitness via new Firestore `darwin_inst_runs`, conformance firewall (diagnosis-only). FINAL coverage map (real numbers): **0/25 cracked** — cheap-single + cheap→Opus cold-cascade both crack 0/25 of the Opus-give-ups (cascade routes to Opus, still 0/15). Direct-Opus/bo3/xbo genomes queued-not-measured (wound down early). LEARNINGS §51. ~$107 incremental. | Config-only cannot close the hard tail → execute ADR-195 Phase-2 capability stack: (1) **trace-localize n=300 validation** (the §56 lever that cracked a give-up — highest value), (2) reproduction/repro-script generation, (3) self-review pass. |
 
 ---
 

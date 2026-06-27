@@ -1,0 +1,444 @@
+{
+  "title": "Per-instance config-evolution — FINAL coverage map (HARD-25 SWE-bench tail, ADR-194)",
+  "status": "WOUND DOWN (coordinator directive): config-only Phase-1 levers diagnosed; budget/quota redirected to trace-localize n=300 validation (§56).",
+  "firewall": "DIAGNOSIS ONLY. Per-instance gold-tuned configs are OVERFIT (HV-1), NOT claimable. Solver ran --no-test-oracle; gold scored finished patches only.",
+  "finishedAt": "2026-06-27T01:34:54.381Z",
+  "total": 25,
+  "probed": 25,
+  "cracked": 0,
+  "robust": 0,
+  "uncracked": 25,
+  "capabilityTally": {},
+  "capabilitiesActuallyMeasured": [
+    "single",
+    "cascade"
+  ],
+  "SCOPE_CAVEAT": "Cheapest-first dispatch + early wind-down means ONLY the cheap-single (z-ai/glm-5.2) and cheap->frontier cascade (glm-5.2>claude-opus-4.8) capabilities completed. The DIRECT frontier-single (claude-opus-4.8), +turn-budget (s20), Best-of-N width (bo3|opus), and cross-model BoN (xbo|opus+glm) genomes were QUEUED but NOT measured before wind-down. So this map proves cheap-single + cheap->Opus-cascade crack 0/25 — it does NOT fully prove all config-only levers fail (direct-Opus/BoN undiagnosed).",
+  "conclusion": "On the 25 Opus-give-ups, the two completed config-only capabilities — cheap-single AND cheap->Opus cold-escalation cascade — crack 0/25 (0 robust). The cascade routes failures to Opus and Opus still yields 0/15 conformant resolves, strong evidence the give-ups are reasoning/localization-ceiling-bound, not cheap-model-bound. Consistent with §56: the lever that cracked a give-up was trace-localize (a NEW harness capability), not a config toggle.",
+  "rows": [
+    {
+      "instance_id": "django__django-11564",
+      "cracked": false,
+      "probesRun": 2,
+      "probes": [
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        },
+        {
+          "capability": "cascade",
+          "gkey": "cascade|glm-5.2>claude-opus-4.8|s15",
+          "rate": "0/2"
+        }
+      ]
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-25079",
+      "cracked": false,
+      "probesRun": 2,
+      "probes": [
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        },
+        {
+          "capability": "cascade",
+          "gkey": "cascade|glm-5.2>claude-opus-4.8|s15",
+          "rate": "0/2"
+        }
+      ]
+    },
+    {
+      "instance_id": "psf__requests-2674",
+      "cracked": false,
+      "probesRun": 3,
+      "probes": [
+        {
+          "capability": "cascade",
+          "gkey": "cascade|glm-5.2>claude-opus-4.8|s15",
+          "rate": "0/2"
+        },
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        },
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        }
+      ]
+    },
+    {
+      "instance_id": "pydata__xarray-3364",
+      "cracked": false,
+      "probesRun": 3,
+      "probes": [
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        },
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        },
+        {
+          "capability": "cascade",
+          "gkey": "cascade|glm-5.2>claude-opus-4.8|s15",
+          "rate": "0/2"
+        }
+      ]
+    },
+    {
+      "instance_id": "pylint-dev__pylint-7114",
+      "cracked": false,
+      "probesRun": 2,
+      "probes": [
+        {
+          "capability": "cascade",
+          "gkey": "cascade|glm-5.2>claude-opus-4.8|s15",
+          "rate": "0/2"
+        },
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        }
+      ]
+    },
+    {
+      "instance_id": "pytest-dev__pytest-5103",
+      "cracked": false,
+      "probesRun": 3,
+      "probes": [
+        {
+          "capability": "cascade",
+          "gkey": "cascade|glm-5.2>claude-opus-4.8|s15",
+          "rate": "0/2"
+        },
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        },
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        }
+      ]
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-7738",
+      "cracked": false,
+      "probesRun": 3,
+      "probes": [
+        {
+          "capability": "cascade",
+          "gkey": "cascade|glm-5.2>claude-opus-4.8|s15",
+          "rate": "0/2"
+        },
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        },
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        }
+      ]
+    },
+    {
+      "instance_id": "sympy__sympy-11870",
+      "cracked": false,
+      "probesRun": 3,
+      "probes": [
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        },
+        {
+          "capability": "cascade",
+          "gkey": "cascade|glm-5.2>claude-opus-4.8|s15",
+          "rate": "0/2"
+        },
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-11797",
+      "cracked": false,
+      "probesRun": 3,
+      "probes": [
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        },
+        {
+          "capability": "cascade",
+          "gkey": "cascade|glm-5.2>claude-opus-4.8|s15",
+          "rate": "0/2"
+        },
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        }
+      ]
+    },
+    {
+      "instance_id": "pydata__xarray-4248",
+      "cracked": false,
+      "probesRun": 3,
+      "probes": [
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        },
+        {
+          "capability": "cascade",
+          "gkey": "cascade|glm-5.2>claude-opus-4.8|s15",
+          "rate": "0/2"
+        },
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        }
+      ]
+    },
+    {
+      "instance_id": "pylint-dev__pylint-7228",
+      "cracked": false,
+      "probesRun": 3,
+      "probes": [
+        {
+          "capability": "cascade",
+          "gkey": "cascade|glm-5.2>claude-opus-4.8|s15",
+          "rate": "0/2"
+        },
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        },
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        }
+      ]
+    },
+    {
+      "instance_id": "pytest-dev__pytest-7220",
+      "cracked": false,
+      "probesRun": 2,
+      "probes": [
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        },
+        {
+          "capability": "cascade",
+          "gkey": "cascade|glm-5.2>claude-opus-4.8|s15",
+          "rate": "0/2"
+        }
+      ]
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-8435",
+      "cracked": false,
+      "probesRun": 2,
+      "probes": [
+        {
+          "capability": "cascade",
+          "gkey": "cascade|glm-5.2>claude-opus-4.8|s15",
+          "rate": "0/2"
+        },
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        }
+      ]
+    },
+    {
+      "instance_id": "sympy__sympy-11897",
+      "cracked": false,
+      "probesRun": 2,
+      "probes": [
+        {
+          "capability": "cascade",
+          "gkey": "cascade|glm-5.2>claude-opus-4.8|s15",
+          "rate": "0/2"
+        },
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-12113",
+      "cracked": false,
+      "probesRun": 2,
+      "probes": [
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        },
+        {
+          "capability": "cascade",
+          "gkey": "cascade|glm-5.2>claude-opus-4.8|s15",
+          "rate": "0/2"
+        }
+      ]
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-8474",
+      "cracked": false,
+      "probesRun": 1,
+      "probes": [
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        }
+      ]
+    },
+    {
+      "instance_id": "sympy__sympy-12236",
+      "cracked": false,
+      "probesRun": 1,
+      "probes": [
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-14997",
+      "cracked": false,
+      "probesRun": 1,
+      "probes": [
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        }
+      ]
+    },
+    {
+      "instance_id": "sympy__sympy-13146",
+      "cracked": false,
+      "probesRun": 1,
+      "probes": [
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-15213",
+      "cracked": false,
+      "probesRun": 1,
+      "probes": [
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        }
+      ]
+    },
+    {
+      "instance_id": "sympy__sympy-13895",
+      "cracked": false,
+      "probesRun": 1,
+      "probes": [
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-15738",
+      "cracked": false,
+      "probesRun": 1,
+      "probes": [
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        }
+      ]
+    },
+    {
+      "instance_id": "sympy__sympy-13915",
+      "cracked": false,
+      "probesRun": 1,
+      "probes": [
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-16408",
+      "cracked": false,
+      "probesRun": 1,
+      "probes": [
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        }
+      ]
+    },
+    {
+      "instance_id": "sympy__sympy-14024",
+      "cracked": false,
+      "probesRun": 1,
+      "probes": [
+        {
+          "capability": "single",
+          "gkey": "single|glm-5.2|s15",
+          "rate": "0/2"
+        }
+      ]
+    }
+  ],
+  "capabilityRoadmap_ADR195": {
+    "finding": "Config-only (model/escalation/turn-budget/BoN-width) is insufficient for the diagnosed cheap+cascade levers; the hard tail needs NEW harness capabilities.",
+    "priority": [
+      "trace-localize (the §56 lever that cracked a give-up — validate at n=300)",
+      "reproduction/repro-script generation",
+      "self-review/reviewer pass"
+    ],
+    "note": "Complete the undiagnosed direct-Opus/bo3/xbo probes ONLY if a cheap follow-up is wanted; the §56 trace-localize n=300 validation is the higher-value next spend."
+  }
+}
