@@ -72,9 +72,19 @@ elif [ -n "$SAMPLE" ]; then
   MANIFEST=/tmp/sample.json; echo "sampled first $SAMPLE instances"
 fi
 CASCADE_FLAG=""; [ "$MODE" = cascade ] && [ -n "$ESCALATE" ] && CASCADE_FLAG="--cascade $ESCALATE"
+# ADR-196 execution-trace localization (default OFF, backward-compatible). TRACE=1 metadata/env forwards
+# --trace-localize to the ESCALATION tier of (e|x)cascade — i.e. Opus on the empty-patch give-ups, the exact
+# hard-tail surface §56 showed it cracks (pylint-7228). It is deliberately NOT applied to the cheap GLM base
+# (that would change the §28/§47 control behavior and burn budget on already-solved bulk). For single/cascade
+# (single-tier modes) it applies to the only solve. ESC_TRACE_FLAG = the escalation-tier toggle.
+TRACE_ENABLED=""; [ "${TRACE:-}" = "1" ] && TRACE_ENABLED=1
+ESC_TRACE_FLAG=""; [ -n "$TRACE_ENABLED" ] && ESC_TRACE_FLAG="--trace-localize"
+# single-tier modes (single/cascade/bo3/xbo base): trace applies to the base solve; cascade-base (ecascade/
+# xcascade) deliberately does NOT — handled at the escalation step below.
+SOLVE_TRACE_FLAG=""; case "$MODE" in ecascade|xcascade) SOLVE_TRACE_FLAG="";; *) SOLVE_TRACE_FLAG="$ESC_TRACE_FLAG";; esac
 solve() { # temp out
   OPENROUTER_API_KEY="$ORKEY" node --experimental-strip-types --no-warnings solve-agentic.mjs \
-    --manifest "$MANIFEST" --no-test-oracle --model "$MODEL" $CASCADE_FLAG \
+    --manifest "$MANIFEST" --no-test-oracle --model "$MODEL" $CASCADE_FLAG $SOLVE_TRACE_FLAG \
     --temperature "$1" --max-steps "${MAXSTEPS:-15}" --concurrency "$CONC" --max-cost "${MAXCOST:-20}" \
     --out "$OUT/$2" --report "$OUT/${2%.jsonl}-report.json"
 }
@@ -101,7 +111,7 @@ elif [ "$MODE" = ecascade ]; then
   solve 0 "preds-cheap.jsonl"   # Tier 1 = $MODEL (cheap) on the full manifest
   node -e 'const fs=require("fs");const P=fs.readFileSync(process.env.OUT+"/preds-cheap.jsonl","utf8").split("\n").filter(Boolean).map(l=>JSON.parse(l));const E=new Set(P.filter(p=>!(p.model_patch||"").trim()).map(p=>p.instance_id));const m=JSON.parse(fs.readFileSync(process.env.MANIFEST,"utf8"));fs.writeFileSync("/tmp/esc-manifest.json",JSON.stringify({instances:m.instances.filter(i=>E.has(i.instance_id))}));console.error("ecascade: escalating "+E.size+" empty-patch give-ups to "+process.env.ESCALATE);'
   OPENROUTER_API_KEY="$ORKEY" node --experimental-strip-types --no-warnings solve-agentic.mjs \
-    --manifest /tmp/esc-manifest.json --no-test-oracle --model "$ESCALATE" \
+    --manifest /tmp/esc-manifest.json --no-test-oracle --model "$ESCALATE" $ESC_TRACE_FLAG \
     --temperature 0 --max-steps 18 --concurrency 2 --max-cost "${ESCCOST:-120}" \
     --out "$OUT/preds-esc.jsonl" --report "$OUT/esc-report.json" || true
   node -e 'const fs=require("fs");const O=process.env.OUT;const cheap=fs.readFileSync(O+"/preds-cheap.jsonl","utf8").split("\n").filter(Boolean).map(l=>JSON.parse(l));const esc=fs.existsSync(O+"/preds-esc.jsonl")?fs.readFileSync(O+"/preds-esc.jsonl","utf8").split("\n").filter(Boolean).map(l=>JSON.parse(l)):[];const byId=Object.fromEntries(esc.map(p=>[p.instance_id,p]));const merged=cheap.map(p=>(!(p.model_patch||"").trim()&&byId[p.instance_id])?byId[p.instance_id]:p);fs.writeFileSync(O+"/preds-merged.jsonl",merged.map(p=>JSON.stringify(p)).join("\n"));console.error("ecascade: merged "+merged.length+" preds ("+esc.length+" escalated)");'
@@ -118,7 +128,7 @@ elif [ "$MODE" = xcascade ]; then
     --out "$OUT/preds-judged.jsonl" --report "$OUT/disc-report.json" || true
   node -e 'const fs=require("fs");const P=fs.readFileSync(process.env.OUT+"/preds-judged.jsonl","utf8").split("\n").filter(Boolean).map(l=>JSON.parse(l));const E=new Set(P.filter(p=>!(p.model_patch||"").trim()).map(p=>p.instance_id));const m=JSON.parse(fs.readFileSync(process.env.MANIFEST,"utf8"));fs.writeFileSync("/tmp/esc-manifest.json",JSON.stringify({instances:m.instances.filter(i=>E.has(i.instance_id))}));console.error("xcascade: "+E.size+" empties after cross-model base → escalate to "+process.env.ESCALATE);'
   OPENROUTER_API_KEY="$ORKEY" node --experimental-strip-types --no-warnings solve-agentic.mjs \
-    --manifest /tmp/esc-manifest.json --no-test-oracle --model "$ESCALATE" \
+    --manifest /tmp/esc-manifest.json --no-test-oracle --model "$ESCALATE" $ESC_TRACE_FLAG \
     --temperature 0 --max-steps 18 --concurrency 2 --max-cost "${ESCCOST:-120}" \
     --out "$OUT/preds-esc.jsonl" --report "$OUT/esc-report.json" || true
   node -e 'const fs=require("fs");const O=process.env.OUT;const base=fs.readFileSync(O+"/preds-judged.jsonl","utf8").split("\n").filter(Boolean).map(l=>JSON.parse(l));const esc=fs.existsSync(O+"/preds-esc.jsonl")?fs.readFileSync(O+"/preds-esc.jsonl","utf8").split("\n").filter(Boolean).map(l=>JSON.parse(l)):[];const byId=Object.fromEntries(esc.map(p=>[p.instance_id,p]));const merged=base.map(p=>(!(p.model_patch||"").trim()&&byId[p.instance_id])?byId[p.instance_id]:p);fs.writeFileSync(O+"/preds-merged.jsonl",merged.map(p=>JSON.stringify(p)).join("\n"));console.error("xcascade: merged "+merged.length+" ("+esc.length+" escalated)");'

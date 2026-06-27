@@ -46,7 +46,7 @@ const key = () => readFileSync('/tmp/.orkey', 'utf8').trim();
 // self-running startup script: install deps, fetch the fixed runner from main, solve+eval, leave results.
 const STARTUP = `#!/bin/bash
 M(){ curl -sf -H 'Metadata-Flavor: Google' "http://metadata/computeMetadata/v1/instance/attributes/$1" 2>/dev/null || true; } # -f: missing attr → empty, NOT the 404 HTML (which broke SAMPLE on non-sample runs)
-export ORKEY=$(M orkey) BENCH=$(M bench) MODE=$(M mode) MODEL=$(M model) ESCALATE=$(M escalate) SAMPLE=$(M sample) XMODELS=$(M xmodels) MAXCOST=$(M maxcost) ESCCOST=$(M esccost) MAXSTEPS=$(M maxsteps) HARD=$(M hard) CONCURRENCY=4
+export ORKEY=$(M orkey) BENCH=$(M bench) MODE=$(M mode) MODEL=$(M model) ESCALATE=$(M escalate) SAMPLE=$(M sample) XMODELS=$(M xmodels) MAXCOST=$(M maxcost) ESCCOST=$(M esccost) MAXSTEPS=$(M maxsteps) HARD=$(M hard) TRACE=$(M trace) CONCURRENCY=4
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -y >/dev/null 2>&1; apt-get install -y python3-venv python3-pip git >/dev/null 2>&1
 mkdir -p /opt
@@ -72,8 +72,8 @@ function provision(o) {
   const name = `${PREFIX}${board}-${tag}`.replace(/-+$/, '').slice(0, 62).replace(/-+$/, ''); // GCP names must end alphanumeric
   if (vmExists(name)) { console.error(`SKIP ${tag}: ${name} already exists`); return false; }
   const tmp = `/tmp/startup-${name}.sh`; writeFileSync(tmp, STARTUP);
-  const maxcost = process.env.MAXCOST || '', esccost = process.env.ESCCOST || '', maxsteps = process.env.MAXSTEPS || '', hard = process.env.HARD || ''; // §36: avoid silent $20 base truncation on big/full runs; HARD=1 → runner filters to hard-<board>-ids.json
-  const meta = `orkey=${key()},bench=${board},mode=${mode},model=${model}` + (escalate ? `,escalate=${escalate}` : '') + (sample ? `,sample=${sample}` : '') + (maxcost ? `,maxcost=${maxcost}` : '') + (esccost ? `,esccost=${esccost}` : '') + (maxsteps ? `,maxsteps=${maxsteps}` : '') + (hard ? `,hard=${hard}` : '');
+  const maxcost = process.env.MAXCOST || '', esccost = process.env.ESCCOST || '', maxsteps = process.env.MAXSTEPS || '', hard = process.env.HARD || '', trace = process.env.TRACE || ''; // §36: avoid silent $20 base truncation on big/full runs; HARD=1 → runner filters to hard-<board>-ids.json; TRACE=1 → ADR-196 trace-localize on the escalation tier (§56)
+  const meta = `orkey=${key()},bench=${board},mode=${mode},model=${model}` + (escalate ? `,escalate=${escalate}` : '') + (sample ? `,sample=${sample}` : '') + (maxcost ? `,maxcost=${maxcost}` : '') + (esccost ? `,esccost=${esccost}` : '') + (maxsteps ? `,maxsteps=${maxsteps}` : '') + (hard ? `,hard=${hard}` : '') + (trace ? `,trace=${trace}` : '');
   let mff = `startup-script=${tmp}`;
   if (xmodels) { const xf = `/tmp/xmodels-${name}.txt`; writeFileSync(xf, xmodels); mff += `,xmodels=${xf}`; } // commas break --metadata; use a file
   console.error(`provisioning ${name}  (${model}${xmodels ? `=[${xmodels}]` : ''} · ${mode}${sample ? ` · n=${sample}` : ''} · ${BOARDS[board]})`);
