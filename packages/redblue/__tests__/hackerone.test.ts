@@ -127,38 +127,49 @@ describe('HackerOne client — no-key static fallback', () => {
   });
 });
 
-describe('HackerOne client — mocked live API ($0)', () => {
-  const mockFetch: FetchLike = async (url) => {
-    if (url.endsWith('/weaknesses')) {
+describe('HackerOne client — mocked GraphQL API ($0)', () => {
+  // Mocks the GraphQL POST: dispatches on the query body, not a REST path.
+  const mockGraphql: FetchLike = async (url, init) => {
+    expect(url).toBe('https://hackerone.com/graphql');
+    expect(init?.method).toBe('POST');
+    // The token is sent as X-Auth-Token (no Basic, no username).
+    expect(init?.headers?.['X-Auth-Token']).toBe('tok');
+    const q = init?.body ?? '';
+    if (q.includes('weaknesses')) {
       return {
         ok: true,
         status: 200,
         json: async () => ({
-          data: [
-            { id: '1', attributes: { name: 'Cross-site Scripting', external_id: 'CWE-79' } },
-            { id: '2', attributes: { name: 'SQL Injection', external_id: 'CWE-89' } },
-          ],
+          data: {
+            weaknesses: {
+              edges: [
+                { node: { name: 'Cross-site Scripting', external_id: 'cwe-79' } },
+                { node: { name: 'SQL Injection', external_id: 'cwe-89' } },
+                { node: { name: 'Some CAPEC thing', external_id: 'capec-597' } },
+              ],
+            },
+          },
         }),
       };
     }
-    // auth smoke endpoint
-    return { ok: true, status: 200, json: async () => ({ data: [] }) };
+    // me query (auth smoke)
+    return { ok: true, status: 200, json: async () => ({ data: { me: { username: 'x' } } }) };
   };
 
-  it('parses the JSON:API weakness payload', async () => {
+  it('sends X-Auth-Token and normalizes cwe-NN → CWE-NN', async () => {
     const client = new HackerOneClient({
-      credentials: { username: 'u', apiKey: 'k' },
-      fetchImpl: mockFetch,
+      credentials: { apiKey: 'tok' },
+      fetchImpl: mockGraphql,
     });
     expect(client.isLive()).toBe(true);
     const ws = await client.weaknesses();
-    expect(ws.map((w) => w.externalId)).toEqual(['CWE-79', 'CWE-89']);
+    expect(ws.map((w) => w.externalId)).toEqual(['CWE-79', 'CWE-89', 'capec-597']);
   });
 
   it('authSmoke returns only ok/status (never the response body)', async () => {
     const client = new HackerOneClient({
-      credentials: { username: 'u', apiKey: 'k' },
-      fetchImpl: mockFetch,
+      credentials: { apiKey: 'tok' },
+      fetchImpl: mockGraphql,
     });
     const r = await client.authSmoke();
     expect(r.live).toBe(true);
@@ -167,10 +178,33 @@ describe('HackerOne client — mocked live API ($0)', () => {
     expect(Object.keys(r).sort()).toEqual(['live', 'ok', 'status']);
   });
 
+  it('authSmoke fails on a 200 carrying GraphQL errors', async () => {
+    const erroring: FetchLike = async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({ errors: [{ message: 'Unauthenticated' }] }),
+    });
+    const client = new HackerOneClient({ credentials: { apiKey: 'tok' }, fetchImpl: erroring });
+    const r = await client.authSmoke();
+    expect(r.ok).toBe(false);
+    expect(r.live).toBe(true);
+  });
+
+  it('weaknesses degrades to the static fallback on GraphQL errors', async () => {
+    const erroring: FetchLike = async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({ errors: [{ message: 'boom' }] }),
+    });
+    const client = new HackerOneClient({ credentials: { apiKey: 'tok' }, fetchImpl: erroring });
+    const ws = await client.weaknesses();
+    expect(ws.length).toBe(staticWeaknessFallback().length);
+  });
+
   it('degrades to the static fallback on a non-OK response', async () => {
-    const failing: FetchLike = async () => ({ ok: false, status: 500, json: async () => ({}) });
+    const failing: FetchLike = async () => ({ ok: false, status: 401, json: async () => ({}) });
     const client = new HackerOneClient({
-      credentials: { username: 'u', apiKey: 'k' },
+      credentials: { apiKey: 'tok' },
       fetchImpl: failing,
     });
     const ws = await client.weaknesses();

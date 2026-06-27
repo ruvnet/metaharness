@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 //
 // LIVE, READ-ONLY HackerOne auth smoke. Skipped unless HACKERONE_API_KEY is in
-// the environment. Confirms HTTP Basic auth works against the real API.
+// the environment. Confirms the GraphQL X-Auth-Token auth works against the real
+// API (POST https://hackerone.com/graphql).
 //
 // SECRETS: this test NEVER prints, logs, or asserts on the token or any response
 // body. It only checks `authSmoke()`'s {ok,status} (the body is never surfaced
@@ -13,7 +14,7 @@ import { HackerOneClient, hasHackerOneKey } from '../src/integrations/hackerone.
 const LIVE = hasHackerOneKey();
 
 describe.skipIf(!LIVE)('LIVE HackerOne read-only auth smoke', () => {
-  it('authenticates with HTTP Basic and can read the weakness taxonomy', async () => {
+  it('authenticates via GraphQL X-Auth-Token and can read the weakness taxonomy', async () => {
     const client = new HackerOneClient();
     expect(client.isLive()).toBe(true);
 

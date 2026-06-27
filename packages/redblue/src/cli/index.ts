@@ -297,7 +297,7 @@ async function cmdHackerOne(argv: string[]): Promise<CliResult> {
       lines.push('');
       lines.push(
         '_No HACKERONE_API_KEY in env — showing the built-in static CWE map. ' +
-          'Set HACKERONE_API_KEY (+ HACKERONE_USERNAME, default ruvnet) at runtime for the live taxonomy._',
+          'Set HACKERONE_API_KEY at runtime (GraphQL X-Auth-Token) for the live taxonomy._',
       );
     }
     return { code: 0, lines };
@@ -340,9 +340,9 @@ Usage:
   redblue hackerone submit ...          # DISABLED — drafts only, never auto-submits
 
 HackerOne: --format hackerone exports bounty-report DRAFTS (CWE + CVSS, redacted
-evidence). Auth is HTTP Basic from HACKERONE_API_KEY/HACKERONE_USERNAME read at
-runtime; with no key, the static CWE fallback keeps it offline/$0. The tool NEVER
-auto-submits to a live program.
+evidence). Auth is a single API token (GraphQL X-Auth-Token) from HACKERONE_API_KEY
+read at runtime; with no key, the static CWE fallback keeps it offline/$0. The tool
+NEVER auto-submits to a live program.
 
 The REAL judge is a model and requires OPENROUTER_API_KEY (the default/product
 path). --mock-judge selects a $0 TEST-ONLY marker fixture — NOT the product judge.

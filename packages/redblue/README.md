@@ -218,22 +218,25 @@ const md = renderHackerOneMarkdown(draft);                // bounty-report body
 redblue hackerone weaknesses   # lists the CWE taxonomy
 ```
 
-With a key, this reads the live HackerOne weakness taxonomy (`GET /v1/weaknesses`,
-**read-only**). With **no key**, it returns a built-in static CWE map so
-offline/CI works deterministically at $0.
+With a key, this reads the live HackerOne weakness taxonomy via the GraphQL API
+(`query{weaknesses(first:N){edges{node{name external_id}}}}`, **read-only**) and
+normalizes `external_id` (`cwe-79` → `CWE-79`). With **no key**, it returns a
+built-in static CWE map so offline/CI works deterministically at $0.
 
-### Auth (env vars, read at runtime)
+### Auth (env var, read at runtime)
 
-HackerOne auth is HTTP Basic `username:api_key`. Both are read **at runtime** from
-the environment (or a local, gitignored `.env`):
+HackerOne auth is a **single API token** sent as the GraphQL `X-Auth-Token`
+header (no username). It is read **at runtime** from the environment (or a local,
+gitignored `.env`):
 
 | Var | Purpose | Default |
 | --- | --- | --- |
-| `HACKERONE_API_KEY` | API token (the Basic password) | — (no key → static fallback) |
-| `HACKERONE_USERNAME` | API identifier (the Basic user) | `ruvnet` |
+| `HACKERONE_API_KEY` | API token (sent as `X-Auth-Token`) | — (no key → static fallback) |
 
-The key is **never** logged, printed, or written to any file. The live read-only
-path activates automatically when the key is present.
+The token is **never** logged, printed, or written to any file. The live
+read-only path activates automatically when the token is present. (The endpoint
+is `https://hackerone.com/graphql`; the v1 REST Basic-auth path is not used — a
+token issued without an identifier authenticates via GraphQL.)
 
 ### ⚠️ Safety: never auto-submits
 

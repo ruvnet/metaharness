@@ -1,46 +1,55 @@
 // SPDX-License-Identifier: MIT
 //
-// Read-only HackerOne API client.
+// Read-only HackerOne API client (GraphQL).
 //
 // SAFETY / SECRETS (strict):
-//   - Auth is HTTP Basic `username:api_key`. Both are read at RUNTIME from the
-//     process environment (or a local .env loaded at runtime — never imported
-//     into source, never written to any file).
-//   - The credentials are NEVER logged, printed, echoed, or returned.
+//   - Auth is a single API token sent as `X-Auth-Token: <HACKERONE_API_KEY>`
+//     against the GraphQL endpoint (https://hackerone.com/graphql). The token is
+//     read at RUNTIME from the process environment (or a local .env loaded at
+//     runtime — never imported into source, never written to any file).
+//   - The token is NEVER logged, printed, echoed, or returned.
 //   - The API is used READ-ONLY here: it fetches the weakness taxonomy (CWE).
 //     This client has no write/submit method at all. (Report "export" produces a
 //     draft only; see reports/hackerone.ts. A live submit, if ever built, is
 //     hard-gated in the CLI and default-off — it is not in this module.)
-//   - With no key present, every method falls back to a built-in static CWE map
-//     so offline/CI works deterministically at $0.
+//   - With no token present, every method falls back to a built-in static CWE
+//     map so offline/CI works deterministically at $0.
+//
+// NOTE on auth: HackerOne's v1 REST API uses HTTP Basic (username:api_token),
+// but a personal API token issued without an identifier authenticates instead
+// via the GraphQL endpoint with the X-Auth-Token header (no username). This
+// client uses the GraphQL path, which is what the configured token requires.
 
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { AttackFamily } from '../types.js';
 import { FAMILY_TAXONOMY } from './cwe-cvss.js';
 
-const HACKERONE_API_BASE = 'https://api.hackerone.com/v1';
-const DEFAULT_USERNAME = 'ruvnet';
+const HACKERONE_GRAPHQL_ENDPOINT = 'https://hackerone.com/graphql';
 
 /** A weakness entry from the HackerOne taxonomy (CWE-bearing). */
 export interface HackerOneWeakness {
-  /** HackerOne weakness id (opaque string) — or a CWE id for the fallback. */
-  id: string;
+  /** HackerOne weakness name. */
   name: string;
-  /** External CWE id, e.g. "CWE-77", when present. */
+  /**
+   * External taxonomy id as returned by HackerOne, e.g. "cwe-79" / "capec-597".
+   * Normalized to upper-case CWE form ("CWE-79") when it is a CWE; left as-is
+   * otherwise. Undefined when HackerOne has no external id for the weakness.
+   */
   externalId?: string;
-  description?: string;
+  /** Stable id used for the static fallback (the CWE id). */
+  id: string;
 }
 
 export interface HackerOneCredentials {
-  username: string;
+  /** The single API token (sent as X-Auth-Token). */
   apiKey: string;
 }
 
 /**
  * Minimal, dependency-free .env reader (KEY=VALUE lines). Used ONLY at runtime
- * to populate credentials when they are not already in process.env. It never
- * persists anything and only reads the two HackerOne keys it needs.
+ * to populate the token when it is not already in process.env. It never persists
+ * anything and only reads the single HackerOne key it needs.
  *
  * Lines: `KEY=VALUE`, `#` comments and blank lines ignored, optional surrounding
  * quotes stripped, no interpolation. Deliberately tiny + auditable.
@@ -72,13 +81,12 @@ function readEnvFile(path: string): Record<string, string> {
 }
 
 /**
- * Resolve HackerOne credentials at RUNTIME.
+ * Resolve the HackerOne API token at RUNTIME.
  *
- * Order: process.env first, then a local .env (cwd) as a fallback — loaded only
- * here, only when needed, never imported into source. Returns null when no API
- * key is available (the no-key path), which keeps the static fallback active.
- *
- * The returned object is for in-process use only; it is never logged or stored.
+ * Order: process.env first, then a local .env (the provided path or ./.env) —
+ * loaded only here, only when needed, never imported into source. Returns null
+ * when no token is available (the no-key path), which keeps the static fallback
+ * active. The returned value is for in-process use only; never logged or stored.
  */
 export function resolveCredentials(opts?: {
   envFilePath?: string;
@@ -86,21 +94,19 @@ export function resolveCredentials(opts?: {
 }): HackerOneCredentials | null {
   const env = opts?.env ?? process.env;
   let apiKey = (env.HACKERONE_API_KEY || '').trim();
-  let username = (env.HACKERONE_USERNAME || '').trim();
 
   if (!apiKey) {
-    // Runtime-only .env fallback (gitignored). Read just the two keys.
+    // Runtime-only .env fallback (gitignored). Read just the single key.
     const envPath = resolve(opts?.envFilePath ?? '.env');
     const fileEnv = readEnvFile(envPath);
-    apiKey = (apiKey || fileEnv.HACKERONE_API_KEY || '').trim();
-    username = (username || fileEnv.HACKERONE_USERNAME || '').trim();
+    apiKey = (fileEnv.HACKERONE_API_KEY || '').trim();
   }
 
   if (!apiKey) return null;
-  return { username: username || DEFAULT_USERNAME, apiKey };
+  return { apiKey };
 }
 
-/** True if a live HackerOne call can be made (credentials present at runtime). */
+/** True if a live HackerOne call can be made (token present at runtime). */
 export function hasHackerOneKey(opts?: {
   envFilePath?: string;
   env?: NodeJS.ProcessEnv;
@@ -108,9 +114,17 @@ export function hasHackerOneKey(opts?: {
   return resolveCredentials(opts) !== null;
 }
 
+/** Normalize a HackerOne external id ("cwe-79") to canonical CWE form. */
+function normalizeExternalId(raw: unknown): string | undefined {
+  if (typeof raw !== 'string' || raw.length === 0) return undefined;
+  const m = /^cwe-(\d+)$/i.exec(raw.trim());
+  if (m) return `CWE-${m[1]}`;
+  return raw.trim();
+}
+
 /**
  * Build the static CWE taxonomy fallback from the family mapping. This is what
- * `weaknesses()` returns when no key is present — every CWE referenced by the
+ * `weaknesses()` returns when no token is present — every CWE referenced by the
  * redblue families, de-duplicated. Deterministic, $0, offline-safe.
  */
 export function staticWeaknessFallback(): HackerOneWeakness[] {
@@ -128,7 +142,7 @@ export function staticWeaknessFallback(): HackerOneWeakness[] {
 /** Injectable fetch (defaults to global fetch) — lets tests mock the network. */
 export type FetchLike = (
   input: string,
-  init?: { method?: string; headers?: Record<string, string> },
+  init?: { method?: string; headers?: Record<string, string>; body?: string },
 ) => Promise<{ ok: boolean; status: number; json(): Promise<unknown> }>;
 
 export interface HackerOneClientOptions {
@@ -143,9 +157,9 @@ export interface HackerOneClientOptions {
 }
 
 /**
- * Read-only HackerOne client. The ONLY network method is `weaknesses()`
- * (GET /v1/weaknesses) plus an auth smoke (`me()` → GET /v1/me/programs).
- * There is intentionally NO submit/create method on this client.
+ * Read-only HackerOne GraphQL client. The ONLY network methods are
+ * `weaknesses()` (query weaknesses) and an auth smoke (`authSmoke()` →
+ * query me). There is intentionally NO submit/create mutation on this client.
  */
 export class HackerOneClient {
   private readonly creds: HackerOneCredentials | null;
@@ -164,33 +178,50 @@ export class HackerOneClient {
     return this.creds !== null;
   }
 
-  /** Build the Basic auth header. NEVER logged. */
-  private authHeader(): string {
+  /** POST a GraphQL query with the X-Auth-Token header. Token NEVER logged. */
+  private async graphql(
+    query: string,
+  ): Promise<{ ok: boolean; status: number; body: { data?: unknown; errors?: unknown } }> {
     if (!this.creds) throw new Error('HackerOneClient: no credentials');
-    const token = Buffer.from(`${this.creds.username}:${this.creds.apiKey}`).toString('base64');
-    return `Basic ${token}`;
+    const res = await this.fetchImpl(HACKERONE_GRAPHQL_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'X-Auth-Token': this.creds.apiKey,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({ query }),
+    });
+    let body: { data?: unknown; errors?: unknown } = {};
+    try {
+      body = ((await res.json()) as { data?: unknown; errors?: unknown }) ?? {};
+    } catch {
+      body = {};
+    }
+    return { ok: res.ok, status: res.status, body };
   }
 
   /**
    * Fetch the weakness taxonomy (CWE). Read-only.
    *
-   * No key → returns the static fallback (offline/CI safe). With a key, calls
-   * GET /v1/weaknesses and normalizes the JSON:API payload into HackerOneWeakness[].
-   * Any network/parse error degrades gracefully to the static fallback so a
-   * flaky API never breaks a report export.
+   * No token → returns the static fallback (offline/CI safe). With a token,
+   * runs `query{weaknesses(first:N){edges{node{name external_id}}}}` and
+   * normalizes the payload into HackerOneWeakness[]. Any network/parse/GraphQL
+   * error degrades gracefully to the static fallback so a flaky API never breaks
+   * a report export.
    */
-  async weaknesses(): Promise<HackerOneWeakness[]> {
+  async weaknesses(first = 100): Promise<HackerOneWeakness[]> {
     if (!this.creds) return staticWeaknessFallback();
     try {
-      const res = await this.fetchImpl(`${HACKERONE_API_BASE}/weaknesses`, {
-        method: 'GET',
-        headers: { Authorization: this.authHeader(), Accept: 'application/json' },
-      });
-      if (!res.ok) return staticWeaknessFallback();
-      const body = (await res.json()) as { data?: unknown };
-      const data = Array.isArray(body?.data) ? body.data : [];
-      const parsed = data
-        .map((item) => normalizeWeakness(item))
+      const n = Math.max(1, Math.min(500, Math.trunc(first)));
+      const query = `query{weaknesses(first:${n}){edges{node{name external_id}}}}`;
+      const { ok, body } = await this.graphql(query);
+      if (!ok || body.errors) return staticWeaknessFallback();
+      const edges = (body.data as { weaknesses?: { edges?: unknown } } | undefined)?.weaknesses
+        ?.edges;
+      const list = Array.isArray(edges) ? edges : [];
+      const parsed = list
+        .map((edge) => normalizeWeakness(edge))
         .filter((w): w is HackerOneWeakness => w !== null);
       return parsed.length > 0 ? parsed : staticWeaknessFallback();
     } catch {
@@ -199,38 +230,35 @@ export class HackerOneClient {
   }
 
   /**
-   * Read-only auth smoke. Confirms the Basic credentials authenticate without
-   * returning any account contents to the caller. Returns only a boolean +
-   * HTTP status — NEVER the response body (which could contain account data).
+   * Read-only auth smoke. Confirms the token authenticates without returning any
+   * account contents to the caller. Runs `query{me{username}}` and returns only
+   * a boolean + HTTP status — NEVER the response body (which could contain
+   * account data).
    *
-   * No key → { ok: false, live: false }. (Not an error; just no live path.)
+   * No token → { ok: false, status: 0, live: false }. (Not an error; just no
+   * live path.)
    */
   async authSmoke(): Promise<{ ok: boolean; status: number; live: boolean }> {
     if (!this.creds) return { ok: false, status: 0, live: false };
     try {
-      const res = await this.fetchImpl(`${HACKERONE_API_BASE}/me/programs`, {
-        method: 'GET',
-        headers: { Authorization: this.authHeader(), Accept: 'application/json' },
-      });
-      // Deliberately do NOT read or surface res.json() — only the status.
-      return { ok: res.ok, status: res.status, live: true };
+      const { ok, status, body } = await this.graphql('query{me{username}}');
+      // Auth succeeded iff HTTP 200 AND no GraphQL errors. Never surface body.
+      const authed = status === 200 && ok && !body.errors;
+      return { ok: authed, status, live: true };
     } catch {
       return { ok: false, status: 0, live: true };
     }
   }
 }
 
-/** Normalize a HackerOne JSON:API weakness object into our shape. */
-function normalizeWeakness(item: unknown): HackerOneWeakness | null {
-  if (typeof item !== 'object' || item === null) return null;
-  const obj = item as { id?: unknown; attributes?: Record<string, unknown> };
-  const id = obj.id !== undefined ? String(obj.id) : undefined;
-  const attrs = obj.attributes ?? {};
-  const name = typeof attrs.name === 'string' ? attrs.name : undefined;
-  if (!id || !name) return null;
-  const externalId =
-    typeof attrs.external_id === 'string' ? attrs.external_id : undefined;
-  const description =
-    typeof attrs.description === 'string' ? attrs.description : undefined;
-  return { id, name, externalId, description };
+/** Normalize a GraphQL weakness edge into our shape. */
+function normalizeWeakness(edge: unknown): HackerOneWeakness | null {
+  if (typeof edge !== 'object' || edge === null) return null;
+  const node = (edge as { node?: unknown }).node;
+  if (typeof node !== 'object' || node === null) return null;
+  const obj = node as { name?: unknown; external_id?: unknown };
+  const name = typeof obj.name === 'string' ? obj.name : undefined;
+  if (!name) return null;
+  const externalId = normalizeExternalId(obj.external_id);
+  return { name, externalId, id: externalId ?? name };
 }
