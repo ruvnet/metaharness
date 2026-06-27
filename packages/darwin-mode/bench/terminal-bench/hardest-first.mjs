@@ -41,6 +41,7 @@ const MAX_STEPS = argv('--max-steps', '30');
 const MAX_COST = parseFloat(argv('--max-cost', '4'));        // overall climb budget breaker (USD)
 const PER_TASK_COST = argv('--per-task-cost', '1.5');         // per-task agent budget (passed to the agent)
 const CONCURRENT = argv('--concurrent', '1');
+const BASE_URL = argv('--base-url', '');                      // OpenAI-compatible endpoint override ($0 local ollama, etc.)
 const OUT = rel(argv('--out', `runs/hardest-${MODEL.split('/').pop().replace(/[.:]/g, '-')}`));
 const DRY = has('--dry');
 const LADDER = has('--ladder');
@@ -63,6 +64,7 @@ function runBand(tasks, runDir, label) {
     ...taskArgs,
     '--agent-import-path', 'darwin_terminal_agent:DarwinTerminalAgent',
     '-k', `model=${MODEL}`, '-k', `max_steps=${MAX_STEPS}`, '-k', `max_cost=${PER_TASK_COST}`,
+    ...(BASE_URL ? ['-k', `base_url=${BASE_URL}`] : []),
     '--n-concurrent', String(CONCURRENT),
     '--output-path', runDir, '--cleanup',
   ];
