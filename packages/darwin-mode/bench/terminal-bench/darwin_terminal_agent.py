@@ -43,6 +43,11 @@ from terminal_bench.agents.failure_mode import FailureMode
 from terminal_bench.terminal.tmux_session import TmuxSession
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+# Optional OpenAI-compatible endpoint override (e.g. a local ollama at $0 inference, or any
+# OpenAI-compatible server). When set via -k base_url=... (or env DARWIN_BASE_URL), the agent
+# posts to <base_url>/chat/completions with the same body. Default stays OpenRouter so the
+# proven path is unchanged. usage.cost is absent on local endpoints → falls back to PRICE_TABLE
+# (empty for local model slugs ⇒ $0, the honest cost for $0-inference local serving).
 
 # Static fallback $/1M-token table for models OpenRouter sometimes omits usage.cost for. Only used
 # when usage.cost is absent; the live usage.cost is always preferred (and is what we trust).
@@ -121,6 +126,7 @@ class DarwinTerminalAgent(BaseAgent):
         cost_sidecar: str | None = None,
         cmd_timeout_sec: float = 60.0,
         obs_cap: int = 4000,
+        base_url: str | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -130,6 +136,14 @@ class DarwinTerminalAgent(BaseAgent):
         self.max_cost = float(max_cost)
         self.cmd_timeout_sec = float(cmd_timeout_sec)
         self.obs_cap = int(obs_cap)
+        # OpenAI-compatible endpoint. base_url override → "<base_url>/chat/completions";
+        # default OpenRouter (unchanged). Strip a trailing /chat/completions if a full URL is given.
+        _bu = base_url or os.environ.get("DARWIN_BASE_URL") or ""
+        if _bu:
+            _bu = _bu.rstrip("/")
+            self.endpoint = _bu if _bu.endswith("/chat/completions") else _bu + "/chat/completions"
+        else:
+            self.endpoint = OPENROUTER_URL
         # sidecar: explicit kwarg, else env, else alongside this file
         self.cost_sidecar = Path(
             cost_sidecar
@@ -157,10 +171,10 @@ class DarwinTerminalAgent(BaseAgent):
             }
         ).encode()
         req = urllib.request.Request(
-            OPENROUTER_URL,
+            self.endpoint,
             data=body,
             headers={
-                "Authorization": f"Bearer {self._api_key}",
+                "Authorization": f"Bearer {self._api_key or 'local'}",
                 "Content-Type": "application/json",
                 "HTTP-Referer": "https://github.com/ruvnet/agent-harness-generator",
                 "X-Title": "darwin-terminal-bench",
@@ -246,7 +260,8 @@ class DarwinTerminalAgent(BaseAgent):
             {"role": "system", "content": SYSTEM},
             {"role": "user", "content": f"TASK:\n{instruction}\n\nBegin. Output one JSON action."},
         ]
-        if not self._api_key:
+        # OpenRouter needs a key; a local/custom endpoint (base_url override) does not.
+        if not self._api_key and self.endpoint == OPENROUTER_URL:
             failure = FailureMode.UNKNOWN_AGENT_ERROR
         else:
             for steps in range(1, self.max_steps + 1):

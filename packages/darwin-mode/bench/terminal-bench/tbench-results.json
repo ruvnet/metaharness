@@ -1,0 +1,892 @@
+{
+  "benchmark": "terminal-bench-core-0.1.1",
+  "denom": 80,
+  "eval_validated": "oracle hello-world -> 100% PASS (before+after)",
+  "runner": "official tb harness, hardest-first, conformant (hidden tests score, agent never sees them)",
+  "ran_on": "ruvultra-local",
+  "budget_gate": "OpenRouter auth/key delta, baseline $2217.36, final +$32.05 of +$40 cap",
+  "deepseek_full80": {
+    "run_dir": "/home/ruvultra/projects/agent-harness-generator/packages/darwin-mode/bench/terminal-bench/runs/deepseek-full/hard",
+    "results_json": "/home/ruvultra/projects/agent-harness-generator/packages/darwin-mode/bench/terminal-bench/runs/deepseek-full/hard/2026-06-26__22-45-10/results.json",
+    "accuracy_official": 0.08333333333333333,
+    "n_tasks": 24,
+    "n_resolved": 2,
+    "accuracy": 0.0833,
+    "total_usd": 0.310664,
+    "mean_usd_per_task": 0.012944,
+    "usd_per_resolved": 0.155332,
+    "rows": [
+      {
+        "task_id": "blind-maze-explorer-5x5",
+        "resolved": false,
+        "usd": 0.007553,
+        "input_tokens": 27605,
+        "output_tokens": 388,
+        "steps": 15
+      },
+      {
+        "task_id": "cartpole-rl-training",
+        "resolved": false,
+        "usd": 0.008369,
+        "input_tokens": 29096,
+        "output_tokens": 2395,
+        "steps": 9
+      },
+      {
+        "task_id": "configure-git-webserver",
+        "resolved": false,
+        "usd": 0.010656,
+        "input_tokens": 42338,
+        "output_tokens": 677,
+        "steps": 13
+      },
+      {
+        "task_id": "extract-moves-from-video",
+        "resolved": false,
+        "usd": 0.045105,
+        "input_tokens": 177561,
+        "output_tokens": 1230,
+        "steps": 26
+      },
+      {
+        "task_id": "git-multibranch",
+        "resolved": false,
+        "usd": 0.02104,
+        "input_tokens": 69104,
+        "output_tokens": 1242,
+        "steps": 20
+      },
+      {
+        "task_id": "gpt2-codegolf",
+        "resolved": false,
+        "usd": 0.002008,
+        "input_tokens": 6338,
+        "output_tokens": 509,
+        "steps": 5
+      },
+      {
+        "task_id": "intrusion-detection",
+        "resolved": false,
+        "usd": 0.005961,
+        "input_tokens": 21159,
+        "output_tokens": 1167,
+        "steps": 9
+      },
+      {
+        "task_id": "oom",
+        "resolved": false,
+        "usd": 0.014334,
+        "input_tokens": 52441,
+        "output_tokens": 608,
+        "steps": 12
+      },
+      {
+        "task_id": "organization-json-generator",
+        "resolved": true,
+        "usd": 0.005849,
+        "input_tokens": 14562,
+        "output_tokens": 1286,
+        "steps": 8
+      },
+      {
+        "task_id": "password-recovery",
+        "resolved": false,
+        "usd": 0.001481,
+        "input_tokens": 3959,
+        "output_tokens": 272,
+        "steps": 6
+      },
+      {
+        "task_id": "path-tracing",
+        "resolved": false,
+        "usd": 0.004203,
+        "input_tokens": 13789,
+        "output_tokens": 269,
+        "steps": 6
+      },
+      {
+        "task_id": "path-tracing-reverse",
+        "resolved": false,
+        "usd": 0.002796,
+        "input_tokens": 11390,
+        "output_tokens": 177,
+        "steps": 12
+      },
+      {
+        "task_id": "play-zork",
+        "resolved": false,
+        "usd": 0.002024,
+        "input_tokens": 7397,
+        "output_tokens": 497,
+        "steps": 11
+      },
+      {
+        "task_id": "polyglot-rust-c",
+        "resolved": false,
+        "usd": 0.001025,
+        "input_tokens": 3186,
+        "output_tokens": 497,
+        "steps": 4
+      },
+      {
+        "task_id": "prove-plus-comm",
+        "resolved": true,
+        "usd": 0.000867,
+        "input_tokens": 2498,
+        "output_tokens": 173,
+        "steps": 4
+      },
+      {
+        "task_id": "pytorch-model-cli",
+        "resolved": false,
+        "usd": 0.012362,
+        "input_tokens": 42990,
+        "output_tokens": 1312,
+        "steps": 15
+      },
+      {
+        "task_id": "pytorch-model-cli.easy",
+        "resolved": false,
+        "usd": 0.021615,
+        "input_tokens": 61740,
+        "output_tokens": 4646,
+        "steps": 15
+      },
+      {
+        "task_id": "pytorch-model-cli.hard",
+        "resolved": false,
+        "usd": 0.005817,
+        "input_tokens": 20480,
+        "output_tokens": 1110,
+        "steps": 11
+      },
+      {
+        "task_id": "run-pdp11-code",
+        "resolved": false,
+        "usd": 0.010803,
+        "input_tokens": 43401,
+        "output_tokens": 436,
+        "steps": 17
+      },
+      {
+        "task_id": "super-benchmark-upet",
+        "resolved": false,
+        "usd": 0.0506,
+        "input_tokens": 200259,
+        "output_tokens": 1808,
+        "steps": 20
+      },
+      {
+        "task_id": "swe-bench-astropy-1",
+        "resolved": false,
+        "usd": 0.008361,
+        "input_tokens": 31771,
+        "output_tokens": 1151,
+        "steps": 11
+      },
+      {
+        "task_id": "swe-bench-astropy-2",
+        "resolved": false,
+        "usd": 0.027248,
+        "input_tokens": 92136,
+        "output_tokens": 1079,
+        "steps": 18
+      },
+      {
+        "task_id": "train-fasttext",
+        "resolved": false,
+        "usd": 0.037869,
+        "input_tokens": 121267,
+        "output_tokens": 1424,
+        "steps": 20
+      },
+      {
+        "task_id": "write-compressor",
+        "resolved": false,
+        "usd": 0.002718,
+        "input_tokens": 11250,
+        "output_tokens": 335,
+        "steps": 10
+      }
+    ]
+  },
+  "deepseek_full80_medium": {
+    "run_dir": "/home/ruvultra/projects/agent-harness-generator/packages/darwin-mode/bench/terminal-bench/runs/deepseek-full/medium-run",
+    "results_json": "/home/ruvultra/projects/agent-harness-generator/packages/darwin-mode/bench/terminal-bench/runs/deepseek-full/medium-run/2026-06-26__23-48-52/results.json",
+    "accuracy_official": 0.20454545454545456,
+    "n_tasks": 44,
+    "n_resolved": 9,
+    "accuracy": 0.2045,
+    "total_usd": 0.88497,
+    "mean_usd_per_task": 0.020113,
+    "usd_per_resolved": 0.09833,
+    "rows": [
+      {
+        "task_id": "blind-maze-explorer-algorithm",
+        "resolved": false,
+        "usd": 0.071447,
+        "input_tokens": 243476,
+        "output_tokens": 9105,
+        "steps": 36
+      },
+      {
+        "task_id": "blind-maze-explorer-algorithm.easy",
+        "resolved": false,
+        "usd": 0.031555,
+        "input_tokens": 99506,
+        "output_tokens": 5103,
+        "steps": 29
+      },
+      {
+        "task_id": "blind-maze-explorer-algorithm.hard",
+        "resolved": false,
+        "usd": 0.004766,
+        "input_tokens": 18692,
+        "output_tokens": 443,
+        "steps": 15
+      },
+      {
+        "task_id": "build-initramfs-qemu",
+        "resolved": false,
+        "usd": 0.005626,
+        "input_tokens": 18629,
+        "output_tokens": 358,
+        "steps": 14
+      },
+      {
+        "task_id": "build-linux-kernel-qemu",
+        "resolved": false,
+        "usd": 0.052473,
+        "input_tokens": 209549,
+        "output_tokens": 1204,
+        "steps": 38
+      },
+      {
+        "task_id": "build-tcc-qemu",
+        "resolved": false,
+        "usd": 0.009509,
+        "input_tokens": 41389,
+        "output_tokens": 391,
+        "steps": 11
+      },
+      {
+        "task_id": "chess-best-move",
+        "resolved": false,
+        "usd": 0.003952,
+        "input_tokens": 11188,
+        "output_tokens": 298,
+        "steps": 9
+      },
+      {
+        "task_id": "conda-env-conflict-resolution",
+        "resolved": false,
+        "usd": 0.017623,
+        "input_tokens": 66652,
+        "output_tokens": 1126,
+        "steps": 29
+      },
+      {
+        "task_id": "crack-7z-hash",
+        "resolved": true,
+        "usd": 0.021217,
+        "input_tokens": 78331,
+        "output_tokens": 526,
+        "steps": 17
+      },
+      {
+        "task_id": "crack-7z-hash.easy",
+        "resolved": true,
+        "usd": 0.007373,
+        "input_tokens": 27699,
+        "output_tokens": 337,
+        "steps": 12
+      },
+      {
+        "task_id": "crack-7z-hash.hard",
+        "resolved": false,
+        "usd": 0.021412,
+        "input_tokens": 80993,
+        "output_tokens": 839,
+        "steps": 24
+      },
+      {
+        "task_id": "cron-broken-network",
+        "resolved": false,
+        "usd": 0.028842,
+        "input_tokens": 91922,
+        "output_tokens": 646,
+        "steps": 33
+      },
+      {
+        "task_id": "decommissioning-service-with-sensitive-data",
+        "resolved": false,
+        "usd": 0.002235,
+        "input_tokens": 8120,
+        "output_tokens": 178,
+        "steps": 6
+      },
+      {
+        "task_id": "download-youtube",
+        "resolved": false,
+        "usd": 0.140023,
+        "input_tokens": 468744,
+        "output_tokens": 3760,
+        "steps": 40
+      },
+      {
+        "task_id": "eval-mteb",
+        "resolved": true,
+        "usd": 0.07078,
+        "input_tokens": 245802,
+        "output_tokens": 2063,
+        "steps": 34
+      },
+      {
+        "task_id": "eval-mteb.hard",
+        "resolved": false,
+        "usd": 0.031217,
+        "input_tokens": 101335,
+        "output_tokens": 533,
+        "steps": 17
+      },
+      {
+        "task_id": "fibonacci-server",
+        "resolved": false,
+        "usd": 0.006544,
+        "input_tokens": 19758,
+        "output_tokens": 874,
+        "steps": 9
+      },
+      {
+        "task_id": "fix-git",
+        "resolved": false,
+        "usd": 0.003005,
+        "input_tokens": 9377,
+        "output_tokens": 214,
+        "steps": 11
+      },
+      {
+        "task_id": "fix-pandas-version",
+        "resolved": true,
+        "usd": 0.003454,
+        "input_tokens": 11236,
+        "output_tokens": 90,
+        "steps": 7
+      },
+      {
+        "task_id": "get-bitcoin-nodes",
+        "resolved": true,
+        "usd": 0.01257,
+        "input_tokens": 45465,
+        "output_tokens": 2782,
+        "steps": 11
+      },
+      {
+        "task_id": "heterogeneous-dates",
+        "resolved": true,
+        "usd": 0.002112,
+        "input_tokens": 6407,
+        "output_tokens": 394,
+        "steps": 6
+      },
+      {
+        "task_id": "hf-model-inference",
+        "resolved": false,
+        "usd": 0.027961,
+        "input_tokens": 92462,
+        "output_tokens": 1092,
+        "steps": 16
+      },
+      {
+        "task_id": "incompatible-python-fasttext",
+        "resolved": false,
+        "usd": 0.003927,
+        "input_tokens": 15211,
+        "output_tokens": 379,
+        "steps": 17
+      },
+      {
+        "task_id": "incompatible-python-fasttext.base_with_hint",
+        "resolved": true,
+        "usd": 0.011554,
+        "input_tokens": 37637,
+        "output_tokens": 1026,
+        "steps": 18
+      },
+      {
+        "task_id": "jupyter-notebook-server",
+        "resolved": false,
+        "usd": 0.074528,
+        "input_tokens": 239257,
+        "output_tokens": 2163,
+        "steps": 30
+      },
+      {
+        "task_id": "new-encrypt-command",
+        "resolved": false,
+        "usd": 0.003304,
+        "input_tokens": 11305,
+        "output_tokens": 360,
+        "steps": 11
+      },
+      {
+        "task_id": "nginx-request-logging",
+        "resolved": false,
+        "usd": 0.004622,
+        "input_tokens": 15192,
+        "output_tokens": 344,
+        "steps": 8
+      },
+      {
+        "task_id": "openssl-selfsigned-cert",
+        "resolved": false,
+        "usd": 0.003979,
+        "input_tokens": 11571,
+        "output_tokens": 541,
+        "steps": 10
+      },
+      {
+        "task_id": "polyglot-c-py",
+        "resolved": false,
+        "usd": 0.048966,
+        "input_tokens": 169727,
+        "output_tokens": 6004,
+        "steps": 25
+      },
+      {
+        "task_id": "qemu-alpine-ssh",
+        "resolved": false,
+        "usd": 0.01385,
+        "input_tokens": 43578,
+        "output_tokens": 2981,
+        "steps": 29
+      },
+      {
+        "task_id": "qemu-startup",
+        "resolved": false,
+        "usd": 0.002556,
+        "input_tokens": 8145,
+        "output_tokens": 423,
+        "steps": 12
+      },
+      {
+        "task_id": "raman-fitting",
+        "resolved": false,
+        "usd": 0.026297,
+        "input_tokens": 99868,
+        "output_tokens": 3738,
+        "steps": 16
+      },
+      {
+        "task_id": "raman-fitting.easy",
+        "resolved": false,
+        "usd": 0.011053,
+        "input_tokens": 35513,
+        "output_tokens": 1779,
+        "steps": 13
+      },
+      {
+        "task_id": "reshard-c4-data",
+        "resolved": false,
+        "usd": 0.007487,
+        "input_tokens": 27650,
+        "output_tokens": 333,
+        "steps": 8
+      },
+      {
+        "task_id": "sanitize-git-repo",
+        "resolved": false,
+        "usd": 0.014238,
+        "input_tokens": 45875,
+        "output_tokens": 2101,
+        "steps": 25
+      },
+      {
+        "task_id": "sanitize-git-repo.hard",
+        "resolved": false,
+        "usd": 0.005869,
+        "input_tokens": 17920,
+        "output_tokens": 602,
+        "steps": 12
+      },
+      {
+        "task_id": "simple-sheets-put",
+        "resolved": false,
+        "usd": 0.011867,
+        "input_tokens": 34299,
+        "output_tokens": 1329,
+        "steps": 13
+      },
+      {
+        "task_id": "solana-data",
+        "resolved": false,
+        "usd": 0.042541,
+        "input_tokens": 120359,
+        "output_tokens": 8216,
+        "steps": 16
+      },
+      {
+        "task_id": "sqlite-db-truncate",
+        "resolved": false,
+        "usd": 0.002346,
+        "input_tokens": 6467,
+        "output_tokens": 678,
+        "steps": 6
+      },
+      {
+        "task_id": "sqlite-with-gcov",
+        "resolved": true,
+        "usd": 0.006673,
+        "input_tokens": 27477,
+        "output_tokens": 386,
+        "steps": 10
+      },
+      {
+        "task_id": "swe-bench-fsspec",
+        "resolved": false,
+        "usd": 0.008714,
+        "input_tokens": 24009,
+        "output_tokens": 2032,
+        "steps": 10
+      },
+      {
+        "task_id": "swe-bench-langcodes",
+        "resolved": true,
+        "usd": 0.000806,
+        "input_tokens": 2822,
+        "output_tokens": 102,
+        "steps": 3
+      },
+      {
+        "task_id": "tmux-advanced-workflow",
+        "resolved": false,
+        "usd": 0.002925,
+        "input_tokens": 10073,
+        "output_tokens": 311,
+        "steps": 11
+      },
+      {
+        "task_id": "vim-terminal-task",
+        "resolved": false,
+        "usd": 0.001172,
+        "input_tokens": 2991,
+        "output_tokens": 255,
+        "steps": 4
+      }
+    ]
+  },
+  "deepseek_full80_easy": {
+    "run_dir": "/home/ruvultra/projects/agent-harness-generator/packages/darwin-mode/bench/terminal-bench/runs/deepseek-full/easy-run",
+    "results_json": "/home/ruvultra/projects/agent-harness-generator/packages/darwin-mode/bench/terminal-bench/runs/deepseek-full/easy-run/2026-06-27__00-32-04/results.json",
+    "accuracy_official": 0.5,
+    "n_tasks": 12,
+    "n_resolved": 6,
+    "accuracy": 0.5,
+    "total_usd": 0.067428,
+    "mean_usd_per_task": 0.005619,
+    "usd_per_resolved": 0.011238,
+    "rows": [
+      {
+        "task_id": "count-dataset-tokens",
+        "resolved": false,
+        "usd": 0.017363,
+        "input_tokens": 59689,
+        "output_tokens": 1117,
+        "steps": 12
+      },
+      {
+        "task_id": "create-bucket",
+        "resolved": true,
+        "usd": 0.001397,
+        "input_tokens": 4299,
+        "output_tokens": 182,
+        "steps": 6
+      },
+      {
+        "task_id": "csv-to-parquet",
+        "resolved": true,
+        "usd": 0.006477,
+        "input_tokens": 24881,
+        "output_tokens": 615,
+        "steps": 12
+      },
+      {
+        "task_id": "extract-safely",
+        "resolved": false,
+        "usd": 0.000554,
+        "input_tokens": 1884,
+        "output_tokens": 69,
+        "steps": 4
+      },
+      {
+        "task_id": "fix-permissions",
+        "resolved": true,
+        "usd": 0.000536,
+        "input_tokens": 1951,
+        "output_tokens": 64,
+        "steps": 5
+      },
+      {
+        "task_id": "git-workflow-hack",
+        "resolved": false,
+        "usd": 0.021086,
+        "input_tokens": 77100,
+        "output_tokens": 1741,
+        "steps": 18
+      },
+      {
+        "task_id": "grid-pattern-transform",
+        "resolved": false,
+        "usd": 0.002132,
+        "input_tokens": 6984,
+        "output_tokens": 441,
+        "steps": 5
+      },
+      {
+        "task_id": "hello-world",
+        "resolved": false,
+        "usd": 0.000405,
+        "input_tokens": 1065,
+        "output_tokens": 40,
+        "steps": 3
+      },
+      {
+        "task_id": "modernize-fortran-build",
+        "resolved": true,
+        "usd": 0.002057,
+        "input_tokens": 6158,
+        "output_tokens": 198,
+        "steps": 7
+      },
+      {
+        "task_id": "processing-pipeline",
+        "resolved": true,
+        "usd": 0.011637,
+        "input_tokens": 40887,
+        "output_tokens": 1020,
+        "steps": 20
+      },
+      {
+        "task_id": "security-vulhub-minio",
+        "resolved": false,
+        "usd": 0.000892,
+        "input_tokens": 2479,
+        "output_tokens": 119,
+        "steps": 6
+      },
+      {
+        "task_id": "simple-web-scraper",
+        "resolved": true,
+        "usd": 0.002892,
+        "input_tokens": 7188,
+        "output_tokens": 540,
+        "steps": 5
+      }
+    ]
+  },
+  "sonnet45_hard24": {
+    "run_dir": "runs/sonnet-hard",
+    "results_json": "runs/sonnet-hard/results.json",
+    "accuracy_official": 0.25,
+    "n_tasks": 24,
+    "n_resolved": 6,
+    "accuracy": 0.25,
+    "total_usd": 18.533307,
+    "mean_usd_per_task": 0.772221,
+    "usd_per_resolved": 3.088885,
+    "rows": [
+      {
+        "task_id": "blind-maze-explorer-5x5",
+        "resolved": false,
+        "usd": 0.352774,
+        "input_tokens": 94369,
+        "output_tokens": 4882,
+        "steps": 14
+      },
+      {
+        "task_id": "cartpole-rl-training",
+        "resolved": true,
+        "usd": 0.58765,
+        "input_tokens": 186794,
+        "output_tokens": 4956,
+        "steps": 20
+      },
+      {
+        "task_id": "configure-git-webserver",
+        "resolved": true,
+        "usd": 0.516563,
+        "input_tokens": 167922,
+        "output_tokens": 1201,
+        "steps": 36
+      },
+      {
+        "task_id": "extract-moves-from-video",
+        "resolved": false,
+        "usd": 0.704104,
+        "input_tokens": 225737,
+        "output_tokens": 2267,
+        "steps": 23
+      },
+      {
+        "task_id": "git-multibranch",
+        "resolved": true,
+        "usd": 0.950795,
+        "input_tokens": 313313,
+        "output_tokens": 1364,
+        "steps": 40
+      },
+      {
+        "task_id": "gpt2-codegolf",
+        "resolved": false,
+        "usd": 0.758505,
+        "input_tokens": 208994,
+        "output_tokens": 9279,
+        "steps": 23
+      },
+      {
+        "task_id": "intrusion-detection",
+        "resolved": false,
+        "usd": 0.748425,
+        "input_tokens": 216515,
+        "output_tokens": 7096,
+        "steps": 25
+      },
+      {
+        "task_id": "oom",
+        "resolved": false,
+        "usd": 0.708918,
+        "input_tokens": 223073,
+        "output_tokens": 3124,
+        "steps": 33
+      },
+      {
+        "task_id": "organization-json-generator",
+        "resolved": false,
+        "usd": 0.217992,
+        "input_tokens": 64053,
+        "output_tokens": 1869,
+        "steps": 16
+      },
+      {
+        "task_id": "password-recovery",
+        "resolved": false,
+        "usd": 0.566507,
+        "input_tokens": 174683,
+        "output_tokens": 3212,
+        "steps": 40
+      },
+      {
+        "task_id": "path-tracing",
+        "resolved": true,
+        "usd": 0.707721,
+        "input_tokens": 197870,
+        "output_tokens": 8084,
+        "steps": 21
+      },
+      {
+        "task_id": "path-tracing-reverse",
+        "resolved": false,
+        "usd": 0.727989,
+        "input_tokens": 237399,
+        "output_tokens": 1543,
+        "steps": 31
+      },
+      {
+        "task_id": "play-zork",
+        "resolved": false,
+        "usd": 0.170511,
+        "input_tokens": 51821,
+        "output_tokens": 1118,
+        "steps": 21
+      },
+      {
+        "task_id": "polyglot-rust-c",
+        "resolved": false,
+        "usd": 0.711137,
+        "input_tokens": 204760,
+        "output_tokens": 6936,
+        "steps": 30
+      },
+      {
+        "task_id": "prove-plus-comm",
+        "resolved": false,
+        "usd": 0.043653,
+        "input_tokens": 10603,
+        "output_tokens": 819,
+        "steps": 8
+      },
+      {
+        "task_id": "pytorch-model-cli",
+        "resolved": false,
+        "usd": 0.432494,
+        "input_tokens": 139081,
+        "output_tokens": 1308,
+        "steps": 39
+      },
+      {
+        "task_id": "pytorch-model-cli.easy",
+        "resolved": false,
+        "usd": 1.281552,
+        "input_tokens": 406299,
+        "output_tokens": 5040,
+        "steps": 36
+      },
+      {
+        "task_id": "pytorch-model-cli.hard",
+        "resolved": true,
+        "usd": 0.727754,
+        "input_tokens": 222495,
+        "output_tokens": 4508,
+        "steps": 39
+      },
+      {
+        "task_id": "run-pdp11-code",
+        "resolved": false,
+        "usd": 0.803789,
+        "input_tokens": 250791,
+        "output_tokens": 3969,
+        "steps": 40
+      },
+      {
+        "task_id": "super-benchmark-upet",
+        "resolved": false,
+        "usd": 1.545588,
+        "input_tokens": 511845,
+        "output_tokens": 1711,
+        "steps": 37
+      },
+      {
+        "task_id": "swe-bench-astropy-1",
+        "resolved": true,
+        "usd": 1.517753,
+        "input_tokens": 490763,
+        "output_tokens": 4053,
+        "steps": 37
+      },
+      {
+        "task_id": "swe-bench-astropy-2",
+        "resolved": false,
+        "usd": 1.52565,
+        "input_tokens": 485207,
+        "output_tokens": 5696,
+        "steps": 38
+      },
+      {
+        "task_id": "train-fasttext",
+        "resolved": false,
+        "usd": 1.507548,
+        "input_tokens": 497332,
+        "output_tokens": 2052,
+        "steps": 34
+      },
+      {
+        "task_id": "write-compressor",
+        "resolved": false,
+        "usd": 0.717935,
+        "input_tokens": 207984,
+        "output_tokens": 6749,
+        "steps": 24
+      }
+    ]
+  }
+}
