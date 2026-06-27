@@ -20,7 +20,7 @@ const PHASES = [
   // Phase 1: kernel-js — everything imports from it. router, harness,
   // darwin-mode and projects are dependency-free (no internal imports) so they
   // build here too.
-  ['kernel-js', 'router', 'harness', 'darwin-mode', 'projects'],
+  ['kernel-js', 'router', 'harness', 'darwin-mode', 'projects', 'redblue'],
   // Phase 2: vertical-base — vertical-trading imports from it
   ['vertical-base'],
   // Phase 3: hosts + sdk + cli — all depend on kernel-js

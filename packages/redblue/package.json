@@ -1,0 +1,60 @@
+{
+  "name": "@metaharness/redblue",
+  "version": "0.1.0",
+  "description": "MetaHarness Adversarial Operators — a safety-gated Red/Blue team harness. Uncensored OpenRouter models act as adversarial SYSTEM ACTORS (simulated insiders/attackers/careless operators) against a target agent/workflow/prompt/toolchain you own; the HARNESS stays controlled. Operationalizes NIST AI RMF + OWASP LLM Top-10 as repeatable tests: red team finds failures -> blue team patches -> retest -> measure the delta. Defensive only: no real credentials, no live external targets, no shell, no arbitrary network. Dependency-free (Node built-ins).",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "metaharness-redblue": "./dist/cli/index.js",
+    "redblue": "./dist/cli/index.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "llm",
+    "red-team",
+    "blue-team",
+    "adversarial",
+    "ai-security",
+    "owasp-llm",
+    "nist-ai-rmf",
+    "prompt-injection",
+    "agent-harness",
+    "metaharness",
+    "ai-safety",
+    "defensive-security"
+  ],
+  "author": "rUv <ruv@ruv.net>",
+  "license": "MIT",
+  "homepage": "https://github.com/ruvnet/agent-harness-generator",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/agent-harness-generator",
+    "directory": "packages/redblue"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
