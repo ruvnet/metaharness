@@ -324,3 +324,24 @@ This schema operationalizes recommendation #3 (formalize artifact classification
 Charts 04/05 render these with **95% Wilson CI whiskers**. Note: official GAIA is HF-gated (token-restricted) → FRAMES used as the open GAIA-class proxy.
 
 **Headline**: cost advantage **56×**; lag **7–11 mo** (knowledge) / **~0** (tool-use); everyday-work performance within **2–8 pts** of current frontier; hard frontier code/security **catastrophically below** (4% vs 60%+) — out of thesis scope. Core-claim confidence **B+**.
+
+---
+
+## Appendix: Vector-memory H1 pilot (knowledge-flattening, dense-RAG)
+
+**ADR-201 hypothesis H1**: does dense retrieval lift cheap models **disproportionately** (Δ_cheap > Δ_frontier), shifting the burden from parametric knowledge to in-context synthesis? Full results + method: [`empirical/VECTOR-MEMORY-H1-PILOT.md`](empirical/VECTOR-MEMORY-H1-PILOT.md).
+
+**Verdict: H1 NOT SUPPORTED.** Run with **current** frontier models (cheap `deepseek-v4-pro`; frontier `gpt-5.5` + `claude-opus-4.8`), FRAMES **n=40 seed 42**, 2 conditions (base no-RAG / +dense-RAG, k=8 ≤12k tok), conformant strict-EM scorer, paired-bootstrap CIs, **$1.68** spend. Two retriever arms bracket the embedder-quality confound.
+
+| Model | Tier | base (no-RAG) | +dense Δ (lexical) | +dense Δ (semantic/ONNX) |
+|-------|------|---------------|--------------------|---------------------------|
+| deepseek-v4-pro | cheap | 10.0% | **−5.0pp** | **0.0pp** |
+| gpt-5.5 | frontier | 10.0% | 0.0pp | **+7.5pp** (CI incl. 0) |
+| claude-opus-4.8 | frontier | 12.5% | −7.5pp | 0.0pp |
+
+- **No knowledge-flattening.** The cheap model never posts a positive lift (Δ_cheap ≤ 0 in both arms), so the disproportionality test `Δ_cheap > Δ_frontier > 0` fails on its first clause. With a **lexical** retriever dense context mildly *hurt* all models (H2-style distraction); with a **semantic** retriever the only gain went to a **frontier** model (gpt-5.5 +7.5pp, not significant) — the *opposite* of flattening. Predicted +5–11pp cheap lift did not appear. (n=40 → underpowered; reasoning disabled — required, else reasoning models returned empty answers at ~40× cost; absolute scores are floor-level vs the 37–43% agentic FRAMES run.)
+- **Base no-RAG row = cheap-vs-CURRENT-frontier gap:** deepseek 10.0% **ties** gpt-5.5 10.0% and is statistically indistinguishable from opus 12.5% (overlapping Wilson CIs) — **parity against today's frontier** on parametric single-shot FRAMES, complementing the parity-vs-months-ago result.
+- **H3/H4 (ruvector GraphRAG / GNN epoch) DEFERRED:** ruvector@0.2.32 ships no working GraphRAG (`@ruvector/graph-node` absent, `CodeGraph.cypher` throws) and a degraded RVF query (`totalVectors===1`) → the "ruvector" arm ≡ dense; skipped. (See the H3 kHop-expansion appendix above for the independent confirmation that the shipped graph path is structurally equivalent to dense.)
+
+**Fig 8 — H1 dense-RAG resolve by condition × embedder arm (base / +dense lexical / +dense semantic, 3 models).**
+![H1 knowledge-flattening](charts/08-h1-knowledge-flattening.svg)

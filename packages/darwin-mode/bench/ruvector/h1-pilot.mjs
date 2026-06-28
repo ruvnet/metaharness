@@ -42,6 +42,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname, isAbsolute, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import { DenseMemory } from './memory-layer.mjs';
 import { buildRagPrompt, extractFinal } from './ruvector-eval.mjs';
 
@@ -93,6 +94,8 @@ const MAX_COST = +argv('--max-cost', Infinity);              // soft per-PROCESS
 const METER = has('--meter');
 const ABORT_USAGE = +argv('--abort-usage', Infinity);        // ABSOLUTE account-usage ceiling (USD)
 const MAX_TOKENS = +argv('--max-tokens', 1024);
+const EMBEDDER = argv('--embedder', 'hashed');               // 'hashed' (scaffold default) | 'onnx' (all-MiniLM-L6-v2 semantic)
+const RUVECTOR_PATH = argv('--ruvector', '/home/ruvultra/projects/ruvector/node_modules/ruvector');
 const CORPUS_DIR = rel(argv('--corpus-cache', 'data/corpus-cache'));
 const OUT = rel(argv('--out', 'data/h1-preds.jsonl'));
 const REPORT = rel(argv('--report', 'data/h1-report.json'));
@@ -213,6 +216,31 @@ async function buildCorpus(task) {
   return corpus;
 }
 
+// ── embedder selection ───────────────────────────────────────────────────────────────────────
+// 'hashed' = the scaffold's keyless lexical bag-of-bigrams embedder (embedder.mjs default).
+// 'onnx'   = ruvector's real all-MiniLM-L6-v2 (384-d semantic, local, $0) — a ROBUSTNESS arm to
+//            rule out "the null is just a weak lexical retriever". Calls are serialized (the ONNX
+//            session is not reentrant) and answered through the DenseMemory `embed` hook.
+let _denseOpts = {};
+async function initEmbedder() {
+  if (EMBEDDER === 'hashed') { _denseOpts = {}; return; }
+  if (EMBEDDER !== 'onnx') throw new Error(`unknown --embedder ${EMBEDDER}`);
+  const require = createRequire(import.meta.url);
+  const rv = require(RUVECTOR_PATH);
+  if (!(rv.OnnxEmbedder && (!rv.isOnnxAvailable || rv.isOnnxAvailable()))) throw new Error('ruvector OnnxEmbedder not available');
+  const e = new rv.OnnxEmbedder();
+  if (e.init) await e.init();
+  const toArr = (v) => (Array.isArray(v) ? (Array.isArray(v[0]) ? v[0] : v) : (v?.data ? Array.from(v.data) : Array.from(v || [])));
+  // serialize embed calls (ONNX session.run not safe under concurrency)
+  let gate = Promise.resolve();
+  const embed = (text) => { const p = gate.then(() => e.embed(String(text)).then(toArr)); gate = p.catch(() => {}); return p; };
+  // probe dim
+  const probe = await embed('dimension probe');
+  _denseOpts = { embed, dim: probe.length };
+  console.error(`[embedder] onnx all-MiniLM-L6-v2 ready: ${probe.length}-d`);
+}
+const makeDense = () => new DenseMemory(_denseOpts);
+
 // ── LLM client ─────────────────────────────────────────────────────────────────────────────────
 const NORAG_SYSTEM = 'You are a precise assistant. Answer the QUESTION using your own knowledge. '
   + 'Reply with exactly one line: "FINAL_ANSWER: <short exact answer>". No explanation. '
@@ -291,7 +319,8 @@ async function main() {
   mkdirSync(dirname(OUT), { recursive: true });
   const manifest = JSON.parse(readFileSync(MANIFEST, 'utf8'));
   const tasks = manifest.tasks;
-  console.error(`[h1] ${tasks.length} FRAMES tasks (seed ${manifest.seed}); models=${MODELS.join(', ')}`);
+  console.error(`[h1] ${tasks.length} FRAMES tasks (seed ${manifest.seed}); models=${MODELS.join(', ')}; embedder=${EMBEDDER}`);
+  await initEmbedder();
 
   // 1) Build corpora (cached). QUESTION-ONLY → no gold leak.
   console.error('[corpus] building/loading per-question Wikipedia corpora …');
@@ -340,7 +369,7 @@ async function main() {
         spent += r0.cost; cells[model].cost += r0.cost;
 
         // ── condition 1: +dense-RAG ──
-        const mem = new DenseMemory();
+        const mem = makeDense();
         await mem.index(corpora[task.task_id].passages);
         const { hits, tokens } = await mem.query(task.question, { k: K, maxTokens: MAX_CTX_TOK });
         await mem.close();
@@ -434,7 +463,7 @@ async function main() {
 
   const report = {
     adr: 'ADR-201', hypothesis: 'H1 knowledge-flattening (dense-RAG)', ts: new Date().toISOString(),
-    config: { manifest: MANIFEST, n: tasks.length, seed: SEED, models: MODELS, cheap: CHEAP, k: K, maxContextTokens: MAX_CTX_TOK, maxTokens: MAX_TOKENS, bootstrap: BOOT, mock: MOCK },
+    config: { manifest: MANIFEST, n: tasks.length, seed: SEED, models: MODELS, cheap: CHEAP, k: K, maxContextTokens: MAX_CTX_TOK, maxTokens: MAX_TOKENS, embedder: EMBEDDER, reasoning: 'disabled', bootstrap: BOOT, mock: MOCK },
     corpus: { meanPassages: corpStats.reduce((a, b) => a + b, 0) / corpStats.length, minPassages: Math.min(...corpStats), maxPassages: Math.max(...corpStats), source: 'en.wikipedia.org (keyless MediaWiki), question-only search — no gold leakage' },
     budget: { processSpendUSD: spent, maxCostUSD: MAX_COST, abortUsageUSD: ABORT_USAGE, skipped },
     summary, verdict,
