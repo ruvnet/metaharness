@@ -1,6 +1,6 @@
 # ADR-201: Vector-Memory Ablation — does GraphRAG (ruvector) lift cheap models over the turn-budget cliff?
 
-**Status:** H3 CLOSED — NOT SUPPORTED for kHop-expansion+cosine (structural null); H1 CLOSED — NOT SUPPORTED for dense cosine on FRAMES. H2/H4 deferred pending ruvector graph-node binding for Node.js.
+**Status:** H3 CLOSED — NOT SUPPORTED for kHop-expansion+cosine (structural null); H1 CLOSED — NOT SUPPORTED for dense cosine on FRAMES; **H5 (difficulty routing) CLOSED — NOT SUPPORTED on FRAMES for the shipped `@ruvector/router` SemanticRouter (embedding-only; hard-detection AUC≈chance)**. H2/H4 deferred pending ruvector graph-node binding for Node.js.
 **Date:** 2026-06-28 (empirical phase completed 2026-06-28)
 **Related:** ADR-194 (crack-the-tail), ADR-198 (weight-eft), the cheap-vs-frontier research (`docs/research/cheap-vs-frontier/`), §5b harness-artifact schema.
 
@@ -100,3 +100,51 @@ H2 (context-distraction penalty) and H4 (GNN self-learning) remain open and DEFE
 - Working community-detection GraphRAG Node.js binding in ruvector
 - SWE-bench code axis test (H3 reformulated for code agents, not QA)
 - Separate budget allocation for the agentic SWE-bench run
+
+## Empirical Verdict (2026-06-28) — H5 (difficulty routing)
+
+**New hypothesis H5 — Difficulty-based model routing** (the #1 lever in
+`docs/research/cheap-vs-frontier/RUVECTOR-LEVERAGE-MAP.md` §1; not in the original
+H1–H4 table). **Falsifiable claim:** the shipped `@ruvector/router` SemanticRouter
+(v0.1.30, HNSW intent-matching over all-MiniLM-L6-v2 query embeddings) can route
+**hard** cases (cheap-fails / frontier-succeeds) → frontier and **easy** → cheap
+accurately enough to beat both always-cheap and always-frontier on the cost-Pareto.
+**Falsified if** hard-detection routing accuracy is at chance, or the routed
+Pareto point does not dominate always-cheap.
+
+### H5 — Difficulty routing (SemanticRouter on FRAMES): NOT SUPPORTED
+
+$0 measurement on the completed FRAMES n=150 (seed 42) runs (per-task outcomes
+from Firestore `frames_preds`, scored with the validated GAIA-EM scorer; labels
+from solve outcomes, not gold-in-loop). Primary pair: cheap = deepseek-v4-pro
+(EM 42.7%, $0.0235/task), frontier = gpt-5.2 (EM 42.7%, $0.1145/task).
+
+1. **Labels:** easy 64 / **hard 15** / neither 71. Only **10%** of questions are
+   "hard" (cheap-wrong/frontier-right) — the entire routable headroom. The
+   suggested 20/20 split is impossible (15 hard exist) → repeated stratified
+   5-fold × 20 CV instead.
+2. **Routing accuracy is at chance.** Hard-detection ROC-AUC (OOF): kNN-exemplar
+   SemanticRouter **0.376 [95% CI 0.230–0.534]**; centroid-intent 0.356
+   [0.227–0.498]; reasoning-type heuristic 0.411. All straddle/sit below 0.5. At a
+   matched 10%-route-up budget the router catches **1/15 hard cases** (recall 6.7%
+   — below random). **Difficulty is not linearly encoded in the query embedding.**
+3. **Cost-Pareto:** always-cheap already matches frontier EM (42.7%=42.7%) at
+   **79.5% lower $/task** — from cheap≈frontier parity, not routing. A *perfect*
+   (oracle) router would reach 52.7% (the cheap∪frontier union, +10pp) at
+   $0.033/task; the **real** ruvector router captures **0%** of that — every usable
+   operating point collapses onto always-frontier (no gain, 5× cost) or always-cheap.
+4. **Robust** across all four cheap×frontier pairings + best-of pairs (AUC 0.36–0.50;
+   the lone >0.5 value rests on 9 hard cases); the live-eval gate (AUC ≥ ~0.65) was
+   **not met**, so **no paid run was launched — $0 spent**.
+
+Full results + harness: `docs/research/cheap-vs-frontier/empirical/ROUTER-PILOT.md`,
+`packages/darwin-mode/bench/ruvector/{router-prep,router-pilot,router-sensitivity}.mjs`,
+`data/router-pilot-results.json`.
+
+**Why null + where routing still might pay:** routing pays when frontier ≫ cheap
+(save by sending the easy majority down — RouteLLM/FrugalGPT's regime); on FRAMES
+cheap *already equals* frontier, so "all-cheap" is already optimal and the only
+prize is the rare hard tail, which needs an accurate difficulty classifier. The
+shipped SemanticRouter is embedding-only kNN (not RouteLLM's *trained* classifier);
+a supervised difficulty model, or the **code axis** (SWE-bench, where cheap≠frontier
+on hard instances), remain open and are not refuted here.

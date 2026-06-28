@@ -392,3 +392,21 @@ The "graph" arm tested is: `kHop-graph-EXPANSION + cosine rerank` via `@ruvector
 
 **Fig 8 — H1 dense-RAG resolve by condition × embedder arm (base / +dense lexical / +dense semantic, 3 models).**
 ![H1 knowledge-flattening](charts/08-h1-knowledge-flattening.svg)
+
+---
+
+## Appendix: ruvector routing (H5 — difficulty-based model routing)
+
+**ADR-201 hypothesis H5** — the #1 leverage point in [`RUVECTOR-LEVERAGE-MAP.md`](RUVECTOR-LEVERAGE-MAP.md): can the shipped `@ruvector/router` SemanticRouter route **hard** cases → frontier and **easy** → cheap to capture frontier-class quality at near-cheap cost (FrugalGPT/RouteLLM-style)? This is the real "how ruvector improves cheap models." Full results + method: [`empirical/ROUTER-PILOT.md`](empirical/ROUTER-PILOT.md).
+
+**Verdict: H5 NOT SUPPORTED on FRAMES.** $0 measurement on the completed FRAMES n=150 (seed 42) runs — per-task outcomes from Firestore `frames_preds`, scored with the validated GAIA-EM scorer (reproduces the §FRAMES table to the instance); labels from solve outcomes, never gold-in-loop. Cheap = deepseek-v4-pro, frontier = gpt-5.2.
+
+- **Labels:** easy 64 / **hard 15 (10%)** / neither 71. Because cheap ≈ frontier on FRAMES, the only routable headroom is the rare 15-question hard tail (cheap-wrong/frontier-right).
+- **The router cannot find it.** Hard-detection ROC-AUC (out-of-fold, 20×5-fold CV): kNN-exemplar SemanticRouter **0.376 [95% CI 0.230–0.534]**, centroid-intent 0.356, reasoning-type heuristic 0.411 — all **indistinguishable from chance (0.5)**. Difficulty is **not encoded in the all-MiniLM query embedding** (topic ≠ solver-difficulty). At a matched 10%-route-up budget it catches **1/15** hard cases (below random). Robust across all cheap×frontier pairings (AUC 0.36–0.50).
+- **Cost-Pareto:** always-cheap already matches frontier EM (42.7% = 42.7%) at **79.5% lower $/task** — that saving is from **parity**, not routing. A *perfect* oracle router would reach 52.7% (cheap∪frontier union, +10pp) at $0.033/task; the **real** ruvector router captures **0%** of it (collapses onto always-frontier). **Net Pareto gain from ruvector routing: none.**
+- **No live spend:** the live-eval gate (routing AUC ≥ ~0.65) was not met → no paid run launched; **$0 of the budget used**.
+
+**Where routing still might pay** (not refuted here): routing wins when frontier ≫ cheap (save by sending the easy majority down) — e.g. the **code axis** (SWE-bench), not knowledge QA where cheap already equals frontier; and a **trained** difficulty classifier (RouteLLM-style), not the shipped embedding-only SemanticRouter.
+
+**Fig 9 — ruvector router cost-Pareto (FRAMES n=150): always-cheap dominates; the oracle's +10pp prize is unreachable at AUC≈chance.**
+![router cost-Pareto](charts/09-router-cost-pareto.svg)
