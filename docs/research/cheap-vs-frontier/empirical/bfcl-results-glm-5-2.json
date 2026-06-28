@@ -1,0 +1,37 @@
+{
+  "model": "z-ai/glm-5.2",
+  "dataset": "bfcl_v3",
+  "task_family": "tool-use / function-calling",
+  "categories": [
+    "simple",
+    "multiple",
+    "parallel"
+  ],
+  "seed": 42,
+  "n": 105,
+  "acc": 0.8667,
+  "correct": 91,
+  "acc_wilson95": [
+    0.7886,
+    0.9189
+  ],
+  "total_cost_usd": 0.0818,
+  "cost_per_task_usd": 0.000779,
+  "cost_per_correct_usd": 0.000899,
+  "by_category": {
+    "simple": {
+      "n": 35,
+      "acc": 0.8857
+    },
+    "multiple": {
+      "n": 35,
+      "acc": 0.9429
+    },
+    "parallel": {
+      "n": 35,
+      "acc": 0.7714
+    }
+  },
+  "scorer": "bfcl-ast-match (conformant, leak-free)",
+  "ts": "2026-06-28T12:56:59.326Z"
+}

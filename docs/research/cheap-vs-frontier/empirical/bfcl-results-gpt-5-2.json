@@ -1,0 +1,37 @@
+{
+  "model": "openai/gpt-5.2",
+  "dataset": "bfcl_v3",
+  "task_family": "tool-use / function-calling",
+  "categories": [
+    "simple",
+    "multiple",
+    "parallel"
+  ],
+  "seed": 42,
+  "n": 105,
+  "acc": 0.8286,
+  "correct": 87,
+  "acc_wilson95": [
+    0.7452,
+    0.8887
+  ],
+  "total_cost_usd": 0.1634,
+  "cost_per_task_usd": 0.001556,
+  "cost_per_correct_usd": 0.001878,
+  "by_category": {
+    "simple": {
+      "n": 35,
+      "acc": 0.8571
+    },
+    "multiple": {
+      "n": 35,
+      "acc": 0.8857
+    },
+    "parallel": {
+      "n": 35,
+      "acc": 0.7429
+    }
+  },
+  "scorer": "bfcl-ast-match (conformant, leak-free)",
+  "ts": "2026-06-28T12:58:08.348Z"
+}

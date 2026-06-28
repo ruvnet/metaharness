@@ -28,6 +28,12 @@ const MODEL = argv('--model', 'deepseek/deepseek-v4-pro');
 const CONCURRENCY = Math.max(1, +argv('--concurrency', 4));
 const MAX_COST = +argv('--max-cost', Infinity);
 const SAMPLE = +argv('--sample', 0);
+// tool_choice: 'auto' (model decides to call) vs 'required' (forces a call). For
+// simple/multiple/parallel a call IS the correct action, so 'required' measures
+// pure function-calling correctness without the "did the model choose to call?"
+// confound that artefactually sank Opus under 'auto' (83/150 no-call). Use the
+// SAME setting for every model for a fair comparison.
+const TOOL_CHOICE = argv('--tool-choice', 'auto');
 const OUT = rel(argv('--out', 'preds-bfcl.jsonl'));
 const REPORT = rel(argv('--report', 'solve-bfcl-report.json'));
 const BASE_URL = (argv('--base-url', 'https://openrouter.ai/api/v1')).replace(/\/$/, '');
@@ -47,7 +53,7 @@ async function callModel(messages, tools) {
       const res = await fetch(CHAT_URL, {
         method: 'POST',
         headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://github.com/ruvnet/agent-harness-generator', 'X-Title': 'darwin-bfcl-bench' },
-        body: JSON.stringify({ model: MODEL, messages, tools, tool_choice: 'auto', temperature: 0, max_tokens: 1024, usage: { include: true } }),
+        body: JSON.stringify({ model: MODEL, messages, tools, tool_choice: TOOL_CHOICE, temperature: 0, max_tokens: 1024, usage: { include: true } }),
       });
       if (!res.ok && (res.status === 429 || res.status >= 500)) { lastErr = new Error(`http ${res.status}`); continue; }
       const j = await res.json();
