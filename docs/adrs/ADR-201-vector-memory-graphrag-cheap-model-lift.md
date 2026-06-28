@@ -12,14 +12,18 @@ The cheap-vs-frontier campaign proved that on everyday-agentic work (FRAMES QA, 
 
 ## Hypotheses (falsifiable — the brief's numbers are PREDICTIONS to prove, not facts)
 
-| # | Hypothesis | Predicted (to verify) | Falsified if |
-|---|-----------|----------------------|--------------|
-| **H1 — Knowledge flattening** | Vector RAG lifts cheap models on domain QA, **disproportionately** (Δ_cheap > Δ_frontier) | +12–18 pt cheap lift; closes the 4–8 pt MMLU/GPQA gap | Δ_cheap ≤ Δ_frontier, or lift < CI |
-| **H2 — Context-distraction penalty** | Cheap models degrade as retrieved-context tokens grow (NIAH); steep drop past ~10–20k tokens | Opus ~98% recall @100k; cheap → ~60% past 10–20k | cheap recall flat across context length |
-| **H3 — GraphRAG > dense** | ruvector GraphRAG feeds fewer, higher-quality tokens (compression Cr>0) → higher resolve than dense RAG at ≤ cost; extends turn-budget survival on SWE-bench | Test B > Control A resolve; Cr > 0 | Test B ≤ Control A, or Cr ≤ 0 |
-| **H4 — GNN self-learning** | After a feedback warm-up epoch, re-running the same tasks lifts resolve | Epoch1 > Epoch0 by >15% | Epoch1 ≤ Epoch0 + CI |
+Predictions below are **recalibrated to published evidence** (`docs/research/cheap-vs-frontier/VECTOR-MEMORY-EVIDENCE.md`, deep-researcher 2026-06-28); the brief's original figures were overstated.
 
-**Integrity:** every predicted number is a target to measure, not assert. ruvector's claimed capabilities (native GraphRAG/Cypher, `.rvf` COW snapshots, GNN `memory_feedback` self-learning, 12µs warm queries) are **to be verified against the real package** before they enter any claim — some may be partial/aspirational at v0.2.x. Conformance firewall holds (no gold in the solve loop; gold only scores). Real numbers + Wilson CI; if vector memory BACKFIRES on hard code, report it straight.
+| # | Hypothesis | Evidence-grounded prediction | Falsified if |
+|---|-----------|------------------------------|--------------|
+| **H1 — Knowledge flattening** | Vector RAG lifts cheap models on domain QA, **disproportionately** (Δ_cheap > Δ_frontier) | **+5–11 pp** cheap lift (NOT the brief's +12–18); ~1.7× disproportionality (med-QA, M4-RAG). Confound: ≤7B models fail to use even *oracle* context 85–100% of the time | Δ_cheap ≤ Δ_frontier, or lift < CI |
+| **H2 — Context-distraction penalty** | Cheap models degrade as retrieved-context tokens grow; differential worse for open/cheap | Open models collapse past **~7k (7B) / 16–32k (70B)**; Opus ~89%@1M single-needle. Brief's "Opus 98%@100k / cheap 60%@10–20k" NOT established | cheap recall flat across context length |
+| **H3 — GraphRAG > dense** | GraphRAG feeds fewer/better tokens (Cr>0) → higher multi-hop resolve than dense at ≤ cost; extends turn-budget survival | Multi-hop **+5–10 pp** established (HippoRAG2/GraphRAG); **SWE-bench applicability is extrapolation** (no paper tests GraphRAG on code agents); Cr is impl-dependent (some GraphRAG modes *increase* tokens); bias-corrected wins can be <8% | Test B ≤ Control A, or Cr ≤ 0 |
+| **H4 — GNN self-learning** | After a feedback warm-up epoch, re-running the same tasks lifts resolve | **>5%** (recalibrated from brief's >15% — no peer-reviewed precedent above ~8.6%; SimRAG 1.2–8.6%) | Epoch1 ≤ Epoch0 + CI |
+
+**ruvector v0.2.32 reality (verified):** SHIPPED — `.rvf` COW snapshots (~2.6ms/10K branch), Cypher (limited, ~5ms), GNN lib (`@ruvector/gnn`). UNVERIFIED/marketing — `memory_feedback` API by name (not in docs → build behind our own seam), "12µs warm queries" (not in docs; real: SIMD distance 14.9ns, HNSW sub-ms, Cypher ~5ms), "30–60% improvement" (no cited benchmark). The harness wires to *shipped* calls only; unshipped capabilities are stubbed behind the memory-layer interface.
+
+**Integrity:** every prediction is a target to measure, not assert. Conformance firewall holds (no gold in the solve loop; feedback uses solve outcomes, gold only scores). Real numbers + Wilson CI. **Genuine null risk:** the context-utilization-failure confound (H1) and the SWE-bench extrapolation (H3) mean vector memory may show little or negative lift — especially BACKFIRING on hard code by overloading weak attention. Report whichever way it lands.
 
 ## Experimental design (A/B/C parallel swarms)
 
