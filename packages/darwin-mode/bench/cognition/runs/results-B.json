@@ -1,0 +1,51 @@
+{
+  "verifier": {
+    "name": "B-selves(verifier)",
+    "scaffold": "parallel-selves-K4",
+    "view": "primary",
+    "n": 40,
+    "correct": 19,
+    "acc": 0.475,
+    "ci": [
+      0.3294,
+      0.625
+    ],
+    "empty_rate": 0.025,
+    "total_cost": 2.6359,
+    "cost_per_task": 0.065897,
+    "cost_per_correct": 0.138731,
+    "selector": "verifier",
+    "K": 4
+  },
+  "majority": {
+    "name": "B-selves(majority)",
+    "scaffold": "parallel-selves-K4",
+    "view": "majority",
+    "n": 40,
+    "correct": 20,
+    "acc": 0.5,
+    "ci": [
+      0.352,
+      0.648
+    ],
+    "empty_rate": 0.025,
+    "total_cost": 2.6359,
+    "cost_per_task": 0.065897,
+    "cost_per_correct": 0.131795,
+    "selector": "majority",
+    "K": 4
+  },
+  "genome": {
+    "selves": 4,
+    "episodicK": 2,
+    "palette": [
+      "cold",
+      "mem",
+      "decomp",
+      "memdecomp"
+    ],
+    "temp": 0.7,
+    "selector": "verifier",
+    "seedSpread": true
+  }
+}

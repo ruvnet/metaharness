@@ -1,0 +1,17 @@
+{
+  "name": "A-baseline",
+  "scaffold": "cold-single",
+  "view": "primary",
+  "n": 40,
+  "correct": 21,
+  "acc": 0.525,
+  "ci": [
+    0.375,
+    0.6706
+  ],
+  "empty_rate": 0.1,
+  "total_cost": 0.624,
+  "cost_per_task": 0.015601,
+  "cost_per_correct": 0.029716,
+  "note": "authoritative cost from the original cold run; the cache-backed phase-C re-run re-emits A at $0/task (all episodes were cache hits)."
+}

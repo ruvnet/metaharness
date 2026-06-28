@@ -1,0 +1,149 @@
+{
+  "model": "deepseek/deepseek-v4-pro",
+  "dataset": "google/frames-benchmark",
+  "seed": 42,
+  "n": 40,
+  "mock": false,
+  "reasoning": "off (no reasoning API param; all shaping is prompt/orchestration-level — consistent with prior FRAMES runs)",
+  "started": "2026-06-28T21:38:14.896Z",
+  "A": {
+    "name": "A-baseline",
+    "scaffold": "cold-single",
+    "view": "primary",
+    "n": 40,
+    "correct": 21,
+    "acc": 0.525,
+    "ci": [
+      0.375,
+      0.6706
+    ],
+    "empty_rate": 0.1,
+    "total_cost": 0,
+    "cost_per_task": 0,
+    "cost_per_correct": 0
+  },
+  "C": {
+    "curve": [
+      {
+        "gen": 0,
+        "evaluated": 6,
+        "best_acc": 0.525,
+        "best_ci": [
+          0.375,
+          0.6706
+        ],
+        "best_genome": {
+          "selves": 1,
+          "episodicK": 0,
+          "palette": [
+            "cold"
+          ],
+          "temp": 0,
+          "selector": "majority",
+          "seedSpread": false
+        },
+        "best_key": "sv1|ek0|t0|selmajority|ss0|pcold",
+        "mean_acc": 0.5,
+        "best_cost_per_task": 0
+      },
+      {
+        "gen": 1,
+        "evaluated": 6,
+        "best_acc": 0.525,
+        "best_ci": [
+          0.375,
+          0.6706
+        ],
+        "best_genome": {
+          "selves": 1,
+          "episodicK": 0,
+          "palette": [
+            "cold"
+          ],
+          "temp": 0,
+          "selector": "majority",
+          "seedSpread": false
+        },
+        "best_key": "sv1|ek0|t0|selmajority|ss0|pcold",
+        "mean_acc": 0.4833,
+        "best_cost_per_task": 0
+      },
+      {
+        "gen": 2,
+        "evaluated": 6,
+        "best_acc": 0.525,
+        "best_ci": [
+          0.375,
+          0.6706
+        ],
+        "best_genome": {
+          "selves": 1,
+          "episodicK": 0,
+          "palette": [
+            "cold"
+          ],
+          "temp": 0,
+          "selector": "majority",
+          "seedSpread": false
+        },
+        "best_key": "sv1|ek0|t0|selmajority|ss0|pcold",
+        "mean_acc": 0.5,
+        "best_cost_per_task": 0
+      },
+      {
+        "gen": 3,
+        "evaluated": 6,
+        "best_acc": 0.525,
+        "best_ci": [
+          0.375,
+          0.6706
+        ],
+        "best_genome": {
+          "selves": 1,
+          "episodicK": 0,
+          "palette": [
+            "cold"
+          ],
+          "temp": 0,
+          "selector": "majority",
+          "seedSpread": false
+        },
+        "best_key": "sv1|ek0|t0|selmajority|ss0|pcold",
+        "mean_acc": 0.4833,
+        "best_cost_per_task": 0
+      }
+    ],
+    "best": {
+      "genomeKey": "sv1|ek0|t0|selmajority|ss0|pcold",
+      "genome": {
+        "selves": 1,
+        "episodicK": 0,
+        "palette": [
+          "cold"
+        ],
+        "temp": 0,
+        "selector": "majority",
+        "seedSpread": false
+      },
+      "acc": 0.525,
+      "correct": 21,
+      "n": 40,
+      "ci": [
+        0.375,
+        0.6706
+      ],
+      "cost": 0,
+      "cost_per_task": 0,
+      "empty_rate": 0.1
+    }
+  },
+  "run_cost_usd": 15.8107,
+  "cache_stats": {
+    "hits": 840,
+    "misses": 1000
+  },
+  "halted": false,
+  "haltReason": "",
+  "elapsed_sec": 7981,
+  "finished": "2026-06-28T23:51:16.005Z"
+}
