@@ -1,0 +1,568 @@
+{
+  "model": "deepseek/deepseek-v4-pro",
+  "n": 40,
+  "pop": 6,
+  "gens": 3,
+  "curve": [
+    {
+      "gen": 0,
+      "evaluated": 6,
+      "best_acc": 0.525,
+      "best_ci": [
+        0.375,
+        0.6706
+      ],
+      "best_genome": {
+        "selves": 1,
+        "episodicK": 0,
+        "palette": [
+          "cold"
+        ],
+        "temp": 0,
+        "selector": "majority",
+        "seedSpread": false
+      },
+      "best_key": "sv1|ek0|t0|selmajority|ss0|pcold",
+      "mean_acc": 0.5,
+      "best_cost_per_task": 0
+    },
+    {
+      "gen": 1,
+      "evaluated": 6,
+      "best_acc": 0.525,
+      "best_ci": [
+        0.375,
+        0.6706
+      ],
+      "best_genome": {
+        "selves": 1,
+        "episodicK": 0,
+        "palette": [
+          "cold"
+        ],
+        "temp": 0,
+        "selector": "majority",
+        "seedSpread": false
+      },
+      "best_key": "sv1|ek0|t0|selmajority|ss0|pcold",
+      "mean_acc": 0.4833,
+      "best_cost_per_task": 0
+    },
+    {
+      "gen": 2,
+      "evaluated": 6,
+      "best_acc": 0.525,
+      "best_ci": [
+        0.375,
+        0.6706
+      ],
+      "best_genome": {
+        "selves": 1,
+        "episodicK": 0,
+        "palette": [
+          "cold"
+        ],
+        "temp": 0,
+        "selector": "majority",
+        "seedSpread": false
+      },
+      "best_key": "sv1|ek0|t0|selmajority|ss0|pcold",
+      "mean_acc": 0.5,
+      "best_cost_per_task": 0
+    },
+    {
+      "gen": 3,
+      "evaluated": 6,
+      "best_acc": 0.525,
+      "best_ci": [
+        0.375,
+        0.6706
+      ],
+      "best_genome": {
+        "selves": 1,
+        "episodicK": 0,
+        "palette": [
+          "cold"
+        ],
+        "temp": 0,
+        "selector": "majority",
+        "seedSpread": false
+      },
+      "best_key": "sv1|ek0|t0|selmajority|ss0|pcold",
+      "mean_acc": 0.4833,
+      "best_cost_per_task": 0
+    }
+  ],
+  "best": {
+    "genomeKey": "sv1|ek0|t0|selmajority|ss0|pcold",
+    "genome": {
+      "selves": 1,
+      "episodicK": 0,
+      "palette": [
+        "cold"
+      ],
+      "temp": 0,
+      "selector": "majority",
+      "seedSpread": false
+    },
+    "acc": 0.525,
+    "correct": 21,
+    "n": 40,
+    "ci": [
+      0.375,
+      0.6706
+    ],
+    "cost": 0,
+    "cost_per_task": 0,
+    "empty_rate": 0.1
+  },
+  "halted": false,
+  "haltReason": "",
+  "all_evals": [
+    {
+      "genomeKey": "sv1|ek0|t0|selmajority|ss0|pcold",
+      "genome": {
+        "selves": 1,
+        "episodicK": 0,
+        "palette": [
+          "cold"
+        ],
+        "temp": 0,
+        "selector": "majority",
+        "seedSpread": false
+      },
+      "acc": 0.525,
+      "correct": 21,
+      "n": 40,
+      "ci": [
+        0.375,
+        0.6706
+      ],
+      "cost": 0,
+      "cost_per_task": 0,
+      "empty_rate": 0.1
+    },
+    {
+      "genomeKey": "sv3|ek0|t1|selverifier|ss1|pcold,cold,cold",
+      "genome": {
+        "selves": 3,
+        "episodicK": 0,
+        "palette": [
+          "cold",
+          "cold",
+          "cold"
+        ],
+        "temp": 1,
+        "selector": "verifier",
+        "seedSpread": true
+      },
+      "acc": 0.525,
+      "correct": 21,
+      "n": 40,
+      "ci": [
+        0.375,
+        0.6706
+      ],
+      "cost": 2.1592,
+      "cost_per_task": 0.053979,
+      "empty_rate": 0.025
+    },
+    {
+      "genomeKey": "sv4|ek2|t0.7|selverifier|ss1|pcold,mem,decomp,memdecomp",
+      "genome": {
+        "selves": 4,
+        "episodicK": 2,
+        "palette": [
+          "cold",
+          "mem",
+          "decomp",
+          "memdecomp"
+        ],
+        "temp": 0.7,
+        "selector": "verifier",
+        "seedSpread": true
+      },
+      "acc": 0.475,
+      "correct": 19,
+      "n": 40,
+      "ci": [
+        0.3294,
+        0.625
+      ],
+      "cost": 0.0614,
+      "cost_per_task": 0.001536,
+      "empty_rate": 0.025
+    },
+    {
+      "genomeKey": "sv3|ek3|t0.7|selmajority|ss1|pmem,mem,mem",
+      "genome": {
+        "selves": 3,
+        "episodicK": 3,
+        "palette": [
+          "mem",
+          "mem",
+          "mem"
+        ],
+        "temp": 0.7,
+        "selector": "majority",
+        "seedSpread": true
+      },
+      "acc": 0.525,
+      "correct": 21,
+      "n": 40,
+      "ci": [
+        0.375,
+        0.6706
+      ],
+      "cost": 1.485,
+      "cost_per_task": 0.037125,
+      "empty_rate": 0.05
+    },
+    {
+      "genomeKey": "sv2|ek1|t0.7|selverifier|ss1|pcold,memdecomp",
+      "genome": {
+        "selves": 2,
+        "episodicK": 1,
+        "palette": [
+          "cold",
+          "memdecomp"
+        ],
+        "temp": 0.7,
+        "selector": "verifier",
+        "seedSpread": true
+      },
+      "acc": 0.475,
+      "correct": 19,
+      "n": 40,
+      "ci": [
+        0.3294,
+        0.625
+      ],
+      "cost": 0.757,
+      "cost_per_task": 0.018924,
+      "empty_rate": 0.05
+    },
+    {
+      "genomeKey": "sv4|ek2|t0.4|selmajority|ss1|pdecomp,mem,cold,memdecomp",
+      "genome": {
+        "selves": 4,
+        "episodicK": 2,
+        "palette": [
+          "decomp",
+          "mem",
+          "cold",
+          "memdecomp"
+        ],
+        "temp": 0.4,
+        "selector": "majority",
+        "seedSpread": true
+      },
+      "acc": 0.475,
+      "correct": 19,
+      "n": 40,
+      "ci": [
+        0.3294,
+        0.625
+      ],
+      "cost": 2.4796,
+      "cost_per_task": 0.061989,
+      "empty_rate": 0.025
+    },
+    {
+      "genomeKey": "sv3|ek3|t0.7|selmajority|ss1|pmem,cold,memdecomp",
+      "genome": {
+        "selves": 3,
+        "episodicK": 3,
+        "temp": 0.7,
+        "selector": "majority",
+        "seedSpread": true,
+        "palette": [
+          "mem",
+          "cold",
+          "memdecomp"
+        ]
+      },
+      "acc": 0.525,
+      "correct": 21,
+      "n": 40,
+      "ci": [
+        0.375,
+        0.6706
+      ],
+      "cost": 1.5228,
+      "cost_per_task": 0.038071,
+      "empty_rate": 0.05
+    },
+    {
+      "genomeKey": "sv3|ek0|t0|selmajority|ss1|pcold,decomp,cold",
+      "genome": {
+        "selves": 3,
+        "episodicK": 0,
+        "temp": 0,
+        "selector": "majority",
+        "seedSpread": true,
+        "palette": [
+          "cold",
+          "decomp",
+          "cold"
+        ]
+      },
+      "acc": 0.475,
+      "correct": 19,
+      "n": 40,
+      "ci": [
+        0.3294,
+        0.625
+      ],
+      "cost": 2.043,
+      "cost_per_task": 0.051074,
+      "empty_rate": 0.05
+    },
+    {
+      "genomeKey": "sv1|ek0|t1|selmajority|ss0|pcold",
+      "genome": {
+        "selves": 1,
+        "episodicK": 0,
+        "temp": 1,
+        "selector": "majority",
+        "seedSpread": false,
+        "palette": [
+          "cold"
+        ]
+      },
+      "acc": 0.425,
+      "correct": 17,
+      "n": 40,
+      "ci": [
+        0.2851,
+        0.5781
+      ],
+      "cost": 0.6315,
+      "cost_per_task": 0.015788,
+      "empty_rate": 0.075
+    },
+    {
+      "genomeKey": "sv1|ek1|t0.7|selmajority|ss0|pmem,mem,mem",
+      "genome": {
+        "selves": 1,
+        "episodicK": 1,
+        "temp": 0.7,
+        "selector": "majority",
+        "seedSpread": false,
+        "palette": [
+          "mem",
+          "mem",
+          "mem"
+        ]
+      },
+      "acc": 0.425,
+      "correct": 17,
+      "n": 40,
+      "ci": [
+        0.2851,
+        0.5781
+      ],
+      "cost": 0.62,
+      "cost_per_task": 0.015499,
+      "empty_rate": 0.075
+    },
+    {
+      "genomeKey": "sv3|ek3|t0.7|selmajority|ss0|pmem,cold,memdecomp",
+      "genome": {
+        "selves": 3,
+        "episodicK": 3,
+        "temp": 0.7,
+        "selector": "majority",
+        "seedSpread": false,
+        "palette": [
+          "mem",
+          "cold",
+          "memdecomp"
+        ]
+      },
+      "acc": 0.5,
+      "correct": 20,
+      "n": 40,
+      "ci": [
+        0.352,
+        0.648
+      ],
+      "cost": 1.54,
+      "cost_per_task": 0.038501,
+      "empty_rate": 0.025
+    },
+    {
+      "genomeKey": "sv2|ek3|t0.7|selmajority|ss1|pmem,cold,memdecomp",
+      "genome": {
+        "selves": 2,
+        "episodicK": 3,
+        "temp": 0.7,
+        "selector": "majority",
+        "seedSpread": true,
+        "palette": [
+          "mem",
+          "cold",
+          "memdecomp"
+        ]
+      },
+      "acc": 0.475,
+      "correct": 19,
+      "n": 40,
+      "ci": [
+        0.3294,
+        0.625
+      ],
+      "cost": 0,
+      "cost_per_task": 0,
+      "empty_rate": 0.125
+    },
+    {
+      "genomeKey": "sv3|ek2|t0.7|selmajority|ss1|pmem,mem,mem",
+      "genome": {
+        "selves": 3,
+        "episodicK": 2,
+        "temp": 0.7,
+        "selector": "majority",
+        "seedSpread": true,
+        "palette": [
+          "mem",
+          "mem",
+          "mem"
+        ]
+      },
+      "acc": 0.525,
+      "correct": 21,
+      "n": 40,
+      "ci": [
+        0.375,
+        0.6706
+      ],
+      "cost": 1.1258,
+      "cost_per_task": 0.028145,
+      "empty_rate": 0.025
+    },
+    {
+      "genomeKey": "sv1|ek0|t0|selverifier|ss0|pmem,cold,memdecomp",
+      "genome": {
+        "selves": 1,
+        "episodicK": 0,
+        "temp": 0,
+        "selector": "verifier",
+        "seedSpread": false,
+        "palette": [
+          "mem",
+          "cold",
+          "memdecomp"
+        ]
+      },
+      "acc": 0.45,
+      "correct": 18,
+      "n": 40,
+      "ci": [
+        0.3071,
+        0.6017
+      ],
+      "cost": 0.5832,
+      "cost_per_task": 0.014579,
+      "empty_rate": 0.1
+    },
+    {
+      "genomeKey": "sv3|ek0|t0|selverifier|ss0|pmem,mem,mem",
+      "genome": {
+        "selves": 3,
+        "episodicK": 0,
+        "temp": 0,
+        "selector": "verifier",
+        "seedSpread": false,
+        "palette": [
+          "mem",
+          "mem",
+          "mem"
+        ]
+      },
+      "acc": 0.45,
+      "correct": 18,
+      "n": 40,
+      "ci": [
+        0.3071,
+        0.6017
+      ],
+      "cost": 0.0467,
+      "cost_per_task": 0.001168,
+      "empty_rate": 0.1
+    },
+    {
+      "genomeKey": "sv4|ek3|t0.7|selmajority|ss0|pmem,mem,mem",
+      "genome": {
+        "selves": 4,
+        "episodicK": 3,
+        "temp": 0.7,
+        "selector": "majority",
+        "seedSpread": false,
+        "palette": [
+          "mem",
+          "mem",
+          "mem"
+        ]
+      },
+      "acc": 0.45,
+      "correct": 18,
+      "n": 40,
+      "ci": [
+        0.3071,
+        0.6017
+      ],
+      "cost": 0,
+      "cost_per_task": 0,
+      "empty_rate": 0.125
+    },
+    {
+      "genomeKey": "sv3|ek2|t0|selmajority|ss1|pcold",
+      "genome": {
+        "selves": 3,
+        "episodicK": 2,
+        "temp": 0,
+        "selector": "majority",
+        "seedSpread": true,
+        "palette": [
+          "cold"
+        ]
+      },
+      "acc": 0.5,
+      "correct": 20,
+      "n": 40,
+      "ci": [
+        0.352,
+        0.648
+      ],
+      "cost": 0.7556,
+      "cost_per_task": 0.018889,
+      "empty_rate": 0.05
+    },
+    {
+      "genomeKey": "sv1|ek3|t0.7|selmajority|ss0|pmem,mem,mem",
+      "genome": {
+        "selves": 1,
+        "episodicK": 3,
+        "temp": 0.7,
+        "selector": "majority",
+        "seedSpread": false,
+        "palette": [
+          "mem",
+          "mem",
+          "mem"
+        ]
+      },
+      "acc": 0.45,
+      "correct": 18,
+      "n": 40,
+      "ci": [
+        0.3071,
+        0.6017
+      ],
+      "cost": 0,
+      "cost_per_task": 0,
+      "empty_rate": 0.125
+    }
+  ]
+}

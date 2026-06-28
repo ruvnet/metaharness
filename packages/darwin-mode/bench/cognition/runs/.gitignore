@@ -1,0 +1,5 @@
+# large / binary / transient run artifacts — keep the result JSONs + preds for the record
+episode-cache.json
+*.rvf
+*.rvf.lock
+*.lock
