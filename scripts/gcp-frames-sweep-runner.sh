@@ -15,7 +15,7 @@
 set -uo pipefail
 md() { curl -s -H 'Metadata-Flavor: Google' "http://metadata/computeMetadata/v1/instance/attributes/$1" 2>/dev/null || true; }
 MODEL="${MODEL:-$(md model)}"; ORKEY="${ORKEY:-$(md orkey)}"
-BUDGETS="${BUDGETS:-$(md budgets)}"; BUDGETS="${BUDGETS:-6,12,18,30}"
+BUDGETS="${BUDGETS:-$(md budgets)}"; BUDGETS="${BUDGETS:-6,12,18,30}"; BUDGETS="${BUDGETS//_/,}"  # metadata passes budgets underscore-delimited (commas break gcloud --metadata)
 SAMPLE="${SAMPLE:-$(md sample)}"; SAMPLE="${SAMPLE:-40}"
 SEED="${SEED:-$(md seed)}"; SEED="${SEED:-42}"
 CONC="${CONC:-$(md conc)}"; CONC="${CONC:-4}"
