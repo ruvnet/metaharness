@@ -89,5 +89,25 @@ else
   echo "WARN: no results file — nothing to report"
 fi
 
+# Per-task preds exfil. GCS is unavailable (the VM service account lacks
+# storage.buckets.* perms), so we ship the full predictions array to a Firestore
+# `frames_preds` collection (one doc per model, preds as a JSON string field).
+# This survives AUTOSTOP+reap so post-mortem diagnosis (e.g. step-cap truncation)
+# is possible without the ephemeral VM disk.
+PREDS="$OUT/preds-$SLUG.jsonl"
+if [ -f "$PREDS" ]; then
+  TOKEN="${TOKEN:-$(curl -s -H 'Metadata-Flavor: Google' 'http://metadata/computeMetadata/v1/instance/service-accounts/default/token' | node -pe 'JSON.parse(require("fs").readFileSync(0)).access_token' 2>/dev/null)}"
+  PROJECT_ID="${PROJECT_ID:-$(curl -s -H 'Metadata-Flavor: Google' 'http://metadata/computeMetadata/v1/project/project-id')}"
+  PBODY=$(node -e '
+    const fs=require("fs");
+    const rows=fs.readFileSync(process.argv[1],"utf8").trim().split("\n").filter(Boolean).map(l=>{try{return JSON.parse(l)}catch{return null}}).filter(Boolean);
+    const f={benchmark:{stringValue:"frames"},model:{stringValue:process.argv[2]},n:{integerValue:String(rows.length)},seed:{integerValue:String(process.argv[3])},maxsteps:{integerValue:String(process.argv[4])},ts:{stringValue:new Date().toISOString()},preds_json:{stringValue:JSON.stringify(rows)}};
+    process.stdout.write(JSON.stringify({fields:f}));
+  ' "$PREDS" "$MODEL" "$SEED" "$MAXSTEPS")
+  curl -s -X POST "https://firestore.googleapis.com/v1/projects/$PROJECT_ID/databases/(default)/documents/frames_preds" \
+    -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d "$PBODY" >/dev/null \
+    && echo "exfil $(wc -l <"$PREDS") preds to Firestore frames_preds" || echo "preds exfil FAILED (results in $OUT)"
+fi
+
 echo "=== DONE — results in $OUT ==="
 if [ "$AUTOSTOP" = "1" ]; then echo "AUTOSTOP: halting in 90s"; (sleep 90; shutdown -h now) & fi
