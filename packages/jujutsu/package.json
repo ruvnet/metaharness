@@ -1,0 +1,80 @@
+{
+  "name": "@metaharness/jujutsu",
+  "version": "0.1.0",
+  "description": "Lock-free version-control-for-agents capability for MetaHarness. Wraps agentic-jujutsu (jj/Jujutsu op-log, QuantumDAG agent coordination, ReasoningBank trajectories, ML-DSA signing) as a removable augmentation, and bridges it to agenticow COW memory branching for dual-state (code-branch + memory-branch) agent lifecycles.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./bridge": {
+      "types": "./dist/bridge/index.d.ts",
+      "import": "./dist/bridge/index.js"
+    }
+  },
+  "files": [
+    "dist/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "lint": "tsc --noEmit",
+    "smoke": "node smoke.mjs"
+  },
+  "keywords": [
+    "jujutsu",
+    "jj",
+    "version-control-for-agents",
+    "vcs",
+    "op-log",
+    "lock-free",
+    "agent-coordination",
+    "quantumdag",
+    "reasoningbank",
+    "trajectory",
+    "agentic",
+    "ai-agents",
+    "agent-memory",
+    "copy-on-write",
+    "cow",
+    "agenticow",
+    "dual-state-branching",
+    "agent-harness",
+    "metaharness"
+  ],
+  "author": "rUv <ruv@ruv.net>",
+  "license": "MIT",
+  "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/packages/jujutsu#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/agent-harness-generator",
+    "directory": "packages/jujutsu"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  },
+  "peerDependencies": {
+    "agenticow": "^0.1.0",
+    "agentic-jujutsu": "^2.3.6"
+  },
+  "peerDependenciesMeta": {
+    "agenticow": {
+      "optional": true
+    },
+    "agentic-jujutsu": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
