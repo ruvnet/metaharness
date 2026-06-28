@@ -205,3 +205,71 @@ H3 as stated is NOT supported by this implementation path. Revisions needed:
 - `ADR-201-vector-memory-graphrag-cheap-model-lift.md` — parent ADR (verdict updated below)
 - `VECTOR-MEMORY-EVIDENCE.md` — web-research evidence backing ADR-201 hypotheses
 - `FRAMES-RESULTS.md` — agentic FRAMES harness (18-step) for comparison: 43% at 18 steps vs ~10% single-step RAG
+
+---
+
+# H3-code (SWE-bench): the code axis — did the graph traverse this time?
+
+**Date:** 2026-06-28 · **Harness:** `packages/darwin-mode/bench/ruvector/h3-code-gate.mjs` ($0 gate) + `h3-code-localize.mjs` (paid micro-pilot) · **Reports:** `data/h3-code-gate-report.json`, `data/h3-code-localize-report.json` · **Spend:** $0.09 (valid run; one $0.16 run was invalidated and re-run, see Honesty) · **Embedder:** ONNX all-MiniLM-L6-v2 (same as the FRAMES H3 above — the apples-to-apples control).
+
+The FRAMES H3 was a *structural* null: Wikipedia + ONNX all-MiniLM is a dense cluster (all pairwise cosine ≥ 0.434), so a cosine-thresholded graph is fully connected → kHop(depth=2) = all nodes → graph ≡ dense, `graphHits = 0`. The leverage-map's Priority-2 thesis (RepoGraph, arXiv 2408.09504, +7pp on SWE-bench) is that **CODE is the opposite**: build the graph from *import / test→target topology* (not cosine), seed from the issue/failing-test, traverse, and surface fix-relevant files that are topically distant from the issue text (low cosine) but structurally close. We tested this gate-first at $0, then ran a small paid probe.
+
+## Method (no Python — project rule)
+
+A JS regex extractor parses Python files into a file-level graph: **nodes = source files**, **edges = `import` / `from … import` / test→target**, resolved to in-repo modules and added bidirectionally. Topology traversal uses the **real local `@ruvector/graph-node` v2.0.4** (`kHopNeighbors`, native Rust); **PageRank** and **hub-degree** are computed in JS over the same edge set (graph-node ships no PageRank). Label: **kHop / PageRank / hub-degree topology traversal over a code graph — NOT the unshipped Rust community-detection GraphRAG.** Repos are shallow-cloned at `base_commit` ($0). Gold = `.py` non-test files from the gold patch diff. Seeds are extracted from the issue text + test patch (file paths, dotted refs, defined symbols), **excluding the gold file** so traversal must *discover* it.
+
+## Gate ($0) — `h3-code-gate.mjs`, 5 medium/large repos
+
+| instance | repo | nodes | edges | pairwise-cosine median | graphHits (non-top-k surfaced) | gold dense-rank | gold recovered by graph |
+|----------|------|-------|-------|------------------------|-------------------------------|-----------------|-------------------------|
+| cabinetry-506 | scikit-hep/cabinetry | 52 | 117 | 0.442 | 35 | 3 | (already in dense top-k) |
+| lmfit-py-989 | lmfit/lmfit-py | 51 | 97 | 0.513 | 32 | 1 | (in top-k) |
+| pgmpy-1906 | pgmpy/pgmpy | 157 | 618 | 0.412 | 121 | 4, **62** | **1** (SEM.py rank 62 → recovered) |
+| zarr-python-2661 | zarr-developers/zarr | 104 | 527 | 0.560 | 81 | 2 | (in top-k) |
+| pdm-3393 | pdm-project/pdm | 211 | 828 | 0.478 | 119 | **52** | **1** (core.py rank 52 → recovered; PageRank rank 17) |
+
+**Gate verdict — two findings, one surprising:**
+
+1. **graphHits > 0 on 5/5 instances (388 total). The FRAMES structural null does NOT recur.** Because the code graph is built from *import topology* (avg degree ~4–8), not cosine thresholds, kHop reaches a specific structural neighborhood, not the whole corpus. Topology traversal surfaces files the dense cosine top-k ranks low, and **recovered 2/2 gold patch files that the dense top-k missed** (pgmpy `SEM.py` at dense rank 62; pdm `core.py` at dense rank 52, which PageRank ranks 17). This is the RepoGraph mechanism appearing at the gate level. ✓ **The graph traversed this time.**
+
+2. **The brief's "sparse code" premise is FALSIFIED.** Under the *same* ONNX all-MiniLM embedder that made FRAMES dense, file-level code embeddings are **even denser**: per-corpus median pairwise cosine **0.41–0.56 (mean 0.48 > FRAMES's 0.434)**, fraction ≥ 0.43 = 45–84%. all-MiniLM embeds same-repo Python prose (shared imports, boilerplate, docstrings) into a tight cluster, exactly like Wikipedia. **Code is not cosine-sparse; the predicted 0.05–0.25 did not appear.** The reason traversal still works is decoupling: the graph's edges are *topological*, so cosine density is irrelevant to whether kHop diverges from dense — a different mechanism than the brief assumed.
+
+The gate also exposed the **dual-edge backfire risk concretely**: kHop reach is 46–152 files per instance — far too many to feed an LLM. Any "graph arm" must *budget-constrain* (topology-rank → top-k), not dump the reachable set.
+
+## Paid micro-pilot — `h3-code-localize.mjs`, n=29, $0.09
+
+graphHits > 0 met the brief's literal proceed-gate, so we ran the real cheap models. We measured **localization** (does the model pick the gold patch file?) — the necessary condition for resolve, and the part an n≈25 budget can power cleanly (an n=25 Docker-*resolve* run is underpowered for the <8% effect predicted, and pulls 25–50 GB of images). Arms are **budget-matched** (same K=8 candidate files, different ranking): **dense** = top-8 by cosine(issue, file); **graph** = seeds → kHopNeighbors(2) → ranked by PageRank (no cosine), top-8. Models: deepseek-v4-pro, glm-5.2, reasoning disabled, temp 0. Cohort: 29 SWE-rebench Python repos (real issues + gold patches), disjoint from the 5 gate repos.
+
+### Results (gold-hit@3; Wilson 95% CI)
+
+| model | dense @3 [95% CI] | graph @3 [95% CI] | Δ graph−dense | significant? |
+|-------|-------------------|-------------------|---------------|--------------|
+| deepseek/deepseek-v4-pro | 79.3% [62, 90] | 72.4% [54, 85] | **−6.9pp** | no (CIs overlap) |
+| z-ai/glm-5.2 | 69.0% [51, 83] | 72.4% [54, 85] | **+3.4pp** | no (CIs overlap) |
+
+- **Set-recall (gold present in the arm's 8-file set at all): dense 75.9% > graph 58.6%.** Pure PageRank topology is a *worse* retriever for gold-recall than cosine — it surfaces high-centrality hubs (`__init__`, core modules), not necessarily the specific fix file. Of the divergences, dense-only-has-gold (9) outnumbers graph-only-has-gold (4).
+- **Cr = −0.14** — the graph context used ~14% *more* tokens than dense, not fewer. This implementation is not a compressor (contradicting the "GraphRAG sends fewer/better tokens" claim).
+- Both per-model Δ are small and **not statistically significant** at n=29.
+
+### Paid verdict — NOT SUPPORTED (as a standalone topology retriever)
+
+Pure kHop+PageRank topology selection does **not** improve cheap-model gold-file localization over dense cosine on this hard-code set: Δ = −6.9pp (deepseek) / +3.4pp (glm), both non-significant, with *lower* raw recall and *higher* token cost. The two falsifiable reasons mirror the gate: (a) the sparsity premise is false, so cosine already has good recall (76%) and topology adds nothing on top; (b) PageRank centrality ≠ fix-relevance.
+
+## Honest combined answer to the brief's question
+
+> *Does sparse code-graph retrieval improve cheap models on hard code — and did the graph actually traverse this time (graphHits > 0)?*
+
+- **Did the graph traverse? YES.** graphHits > 0 on 5/5 gate repos; the FRAMES structural null did not recur; topology recovered 2/2 dense-missed gold files on the larger repos. The code-axis genuinely traverses where the FRAMES axis could not.
+- **Does it improve cheap models? NOT as shown here.** The "sparse" premise was empirically false (code is cosine-dense under ONNX), and a budget-matched pure-topology arm gave no significant localization lift over dense cosine (and lower recall + more tokens).
+- **The one place graph still looked useful** is the **large-repo tail** (pgmpy, pdm), where dense cosine genuinely *missed* the gold file (rank 52, 62) and topology recovered it. The paid cohort (mostly smaller SWE-rebench repos, dense recall already 76%) under-samples that regime. The honest next step is a **powered (n ≥ 100), large-repo, end-to-end Docker-resolve** run of a **hybrid** retriever (dense seed ∪ graph-expand, topology-*reranked*, budget-capped) — not the pure-topology or dump-all variants tested here. That exceeds the $30 / n=25 envelope and needs its own allocation.
+
+## Honesty notes (H3-code)
+
+1. **One run was invalidated and re-run.** The first paid run used `max_tokens=200` *with reasoning enabled*; deepseek-v4-pro (a reasoning model) returned **empty content on 90% of dense calls** (reasoning consumed the budget — the exact failure flagged in the FRAMES H1/H3 harness). That produced a spurious "deepseek graph +34.5pp." It was caught by an explicit empty-response audit, fixed (`reasoning:{enabled:false}`, `max_tokens=800`), and re-run → empty-rate 0%, Δ −6.9pp. Only the corrected run is reported. Both runs are in the cost ledger ($0.16 invalid + $0.09 valid).
+2. **Dataset:** SWE-rebench (real Python repos + gold patches, self-contained, $0 to clone) used as the code-axis proxy — chosen over canonical SWE-bench Lite because it carries gold patches locally (no HF/Docker needed for the $0 gate). 4 of the 29 are flagged `is_lite`.
+3. **No gold leakage:** gold patches are read only by the offline scorer; seeds, embeddings, traversal, and prompts never see the gold file (it is explicitly excluded from seeds).
+4. **graph-node is real and working** (v2.0.4, native kHopNeighbors verified). The null is not a binding bug — it is the genuine behavior of pure-topology ranking on cosine-dense code.
+
+![H3-code localization: dense vs graph](../charts/10-h3-code-localization.svg)
+
+*Figure: cheap-model gold-hit@3 by arm (dense cosine / graph topology) per model, Wilson 95% CI. Bars overlap within model; neither Δ is significant. Set-recall favors dense (76% vs 59%).*

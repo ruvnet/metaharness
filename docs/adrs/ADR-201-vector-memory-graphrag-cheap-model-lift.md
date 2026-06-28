@@ -1,6 +1,6 @@
 # ADR-201: Vector-Memory Ablation — does GraphRAG (ruvector) lift cheap models over the turn-budget cliff?
 
-**Status:** H3 CLOSED — NOT SUPPORTED for kHop-expansion+cosine (structural null); H1 CLOSED — NOT SUPPORTED for dense cosine on FRAMES; **H5 (difficulty routing) CLOSED — NOT SUPPORTED on FRAMES for the shipped `@ruvector/router` SemanticRouter (embedding-only; hard-detection AUC≈chance)**. H2/H4 deferred pending ruvector graph-node binding for Node.js.
+**Status:** H3 CLOSED — NOT SUPPORTED for kHop-expansion+cosine on FRAMES (structural null) AND on the **code axis** (H3-code: the graph *traverses* this time — graphHits>0, 5/5 — but pure kHop+PageRank topology gives no significant cheap-model lift, and the "sparse code" premise is FALSIFIED: code is cosine-DENSE under ONNX); H1 CLOSED — NOT SUPPORTED for dense cosine on FRAMES; **H5 (difficulty routing) CLOSED — NOT SUPPORTED on FRAMES for the shipped `@ruvector/router` SemanticRouter (embedding-only; hard-detection AUC≈chance)**. H2/H4 deferred pending ruvector graph-node binding for Node.js. A powered large-repo *hybrid*-retriever Docker-resolve run is the one open horizon (needs its own budget).
 **Date:** 2026-06-28 (empirical phase completed 2026-06-28)
 **Related:** ADR-194 (crack-the-tail), ADR-198 (weight-eft), the cheap-vs-frontier research (`docs/research/cheap-vs-frontier/`), §5b harness-artifact schema.
 
@@ -100,6 +100,25 @@ H2 (context-distraction penalty) and H4 (GNN self-learning) remain open and DEFE
 - Working community-detection GraphRAG Node.js binding in ruvector
 - SWE-bench code axis test (H3 reformulated for code agents, not QA)
 - Separate budget allocation for the agentic SWE-bench run
+
+## Empirical Verdict (2026-06-28) — H3-code (SWE-bench code axis)
+
+H3 reformulated for code (leverage-map Priority-2; RepoGraph arXiv 2408.09504). Gate-first at $0, then a paid micro-pilot. Harness: `packages/darwin-mode/bench/ruvector/h3-code-gate.mjs` + `h3-code-localize.mjs`. Full write-up: `docs/research/cheap-vs-frontier/empirical/VECTOR-MEMORY-H3-RESULTS.md` (§ H3-code).
+
+**Two findings — the graph traversed, but the premise was wrong:**
+
+1. **graphHits > 0 on 5/5 repos (388 non-top-k files surfaced) — the FRAMES structural null does NOT recur.** A code graph built from *import / test→target topology* (not cosine thresholds) is structurally sparse (avg degree ~4–8), so kHop(depth=2) reaches a specific neighborhood, not the whole corpus. Topology traversal recovered **2/2 gold patch files the dense cosine top-k missed** (pgmpy `SEM.py` dense-rank 62; pdm `core.py` dense-rank 52 → PageRank-rank 17). The code axis genuinely traverses where FRAMES could not.
+
+2. **The "sparse code" premise is FALSIFIED.** Under the *same* ONNX all-MiniLM that made FRAMES dense, file-level code embeddings are **even denser** — per-corpus median pairwise cosine **0.41–0.56 (mean 0.48 > FRAMES's 0.434)**. The predicted 0.05–0.25 did not appear. Traversal works not because code is cosine-sparse but because the graph edges are *topological* (decoupled from cosine).
+
+**Paid micro-pilot (n=29 SWE-rebench repos, $0.09, deepseek-v4-pro + glm-5.2, reasoning disabled).** Budget-matched arms (K=8): dense = top-K cosine; graph = kHop+PageRank topology (no cosine). Localization (gold-hit@3), the necessary condition for resolve, measured because an n=25 Docker-*resolve* run is underpowered for the <8% predicted effect:
+
+| model | dense @3 | graph @3 | Δ | sig? |
+|-------|----------|----------|---|------|
+| deepseek-v4-pro | 79.3% [62,90] | 72.4% [54,85] | −6.9pp | no |
+| glm-5.2 | 69.0% [51,83] | 72.4% [54,85] | +3.4pp | no |
+
+Set-recall: dense 76% > graph 59% (PageRank surfaces hubs, not fix files); Cr = −0.14 (graph used *more* tokens). **Verdict: NOT SUPPORTED as a standalone topology retriever** — no significant cheap-model localization lift over dense cosine, with lower recall and higher token cost. The only regime where graph still looked useful is the **large-repo tail** (dense recall fails → topology recovers gold), which the paid cohort under-samples. **Open horizon:** a powered (n ≥ 100), large-repo, **hybrid** retriever (dense seed ∪ topology-reranked graph-expand, budget-capped) end-to-end Docker-resolve run — distinct budget required. **Honesty:** a first paid run was invalidated (deepseek 90% empty responses from reasoning truncating `max_tokens=200`), caught by an empty-response audit, fixed and re-run; both runs are in the cost ledger.
 
 ## Empirical Verdict (2026-06-28) — H5 (difficulty routing)
 

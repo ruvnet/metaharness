@@ -374,6 +374,34 @@ The "graph" arm tested is: `kHop-graph-EXPANSION + cosine rerank` via `@ruvector
 
 ---
 
+## Appendix: Vector-memory H3-code (SWE-bench code axis — did the graph traverse this time?)
+
+**ADR-201 H3 reformulated for code** (leverage-map Priority-2; RepoGraph arXiv 2408.09504, +7pp on SWE-bench). The FRAMES H3 was a structural null because Wikipedia+ONNX is a dense cosine cluster → cosine-thresholded graph fully-connected → kHop≡dense (graphHits=0). The code-axis thesis: build the graph from *import/test→target topology* (not cosine) so traversal surfaces structurally-close-but-topically-distant files. Gate-first at $0, then a paid micro-pilot. Full results: [`empirical/VECTOR-MEMORY-H3-RESULTS.md`](empirical/VECTOR-MEMORY-H3-RESULTS.md) (§ H3-code).
+
+**Verdict: the graph TRAVERSED (graphHits>0) — but the "sparse code" premise is FALSE, and pure topology gives NO significant cheap-model lift.**
+
+- **Gate ($0, 5 medium/large repos via real `@ruvector/graph-node` v2.0.4 kHopNeighbors):** graphHits>0 on **5/5** repos (388 non-top-k files surfaced); the FRAMES null does **not** recur. Topology recovered **2/2 gold patch files the dense top-k missed** (pgmpy `SEM.py` rank 62; pdm `core.py` rank 52 → PageRank 17). **But** under the *same* ONNX all-MiniLM, file-level code is **cosine-DENSE** — median pairwise cosine **0.48 > FRAMES's 0.434** (predicted 0.05–0.25 did not appear). Traversal works because edges are topological, not because code is sparse.
+- **Paid micro-pilot (n=29 SWE-rebench repos, $0.09, reasoning disabled):** budget-matched dense (top-K cosine) vs graph (kHop+PageRank topology), gold-localization@3:
+
+| model | dense @3 [95% CI] | graph @3 [95% CI] | Δ graph−dense |
+|-------|-------------------|-------------------|----------------|
+| deepseek-v4-pro | 79.3% [62,90] | 72.4% [54,85] | −6.9pp (n.s.) |
+| z-ai/glm-5.2 | 69.0% [51,83] | 72.4% [54,85] | +3.4pp (n.s.) |
+
+Set-recall dense 76% > graph 59% (PageRank surfaces hubs, not fix files); Cr=−0.14 (graph uses *more* tokens). No significant localization lift over dense cosine; the graph's only useful regime is the large-repo tail where dense recall fails — under-sampled here. **Open horizon:** a powered (n≥100), large-repo, *hybrid* retriever Docker-resolve run (own budget). Honesty: a first $0.16 run was invalidated (deepseek 90% empty responses from reasoning truncating max_tokens=200), caught by an empty-response audit, fixed and re-run.
+
+**Fig 10 — H3-code localization: dense cosine vs graph topology (cheap models, Wilson 95% CI).**
+![H3-code localization](charts/10-h3-code-localization.svg)
+
+### Empirical run log (H3-code)
+
+| Run | Cohort | n | Arms | Embedder | Status | Verdict |
+|-----|--------|---|------|----------|--------|---------|
+| H3-code gate ($0) | SWE-rebench repos | 5 | dense / graph-topology | ONNX all-MiniLM-L6-v2 | ✅ done | graphHits>0 5/5; sparsity premise FALSIFIED |
+| H3-code localization (paid) | SWE-rebench repos | 29 | dense / graph-topology × 2 cheap | ONNX all-MiniLM-L6-v2 | ✅ done | NOT SUPPORTED; Δ −6.9/+3.4pp (n.s.), $0.09 |
+
+---
+
 ## Appendix: Vector-memory H1 pilot (knowledge-flattening, dense-RAG)
 
 **ADR-201 hypothesis H1**: does dense retrieval lift cheap models **disproportionately** (Δ_cheap > Δ_frontier), shifting the burden from parametric knowledge to in-context synthesis? Full results + method: [`empirical/VECTOR-MEMORY-H1-PILOT.md`](empirical/VECTOR-MEMORY-H1-PILOT.md).
