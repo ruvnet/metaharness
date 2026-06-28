@@ -59,3 +59,4 @@ ruvector.db
 __pycache__/
 *.pyc
 .swarm/
+packages/darwin-mode/bench/ruvector/data/
