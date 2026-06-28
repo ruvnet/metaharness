@@ -156,5 +156,194 @@ function chart5() {
   return svg(s);
 }
 
+// ---- Chart 6: H3 FRAMES resolve% by model × condition (grouped bar) ----
+// Data source: packages/darwin-mode/bench/ruvector/data/h3-report.json
+// Reads live from the report; gracefully skips if file missing.
+function chart6() {
+  const reportPath = join(DIR, '../../../packages/darwin-mode/bench/ruvector/data/h3-report.json');
+  let rep;
+  try { rep = JSON.parse(readFileSync(reportPath, 'utf8')); } catch { return null; }
+  const models = Object.keys(rep.summary || {});
+  if (!models.length) return null;
+
+  // Build data rows
+  const rows = models.map(m => {
+    const s = rep.summary[m];
+    return {
+      model: m.replace('deepseek/', '').replace('z-ai/', '').replace('openai/', ''),
+      cheap: s.cheap,
+      base: s.base.p, baseCI: s.base.ci,
+      dense: s.dense.p, denseCI: s.dense.ci,
+      graph: s.graph.p, graphCI: s.graph.ci,
+    };
+  });
+
+  const W6 = 820, H6 = 460, M6 = { t: 56, r: 200, b: 64, l: 64 };
+  const PW6 = W6 - M6.l - M6.r, PH6 = H6 - M6.t - M6.b;
+  const y0 = 0, y1 = Math.max(0.35, ...rows.flatMap(r => [r.base, r.dense, r.graph, r.graphCI?.[1] || 0])) * 1.15;
+  const sy6 = (v) => M6.t + PH6 - (v / y1) * PH6;
+  const sx6 = (v) => M6.l + v * PW6;
+
+  // Grouped bars: 3 bars per model (base, dense, graph), gap between models
+  const nModels = rows.length;
+  const groupW = 1 / nModels;
+  const barW = groupW * 0.22;
+  const colors = { base: '#94a3b8', dense: '#3b82f6', graph: '#7c3aed' };
+
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W6} ${H6}" width="${W6}" height="${H6}">`;
+  s += `<rect width="${W6}" height="${H6}" fill="white"/>`;
+  s += `<text x="${M6.l}" y="26" font-family="system-ui,sans-serif" font-size="17" font-weight="700" fill="${C.text}">H3 FRAMES: resolve% by condition — base / +dense / +graph (kHop-expansion)</text>`;
+  s += `<text x="${M6.l}" y="44" font-family="system-ui,sans-serif" font-size="11" fill="${C.sub}">ONNX all-MiniLM-L6-v2 embedder; n=50, seed 42; whiskers = Wilson 95% CI; * = cheap model</text>`;
+
+  // y-axis grid + labels
+  for (const v of [0.05, 0.10, 0.15, 0.20, 0.25, 0.30]) {
+    if (v > y1) continue;
+    const y = sy6(v);
+    s += `<line x1="${M6.l}" y1="${y}" x2="${M6.l + PW6}" y2="${y}" stroke="${C.grid}" stroke-width="1"/>`;
+    s += `<text x="${M6.l - 6}" y="${y + 4}" text-anchor="end" font-family="system-ui,sans-serif" font-size="10" fill="${C.sub}">${(v * 100).toFixed(0)}%</text>`;
+  }
+  s += `<line x1="${M6.l}" y1="${M6.t + PH6}" x2="${M6.l + PW6}" y2="${M6.t + PH6}" stroke="${C.axis}" stroke-width="1.5"/>`;
+  s += `<line x1="${M6.l}" y1="${M6.t}" x2="${M6.l}" y2="${M6.t + PH6}" stroke="${C.axis}" stroke-width="1.5"/>`;
+
+  // Bars
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    const cx = (i + 0.5) / nModels;  // center of group in [0,1]
+    const conditions = [
+      { key: 'base', v: r.base, ci: r.baseCI, label: 'base' },
+      { key: 'dense', v: r.dense, ci: r.denseCI, label: '+dense' },
+      { key: 'graph', v: r.graph, ci: r.graphCI, label: '+graph' },
+    ];
+    let bx = cx - barW * 1.1;
+    for (const cond of conditions) {
+      const x = sx6(bx) + M6.l - M6.l;  // in absolute coords
+      const xabs = M6.l + bx * PW6;
+      const bwPx = barW * PW6;
+      const barTop = sy6(cond.v);
+      const barBot = sy6(0);
+      s += `<rect x="${xabs - bwPx / 2}" y="${barTop}" width="${bwPx}" height="${barBot - barTop}" fill="${colors[cond.key]}" opacity="0.85" rx="2"/>`;
+      // CI whiskers
+      if (cond.ci && cond.ci[0] != null) {
+        const ylo = sy6(cond.ci[1]); const yhi = sy6(cond.ci[0]);
+        s += `<line x1="${xabs}" y1="${ylo}" x2="${xabs}" y2="${yhi}" stroke="#374151" stroke-width="1.5"/>`;
+        s += `<line x1="${xabs - 3}" y1="${ylo}" x2="${xabs + 3}" y2="${ylo}" stroke="#374151" stroke-width="1.5"/>`;
+        s += `<line x1="${xabs - 3}" y1="${yhi}" x2="${xabs + 3}" y2="${yhi}" stroke="#374151" stroke-width="1.5"/>`;
+      }
+      // bar value label
+      s += `<text x="${xabs}" y="${barTop - 3}" text-anchor="middle" font-family="system-ui,sans-serif" font-size="8.5" fill="${C.text}">${(cond.v * 100).toFixed(0)}%</text>`;
+      bx += barW * 1.1;
+    }
+    // Model label
+    const labelY = M6.t + PH6 + 18;
+    const labelX = M6.l + cx * PW6;
+    const shortName = r.model.length > 16 ? r.model.slice(0, 14) + '…' : r.model;
+    s += `<text x="${labelX}" y="${labelY}" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9.5" fill="${C.text}">${esc((r.cheap ? '*' : '') + shortName)}</text>`;
+  }
+
+  // Legend
+  const lx = M6.l + PW6 + 18, lItems = [
+    { c: colors.base, label: 'base (no-RAG, parametric)' },
+    { c: colors.dense, label: '+dense cosine RAG' },
+    { c: colors.graph, label: '+graph kHop+cosine' },
+    { c: '#374151', label: '* = cheap model' },
+  ];
+  for (let i = 0; i < lItems.length; i++) {
+    const ly = M6.t + 16 + i * 22;
+    s += `<rect x="${lx}" y="${ly - 8}" width="12" height="12" fill="${lItems[i].c}" rx="2"/>`;
+    s += `<text x="${lx + 16}" y="${ly + 2}" font-family="system-ui,sans-serif" font-size="10.5" fill="${C.text}">${esc(lItems[i].label)}</text>`;
+  }
+  s += '</svg>';
+  return s;
+}
+
+// ---- Chart 7: H3 Δ comparison — Δ_dense, Δ_graph per cheap model ----
+function chart7() {
+  const reportPath = join(DIR, '../../../packages/darwin-mode/bench/ruvector/data/h3-report.json');
+  let rep;
+  try { rep = JSON.parse(readFileSync(reportPath, 'utf8')); } catch { return null; }
+  const cheapModels = Object.keys(rep.summary || {}).filter(m => rep.summary[m].cheap);
+  if (!cheapModels.length) return null;
+
+  const W7 = 820, H7 = 440, M7 = { t: 56, r: 200, b: 80, l: 80 };
+  const PW7 = W7 - M7.l - M7.r, PH7 = H7 - M7.t - M7.b;
+  const allDeltas = cheapModels.flatMap(m => {
+    const s = rep.summary[m];
+    return [
+      s.delta_dense_vs_base?.delta ?? 0, s.delta_dense_vs_base?.ci?.[0] ?? 0, s.delta_dense_vs_base?.ci?.[1] ?? 0,
+      s.delta_graph_vs_base?.delta ?? 0, s.delta_graph_vs_base?.ci?.[0] ?? 0, s.delta_graph_vs_base?.ci?.[1] ?? 0,
+    ];
+  });
+  const absMax = Math.max(0.18, ...allDeltas.map(Math.abs)) * 1.3;
+  const y0 = -absMax, y1 = absMax;
+  const sy7 = (v) => M7.t + PH7 / 2 - (v / absMax) * (PH7 / 2);
+  const zeroY = sy7(0);
+
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W7} ${H7}" width="${W7}" height="${H7}">`;
+  s += `<rect width="${W7}" height="${H7}" fill="white"/>`;
+  s += `<text x="${M7.l}" y="26" font-family="system-ui,sans-serif" font-size="17" font-weight="700" fill="${C.text}">H3 FRAMES: Δ resolve vs base — dense-RAG and graph-RAG (cheap models)</text>`;
+  s += `<text x="${M7.l}" y="44" font-family="system-ui,sans-serif" font-size="11" fill="${C.sub}">Δ = resolve(condition) − resolve(base); whiskers = 95% bootstrap CI; above zero = lift; below = harm</text>`;
+
+  // Grid
+  for (const v of [-0.15, -0.10, -0.05, 0, 0.05, 0.10, 0.15]) {
+    if (v < y0 || v > y1) continue;
+    const y = sy7(v);
+    const isZero = v === 0;
+    s += `<line x1="${M7.l}" y1="${y}" x2="${M7.l + PW7}" y2="${y}" stroke="${isZero ? C.axis : C.grid}" stroke-width="${isZero ? 2 : 1}" stroke-dasharray="${isZero ? '' : '4 3'}"/>`;
+    s += `<text x="${M7.l - 6}" y="${y + 4}" text-anchor="end" font-family="system-ui,sans-serif" font-size="10" fill="${C.sub}">${v > 0 ? '+' : ''}${(v * 100).toFixed(0)}pp</text>`;
+  }
+  s += `<line x1="${M7.l}" y1="${M7.t}" x2="${M7.l}" y2="${M7.t + PH7}" stroke="${C.axis}" stroke-width="1.5"/>`;
+
+  const nModels = cheapModels.length;
+  const groupW = 1 / nModels;
+  const barW = groupW * 0.28;
+  const condColors = { dense: '#3b82f6', graph: '#7c3aed' };
+
+  for (let i = 0; i < cheapModels.length; i++) {
+    const m = cheapModels[i];
+    const s7 = rep.summary[m];
+    const cx = (i + 0.5) / nModels;
+    const conds = [
+      { key: 'dense', delta: s7.delta_dense_vs_base?.delta ?? 0, ci: s7.delta_dense_vs_base?.ci },
+      { key: 'graph', delta: s7.delta_graph_vs_base?.delta ?? 0, ci: s7.delta_graph_vs_base?.ci },
+    ];
+    let bx = cx - barW * 0.6;
+    for (const cond of conds) {
+      const xabs = M7.l + bx * PW7;
+      const bwPx = barW * PW7;
+      const top = sy7(Math.max(0, cond.delta));
+      const bot = sy7(Math.min(0, cond.delta));
+      s += `<rect x="${xabs - bwPx / 2}" y="${top}" width="${bwPx}" height="${Math.max(1, bot - top)}" fill="${condColors[cond.key]}" opacity="0.85" rx="2"/>`;
+      // CI whiskers
+      if (cond.ci && cond.ci[0] != null && cond.ci[1] != null) {
+        const ylo = sy7(cond.ci[1]); const yhi = sy7(cond.ci[0]);
+        s += `<line x1="${xabs}" y1="${ylo}" x2="${xabs}" y2="${yhi}" stroke="#374151" stroke-width="1.5"/>`;
+        s += `<line x1="${xabs - 4}" y1="${ylo}" x2="${xabs + 4}" y2="${ylo}" stroke="#374151" stroke-width="1.5"/>`;
+        s += `<line x1="${xabs - 4}" y1="${yhi}" x2="${xabs + 4}" y2="${yhi}" stroke="#374151" stroke-width="1.5"/>`;
+      }
+      const dSign = cond.delta >= 0 ? '+' : '';
+      const labelY = cond.delta >= 0 ? top - 4 : bot + 14;
+      s += `<text x="${xabs}" y="${labelY}" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9" fill="${C.text}">${dSign}${(cond.delta * 100).toFixed(1)}pp</text>`;
+      bx += barW * 1.2;
+    }
+    const shortName = m.replace('deepseek/', '').replace('z-ai/', '').replace('openai/', '');
+    s += `<text x="${M7.l + cx * PW7}" y="${M7.t + PH7 + 20}" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" fill="${C.text}">${esc(shortName)}</text>`;
+  }
+
+  // Legend
+  const lx = M7.l + PW7 + 18;
+  const lItems = [{ c: condColors.dense, label: 'Δ dense-RAG vs base' }, { c: condColors.graph, label: 'Δ graph-RAG vs base' }, { c: '#374151', label: 'whiskers = 95% bootstrap CI' }];
+  for (let i = 0; i < lItems.length; i++) {
+    const ly = M7.t + 16 + i * 22;
+    s += `<rect x="${lx}" y="${ly - 8}" width="12" height="12" fill="${lItems[i].c}" rx="2"/>`;
+    s += `<text x="${lx + 16}" y="${ly + 2}" font-family="system-ui,sans-serif" font-size="10.5" fill="${C.text}">${esc(lItems[i].label)}</text>`;
+  }
+  s += '</svg>';
+  return s;
+}
+
 const charts = { '01-mmlu-score-over-time': chart1(), '02-lag-shrinking': chart2(), '03-cost-pareto-swebench': chart3(), '04-frames-empirical-pareto': chart4(), '05-bfcl-tooluse': chart5() };
+// H3 charts are generated only when h3-report.json exists
+const c6 = chart6(), c7 = chart7();
+if (c6) charts['06-h3-frames-resolve-by-condition'] = c6;
+if (c7) charts['07-h3-frames-delta-comparison'] = c7;
 for (const [name, s] of Object.entries(charts)) { writeFileSync(join(OUT, name + '.svg'), s); console.log('wrote charts/' + name + '.svg (' + s.length + ' bytes)'); }

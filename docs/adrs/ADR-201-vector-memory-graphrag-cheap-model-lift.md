@@ -1,7 +1,7 @@
 # ADR-201: Vector-Memory Ablation — does GraphRAG (ruvector) lift cheap models over the turn-budget cliff?
 
-**Status:** Proposed (build $0 now; paid empirical proof gated on budget allocation)
-**Date:** 2026-06-28
+**Status:** H3 CLOSED — NOT SUPPORTED for kHop-expansion+cosine (structural null); H1 CLOSED — NOT SUPPORTED for dense cosine on FRAMES. H2/H4 deferred pending ruvector graph-node binding for Node.js.
+**Date:** 2026-06-28 (empirical phase completed 2026-06-28)
 **Related:** ADR-194 (crack-the-tail), ADR-198 (weight-eft), the cheap-vs-frontier research (`docs/research/cheap-vs-frontier/`), §5b harness-artifact schema.
 
 ## Context
@@ -64,3 +64,39 @@ Fixed seed, same instances per swarm. Everyday axis: FRAMES (n≥50, knowledge-f
 ## Decision
 
 Build the ablation harness + research backing now ($0). Run the empirical A/B/C proof when budget is allocated, honest numbers only, reporting H1–H4 verdicts (including backfire on hard code if observed). Drop-in, removable augmentation (ADR-150 constraint): ruvector is swapped in behind a memory-layer interface; the base cascade still runs without it.
+
+---
+
+## Empirical Verdict (2026-06-28) — H1 and H3
+
+### H1 — Knowledge flattening (dense cosine RAG on FRAMES): NOT SUPPORTED
+
+Dense cosine RAG (k=8, ONNX all-MiniLM-L6-v2) does not lift cheap models on FRAMES multi-hop QA. Both the hash-embedder pilot (n=40) and the ONNX pilot (n=50) show Δ_dense ≈ 0 or negative for cheap models. Single-step cosine retrieval hits one semantic cluster; FRAMES questions require cross-domain multi-hop hops that k=8 cosine retrieval misses.
+
+Full results: `docs/research/cheap-vs-frontier/empirical/VECTOR-MEMORY-H3-RESULTS.md`, `packages/darwin-mode/bench/ruvector/data/h3-report.json`.
+
+### H3 — GraphRAG > dense (kHop-expansion+cosine on FRAMES): NOT SUPPORTED (structural null)
+
+The implemented "graph" arm (`@ruvector/graph-node` v2.0.4, kHopNeighbors(depth=2) + cosine rerank) is algebraically equivalent to dense cosine retrieval when ONNX all-MiniLM-L6-v2 is used on Wikipedia corpora:
+
+1. All pairwise cosine ≥ 0.43 → graph fully connected at any threshold ≤ 0.43
+2. kHop(fully-connected, depth=2) = all nodes
+3. Cosine rerank over all nodes = direct top-k cosine (= dense)
+
+Confirmed empirically: `graphHits = 0` at thresholds 0.35–0.90 across 50 tasks. The graph arm produced identical LLM prompts and identical resolve rates as the dense arm. Δ_graph_vs_dense ≈ 0pp by construction.
+
+**This is not a code bug.** The @ruvector/graph-node library is working correctly. The null arises from the combination of: (a) ONNX all-MiniLM-L6-v2 embedding properties on Wikipedia (dense cluster, min cosine ≥ 0.43), and (b) cosine rerank as the graph scoring function (topology-blind, equivalent to dense).
+
+### What would create measurable graph lift (future horizon)
+
+1. **Topology-based scoring**: PageRank, community membership, hub-degree weighting — not cosine. Retrieves structurally important nodes regardless of cosine similarity.
+2. **Sparse domain graphs**: code file graphs (import → definition chains), citation networks — where topically distant but structurally connected nodes need discovery.
+3. **Community-detection GraphRAG** (the Rust `ruvector-core/graph_rag.rs` pipeline): retrieves cluster representatives covering different semantic regions, not cosine top-k. Literature shows +5–10 pp on multi-hop. Needs Node.js binding (currently not available).
+4. **SWE-bench code axis** (not FRAMES QA): graph traversal of file→import→function→test chains may extend turn-budget survival where dense cosine retrieval retrieves semantically similar but structurally disconnected code.
+
+### Revised horizon for H2/H4
+
+H2 (context-distraction penalty) and H4 (GNN self-learning) remain open and DEFERRED pending:
+- Working community-detection GraphRAG Node.js binding in ruvector
+- SWE-bench code axis test (H3 reformulated for code agents, not QA)
+- Separate budget allocation for the agentic SWE-bench run

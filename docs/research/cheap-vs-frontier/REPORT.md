@@ -327,6 +327,53 @@ Charts 04/05 render these with **95% Wilson CI whiskers**. Note: official GAIA i
 
 ---
 
+## Appendix: Vector-Memory Ablation (H3 — ruvector kHop-graph-expansion)
+
+**ADR-201 hypothesis H3**: does local GraphRAG (ruvector kHop-expansion + cosine rerank) lift cheap models above dense cosine RAG on everyday knowledge QA?
+
+**Verdict: H3 NOT SUPPORTED — graph arm is structurally equivalent to dense for ONNX+Wikipedia.**
+
+Full results and analysis: `empirical/VECTOR-MEMORY-H3-RESULTS.md`
+
+### Summary table (FRAMES n=50, seed 42; conditions: base / +dense / +graph)
+
+| Model | Tier | base % | +dense % | +graph % | Δ_dense | Δ_graph | Δ_graph_vs_dense |
+|-------|------|--------|----------|----------|---------|---------|-----------------|
+| deepseek-v4-pro | cheap | 6.0% | 8.0% | 10.0% | +2.0pp | +4.0pp | +2.0pp (not sig; CI[0,6]) |
+| glm-5.2 | cheap | 10.0% | 10.0% | 8.0% | 0.0pp | −2.0pp | −2.0pp (not sig; CI[−6,0]) |
+| gpt-5.5 | frontier | 10.0% | 16.0% | 16.0% | +6.0pp | +6.0pp | 0.0pp |
+
+n=50, seed 42, ONNX all-MiniLM-L6-v2 embedder, $0.937 total. Wilson CI and paired bootstrap in full report. Cr=1.00 for all models (graph=dense hits). Δ_graph_vs_dense not statistically significant for either cheap model (95% CI straddles zero).
+
+### Key finding: structural equivalence
+
+The kHop-expansion + cosine rerank algorithm is **algebraically equivalent** to dense cosine retrieval when the ONNX all-MiniLM-L6-v2 embedder is used on Wikipedia corpora. All passage pairs have cosine ≥ 0.43 (min observed), making the graph fully connected at any threshold ≤ 0.43. kHop(depth=2) on a fully-connected graph returns all nodes; re-ranking by cosine returns the same top-k as dense. Confirmed empirically: `graphHits = 0` at thresholds 0.35–0.90 across all 50 tasks. The graph and dense arms produce **identical LLM prompts**.
+
+### What this means for dense RAG vs base (core H1 question)
+
+Dense ONNX RAG does NOT consistently lift cheap models on FRAMES multi-hop QA. This replicates the H1 pilot (hash embedder): single-step cosine retrieval retrieves from one semantic cluster, missing the cross-domain hops FRAMES questions require. Parametric knowledge (base no-RAG) is competitive with retrieval-augmented on this benchmark.
+
+### H3 implementation label
+
+The "graph" arm tested is: `kHop-graph-EXPANSION + cosine rerank` via `@ruvector/graph-node v2.0.4`. This is NOT the Rust community-detection GraphRAG (`ruvector-core/graph_rag.rs`) that literature shows +5–10 pp on multi-hop. The algorithm label matters: topology-blind cosine rerank = dense.
+
+### Charts
+
+**Fig 6 — H3 FRAMES resolve% by condition (base/dense/graph × 3 models).**
+![H3 FRAMES resolve by condition](charts/06-h3-frames-resolve-by-condition.svg)
+
+**Fig 7 — H3 Δ comparison (cheap models only): dense and graph vs base.**
+![H3 FRAMES delta comparison](charts/07-h3-frames-delta-comparison.svg)
+
+### Empirical run log
+
+| Run | Benchmark | n | Conditions | Embedder | Status | Result |
+|-----|-----------|---|------------|----------|--------|--------|
+| H3 FRAMES ablation | FRAMES (n=50, seed 42) | 50 | base / +dense / +graph | ONNX all-MiniLM-L6-v2 (384-d) | ✅ done | H3 NOT SUPPORTED; graph≡dense structurally |
+| H1 FRAMES ablation | FRAMES (n=40, seed 42) | 40 | base / +dense | hash bag-of-bigrams | ✅ done (prior) | H1 NOT SUPPORTED; dense hurts cheap (Δ=−5pp) |
+
+---
+
 ## Appendix: Vector-memory H1 pilot (knowledge-flattening, dense-RAG)
 
 **ADR-201 hypothesis H1**: does dense retrieval lift cheap models **disproportionately** (Δ_cheap > Δ_frontier), shifting the burden from parametric knowledge to in-context synthesis? Full results + method: [`empirical/VECTOR-MEMORY-H1-PILOT.md`](empirical/VECTOR-MEMORY-H1-PILOT.md).

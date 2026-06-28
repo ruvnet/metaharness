@@ -85,30 +85,34 @@ With ONNX `all-MiniLM-L6-v2` (384-d) on Wikipedia passage corpora:
 
 | Model | Tier | n | base % [95% CI] | +dense % [95% CI] | +graph % [95% CI] |
 |-------|------|---|-----------------|-------------------|-------------------|
-| deepseek/deepseek-v4-pro | cheap | 50 | [RESULTS] | [RESULTS] | [RESULTS] |
-| z-ai/glm-5.2 | cheap | 50 | [RESULTS] | [RESULTS] | [RESULTS] |
-| openai/gpt-5.5 | frontier | 50 | [RESULTS] | [RESULTS] | [RESULTS] |
+| deepseek/deepseek-v4-pro | cheap | 50 | 6.0% [2.1%, 16.2%] | 8.0% [3.2%, 18.8%] | 10.0% [4.3%, 21.4%] |
+| z-ai/glm-5.2 | cheap | 50 | 10.0% [4.3%, 21.4%] | 10.0% [4.3%, 21.4%] | 8.0% [3.2%, 18.8%] |
+| openai/gpt-5.5 | frontier | 50 | 10.0% [4.3%, 21.4%] | 16.0% [8.3%, 28.5%] | 16.0% [8.3%, 28.5%] |
 
 ### Delta table — retrieval lift vs base
 
 | Model | Δ_dense (pp) [95% CI] | Δ_graph (pp) [95% CI] | Δ_graph_vs_dense (pp) [95% CI] |
 |-------|----------------------|----------------------|-------------------------------|
-| deepseek/deepseek-v4-pro | [RESULTS] | [RESULTS] | ≈ 0 (structural) |
-| z-ai/glm-5.2 | [RESULTS] | [RESULTS] | ≈ 0 (structural) |
-| openai/gpt-5.5 | [RESULTS] | [RESULTS] | ≈ 0 (structural) |
+| deepseek/deepseek-v4-pro | +2.0pp [-6.0pp, +12.0pp] | +4.0pp [-4.0pp, +12.0pp] | +2.0pp [+0.0pp, +6.0pp] |
+| z-ai/glm-5.2 | +0.0pp [-6.0pp, +6.0pp] | -2.0pp [-10.0pp, +4.0pp] | -2.0pp [-6.0pp, +0.0pp] |
+| openai/gpt-5.5 | +6.0pp [-2.0pp, +16.0pp] | +6.0pp [-2.0pp, +14.0pp] | +0.0pp [+0.0pp, +0.0pp] |
 
 Note: Δ_graph_vs_dense is known to be ≈ 0 by structural equivalence (see above). Any non-zero observed value is sampling noise from temperature=0.1 LLM randomness.
 
 ### Context compression (Cr)
 
-Cr = mean graph context tokens / mean dense context tokens. Expected ≈ 1.00 (same hits → same context → same token count). The graph arm is not a compressor in this implementation — it produces the same k passages with the same text.
+Cr = mean graph context tokens / mean dense context tokens.
+
+deepseek/deepseek-v4-pro: Cr=1.000; z-ai/glm-5.2: Cr=1.000; openai/gpt-5.5: Cr=1.000.
+
+As expected: Cr ≈ 1.00 — identical hits → same token count for all models. The graph arm is not a compressor in this implementation.
 
 ### Gap narrowing vs gpt-5.5
 
 | Model | Gap@base (pp) | Gap@dense (pp) | Gap@graph (pp) | Narrowing by dense | Narrowing by graph |
 |-------|--------------|----------------|----------------|-------------------|-------------------|
-| deepseek/deepseek-v4-pro | [RESULTS] | [RESULTS] | [RESULTS] | [RESULTS] | [RESULTS] |
-| z-ai/glm-5.2 | [RESULTS] | [RESULTS] | [RESULTS] | [RESULTS] | [RESULTS] |
+| deepseek/deepseek-v4-pro | 4.0% | 8.0% | 6.0% | -4.0pp | -2.0pp |
+| z-ai/glm-5.2 | 0.0% | 6.0% | 8.0% | -6.0pp | -8.0pp |
 
 ---
 
@@ -146,10 +150,10 @@ Paths where ruvector COULD lift cheap models:
 
 | Model | $ total (50 tasks × 3 conditions) | $/task |
 |-------|----------------------------------|--------|
-| deepseek/deepseek-v4-pro | [RESULTS] | [RESULTS] |
-| z-ai/glm-5.2 | [RESULTS] | [RESULTS] |
-| openai/gpt-5.5 | [RESULTS] | [RESULTS] |
-| **Total** | [RESULTS] | — |
+| deepseek/deepseek-v4-pro | $0.1032 | $0.0021 |
+| z-ai/glm-5.2 | $0.1674 | $0.0033 |
+| openai/gpt-5.5 | $0.6664 | $0.0133 |
+| **Total** | **$0.9370** | — |
 
 Pre-warm (ONNX embeddings, 50 corpora × ~127 passages avg = ~6,350 unique texts at ~190ms each): ~19 minutes, $0 (local inference).
 
