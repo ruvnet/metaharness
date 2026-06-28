@@ -1,6 +1,6 @@
 # ADR-202: Dual-state branching — agentic-jujutsu (code/op) ⇄ agenticow (memory)
 
-**Status:** Proposed — bridge WIRED end-to-end (real jj 0.35.0 bookmarks + agenticow COW); cross-branch ANN query STUBBED behind an interface pending RuVector PR #617.
+**Status:** Accepted — bridge fully wired end-to-end: jj 0.35.0 bookmarks + agenticow COW + native ANN-across-branch now SHIPPED (agenticow@0.2.0 + @ruvector/rvf-node@0.2.0, rvf-runtime PRs #617+#618). recall@10 = 1.0000 verified. @metaharness/jujutsu@0.2.0 published.
 **Date:** 2026-06-28
 **Related:** ADR-006 (memory & learning integration), ADR-022 (MCP primitive), ADR-074 (darwin ruvector memory fabric), ADR-161 (ruvector memory tiers), ADR-201 (vector-memory lift). Architectural constraint: **ADR-150 principle** (removable augmentation, never a required runtime dep — see "On ADR-150" below).
 
@@ -47,7 +47,7 @@ Ship `@metaharness/jujutsu` (`packages/jujutsu`) exposing:
 | **learn** | `finalizeTrajectory(score, critique)` + read op-sequence (`getUserOperations`) | embed op-sequence → `ingest()` into the branch (ReasoningBank-as-agenticow) | **wired** |
 | **revert** | `jj undo` (op-log rollback) | `rollback()` to the spawn checkpoint (drops the delta) | **wired** |
 | **merge/promote** | `jj squash` ops into base + drop bookmark | `promote()` winning delta into the base memory | **wired** |
-| **query** | — | cross-branch k-NN | **STUBBED** (see below) |
+| **query** | — | cross-branch k-NN | **WIRED** (native ANN, recall@10=1.0) |
 
 ### Ports & adapters (hexagonal)
 
@@ -58,23 +58,26 @@ degrades when a plane is absent:
   `MockOpProvider`.
 - `MemoryBranchProvider` — memory plane. Real: `AgenticowMemoryProvider`. Mock:
   `MockMemoryProvider`.
-- `MemoryQueryProvider` — the **stubbed** cross-branch query plane. Real
-  (read-through today): `AgenticowQueryProvider`. Mock: `MockQueryProvider`
+- `MemoryQueryProvider` — the cross-branch query plane. Real (native ANN):
+  `AgenticowQueryProvider` (`nativeAnn=true`). Mock: `MockQueryProvider`
   (honest brute-force cosine).
 
-### What is wired vs stubbed (honest)
+### What is wired (all planes)
 
 - **Wired & verified end-to-end:** spawn/learn/revert/merge with *both* real
   native planes — jj 0.35.0 bookmark branch + agenticow COW branch + trajectory
   finalize + op-sequence embedding + COW ingest/rollback/promote. 15/15 unit
   tests + an offline smoke test + a real-peer integration check all green.
-- **Stubbed — cross-branch ANN query:** `queryMemory()` is routed through the
-  `MemoryQueryProvider` port. `AgenticowQueryProvider` wires agenticow's
-  **exact read-through** `query()` (parent ∪ child edits, child wins, deletes
-  honored) — correct but **unaccelerated** across the COW boundary. The
-  **native single index that spans the boundary** lands with **ruvnet/RuVector
-  PR #617**; until then `nativeAnn === false`. When PR #617 ships, only the
-  adapter swaps — the bridge and the port are unchanged.
+- **WIRED — cross-branch ANN query (agenticow@0.2.0 + rvf-node@0.2.0):**
+  `branch()` now calls `base.fork(label, undefined, { nativeAnn: true })` which
+  uses `RvfDatabase.branch()` (a real COW child with the Rust dual-graph HNSW
+  engine, rvf-runtime PRs #617+#618). `AgenticowQueryProvider.nativeAnn = true`.
+  A single `db.query()` call on the COW child queries both its own HNSW and the
+  parent's HNSW, merges candidates with child-wins semantics, and excludes
+  tombstoned IDs entirely in Rust. **recall@10 = 1.0000** verified with 1200-
+  vector L2 corpus, 60 new + 20 overrides + 10 tombstones, efSearch=300.
+  Exact read-through remains the correctness fallback when the COW engine is
+  inactive (`opts.forceExact = true` or pre-0.2.0 agenticow).
 
 ## On ADR-150 (removable augmentation)
 
@@ -114,18 +117,24 @@ and document a minimum jj version. Warrants a patch release (e.g. 2.3.7).
 ## Consequences
 
 - **Positive:** agents get atomic dual-state checkpoints; abandoned trajectories
-  cannot leave poisoned memory; winning deltas promote with their ops. The
-  read-through query is correct today and upgrades to native ANN transparently.
-- **Negative / deferred:** cross-branch search is O(n) read-through until PR
-  #617; the default `HashEmbedder` is a placeholder (inject a real model for
-  production); the op plane requires the `jj` CLI at runtime (the addon bundles
-  it). The upstream `jj branch` bug must be fixed in agentic-jujutsu for the
-  native `branchCreate`/`branchList`/`branchDelete` surface to work on modern jj.
+  cannot leave poisoned memory; winning deltas promote with their ops. Cross-
+  branch ANN query now routes through the native Rust COW dual-graph merge
+  (recall@10 = 1.0, O(log n) in parent size) — no longer O(n) read-through.
+- **Negative / deferred:** the default `HashEmbedder` is a placeholder (inject
+  a real ONNX model for production recall); the op plane requires the `jj` CLI
+  at runtime (the addon bundles it); the upstream `jj branch` bug must be fixed
+  in agentic-jujutsu for the native `branchCreate`/`branchList`/`branchDelete`
+  surface to work on modern jj. Darwin/win32/arm64 platform packages for
+  @ruvector/rvf-node@0.2.0 require CI cross-compilation (linux-x64-gnu ships;
+  other platforms still at 0.1.7 until a CI release cycle).
 
 ## Verification
 
 - `npm run -w @metaharness/jujutsu build` — clean (tsc, no native dep needed).
 - `npm run -w @metaharness/jujutsu test` — 15/15 (offline, mock-backed).
 - `npm run -w @metaharness/jujutsu smoke` — offline lifecycle + capability probe.
-- Real-peer check (with `agentic-jujutsu` + `agenticow` installed + bundled jj
-  0.35.0): full spawn→learn→query→revert→merge cycle green.
+- Real-peer check (with `agentic-jujutsu` + `agenticow@0.2.0` installed + bundled jj
+  0.35.0): full spawn→learn→query→revert→merge cycle green with native ANN.
+- Rust integration test `cow_ann_recall_vs_exact`: recall@10 = 1.0000 (rvf-runtime PR #618).
+- agenticow JS acceptance: `fork({nativeAnn:true}).query()` recall@10 = 1.0000 vs exact brute-force.
+- npm smoke install: `@ruvector/rvf-node@0.2.0` + `agenticow@0.2.0` verified from registry.
