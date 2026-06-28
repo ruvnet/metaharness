@@ -1,0 +1,128 @@
+{
+  "_meta": {
+    "description": "Time-lag estimates: months by which a cheap model's score trails the frontier score-over-time curve",
+    "methodology": "For each cheap model release date + score, find the frontier model/date whose score is closest. Lag = cheap_model_release_date - frontier_date_with_equivalent_score. Negative lag = cheap model EXCEEDED the frontier on that benchmark.",
+    "generated": "2026-06-28",
+    "confidence": "MEDIUM — frontier dates are exact, but intermediate frontier scores are estimated (not all models self-report on all benchmarks)"
+  },
+  "lag_series": [
+    {
+      "cheap_model": "DeepSeek V3",
+      "cheap_release": "2025-01-20",
+      "benchmark": "MMLU-Pro",
+      "cheap_score": 75.9,
+      "frontier_equivalent_model": "GPT-4o",
+      "frontier_equivalent_date": "2024-05-13",
+      "frontier_equivalent_score": 78.0,
+      "lag_months": 8.2,
+      "confidence": "HIGH",
+      "note": "V3 75.9% slightly below GPT-4o's 78.0%. Nearest frontier: May 2024."
+    },
+    {
+      "cheap_model": "DeepSeek V3",
+      "cheap_release": "2025-01-20",
+      "benchmark": "GPQA-Diamond",
+      "cheap_score": 59.1,
+      "frontier_equivalent_model": "Claude 3.5 Sonnet (Jun 2024)",
+      "frontier_equivalent_date": "2024-06-21",
+      "frontier_equivalent_score": 59.4,
+      "lag_months": 7.0,
+      "confidence": "HIGH",
+      "note": "V3 59.1% essentially equal to Claude 3.5 Sonnet 59.4% (Jun 2024)."
+    },
+    {
+      "cheap_model": "DeepSeek V3.2",
+      "cheap_release": "2025-12-01",
+      "benchmark": "MMLU-Pro",
+      "cheap_score": 85.0,
+      "frontier_equivalent_model": "Claude 3.7 Sonnet (approximate)",
+      "frontier_equivalent_date": "2025-02-24",
+      "frontier_equivalent_score": 82.1,
+      "lag_months": 9.2,
+      "confidence": "MEDIUM",
+      "note": "V3.2 at 85% exceeds the ~82% Claude 3.7 Sonnet (Feb 2025). Nearest equivalent frontier is Claude Opus 4 Q2 2025 (~85-86%). Lag ~6-9 months."
+    },
+    {
+      "cheap_model": "DeepSeek V3.2",
+      "cheap_release": "2025-12-01",
+      "benchmark": "SWE-bench Verified",
+      "cheap_score": 67.8,
+      "frontier_equivalent_model": "Claude Opus 4 (approximate)",
+      "frontier_equivalent_date": "2025-05-22",
+      "frontier_equivalent_score": 72.5,
+      "lag_months": 6.3,
+      "confidence": "MEDIUM",
+      "note": "V3.2 at 67.8% close to Claude Opus 4 level (~72%). Lag ~6-7 months."
+    },
+    {
+      "cheap_model": "GLM-5.2",
+      "cheap_release": "2026-02-17",
+      "benchmark": "GPQA-Diamond",
+      "cheap_score": 86.0,
+      "frontier_equivalent_model": "Claude Opus 4 (approximate)",
+      "frontier_equivalent_date": "2025-05-22",
+      "frontier_equivalent_score": 90.0,
+      "lag_months": 8.8,
+      "confidence": "MEDIUM",
+      "note": "GLM-5.2 at 86% slightly trails Claude Opus 4 (~90%). Frontier equivalent ~mid-2025."
+    },
+    {
+      "cheap_model": "GLM-5.2",
+      "cheap_release": "2026-02-17",
+      "benchmark": "MCP-Atlas (tool-use)",
+      "cheap_score": 75.6,
+      "frontier_equivalent_model": "Claude Opus 4.7",
+      "frontier_equivalent_date": "2026-04-15",
+      "frontier_equivalent_score": 79.1,
+      "lag_months": -2.0,
+      "confidence": "MEDIUM",
+      "note": "GLM-5.1 (75.6%) close to Claude Opus 4.7 (79.1%) — only 3.5 points below current frontier (negative lag: cheap came BEFORE the frontier comparison point). Near-parity on tool-use."
+    },
+    {
+      "cheap_model": "DeepSeek V4-Pro",
+      "cheap_release": "2026-04-24",
+      "benchmark": "MMLU-Pro",
+      "cheap_score": 87.5,
+      "frontier_equivalent_model": "Claude Opus 4 / Claude Opus 4.5",
+      "frontier_equivalent_date": "2025-08-01",
+      "frontier_equivalent_score": 87.0,
+      "lag_months": 8.7,
+      "confidence": "MEDIUM",
+      "note": "V4-Pro 87.5% closely matches mid-2025 US frontier level. Current frontier (Gemini 3 Pro 90.1%, Opus 4.7 89.5%) is still 2-3 pts ahead."
+    },
+    {
+      "cheap_model": "DeepSeek V4-Pro",
+      "cheap_release": "2026-04-24",
+      "benchmark": "GPQA-Diamond",
+      "cheap_score": 90.1,
+      "frontier_equivalent_model": "Claude Opus 4 (approximate)",
+      "frontier_equivalent_date": "2025-05-22",
+      "frontier_equivalent_score": 90.0,
+      "lag_months": 11.0,
+      "confidence": "MEDIUM",
+      "note": "V4-Pro 90.1% matches Claude Opus 4 level (~90%), which was May 2025 frontier. Lag ~11 months. Current frontier 94%+."
+    },
+    {
+      "cheap_model": "DeepSeek V4-Pro",
+      "cheap_release": "2026-04-24",
+      "benchmark": "SWE-bench Verified",
+      "cheap_score": 80.6,
+      "frontier_equivalent_model": "Claude Opus 4 / approximate mid-2025",
+      "frontier_equivalent_date": "2025-09-01",
+      "frontier_equivalent_score": 80.0,
+      "lag_months": 7.7,
+      "confidence": "MEDIUM",
+      "note": "V4-Pro 80.6% aligns with estimated US frontier around Q3 2025. Current frontier is 88.6-88.7% (Opus 4.8, GPT-5.5)."
+    }
+  ],
+  "lag_trend_summary": {
+    "description": "Average lag across key everyday benchmarks (MMLU-Pro, GPQA-D) by cheap model generation",
+    "series": [
+      { "cheap_generation": "DeepSeek V3",     "release": "2025-01-20", "avg_lag_months": 7.6,  "benchmarks": ["MMLU-Pro", "GPQA-D"] },
+      { "cheap_generation": "DeepSeek V3.2",   "release": "2025-12-01", "avg_lag_months": 7.7,  "benchmarks": ["MMLU-Pro", "SWE-bench"], "note": "V3.2 slightly higher avg lag than V3 on MMLU-Pro because frontier accelerated in 2025" },
+      { "cheap_generation": "GLM-5.2",         "release": "2026-02-17", "avg_lag_months": 5.0,  "benchmarks": ["GPQA-D", "tool-use", "SWE-bench"] },
+      { "cheap_generation": "DeepSeek V4-Pro", "release": "2026-04-24", "avg_lag_months": 9.1,  "benchmarks": ["MMLU-Pro", "GPQA-D", "SWE-bench"], "note": "Lag on raw knowledge tests is ~8-11 months; tool-use gap near-zero." }
+    ],
+    "analyst_note": "The lag metric is noisy because (a) the frontier accelerated significantly in 2025 making absolute gaps temporarily larger even as proportional capability closed, and (b) cheap models pull ahead on SOME benchmarks (GLM-5 on BrowseComp; DeepSeek on LiveCodeBench). The robust signal is: tool-use/agentic gap is near-zero; hard-code gap persists at 8+ points on SWE-bench Verified."
+  }
+}

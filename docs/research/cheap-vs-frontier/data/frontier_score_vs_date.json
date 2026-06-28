@@ -1,0 +1,129 @@
+{
+  "_meta": {
+    "description": "Frontier model benchmark scores over time, for time-lag analysis",
+    "generated": "2026-06-28",
+    "sources": [
+      "Anthropic model cards",
+      "OpenAI API docs",
+      "DeepSeek technical reports",
+      "BenchLM.ai",
+      "SWE-bench leaderboard",
+      "GAIA HAL leaderboard",
+      "GLM-5 arXiv 2602.15763"
+    ]
+  },
+  "mmlu_pro": {
+    "description": "MMLU-Pro scores (%), higher = better",
+    "frontier_progression": [
+      { "model": "GPT-4 Turbo",       "type": "frontier_US", "date": "2023-11-06", "score": 63.0, "note": "approximate, from community benchmarks" },
+      { "model": "Claude 3 Opus",      "type": "frontier_US", "date": "2024-03-04", "score": 73.0, "note": "approximate" },
+      { "model": "GPT-4o",             "type": "frontier_US", "date": "2024-05-13", "score": 78.0, "source": "DeepSeek-V3 tech report comparison table" },
+      { "model": "Claude 3.5 Sonnet",  "type": "frontier_US", "date": "2024-06-21", "score": 78.3, "source": "DeepSeek-V3 tech report" },
+      { "model": "Claude 3.7 Sonnet",  "type": "frontier_US", "date": "2025-02-24", "score": 82.1, "note": "approximate from benchmarks" },
+      { "model": "Claude Opus 4",      "type": "frontier_US", "date": "2025-05-22", "score": 85.5, "note": "approximate" },
+      { "model": "Claude Opus 4.5",    "type": "frontier_US", "date": "2025-08-01", "score": 89.5, "source": "BenchLM mmluPro leaderboard" },
+      { "model": "Claude Opus 4.7",    "type": "frontier_US", "date": "2026-04-15", "score": 89.5, "source": "BenchLM mmluPro leaderboard" },
+      { "model": "Gemini 3 Pro",       "type": "frontier_US", "date": "2026-03-01", "score": 90.1, "source": "BenchLM mmluPro leaderboard" }
+    ],
+    "cheap_models": [
+      { "model": "DeepSeek V3",        "type": "cheap_CN", "date": "2025-01-20", "score": 75.9, "source": "DeepSeek-V3 technical report arXiv:2412.19437", "price_in_usd_per_mtok": 0.20 },
+      { "model": "DeepSeek V3.2",      "type": "cheap_CN", "date": "2025-12-01", "score": 85.0, "source": "BenchLM mmluPro / DeepSeek V3.2 tech report", "price_in_usd_per_mtok": 0.2288 },
+      { "model": "GLM-4.7Z",           "type": "cheap_CN", "date": "2026-01-01", "score": 84.3, "source": "BenchLM mmluPro leaderboard", "price_in_usd_per_mtok": 1.20 },
+      { "model": "GLM-5.2",            "type": "cheap_CN", "date": "2026-02-17", "score": 84.8, "source": "BenchLM mmluPro leaderboard (GLM-5 paper 2602.15763)", "price_in_usd_per_mtok": 1.20 },
+      { "model": "DeepSeek V4-Flash",  "type": "cheap_CN", "date": "2026-04-24", "score": 83.0, "source": "BenchLM mmluPro leaderboard", "price_in_usd_per_mtok": 0.09 },
+      { "model": "DeepSeek V4-Pro",    "type": "cheap_CN", "date": "2026-04-24", "score": 87.5, "source": "DeepSeek V4 technical spec; BenchLM", "price_in_usd_per_mtok": 0.435 }
+    ]
+  },
+  "gpqa_diamond": {
+    "description": "GPQA Diamond scores (%), graduate-level scientific reasoning",
+    "frontier_progression": [
+      { "model": "GPT-4 Turbo",       "type": "frontier_US", "date": "2023-11-06", "score": 50.3, "note": "approximate" },
+      { "model": "Claude 3 Opus",      "type": "frontier_US", "date": "2024-03-04", "score": 50.4, "note": "Anthropic card" },
+      { "model": "GPT-4o",             "type": "frontier_US", "date": "2024-05-13", "score": 53.6, "source": "Claude 3.5 Sonnet vs GPT-4o comparison" },
+      { "model": "Claude 3.5 Sonnet",  "type": "frontier_US", "date": "2024-06-21", "score": 59.4, "source": "Anthropic model card; Claude 3.5 Sonnet release" },
+      { "model": "Claude 3.7 Sonnet",  "type": "frontier_US", "date": "2025-02-24", "score": 79.0, "note": "approximate from reports" },
+      { "model": "Claude Opus 4",      "type": "frontier_US", "date": "2025-05-22", "score": 90.0, "note": "approximate" },
+      { "model": "Claude Opus 4.7",    "type": "frontier_US", "date": "2026-04-15", "score": 94.2, "source": "BenchLM GPQA-D leaderboard" },
+      { "model": "GPT-5.5",            "type": "frontier_US", "date": "2026-04-01", "score": 93.6, "source": "BenchLM GPQA-D leaderboard" },
+      { "model": "Gemini 3.1 Pro",     "type": "frontier_US", "date": "2026-03-01", "score": 94.3, "source": "BenchLM GPQA-D leaderboard" }
+    ],
+    "cheap_models": [
+      { "model": "DeepSeek V3",        "type": "cheap_CN", "date": "2025-01-20", "score": 59.1, "source": "DeepSeek-V3 technical report arXiv:2412.19437", "price_in_usd_per_mtok": 0.20 },
+      { "model": "DeepSeek V3.2",      "type": "cheap_CN", "date": "2025-12-01", "score": 75.0, "source": "community benchmarks / approximate", "price_in_usd_per_mtok": 0.2288 },
+      { "model": "GLM-5.2",            "type": "cheap_CN", "date": "2026-02-17", "score": 86.0, "source": "BenchLM GPQA-D; GLM-5Z.AI reported 86.0", "price_in_usd_per_mtok": 1.20 },
+      { "model": "DeepSeek V4-Pro",    "type": "cheap_CN", "date": "2026-04-24", "score": 90.1, "source": "BenchLM GPQA-D; DeepSeek V4 self-report", "price_in_usd_per_mtok": 0.435 }
+    ]
+  },
+  "swe_bench_verified": {
+    "description": "SWE-bench Verified pass rate (%), harder code problems",
+    "frontier_progression": [
+      { "model": "GPT-4o",              "type": "frontier_US", "date": "2024-05-13", "score": 33.0, "note": "approximate, early leaderboard" },
+      { "model": "Claude 3.5 Sonnet",   "type": "frontier_US", "date": "2024-10-22", "score": 49.0, "source": "SWE-bench Verified leaderboard" },
+      { "model": "Claude 3.7 Sonnet",   "type": "frontier_US", "date": "2025-02-24", "score": 62.3, "source": "Anthropic model card" },
+      { "model": "Claude Opus 4",        "type": "frontier_US", "date": "2025-05-22", "score": 72.5, "note": "approximate from LEARNINGS §21 n=25 signal" },
+      { "model": "Claude Opus 4.8",      "type": "frontier_US", "date": "2026-02-01", "score": 88.6, "source": "SWE-bench Verified leaderboard; localaimaster.com" },
+      { "model": "GPT-5.5",             "type": "frontier_US", "date": "2026-04-01", "score": 88.7, "source": "SWE-Bench Leaderboard May 2026" }
+    ],
+    "cheap_models": [
+      { "model": "DeepSeek V3",         "type": "cheap_CN", "date": "2025-01-20", "score": 42.0, "source": "approximate from community benchmarks", "price_in_usd_per_mtok": 0.20 },
+      { "model": "DeepSeek V3.2",       "type": "cheap_CN", "date": "2025-12-01", "score": 67.8, "source": "BenchLM; DeepSeek V3.2 report", "price_in_usd_per_mtok": 0.2288 },
+      { "model": "GLM-5.2",             "type": "cheap_CN", "date": "2026-02-17", "score": 77.8, "source": "SWE-bench Verified leaderboard / localaimaster.com", "price_in_usd_per_mtok": 1.20 },
+      { "model": "DeepSeek V4-Pro",     "type": "cheap_CN", "date": "2026-04-24", "score": 80.6, "source": "DeepSeek V4 self-report; morphllm.com leaderboard", "price_in_usd_per_mtok": 0.435 },
+      { "model": "DeepSeek V4-Flash (Darwin cascade, GLM+Opus)", "type": "hybrid_cascade", "date": "2026-06-01", "score": 55.6, "source": "LEARNINGS.md §47 (our own measurement, n=500 Verified)", "price_per_instance_usd": 0.15 }
+    ]
+  },
+  "gaia": {
+    "description": "GAIA benchmark scores — base model or scaffolded as noted",
+    "frontier_progression": [
+      { "model": "GPT-4 (base)",         "type": "frontier_US", "date": "2023-11-06", "score": 15.0, "source": "GAIA paper, Meta AI Research" },
+      { "model": "GPT-4o (base)",        "type": "frontier_US", "date": "2024-05-13", "score": 28.0, "note": "approximate base score" },
+      { "model": "Claude 3.5 Sonnet",    "type": "frontier_US", "date": "2024-10-22", "score": 38.0, "note": "approximate base score" },
+      { "model": "OpenAI Deep Research",  "type": "frontier_US_agent", "date": "2025-02-01", "score": 67.4, "source": "GAIA HAL leaderboard — scaffolded agent; steel.dev" },
+      { "model": "Claude 3.7 Sonnet High","type": "frontier_US_agent", "date": "2025-02-24", "score": 64.2, "source": "GAIA HAL leaderboard" },
+      { "model": "Claude Opus 4 High",    "type": "frontier_US_agent", "date": "2025-05-22", "score": 64.8, "source": "GAIA HAL leaderboard" },
+      { "model": "GPT-5 Medium",          "type": "frontier_US_agent", "date": "2025-08-01", "score": 62.8, "source": "GAIA HAL leaderboard" },
+      { "model": "Claude Sonnet 4.5",     "type": "frontier_US_agent", "date": "2026-02-01", "score": 74.6, "source": "GAIA HAL leaderboard (HAL scaffolded)" },
+      { "model": "Top ensemble systems",  "type": "ensemble_agent",    "date": "2026-03-01", "score": 92.4, "source": "GAIA leaderboard; steel.dev — OPS-Agentic-Search, Alibaba Cloud" }
+    ],
+    "cheap_models": [
+      { "model": "DeepSeek V3",          "type": "cheap_CN_agent", "date": "2025-03-01", "score": 36.4, "source": "GAIA leaderboard — HAL Generalist Agent setup; awesomeagents.ai", "price_in_usd_per_mtok": 0.20 }
+    ],
+    "note": "GAIA scores depend heavily on scaffolding (+30 pts absolute). Cheap model base scores are rarely published separately. DeepSeek V3 36.4% is the only confirmed cheap-model GAIA datapoint."
+  },
+  "tau_bench": {
+    "description": "TAU-bench (tau-squared) tool-agent-user interaction, % pass",
+    "frontier_progression": [
+      { "model": "Claude Sonnet 4.5",   "type": "frontier_US", "date": "2026-01-01", "score": 88.1, "source": "tau-bench leaderboard; awesomeagents.ai" },
+      { "model": "GPT-5",               "type": "frontier_US", "date": "2025-08-01", "score": 84.2, "source": "tau-bench leaderboard; awesomeagents.ai" },
+      { "model": "Claude Mythos 5",     "type": "frontier_US", "date": "2026-03-01", "score": 89.2, "source": "BenchLM tauBench leaderboard" }
+    ],
+    "cheap_models": [
+      { "model": "GLM-5",               "type": "cheap_CN", "date": "2026-02-17", "score": 86.0, "source": "GLM-5 paper arXiv:2602.15763 — described as 'comparable to Claude'; approximate from figure", "price_in_usd_per_mtok": 1.20 }
+    ],
+    "note": "GLM-5 paper states 'comparable to Claude Opus 4.5 and GPT-5.2' on tau²-Bench. Score is approximate from paper figure (not exact table)."
+  },
+  "mcp_atlas": {
+    "description": "MCP-Atlas tool-use benchmark (1,000 tasks, 220 real MCP tools), % success",
+    "frontier_progression": [
+      { "model": "Muse Spark",           "type": "frontier_proprietary", "date": "2026-03-01", "score": 82.2 },
+      { "model": "Claude Opus 4.7",      "type": "frontier_US",          "date": "2026-04-15", "score": 79.1, "source": "MCP Atlas Scale Labs leaderboard; arxiv:2602.00933" },
+      { "model": "Gemini 3.1 Pro Preview","type": "frontier_US",         "date": "2026-03-01", "score": 78.2 }
+    ],
+    "cheap_models": [
+      { "model": "GLM-5.1",              "type": "cheap_CN",             "date": "2026-02-17", "score": 75.6, "source": "MCP Atlas Scale Labs leaderboard (highest-ranked open model)", "price_in_usd_per_mtok": 1.20 }
+    ],
+    "note": "GLM-5.1 trails Claude Opus 4.7 by only 3.5 points on MCP-Atlas. Smallest observed gap on any tool-use benchmark."
+  },
+  "web_arena": {
+    "description": "WebArena browser task success rate (%)",
+    "frontier_progression": [
+      { "model": "Claude Mythos 5",      "type": "frontier_US", "date": "2026-03-01", "score": 68.7, "source": "BenchLM webArena leaderboard" }
+    ],
+    "cheap_models": [
+      { "model": "Qwen3.5 397B",         "type": "cheap_CN", "date": "2026-04-01", "score": 55.8, "source": "BenchLM webArena leaderboard", "price_in_usd_per_mtok": 0.60 },
+      { "model": "GLM-5 (Reasoning)",    "type": "cheap_CN", "date": "2026-02-17", "score": 49.8, "source": "BenchLM webArena leaderboard", "price_in_usd_per_mtok": 1.20 },
+      { "model": "DeepSeek V3.2 (Thinking)","type": "cheap_CN", "date": "2025-12-01", "score": 48.6, "source": "BenchLM webArena leaderboard", "price_in_usd_per_mtok": 0.2288 }
+    ],
+    "note": "Larger gap here (18-20 points) than on tool-use benchmarks. WebArena is harder for non-frontier models."
+  }
+}

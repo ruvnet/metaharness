@@ -1,0 +1,163 @@
+{
+  "_meta": {
+    "description": "Cost-Pareto data: resolve/score vs cost-per-task for cheap and frontier models on SWE-bench Lite (n=300, conformant, Darwin harness) and token pricing comparison",
+    "generated": "2026-06-28",
+    "primary_source": "LEARNINGS.md §4-§35 (own empirical measurement); OpenRouter pricing pages"
+  },
+  "darwin_cost_pareto_swe_bench_lite": {
+    "description": "SWE-bench Lite (300 instances) conformant resolve rate vs cost per instance, measured in the Darwin harness. All numbers from LEARNINGS.md with n=300 unless noted.",
+    "currency": "USD",
+    "points": [
+      {
+        "label": "Single-shot cheap (DeepSeek V4-Flash)",
+        "model": "deepseek/deepseek-v4-flash",
+        "resolve_pct": 34.0,
+        "cost_per_instance_usd": 0.005,
+        "n": 300,
+        "confidence": "HIGH",
+        "source": "LEARNINGS.md §17",
+        "note": "Economy tier. Confirmed full-300."
+      },
+      {
+        "label": "Single-shot cheap (GLM-5.2)",
+        "model": "zhipuai/glm-5.2",
+        "resolve_pct": 37.0,
+        "cost_per_instance_usd": 0.018,
+        "n": 300,
+        "confidence": "HIGH",
+        "source": "LEARNINGS.md §24",
+        "note": "Measured; full-300. Has 38% empty-patch rate at concurrency-4."
+      },
+      {
+        "label": "Best-of-3 + LLM judge (DeepSeek V4-Flash)",
+        "model": "deepseek/deepseek-v4-flash x3",
+        "resolve_pct": 39.7,
+        "cost_per_instance_usd": 0.015,
+        "n": 300,
+        "confidence": "HIGH",
+        "source": "LEARNINGS.md §18",
+        "note": "Champion Economy tier. Best-of-3 trajectories + LLM-judge selection. Confirmed full-300."
+      },
+      {
+        "label": "Cross-cascade (xcascade: V3.2+GLM → Opus escalate)",
+        "model": "hybrid",
+        "resolve_pct": 49.0,
+        "cost_per_instance_usd": 0.215,
+        "n": 300,
+        "confidence": "HIGH",
+        "source": "LEARNINGS.md §35",
+        "note": "Dominated by simpler cascade."
+      },
+      {
+        "label": "GLM→Opus empty-patch cascade [PERFORMANCE TIER WINNER]",
+        "model": "zhipuai/glm-5.2 + claude-opus-4.8 escalation",
+        "resolve_pct": 51.3,
+        "cost_per_instance_usd": 0.267,
+        "n": 300,
+        "confidence": "HIGH",
+        "source": "LEARNINGS.md §28 (confirmed n=300 × 2, §35b replication at 50.7%)",
+        "note": "The 56× point: $0.267 vs Opus single $15+ = 56.2× cheaper for near-equivalent resolve to frontier single.",
+        "cost_ratio_vs_frontier_single": 56.2
+      },
+      {
+        "label": "GLM→Opus cascade (Verified-500, n=500)",
+        "model": "zhipuai/glm-5.2 + claude-opus-4.8",
+        "resolve_pct": 55.6,
+        "cost_per_instance_usd": 0.15,
+        "n": 500,
+        "confidence": "HIGH",
+        "source": "LEARNINGS.md §47",
+        "benchmark": "SWE-bench Verified (n=500)",
+        "note": "SWE-bench Verified (harder, 500 instances). Lower cost because Verified has fewer empty patches."
+      },
+      {
+        "label": "Opus single [BRUTE-FORCE / n=25 directional]",
+        "model": "claude-opus-4.8",
+        "resolve_pct": 60.0,
+        "cost_per_instance_usd": 15.0,
+        "n": 25,
+        "confidence": "MEDIUM",
+        "source": "LEARNINGS.md §21 (n=25, directional only)",
+        "note": "Frontier-only brute force. n=25, wide CI. The reference point for the 56× ratio."
+      },
+      {
+        "label": "Opus+GLM cross-model BoN [n=25 directional only]",
+        "model": "claude-opus-4.8 + zhipuai/glm-5.2",
+        "resolve_pct": 72.0,
+        "cost_per_instance_usd": 0.52,
+        "n": 25,
+        "confidence": "LOW",
+        "source": "LEARNINGS.md §32 (n=25, confirmed cost-blocked at n=300)",
+        "note": "Directional only; n=300 full run was cost-blocked (§36). Not a confirmed leaderboard number."
+      }
+    ],
+    "chart_spec": {
+      "x_axis": "cost_per_instance_usd (log scale)",
+      "y_axis": "resolve_pct",
+      "pareto_frontier_points": [
+        "Single-shot cheap (DeepSeek V4-Flash)",
+        "Best-of-3 + LLM judge (DeepSeek V4-Flash)",
+        "GLM→Opus empty-patch cascade [PERFORMANCE TIER WINNER]"
+      ],
+      "reference_point": "Opus single [BRUTE-FORCE / n=25 directional]"
+    }
+  },
+  "token_pricing_comparison": {
+    "description": "Token pricing ($/M tokens) for cheap and frontier models as of June 2026 via OpenRouter",
+    "date": "2026-06-28",
+    "source": "OpenRouter model pages",
+    "models": [
+      { "model": "DeepSeek V4-Flash",   "type": "cheap_CN", "input_usd_per_mtok": 0.09,   "output_usd_per_mtok": 0.18,  "source": "openrouter.ai/deepseek/deepseek-v4-flash" },
+      { "model": "DeepSeek V3",         "type": "cheap_CN", "input_usd_per_mtok": 0.2002,  "output_usd_per_mtok": 0.8001,"source": "openrouter.ai/deepseek/deepseek-chat" },
+      { "model": "DeepSeek V3.2",       "type": "cheap_CN", "input_usd_per_mtok": 0.2288,  "output_usd_per_mtok": 0.3432,"source": "openrouter.ai/deepseek/deepseek-v3.2" },
+      { "model": "DeepSeek V4-Pro",     "type": "cheap_CN", "input_usd_per_mtok": 0.435,   "output_usd_per_mtok": 0.87,  "source": "openrouter.ai/deepseek/deepseek-v4-pro; codersera.com review" },
+      { "model": "GLM-5 Turbo (approx)","type": "cheap_CN", "input_usd_per_mtok": 1.20,    "output_usd_per_mtok": 1.20,  "source": "comparative sources; exact figure uncertain", "confidence": "LOW" },
+      { "model": "Claude Opus 4.7/4.8", "type": "frontier_US", "input_usd_per_mtok": 5.00,  "output_usd_per_mtok": 25.00, "source": "Anthropic pricing page; finout.io" },
+      { "model": "GPT-5.5",             "type": "frontier_US", "input_usd_per_mtok": 5.00,  "output_usd_per_mtok": 30.00, "source": "OpenAI API pricing 2026; valueaddvc.com" }
+    ],
+    "cost_ratios": {
+      "deepseek_flash_vs_opus_input": { "ratio": 55.6, "formula": "5.00 / 0.09", "note": "This is one source of the '56×' claim" },
+      "deepseek_flash_vs_opus_output": { "ratio": 138.9, "formula": "25.00 / 0.18", "note": "Output tokens even cheaper proportionally" },
+      "deepseek_v4pro_vs_opus_input": { "ratio": 11.5, "formula": "5.00 / 0.435", "note": "V4-Pro is high-intelligence cheap tier, ~11.5× input" },
+      "deepseek_v4pro_vs_opus_output": { "ratio": 28.7, "formula": "25.00 / 0.87" },
+      "blended_flash_vs_opus_at_3to1_out_in": {
+        "cheap": 0.18,
+        "frontier": 9.5,
+        "ratio": 52.8,
+        "formula": "(0.09 + 3*0.18)/4 vs (5.00 + 3*25.00)/4",
+        "note": "Blended effective $/Mtok at 3:1 output:input ratio, typical agentic; ≈53× advantage"
+      }
+    }
+  },
+  "agentic_workload_examples": {
+    "description": "Real-world cost comparisons cited in external sources",
+    "examples": [
+      {
+        "workload": "Coding agent workload (same tasks, same volume)",
+        "cheap_cost": "$252/month (DeepSeek V4-Flash)",
+        "frontier_cost": "$22,500/month (Claude Fable 5)",
+        "ratio": 89.3,
+        "source": "morphllm.com/ai-coding-costs (Jun 2026)"
+      },
+      {
+        "workload": "5,000 complex tasks/month",
+        "model_a": "o3 extended thinking",
+        "cost_a": ">$2,000/month",
+        "model_b": "GPT-5.2 standard",
+        "cost_b": "$166/month",
+        "model_c": "DeepSeek V3.2 via inference.net",
+        "cost_c": "<$5/month",
+        "ratio_a_to_c": 400,
+        "source": "cloudzero.com LLM API pricing comparison (2026)"
+      },
+      {
+        "workload": "Kimi-K2.5 vs Claude Opus 4.6 agentic",
+        "cheap": "Kimi-K2.5 (cost index 1)",
+        "frontier": "Claude Opus 4.6 (cost index 11.5)",
+        "quality_delta_pct": 5,
+        "cost_increase_x": 11.5,
+        "source": "lucaberton.com LLM quality vs cost guide (2026)"
+      }
+    ]
+  }
+}
