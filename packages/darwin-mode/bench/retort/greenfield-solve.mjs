@@ -13,7 +13,17 @@
 //     the darwin-mode loop primitives — imported, not reimplemented);
 //   • model ROUTING — a cheap default model (deepseek-v4-pro) that ESCALATES to a
 //     frontier model after repeated build/test failures (the cost lever);
-//   • optional agenticow COW memory (--memory) for cross-step scratch state.
+//   • optional agenticow COW memory (--memory) — a copy-on-write vector store of
+//     every step's observation; before each turn the most-relevant SCROLLED-OUT
+//     observations are recalled and re-injected, fighting the transcript-window
+//     truncation that makes a cheap model lose earlier context on long tasks.
+//
+// Phase-2.1 efficiency (the timeout/latency lever, ADR-201): the loop now accepts
+// MULTI-ACTION turns — the model may emit a JSON ARRAY (or several JSON objects)
+// in one response and they are executed in order, returning all observations.
+// This collapses the slow per-call round-trips (write app + 3 tests + README +
+// run in ONE deepseek call instead of six), which both CUTS wall-clock latency
+// and lets the cheap-tier cells finish inside the cap instead of timing out.
 //
 // The OpenRouter key is read from env (OPENROUTER_API_KEY) or /tmp/.orkey and is
 // passed only to the LLM HTTP call — never written into the workspace or the prompt.
@@ -51,7 +61,8 @@ const BASE_URL = argv('--base-url', 'https://openrouter.ai/api/v1').replace(/\/$
 const KEY_ENV = argv('--api-key-env', 'OPENROUTER_API_KEY');
 const USE_MEMORY = has('--memory');
 const RUN_TIMEOUT_MS = +argv('--run-timeout', 120) * 1000;
-const MAX_TOKENS = +argv('--max-tokens', 8192);
+const MAX_TOKENS = +argv('--max-tokens', 12000);   // headroom for batched multi-file writes in one turn
+const MAX_ACTIONS_PER_TURN = +argv('--max-actions', 6);  // cap a multi-action turn so a runaway can't explode
 
 const key = (process.env[KEY_ENV] || (() => { try { return readFileSync('/tmp/.orkey', 'utf8'); } catch { return ''; } })()).trim();
 if (!key) { console.error('metaharness: no API key (set OPENROUTER_API_KEY or /tmp/.orkey)'); process.exit(2); }
@@ -59,6 +70,39 @@ if (!key) { console.error('metaharness: no API key (set OPENROUTER_API_KEY or /t
 const taskPath = isAbsolute(TASK_FILE) ? TASK_FILE : join(WORK, TASK_FILE);
 const problem = existsSync(taskPath) ? readFileSync(taskPath, 'utf8') : '';
 if (!problem.trim()) { console.error(`metaharness: empty/missing task spec at ${taskPath}`); process.exit(2); }
+
+// ── multi-action parsing (the latency lever): one turn may carry several tool
+//    calls — a JSON array OR several top-level {...} objects — executed in order.
+//    Backward compatible: a single {...} still yields a one-element list. Falls
+//    back to parseAction()'s error object so noop/error messaging is preserved. ──
+function parseActions(raw) {
+  if (!raw || typeof raw !== 'string') return [parseAction(raw)];
+  const stripped = raw.replace(/^>>>\s*/gm, '');
+  const fence = stripped.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const body = (fence ? fence[1] : stripped).trim();
+  const out = [];
+  // 1) explicit JSON array of actions.
+  if (body.startsWith('[')) {
+    try {
+      const arr = JSON.parse(body);
+      if (Array.isArray(arr)) for (const o of arr) if (o && typeof o.tool === 'string') out.push(o);
+      if (out.length) return out.slice(0, MAX_ACTIONS_PER_TURN);
+    } catch { /* fall through to object scan */ }
+  }
+  // 2) one-or-more top-level {...} objects (depth-aware), in document order.
+  let depth = 0, start = -1;
+  for (let i = 0; i < stripped.length; i++) {
+    if (stripped[i] === '{') { if (!depth) start = i; depth++; }
+    else if (stripped[i] === '}' && depth) {
+      depth--;
+      if (!depth && start >= 0) {
+        try { const o = JSON.parse(stripped.slice(start, i + 1)); if (o && typeof o.tool === 'string') out.push(o); }
+        catch { /* skip unparseable fragment */ }
+      }
+    }
+  }
+  return out.length ? out.slice(0, MAX_ACTIONS_PER_TURN) : [parseAction(raw)];
+}
 
 // ── the validated search/replace primitive (shared shape with solve-repair.mjs) ──
 function applyEdit(content, search, replace) {
@@ -150,10 +194,15 @@ const SYSTEM =
   + '{"tool":"grep","pattern":"reg","glob":"*.py"}    search the workspace\n'
   + '{"tool":"run","cmd":"python -m pytest -q"}        run a shell command (build / install deps / tests)\n'
   + '{"tool":"done"}                                  finish (only after tests pass)\n'
-  + 'Strategy: implement the code with `write`, add a README.md and AT LEAST 3 tests, install '
+  + 'EFFICIENCY: you MAY batch several independent actions in ONE turn by emitting a JSON ARRAY '
+  + 'of action objects, e.g. [{"tool":"write",...},{"tool":"write",...},{"tool":"run",...}]. They '
+  + 'run in order and you get all observations back. Batch all your file writes (app + README + '
+  + 'the >=3 tests) into ONE array, then `run` — this is far faster than one file per turn. Do NOT '
+  + 'batch a `run` you need the output of before deciding the next edit; inspect, then fix.\n'
+  + 'Strategy: implement the code with `write` (batched), add a README.md and AT LEAST 3 tests, install '
   + 'any deps and RUN the build + tests with `run`, fix failures from the output, and only then '
   + 'call done. Prefer the standard/embedded options the spec names (e.g. SQLite). Keep the '
-  + 'project runnable from the current directory. Output ONE JSON action per turn.';
+  + 'project runnable from the current directory. Output ONE JSON action OR a JSON array per turn.';
 
 // ── OpenRouter chat call with usage/cost; returns {raw, cost, tokens} ──
 async function llmCall(model, convo) {
@@ -178,11 +227,62 @@ async function llmCall(model, convo) {
   throw lastErr ?? new Error('llm failed');
 }
 
-// ── optional agenticow COW memory (best-effort; absent => no-op) ──
-let memory = null;
+// ── optional agenticow COW memory (best-effort; absent/broken => no-op) ──
+// A genuine integration of agenticow's copy-on-write vector store: every step's
+// observation is embedded (cheap deterministic char-trigram hash → fixed dim) and
+// ingested; before each turn we QUERY for the observations most relevant to the
+// current state and re-inject the ones that have SCROLLED OUT of the truncated
+// transcript window. This directly tests whether recalling lost context helps the
+// cheap model finish. Fully guarded — any failure degrades to no-op, never fatal.
+const MEM_DIM = 64;
+function embedText(s) {
+  const v = new Float32Array(MEM_DIM);
+  const str = (' ' + String(s || '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ') + ' ');
+  for (let i = 0; i < str.length - 2; i++) {
+    let h = 0x811c9dc5;
+    for (let j = 0; j < 3; j++) { h ^= str.charCodeAt(i + j); h = Math.imul(h, 0x01000193); }
+    v[(h >>> 0) % MEM_DIM] += 1;
+  }
+  let n = 0; for (let i = 0; i < MEM_DIM; i++) n += v[i] * v[i];
+  n = Math.sqrt(n) || 1; for (let i = 0; i < MEM_DIM; i++) v[i] /= n;
+  return v;
+}
+let mem = null;             // agenticow store
+const memText = new Map();  // id -> full observation text (the store holds vectors only)
+let memCalls = 0;
 if (USE_MEMORY) {
-  try { const m = await import('agenticow'); memory = (m.default || m).create ? (m.default || m).create() : null; }
-  catch { console.error('metaharness: agenticow not installed; continuing without COW memory'); }
+  try {
+    const m = await import('agenticow');
+    const open = m.open || (m.default && m.default.open);
+    if (typeof open === 'function') {
+      // Store OUTSIDE the scored workspace so the .rvf artifact never confounds
+      // Retort's code-quality / spec-gate scoring of the produced source tree.
+      const os = await import('node:os');
+      const memPath = join(os.tmpdir(), `mh-mem-${process.pid}-${Date.now()}.rvf`);
+      mem = open(memPath, { dimension: MEM_DIM, metric: 'l2', track: false });
+    } else { console.error('metaharness: agenticow has no open(); continuing without COW memory'); }
+  } catch (e) { console.error(`metaharness: agenticow unavailable (${String(e.message || e).split('\n')[0]}); continuing without COW memory`); }
+}
+function memStore(step, text) {
+  if (!mem) return;
+  try { const id = step; memText.set(id, text); mem.ingest(embedText(text), [id]); }
+  catch { /* non-fatal */ }
+}
+function memRecall(queryText, excludeIds, k = 3) {
+  if (!mem) return '';
+  try {
+    memCalls++;
+    const res = mem.query(embedText(queryText), Math.min(k + excludeIds.size, 8));
+    const ids = (res && (res.ids || res)) || [];
+    const picks = [];
+    for (const id of ids) {
+      const n = typeof id === 'number' ? id : (id && id.id);
+      if (n == null || excludeIds.has(n) || !memText.has(n)) continue;
+      picks.push(`[recalled step ${n}] ${memText.get(n).slice(0, 600)}`);
+      if (picks.length >= k) break;
+    }
+    return picks.length ? `--- RELEVANT EARLIER CONTEXT (recalled from memory) ---\n${picks.join('\n')}\n--- end recalled context ---\n` : '';
+  } catch { return ''; }
 }
 
 // ── the bounded ReAct loop (greenfield variant of agenticSolve) ──
@@ -192,34 +292,50 @@ let cost = 0, tokens = 0, calls = 0, done = false, escalated = false;
 let model = MODEL;
 const header = `--- TASK.md ---\n${problem.slice(0, 7000)}\n--- begin. Output ONE JSON action. ---`;
 
+const recalledIds = new Set();
 for (let step = 1; step <= MAX_STEPS && !done; step++) {
   // routing: escalate to the frontier tier after repeated build/test failures.
   if (ESCALATE && !escalated && runFailures >= ESCALATE_AFTER) {
     model = ESCALATE; escalated = true;
     transcript.push({ actionRaw: '(router)', obs: `⚙️ SYSTEM: escalated to frontier model ${ESCALATE} after ${runFailures} consecutive failures.` });
   }
-  const convo = header + '\n' + transcript.map((t) => `>>> ${t.actionRaw}\n${t.obs}`).join('\n').slice(-14000);
+  let convo = header + '\n' + transcript.map((t) => `>>> ${t.actionRaw}\n${t.obs}`).join('\n').slice(-14000);
+  // memory: recall scrolled-out observations relevant to the most recent state.
+  if (mem) {
+    const recent = transcript.slice(-3).map((t) => t.obs).join('\n') || problem;
+    const inWindow = new Set(transcript.slice(-12).map((_, i) => transcript.length - 12 + i + 1).filter((n) => n > 0));
+    const block = memRecall(recent, inWindow);
+    if (block) convo = header + '\n' + block + convo.slice(header.length + 1);
+  }
   let r;
   try { r = await llmCall(model, convo); }
   catch (e) { transcript.push({ actionRaw: '(model error)', obs: String(e.message || e) }); break; }
   calls++; cost += r.cost || 0; tokens += r.tokens || 0;
-  const action = parseAction(r.raw);
-  let obs;
-  if (action.tool === 'done' || action.tool === 'submit') { done = true; obs = 'done.'; }
-  else if (action.tool === 'noop') obs = `error: ${action.error}. Output ONE valid JSON tool action.`;
-  else if (tools[action.tool]) obs = tools[action.tool](action);
-  else obs = `error: unknown tool "${action.tool}". Valid: ls, read, write, edit, line_edit, grep, run, done.`;
-  if (['read', 'grep', 'ls'].includes(action.tool)) {
-    const h = stateHash(action.tool + '|' + JSON.stringify(action) + '|' + obs);
-    if (seen.has(h)) obs += '\n⚠️ SYSTEM: you already ran this exact action with this result — change strategy (write/run/edit) or call done.';
-    else seen.add(h);
-  }
-  if (memory) { try { memory.set(`step:${step}`, JSON.stringify({ tool: action.tool, obs: obs.slice(0, 500) })); } catch { /**/ } }
-  const actionRaw = JSON.stringify(action.tool === 'noop' ? { raw: (r.raw || '').slice(0, 160) } : action).slice(0, 400);
-  transcript.push({ actionRaw, obs });
-  console.error(`[step ${step}/${MAX_STEPS}] ${action.tool}${escalated ? ' (esc)' : ''} — ${obs.split('\n')[0].slice(0, 100)}`);
-}
 
-const summary = { tokens, cost: +cost.toFixed(6), steps: transcript.length, calls, model, escalated, done };
+  // multi-action: execute every tool call the model emitted this turn, in order.
+  const actions = parseActions(r.raw);
+  let firstTool = actions[0] ? actions[0].tool : 'noop';
+  for (let ai = 0; ai < actions.length && !done; ai++) {
+    const action = actions[ai];
+    let obs;
+    if (action.tool === 'done' || action.tool === 'submit') { done = true; obs = 'done.'; }
+    else if (action.tool === 'noop') obs = `error: ${action.error}. Output ONE valid JSON tool action (or a JSON array of actions).`;
+    else if (tools[action.tool]) obs = tools[action.tool](action);
+    else obs = `error: unknown tool "${action.tool}". Valid: ls, read, write, edit, line_edit, grep, run, done.`;
+    if (['read', 'grep', 'ls'].includes(action.tool)) {
+      const h = stateHash(action.tool + '|' + JSON.stringify(action) + '|' + obs);
+      if (seen.has(h)) obs += '\n⚠️ SYSTEM: you already ran this exact action with this result — change strategy (write/run/edit) or call done.';
+      else seen.add(h);
+    }
+    const actionRaw = JSON.stringify(action.tool === 'noop' ? { raw: (r.raw || '').slice(0, 160) } : action).slice(0, 400);
+    transcript.push({ actionRaw, obs });
+    memStore(transcript.length, `${action.tool}: ${obs}`);
+    console.error(`[step ${step}/${MAX_STEPS}${actions.length > 1 ? `.${ai + 1}/${actions.length}` : ''}] ${action.tool}${escalated ? ' (esc)' : ''} — ${obs.split('\n')[0].slice(0, 100)}`);
+  }
+  void firstTool; void recalledIds;
+}
+if (mem) { try { mem.close && mem.close(); } catch { /**/ } }
+
+const summary = { tokens, cost: +cost.toFixed(6), steps: transcript.length, calls, model, escalated, done, memory_used: !!mem, memory_recalls: memCalls };
 try { writeFileSync(OUT, JSON.stringify({ ...summary, lang: LANG }, null, 2)); } catch { /**/ }
 console.log(JSON.stringify(summary));

@@ -18,6 +18,17 @@ cost win comes at a real **latency** cost (MetaHarness is 2–3× slower) and a 
 excluded as tooling). This is *stronger* than our pre-registered expectation
 ("cheaper, not more accurate") on the coverage axis, but honest about the tradeoffs.
 
+> **Iteration-2 update (2026-06-29, see §6).** We fixed the #1 lever — the timeout —
+> with a raised cap (12→20 min) **and** multi-action ReAct turns (batch tool calls
+> in one LLM round-trip), and added **agenticow memory** as a real DoE factor.
+> Result, on a held-out cheap-tier re-run (48 cells): timeouts **8→4**, and
+> metaharness/cheap's **all-in pass-rate doubled, 0.42→0.83** (genuine pass-rate
+> 0.62→0.95, now *tying* claude-code/frontier's 0.96). **agenticow memory is a
+> null** (coverage main-effect p=0.50). **Beyond-SOTA is NOT reached:** the fix
+> moved metaharness/cheap toward the frontier on reliability, but it still does
+> **not Pareto-dominate** claude-code/frontier — lower coverage (0.91 vs 0.96) and
+> ~3× higher latency keep it the **cost-optimal corner**, now a *stronger* corner.
+
 ---
 
 ## The grid (validated plan, real metered run)
@@ -214,6 +225,110 @@ frontier.
 Raise the timeout (recover the 8 lost cheap cells), add the **memory** and **routing**
 factors, bump to 5 reps, and add brazil-bench — to test whether MetaHarness can move
 from *a cheaper frontier point* to *dominating* claude-code/frontier on a held-out split.
+
+---
+
+## 6. Iteration 2 — timeout/efficiency fix + memory factor (held-out re-run, 2026-06-29)
+
+The Phase-2 diagnosis named one genuine, non-overfitting lever: **all 10 tooling
+fails were MetaHarness 12-min timeouts** (deepseek latency), which crushed
+metaharness/cheap's pass-rate (0.62) despite its high coverage. Iteration 2 fixes
+that lever and tests the unattributed memory factor, on a **held-out re-run of the
+cheap tier only** (48 cells: `language{python,ts,go,rust} × memory{none,agenticow}
+× task{rest-api-crud,cli-data-pipeline} × 3 reps`, model = deepseek-v4-pro). The
+claude-code and metaharness/frontier cells from Phase-2 are reused unchanged; only
+the cheap tier was re-run with the improved harness. Spend: **$5.01** of a $30 cap.
+
+**The fix (two parts, both in `greenfield-solve.mjs`):**
+1. **Multi-action turns** — the model may emit a JSON *array* of tool calls in one
+   turn (e.g. write app + 3 tests + README, then `run`), executed in order. This
+   collapses 5–6 slow deepseek round-trips into one, cutting wall-clock on the
+   cells that used to crawl to the cap. (A trivial smoke task went 6 calls → 2.)
+2. **Raised per-cell cap 12 → 20 min** (Retort's adaptive estimator extends it
+   further for slow languages — it auto-bumped to 22 min for rust/ts).
+
+**Did the timeout fix work? YES on reliability — partially on latency.**
+
+| metric (metaharness/cheap) | v1 (Phase-2) | v2 (this fix, memory=none) |
+|---|---|---|
+| timeouts (of 24 cheap cells) | **8** | **3** (all typescript + cli-data-pipeline) |
+| **all-in pass-rate** (timeouts = fail) | **0.42** [0.24, 0.61] | **0.83** [0.64, 0.93] |
+| genuine pass-rate (Wilson 95%) | 0.62 [0.39, 0.82] | **0.95** [0.77, 0.99] |
+| coverage (mean, genuine) | 0.954† | 0.913 |
+| latency (s) — mean / **median** | 481 / 498 | 524 / **382** |
+| $/task | $0.102 | $0.085 |
+
+The **all-in pass-rate doubled (0.42→0.83, disjoint CIs)** — the fix converted 5 of
+8 timeouts into completions (python, go, rust, and the crud typescript cells all
+now finish). The genuine pass-rate (0.95) now **ties** claude-code/frontier (0.96).
+**†The coverage "drop" 0.954→0.913 is a survivorship *correction*, not a
+regression:** v1's 0.954 was computed only on the 16 easy cells that finished; v2
+*includes* the recovered hard cells, which complete with partial coverage (rust
+0.67–0.89, cli-python 0.87). Latency is the honest caveat — the **median** improved
+(498→382 s) because typical cells are now fast (python 142–418 s), but the **mean
+rose** (481→524 s) because a recovered timeout completes slowly (~600–900 s) rather
+than being excluded. Multi-action helps easy cells; hard cells still spiral.
+
+**The residual:** **typescript + cli-data-pipeline is the one stubborn timeout**
+(3/3 reps still hit the 20-min cap at memory=none; deepseek loops on 100k–160k-token
+rewrites it can't converge). Everything else recovered. A 30-min cap would likely
+recover these too, but at poor latency — diminishing returns.
+
+**Does agenticow memory help? NO — a null result.** Memory was wired as a *real*
+COW vector store (every step's observation embedded + the most-relevant
+scrolled-out ones recalled into the next prompt; v1's `--memory` was a silent no-op
+calling a nonexistent API). Memory-factor ANOVA on the 44 genuine cheap cells:
+
+| response | memory main effect | p | verdict |
+|---|---|---|---|
+| requirement_coverage | **1.1%** | 0.50 | not significant |
+| code_quality | ~0% | — | not significant |
+| cost_per_task | **0.0%** | 0.96 | no effect |
+| latency_s | ~0% | — | not significant |
+
+agenticow/none coverage 0.956/0.913 and pass-rate 0.87/0.95 — overlapping CIs, no
+significant difference. The only flicker is a **marginal `memory×task` (p≈0.07)**:
+memory helped the harder *cli* task (recovered 2 of 3 ts/cli timeouts, lifted rust
+cli 0.67→1.0) but *hurt* the easier *crud* task (rust 0.89→0.69) — i.e. recalled
+context occasionally confuses a cheap model on simple work. Net across the grid:
+**a wash.** On these two greenfield tasks at ≤25 steps, COW memory does not move the
+needle (consistent with the prior `darwin evolve is NULL on a cheap model` finding).
+
+**New Pareto frontier (combined-v2, genuine cells):**
+
+```
+stack                    n   cov     $/task    latency  pass-rate (Wilson 95%)
+claude-code/frontier     24  0.958   $1.232    170 s    0.96 [0.80, 0.99]   ← accuracy + latency corner
+metaharness/frontier     22  0.944   $1.076    262 s    0.86 [0.67, 0.95]
+metaharness/cheap (v2)   21  0.913   $0.085    524 s    0.95 [0.77, 0.99]   ← cost corner, ~14× cheaper
+claude-code/cheap        24  0.451   $0.254    148 s    0.38 [0.21, 0.57]   ← dominated
+```
+
+- **Cost-Pareto frontier:** claude-code/frontier, metaharness/frontier, **metaharness/cheap**; claude-code/cheap dominated.
+- **Latency-Pareto:** both claude-code stacks dominate; both MetaHarness stacks dominated (latency is still MetaHarness's weak axis).
+- **Combined-v2 ANOVA** (n=91) reproduces Phase-2 + Retort: **model** governs coverage (16.4%) and cost (67.2%), **language** governs quality (26.8%), **harness** governs latency (30.6%), with a significant **model×harness** interaction on coverage (8.5%, p<0.001).
+
+**Verdict — beyond-SOTA reached? NO. Honest plateau at a *stronger* cost-corner.**
+metaharness/cheap does **not** Pareto-dominate claude-code/frontier:
+- ✅ pass-rate now **ties** the frontier (0.95 vs 0.96, overlapping CIs) — **up from 0.62**; the timeout fix delivered this.
+- ✅ **~14× cheaper** ($0.085 vs $1.232).
+- ❌ **lower coverage** (0.913 vs 0.958) — partial-credit on the recovered hard cells.
+- ❌ **~3× higher latency** (524 s vs 170 s).
+
+The fix moved metaharness/cheap decisively toward the frontier **on the reliability
+axis** (it no longer loses on pass-rate), but **coverage and latency keep it a
+distinct, cheaper corner of the same frontier — not a domination.** This is a
+*genuine* improvement (a harness-config fix measured on held-out cells, not
+task-tuning) and a stronger result than Phase-2's 0.62-pass-rate corner, but
+**beyond-SOTA — Pareto-dominating claude-code/frontier — is not reached.** The
+remaining gap is the cheap model's coverage/latency on hard cells (ts/cli), which a
+harness change alone did not close; closing it needs a more capable cheap model or
+task-specific routing, not more orchestration.
+
+*Iteration-2 artifacts:* `results-cheap-v2.csv` (48 re-run cells), `results-combined-v2.csv`
+(96 rows: Phase-2 frame with the cheap tier swapped for the fixed harness),
+`placement-analysis-v2.json` (full before/after + memory ANOVA + Pareto), `harvest2.py`,
+`analyze2.py`. Harness fix in `packages/darwin-mode/bench/retort/greenfield-solve.mjs`.
 
 ---
 
