@@ -14,6 +14,7 @@ import type {
 import { extractApiKey, verifyApiKey } from '../auth/apiKey';
 import { resolveTier } from '../tier/resolveTier';
 import { executeNonStream, effectiveEscalation } from '../core/pipeline';
+import { loadInflightScanner, streamInflight } from '../midstream/inflight';
 import { priceUsd } from '../metering/pricing';
 import { makeCounter } from '../metering/tokenizer';
 import { meter } from '../metering/record';
@@ -177,6 +178,20 @@ async function streamResponse(
   const id = `chatcmpl-${requestId}`;
   const writeChunk = (obj: unknown) => res.write(`data: ${JSON.stringify(obj)}\n\n`);
 
+  // `inflight` (§3.5, Option C′): midstream-only. The firewall returns a scanner ONLY when
+  // @midstream/wasm is present; today it is 404 on npm so loadInflightScanner → null and we
+  // FALL THROUGH to stream_oneshot (Option B). This hook is off-by-default + fully working
+  // without midstream; the SDK-safe truncation protocol lives in streamInflight for when the
+  // WASM is vendored/published.
+  if (body.escalation === 'inflight') {
+    const scanner = await loadInflightScanner(body);
+    if (scanner) {
+      await streamInflight({ deps, res, requestId, body, resolution, key, keyPrefix, startedAt, scanner });
+      return;
+    }
+    // midstream absent (operative state today) → degrade to Option B below.
+  }
+
   // `buffered`: run the full non-stream pipeline (with τ escalation), then flush as a
   // pseudo-stream — trades TTFT for verifier-gated escalation on a streaming-shaped reply.
   if (effectiveEscalation(body) === 'buffered') {
@@ -276,6 +291,7 @@ async function streamResponse(
   });
 
   for await (const delta of deps.provider.stream(model, body)) {
+    if (finalized) break; // client disconnected → stop streaming (close handler already billed)
     if (delta.content) completionCounter.pushDelta(delta.content);
     writeChunk({
       id,
@@ -285,6 +301,10 @@ async function streamResponse(
       choices: [{ index: 0, delta: delta.content ? { content: delta.content } : {}, finish_reason: delta.finishReason ?? null }],
     });
   }
+
+  // If the client disconnected, the close handler already wrote the truncated ledger row;
+  // do NOT run the normal-completion path (it would overwrite that row for the same requestId).
+  if (finalized) return;
 
   // Final usage estimate (§5.1 local floor) + x_cognitum on a trailing chunk.
   const completionTokens = completionCounter.completionTokens();
