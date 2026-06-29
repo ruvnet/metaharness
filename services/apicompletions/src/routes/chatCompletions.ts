@@ -1,9 +1,11 @@
 // POST /v1/chat/completions (ADR-203 §3.1). Orchestrates the full request flow:
-//   auth → tier → route → infer (JSON or SSE) → post-gen τ escalation → x_cognitum.
-// Metering (usage_ledger write + Pub/Sub publish) and the scatter-gather rate limiter are
-// wired in a later phase (§5.1/§5.3); this handler owns the CORE request path (§3.1 a–f).
+//   auth → idempotency → tier → rate-limit → route → infer (JSON or SSE) → post-gen τ
+//   escalation → meter (usage_ledger truth + Pub/Sub rollup) → x_cognitum.
+// Metering (§5.1), the scatter-gather rate limiter (§5.3), and the 24h idempotency cache
+// (§5.3) are now wired here; the core routing/inference path is owned by core/pipeline.
 import type { Request, Response } from 'express';
 import type { AppDeps } from '../deps';
+import type { ApiKeyDoc } from '../auth/apiKey';
 import type {
   ChatCompletionRequest,
   ChatCompletionResponse,
@@ -13,10 +15,14 @@ import { extractApiKey, verifyApiKey } from '../auth/apiKey';
 import { resolveTier } from '../tier/resolveTier';
 import { executeNonStream, effectiveEscalation } from '../core/pipeline';
 import { priceUsd } from '../metering/pricing';
+import { makeCounter } from '../metering/tokenizer';
+import { meter } from '../metering/record';
 import {
+  idempotencyKeyOf,
   mergeRoutingControls,
   requestIdOf,
   sendError,
+  sendRateLimited,
   setCognitumHeaders,
 } from '../core/http';
 
@@ -38,6 +44,7 @@ function validateChatBody(body: unknown): ChatCompletionRequest | { error: strin
 export function makeChatCompletions(deps: AppDeps) {
   return async function postChatCompletions(req: Request, res: Response): Promise<void> {
     const requestId = requestIdOf(req);
+    const startedAt = Date.now();
 
     // a. AUTH — real cog_ scheme (§6): X-API-Key / Bearer → SHA-256 → store lookup.
     const auth = await verifyApiKey(extractApiKey(req.headers), deps.keyStore);
@@ -54,6 +61,19 @@ export function makeChatCompletions(deps: AppDeps) {
     const body = validated;
     mergeRoutingControls(body, req.headers);
 
+    // a'. IDEMPOTENCY (§5.3) — a replay returns the cached result and is NOT re-billed or
+    // rate-limited (short-circuits before tier/rate-limit/metering).
+    const idemKey = idempotencyKeyOf(req.headers);
+    if (idemKey) {
+      const cached = await deps.idempotency.lookup(idemKey);
+      if (cached) {
+        res.setHeader('X-Request-Id', requestId);
+        res.setHeader('Idempotent-Replay', 'true');
+        res.status(cached.status).json(cached.body);
+        return;
+      }
+    }
+
     // b. TIER — model dial + difficulty + scope enforcement (§3.3, §6 item 2).
     const resolution = resolveTier(body, auth.key);
     if (resolution.kind === 'error') {
@@ -61,10 +81,18 @@ export function makeChatCompletions(deps: AppDeps) {
       return;
     }
 
+    // c. RATE-LIMIT (§5.3) — scatter-gather per (keyHash, tier), per-tier limit.
+    const limit = deps.config.tierPools[resolution.tier].rateLimitPerMin;
+    const rl = await deps.rateLimiter.checkAndRecord(auth.key.key, resolution.tier, limit);
+    if (!rl.allowed) {
+      sendRateLimited(res, requestId, rl.retryAfterMs ?? 1000);
+      return;
+    }
+
     try {
       // e/f. INFER + ESCALATE.
       if (body.stream) {
-        await streamResponse(deps, req, res, requestId, body, resolution);
+        await streamResponse(deps, req, res, requestId, body, resolution, auth.key, auth.rawPrefix, startedAt);
         return;
       }
 
@@ -96,6 +124,23 @@ export function makeChatCompletions(deps: AppDeps) {
         usage: outcome.usage,
         x_cognitum,
       };
+
+      // g. METER — ledger (truth, awaited) + Pub/Sub rollup (fire-and-forget) (§5.1).
+      await meter(deps, {
+        requestId,
+        key: auth.key,
+        keyPrefix: auth.rawPrefix,
+        tier: outcome.resolvedTier,
+        resolvedModel: outcome.resolvedModel,
+        usage: outcome.usage,
+        priceUsd: outcome.priceUsd,
+        escalated: outcome.escalated,
+        latencyMs: Date.now() - startedAt,
+        tokensFromLocalFloor: outcome.tokensFromLocalFloor,
+        idempotencyKey: idemKey,
+      });
+
+      if (idemKey) await deps.idempotency.store(idemKey, { status: 200, body: response });
       res.status(200).json(response);
     } catch (err) {
       sendError(
@@ -113,6 +158,9 @@ export function makeChatCompletions(deps: AppDeps) {
  * SSE streaming (§3.3). Default `stream_oneshot`: route ONCE up front on the input signal
  * (resolution.tier already reflects it) — no post-gen escalation. `buffered` opts into
  * verifier-gated escalation at the cost of TTFT (buffer → verify → pseudo-stream).
+ * Streaming closes the truncation billing hole (§5.1): a FAMILY-CORRECT progressive counter
+ * is fed each delta, and the ledger is written from the local floor on normal completion OR
+ * on early client disconnect (flagged `truncated:true`) — a dropped stream is still billed.
  */
 async function streamResponse(
   deps: AppDeps,
@@ -121,6 +169,9 @@ async function streamResponse(
   requestId: string,
   body: ChatCompletionRequest,
   resolution: ReturnType<typeof resolveTier> & { kind: 'ok' },
+  key: ApiKeyDoc,
+  keyPrefix: string,
+  startedAt: number,
 ): Promise<void> {
   const created = Math.floor(Date.now() / 1000);
   const id = `chatcmpl-${requestId}`;
@@ -157,6 +208,18 @@ async function streamResponse(
     });
     res.write('data: [DONE]\n\n');
     res.end();
+    await meter(deps, {
+      requestId,
+      key,
+      keyPrefix,
+      tier: outcome.resolvedTier,
+      resolvedModel: outcome.resolvedModel,
+      usage: outcome.usage,
+      priceUsd: outcome.priceUsd,
+      escalated: outcome.escalated,
+      latencyMs: Date.now() - startedAt,
+      tokensFromLocalFloor: outcome.tokensFromLocalFloor,
+    });
     return;
   }
 
@@ -174,9 +237,46 @@ async function streamResponse(
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
 
-  let collected = '';
+  // §5.1 progressive billing: family-correct counter for the model that is actually serving,
+  // seeded with the prompt tokens; fed each outbound delta as bytes stream out.
+  const counter = makeCounter(model, tier);
+  const promptTokens = body.messages.reduce((n, m) => {
+    counter.pushDelta(m.content ?? '');
+    return n;
+  }, 0);
+  const promptFloor = counter.completionTokens();
+  // Reset the counter to count COMPLETION bytes only (prompt was just measured above).
+  const completionCounter = makeCounter(model, tier);
+
+  // Truncation guard (§5.1): if the client drops the TCP connection before [DONE], bill the
+  // partial answer from the local floor with truncated:true rather than losing the usage.
+  let finalized = false;
+  res.on('close', () => {
+    if (finalized) return;
+    finalized = true;
+    const completionTokens = completionCounter.completionTokens();
+    const usage = {
+      prompt_tokens: promptFloor,
+      completion_tokens: completionTokens,
+      total_tokens: promptFloor + completionTokens,
+    };
+    void meter(deps, {
+      requestId,
+      key,
+      keyPrefix,
+      tier,
+      resolvedModel: model,
+      usage,
+      priceUsd: priceUsd(deps.config, tier, usage),
+      escalated: false,
+      latencyMs: Date.now() - startedAt,
+      tokensFromLocalFloor: true,
+      truncated: true,
+    });
+  });
+
   for await (const delta of deps.provider.stream(model, body)) {
-    if (delta.content) collected += delta.content;
+    if (delta.content) completionCounter.pushDelta(delta.content);
     writeChunk({
       id,
       object: 'chat.completion.chunk',
@@ -185,11 +285,15 @@ async function streamResponse(
       choices: [{ index: 0, delta: delta.content ? { content: delta.content } : {}, finish_reason: delta.finishReason ?? null }],
     });
   }
+
   // Final usage estimate (§5.1 local floor) + x_cognitum on a trailing chunk.
-  const approx = (s: string) => Math.max(1, Math.ceil(s.length / 4));
-  const promptTokens = body.messages.reduce((n, m) => n + approx(m.content ?? ''), 0);
-  const completionTokens = approx(collected);
-  const usage = { prompt_tokens: promptTokens, completion_tokens: completionTokens, total_tokens: promptTokens + completionTokens };
+  const completionTokens = completionCounter.completionTokens();
+  const usage = {
+    prompt_tokens: promptFloor,
+    completion_tokens: completionTokens,
+    total_tokens: promptFloor + completionTokens,
+  };
+  const price = priceUsd(deps.config, tier, usage);
   writeChunk({
     id,
     object: 'chat.completion.chunk',
@@ -204,9 +308,25 @@ async function streamResponse(
       escalated: false,
       cap_degraded: resolution.capDegraded,
       routing_reason: resolution.routingReason,
-      price_usd: priceUsd(deps.config, tier, usage),
+      price_usd: price,
     },
   });
   res.write('data: [DONE]\n\n');
   res.end();
+
+  // Normal completion — write the ledger from the family-correct floor (no provider usage on
+  // the live SSE path). Mark finalized FIRST so the close handler does not double-bill.
+  finalized = true;
+  await meter(deps, {
+    requestId,
+    key,
+    keyPrefix,
+    tier,
+    resolvedModel: model,
+    usage,
+    priceUsd: price,
+    escalated: false,
+    latencyMs: Date.now() - startedAt,
+    tokensFromLocalFloor: true,
+  });
 }

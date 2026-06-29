@@ -8,6 +8,7 @@ import { type ModelProvider, type ProviderResult, ProviderError } from '../provi
 import type { TierResolution } from '../tier/resolveTier';
 import { verify, shouldEscalate } from '../router/escalation';
 import { priceUsd } from '../metering/pricing';
+import { estimateTokens } from '../metering/tokenizer';
 
 export interface InferOutcome {
   text: string;
@@ -18,18 +19,26 @@ export interface InferOutcome {
   capDegraded: boolean;
   routingReason: string;
   priceUsd: number;
+  /** §5.1 — true when usage came from the local family floor, not the provider's count. */
+  tokensFromLocalFloor: boolean;
 }
 
-/** Conservative local token floor (§5.1) — used only when the provider omits usage. */
-function localUsage(req: ChatCompletionRequest, text: string): Usage {
-  const approx = (s: string) => Math.max(1, Math.ceil(s.length / 4));
-  const prompt = req.messages.reduce((n, m) => n + approx(m.content ?? ''), 0);
-  const completion = approx(text);
+/**
+ * FAMILY-CORRECT local token floor (§5.1) — used only when the provider omits an
+ * authoritative usage block. Counts prompt + completion with the resolved model's
+ * byte→token ratio, never an OpenAI profile for a non-OpenAI model.
+ */
+function localUsage(req: ChatCompletionRequest, resolvedModel: string, text: string): Usage {
+  const prompt = req.messages.reduce(
+    (n, m) => n + estimateTokens(resolvedModel, m.content ?? ''),
+    0,
+  );
+  const completion = estimateTokens(resolvedModel, text);
   return { prompt_tokens: prompt, completion_tokens: completion, total_tokens: prompt + completion };
 }
 
-function usageOf(req: ChatCompletionRequest, r: ProviderResult): Usage {
-  return r.usage ?? localUsage(req, r.text);
+function usageOf(req: ChatCompletionRequest, resolvedModel: string, r: ProviderResult): Usage {
+  return r.usage ?? localUsage(req, resolvedModel, r.text);
 }
 
 /**
@@ -83,7 +92,8 @@ export async function executeNonStream(
   let tier = resolution.tier;
   let pool = config.tierPools[tier];
   let result = await inferWithFallback(provider, pool.models, req);
-  let usage = usageOf(req, result);
+  let usage = usageOf(req, result.model, result);
+  let fromFloor = result.usage === undefined;
   let escalated = false;
   let routingReason = resolution.routingReason;
 
@@ -97,7 +107,8 @@ export async function executeNonStream(
       tier = decision.nextTier;
       pool = config.tierPools[tier];
       result = await inferWithFallback(provider, pool.models, req);
-      usage = usageOf(req, result);
+      usage = usageOf(req, result.model, result);
+      fromFloor = result.usage === undefined;
       escalated = true;
       routingReason = `${routingReason}; ${decision.reason}`;
     }
@@ -112,5 +123,6 @@ export async function executeNonStream(
     capDegraded: resolution.capDegraded,
     routingReason,
     priceUsd: priceUsd(config, tier, usage),
+    tokensFromLocalFloor: fromFloor,
   };
 }

@@ -21,6 +21,31 @@ export function sendError(
   res.status(status).json(body);
 }
 
+/** The optional `Idempotency-Key` request header (§5.3). */
+export function idempotencyKeyOf(headers: Request['headers']): string | undefined {
+  const v = headers['idempotency-key'];
+  if (typeof v === 'string' && v.length > 0) return v;
+  if (Array.isArray(v) && v.length > 0) return v[0];
+  return undefined;
+}
+
+/**
+ * 429 rate-limit envelope (§5.3) — uniform error shape + the standard `Retry-After`
+ * header (whole seconds, rounded up from the limiter's ms hint).
+ */
+export function sendRateLimited(res: Response, requestId: string, retryAfterMs: number): void {
+  const seconds = Math.max(1, Math.ceil(retryAfterMs / 1000));
+  res.setHeader('Retry-After', String(seconds));
+  res.setHeader('X-Request-Id', requestId);
+  sendError(
+    res,
+    requestId,
+    429,
+    'rate_limit_exceeded',
+    `Rate limit exceeded for this API key + tier. Retry after ~${seconds}s.`,
+  );
+}
+
 function asTier(v: unknown): Tier | undefined {
   return v === 'low' || v === 'mid' || v === 'high' ? v : undefined;
 }

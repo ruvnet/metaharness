@@ -8,7 +8,8 @@ import type { ChatCompletionRequest, XCognitum } from '../types/openai';
 import { extractApiKey, verifyApiKey } from '../auth/apiKey';
 import { resolveTier } from '../tier/resolveTier';
 import { executeNonStream } from '../core/pipeline';
-import { mergeRoutingControls, requestIdOf, sendError, setCognitumHeaders } from '../core/http';
+import { meter } from '../metering/record';
+import { mergeRoutingControls, requestIdOf, sendError, sendRateLimited, setCognitumHeaders } from '../core/http';
 
 interface LegacyCompletionRequest extends Omit<ChatCompletionRequest, 'messages'> {
   prompt?: string | string[];
@@ -27,6 +28,7 @@ function promptToMessages(prompt: string | string[] | undefined): ChatCompletion
 export function makeCompletions(deps: AppDeps) {
   return async function postCompletions(req: Request, res: Response): Promise<void> {
     const requestId = requestIdOf(req);
+    const startedAt = Date.now();
 
     const auth = await verifyApiKey(extractApiKey(req.headers), deps.keyStore);
     if (!auth.ok) {
@@ -70,6 +72,14 @@ export function makeCompletions(deps: AppDeps) {
       return;
     }
 
+    // RATE-LIMIT (§5.3) — scatter-gather per (keyHash, tier).
+    const limit = deps.config.tierPools[resolution.tier].rateLimitPerMin;
+    const rl = await deps.rateLimiter.checkAndRecord(auth.key.key, resolution.tier, limit);
+    if (!rl.allowed) {
+      sendRateLimited(res, requestId, rl.retryAfterMs ?? 1000);
+      return;
+    }
+
     try {
       const outcome = await executeNonStream(deps, chatReq, resolution);
       const x_cognitum: XCognitum = {
@@ -82,6 +92,21 @@ export function makeCompletions(deps: AppDeps) {
         price_usd: outcome.priceUsd,
       };
       setCognitumHeaders(res, requestId, outcome);
+
+      // METER — ledger (truth) + Pub/Sub rollup (fire-and-forget) (§5.1).
+      await meter(deps, {
+        requestId,
+        key: auth.key,
+        keyPrefix: auth.rawPrefix,
+        tier: outcome.resolvedTier,
+        resolvedModel: outcome.resolvedModel,
+        usage: outcome.usage,
+        priceUsd: outcome.priceUsd,
+        escalated: outcome.escalated,
+        latencyMs: Date.now() - startedAt,
+        tokensFromLocalFloor: outcome.tokensFromLocalFloor,
+      });
+
       res.status(200).json({
         id: `cmpl-${requestId}`,
         object: 'text_completion',
