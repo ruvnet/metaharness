@@ -51,7 +51,7 @@ jobs:
       - name: E2E (desktop + mobile)
         run: npm run e2e
 
-      - name: Build (base = /agent-harness-generator/)
+      - name: Build (base = './' relative — survives repo rename)
         run: npm run build
 
       # SPA + Pages: 404 falls back to index.html so deep links work.

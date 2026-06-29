@@ -32,7 +32,7 @@ const JSON_OUT = args.includes('--json');
 const PROBE_PAGES = args.includes('--probe-pages');
 const onlyCheck = args.find(a => a.startsWith('--check='))?.slice('--check='.length);
 
-const STUDIO_URL = 'https://ruvnet.github.io/agent-harness-generator/';
+const STUDIO_URL = 'https://ruvnet.github.io/metaharness/';
 
 const CHECKS = {
   async version() {

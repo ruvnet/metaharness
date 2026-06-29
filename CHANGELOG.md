@@ -358,7 +358,7 @@ All notable changes to this project are documented here. Format follows [Keep a 
   Next: capture the full diagnostic state for a support ticket:
     harness diag /path/to/harness --bundle > bundle.json
   (then attach bundle.json to a GitHub issue at
-   https://github.com/ruvnet/agent-harness-generator/issues — the
+   https://github.com/ruvnet/metaharness/issues — the
    bundle is sanitised; secret_/token_/key_/password_ fields are redacted)
   ```
 - **HEALTHY output is unchanged** — the bundle suggestion would be
@@ -389,7 +389,7 @@ All notable changes to this project are documented here. Format follows [Keep a 
   Next: capture the full diagnostic state for a support ticket:
     harness diag /path/to/harness --bundle > bundle.json
   (then attach bundle.json to a GitHub issue at
-   https://github.com/ruvnet/agent-harness-generator/issues — the
+   https://github.com/ruvnet/metaharness/issues — the
    bundle is sanitised; secret_/token_/key_/password_ fields are redacted)
   ```
 - **Sanitisation reassurance is load-bearing** — users hitting their
@@ -999,7 +999,7 @@ All notable changes to this project are documented here. Format follows [Keep a 
 ### Added — Iter 72 (2026-06-14)
 
 - **`scripts/healthcheck.mjs --probe-pages`** — opt-in HTTP probe of
-  the live Studio at <https://ruvnet.github.io/agent-harness-generator/>.
+  the live Studio at <https://ruvnet.github.io/metaharness/>.
   iter-42 healthcheck was deliberately offline (file-system only); the
   Pages site has become a primary distribution surface so the daily
   driver should know how to verify it's alive.
@@ -1015,7 +1015,7 @@ All notable changes to this project are documented here. Format follows [Keep a 
   live-site verification one flag away.
 - New live output with `--probe-pages`:
   ```
-  PASS pages       https://ruvnet.github.io/agent-harness-generator/ OK + Vite bundle 200
+  PASS pages       https://ruvnet.github.io/metaharness/ OK + Vite bundle 200
   ```
 - `__tests__/healthcheck.test.ts` 7 → 9 cases (+2):
   - pages check is SKIP by default (no network)

@@ -1,5 +1,5 @@
 # iter 84: daily liveness probe of the live Studio at
-# https://ruvnet.github.io/agent-harness-generator/.
+# https://ruvnet.github.io/metaharness/.
 #
 # Separate from pages.yml (which fires on push to apps/web-ui/**) so
 # the Studio is verified every 24h regardless of whether anyone

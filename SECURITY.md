@@ -13,7 +13,7 @@ The project is pre-1.0. Only the **latest published `0.x` version** receives sec
 
 **Do NOT open a public issue.** Use one of these private channels:
 
-1. **GitHub Security Advisory** — preferred. Go to [Security → Report a vulnerability](https://github.com/ruvnet/agent-harness-generator/security/advisories/new). The form gives us a private repo where we collaborate on the fix without disclosing details before a coordinated release.
+1. **GitHub Security Advisory** — preferred. Go to [Security → Report a vulnerability](https://github.com/ruvnet/metaharness/security/advisories/new). The form gives us a private repo where we collaborate on the fix without disclosing details before a coordinated release.
 2. **Email** — `ruv@ruv.net` with subject `SECURITY: agent-harness-generator`. Include:
    - The affected package (`@metaharness/kernel`, `@metaharness/host-*`, `create-agent-harness`)
    - Affected versions

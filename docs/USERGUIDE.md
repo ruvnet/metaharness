@@ -44,7 +44,7 @@ codebase, owned by you, runs on your laptop.
 
 ### 1. Paste a GitHub URL and generate a harness for it
 
-Open the Studio: <https://ruvnet.github.io/agent-harness-generator/>
+Open the Studio: <https://ruvnet.github.io/metaharness/>
 
 1. Click the **Repo → Harness** tab
 2. Paste a GitHub URL (e.g. `https://github.com/sindresorhus/ky`)
@@ -209,7 +209,7 @@ generate just the content you actually need, owned by you, branded by you.
 
 ## Next steps
 
-1. **Try the Studio:** <https://ruvnet.github.io/agent-harness-generator/>
+1. **Try the Studio:** <https://ruvnet.github.io/metaharness/>
 2. **Generate a harness for a repo you know:** the first time, pick a repo
    you're familiar with so you can sanity-check the output.
 3. **Read the agent prompts in `src/agents/*.ts`:** that's where the
@@ -222,8 +222,8 @@ generate just the content you actually need, owned by you, branded by you.
 
 ## Where to find help
 
-- Bug? <https://github.com/ruvnet/agent-harness-generator/issues>
-- Discussion? <https://github.com/ruvnet/agent-harness-generator/discussions>
+- Bug? <https://github.com/ruvnet/metaharness/issues>
+- Discussion? <https://github.com/ruvnet/metaharness/discussions>
 - Read the architecture: [`docs/ARCHITECTURE.md`](ARCHITECTURE.md)
 - Read the design decisions: [`docs/adrs/INDEX.md`](adrs/INDEX.md)
 - File a support ticket the right way: `harness diag --bundle > bundle.json`

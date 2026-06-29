@@ -1,9 +1,11 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// Base path for GitHub Pages: served from /agent-harness-generator/.
-// Override with VITE_BASE=/ for local root-serving or custom domains.
-const base = process.env.VITE_BASE ?? '/agent-harness-generator/';
+// Base path for GitHub Pages. Relative ('./') so emitted asset URLs resolve
+// against whatever path the site is served from — this keeps the bundle
+// working after a repo rename (e.g. /agent-harness-generator/ → /metaharness/)
+// without rebuilding. Override with VITE_BASE=/some/path/ for an absolute base.
+const base = process.env.VITE_BASE ?? './';
 
 export default defineConfig({
   base,

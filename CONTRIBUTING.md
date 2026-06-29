@@ -25,8 +25,8 @@ Single command tells you every dev script + every `harness` subcommand + every C
 ## First-time setup
 
 ```bash
-git clone https://github.com/ruvnet/agent-harness-generator
-cd agent-harness-generator
+git clone https://github.com/ruvnet/metaharness
+cd metaharness
 
 # Rust workspace
 cargo test --workspace

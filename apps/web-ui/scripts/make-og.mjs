@@ -5,7 +5,7 @@
 // (Twitter/Slack/Discord/LinkedIn/Facebook) do NOT render SVG, so we rasterise a
 // branded HTML card with the Playwright chromium already used for e2e. Output:
 // public/og.png (Vite copies public/ to the dist root → served at
-// https://ruvnet.github.io/agent-harness-generator/og.png).
+// https://ruvnet.github.io/metaharness/og.png).
 //
 // Run: node scripts/make-og.mjs   (regenerate whenever the card copy changes)
 

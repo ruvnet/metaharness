@@ -2,7 +2,7 @@
 
 **Initialized**: 2026-06-22
 **Horizon key**: `horizons/horizon-darwin-sota` (ruflo memory)
-**Owner**: ruvnet/agent-harness-generator, branch `claude/darwin-mode-evolve-polyglot`
+**Owner**: ruvnet/metaharness, branch `claude/darwin-mode-evolve-polyglot`
 **Purpose**: Durable cross-session tracker for the Darwin Mode SWE-bench SOTA campaign. Each session must check this file in and update it at check-out.
 
 ---

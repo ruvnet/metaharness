@@ -1,6 +1,6 @@
 # Submit to the Cost-Pareto Leaderboard
 
-**[Live board →](https://ruvnet.github.io/agent-harness-generator/cost-pareto.html)**
+**[Live board →](https://ruvnet.github.io/metaharness/cost-pareto.html)**
 
 The leaderboard ranks coding-agent harnesses by **resolve-per-dollar** on public SWE benchmarks — the cheapest
 system that reaches each level of capability, scored by a tunable **Value Score** (capability blended with price).

@@ -4,17 +4,17 @@
 
 ### Mint a custom AI agent harness from any repo.
 
-`npx metaharness` · [open the Studio →](https://ruvnet.github.io/agent-harness-generator/)
+`npx metaharness` · [open the Studio →](https://ruvnet.github.io/metaharness/)
 
-<sub>(Repo: `ruvnet/agent-harness-generator` · CLI: `metaharness` · Library: `@ruvnet/agent-harness-generator`)</sub>
+<sub>(Repo: `ruvnet/metaharness` · CLI: `metaharness` · Library: `@ruvnet/agent-harness-generator`)</sub>
 
-[![Open the Studio](https://img.shields.io/badge/Studio-open_in_browser_↗-7c5cff?style=for-the-badge&logo=githubpages&logoColor=white)](https://ruvnet.github.io/agent-harness-generator/)
+[![Open the Studio](https://img.shields.io/badge/Studio-open_in_browser_↗-7c5cff?style=for-the-badge&logo=githubpages&logoColor=white)](https://ruvnet.github.io/metaharness/)
 [![User guide](https://img.shields.io/badge/User_guide-plain_language-22c55e?style=for-the-badge)](docs/USERGUIDE.md)
 [![Tests — 568 passing](https://img.shields.io/badge/tests-568%20passing-22c55e?style=for-the-badge)](docs/ARCHITECTURE.md)
-[![npm publish smoke](https://github.com/ruvnet/agent-harness-generator/actions/workflows/published-smoke.yml/badge.svg)](https://github.com/ruvnet/agent-harness-generator/actions/workflows/published-smoke.yml)
+[![npm publish smoke](https://github.com/ruvnet/metaharness/actions/workflows/published-smoke.yml/badge.svg)](https://github.com/ruvnet/metaharness/actions/workflows/published-smoke.yml)
 [![License MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 
-[![Agent Harness Studio](docs/web-ui/screenshot-desktop.png)](https://ruvnet.github.io/agent-harness-generator/)
+[![Agent Harness Studio](docs/web-ui/screenshot-desktop.png)](https://ruvnet.github.io/metaharness/)
 
 </div>
 
@@ -102,7 +102,7 @@ learned from your own eval logs. `npm i @metaharness/router`.
 
 ```bash
 # In the browser — zero install, nothing leaves the page
-open https://ruvnet.github.io/agent-harness-generator/
+open https://ruvnet.github.io/metaharness/
 
 # Or in the terminal — the same harness (behaviourally equivalent output)
 npx metaharness my-bot --template vertical:coding --host claude-code
@@ -272,7 +272,7 @@ across Rust × 3 OS + WASM × 3 OS + Node 20+22 × 3 OS + Bench + pack+install �
 | CI matrix | 16 jobs green |
 | Security pipeline | cargo-audit · cargo-deny · npm-audit · CodeQL · SBOM (SPDX-2.3) |
 | Publish pipeline | GCP WIF + 2 gates + 11 packages + IPFS pin |
-| Agent Harness Studio | Live at <https://ruvnet.github.io/agent-harness-generator/> |
+| Agent Harness Studio | Live at <https://ruvnet.github.io/metaharness/> |
 
 ---
 
@@ -311,8 +311,8 @@ You operate the factory. The factory produces your harness. Your users never see
 ## Developer quick-start
 
 ```bash
-git clone https://github.com/ruvnet/agent-harness-generator
-cd agent-harness-generator
+git clone https://github.com/ruvnet/metaharness
+cd metaharness
 
 cargo test --workspace
 cargo clippy --workspace --all-targets -- -D warnings
@@ -335,7 +335,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Cost-Pareto Leaderboard
 
-**[→ Live leaderboard — the cost-performance Pareto frontier](https://ruvnet.github.io/agent-harness-generator/cost-pareto.html)**
+**[→ Live leaderboard — the cost-performance Pareto frontier](https://ruvnet.github.io/metaharness/cost-pareto.html)**
 
 Which harness resolves the most benchmark per **dollar**, not just the highest raw score — ranked by a tunable
 **Value Score** that blends capability and price. Tabs: SWE-bench **Lite** / **Verified** / **Pro** / **DRACO** /

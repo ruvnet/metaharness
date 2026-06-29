@@ -420,7 +420,7 @@ function readme(cfg: HarnessConfig): string {
 
 > ${cfg.description}
 
-Generated with the [agent-harness-generator](https://github.com/ruvnet/agent-harness-generator) web UI.
+Generated with the [metaharness](https://github.com/ruvnet/metaharness) web UI.
 
 - **Template:** ${tmpl?.name ?? cfg.template}
 - **Hosts:** ${hostNames}
