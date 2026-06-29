@@ -1,0 +1,36 @@
+{
+  "name": "@cognitum-one/apicompletions",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Cognitum Fugu (ADR-203) — OpenAI-compatible, metered, tiered /v1/chat/completions Cloud Run service behind api.cognitum.one. TS/Node sibling of @cognitum-one/api-gateway.",
+  "main": "dist/index.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "lint": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "emulators": "docker compose -f docker-compose.emulators.yml up"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.0",
+    "@types/supertest": "^6.0.2",
+    "@vitest/coverage-v8": "^2.0.0",
+    "supertest": "^7.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  },
+  "comments": {
+    "deferred-deps": "Wired during Phase-1 implementation (kept out of the skeleton to keep install fast + green): firebase-admin (Firestore api_keys/usage_ledger), @google-cloud/pubsub (completions-usage), js-tiktoken + per-family tokenizers (§5.1 progressive billing floor). @midstream/wasm is a FUTURE optionalDependency (404 on npm today — §3.5) loaded via the dynamic-import firewall in src/midstream/firewall.ts, never declared as a hard dep."
+  }
+}

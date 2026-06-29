@@ -1,0 +1,28 @@
+# Local GCP emulators for emulator-first ($0) dev (ADR-203 §7.3; AgentBBS ADR-0012).
+# Firestore : localhost:8080  (FIRESTORE_EMULATOR_HOST)
+# Pub/Sub   : localhost:8085  (PUBSUB_EMULATOR_HOST)
+#
+#   docker compose -f docker-compose.emulators.yml up
+#   export FIRESTORE_EMULATOR_HOST=localhost:8080
+#   export PUBSUB_EMULATOR_HOST=localhost:8085
+#   curl -s -X PUT "http://localhost:8085/v1/projects/demo-project/topics/completions-usage"
+#   USE_MOCK_PROVIDER=true PORT=8090 npm run dev   # whole auth→tier→route→meter loop at $0
+services:
+  firestore-emulator:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:latest
+    container_name: apicompletions-firestore-emulator
+    command: >-
+      gcloud beta emulators firestore start
+      --host-port=0.0.0.0:8080
+      --database-mode=firestore-native
+    ports:
+      - "8080:8080"
+  pubsub-emulator:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:latest
+    container_name: apicompletions-pubsub-emulator
+    command: >-
+      gcloud beta emulators pubsub start
+      --host-port=0.0.0.0:8085
+      --project=demo-project
+    ports:
+      - "8085:8085"
