@@ -854,6 +854,54 @@ path is 3→4→6→8. Step 7 gates 8 (no deploy without green offline tests).
 
 ---
 
+## Peer review addressed (rev 5)
+
+This revision is **purely additive** — it makes the service **dual-protocol** by adding an
+**Anthropic Messages API** surface alongside the rev-1 OpenAI surface, and **changes none of
+the prior decisions**. **No OpenAI-protocol behaviour changes**; the §3.3 streaming decision,
+§5 metering/billing, §6 auth/scope rules, and the §3.5 midstream upgrade all apply identically
+across both protocols. Status stays **Proposed (rev 5)**.
+
+1. **Anthropic Messages API surface (new §3.6; §3.4 endpoint/header update; §10 row).** Adds
+   `POST /v1/messages` (+ `POST /v1/messages/count_tokens`) so **Claude Code** and Anthropic-SDK
+   clients work against Cognitum Fugu with `ANTHROPIC_BASE_URL=https://api.cognitum.one/<base>`
+   + `ANTHROPIC_API_KEY=cog_…`. Both protocols ride the **same** auth / router / metering /
+   budget / streaming core — a thin translation shell, not a second engine.
+
+2. **Auth reuses the existing `cog_` middleware.** Claude Code's `x-api-key` header is matched
+   by the rev-1 **case-insensitive** `X-API-Key` middleware (§6), so `cog_…` keys +
+   `completions:{low,mid,high}` scopes work unchanged; `anthropic-version` is **accepted and
+   safely ignored**. No new auth system.
+
+3. **Model→tier mapping accepts both dialects.** `cognitum-{auto,low,mid,high}` **and** real
+   Anthropic ids — `opus*→high`, `sonnet*→mid`, `haiku*→low` (table in §3.6). `min_tier`/
+   `max_tier` + the `fail_fast`/`best_effort` tier-scope rules (§6) apply identically. Raw
+   arbitrary vendor ids resolve via the tier map, **never** passthrough.
+
+4. **Request/response translation + streaming (the real work).** Maps the Anthropic
+   `{model, max_tokens, system, messages, stream, …}` shape ↔ the internal canonical request,
+   and renders the result to `{id, type:"message", role:"assistant", content:[{type:"text",
+   text}], model, stop_reason, stop_sequence, usage:{input_tokens, output_tokens}}`. A
+   stream-translation adapter synthesizes the Anthropic SSE sequence (`message_start` →
+   `content_block_start` → `content_block_delta` → `content_block_stop` → `message_delta` →
+   `message_stop`, with `ping`s) from **any** backend incl. non-Anthropic (deepseek/gpt via
+   OpenRouter). The §5.1 disconnect-billing floor applies to the Anthropic stream too, with the
+   tokenizer family = the **resolved** model's family (not Anthropic's) for non-Anthropic
+   backends. `usage` maps to the resolved-tier pricing ledger (§5.2).
+
+5. **Honesty guard (§3.6, §10).** When `cognitum-auto`/`low` routes a Claude-Code request to a
+   non-Anthropic cheap model, the translated response is **NOT Claude** and is never presented
+   as such — the actual resolved model is surfaced in `model` / `x_cognitum.resolved_tier` /
+   `resolved_model` and recorded in `usage_ledger` (same no-capability-laundering rule as §8,
+   now across the translation boundary). New §10 row covers protocol-translation fidelity /
+   SSE-shape correctness for Claude Code's parser.
+
+**Remaining open dependency:** unchanged — the `accountId` field on cognitum-one/api `api_keys`
+docs (§6, §10), plus the rev-4 firewalled midstream-publish/vendor dependency (degrades safely
+to Option B). The dual-protocol addition introduces no new external dependency.
+
+---
+
 ## Peer review addressed (rev 4)
 
 This revision is **purely additive** — it adds an **OPTIONAL, firewalled** integration of
