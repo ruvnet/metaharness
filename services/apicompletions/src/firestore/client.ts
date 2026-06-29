@@ -41,10 +41,23 @@ export interface CollectionRefLike extends QueryLike {
   doc(id: string): DocRefLike;
 }
 
+/**
+ * Structural subset of a firebase-admin `Transaction` (ADR-204 §5.2 Reserve-and-Commit).
+ * The RESERVE/COMMIT txns read at most two single docs (account + agent-shard) and never
+ * scan a subcollection on the hot path (§5.2 fix 2 — no `sumReserved()` read lock).
+ */
+export interface TransactionLike {
+  get(ref: DocRefLike): Promise<DocSnapshotLike>;
+  set(ref: DocRefLike, data: Record<string, unknown>, opts?: { merge?: boolean }): void;
+  update(ref: DocRefLike, data: Record<string, unknown>): void;
+}
+
 /** Structural subset of a firebase-admin `Firestore` instance. */
 export interface FirestoreLike {
   collection(path: string): CollectionRefLike;
   doc(path: string): DocRefLike;
+  /** ADR-204 §5.2 — atomic Reserve / Commit transactions on the budget docs. */
+  runTransaction<T>(fn: (txn: TransactionLike) => Promise<T>): Promise<T>;
 }
 
 /** Structural subset of a `@google-cloud/pubsub` Topic.publishMessage handle. */

@@ -17,6 +17,8 @@ import {
 } from './metering/ledger';
 import { RateLimiter, InMemoryRateLimitStore } from './ratelimit/limiter';
 import { type IdempotencyStore, InMemoryIdempotencyStore } from './ratelimit/idempotency';
+import type { BudgetTracker } from './budget/types';
+import { InMemoryBudgetTracker } from './budget/tracker';
 
 export interface AppDeps {
   config: Config;
@@ -30,6 +32,8 @@ export interface AppDeps {
   rateLimiter: RateLimiter;
   /** 24h replay cache (§5.3). */
   idempotency: IdempotencyStore;
+  /** Reserve-and-Commit budget defense (ADR-204 §5.2). Unmetered until an account opts in. */
+  budget: BudgetTracker;
 }
 
 export interface AppDepsOverrides {
@@ -40,6 +44,7 @@ export interface AppDepsOverrides {
   usagePublisher?: UsagePublisher;
   rateLimiter?: RateLimiter;
   idempotency?: IdempotencyStore;
+  budget?: BudgetTracker;
 }
 
 /**
@@ -63,5 +68,9 @@ export function defaultDeps(overrides: AppDepsOverrides = {}): AppDeps {
     usagePublisher: overrides.usagePublisher ?? new InMemoryUsagePublisher(),
     rateLimiter: overrides.rateLimiter ?? new RateLimiter(new InMemoryRateLimitStore()),
     idempotency: overrides.idempotency ?? new InMemoryIdempotencyStore(),
+    // Default to the in-memory tracker with NO seeded accounts → transparent (admits all,
+    // no reservation) until an account opts into enforcement. Production binds
+    // FirestoreBudgetTracker(admin.firestore(), config).
+    budget: overrides.budget ?? new InMemoryBudgetTracker(config),
   };
 }

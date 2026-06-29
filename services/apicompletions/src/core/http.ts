@@ -64,6 +64,25 @@ function asTier(v: unknown): Tier | undefined {
 }
 
 /**
+ * Resolve the per-agent / per-loop budget identity (ADR-204 §5.2). The optional
+ * `X-Cognitum-Agent-Id` header names the autonomous agent / loop so its runaway cap is
+ * tracked independently; absent it, all of a key's traffic collapses to one agent bucket
+ * keyed by the account (or the key hash when the key carries no accountId). Bounded length so
+ * an attacker-chosen header can't blow up the Firestore doc id.
+ */
+export function agentIdOf(headers: Request['headers'], key: ApiKeyDoc): string {
+  const h = headers['x-cognitum-agent-id'];
+  const raw = typeof h === 'string' ? h : Array.isArray(h) ? h[0] : undefined;
+  if (raw && raw.length > 0) return raw.slice(0, 128);
+  return key.accountId ?? key.key;
+}
+
+/** Account budget identity (ADR-204 §5.2) — the subscription doc key. */
+export function accountIdOf(key: ApiKeyDoc): string {
+  return key.accountId ?? key.key;
+}
+
+/**
  * Merge the X-Cognitum-* routing-control headers onto the request body fields (§3.4).
  * Body values take precedence; headers fill in when the body omits the field.
  */

@@ -18,7 +18,10 @@ import { loadInflightScanner, streamInflight } from '../midstream/inflight';
 import { priceUsd } from '../metering/pricing';
 import { makeCounter } from '../metering/tokenizer';
 import { meter } from '../metering/record';
+import { maxOutputTokens, promptTokenFloor, worstCaseEstimateUsd } from '../budget/estimate';
 import {
+  accountIdOf,
+  agentIdOf,
   idempotencyCacheKey,
   idempotencyKeyOf,
   mergeRoutingControls,
@@ -112,10 +115,36 @@ export function makeChatCompletions(deps: AppDeps) {
       return;
     }
 
+    // d. RESERVE (ADR-204 §5.2) — atomic worst-case budget reservation at the CEILING tier,
+    // BEFORE any provider invoke. Denies 402 (account/agent budget) or 429 (loop) at the
+    // reservation write so an overspend is impossible (no reservation → no invoke). Unmetered
+    // accounts admit transparently with no reservation (resId undefined → COMMIT is a no-op).
+    const ceilingTier = resolution.ceiling;
+    const promptTokens = promptTokenFloor(deps.config, ceilingTier, body.messages);
+    const estimateUsd = worstCaseEstimateUsd(
+      deps.config,
+      ceilingTier,
+      promptTokens,
+      maxOutputTokens(deps.config, body.max_tokens),
+    );
+    const reservation = await deps.budget.reserve({
+      accountId: accountIdOf(auth.key),
+      agentId: agentIdOf(req.headers, auth.key),
+      ceilingTier,
+      estimateUsd,
+      reqType: body.stream ? 'streaming' : 'sync',
+      resId: requestId,
+    });
+    if (!reservation.admit) {
+      sendError(res, requestId, reservation.status, reservation.code, reservation.error);
+      return;
+    }
+    const resId = reservation.resId;
+
     try {
       // e/f. INFER + ESCALATE.
       if (body.stream) {
-        await streamResponse(deps, req, res, requestId, body, resolution, auth.key, auth.rawPrefix, startedAt);
+        await streamResponse(deps, req, res, requestId, body, resolution, auth.key, auth.rawPrefix, startedAt, resId);
         return;
       }
 
@@ -163,6 +192,10 @@ export function makeChatCompletions(deps: AppDeps) {
         idempotencyKey: idemKey,
       });
 
+      // d'. COMMIT (ADR-204 §5.2) — release the worst-case estimate, record the actual spend.
+      // Idempotent on resId; a no-op for unmetered accounts (resId undefined).
+      if (resId) await deps.budget.commit(resId, outcome.priceUsd);
+
       if (cacheKey) await deps.idempotency.store(cacheKey, { status: 200, body: response });
       res.status(200).json(response);
     } catch (err) {
@@ -193,6 +226,7 @@ async function streamResponse(
   key: ApiKeyDoc,
   keyPrefix: string,
   startedAt: number,
+  resId: string | undefined,
 ): Promise<void> {
   const created = Math.floor(Date.now() / 1000);
   const id = `chatcmpl-${requestId}`;
@@ -255,6 +289,7 @@ async function streamResponse(
       latencyMs: Date.now() - startedAt,
       tokensFromLocalFloor: outcome.tokensFromLocalFloor,
     });
+    if (resId) await deps.budget.commit(resId, outcome.priceUsd);
     return;
   }
 
@@ -295,6 +330,7 @@ async function streamResponse(
       completion_tokens: completionTokens,
       total_tokens: promptFloor + completionTokens,
     };
+    const truncatedPrice = priceUsd(deps.config, tier, usage);
     void meter(deps, {
       requestId,
       key,
@@ -302,12 +338,15 @@ async function streamResponse(
       tier,
       resolvedModel: model,
       usage,
-      priceUsd: priceUsd(deps.config, tier, usage),
+      priceUsd: truncatedPrice,
       escalated: false,
       latencyMs: Date.now() - startedAt,
       tokensFromLocalFloor: true,
       truncated: true,
     });
+    // §5.1 disconnect is BOTH un-locked AND billed (§5.5): commit the partial actual so the
+    // dropped stream releases its lease at the truncated floor, not the worst-case estimate.
+    if (resId) void deps.budget.commit(resId, truncatedPrice);
   });
 
   // A provider error AFTER the first chunk means headers are already flushed — we CANNOT fall
@@ -394,4 +433,6 @@ async function streamResponse(
     latencyMs: Date.now() - startedAt,
     tokensFromLocalFloor: true,
   });
+  // §5.2 COMMIT — release the worst-case estimate, book the streamed actual.
+  if (resId) await deps.budget.commit(resId, price);
 }
