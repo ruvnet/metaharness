@@ -1,0 +1,378 @@
+{
+  "n_total": 96,
+  "diagnosis": {
+    "pass": 61,
+    "genuine_model_fail": 25,
+    "tooling_false_fail": 10
+  },
+  "n_genuine": 86,
+  "tooling_by_stack": {
+    "metaharness/cheap": 8,
+    "metaharness/frontier": 2
+  },
+  "stacks": [
+    {
+      "stack": "claude-code/frontier",
+      "harness": "claude-code",
+      "tier": "frontier",
+      "n": 24,
+      "coverage_mean": 0.9583,
+      "coverage_median": 1.0,
+      "code_quality_mean": 0.7491,
+      "cost_per_task_mean": 1.231722,
+      "latency_s_mean": 169.7,
+      "pass_rate": 0.9583,
+      "pass_lo": 0.7976,
+      "pass_hi": 0.9926,
+      "n_full_cov": 23
+    },
+    {
+      "stack": "metaharness/cheap",
+      "harness": "metaharness",
+      "tier": "cheap",
+      "n": 16,
+      "coverage_mean": 0.9536,
+      "coverage_median": 1.0,
+      "code_quality_mean": 0.5,
+      "cost_per_task_mean": 0.101864,
+      "latency_s_mean": 481.28,
+      "pass_rate": 0.625,
+      "pass_lo": 0.3864,
+      "pass_hi": 0.8152,
+      "n_full_cov": 10
+    },
+    {
+      "stack": "metaharness/frontier",
+      "harness": "metaharness",
+      "tier": "frontier",
+      "n": 22,
+      "coverage_mean": 0.9439,
+      "coverage_median": 1.0,
+      "code_quality_mean": 0.6874,
+      "cost_per_task_mean": 1.075863,
+      "latency_s_mean": 262.45,
+      "pass_rate": 0.8636,
+      "pass_lo": 0.6666,
+      "pass_hi": 0.9525,
+      "n_full_cov": 16
+    },
+    {
+      "stack": "claude-code/cheap",
+      "harness": "claude-code",
+      "tier": "cheap",
+      "n": 24,
+      "coverage_mean": 0.4511,
+      "coverage_median": 0.0,
+      "code_quality_mean": 0.7752,
+      "cost_per_task_mean": 0.254157,
+      "latency_s_mean": 147.62,
+      "pass_rate": 0.375,
+      "pass_lo": 0.2116,
+      "pass_hi": 0.5729,
+      "n_full_cov": 9
+    }
+  ],
+  "pareto_cost": {
+    "frontier": [
+      "claude-code/frontier",
+      "metaharness/cheap"
+    ],
+    "dominated": [
+      "metaharness/frontier",
+      "claude-code/cheap"
+    ],
+    "ranks": {
+      "claude-code/frontier": 0,
+      "metaharness/cheap": 0,
+      "metaharness/frontier": 1,
+      "claude-code/cheap": 1
+    }
+  },
+  "pareto_latency": {
+    "frontier": [
+      "claude-code/frontier",
+      "claude-code/cheap"
+    ],
+    "dominated": [
+      "metaharness/cheap",
+      "metaharness/frontier"
+    ]
+  },
+  "anova_factors": [
+    "model",
+    "harness_config",
+    "language",
+    "task"
+  ],
+  "anova": {
+    "requirement_coverage": {
+      "rows": [
+        {
+          "effect": "model",
+          "pct_variance": 16.79,
+          "p_value": 0.0,
+          "significant": true
+        },
+        {
+          "effect": "model\u00d7harness_config",
+          "pct_variance": 10.38,
+          "p_value": 0.0001,
+          "significant": true
+        },
+        {
+          "effect": "language",
+          "pct_variance": 9.79,
+          "p_value": 0.0027,
+          "significant": true
+        },
+        {
+          "effect": "harness_config",
+          "pct_variance": 7.67,
+          "p_value": 0.0008,
+          "significant": true
+        },
+        {
+          "effect": "model\u00d7language",
+          "pct_variance": 4.31,
+          "p_value": 0.0856,
+          "significant": true
+        },
+        {
+          "effect": "task",
+          "pct_variance": 3.02,
+          "p_value": 0.0316,
+          "significant": true
+        },
+        {
+          "effect": "harness_config\u00d7language",
+          "pct_variance": 2.91,
+          "p_value": 0.2105,
+          "significant": false
+        },
+        {
+          "effect": "language\u00d7task",
+          "pct_variance": 2.31,
+          "p_value": 0.3053,
+          "significant": false
+        },
+        {
+          "effect": "model\u00d7task",
+          "pct_variance": 0.45,
+          "p_value": 0.402,
+          "significant": false
+        },
+        {
+          "effect": "harness_config\u00d7task",
+          "pct_variance": 0.4,
+          "p_value": 0.4254,
+          "significant": false
+        }
+      ],
+      "r_squared": 0.6091,
+      "residual_pct": 41.97,
+      "n": 86
+    },
+    "code_quality": {
+      "rows": [
+        {
+          "effect": "language",
+          "pct_variance": 19.38,
+          "p_value": 0.0,
+          "significant": true
+        },
+        {
+          "effect": "harness_config\u00d7language",
+          "pct_variance": 8.31,
+          "p_value": 0.0078,
+          "significant": true
+        },
+        {
+          "effect": "task",
+          "pct_variance": 7.21,
+          "p_value": 0.0013,
+          "significant": true
+        },
+        {
+          "effect": "harness_config",
+          "pct_variance": 6.85,
+          "p_value": 0.0017,
+          "significant": true
+        },
+        {
+          "effect": "language\u00d7task",
+          "pct_variance": 4.73,
+          "p_value": 0.0708,
+          "significant": true
+        },
+        {
+          "effect": "model\u00d7language",
+          "pct_variance": 3.15,
+          "p_value": 0.1907,
+          "significant": false
+        },
+        {
+          "effect": "model\u00d7harness_config",
+          "pct_variance": 2.75,
+          "p_value": 0.0425,
+          "significant": true
+        },
+        {
+          "effect": "harness_config\u00d7task",
+          "pct_variance": 2.03,
+          "p_value": 0.0805,
+          "significant": true
+        },
+        {
+          "effect": "model",
+          "pct_variance": 1.46,
+          "p_value": 0.1372,
+          "significant": false
+        },
+        {
+          "effect": "model\u00d7task",
+          "pct_variance": 1.03,
+          "p_value": 0.2096,
+          "significant": false
+        }
+      ],
+      "r_squared": 0.5626,
+      "residual_pct": 43.11,
+      "n": 86
+    },
+    "cost_per_task": {
+      "rows": [
+        {
+          "effect": "model",
+          "pct_variance": 78.08,
+          "p_value": 0.0,
+          "significant": true
+        },
+        {
+          "effect": "harness_config",
+          "pct_variance": 6.72,
+          "p_value": 0.0,
+          "significant": true
+        },
+        {
+          "effect": "model\u00d7harness_config",
+          "pct_variance": 3.28,
+          "p_value": 0.0,
+          "significant": true
+        },
+        {
+          "effect": "language",
+          "pct_variance": 2.85,
+          "p_value": 0.0,
+          "significant": true
+        },
+        {
+          "effect": "task",
+          "pct_variance": 1.35,
+          "p_value": 0.0,
+          "significant": true
+        },
+        {
+          "effect": "language\u00d7task",
+          "pct_variance": 1.12,
+          "p_value": 0.0012,
+          "significant": true
+        },
+        {
+          "effect": "harness_config\u00d7language",
+          "pct_variance": 1.05,
+          "p_value": 0.0018,
+          "significant": true
+        },
+        {
+          "effect": "model\u00d7language",
+          "pct_variance": 0.9,
+          "p_value": 0.0044,
+          "significant": true
+        },
+        {
+          "effect": "harness_config\u00d7task",
+          "pct_variance": 0.39,
+          "p_value": 0.0157,
+          "significant": true
+        },
+        {
+          "effect": "model\u00d7task",
+          "pct_variance": 0.06,
+          "p_value": 0.3484,
+          "significant": false
+        }
+      ],
+      "r_squared": 0.9578,
+      "residual_pct": 4.21,
+      "n": 86
+    },
+    "latency_s": {
+      "rows": [
+        {
+          "effect": "harness_config",
+          "pct_variance": 35.27,
+          "p_value": 0.0,
+          "significant": true
+        },
+        {
+          "effect": "language",
+          "pct_variance": 15.38,
+          "p_value": 0.0,
+          "significant": true
+        },
+        {
+          "effect": "model\u00d7harness_config",
+          "pct_variance": 9.46,
+          "p_value": 0.0,
+          "significant": true
+        },
+        {
+          "effect": "harness_config\u00d7language",
+          "pct_variance": 5.95,
+          "p_value": 0.0001,
+          "significant": true
+        },
+        {
+          "effect": "model\u00d7language",
+          "pct_variance": 5.35,
+          "p_value": 0.0002,
+          "significant": true
+        },
+        {
+          "effect": "language\u00d7task",
+          "pct_variance": 3.83,
+          "p_value": 0.0018,
+          "significant": true
+        },
+        {
+          "effect": "model",
+          "pct_variance": 3.53,
+          "p_value": 0.0002,
+          "significant": true
+        },
+        {
+          "effect": "task",
+          "pct_variance": 3.15,
+          "p_value": 0.0004,
+          "significant": true
+        },
+        {
+          "effect": "harness_config\u00d7task",
+          "pct_variance": 1.46,
+          "p_value": 0.0141,
+          "significant": true
+        },
+        {
+          "effect": "model\u00d7task",
+          "pct_variance": 1.23,
+          "p_value": 0.0236,
+          "significant": true
+        }
+      ],
+      "r_squared": 0.8499,
+      "residual_pct": 15.4,
+      "n": 86
+    }
+  },
+  "pareto_ascii": "coverage (up) vs $/task (right) \u2014 higher-left is better\n0.96 |                                                         A\n     |B                                                C        \n     |                                                          \n     |                                                          \n     |                                                          \n     |                                                          \n     |                                                          \n     |                                                          \n     |                                                          \n     |                                                          \n     |                                                          \n     |                                                          \n     |                                                          \n     |                                                          \n     |                                                          \n0.45 |       D                                                  \n     +----------------------------------------------------------\n      $0.1019                                            $1.2317\n  A = claude-code/frontier   cov=0.958 $1.2317/task\n  B = metaharness/cheap      cov=0.954 $0.1019/task\n  C = metaharness/frontier   cov=0.944 $1.0759/task\n  D = claude-code/cheap      cov=0.451 $0.2542/task"
+}
