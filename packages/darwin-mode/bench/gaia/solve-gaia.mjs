@@ -54,6 +54,8 @@ const SAMPLES = +argv('--samples', 3);                  // verifier-bon: N candi
 const SAMPLE_TEMP = +argv('--sample-temp', 0.7);        // verifier-bon: diversity temperature
 const REFLEXION_ROUNDS = +argv('--reflexion-rounds', 2);// reflexion: max extra retries
 const TAU = +argv('--tau', 0.7);                        // reflexion: confidence threshold to stop
+const RESPAWNS = +argv('--respawns', 2);                // failfast: max drop+respawn rounds
+const SHORT_STEPS = +argv('--short-steps', 2);          // failfast: per-episode step cap
 const MOCK = has('--mock');                             // $0 offline wiring test
 // Account-meter guard (mirrors ruvector-eval.mjs): --abort-usage is the ABSOLUTE USD ceiling on
 // the OpenRouter key at which we stop launching new tasks (the authoritative budget gate).
@@ -94,7 +96,8 @@ function mkLlm(model) {
 // Dependency bundle for the scaffolds. --mock swaps in a deterministic offline LLM+tools ($0).
 const deps = MOCK ? { ...mockDeps(), parseAction, stateHash } : { llm: mkLlm(MODEL), searchWiki, openWiki, parseAction, stateHash };
 const scaffoldOpts = { scaffold: SCAFFOLD, maxSteps: MAX_STEPS, maxOut: MAX_OUT, temp: TEMP,
-  samples: SAMPLES, sampleTemp: SAMPLE_TEMP, reflexionRounds: REFLEXION_ROUNDS, tau: TAU };
+  samples: SAMPLES, sampleTemp: SAMPLE_TEMP, reflexionRounds: REFLEXION_ROUNDS, tau: TAU,
+  respawns: RESPAWNS, shortSteps: SHORT_STEPS };
 
 // One task → the chosen scaffold's solve (base ReAct when --scaffold none).
 async function solveOne(task) { return solveWithScaffold(task, deps, scaffoldOpts); }

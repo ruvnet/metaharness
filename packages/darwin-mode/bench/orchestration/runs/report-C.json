@@ -1,0 +1,1014 @@
+{
+  "model": "deepseek/deepseek-v4-pro",
+  "dataset": "frames",
+  "scaffold": "failfast",
+  "maxSteps": 12,
+  "reasoning": "off (no reasoning API param; scaffolds are prompt/orchestration-level only)",
+  "n": 100,
+  "cappedAtTask": null,
+  "maxCost": null,
+  "totalCost_usd": 0.6059,
+  "costPerTask_usd": 0.006059,
+  "tasks": [
+    {
+      "task_id": "frames-621",
+      "reasoning_types": "Multiple constraints | Post processing",
+      "model_answer": "7",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.002275,
+      "episodes": 1,
+      "sec": 4
+    },
+    {
+      "task_id": "frames-757",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "1,429,475",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.003065,
+      "episodes": 1,
+      "sec": 8
+    },
+    {
+      "task_id": "frames-454",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "Orhan Pamuk",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.002808,
+      "episodes": 1,
+      "sec": 11
+    },
+    {
+      "task_id": "frames-175",
+      "reasoning_types": "Numerical reasoning",
+      "model_answer": "Insufficient information.",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.002806,
+      "episodes": 1,
+      "sec": 12
+    },
+    {
+      "task_id": "frames-661",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "1983",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.002002,
+      "episodes": 1,
+      "sec": 8
+    },
+    {
+      "task_id": "frames-119",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "Ang Lee",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.002604,
+      "episodes": 1,
+      "sec": 8
+    },
+    {
+      "task_id": "frames-482",
+      "reasoning_types": "Numerical reasoning | Tabular reasoning",
+      "model_answer": "47",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.001706,
+      "episodes": 1,
+      "sec": 13
+    },
+    {
+      "task_id": "frames-44",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "The nearest train stations to the G40 postcode area (Glasgow) are **Bridgeton**, **Dalmarnock**, **Bellgrove**, and **High Street (Glasgow)**.",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.002932,
+      "episodes": 1,
+      "sec": 11
+    },
+    {
+      "task_id": "frames-298",
+      "reasoning_types": "Numerical reasoning | Tabular reasoning | Multiple constraints",
+      "model_answer": "Insufficient data.",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.003009,
+      "episodes": 1,
+      "sec": 14
+    },
+    {
+      "task_id": "frames-322",
+      "reasoning_types": "Tabular reasoning",
+      "model_answer": "Umbro",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.001169,
+      "episodes": 1,
+      "sec": 12
+    },
+    {
+      "task_id": "frames-498",
+      "reasoning_types": "Numerical reasoning | Tabular reasoning | Multiple constraints | Post processing | Temporal reasoning",
+      "model_answer": "3.1 points",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.001762,
+      "episodes": 1,
+      "sec": 10
+    },
+    {
+      "task_id": "frames-403",
+      "reasoning_types": "Temporal reasoning",
+      "model_answer": "1914, 1987, 2002",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.003797,
+      "episodes": 1,
+      "sec": 26
+    },
+    {
+      "task_id": "frames-121",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "McDonald's",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.00215,
+      "episodes": 1,
+      "sec": 12
+    },
+    {
+      "task_id": "frames-286",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "",
+      "steps": 6,
+      "submitted": false,
+      "cost_usd": 0.016432,
+      "episodes": 3,
+      "sec": 82
+    },
+    {
+      "task_id": "frames-504",
+      "reasoning_types": "Multiple constraints | Temporal reasoning",
+      "model_answer": "Barbara Kingsolver",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.002975,
+      "episodes": 1,
+      "sec": 22
+    },
+    {
+      "task_id": "frames-462",
+      "reasoning_types": "Numerical reasoning | Multiple constraints | Temporal reasoning",
+      "model_answer": "On the Road by Jack Kerouac",
+      "steps": 4,
+      "submitted": false,
+      "cost_usd": 0.011932,
+      "episodes": 2,
+      "sec": 76
+    },
+    {
+      "task_id": "frames-379",
+      "reasoning_types": "Tabular reasoning | Temporal reasoning",
+      "model_answer": "George Washington",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.001494,
+      "episodes": 1,
+      "sec": 4
+    },
+    {
+      "task_id": "frames-7",
+      "reasoning_types": "Multiple constraints | Temporal reasoning",
+      "model_answer": "",
+      "steps": 6,
+      "submitted": false,
+      "cost_usd": 0.010494,
+      "episodes": 3,
+      "sec": 73
+    },
+    {
+      "task_id": "frames-346",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "Irish Sea",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.001476,
+      "episodes": 1,
+      "sec": 7
+    },
+    {
+      "task_id": "frames-16",
+      "reasoning_types": "Numerical reasoning | Tabular reasoning | Post processing | Temporal reasoning",
+      "model_answer": "28",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.001726,
+      "episodes": 1,
+      "sec": 11
+    },
+    {
+      "task_id": "frames-550",
+      "reasoning_types": "Multiple constraints | Post processing",
+      "model_answer": "10",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.002576,
+      "episodes": 1,
+      "sec": 12
+    },
+    {
+      "task_id": "frames-473",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "5",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.001279,
+      "episodes": 1,
+      "sec": 9
+    },
+    {
+      "task_id": "frames-407",
+      "reasoning_types": "Numerical reasoning | Tabular reasoning",
+      "model_answer": "7",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.004433,
+      "episodes": 1,
+      "sec": 13
+    },
+    {
+      "task_id": "frames-494",
+      "reasoning_types": "Post processing",
+      "model_answer": "11",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.002704,
+      "episodes": 1,
+      "sec": 15
+    },
+    {
+      "task_id": "frames-54",
+      "reasoning_types": "Tabular reasoning | Multiple constraints | Post processing",
+      "model_answer": "17",
+      "steps": 6,
+      "submitted": false,
+      "cost_usd": 0.014255,
+      "episodes": 3,
+      "sec": 105
+    },
+    {
+      "task_id": "frames-263",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "Toda Pérez de Azagra",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.001542,
+      "episodes": 1,
+      "sec": 15
+    },
+    {
+      "task_id": "frames-644",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "Game Freak",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.003934,
+      "episodes": 1,
+      "sec": 23
+    },
+    {
+      "task_id": "frames-416",
+      "reasoning_types": "Tabular reasoning | Multiple constraints",
+      "model_answer": "Shoyo Hinata",
+      "steps": 4,
+      "submitted": false,
+      "cost_usd": 0.037912,
+      "episodes": 2,
+      "sec": 156
+    },
+    {
+      "task_id": "frames-282",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "Edward Jenner",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.003341,
+      "episodes": 1,
+      "sec": 11
+    },
+    {
+      "task_id": "frames-709",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "Rhesus macaque",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.00398,
+      "episodes": 1,
+      "sec": 7
+    },
+    {
+      "task_id": "frames-86",
+      "reasoning_types": "Tabular reasoning",
+      "model_answer": "Bronze",
+      "steps": 4,
+      "submitted": false,
+      "cost_usd": 0.01677,
+      "episodes": 2,
+      "sec": 83
+    },
+    {
+      "task_id": "frames-377",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "",
+      "steps": 6,
+      "submitted": false,
+      "cost_usd": 0.009575,
+      "episodes": 3,
+      "sec": 91
+    },
+    {
+      "task_id": "frames-328",
+      "reasoning_types": "Numerical reasoning | Tabular reasoning",
+      "model_answer": "The M*A*S*H series finale (\"Goodbye, Farewell and Amen\") ran the longest, by 60 minutes.",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.006876,
+      "episodes": 1,
+      "sec": 27
+    },
+    {
+      "task_id": "frames-110",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "Yes, Nashville.",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.002688,
+      "episodes": 1,
+      "sec": 18
+    },
+    {
+      "task_id": "frames-74",
+      "reasoning_types": "Numerical reasoning | Tabular reasoning",
+      "model_answer": "26.5 meters",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.002993,
+      "episodes": 1,
+      "sec": 24
+    },
+    {
+      "task_id": "frames-167",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "Daniela Lavender",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.003968,
+      "episodes": 1,
+      "sec": 12
+    },
+    {
+      "task_id": "frames-753",
+      "reasoning_types": "Numerical reasoning | Temporal reasoning",
+      "model_answer": "17 years",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.002343,
+      "episodes": 1,
+      "sec": 22
+    },
+    {
+      "task_id": "frames-591",
+      "reasoning_types": "Tabular reasoning",
+      "model_answer": "Perth",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.002403,
+      "episodes": 1,
+      "sec": 10
+    },
+    {
+      "task_id": "frames-765",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "1904",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.001829,
+      "episodes": 1,
+      "sec": 7
+    },
+    {
+      "task_id": "frames-598",
+      "reasoning_types": "Numerical reasoning | Multiple constraints | Temporal reasoning",
+      "model_answer": "2",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.001338,
+      "episodes": 1,
+      "sec": 9
+    },
+    {
+      "task_id": "frames-17",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "Leirion",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.005207,
+      "episodes": 1,
+      "sec": 48
+    },
+    {
+      "task_id": "frames-571",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "Steve Jobs and Steve Wozniak",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.001501,
+      "episodes": 1,
+      "sec": 7
+    },
+    {
+      "task_id": "frames-526",
+      "reasoning_types": "Multiple constraints | Temporal reasoning",
+      "model_answer": "Martin Gilbert Sartre",
+      "steps": 1,
+      "submitted": true,
+      "cost_usd": 0.001199,
+      "episodes": 1,
+      "sec": 7
+    },
+    {
+      "task_id": "frames-408",
+      "reasoning_types": "Numerical reasoning | Tabular reasoning | Multiple constraints",
+      "model_answer": "4 colours: blue, white, green, black.",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.007309,
+      "episodes": 1,
+      "sec": 34
+    },
+    {
+      "task_id": "frames-797",
+      "reasoning_types": "Numerical reasoning | Tabular reasoning | Multiple constraints | Temporal reasoning",
+      "model_answer": "\"Love Will Never Do (Without You)\" by Janet Jackson",
+      "steps": 4,
+      "submitted": false,
+      "cost_usd": 0.004335,
+      "episodes": 2,
+      "sec": 38
+    },
+    {
+      "task_id": "frames-139",
+      "reasoning_types": "Multiple constraints | Temporal reasoning",
+      "model_answer": "",
+      "steps": 6,
+      "submitted": false,
+      "cost_usd": 0.007537,
+      "episodes": 3,
+      "sec": 69
+    },
+    {
+      "task_id": "frames-320",
+      "reasoning_types": "Numerical reasoning | Multiple constraints | Post processing | Temporal reasoning",
+      "model_answer": "LXXIX",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.00123,
+      "episodes": 1,
+      "sec": 4
+    },
+    {
+      "task_id": "frames-659",
+      "reasoning_types": "Multiple constraints | Temporal reasoning",
+      "model_answer": "30,000",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.002577,
+      "episodes": 1,
+      "sec": 20
+    },
+    {
+      "task_id": "frames-124",
+      "reasoning_types": "Numerical reasoning | Multiple constraints",
+      "model_answer": "Oakland Athletics",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.001975,
+      "episodes": 1,
+      "sec": 8
+    },
+    {
+      "task_id": "frames-108",
+      "reasoning_types": "Numerical reasoning | Post processing",
+      "model_answer": "Yes",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.001673,
+      "episodes": 1,
+      "sec": 7
+    },
+    {
+      "task_id": "frames-432",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "Serbia",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.001828,
+      "episodes": 1,
+      "sec": 6
+    },
+    {
+      "task_id": "frames-293",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "59",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.003729,
+      "episodes": 1,
+      "sec": 30
+    },
+    {
+      "task_id": "frames-517",
+      "reasoning_types": "Numerical reasoning",
+      "model_answer": "39",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.009363,
+      "episodes": 1,
+      "sec": 31
+    },
+    {
+      "task_id": "frames-800",
+      "reasoning_types": "Tabular reasoning",
+      "model_answer": "Seoul (Summer) at Seoul Olympic Stadium; Calgary (Winter) at McMahon Stadium.",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.001511,
+      "episodes": 1,
+      "sec": 13
+    },
+    {
+      "task_id": "frames-240",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "Jill Valentine",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.007417,
+      "episodes": 1,
+      "sec": 20
+    },
+    {
+      "task_id": "frames-412",
+      "reasoning_types": "Multiple constraints | Temporal reasoning",
+      "model_answer": "Enchantment",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.004133,
+      "episodes": 1,
+      "sec": 16
+    },
+    {
+      "task_id": "frames-22",
+      "reasoning_types": "Numerical reasoning | Tabular reasoning | Multiple constraints",
+      "model_answer": "950,135",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.003927,
+      "episodes": 1,
+      "sec": 19
+    },
+    {
+      "task_id": "frames-270",
+      "reasoning_types": "Numerical reasoning | Tabular reasoning | Multiple constraints | Temporal reasoning",
+      "model_answer": "Brazil",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.00168,
+      "episodes": 1,
+      "sec": 6
+    },
+    {
+      "task_id": "frames-822",
+      "reasoning_types": "Multiple constraints | Temporal reasoning",
+      "model_answer": "Fame",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.001847,
+      "episodes": 1,
+      "sec": 22
+    },
+    {
+      "task_id": "frames-719",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "Barack Obama",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.001409,
+      "episodes": 1,
+      "sec": 12
+    },
+    {
+      "task_id": "frames-438",
+      "reasoning_types": "Tabular reasoning",
+      "model_answer": "Alberto Ginés López",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.001443,
+      "episodes": 1,
+      "sec": 9
+    },
+    {
+      "task_id": "frames-120",
+      "reasoning_types": "Tabular reasoning | Multiple constraints",
+      "model_answer": "The total area of La Casita-Garciasville, Texas is approximately 0.4 km² larger than Vatican City.",
+      "steps": 4,
+      "submitted": false,
+      "cost_usd": 0.002603,
+      "episodes": 2,
+      "sec": 29
+    },
+    {
+      "task_id": "frames-658",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "Coburg",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.0041,
+      "episodes": 1,
+      "sec": 10
+    },
+    {
+      "task_id": "frames-453",
+      "reasoning_types": "Numerical reasoning | Tabular reasoning",
+      "model_answer": "arrow",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.003851,
+      "episodes": 1,
+      "sec": 20
+    },
+    {
+      "task_id": "frames-243",
+      "reasoning_types": "Numerical reasoning | Tabular reasoning | Multiple constraints | Post processing | Temporal reasoning",
+      "model_answer": "43727",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.002878,
+      "episodes": 1,
+      "sec": 24
+    },
+    {
+      "task_id": "frames-363",
+      "reasoning_types": "Numerical reasoning | Tabular reasoning | Multiple constraints",
+      "model_answer": "523",
+      "steps": 4,
+      "submitted": false,
+      "cost_usd": 0.009435,
+      "episodes": 2,
+      "sec": 46
+    },
+    {
+      "task_id": "frames-496",
+      "reasoning_types": "Multiple constraints | Post processing | Temporal reasoning",
+      "model_answer": "August 28, 1981",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.003465,
+      "episodes": 1,
+      "sec": 18
+    },
+    {
+      "task_id": "frames-89",
+      "reasoning_types": "Tabular reasoning | Multiple constraints | Temporal reasoning",
+      "model_answer": "November 24, 1921",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.001475,
+      "episodes": 1,
+      "sec": 7
+    },
+    {
+      "task_id": "frames-429",
+      "reasoning_types": "Temporal reasoning",
+      "model_answer": "None.",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.006037,
+      "episodes": 1,
+      "sec": 17
+    },
+    {
+      "task_id": "frames-361",
+      "reasoning_types": "Numerical reasoning",
+      "model_answer": "Information not available.",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.003122,
+      "episodes": 1,
+      "sec": 18
+    },
+    {
+      "task_id": "frames-123",
+      "reasoning_types": "Tabular reasoning",
+      "model_answer": "Halifax, Nova Scotia (birthplace); Cole Harbour, Nova Scotia (hometown)",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.004294,
+      "episodes": 1,
+      "sec": 9
+    },
+    {
+      "task_id": "frames-559",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "Millennium by Backstreet Boys",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.009213,
+      "episodes": 1,
+      "sec": 25
+    },
+    {
+      "task_id": "frames-604",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "2011, The King's Speech",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.002055,
+      "episodes": 1,
+      "sec": 9
+    },
+    {
+      "task_id": "frames-764",
+      "reasoning_types": "Tabular reasoning",
+      "model_answer": "Novak Djokovic",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.000983,
+      "episodes": 1,
+      "sec": 13
+    },
+    {
+      "task_id": "frames-348",
+      "reasoning_types": "Numerical reasoning | Multiple constraints",
+      "model_answer": "5967",
+      "steps": 1,
+      "submitted": true,
+      "cost_usd": 0.000355,
+      "episodes": 1,
+      "sec": 2
+    },
+    {
+      "task_id": "frames-663",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "Unknown",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.002437,
+      "episodes": 1,
+      "sec": 24
+    },
+    {
+      "task_id": "frames-739",
+      "reasoning_types": "Multiple constraints | Temporal reasoning",
+      "model_answer": "The 2007 skateboarding video \"Fully Flared\"",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.00155,
+      "episodes": 1,
+      "sec": 10
+    },
+    {
+      "task_id": "frames-513",
+      "reasoning_types": "Temporal reasoning",
+      "model_answer": "The reign of Queen Elizabeth II",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.003344,
+      "episodes": 1,
+      "sec": 7
+    },
+    {
+      "task_id": "frames-36",
+      "reasoning_types": "Numerical reasoning | Tabular reasoning | Multiple constraints | Temporal reasoning",
+      "model_answer": "140 years",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.005234,
+      "episodes": 1,
+      "sec": 23
+    },
+    {
+      "task_id": "frames-818",
+      "reasoning_types": "Temporal reasoning",
+      "model_answer": "Pope Eugene II",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.001373,
+      "episodes": 1,
+      "sec": 4
+    },
+    {
+      "task_id": "frames-78",
+      "reasoning_types": "Numerical reasoning | Tabular reasoning | Multiple constraints",
+      "model_answer": "The taller of the two wonders was 108.5 m shorter.",
+      "steps": 4,
+      "submitted": false,
+      "cost_usd": 0.008589,
+      "episodes": 2,
+      "sec": 52
+    },
+    {
+      "task_id": "frames-728",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "",
+      "steps": 6,
+      "submitted": false,
+      "cost_usd": 0.018323,
+      "episodes": 3,
+      "sec": 113
+    },
+    {
+      "task_id": "frames-553",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "Amaravati",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.005031,
+      "episodes": 1,
+      "sec": 23
+    },
+    {
+      "task_id": "frames-713",
+      "reasoning_types": "Temporal reasoning",
+      "model_answer": "0",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.00319,
+      "episodes": 1,
+      "sec": 15
+    },
+    {
+      "task_id": "frames-805",
+      "reasoning_types": "Tabular reasoning | Multiple constraints",
+      "model_answer": "Kida",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.002291,
+      "episodes": 1,
+      "sec": 15
+    },
+    {
+      "task_id": "frames-156",
+      "reasoning_types": "Multiple constraints | Temporal reasoning",
+      "model_answer": "Cincinnati Bearcats",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.004402,
+      "episodes": 1,
+      "sec": 9
+    },
+    {
+      "task_id": "frames-37",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "Jesse Tyler Ferguson married Justin Mikita.",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.001137,
+      "episodes": 1,
+      "sec": 5
+    },
+    {
+      "task_id": "frames-297",
+      "reasoning_types": "Tabular reasoning | Multiple constraints | Temporal reasoning",
+      "model_answer": "\"Little Things Mean a Lot\"",
+      "steps": 4,
+      "submitted": false,
+      "cost_usd": 0.006219,
+      "episodes": 2,
+      "sec": 46
+    },
+    {
+      "task_id": "frames-750",
+      "reasoning_types": "Temporal reasoning",
+      "model_answer": "8",
+      "steps": 6,
+      "submitted": false,
+      "cost_usd": 0.016388,
+      "episodes": 3,
+      "sec": 92
+    },
+    {
+      "task_id": "frames-197",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "Las Vegas",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.001446,
+      "episodes": 1,
+      "sec": 9
+    },
+    {
+      "task_id": "frames-740",
+      "reasoning_types": "Numerical reasoning | Tabular reasoning",
+      "model_answer": "5",
+      "steps": 2,
+      "submitted": true,
+      "cost_usd": 0.004468,
+      "episodes": 1,
+      "sec": 11
+    },
+    {
+      "task_id": "frames-334",
+      "reasoning_types": "Tabular reasoning | Temporal reasoning",
+      "model_answer": "Paula Radcliffe",
+      "steps": 6,
+      "submitted": false,
+      "cost_usd": 0.016198,
+      "episodes": 3,
+      "sec": 118
+    },
+    {
+      "task_id": "frames-68",
+      "reasoning_types": "Multiple constraints",
+      "model_answer": "Baldur's Gate 3",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.007003,
+      "episodes": 1,
+      "sec": 44
+    },
+    {
+      "task_id": "frames-373",
+      "reasoning_types": "Tabular reasoning | Multiple constraints",
+      "model_answer": "For the Dawes Plan",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.003599,
+      "episodes": 1,
+      "sec": 32
+    },
+    {
+      "task_id": "frames-111",
+      "reasoning_types": "Numerical reasoning | Multiple constraints | Temporal reasoning",
+      "model_answer": "91",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.002616,
+      "episodes": 1,
+      "sec": 20
+    },
+    {
+      "task_id": "frames-102",
+      "reasoning_types": "Tabular reasoning | Multiple constraints | Post processing",
+      "model_answer": "J Root",
+      "steps": 2,
+      "submitted": false,
+      "cost_usd": 0.020865,
+      "episodes": 1,
+      "sec": 94
+    },
+    {
+      "task_id": "frames-749",
+      "reasoning_types": "Tabular reasoning | Multiple constraints",
+      "model_answer": "",
+      "steps": 6,
+      "submitted": false,
+      "cost_usd": 0.014251,
+      "episodes": 3,
+      "sec": 105
+    },
+    {
+      "task_id": "frames-145",
+      "reasoning_types": "Tabular reasoning | Multiple constraints | Post processing",
+      "model_answer": "",
+      "steps": 6,
+      "submitted": false,
+      "cost_usd": 0.012646,
+      "episodes": 3,
+      "sec": 92
+    },
+    {
+      "task_id": "frames-545",
+      "reasoning_types": "Numerical reasoning | Tabular reasoning | Temporal reasoning",
+      "model_answer": "15",
+      "steps": 4,
+      "submitted": false,
+      "cost_usd": 0.030055,
+      "episodes": 2,
+      "sec": 111
+    },
+    {
+      "task_id": "frames-132",
+      "reasoning_types": "Numerical reasoning | Temporal reasoning",
+      "model_answer": "113",
+      "steps": 6,
+      "submitted": false,
+      "cost_usd": 0.081186,
+      "episodes": 3,
+      "sec": 587
+    }
+  ]
+}

@@ -183,6 +183,23 @@ export async function verifierBoN(task, deps, { samples = 3, sampleTemp = 0.7, .
     extra: { samples, majority_answer: majorityAnswer, majority_votes: voteN, verifier_pick: pickedIdx, candidate_answers: cands.map((c) => c.answer) } };
 }
 
+// ── Fail-fast: short 2-turn episode, drop + respawn on empty ─────────────────────
+// A deliberately CHEAP, SHALLOW arm: cap each episode at `shortSteps` turns, then
+// (via runEpisode's salvage) force a final answer. If the answer is empty, DROP the
+// episode and RESPAWN a fresh one (new temp>0 sample) up to `respawns` times; keep the
+// first non-empty answer. Trades depth for cost: great on easy lookups, expected to
+// FAIL on deep multi-hop chains (which is the signal the router should learn to avoid).
+// GOLD-FREE: the respawn trigger is the empty-answer heuristic only, never correctness.
+export async function failFast(task, deps, { respawns = 2, shortSteps = 2, sampleTemp = 0.7, ...opts } = {}) {
+  let cost = 0, episodes = 0, answer = '', submitted = false, steps = 0;
+  for (let attempt = 0; attempt <= respawns; attempt++) {
+    const ep = await runEpisode(task, deps, { ...opts, maxSteps: shortSteps, temp: attempt === 0 ? (opts.temp ?? 0) : sampleTemp });
+    cost += ep.cost; episodes++; steps += ep.steps;
+    if (ep.answer && ep.answer.trim()) { answer = ep.answer.trim(); submitted = ep.submitted; break; } // first non-empty wins
+  }
+  return { answer, steps, cost, submitted, episodes, extra: { respawns_used: episodes - 1, short_steps: shortSteps } };
+}
+
 // ── Compound: Plan-and-Solve prefix + Verifier-gated Best-of-N ───────────────────
 // Hypothesis (SOTA shortlist): a plan prefix that fixes missing-step errors, AND a
 // verifier that closes the generation-verification gap, stack. One plan call, then N
@@ -202,11 +219,12 @@ export async function planBoN(task, deps, { samples = 5, sampleTemp = 0.7, ...op
 }
 
 // ── Dispatcher ───────────────────────────────────────────────────────────────────
-export async function solveWithScaffold(task, deps, { scaffold = 'none', samples = 3, sampleTemp = 0.7, reflexionRounds = 2, tau = 0.7, ...opts } = {}) {
+export async function solveWithScaffold(task, deps, { scaffold = 'none', samples = 3, sampleTemp = 0.7, reflexionRounds = 2, tau = 0.7, respawns = 2, shortSteps = 2, ...opts } = {}) {
   if (scaffold === 'plan') return planAndSolve(task, deps, opts);
   if (scaffold === 'reflexion') return reflexion(task, deps, { rounds: reflexionRounds, tau, ...opts });
   if (scaffold === 'verifier-bon') return verifierBoN(task, deps, { samples, sampleTemp, ...opts });
   if (scaffold === 'ps-bon') return planBoN(task, deps, { samples, sampleTemp, ...opts });
+  if (scaffold === 'failfast') return failFast(task, deps, { respawns, shortSteps, sampleTemp, ...opts });
   // none — the plain base episode.
   const ep = await runEpisode(task, deps, opts);
   return { answer: ep.answer, steps: ep.steps, cost: ep.cost, submitted: ep.submitted, episodes: 1, extra: {} };

@@ -1,0 +1,654 @@
+{
+  "experiment": "learned adaptive routing policy vs best static (FRAMES)",
+  "dataset": "google/frames-benchmark",
+  "seed": 42,
+  "policy_engine": "rvf-solver algorithm (two-signal Thompson Sampling, context-bucketed), reimplemented — NOT the @ruvector/rvf-solver npm package (its train() is puzzle-train-locked and cannot accept external arms/rewards)",
+  "reasoning": "off (no reasoning API param; consistent with prior FRAMES runs)",
+  "split": {
+    "train_n": 50,
+    "eval_n": 50,
+    "train_ids": [
+      "frames-416",
+      "frames-175",
+      "frames-757",
+      "frames-621",
+      "frames-286",
+      "frames-454",
+      "frames-661",
+      "frames-482",
+      "frames-119",
+      "frames-44",
+      "frames-298",
+      "frames-462",
+      "frames-322",
+      "frames-403",
+      "frames-7",
+      "frames-498",
+      "frames-54",
+      "frames-121",
+      "frames-504",
+      "frames-377",
+      "frames-86",
+      "frames-379",
+      "frames-346",
+      "frames-16",
+      "frames-550",
+      "frames-473",
+      "frames-407",
+      "frames-494",
+      "frames-644",
+      "frames-263",
+      "frames-282",
+      "frames-328",
+      "frames-709",
+      "frames-139",
+      "frames-17",
+      "frames-74",
+      "frames-110",
+      "frames-753",
+      "frames-167",
+      "frames-591",
+      "frames-797",
+      "frames-408",
+      "frames-598",
+      "frames-765",
+      "frames-571",
+      "frames-526",
+      "frames-293",
+      "frames-517",
+      "frames-659",
+      "frames-320"
+    ],
+    "eval_ids": [
+      "frames-124",
+      "frames-108",
+      "frames-240",
+      "frames-432",
+      "frames-22",
+      "frames-800",
+      "frames-412",
+      "frames-822",
+      "frames-363",
+      "frames-120",
+      "frames-719",
+      "frames-728",
+      "frames-270",
+      "frames-243",
+      "frames-453",
+      "frames-438",
+      "frames-658",
+      "frames-496",
+      "frames-429",
+      "frames-559",
+      "frames-361",
+      "frames-89",
+      "frames-334",
+      "frames-123",
+      "frames-604",
+      "frames-663",
+      "frames-750",
+      "frames-764",
+      "frames-78",
+      "frames-348",
+      "frames-36",
+      "frames-739",
+      "frames-513",
+      "frames-818",
+      "frames-553",
+      "frames-297",
+      "frames-713",
+      "frames-805",
+      "frames-102",
+      "frames-156",
+      "frames-749",
+      "frames-37",
+      "frames-197",
+      "frames-68",
+      "frames-145",
+      "frames-740",
+      "frames-373",
+      "frames-545",
+      "frames-111",
+      "frames-132"
+    ]
+  },
+  "context": {
+    "features": [
+      "q_words (length)",
+      "probe_consistency (3-sample cheap agreement)",
+      "probe_confidence"
+    ],
+    "buckets": "len{short,long} × consistency{lo,mid,hi} = 6, global pool fallback",
+    "median_words_train": 24,
+    "bucket_counts_train": {
+      "long|lo": 22,
+      "short|lo": 26,
+      "long|mid": 1,
+      "short|mid": 1
+    },
+    "bucket_counts_eval": {
+      "short|lo": 26,
+      "long|lo": 24
+    }
+  },
+  "arms": {
+    "A": "base-ReAct (cheap)",
+    "B": "self-consistency N=5 (cheap)",
+    "C": "fail-fast respawn (cheap)",
+    "D": "route-to-frontier (opus)"
+  },
+  "static_baselines": {
+    "A": {
+      "label": "base-ReAct (cheap)",
+      "n": 50,
+      "correct": 19,
+      "resolve": 0.38,
+      "wilson95": [
+        0.2586,
+        0.5185
+      ],
+      "total_cost_usd": 0.7552,
+      "cost_per_task_usd": 0.015104,
+      "cost_per_correct_usd": 0.039747,
+      "arm_distribution": {
+        "A": 50,
+        "B": 0,
+        "C": 0,
+        "D": 0
+      }
+    },
+    "B": {
+      "label": "self-consistency N=5 (cheap)",
+      "n": 50,
+      "correct": 21,
+      "resolve": 0.42,
+      "wilson95": [
+        0.2937,
+        0.5577
+      ],
+      "total_cost_usd": 4.9971,
+      "cost_per_task_usd": 0.099943,
+      "cost_per_correct_usd": 0.237959,
+      "arm_distribution": {
+        "A": 0,
+        "B": 50,
+        "C": 0,
+        "D": 0
+      }
+    },
+    "C": {
+      "label": "fail-fast respawn (cheap)",
+      "n": 50,
+      "correct": 15,
+      "resolve": 0.3,
+      "wilson95": [
+        0.191,
+        0.4375
+      ],
+      "total_cost_usd": 0.3566,
+      "cost_per_task_usd": 0.007131,
+      "cost_per_correct_usd": 0.02377,
+      "arm_distribution": {
+        "A": 0,
+        "B": 0,
+        "C": 50,
+        "D": 0
+      }
+    },
+    "D": {
+      "label": "route-to-frontier (opus)",
+      "n": 50,
+      "correct": 20,
+      "resolve": 0.4,
+      "wilson95": [
+        0.2761,
+        0.5382
+      ],
+      "total_cost_usd": 5.5165,
+      "cost_per_task_usd": 0.11033,
+      "cost_per_correct_usd": 0.275825,
+      "arm_distribution": {
+        "A": 0,
+        "B": 0,
+        "C": 0,
+        "D": 50
+      }
+    }
+  },
+  "oracle_best_fixed_arm": {
+    "chosen_on_train": "B",
+    "train_resolve": 0.52,
+    "n": 50,
+    "correct": 21,
+    "resolve": 0.42,
+    "wilson95": [
+      0.2937,
+      0.5577
+    ],
+    "total_cost_usd": 4.9971,
+    "cost_per_task_usd": 0.099943,
+    "cost_per_correct_usd": 0.237959,
+    "arm_distribution": {
+      "A": 0,
+      "B": 50,
+      "C": 0,
+      "D": 0
+    }
+  },
+  "oracle_per_question_eval_upper_bound": {
+    "n": 50,
+    "correct": 24,
+    "resolve": 0.48,
+    "wilson95": [
+      0.348,
+      0.6149
+    ],
+    "total_cost_usd": 0.6801,
+    "cost_per_task_usd": 0.013601,
+    "cost_per_correct_usd": 0.028336,
+    "arm_distribution": {
+      "A": 13,
+      "B": 2,
+      "C": 32,
+      "D": 3
+    }
+  },
+  "learned_sweep": [
+    {
+      "V": 0.03,
+      "n": 50,
+      "correct": 15,
+      "resolve": 0.3,
+      "wilson95": [
+        0.191,
+        0.4375
+      ],
+      "total_cost_usd": 0.4462,
+      "cost_per_task_usd": 0.008925,
+      "cost_per_correct_usd": 0.029749,
+      "arm_distribution": {
+        "A": 0,
+        "B": 0,
+        "C": 50,
+        "D": 0
+      },
+      "eval_excl_probe_cost_per_correct": 0.02377,
+      "train_accuracy_per_dollar": 36.19
+    },
+    {
+      "V": 0.05,
+      "n": 50,
+      "correct": 15,
+      "resolve": 0.3,
+      "wilson95": [
+        0.191,
+        0.4375
+      ],
+      "total_cost_usd": 0.4462,
+      "cost_per_task_usd": 0.008925,
+      "cost_per_correct_usd": 0.029749,
+      "arm_distribution": {
+        "A": 0,
+        "B": 0,
+        "C": 50,
+        "D": 0
+      },
+      "eval_excl_probe_cost_per_correct": 0.02377,
+      "train_accuracy_per_dollar": 36.19
+    },
+    {
+      "V": 0.08,
+      "n": 50,
+      "correct": 15,
+      "resolve": 0.3,
+      "wilson95": [
+        0.191,
+        0.4375
+      ],
+      "total_cost_usd": 0.4462,
+      "cost_per_task_usd": 0.008925,
+      "cost_per_correct_usd": 0.029749,
+      "arm_distribution": {
+        "A": 0,
+        "B": 0,
+        "C": 50,
+        "D": 0
+      },
+      "eval_excl_probe_cost_per_correct": 0.02377,
+      "train_accuracy_per_dollar": 36.19
+    },
+    {
+      "V": 0.12,
+      "n": 50,
+      "correct": 18,
+      "resolve": 0.36,
+      "wilson95": [
+        0.2414,
+        0.4986
+      ],
+      "total_cost_usd": 0.614,
+      "cost_per_task_usd": 0.01228,
+      "cost_per_correct_usd": 0.03411,
+      "arm_distribution": {
+        "A": 24,
+        "B": 0,
+        "C": 26,
+        "D": 0
+      },
+      "eval_excl_probe_cost_per_correct": 0.029128,
+      "train_accuracy_per_dollar": 29.96
+    },
+    {
+      "V": 0.18,
+      "n": 50,
+      "correct": 18,
+      "resolve": 0.36,
+      "wilson95": [
+        0.2414,
+        0.4986
+      ],
+      "total_cost_usd": 0.614,
+      "cost_per_task_usd": 0.01228,
+      "cost_per_correct_usd": 0.03411,
+      "arm_distribution": {
+        "A": 24,
+        "B": 0,
+        "C": 26,
+        "D": 0
+      },
+      "eval_excl_probe_cost_per_correct": 0.029128,
+      "train_accuracy_per_dollar": 30.82
+    },
+    {
+      "V": 0.25,
+      "n": 50,
+      "correct": 18,
+      "resolve": 0.36,
+      "wilson95": [
+        0.2414,
+        0.4986
+      ],
+      "total_cost_usd": 0.614,
+      "cost_per_task_usd": 0.01228,
+      "cost_per_correct_usd": 0.03411,
+      "arm_distribution": {
+        "A": 24,
+        "B": 0,
+        "C": 26,
+        "D": 0
+      },
+      "eval_excl_probe_cost_per_correct": 0.029128,
+      "train_accuracy_per_dollar": 30.82
+    },
+    {
+      "V": 0.4,
+      "n": 50,
+      "correct": 19,
+      "resolve": 0.38,
+      "wilson95": [
+        0.2586,
+        0.5185
+      ],
+      "total_cost_usd": 0.8449,
+      "cost_per_task_usd": 0.016897,
+      "cost_per_correct_usd": 0.044467,
+      "arm_distribution": {
+        "A": 50,
+        "B": 0,
+        "C": 0,
+        "D": 0
+      },
+      "eval_excl_probe_cost_per_correct": 0.039747,
+      "train_accuracy_per_dollar": 22.36
+    },
+    {
+      "V": 0.7,
+      "n": 50,
+      "correct": 19,
+      "resolve": 0.38,
+      "wilson95": [
+        0.2586,
+        0.5185
+      ],
+      "total_cost_usd": 0.8449,
+      "cost_per_task_usd": 0.016897,
+      "cost_per_correct_usd": 0.044467,
+      "arm_distribution": {
+        "A": 50,
+        "B": 0,
+        "C": 0,
+        "D": 0
+      },
+      "eval_excl_probe_cost_per_correct": 0.039747,
+      "train_accuracy_per_dollar": 22.36
+    },
+    {
+      "V": 1.5,
+      "n": 50,
+      "correct": 21,
+      "resolve": 0.42,
+      "wilson95": [
+        0.2937,
+        0.5577
+      ],
+      "total_cost_usd": 2.599,
+      "cost_per_task_usd": 0.051979,
+      "cost_per_correct_usd": 0.12376,
+      "arm_distribution": {
+        "A": 24,
+        "B": 26,
+        "C": 0,
+        "D": 0
+      },
+      "eval_excl_probe_cost_per_correct": 0.11949,
+      "train_accuracy_per_dollar": 9.92
+    }
+  ],
+  "headline": {
+    "matched_budget_vs_always_A": {
+      "V": 0.4,
+      "learned": {
+        "resolve": 0.38,
+        "wilson95": [
+          0.2586,
+          0.5185
+        ],
+        "cost_per_task_usd": 0.016897,
+        "cost_per_correct_usd": 0.044467,
+        "arm_distribution": {
+          "A": 50,
+          "B": 0,
+          "C": 0,
+          "D": 0
+        }
+      },
+      "always_A": {
+        "resolve": 0.38,
+        "wilson95": [
+          0.2586,
+          0.5185
+        ],
+        "cost_per_task_usd": 0.015104,
+        "cost_per_correct_usd": 0.039747,
+        "arm_distribution": {
+          "A": 50,
+          "B": 0,
+          "C": 0,
+          "D": 0
+        }
+      }
+    },
+    "matched_resolve_vs_always_D": {
+      "V": 1.5,
+      "learned": {
+        "resolve": 0.42,
+        "wilson95": [
+          0.2937,
+          0.5577
+        ],
+        "cost_per_task_usd": 0.051979,
+        "cost_per_correct_usd": 0.12376,
+        "arm_distribution": {
+          "A": 24,
+          "B": 26,
+          "C": 0,
+          "D": 0
+        }
+      },
+      "always_D": {
+        "resolve": 0.4,
+        "wilson95": [
+          0.2761,
+          0.5382
+        ],
+        "cost_per_task_usd": 0.11033,
+        "cost_per_correct_usd": 0.275825,
+        "arm_distribution": {
+          "A": 0,
+          "B": 0,
+          "C": 0,
+          "D": 50
+        }
+      }
+    },
+    "best_accuracy_per_dollar_learned": {
+      "V": 0.03,
+      "resolve": 0.3,
+      "wilson95": [
+        0.191,
+        0.4375
+      ],
+      "cost_per_task_usd": 0.008925,
+      "cost_per_correct_usd": 0.029749,
+      "arm_distribution": {
+        "A": 0,
+        "B": 0,
+        "C": 50,
+        "D": 0
+      }
+    },
+    "any_learned_point_pareto_dominates_a_static": [
+      {
+        "V": 1.5,
+        "resolve": 0.42,
+        "cost": 0.051979
+      }
+    ]
+  },
+  "representative_policy_snapshot": {
+    "V": 0.03,
+    "buckets": {
+      "long|lo": {
+        "choose": "C",
+        "U": 0.00766,
+        "arms": {
+          "A": {
+            "n": 22,
+            "pMean": 0.5,
+            "costEma": 0.016274
+          },
+          "B": {
+            "n": 22,
+            "pMean": 0.5,
+            "costEma": 0.071025
+          },
+          "C": {
+            "n": 22,
+            "pMean": 0.3333,
+            "costEma": 0.002338
+          },
+          "D": {
+            "n": 22,
+            "pMean": 0.4167,
+            "costEma": 0.069973
+          }
+        }
+      },
+      "short|lo": {
+        "choose": "C",
+        "U": 0.00677,
+        "arms": {
+          "A": {
+            "n": 26,
+            "pMean": 0.4643,
+            "costEma": 0.02315
+          },
+          "B": {
+            "n": 26,
+            "pMean": 0.5357,
+            "costEma": 0.106843
+          },
+          "C": {
+            "n": 26,
+            "pMean": 0.3929,
+            "costEma": 0.005014
+          },
+          "D": {
+            "n": 26,
+            "pMean": 0.3929,
+            "costEma": 0.083468
+          }
+        }
+      },
+      "long|mid": {
+        "choose": "C",
+        "U": 0.00725,
+        "arms": {
+          "A": {
+            "n": 1,
+            "pMean": 0.6667,
+            "costEma": 0.021152
+          },
+          "B": {
+            "n": 1,
+            "pMean": 0.6667,
+            "costEma": 0.135902
+          },
+          "C": {
+            "n": 1,
+            "pMean": 0.3333,
+            "costEma": 0.010494
+          },
+          "D": {
+            "n": 1,
+            "pMean": 0.3333,
+            "costEma": 0.238224
+          }
+        }
+      },
+      "short|mid": {
+        "choose": "C",
+        "U": 0.00725,
+        "arms": {
+          "A": {
+            "n": 1,
+            "pMean": 0.3333,
+            "costEma": 0.004859
+          },
+          "B": {
+            "n": 1,
+            "pMean": 0.3333,
+            "costEma": 0.086791
+          },
+          "C": {
+            "n": 1,
+            "pMean": 0.3333,
+            "costEma": 0.002688
+          },
+          "D": {
+            "n": 1,
+            "pMean": 0.3333,
+            "costEma": 0.067305
+          }
+        }
+      }
+    }
+  },
+  "train_resolve_by_arm": {
+    "A": 0.48,
+    "B": 0.52,
+    "C": 0.34,
+    "D": 0.38
+  },
+  "ts": "2026-06-29T00:02:33.029Z"
+}
