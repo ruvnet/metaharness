@@ -19,6 +19,7 @@ import { priceUsd } from '../metering/pricing';
 import { makeCounter } from '../metering/tokenizer';
 import { meter } from '../metering/record';
 import {
+  idempotencyCacheKey,
   idempotencyKeyOf,
   mergeRoutingControls,
   requestIdOf,
@@ -26,6 +27,12 @@ import {
   sendRateLimited,
   setCognitumHeaders,
 } from '../core/http';
+
+// Explicit request-shape bounds (§3.4, sec-review). The global express.json limit only caps
+// raw bytes; these bound the structural fan-out fed to the difficulty regexes / tokenizer so
+// a single in-limit body can't carry a pathological messages array.
+const MAX_MESSAGES = 512;
+const MAX_MESSAGE_CHARS = 131_072; // 128 KiB of content per message
 
 function validateChatBody(body: unknown): ChatCompletionRequest | { error: string; code: string } {
   if (!body || typeof body !== 'object') return { error: 'Request body must be a JSON object.', code: 'invalid_request' };
@@ -35,6 +42,15 @@ function validateChatBody(body: unknown): ChatCompletionRequest | { error: strin
   }
   if (!Array.isArray(b.messages) || b.messages.length === 0) {
     return { error: 'Field "messages" must be a non-empty array.', code: 'invalid_request' };
+  }
+  if (b.messages.length > MAX_MESSAGES) {
+    return { error: `Too many messages (max ${MAX_MESSAGES}).`, code: 'invalid_request' };
+  }
+  for (const m of b.messages) {
+    const content = (m as { content?: unknown })?.content;
+    if (typeof content === 'string' && content.length > MAX_MESSAGE_CHARS) {
+      return { error: `A message exceeds the ${MAX_MESSAGE_CHARS}-character limit.`, code: 'invalid_request' };
+    }
   }
   if (b.n !== undefined && b.n !== 1) {
     return { error: 'Only n=1 is supported in v1.', code: 'invalid_request' };
@@ -50,6 +66,9 @@ export function makeChatCompletions(deps: AppDeps) {
     // a. AUTH — real cog_ scheme (§6): X-API-Key / Bearer → SHA-256 → store lookup.
     const auth = await verifyApiKey(extractApiKey(req.headers), deps.keyStore);
     if (!auth.ok) {
+      if (auth.logCode) {
+        console.warn(`[auth] ${requestId} rejected (${auth.logCode})${auth.logReason ? `: ${auth.logReason}` : ''}`);
+      }
       sendError(res, requestId, auth.status, auth.code, auth.error);
       return;
     }
@@ -65,8 +84,11 @@ export function makeChatCompletions(deps: AppDeps) {
     // a'. IDEMPOTENCY (§5.3) — a replay returns the cached result and is NOT re-billed or
     // rate-limited (short-circuits before tier/rate-limit/metering).
     const idemKey = idempotencyKeyOf(req.headers);
-    if (idemKey) {
-      const cached = await deps.idempotency.lookup(idemKey);
+    // Namespace the attacker-chosen key by the authenticated principal so the cache cannot
+    // leak across tenants / scopes (sec-review §5.3).
+    const cacheKey = idemKey ? idempotencyCacheKey(auth.key, idemKey) : undefined;
+    if (cacheKey) {
+      const cached = await deps.idempotency.lookup(cacheKey);
       if (cached) {
         res.setHeader('X-Request-Id', requestId);
         res.setHeader('Idempotent-Replay', 'true');
@@ -141,16 +163,14 @@ export function makeChatCompletions(deps: AppDeps) {
         idempotencyKey: idemKey,
       });
 
-      if (idemKey) await deps.idempotency.store(idemKey, { status: 200, body: response });
+      if (cacheKey) await deps.idempotency.store(cacheKey, { status: 200, body: response });
       res.status(200).json(response);
     } catch (err) {
-      sendError(
-        res,
-        requestId,
-        502,
-        'upstream_error',
-        err instanceof Error ? err.message : 'Upstream provider error.',
-      );
+      // Never leak the concrete vendor model roster / provider name to the client (§3.4):
+      // the attempted-model chain (ProviderError) is logged server-side keyed by requestId;
+      // the wire body is a generic, stable message.
+      console.error(`[upstream] ${requestId} provider error: ${err instanceof Error ? err.message : String(err)}`);
+      sendError(res, requestId, 502, 'upstream_error', 'Upstream provider error.');
     }
   };
 }
@@ -290,16 +310,41 @@ async function streamResponse(
     });
   });
 
-  for await (const delta of deps.provider.stream(model, body)) {
-    if (finalized) break; // client disconnected → stop streaming (close handler already billed)
-    if (delta.content) completionCounter.pushDelta(delta.content);
-    writeChunk({
-      id,
-      object: 'chat.completion.chunk',
-      created,
-      model: body.model,
-      choices: [{ index: 0, delta: delta.content ? { content: delta.content } : {}, finish_reason: delta.finishReason ?? null }],
-    });
+  // A provider error AFTER the first chunk means headers are already flushed — we CANNOT fall
+  // through to the outer sendError (that calls res.json() → 'headers already sent', hanging the
+  // SSE socket). Instead emit a terminal SSE error chunk + [DONE] + end; the res.on('close')
+  // handler then bills the partial answer exactly once (truncated:true). If the error happens
+  // before any byte is written, rethrow so the outer catch can still send a clean 502 JSON.
+  try {
+    for await (const delta of deps.provider.stream(model, body)) {
+      if (finalized) break; // client disconnected → stop streaming (close handler already billed)
+      if (delta.content) completionCounter.pushDelta(delta.content);
+      writeChunk({
+        id,
+        object: 'chat.completion.chunk',
+        created,
+        model: body.model,
+        choices: [{ index: 0, delta: delta.content ? { content: delta.content } : {}, finish_reason: delta.finishReason ?? null }],
+      });
+    }
+  } catch (err) {
+    console.error(`[upstream] ${requestId} stream error: ${err instanceof Error ? err.message : String(err)}`);
+    if (!res.headersSent) {
+      throw err; // nothing streamed yet → let the outer catch emit a generic 502 JSON envelope
+    }
+    if (!res.writableEnded) {
+      writeChunk({
+        id,
+        object: 'chat.completion.chunk',
+        created,
+        model: body.model,
+        choices: [{ index: 0, delta: {}, finish_reason: 'stop' }],
+        error: { code: 'upstream_error', message: 'Upstream provider error.' },
+      });
+      res.write('data: [DONE]\n\n');
+      res.end(); // → 'close' fires → close handler bills the partial (truncated:true) once
+    }
+    return;
   }
 
   // If the client disconnected, the close handler already wrote the truncated ledger row;

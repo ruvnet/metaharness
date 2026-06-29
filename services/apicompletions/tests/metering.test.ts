@@ -179,6 +179,32 @@ describe('idempotency — 24h replay cache, NOT re-billed (ADR-203 §5.3)', () =
 
     expect(ledger.size).toBe(1); // billed once, not twice
   });
+
+  it('does NOT replay across API keys — the cache is namespaced per principal (sec-review §5.3)', async () => {
+    const ledger = new InMemoryLedgerStore();
+    const idempotency = new InMemoryIdempotencyStore();
+    const app = createAppWith({ keyStore: seededStore(), ledger, idempotency });
+    const send = (apiKey: string) =>
+      request(app)
+        .post('/v1/chat/completions')
+        .set('X-API-Key', apiKey)
+        .set('Idempotency-Key', 'shared-idem-key')
+        .send({ model: 'cognitum-low', messages: [{ role: 'user', content: 'secret for key A' }] });
+
+    // Key A (LOW) stores a completion under Idempotency-Key 'shared-idem-key'.
+    const a = await send(LOW);
+    expect(a.status).toBe(200);
+    expect(a.headers['idempotent-replay']).toBeUndefined();
+
+    // Key B (ALL) sends the SAME attacker-chosen Idempotency-Key → MUST MISS (no replay), and
+    // is processed/billed on its own — never served A's cached body (cross-tenant leak).
+    const b = await send(ALL);
+    expect(b.status).toBe(200);
+    expect(b.headers['idempotent-replay']).toBeUndefined(); // not a replay of A
+    expect(b.body.id).not.toBe(a.body.id); // distinct completion, not A's leaked row
+
+    expect(ledger.size).toBe(2); // both keys billed — no cross-tenant billing bypass
+  });
 });
 
 // ───────────────────── Ledger + publish on the request path (§5.1) ─────────────────────

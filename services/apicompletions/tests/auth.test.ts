@@ -58,12 +58,25 @@ describe('auth — cog_ key scheme (ADR-203 §6)', () => {
     expect((await verifyApiKey(VALID2, s))).toMatchObject({ ok: false, status: 401, code: 'invalid_api_key' });
   });
 
-  it('rejects inactive and expired keys with 401', async () => {
+  it('rejects inactive and expired keys with an OPAQUE 401 (granular reason in logs only)', async () => {
     const s = new InMemoryKeyStore();
     s.add(VALID, { permissions: [COMPLETION_SCOPES.low], rateLimit: 1, active: false, expiresAt: null });
     s.add(VALID2, { permissions: [COMPLETION_SCOPES.low], rateLimit: 1, active: true, expiresAt: new Date(Date.now() - 1000) });
-    expect((await verifyApiKey(VALID, s))).toMatchObject({ ok: false, code: 'key_inactive' });
-    expect((await verifyApiKey(VALID2, s))).toMatchObject({ ok: false, code: 'key_expired' });
+    // External wire code/error must NOT reveal key state (anti-enumeration, §6) — collapsed to
+    // the same invalid_api_key / 'Invalid API key.' as an unknown key; reason kept in logCode.
+    expect((await verifyApiKey(VALID, s))).toMatchObject({ ok: false, code: 'invalid_api_key', error: 'Invalid API key.', logCode: 'key_inactive' });
+    expect((await verifyApiKey(VALID2, s))).toMatchObject({ ok: false, code: 'invalid_api_key', error: 'Invalid API key.', logCode: 'key_expired' });
+  });
+
+  it('returns an indistinguishable response for unknown vs inactive vs expired keys', async () => {
+    const s = new InMemoryKeyStore();
+    s.add(VALID, { permissions: [COMPLETION_SCOPES.low], rateLimit: 1, active: false, expiresAt: null });
+    const unknown = await verifyApiKey(VALID2, s); // valid format, not in store
+    const inactive = await verifyApiKey(VALID, s);
+    if (unknown.ok || inactive.ok) throw new Error('expected both to fail');
+    expect(unknown.status).toBe(inactive.status);
+    expect(unknown.code).toBe(inactive.code);
+    expect(unknown.error).toBe(inactive.error);
   });
 
   it('accepts a valid, active, scoped key', async () => {

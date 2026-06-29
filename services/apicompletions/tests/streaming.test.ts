@@ -76,6 +76,21 @@ function slowProvider(deltas = ['alpha ', 'bravo ', 'charlie ', 'delta ', 'echo 
   };
 }
 
+/** A provider that streams one good delta, then throws (provider 5xx mid-stream). */
+function throwAfterFirst(): ModelProvider {
+  return {
+    name: 'throw-after-first',
+    async complete(): Promise<ProviderResult> {
+      return { text: 'partial answer ', usage: undefined };
+    },
+    async *stream(): AsyncIterable<ProviderDelta> {
+      yield { content: 'partial answer ', finishReason: null };
+      // Carries vendor detail that must NEVER reach the client (§3.4).
+      throw new Error('openrouter deepseek-v4-pro → HTTP 503');
+    },
+  };
+}
+
 // ───────────────────── integration — the route streaming paths ─────────────────────
 describe('streaming — /v1/chat/completions SSE paths (ADR-203 §3.3)', () => {
   it('stream_oneshot (default for stream:true): OpenAI-shaped SSE + final usage/x_cognitum chunk', async () => {
@@ -141,6 +156,33 @@ describe('streaming — /v1/chat/completions SSE paths (ADR-203 §3.3)', () => {
     expect(rows[0].truncated).toBe(true);
     expect(rows[0].tier).toBe('low');
     expect(rows[0].tokensFromLocalFloor).toBe(true);
+  });
+
+  it('provider error AFTER the first chunk → terminal SSE error (no headers-already-sent crash), bills once, no vendor leak (sec-review §3.3/§3.4)', async () => {
+    const ledger = new InMemoryLedgerStore();
+    const app = createAppWith({ keyStore: seededStore(), provider: throwAfterFirst(), ledger });
+    const res = await request(app)
+      .post('/v1/chat/completions')
+      .set('X-API-Key', LOW)
+      .send({ model: 'cognitum-low', messages: [{ role: 'user', content: 'hi' }], stream: true });
+    // Headers were already flushed by the first chunk → status is 200 SSE, NOT a 502 JSON.
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('text/event-stream');
+    expect(res.text).toContain('partial answer'); // the delta delivered before the error
+    // A terminal error chunk is emitted with a GENERIC message — no vendor id / provider name.
+    const errChunk = parseChunks(res.text).find((c) => (c as { error?: unknown }).error) as
+      | { error?: { code?: string; message?: string } }
+      | undefined;
+    expect(errChunk?.error?.code).toBe('upstream_error');
+    expect(errChunk?.error?.message).toBe('Upstream provider error.');
+    expect(res.text).not.toContain('deepseek');
+    expect(res.text).not.toContain('openrouter');
+    expect(res.text).not.toContain('HTTP 503');
+    expect(res.text.trimEnd().endsWith('data: [DONE]')).toBe(true);
+    await tick(60); // let res 'close' + the truncation meter settle
+    const rows = ledger.all();
+    expect(rows).toHaveLength(1); // billed exactly once (partial, truncated) — not double-billed
+    expect(rows[0].truncated).toBe(true);
   });
 });
 

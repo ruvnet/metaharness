@@ -66,10 +66,17 @@ export class InMemoryKeyStore implements KeyStore {
   }
 }
 
-/** Result of an auth attempt — success carries the key doc, failure the wire error. */
+/**
+ * Result of an auth attempt — success carries the key doc, failure the wire error.
+ * On failure the wire `code`/`error` are deliberately OPAQUE (§6, sec-review): malformed,
+ * unknown, inactive and expired keys all collapse to a single `invalid_api_key` /
+ * 'Invalid API key.' so a caller cannot enumerate valid-but-disabled keys. The granular
+ * reason is preserved in `logCode`/`logReason` for SERVER-SIDE logs only (never sent to
+ * the client).
+ */
 export type AuthOutcome =
   | { ok: true; key: ApiKeyDoc; rawPrefix: string }
-  | { ok: false; status: number; code: string; error: string };
+  | { ok: false; status: number; code: string; error: string; logCode?: string; logReason?: string };
 
 /**
  * Extract the raw cog_ key from the request headers.
@@ -100,18 +107,28 @@ export async function verifyApiKey(
   if (!rawKey) {
     return { ok: false, status: 401, code: 'missing_api_key', error: 'Missing API key. Provide X-API-Key or Authorization: Bearer.' };
   }
+  // Opaque external response for every "this key won't authenticate" case — the granular
+  // reason rides along in logCode/logReason for server logs only (anti-enumeration, §6).
+  const invalid = (logCode: string, logReason: string): AuthOutcome => ({
+    ok: false,
+    status: 401,
+    code: 'invalid_api_key',
+    error: 'Invalid API key.',
+    logCode,
+    logReason,
+  });
   if (!isValidKeyFormat(rawKey)) {
-    return { ok: false, status: 401, code: 'invalid_api_key', error: 'Malformed API key.' };
+    return invalid('malformed', 'Malformed API key.');
   }
   const doc = await store.findByHash(hashKey(rawKey));
   if (!doc) {
-    return { ok: false, status: 401, code: 'invalid_api_key', error: 'Unknown API key.' };
+    return invalid('unknown_key', 'Unknown API key.');
   }
   if (!doc.active) {
-    return { ok: false, status: 401, code: 'key_inactive', error: 'API key is inactive.' };
+    return invalid('key_inactive', 'API key is inactive.');
   }
   if (doc.expiresAt && doc.expiresAt.getTime() <= Date.now()) {
-    return { ok: false, status: 401, code: 'key_expired', error: 'API key has expired.' };
+    return invalid('key_expired', 'API key has expired.');
   }
   return { ok: true, key: doc, rawPrefix: keyPrefix(rawKey) };
 }

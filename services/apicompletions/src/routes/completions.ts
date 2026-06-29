@@ -15,14 +15,20 @@ interface LegacyCompletionRequest extends Omit<ChatCompletionRequest, 'messages'
   prompt?: string | string[];
 }
 
-function promptToMessages(prompt: string | string[] | undefined): ChatCompletionRequest['messages'] | null {
+// Bound the adapted prompt size (§3.4, sec-review) — mirrors the chat-route MAX_MESSAGE_CHARS
+// so a single in-byte-limit legacy body can't carry a pathological prompt into the tokenizer.
+const MAX_PROMPT_CHARS = 131_072;
+
+function promptToMessages(prompt: string | string[] | undefined): ChatCompletionRequest['messages'] | 'empty' | 'too_large' {
+  let content: string | null = null;
   if (typeof prompt === 'string' && prompt.length > 0) {
-    return [{ role: 'user', content: prompt }];
+    content = prompt;
+  } else if (Array.isArray(prompt) && prompt.length > 0) {
+    content = prompt.join('\n');
   }
-  if (Array.isArray(prompt) && prompt.length > 0) {
-    return [{ role: 'user', content: prompt.join('\n') }];
-  }
-  return null;
+  if (content === null) return 'empty';
+  if (content.length > MAX_PROMPT_CHARS) return 'too_large';
+  return [{ role: 'user', content }];
 }
 
 export function makeCompletions(deps: AppDeps) {
@@ -32,6 +38,9 @@ export function makeCompletions(deps: AppDeps) {
 
     const auth = await verifyApiKey(extractApiKey(req.headers), deps.keyStore);
     if (!auth.ok) {
+      if (auth.logCode) {
+        console.warn(`[auth] ${requestId} rejected (${auth.logCode})${auth.logReason ? `: ${auth.logReason}` : ''}`);
+      }
       sendError(res, requestId, auth.status, auth.code, auth.error);
       return;
     }
@@ -46,8 +55,12 @@ export function makeCompletions(deps: AppDeps) {
       return;
     }
     const messages = promptToMessages(b.prompt);
-    if (!messages) {
+    if (messages === 'empty') {
       sendError(res, requestId, 400, 'invalid_request', 'Field "prompt" must be a non-empty string or array.');
+      return;
+    }
+    if (messages === 'too_large') {
+      sendError(res, requestId, 400, 'invalid_request', `Field "prompt" exceeds the ${MAX_PROMPT_CHARS}-character limit.`);
       return;
     }
 
@@ -117,13 +130,9 @@ export function makeCompletions(deps: AppDeps) {
         x_cognitum,
       });
     } catch (err) {
-      sendError(
-        res,
-        requestId,
-        502,
-        'upstream_error',
-        err instanceof Error ? err.message : 'Upstream provider error.',
-      );
+      // Generic wire body; the concrete attempted-model chain is logged server-side only (§3.4).
+      console.error(`[upstream] ${requestId} provider error: ${err instanceof Error ? err.message : String(err)}`);
+      sendError(res, requestId, 502, 'upstream_error', 'Upstream provider error.');
     }
   };
 }

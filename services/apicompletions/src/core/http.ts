@@ -3,6 +3,7 @@
 // as headers (mirroring the body fields); X-Cognitum-* response headers mirror x_cognitum.
 import { randomUUID } from 'crypto';
 import type { Request, Response } from 'express';
+import type { ApiKeyDoc } from '../auth/apiKey';
 import type { ChatCompletionRequest, EscalationStrategy, ErrorEnvelope, FallbackPolicy, Tier } from '../types/openai';
 
 export function requestIdOf(req: Request): string {
@@ -27,6 +28,18 @@ export function idempotencyKeyOf(headers: Request['headers']): string | undefine
   if (typeof v === 'string' && v.length > 0) return v;
   if (Array.isArray(v) && v.length > 0) return v[0];
   return undefined;
+}
+
+/**
+ * Namespace the client-chosen Idempotency-Key by the authenticated principal (§5.3,
+ * sec-review). The raw header is attacker-chosen, so keying the cache on it verbatim lets
+ * tenant B replay tenant A's cached completion (cross-tenant disclosure) AND skip
+ * rate-limit/metering (billing bypass). We compose `${keyHash}:${idemKey}` — the per-key
+ * SHA-256 hash (NOT the plaintext) — so the cache is strictly per API key and a lower-scope
+ * key can never read another key's cached output.
+ */
+export function idempotencyCacheKey(key: ApiKeyDoc, idemKey: string): string {
+  return `${key.key}:${idemKey}`;
 }
 
 /**

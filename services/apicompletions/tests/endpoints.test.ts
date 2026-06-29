@@ -167,6 +167,12 @@ describe('endpoints — provider fallback chain (ADR-203 §3.2)', () => {
       .send({ model: 'cognitum-low', messages: [{ role: 'user', content: 'hi' }] });
     expect(res.status).toBe(502);
     expect(res.body.code).toBe('upstream_error');
+    // The wire body must NOT leak the concrete vendor model roster / provider name (§3.4).
+    expect(res.body.error).toBe('Upstream provider error.');
+    const serialized = JSON.stringify(res.body);
+    expect(serialized).not.toContain('deepseek');
+    expect(serialized).not.toContain('glm-');
+    expect(serialized).not.toContain('tier chain');
   });
 });
 
