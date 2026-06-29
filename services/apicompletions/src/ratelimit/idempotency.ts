@@ -2,12 +2,19 @@
 // caching the response + status for 24h. Replays return the stored result and are NOT
 // re-billed (the route short-circuits before rate-limit + metering). Critical for
 // streaming retries. DI'd behind a store interface like the rest of the metering surface.
-import type { ChatCompletionResponse } from '../types/openai';
 import type { FirestoreLike } from '../firestore/client';
+
+/**
+ * Cached body — a serialized JSON response object. Broadened from the OpenAI response shape to
+ * a generic JSON record so the SAME cache serves both /v1/chat/completions (ChatCompletionResponse)
+ * and /v1/messages (AnthropicMessageResponse); the value is only ever re-serialized, never read
+ * field-by-field, so the concrete shape does not matter here.
+ */
+export type CachedBody = object;
 
 export interface CachedResponse {
   status: number;
-  body: ChatCompletionResponse;
+  body: CachedBody;
 }
 
 /** 24h cache window (§5.3). */
@@ -59,7 +66,7 @@ export class FirestoreIdempotencyStore implements IdempotencyStore {
     const data = snap.data();
     if (!data) return null;
     if (typeof data.expireAt === 'number' && data.expireAt <= Date.now()) return null;
-    return { status: data.status as number, body: data.body as ChatCompletionResponse };
+    return { status: data.status as number, body: data.body as CachedBody };
   }
 
   async store(key: string, resp: CachedResponse): Promise<void> {

@@ -6,6 +6,7 @@ import express, { type Express, type Request, type Response } from 'express';
 import { type AppDeps, type AppDepsOverrides, defaultDeps } from './deps';
 import { makeChatCompletions } from './routes/chatCompletions';
 import { makeCompletions } from './routes/completions';
+import { makeMessages } from './routes/messages';
 import { getModels } from './routes/models';
 
 export function createApp(deps: AppDeps = defaultDeps()): Express {
@@ -19,6 +20,7 @@ export function createApp(deps: AppDeps = defaultDeps()): Express {
   app.get('/v1/models', getModels);
   app.post('/v1/chat/completions', makeChatCompletions(deps));
   app.post('/v1/completions', makeCompletions(deps));
+  app.post('/v1/messages', makeMessages(deps)); // Anthropic Messages API (ADR-203 §3.6)
 
   return app;
 }
