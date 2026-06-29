@@ -1,0 +1,739 @@
+{
+  "inputs": {
+    "prior": "/home/ruvultra/projects/agent-harness-generator/docs/research/retort-placement/results-combined-v2.csv",
+    "new": "/tmp/claude-1000/-home-ruvultra-projects-agent-harness-generator/ec35bf87-f599-4921-ac41-4996378d9334/scratchpad/grid3/results-routed-v3.csv"
+  },
+  "new_diagnosis": {
+    "pass": 39,
+    "genuine_model_fail": 8,
+    "tooling_false_fail": 1
+  },
+  "new_n_genuine": 47,
+  "new_by_routing_genuine": {
+    "off": {
+      "n": 23,
+      "coverage_mean": 0.8357,
+      "coverage_median": 1.0,
+      "code_quality_mean": 0.628,
+      "cost_per_task_mean": 0.087713,
+      "latency_s_mean": 574.66,
+      "latency_s_median": 613.61,
+      "pass_rate": 0.7826,
+      "pass_lo": 0.581,
+      "pass_hi": 0.9034,
+      "n_full_cov": 15
+    },
+    "opus": {
+      "n": 24,
+      "coverage_mean": 0.9273,
+      "coverage_median": 1.0,
+      "code_quality_mean": 0.5829,
+      "cost_per_task_mean": 0.279208,
+      "latency_s_mean": 344.01,
+      "latency_s_median": 333.62,
+      "pass_rate": 0.875,
+      "pass_lo": 0.69,
+      "pass_hi": 0.9566,
+      "n_full_cov": 19
+    }
+  },
+  "new_by_routing_allin": {
+    "off": {
+      "n_all": 24,
+      "pass_rate_allin": 0.75,
+      "pass_lo": 0.551,
+      "pass_hi": 0.88,
+      "timeouts": 1
+    },
+    "opus": {
+      "n_all": 24,
+      "pass_rate_allin": 0.875,
+      "pass_lo": 0.69,
+      "pass_hi": 0.9566,
+      "timeouts": 0
+    }
+  },
+  "new_timeouts_total": 1,
+  "escalation": {
+    "n_opus_cells": 24,
+    "n_escalated": 8,
+    "escalation_rate": 0.3333,
+    "escalated_by_lang": {
+      "go": {
+        "n": 6,
+        "escalated": 2
+      },
+      "python": {
+        "n": 6,
+        "escalated": 0
+      },
+      "rust": {
+        "n": 6,
+        "escalated": 3
+      },
+      "typescript": {
+        "n": 6,
+        "escalated": 3
+      }
+    },
+    "escalated_by_task": {
+      "cli-data-pipeline": {
+        "n": 12,
+        "escalated": 4
+      },
+      "rest-api-crud": {
+        "n": 12,
+        "escalated": 4
+      }
+    }
+  },
+  "i2_baseline_mh_cheap": {
+    "n": 21,
+    "coverage_mean": 0.9133,
+    "coverage_median": 1.0,
+    "code_quality_mean": 0.6593,
+    "cost_per_task_mean": 0.085034,
+    "latency_s_mean": 523.73,
+    "latency_s_median": 381.86,
+    "pass_rate": 0.9524,
+    "pass_lo": 0.7733,
+    "pass_hi": 0.9915,
+    "n_full_cov": 16,
+    "allin": {
+      "n_all": 24,
+      "pass_rate_allin": 0.8333,
+      "pass_lo": 0.6415,
+      "pass_hi": 0.9332,
+      "timeouts": 3
+    }
+  },
+  "i3_off_control": {
+    "n": 23,
+    "coverage_mean": 0.8357,
+    "coverage_median": 1.0,
+    "code_quality_mean": 0.628,
+    "cost_per_task_mean": 0.087713,
+    "latency_s_mean": 574.66,
+    "latency_s_median": 613.61,
+    "pass_rate": 0.7826,
+    "pass_lo": 0.581,
+    "pass_hi": 0.9034,
+    "n_full_cov": 15
+  },
+  "i3_off_control_allin": {
+    "n_all": 24,
+    "pass_rate_allin": 0.75,
+    "pass_lo": 0.551,
+    "pass_hi": 0.88,
+    "timeouts": 1
+  },
+  "i3_routed_opus": {
+    "n": 24,
+    "coverage_mean": 0.9273,
+    "coverage_median": 1.0,
+    "code_quality_mean": 0.5829,
+    "cost_per_task_mean": 0.279208,
+    "latency_s_mean": 344.01,
+    "latency_s_median": 333.62,
+    "pass_rate": 0.875,
+    "pass_lo": 0.69,
+    "pass_hi": 0.9566,
+    "n_full_cov": 19
+  },
+  "i3_routed_opus_allin": {
+    "n_all": 24,
+    "pass_rate_allin": 0.875,
+    "pass_lo": 0.69,
+    "pass_hi": 0.9566,
+    "timeouts": 0
+  },
+  "combined_diagnosis": {
+    "pass": 72,
+    "genuine_model_fail": 22,
+    "tooling_false_fail": 2
+  },
+  "combined_stacks": [
+    {
+      "stack": "claude-code/frontier",
+      "harness": "claude-code",
+      "tier": "frontier",
+      "n": 24,
+      "coverage_mean": 0.9583,
+      "coverage_median": 1.0,
+      "code_quality_mean": 0.7491,
+      "cost_per_task_mean": 1.231722,
+      "latency_s_mean": 169.7,
+      "latency_s_median": 164.64,
+      "pass_rate": 0.9583,
+      "pass_lo": 0.7976,
+      "pass_hi": 0.9926,
+      "n_full_cov": 23
+    },
+    {
+      "stack": "metaharness/frontier",
+      "harness": "metaharness",
+      "tier": "frontier",
+      "n": 22,
+      "coverage_mean": 0.9439,
+      "coverage_median": 1.0,
+      "code_quality_mean": 0.6874,
+      "cost_per_task_mean": 1.075863,
+      "latency_s_mean": 262.45,
+      "latency_s_median": 253.55,
+      "pass_rate": 0.8636,
+      "pass_lo": 0.6666,
+      "pass_hi": 0.9525,
+      "n_full_cov": 16
+    },
+    {
+      "stack": "metaharness/cheap",
+      "harness": "metaharness",
+      "tier": "cheap",
+      "n": 24,
+      "coverage_mean": 0.9273,
+      "coverage_median": 1.0,
+      "code_quality_mean": 0.5829,
+      "cost_per_task_mean": 0.279208,
+      "latency_s_mean": 344.01,
+      "latency_s_median": 333.62,
+      "pass_rate": 0.875,
+      "pass_lo": 0.69,
+      "pass_hi": 0.9566,
+      "n_full_cov": 19
+    },
+    {
+      "stack": "claude-code/cheap",
+      "harness": "claude-code",
+      "tier": "cheap",
+      "n": 24,
+      "coverage_mean": 0.4511,
+      "coverage_median": 0.0,
+      "code_quality_mean": 0.7752,
+      "cost_per_task_mean": 0.254157,
+      "latency_s_mean": 147.62,
+      "latency_s_median": 140.08,
+      "pass_rate": 0.375,
+      "pass_lo": 0.2116,
+      "pass_hi": 0.5729,
+      "n_full_cov": 9
+    }
+  ],
+  "pareto_cost": {
+    "frontier": [
+      "claude-code/frontier",
+      "metaharness/frontier",
+      "metaharness/cheap",
+      "claude-code/cheap"
+    ],
+    "dominated": []
+  },
+  "pareto_latency": {
+    "frontier": [
+      "claude-code/frontier",
+      "claude-code/cheap"
+    ],
+    "dominated": [
+      "metaharness/frontier",
+      "metaharness/cheap"
+    ]
+  },
+  "dominance_vs_ccf": {
+    "ccf": {
+      "coverage": 0.9583,
+      "cost": 1.231722
+    },
+    "metaharness": {
+      "metaharness/frontier": {
+        "coverage": 0.9439,
+        "cost": 1.075863,
+        "coverage_ge_ccf": false,
+        "cost_le_ccf": true,
+        "dominates_ccf": false
+      },
+      "metaharness/cheap": {
+        "coverage": 0.9273,
+        "cost": 0.279208,
+        "coverage_ge_ccf": false,
+        "cost_le_ccf": true,
+        "dominates_ccf": false
+      }
+    }
+  },
+  "anova_routing": {
+    "factors": [
+      "routing",
+      "language",
+      "task"
+    ],
+    "effects": {
+      "requirement_coverage": {
+        "rows": [
+          {
+            "effect": "language",
+            "pct_variance": 11.77,
+            "p_value": 0.1396,
+            "significant": false
+          },
+          {
+            "effect": "language\u00d7task",
+            "pct_variance": 8.35,
+            "p_value": 0.264,
+            "significant": false
+          },
+          {
+            "effect": "routing\u00d7language",
+            "pct_variance": 4.98,
+            "p_value": 0.4882,
+            "significant": false
+          },
+          {
+            "effect": "routing",
+            "pct_variance": 3.99,
+            "p_value": 0.1676,
+            "significant": false
+          },
+          {
+            "effect": "task",
+            "pct_variance": 2.0,
+            "p_value": 0.3254,
+            "significant": false
+          },
+          {
+            "effect": "routing\u00d7task",
+            "pct_variance": 0.59,
+            "p_value": 0.5928,
+            "significant": false
+          }
+        ],
+        "r_squared": 0.3159,
+        "residual_pct": 68.31,
+        "n": 47
+      },
+      "code_quality": {
+        "rows": [
+          {
+            "effect": "language",
+            "pct_variance": 36.3,
+            "p_value": 0.0001,
+            "significant": true
+          },
+          {
+            "effect": "language\u00d7task",
+            "pct_variance": 11.92,
+            "p_value": 0.0386,
+            "significant": true
+          },
+          {
+            "effect": "routing\u00d7language",
+            "pct_variance": 7.75,
+            "p_value": 0.1282,
+            "significant": false
+          },
+          {
+            "effect": "task",
+            "pct_variance": 0.48,
+            "p_value": 0.545,
+            "significant": false
+          },
+          {
+            "effect": "routing",
+            "pct_variance": 0.17,
+            "p_value": 0.7154,
+            "significant": false
+          },
+          {
+            "effect": "routing\u00d7task",
+            "pct_variance": 0.13,
+            "p_value": 0.7557,
+            "significant": false
+          }
+        ],
+        "r_squared": 0.5671,
+        "residual_pct": 43.26,
+        "n": 47
+      },
+      "cost_per_task": {
+        "rows": [
+          {
+            "effect": "language",
+            "pct_variance": 19.71,
+            "p_value": 0.0158,
+            "significant": true
+          },
+          {
+            "effect": "routing",
+            "pct_variance": 11.68,
+            "p_value": 0.0119,
+            "significant": true
+          },
+          {
+            "effect": "language\u00d7task",
+            "pct_variance": 7.27,
+            "p_value": 0.2416,
+            "significant": false
+          },
+          {
+            "effect": "routing\u00d7language",
+            "pct_variance": 3.13,
+            "p_value": 0.6004,
+            "significant": false
+          },
+          {
+            "effect": "task",
+            "pct_variance": 1.12,
+            "p_value": 0.4172,
+            "significant": false
+          },
+          {
+            "effect": "routing\u00d7task",
+            "pct_variance": 0.88,
+            "p_value": 0.4715,
+            "significant": false
+          }
+        ],
+        "r_squared": 0.4497,
+        "residual_pct": 56.23,
+        "n": 47
+      },
+      "latency_s": {
+        "rows": [
+          {
+            "effect": "language",
+            "pct_variance": 33.77,
+            "p_value": 0.0001,
+            "significant": true
+          },
+          {
+            "effect": "task",
+            "pct_variance": 8.84,
+            "p_value": 0.0107,
+            "significant": true
+          },
+          {
+            "effect": "routing\u00d7language",
+            "pct_variance": 5.62,
+            "p_value": 0.2199,
+            "significant": false
+          },
+          {
+            "effect": "language\u00d7task",
+            "pct_variance": 4.74,
+            "p_value": 0.2882,
+            "significant": false
+          },
+          {
+            "effect": "routing",
+            "pct_variance": 4.15,
+            "p_value": 0.0729,
+            "significant": true
+          },
+          {
+            "effect": "routing\u00d7task",
+            "pct_variance": 1.73,
+            "p_value": 0.2402,
+            "significant": false
+          }
+        ],
+        "r_squared": 0.5923,
+        "residual_pct": 41.15,
+        "n": 47
+      }
+    }
+  },
+  "anova_combined": {
+    "factors": [
+      "model",
+      "harness_config",
+      "language",
+      "task"
+    ],
+    "effects": {
+      "requirement_coverage": {
+        "rows": [
+          {
+            "effect": "model",
+            "pct_variance": 13.86,
+            "p_value": 0.0,
+            "significant": true
+          },
+          {
+            "effect": "harness_config",
+            "pct_variance": 11.87,
+            "p_value": 0.0,
+            "significant": true
+          },
+          {
+            "effect": "model\u00d7harness_config",
+            "pct_variance": 11.22,
+            "p_value": 0.0,
+            "significant": true
+          },
+          {
+            "effect": "language",
+            "pct_variance": 9.17,
+            "p_value": 0.0014,
+            "significant": true
+          },
+          {
+            "effect": "model\u00d7language",
+            "pct_variance": 4.04,
+            "p_value": 0.065,
+            "significant": true
+          },
+          {
+            "effect": "harness_config\u00d7language",
+            "pct_variance": 3.48,
+            "p_value": 0.0992,
+            "significant": true
+          },
+          {
+            "effect": "language\u00d7task",
+            "pct_variance": 2.65,
+            "p_value": 0.1863,
+            "significant": false
+          },
+          {
+            "effect": "task",
+            "pct_variance": 2.56,
+            "p_value": 0.0321,
+            "significant": true
+          },
+          {
+            "effect": "harness_config\u00d7task",
+            "pct_variance": 0.73,
+            "p_value": 0.2484,
+            "significant": false
+          },
+          {
+            "effect": "model\u00d7task",
+            "pct_variance": 0.21,
+            "p_value": 0.5317,
+            "significant": false
+          }
+        ],
+        "r_squared": 0.5937,
+        "residual_pct": 40.21,
+        "n": 94
+      },
+      "code_quality": {
+        "rows": [
+          {
+            "effect": "language",
+            "pct_variance": 37.58,
+            "p_value": 0.0,
+            "significant": true
+          },
+          {
+            "effect": "language\u00d7task",
+            "pct_variance": 7.26,
+            "p_value": 0.003,
+            "significant": true
+          },
+          {
+            "effect": "harness_config\u00d7language",
+            "pct_variance": 6.01,
+            "p_value": 0.0084,
+            "significant": true
+          },
+          {
+            "effect": "task",
+            "pct_variance": 4.86,
+            "p_value": 0.0021,
+            "significant": true
+          },
+          {
+            "effect": "harness_config",
+            "pct_variance": 3.73,
+            "p_value": 0.0066,
+            "significant": true
+          },
+          {
+            "effect": "model\u00d7task",
+            "pct_variance": 2.85,
+            "p_value": 0.017,
+            "significant": true
+          },
+          {
+            "effect": "model\u00d7harness_config",
+            "pct_variance": 0.95,
+            "p_value": 0.1633,
+            "significant": false
+          },
+          {
+            "effect": "harness_config\u00d7task",
+            "pct_variance": 0.5,
+            "p_value": 0.3105,
+            "significant": false
+          },
+          {
+            "effect": "model",
+            "pct_variance": 0.3,
+            "p_value": 0.4303,
+            "significant": false
+          },
+          {
+            "effect": "model\u00d7language",
+            "pct_variance": 0.2,
+            "p_value": 0.9358,
+            "significant": false
+          }
+        ],
+        "r_squared": 0.6444,
+        "residual_pct": 35.78,
+        "n": 94
+      },
+      "cost_per_task": {
+        "rows": [
+          {
+            "effect": "model",
+            "pct_variance": 58.72,
+            "p_value": 0.0,
+            "significant": true
+          },
+          {
+            "effect": "language",
+            "pct_variance": 5.99,
+            "p_value": 0.0009,
+            "significant": true
+          },
+          {
+            "effect": "harness_config\u00d7language",
+            "pct_variance": 3.47,
+            "p_value": 0.0184,
+            "significant": true
+          },
+          {
+            "effect": "harness_config",
+            "pct_variance": 3.0,
+            "p_value": 0.0033,
+            "significant": true
+          },
+          {
+            "effect": "language\u00d7task",
+            "pct_variance": 2.26,
+            "p_value": 0.0832,
+            "significant": true
+          },
+          {
+            "effect": "task",
+            "pct_variance": 0.71,
+            "p_value": 0.1429,
+            "significant": false
+          },
+          {
+            "effect": "model\u00d7harness_config",
+            "pct_variance": 0.62,
+            "p_value": 0.1722,
+            "significant": false
+          },
+          {
+            "effect": "model\u00d7language",
+            "pct_variance": 0.41,
+            "p_value": 0.7386,
+            "significant": false
+          },
+          {
+            "effect": "model\u00d7task",
+            "pct_variance": 0.31,
+            "p_value": 0.3304,
+            "significant": false
+          },
+          {
+            "effect": "harness_config\u00d7task",
+            "pct_variance": 0.06,
+            "p_value": 0.6575,
+            "significant": false
+          }
+        ],
+        "r_squared": 0.7548,
+        "residual_pct": 24.44,
+        "n": 94
+      },
+      "latency_s": {
+        "rows": [
+          {
+            "effect": "harness_config",
+            "pct_variance": 27.63,
+            "p_value": 0.0,
+            "significant": true
+          },
+          {
+            "effect": "language",
+            "pct_variance": 24.9,
+            "p_value": 0.0,
+            "significant": true
+          },
+          {
+            "effect": "harness_config\u00d7language",
+            "pct_variance": 8.9,
+            "p_value": 0.0,
+            "significant": true
+          },
+          {
+            "effect": "task",
+            "pct_variance": 4.08,
+            "p_value": 0.0002,
+            "significant": true
+          },
+          {
+            "effect": "model\u00d7language",
+            "pct_variance": 3.69,
+            "p_value": 0.0051,
+            "significant": true
+          },
+          {
+            "effect": "model\u00d7harness_config",
+            "pct_variance": 3.38,
+            "p_value": 0.0006,
+            "significant": true
+          },
+          {
+            "effect": "language\u00d7task",
+            "pct_variance": 3.32,
+            "p_value": 0.0089,
+            "significant": true
+          },
+          {
+            "effect": "harness_config\u00d7task",
+            "pct_variance": 1.77,
+            "p_value": 0.012,
+            "significant": true
+          },
+          {
+            "effect": "model\u00d7task",
+            "pct_variance": 1.59,
+            "p_value": 0.0168,
+            "significant": true
+          },
+          {
+            "effect": "model",
+            "pct_variance": 0.77,
+            "p_value": 0.0936,
+            "significant": true
+          }
+        ],
+        "r_squared": 0.7981,
+        "residual_pct": 19.98,
+        "n": 94
+      }
+    }
+  },
+  "per_language_coverage": {
+    "go": {
+      "off": 1.0,
+      "opus": 1.0
+    },
+    "python": {
+      "off": 0.8148,
+      "opus": 0.9773
+    },
+    "rust": {
+      "off": 0.5996,
+      "opus": 0.8472
+    },
+    "typescript": {
+      "off": 0.8889,
+      "opus": 0.8846
+    }
+  }
+}

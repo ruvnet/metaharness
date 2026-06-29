@@ -12,7 +12,10 @@
 //   • bounded ReAct loop with read/grep/ls/edit/write/run tools (genuine reuse of
 //     the darwin-mode loop primitives — imported, not reimplemented);
 //   • model ROUTING — a cheap default model (deepseek-v4-pro) that ESCALATES to a
-//     frontier model after repeated build/test failures (the cost lever);
+//     stronger model on an INTRINSIC task-difficulty signal (the orchestration lever):
+//     legacy = repeated build/test failures; iteration-3 (--route-difficulty) adds
+//     early token-burn / rewrite-churn signals gated by "no green run yet" so only a
+//     genuinely-stuck hard cell routes up while easy cells stay on the cheap model;
 //   • optional agenticow COW memory (--memory) — a copy-on-write vector store of
 //     every step's observation; before each turn the most-relevant SCROLLED-OUT
 //     observations are recalled and re-injected, fighting the transcript-window
@@ -64,12 +67,44 @@ const RUN_TIMEOUT_MS = +argv('--run-timeout', 120) * 1000;
 const MAX_TOKENS = +argv('--max-tokens', 12000);   // headroom for batched multi-file writes in one turn
 const MAX_ACTIONS_PER_TURN = +argv('--max-actions', 6);  // cap a multi-action turn so a runaway can't explode
 
+// ── iteration-3: task-difficulty-aware routing (the orchestration lever) ──────
+// Opt-in (--route-difficulty). When OFF, behaviour is byte-identical to i2: the
+// only escalation path is the legacy runFailures>=ESCALATE_AFTER trigger (which is
+// itself inert when --escalate is empty). When ON, we escalate a *hard* cell to the
+// stronger --escalate model EARLY, using only INTRINSIC signals the harness itself
+// observes — never the gold REQUIREMENTS.json or any reference solution:
+//   • a-priori: language∈{ts,go,rust} (compiled/strict-typed greenfield is harder)
+//     + the spec's requirement count → a lower per-cell token threshold;
+//   • dynamic: cumulative TOKENS burned, cumulative BYTES written (large multi-file
+//     rewrite churn), and consecutive build/test FAILURES — each gated by
+//     `everRanOk` (has any build/test gone green yet) for PRECISION: a cell that
+//     already gets something running cheap is NOT escalated just for being slow;
+//     only a cell that is burning tokens / churning rewrites WITHOUT ever getting a
+//     green run (the i2 ts+cli timeout signature: deepseek looping on 100–160k-token
+//     rewrites it can't converge) is routed up.
+const ROUTE_DIFFICULTY = has('--route-difficulty');
+const TOKEN_ESCALATE_AT = +argv('--token-escalate', 55000);  // burn-without-green → escalate
+const BYTES_ESCALATE_AT = +argv('--bytes-escalate', 50000);  // rewrite churn → escalate
+
 const key = (process.env[KEY_ENV] || (() => { try { return readFileSync('/tmp/.orkey', 'utf8'); } catch { return ''; } })()).trim();
 if (!key) { console.error('metaharness: no API key (set OPENROUTER_API_KEY or /tmp/.orkey)'); process.exit(2); }
 
 const taskPath = isAbsolute(TASK_FILE) ? TASK_FILE : join(WORK, TASK_FILE);
 const problem = existsSync(taskPath) ? readFileSync(taskPath, 'utf8') : '';
 if (!problem.trim()) { console.error(`metaharness: empty/missing task spec at ${taskPath}`); process.exit(2); }
+
+// ── a-priori difficulty estimate (INTRINSIC: from the spec text + language only;
+//    never the gold REQUIREMENTS.json). Hard language + a requirement-dense spec
+//    lowers the token threshold at which we route up, so a struggling hard cell
+//    escalates sooner while an easy cell keeps the high threshold and rarely does. ──
+const HARD_LANG = ['typescript', 'go', 'rust'].includes(LANG.toLowerCase());
+const specReqs = (problem.match(/^\s*(?:[-*]|\d+[.)])\s+|.*\b(?:must|should|require|implement|support|endpoint|command)\b/gim) || []).length;
+const aprioriHard = HARD_LANG && specReqs >= 6;   // strict-typed + many requirements
+const tokenEscalateAt = Math.round(TOKEN_ESCALATE_AT * (aprioriHard ? 0.7 : 1.0));
+const bytesEscalateAt = Math.round(BYTES_ESCALATE_AT * (aprioriHard ? 0.7 : 1.0));
+if (ROUTE_DIFFICULTY) {
+  console.error(`[router] difficulty prior: lang=${LANG} hardLang=${HARD_LANG} specReqs=${specReqs} aprioriHard=${aprioriHard} → tokenEscalateAt=${tokenEscalateAt} bytesEscalateAt=${bytesEscalateAt} escalateTo=${ESCALATE || '(none)'}`);
+}
 
 // ── multi-action parsing (the latency lever): one turn may carry several tool
 //    calls — a JSON array OR several top-level {...} objects — executed in order.
@@ -151,7 +186,11 @@ const io = {
 const baseTools = makeTools(io);
 
 // ── greenfield-only tools layered on top of the reused read/grep/ls/edit set ──
-let runFailures = 0;
+// Difficulty-router state — all INTRINSIC (observed by the harness, never gold):
+//   runFailures  consecutive build/test failures (build-fail-without-progress)
+//   bytesWritten cumulative bytes the agent wrote (large multi-file rewrite churn)
+//   everRanOk    has ANY build/test gone green yet (the precision gate)
+let runFailures = 0, bytesWritten = 0, everRanOk = false;
 const tools = {
   ls: baseTools.ls, read: baseTools.read, grep: baseTools.grep,
   edit: baseTools.edit, line_edit: baseTools.line_edit,
@@ -162,6 +201,7 @@ const tools = {
       if (!abs.startsWith(WORK)) return 'write error: path escapes workspace';
       if (typeof a.content !== 'string') return 'write error: content must be a string';
       io.writeFile(abs, a.content);
+      bytesWritten += a.content.length;
       return `wrote ${rel} (${a.content.length} bytes)`;
     } catch (e) { return `write error: ${String(e.message || e)}`; }
   },
@@ -169,7 +209,7 @@ const tools = {
     if (!a.cmd || typeof a.cmd !== 'string') return 'run error: cmd (string) required';
     try {
       const out = execSync(a.cmd, { cwd: WORK, encoding: 'utf8', timeout: RUN_TIMEOUT_MS, maxBuffer: 1 << 26, stdio: ['ignore', 'pipe', 'pipe'] });
-      runFailures = 0;
+      runFailures = 0; everRanOk = true;
       const t = (out || '').slice(-3500);
       return `run ok (exit 0):\n${t || '(no output)'}`;
     } catch (e) {
@@ -179,6 +219,20 @@ const tools = {
     }
   },
 };
+
+// ── the difficulty-routing decision: escalate the cheap model to the stronger
+//    --escalate model when an INTRINSIC signal says this cell is hard. Returns a
+//    short reason string when it fires, else ''. Legacy runFailures trigger is kept
+//    (active whenever --escalate is set); the token/bytes triggers are gated behind
+//    --route-difficulty AND `!everRanOk` (only route up a cell that has NOT yet got
+//    anything to build/test green — the i2 ts/cli looping signature). ──
+function difficultyReason(tokensSoFar) {
+  if (runFailures >= ESCALATE_AFTER) return `${runFailures} consecutive build/test failures`;
+  if (!ROUTE_DIFFICULTY) return '';
+  if (!everRanOk && tokensSoFar >= tokenEscalateAt) return `${tokensSoFar} tokens burned with no green build/test (threshold ${tokenEscalateAt})`;
+  if (!everRanOk && bytesWritten >= bytesEscalateAt) return `${bytesWritten} bytes of rewrite churn with no green build/test (threshold ${bytesEscalateAt})`;
+  return '';
+}
 
 const SYSTEM =
   'You are an autonomous software engineer working in an EMPTY project workspace. '
@@ -293,11 +347,17 @@ let model = MODEL;
 const header = `--- TASK.md ---\n${problem.slice(0, 7000)}\n--- begin. Output ONE JSON action. ---`;
 
 const recalledIds = new Set();
+let escalationReason = '';
 for (let step = 1; step <= MAX_STEPS && !done; step++) {
-  // routing: escalate to the frontier tier after repeated build/test failures.
-  if (ESCALATE && !escalated && runFailures >= ESCALATE_AFTER) {
-    model = ESCALATE; escalated = true;
-    transcript.push({ actionRaw: '(router)', obs: `⚙️ SYSTEM: escalated to frontier model ${ESCALATE} after ${runFailures} consecutive failures.` });
+  // task-difficulty-aware routing: escalate the cheap model to the stronger
+  // --escalate model when an intrinsic difficulty signal fires (see difficultyReason).
+  if (ESCALATE && !escalated) {
+    const reason = difficultyReason(tokens);
+    if (reason) {
+      model = ESCALATE; escalated = true; escalationReason = reason;
+      transcript.push({ actionRaw: '(router)', obs: `⚙️ SYSTEM: difficulty router escalated to ${ESCALATE} — ${reason}.` });
+      console.error(`[router] ESCALATE → ${ESCALATE} at step ${step}: ${reason}`);
+    }
   }
   let convo = header + '\n' + transcript.map((t) => `>>> ${t.actionRaw}\n${t.obs}`).join('\n').slice(-14000);
   // memory: recall scrolled-out observations relevant to the most recent state.
@@ -336,6 +396,6 @@ for (let step = 1; step <= MAX_STEPS && !done; step++) {
 }
 if (mem) { try { mem.close && mem.close(); } catch { /**/ } }
 
-const summary = { tokens, cost: +cost.toFixed(6), steps: transcript.length, calls, model, escalated, done, memory_used: !!mem, memory_recalls: memCalls };
+const summary = { tokens, cost: +cost.toFixed(6), steps: transcript.length, calls, model, escalated, escalation_reason: escalationReason, route_difficulty: ROUTE_DIFFICULTY, apriori_hard: aprioriHard, bytes_written: bytesWritten, ever_ran_ok: everRanOk, done, memory_used: !!mem, memory_recalls: memCalls };
 try { writeFileSync(OUT, JSON.stringify({ ...summary, lang: LANG }, null, 2)); } catch { /**/ }
 console.log(JSON.stringify(summary));

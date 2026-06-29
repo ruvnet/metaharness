@@ -28,6 +28,16 @@ excluded as tooling). This is *stronger* than our pre-registered expectation
 > moved metaharness/cheap toward the frontier on reliability, but it still does
 > **not Pareto-dominate** claude-code/frontier — lower coverage (0.91 vs 0.96) and
 > ~3× higher latency keep it the **cost-optimal corner**, now a *stronger* corner.
+>
+> **Iteration-3 update (2026-06-29, see §7).** Added the last orchestration lever —
+> **task-difficulty-aware routing** (escalate only the hard cells, by an *intrinsic*
+> signal, from deepseek to opus-4.8). On a held-out 48-cell re-run, routing (33%
+> escalation) lifted coverage 0.836→0.927 and pass-rate 0.78→0.875, *cut* latency
+> 575→344 s and killed all timeouts — but at **3.2× cost** ($0.088→$0.279), with a
+> coverage gain that ANOVA finds **not significant** (p=0.17). It **still does not
+> dominate** claude-code/frontier (0.927 < 0.958 coverage). **Beyond-SOTA: NO —
+> outcome (b) "no free lunch":** routing slides metaharness/cheap *up and to the
+> right* along the same frontier to a stronger, costlier corner; it does not cross it.
 
 ---
 
@@ -329,6 +339,131 @@ task-specific routing, not more orchestration.
 (96 rows: Phase-2 frame with the cheap tier swapped for the fixed harness),
 `placement-analysis-v2.json` (full before/after + memory ANOVA + Pareto), `harvest2.py`,
 `analyze2.py`. Harness fix in `packages/darwin-mode/bench/retort/greenfield-solve.mjs`.
+
+---
+
+## 7. Iteration 3 — task-difficulty-aware ROUTING (the last orchestration lever, held-out re-run, 2026-06-29)
+
+Iteration 2 left one named lever: the residual hard cells (typescript+cli timed out
+3/3; deepseek looping on 100–160k-token rewrites it can't converge). The genuine,
+non-overfitting move is **task-difficulty-aware routing** — detect a hard cell from an
+**intrinsic** signal and escalate *that cell* to a stronger model (opus-4.8) while easy
+cells stay on cheap deepseek. The honest question: does routing the hard cells up
+**close the coverage gap toward dominating** claude-code/frontier — or does it just
+**trade cost for coverage** (slide along the same frontier, no free lunch)?
+
+**The router (intrinsic, never gold).** Opt-in `--route-difficulty` in
+`greenfield-solve.mjs`; byte-identical to i2 when off (verified). It escalates the cheap
+model to opus-4.8 on signals the harness *itself observes* — never the gold
+`REQUIREMENTS.json` or any reference solution:
+- **a-priori:** language ∈ {ts, go, rust} (strict-typed greenfield is harder) + the
+  spec's requirement-density → a *lower* token threshold for those cells;
+- **dynamic:** cumulative **tokens burned**, cumulative **bytes written** (large
+  multi-file rewrite churn), and consecutive **build/test failures** — each gated by
+  `everRanOk` (has any build/test gone green yet) for **precision**: a cell that already
+  gets something running cheap is *not* escalated for being slow; only one burning
+  tokens / churning rewrites with *no green run yet* (the i2 ts/cli signature) routes up.
+
+**The grid (held-out, Retort scoring untouched).** `routing{off, opus} × language{python,
+typescript, go, rust} × task{rest-api-crud, cli-data-pipeline} × 3 reps` = **48 cells**,
+all fresh under identical conditions (deepseek-v4-pro base, 20-min cap, multi-action — all
+held constant from i2). `routing=off` is the **within-run deepseek-only control**;
+`routing=opus` is the **difficulty-routed headline**. Routing is the new DoE factor (it
+replaces i2's null `memory` factor). Spend: **$8.89** of a $15 cap; research-spend
+~$320.72 of the $375 hard-stop.
+
+**Result — routing buys coverage + reliability at ~3× cost, but does NOT dominate.**
+
+| metric (genuine cells) | i3 off (deepseek-only) | i3 opus (routed) | claude-code/frontier |
+|---|---|---|---|
+| n | 23 | 24 | 24 |
+| **coverage** (mean) | 0.836 | **0.927** | **0.958** |
+| **pass-rate** (Wilson 95%) | 0.78 [0.58, 0.90] | **0.875 [0.69, 0.96]** | **0.958 [0.80, 0.99]** |
+| **$/task** | $0.088 | **$0.279** | $1.232 |
+| latency (s, mean) | 575 | **344** | 170 |
+| timeouts (of 24, all-in) | 1 | **0** | 0 |
+
+Within-run, routing lifted coverage **0.836 → 0.927**, pass-rate **0.78 → 0.875**, *cut*
+latency **575 → 344 s**, and eliminated timeouts — while cost rose **3.2×** ($0.088 →
+$0.279). **Escalation fraction: 33% (8/24)**, correctly concentrated on the hard
+languages (rust 3/6, typescript 3/6, go 2/6, **python 0/6** — python greens fast and is
+never escalated). The router's intrinsic signal targets roughly the right cells.
+
+**But the coverage lift is mostly rust, partly noise, and ts plateaued** (per-language
+off→opus coverage):
+
+| language | off | opus | what routing did |
+|---|---|---|---|
+| python | 0.815 | 0.977 | **noise** — python never escalated (0/6); the gain is replicate variance, *not* routing |
+| go | 1.000 | 1.000 | **wasted** — 2 escalations on already-passing cells (false positives, +cost, no gain) |
+| rust | 0.600 | 0.847 | **real gain** — 3 escalations recovered the hard rust cells (+0.25 coverage) |
+| typescript | 0.889 | 0.885 | **plateau** — escalation did *not* help; the stubborn ts/cli cell stays ~0.77 even on opus |
+
+**ANOVA on the new cells** (routing × language × task, Type-II log) makes the no-free-lunch
+verdict statistical: **routing's effect on cost is significant (11.7%, p=0.012)** and on
+latency marginal (4.2%, p=0.073, *down*), but its effect on **coverage is NOT significant
+(4.0%, p=0.17)**. *Routing buys cost reliably and coverage only marginally.* The
+**combined-v3 ANOVA** (n=94) reproduces the campaign finding: **model** governs coverage
+(13.9%) and cost (58.7%), **harness** governs latency (27.6%), **language** governs quality
+(37.6%), with the significant **model×harness** coverage interaction (11.2%).
+
+**New Pareto frontier (combined-v3, genuine cells):**
+
+```
+stack                         n   cov     $/task    latency  pass-rate (Wilson 95%)
+claude-code/frontier          24  0.958   $1.232    170 s    0.958 [0.80, 0.99]   ← accuracy + latency corner
+metaharness/frontier          22  0.944   $1.076    262 s    0.864 [0.67, 0.95]
+metaharness/cheap (routed)    24  0.927   $0.279    344 s    0.875 [0.69, 0.96]   ← cost corner, slid UP
+claude-code/cheap             24  0.451   $0.254    148 s    0.375 [0.21, 0.57]
+```
+
+- **Cost-Pareto:** all four stacks are now on the frontier (none dominated). Routing moved
+  metaharness/cheap from i2's **(0.913, $0.085)** to **(0.927, $0.279)** — *up and to the
+  right*: more coverage, more cost. That is the literal definition of **sliding along the
+  frontier**, not crossing it.
+- **Latency-Pareto:** both claude-code stacks dominate; both MetaHarness stacks dominated
+  (latency is still MetaHarness's weak axis — though routing improved it, 575 → 344 s).
+- **Dominance vs claude-code/frontier:** routed metaharness/cheap has coverage **0.927 <
+  0.958** and pass-rate **0.875 < 0.958** — it does **NOT** dominate (it *is* ~4.4× cheaper,
+  but not ≥ on coverage or pass-rate). No MetaHarness stack dominates the accuracy leader.
+
+### Verdict — beyond-SOTA? **NO. Outcome (b): "no free lunch" (+ a (c) plateau on ts).**
+
+Routing the hard cells up to opus-4.8 **closed part of the coverage gap and fixed
+reliability** (0 timeouts, latency 575→344 s, rust recovered) — but it **bought that with
+~3× cost** and a *statistically-insignificant* coverage gain, and it **did not reach,
+let alone dominate, claude-code/frontier's 0.958 coverage / 0.958 pass-rate.** The routed
+operating point slid **up and to the right** along the same Pareto frontier to a new,
+*stronger but more expensive* cost-corner (0.927 coverage at $0.279, still ~4.4× cheaper
+than frontier). The one cell routing **couldn't** fix — typescript+cli — *plateaued even
+on opus escalation* (0.889 → 0.885), confirming the residual is hard intrinsically, not a
+harness-config artifact.
+
+This is the clean confirmation of the campaign thesis, stated straight: **orchestration
+moves you *along* the cost↔coverage frontier; it does not move you *beyond* it. The
+remaining gap to the accuracy leader is the model's capability, not the harness.** Three
+iterations of genuine orchestration levers (timeout/efficiency fix → memory → difficulty
+routing) each shifted MetaHarness/cheap to a stronger *corner* of the same frontier; none
+produced domination. Routing is the last orchestration lever, and it confirms — rather than
+breaks — the frontier.
+
+### Limitations
+1. **n = 3 reps** — the coverage lift (0.836→0.927) is a point estimate; ANOVA finds it
+   *not* significant (p=0.17). More reps would tighten this, but the *direction* (cost up,
+   coverage up, no domination) is robust.
+2. **Escalation precision is imperfect** — 2 of 8 escalations (go) were on already-passing
+   cells (wasted cost); python's apparent gain is replicate noise (0 escalations). A
+   sharper signal would cut the wasted-escalation cost but cannot manufacture coverage the
+   model doesn't have.
+3. **Within-run off control (0.836) ran lower than i2's mh/cheap (0.913)** — deepseek
+   replicate variance (rust/crud collapsed this run). The within-run off→opus delta is the
+   clean comparison; both point the same way.
+
+*Iteration-3 artifacts:* `results-routed-v3.csv` (48 cells, routing factor),
+`placement-analysis-v3.json` (arms + escalation + Pareto + dominance + ANOVA),
+`harvest3.py`, `analyze3.py`. Router in `packages/darwin-mode/bench/retort/greenfield-solve.mjs`
+(`--route-difficulty`); runner factor wiring in
+`retort/src/retort/playpen/metaharness_runner.py` (`routing` factor).
 
 ---
 
