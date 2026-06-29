@@ -19,11 +19,12 @@ describe('apicompletions skeleton — health + surface', () => {
     expect(ids).toEqual(['cognitum-auto', 'cognitum-low', 'cognitum-mid', 'cognitum-high']);
   });
 
-  it('POST /v1/chat/completions is a 501 skeleton (not yet implemented)', async () => {
+  it('POST /v1/chat/completions without an API key is 401 (auth enforced, §6)', async () => {
     const res = await request(app)
       .post('/v1/chat/completions')
       .send({ model: 'cognitum-auto', messages: [{ role: 'user', content: 'hi' }] });
-    expect(res.status).toBe(501);
-    expect(res.body.code).toBe('not_implemented');
+    expect(res.status).toBe(401);
+    expect(res.body.code).toBe('missing_api_key');
+    expect(res.body).toHaveProperty('requestId');
   });
 });

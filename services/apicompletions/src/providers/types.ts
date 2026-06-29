@@ -11,6 +11,8 @@ export interface ProviderDelta {
 export interface ProviderResult {
   text: string;
   usage?: Usage; // provider's authoritative count when present (§5.1)
+  /** Optional self-confidence in [0,1]; when present it pre-empts the heuristic verifier (§6.5). */
+  confidence?: number;
 }
 
 export interface ModelProvider {
@@ -19,4 +21,15 @@ export interface ModelProvider {
   complete(model: string, req: ChatCompletionRequest): Promise<ProviderResult>;
   /** Streaming completion — async iterator of deltas (mapped to OpenAI SSE upstream). */
   stream(model: string, req: ChatCompletionRequest): AsyncIterable<ProviderDelta>;
+}
+
+/** Thrown when every model in a tier's fallback chain fails (§3.2). Maps to 502 upstream. */
+export class ProviderError extends Error {
+  constructor(
+    message: string,
+    readonly attempted: string[],
+  ) {
+    super(message);
+    this.name = 'ProviderError';
+  }
 }

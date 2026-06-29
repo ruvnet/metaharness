@@ -34,10 +34,12 @@ export function loadConfig(): Config {
     pubsubEmulatorHost: env.PUBSUB_EMULATOR_HOST,
     usageTopic: env.USAGE_TOPIC ?? 'completions-usage',
     useMockProvider: env.USE_MOCK_PROVIDER === 'true' || !env.OPENROUTER_API_KEY,
+    // Rates are ILLUSTRATIVE ($/1M tokens) — the shape (low ≪ mid < high) is fixed by the
+    // §4.1 DoE, the absolute numbers are a launch decision (§4.2). Asymmetric in/out per tier.
     tierPools: {
-      low: { models: ['deepseek-v4-pro', 'glm-5.2'], rateLimitPerMin: 120, rateInPer1M: 0, rateOutPer1M: 0 },
-      mid: { models: ['gpt-5.5', 'gemini-3.1-pro'], rateLimitPerMin: 60, rateInPer1M: 0, rateOutPer1M: 0 },
-      high: { models: ['claude-opus-4.8', 'gpt-5.5'], rateLimitPerMin: 30, rateInPer1M: 0, rateOutPer1M: 0 },
+      low: { models: ['deepseek-v4-pro', 'glm-5.2'], rateLimitPerMin: 120, rateInPer1M: 0.1, rateOutPer1M: 0.3 },
+      mid: { models: ['gpt-5.5', 'gemini-3.1-pro'], rateLimitPerMin: 60, rateInPer1M: 0.6, rateOutPer1M: 1.8 },
+      high: { models: ['claude-opus-4.8', 'gpt-5.5'], rateLimitPerMin: 30, rateInPer1M: 2.5, rateOutPer1M: 7.5 },
     },
   };
 }
