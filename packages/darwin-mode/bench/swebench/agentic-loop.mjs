@@ -211,3 +211,113 @@ export async function agenticSolve({ problem, io, llm, maxSteps = 20, onStep, te
   }
   return { patch: io.gitDiff(), steps: transcript.length, submitted, resolvedInLoop, cost, thrash, transcript };
 }
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+// Native tool-use path (ADR-197 diagnosis) — an OpenRouter/OpenAI-style function-calling adapter for
+// the SAME tool surface (ls/read/grep/edit/line_edit/run_tests/submit), gated behind a flag so it is
+// fully additive: the text-JSON path above (`AGENTIC_SYSTEM`/`parseAction`/`agenticSolve`) is
+// untouched and stays byte-identical. Diagnosis (measured, 3 hard-slice instances, N=1 each, $0.03-0.15
+// per instance): sonnet-5 parses the text-JSON protocol correctly ~92-100% of turns — the observed
+// 8/8 empty patches on the fusion hard-slice were NOT primarily a parse-failure death spiral. In every
+// sampled trace the model spent its entire 12-step budget on read/grep/ls and never once attempted an
+// `edit`/`line_edit`/`submit` call. Native tool-use is still the requested lever (frontier models are
+// RL-trained to call tools decisively rather than emit free text describing one) and is measured
+// honestly in NATIVE-TOOLUSE.md — this comment intentionally does not oversell it.
+/**
+ * Build the OpenAI/OpenRouter `tools: [{type:"function",...}]` schema for the same tool surface as
+ * `buildAgenticSystem` describes in prose. `ext`/`glob` only flavor the description text (ADR-192
+ * polyglot parity); no tool semantics differ from the text-JSON path.
+ */
+export function buildAgenticToolsSchema(ext = 'py', glob = '*.py') {
+  return [
+    { type: 'function', function: { name: 'ls', description: 'List a directory in the repository.', parameters: { type: 'object', properties: { dir: { type: 'string', description: 'directory path, e.g. "path/" (default: repo root)' } }, required: [] } } },
+    { type: 'function', function: { name: 'read', description: 'Read a file (optionally a line range; omit start/end for the whole file).', parameters: { type: 'object', properties: { path: { type: 'string', description: `file path, e.g. "f.${ext}"` }, start: { type: 'integer', description: '1-based inclusive start line (optional)' }, end: { type: 'integer', description: '1-based inclusive end line (optional)' } }, required: ['path'] } } },
+    { type: 'function', function: { name: 'grep', description: 'Search the repository for a regex pattern (glob optional).', parameters: { type: 'object', properties: { pattern: { type: 'string', description: 'regex pattern' }, glob: { type: 'string', description: `pathspec glob, e.g. "${glob}" (optional)` } }, required: ['pattern'] } } },
+    { type: 'function', function: { name: 'edit', description: 'Apply a search/replace edit. `search` must match the file CHARACTER-FOR-CHARACTER (indentation included) or the edit fails — prefer line_edit when unsure.', parameters: { type: 'object', properties: { path: { type: 'string', description: `file path, e.g. "f.${ext}"` }, search: { type: 'string', description: 'exact lines to find, indentation included' }, replace: { type: 'string', description: 'new text to substitute' } }, required: ['path', 'search', 'replace'] } } },
+    { type: 'function', function: { name: 'line_edit', description: 'Replace an inclusive LINE RANGE — robust, uses the line numbers reported by `read`. Prefer this over `edit`.', parameters: { type: 'object', properties: { path: { type: 'string', description: `file path, e.g. "f.${ext}"` }, start: { type: 'integer', description: '1-based inclusive start line (from `read`)' }, end: { type: 'integer', description: '1-based inclusive end line (from `read`)' }, replace: { type: 'string', description: 'new text for lines start..end' } }, required: ['path', 'start', 'end', 'replace'] } } },
+    { type: 'function', function: { name: 'run_tests', description: 'Run the failing tests against the current edits; returns the trace.', parameters: { type: 'object', properties: {}, required: [] } } },
+    { type: 'function', function: { name: 'submit', description: 'Finalize the current patch and stop — call this once the target tests pass.', parameters: { type: 'object', properties: {}, required: [] } } },
+  ];
+}
+
+/** System prompt for the native tool-calling path. Same strategy guidance as `buildAgenticSystem`,
+ * minus the JSON-emission instructions (the provider's tool-calling machinery owns the call format). */
+export function buildAgenticNativeSystem() {
+  return 'You are an autonomous bug-fixing agent working inside a real repository. Call exactly ONE tool per turn — '
+    + 'never reply with prose alone. Strategy: explore (read/grep/ls) to locate the fix, make minimal edit(s) — '
+    + 'PREFER line_edit (use the line numbers from `read`) over `edit`, which must match the file '
+    + 'character-for-character. Run run_tests, iterate on the trace, then submit once tests pass. Never edit test files. '
+    + 'Do not spend the entire turn budget exploring — move to an edit once you have located the fix.';
+}
+
+/**
+ * Map one native tool_call (OpenAI/OpenRouter function-calling shape:
+ * `{ id, function: { name, arguments } }`, `arguments` a JSON-encoded string) into the same
+ * `{ tool, ...args }` action object the text-protocol dispatcher (`makeTools`) already understands.
+ * Malformed calls (missing name / unparseable arguments) degrade to the same `noop` shape `parseAction`
+ * uses, so the loop's error-recovery path is identical across both protocols.
+ */
+export function parseNativeToolCall(toolCall) {
+  if (!toolCall || !toolCall.function || typeof toolCall.function.name !== 'string' || !toolCall.function.name) {
+    return { tool: 'noop', error: 'malformed tool_call (missing function.name)' };
+  }
+  let args = {};
+  const rawArgs = toolCall.function.arguments;
+  if (rawArgs != null && rawArgs !== '') {
+    try { args = JSON.parse(rawArgs); if (args == null || typeof args !== 'object' || Array.isArray(args)) args = {}; }
+    catch { return { tool: 'noop', error: `unparseable tool_call arguments for "${toolCall.function.name}"` }; }
+  }
+  return { tool: toolCall.function.name, ...args };
+}
+
+/**
+ * Run the SAME bounded ReAct loop as `agenticSolve`, but over native OpenAI/OpenRouter-style
+ * function-calling instead of the text-JSON protocol. Returns the identical result shape
+ * `{ patch, steps, submitted, resolvedInLoop, cost, thrash, transcript }`.
+ *
+ *   llm    async (messages, toolsSchema, temp) => { message, cost }
+ *          `messages` is the full running chat array (system/user/assistant/tool roles); `message`
+ *          is the returned assistant message (`{ content, tool_calls? }` — OpenAI/OpenRouter shape).
+ *
+ * Only the FIRST tool_call of a turn is dispatched (mirrors the text protocol's "one action per
+ * turn" contract) — extra tool_calls in the same turn are ignored, matching parseAction's behaviour
+ * of only ever returning a single action.
+ */
+export async function agenticSolveNative({ problem, io, llm, maxSteps = 20, onStep, tempSchedule, system = buildAgenticNativeSystem(), toolsSchema, ext = 'py', glob = '*.py' }) {
+  const tools = makeTools(io);
+  const schema = toolsSchema || buildAgenticToolsSchema(ext, glob);
+  const transcript = [];
+  let submitted = false; let resolvedInLoop = false; let cost = 0; let thrash = 0;
+  const seenStates = new Set();
+  const messages = [
+    { role: 'system', content: system },
+    { role: 'user', content: `--- problem statement ---\n${String(problem || '').slice(0, 6000)}\n--- begin. Call ONE tool. ---` },
+  ];
+  for (let step = 1; step <= maxSteps && !submitted; step++) {
+    let message;
+    try { const r = await llm(messages, schema, tempSchedule ? tempSchedule(step, maxSteps) : undefined); message = r.message || {}; cost += r.cost || 0; }
+    catch (e) { transcript.push({ actionRaw: '(model error)', obs: String(e.message || e) }); break; }
+    const toolCall = message.tool_calls?.[0];
+    const action = toolCall ? parseNativeToolCall(toolCall) : { tool: 'noop', error: 'no tool_call in response (model replied with plain content instead of calling a tool)' };
+    let obs;
+    if (action.tool === 'submit') { submitted = true; obs = 'submitted.'; }
+    else if (action.tool === 'noop') obs = `error: ${action.error}. Call exactly one tool.`;
+    else if (tools[action.tool]) { obs = tools[action.tool](action); if (action.tool === 'run_tests' && /ALL TARGET TESTS PASS/.test(obs)) resolvedInLoop = true; }
+    else obs = `error: unknown tool "${action.tool}". Valid: ls, read, grep, edit, line_edit, run_tests, submit.`;
+    if (['read', 'grep', 'ls'].includes(action.tool)) {
+      const h = stateHash(action.tool + '|' + JSON.stringify(action) + '|' + obs);
+      if (seenStates.has(h)) { thrash++; obs += '\n⚠️ SYSTEM: You already ran this exact action and got this exact result. Stop repeating — change your strategy (read a different file / edit / run_tests) or submit.'; }
+      else seenStates.add(h);
+    }
+    // Keep the native chat protocol shape intact: the assistant turn that carried the tool_call(s),
+    // then a tool-role message reporting the observation (keyed to the SAME tool_call_id the model
+    // used) — this is what lets a native-tool-calling model track its own conversation state.
+    messages.push({ role: 'assistant', content: message.content ?? null, ...(message.tool_calls ? { tool_calls: message.tool_calls } : {}) });
+    if (toolCall) messages.push({ role: 'tool', tool_call_id: toolCall.id, content: obs });
+    else messages.push({ role: 'user', content: `error: ${action.error}. Call exactly one tool.` });
+    const actionRaw = JSON.stringify(action.tool === 'noop' ? { raw: String(message.content || '').slice(0, 200) } : action).slice(0, 400);
+    transcript.push({ actionRaw, obs });
+    if (onStep) onStep(step, action, obs);
+  }
+  return { patch: io.gitDiff(), steps: transcript.length, submitted, resolvedInLoop, cost, thrash, transcript };
+}

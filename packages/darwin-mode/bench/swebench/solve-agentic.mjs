@@ -14,7 +14,7 @@ import { execSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join, dirname, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { agenticSolve, chebTemp, buildAgenticSystem } from './agentic-loop.mjs';
+import { agenticSolve, agenticSolveNative, chebTemp, buildAgenticSystem } from './agentic-loop.mjs';
 import { runConformantTests } from './conformant-tests.mjs';
 import { langProfile } from './lang-profile.mjs';
 // ADR-195 Phase-2 capability stack (all opt-in; off by default — backward-compatible).
@@ -56,6 +56,10 @@ const LOCALIZE_K = +argv('--localize-k', 12);
 const GNN_RERANK = args.includes('--gnn-rerank');        // optional ruvector-gnn-rerank diffusion
 const REPRO_ROUNDS = +argv('--repro-rounds', 3);
 const REVIEW_REVISIONS = +argv('--review-revisions', 2);
+// ADR-197 — native OpenRouter/OpenAI function-calling path (opt-in; default OFF = the pre-existing
+// text-JSON tool protocol, byte-identical). See agentic-loop.mjs's agenticSolveNative for the loop and
+// NATIVE-TOOLUSE.md for the diagnosis that motivated it.
+const NATIVE_TOOLS = args.includes('--native-tools');
 
 let manifest = JSON.parse(readFileSync(rel(argv('--manifest', 'pilot-sample-25.json')), 'utf8')).instances;
 if (onlyInstance) manifest = manifest.filter((i) => i.instance_id === onlyInstance);
@@ -109,11 +113,33 @@ function mkLlm(model) {
     throw lastErr ?? new Error('llm failed');
   };
 }
-const llm = mkLlm(MODEL);
+// ADR-197 — native tool-calling variant of mkLlm: sends the running `messages` array (already built by
+// agenticSolveNative) plus `tools`/`tool_choice: 'required'` and returns the assistant `message` object
+// (which may carry `tool_calls`) instead of a raw text string. Same retry/backoff shape as mkLlm.
+function mkLlmNative(model) {
+  return async function (messages, toolsSchema, temp) {
+    let lastErr;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      if (attempt) await new Promise((r) => setTimeout(r, 2000 * 2 ** (attempt - 1)));
+      try {
+        const body = { model, messages, max_tokens: 4096, temperature: (temp ?? TEMP), tools: toolsSchema, tool_choice: 'required' };
+        const res = await fetch(CHAT_URL, { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        if (!res.ok && (res.status === 429 || res.status >= 500)) { lastErr = new Error(`http ${res.status}`); continue; }
+        const j = await res.json();
+        return { message: j.choices?.[0]?.message ?? {}, cost: j.usage?.cost ?? 0 };
+      } catch (e) { lastErr = e; }
+    }
+    throw lastErr ?? new Error('llm failed');
+  };
+}
+const llm = NATIVE_TOOLS ? mkLlmNative(MODEL) : mkLlm(MODEL);
+// judgePick (below) always needs a plain-text {raw,cost} completion regardless of --native-tools —
+// kept as a separate instance so the native-tools loop llm's different return shape never leaks there.
+const llmJudge = mkLlm(MODEL);
 // ADR-182 — cost cascade: cheap tier-1; escalate ONLY instances whose patch fails the repo's own tests
 // (conformant gate). Tier-2 starts COLD (fresh work tree) to preserve trajectory diversity (the union ceiling).
 const ESCALATE = argv('--cascade', null);
-const llmEsc = ESCALATE ? mkLlm(ESCALATE) : null;
+const llmEsc = ESCALATE ? (NATIVE_TOOLS ? mkLlmNative(ESCALATE) : mkLlm(ESCALATE)) : null;
 function evalOne(instanceId, patch, runId) {
   const preds = `/tmp/agentic-${runId}.jsonl`;
   writeFileSync(preds, JSON.stringify({ instance_id: instanceId, model_name_or_path: 'darwin-agentic', model_patch: patch }) + '\n');
@@ -256,19 +282,23 @@ async function solveTier(inst, llmFn, opts = {}) {
     },
     MAX_OUT: 4000,
   };
-  const system = buildAgenticSystem(prof.exampleExt, defGlob);
   // ADR-195: assemble the problem surface — localization hint first (where to look), then the issue,
   // then any extra capability context (self-written repro / reviewer critique). All empty by default.
   // (Supersedes the worktree-a29099 probe's loadSeedBlock --localize-seed path; the standalone probe
   // tool ruvector-localize.mjs + LEARNINGS §52 record the empirical n=5 A/B that motivated this.)
   const problem = [opts.localizeHint, inst.problem_statement, opts.extraContext].filter(Boolean).join('\n\n');
-  const res = await agenticSolve({ problem, io, llm: llmFn, maxSteps: MAX_STEPS, system, tempSchedule: CHEB_TEMP ? ((s, n) => chebTemp(s, n, CHEB_HI)) : undefined });
+  const tempSchedule = CHEB_TEMP ? ((s, n) => chebTemp(s, n, CHEB_HI)) : undefined;
+  // ADR-197: --native-tools swaps the text-JSON ReAct core for the native function-calling one. The
+  // default path below (agenticSolve + buildAgenticSystem) is untouched and stays byte-identical.
+  const res = NATIVE_TOOLS
+    ? await agenticSolveNative({ problem, io, llm: llmFn, maxSteps: MAX_STEPS, ext: prof.exampleExt, glob: defGlob, tempSchedule })
+    : await agenticSolve({ problem, io, llm: llmFn, maxSteps: MAX_STEPS, system: buildAgenticSystem(prof.exampleExt, defGlob), tempSchedule });
   return { res, work, prof };
 }
 // Cascade tie-break: neither tier passed the repo gate — judge picks the likelier fix (cheap, conformant).
 async function judgePick(inst, pA, pB) {
   if (!pA.trim()) return pB; if (!pB.trim()) return pA;
-  try { const { raw, cost } = await llm(`A GitHub issue and TWO candidate patches, neither verified by tests. Pick the one more likely to correctly fix it.\n\nISSUE:\n${String(inst.problem_statement).slice(0, 4000)}\n\nPATCH A:\n${pA.slice(0, 5000)}\n\nPATCH B:\n${pB.slice(0, 5000)}\n\nReply ONLY 'A' or 'B'.`); totalCost += cost; return /^\s*B/i.test(raw) ? pB : pA; } catch { return pA; }
+  try { const { raw, cost } = await llmJudge(`A GitHub issue and TWO candidate patches, neither verified by tests. Pick the one more likely to correctly fix it.\n\nISSUE:\n${String(inst.problem_statement).slice(0, 4000)}\n\nPATCH A:\n${pA.slice(0, 5000)}\n\nPATCH B:\n${pB.slice(0, 5000)}\n\nReply ONLY 'A' or 'B'.`); totalCost += cost; return /^\s*B/i.test(raw) ? pB : pA; } catch { return pA; }
 }
 // ── ADR-195 Phase-2 #2: reproduction-first gate (wires the pure reproGateSolve to the real repro
 // writer + COLD agentic rounds + the conformant repro runner). Returns the reproGateSolve result. ──
@@ -420,5 +450,7 @@ if (NO_ORACLE && usedOracleDuringSolve) console.error('⚠️ LEAKAGE: gold harn
 writeFileSync(REPORT, JSON.stringify({ model: MODEL, escalateModel: ESCALATE, cascade: !!ESCALATE, maxSteps: MAX_STEPS, n: report.length, resolvedInLoop: inloop, escalated, byTier, noTestOracle: NO_ORACLE, leaderboardConformant: conformant,
   // ADR-195 Phase-2 capability flags active for this run (all false → pre-Phase-2 behaviour).
   phase2: { localize: LOCALIZE, gnnRerank: GNN_RERANK, reproGate: REPRO_GATE, reviewer: REVIEWER, traceLocalize: TRACE_LOCALIZE },
+  // ADR-197 — native tool-calling flag active for this run (false → pre-existing text-JSON protocol).
+  nativeTools: NATIVE_TOOLS,
   cappedAtInstance: cappedAt, maxCost: MAX_COST===Infinity?null:MAX_COST, totalCost_usd: Math.round(totalCost * 10000) / 10000, blendedCostPerInst_usd: report.length ? Math.round(totalCost / report.length * 1e5) / 1e5 : 0, instances: report }, null, 2));
-console.error(`\nDONE ${report.length} | in-loop ${inloop}/${report.length} | cascade=${!!ESCALATE} escalated=${escalated} tiers=${JSON.stringify(byTier)} | $${Math.round(totalCost * 10000) / 10000} (${report.length?(totalCost/report.length).toFixed(4):0}/inst) | preds → ${OUT}`);
+console.error(`\nDONE ${report.length} | in-loop ${inloop}/${report.length} | cascade=${!!ESCALATE} escalated=${escalated} tiers=${JSON.stringify(byTier)} | native-tools=${NATIVE_TOOLS} | $${Math.round(totalCost * 10000) / 10000} (${report.length?(totalCost/report.length).toFixed(4):0}/inst) | preds → ${OUT}`);
