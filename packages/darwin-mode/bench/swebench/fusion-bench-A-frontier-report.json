@@ -1,0 +1,114 @@
+{
+  "model": "anthropic/claude-sonnet-5",
+  "escalateModel": null,
+  "cascade": false,
+  "maxSteps": 12,
+  "n": 8,
+  "resolvedInLoop": 0,
+  "escalated": 0,
+  "byTier": {
+    "T1": 8
+  },
+  "noTestOracle": true,
+  "leaderboardConformant": true,
+  "phase2": {
+    "localize": false,
+    "gnnRerank": false,
+    "reproGate": false,
+    "reviewer": false,
+    "traceLocalize": false
+  },
+  "modelParams": {
+    "temperature": 0,
+    "temperatureSent": false,
+    "maxTokens": 4096,
+    "reasoningEffort": null,
+    "reasoningSent": false
+  },
+  "cappedAtInstance": null,
+  "maxCost": 12,
+  "totalCost_usd": 1.0726,
+  "blendedCostPerInst_usd": 0.13407,
+  "instances": [
+    {
+      "instance_id": "psf__requests-2674",
+      "repo": "psf/requests",
+      "tier": "T1",
+      "resolved": false,
+      "steps": 12,
+      "submitted": false,
+      "resolvedInLoop": false,
+      "sec": 51
+    },
+    {
+      "instance_id": "pylint-dev__pylint-7114",
+      "repo": "pylint-dev/pylint",
+      "tier": "T1",
+      "resolved": false,
+      "steps": 12,
+      "submitted": false,
+      "resolvedInLoop": false,
+      "sec": 72
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-7738",
+      "repo": "sphinx-doc/sphinx",
+      "tier": "T1",
+      "resolved": false,
+      "steps": 12,
+      "submitted": false,
+      "resolvedInLoop": false,
+      "sec": 56
+    },
+    {
+      "instance_id": "pytest-dev__pytest-5103",
+      "repo": "pytest-dev/pytest",
+      "tier": "T1",
+      "resolved": false,
+      "steps": 12,
+      "submitted": false,
+      "resolvedInLoop": false,
+      "sec": 99
+    },
+    {
+      "instance_id": "pydata__xarray-3364",
+      "repo": "pydata/xarray",
+      "tier": "T1",
+      "resolved": false,
+      "steps": 12,
+      "submitted": false,
+      "resolvedInLoop": false,
+      "sec": 49
+    },
+    {
+      "instance_id": "django__django-11564",
+      "repo": "django/django",
+      "tier": "T1",
+      "resolved": false,
+      "steps": 12,
+      "submitted": false,
+      "resolvedInLoop": false,
+      "sec": 67
+    },
+    {
+      "instance_id": "sympy__sympy-11870",
+      "repo": "sympy/sympy",
+      "tier": "T1",
+      "resolved": false,
+      "steps": 12,
+      "submitted": false,
+      "resolvedInLoop": false,
+      "sec": 99
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-25079",
+      "repo": "matplotlib/matplotlib",
+      "tier": "T1",
+      "resolved": false,
+      "steps": 12,
+      "submitted": false,
+      "resolvedInLoop": false,
+      "sec": 75
+    }
+  ]
+}
