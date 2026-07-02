@@ -1,0 +1,24 @@
+{
+  "model": "deepseek/deepseek-chat",
+  "escalateTo": [
+    "claude-p-fable"
+  ],
+  "escalatePolicy": "aggressive",
+  "nativeTools": true,
+  "noTestOracle": true,
+  "maxSteps": 15,
+  "n": 25,
+  "escalationRate": 1.0,
+  "escalated": 25,
+  "darwinCost_usd": 1.9297,
+  "handoffCost_usd": 72.6488,
+  "totalCost_usd": 74.5785,
+  "meanDarwinCostPerInst_usd": 0.07719,
+  "meanHandoffCostPerEscalated_usd": 2.906,
+  "handoffStatusCounts": {
+    "resolved": 25
+  },
+  "finalPatchNonempty": 25,
+  "medianHandoffLatencyMs": 236060,
+  "note": "Two-run arm: first run killed at 12/25 by a background-task stop (partial preds/receipts preserved), topped up on the remaining 13; predictions+receipts merged to the full 25. Gold scoring in run_id handoff_hard25."
+}

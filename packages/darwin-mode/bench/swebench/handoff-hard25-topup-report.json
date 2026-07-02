@@ -1,0 +1,404 @@
+{
+  "model": "deepseek/deepseek-chat",
+  "escalateModel": null,
+  "cascade": false,
+  "maxSteps": 15,
+  "n": 13,
+  "resolvedInLoop": 0,
+  "escalated": 0,
+  "byTier": {
+    "handoff:claude-p-fable": 13
+  },
+  "noTestOracle": true,
+  "leaderboardConformant": true,
+  "phase2": {
+    "localize": false,
+    "gnnRerank": false,
+    "reproGate": false,
+    "reviewer": false,
+    "traceLocalize": false
+  },
+  "nativeTools": true,
+  "escalateTo": [
+    "claude-p-fable"
+  ],
+  "escalatePolicy": "aggressive",
+  "escalationRate": 1,
+  "cappedAtInstance": null,
+  "maxCost": 45,
+  "totalCost_usd": 43.3662,
+  "blendedCostPerInst_usd": 3.33586,
+  "instances": [
+    {
+      "instance_id": "pytest-dev__pytest-7220",
+      "repo": "pytest-dev/pytest",
+      "tier": "handoff:claude-p-fable",
+      "resolved": false,
+      "steps": 11,
+      "submitted": true,
+      "resolvedInLoop": false,
+      "handoffChain": [
+        "claude-p-fable"
+      ],
+      "escalationReasons": [
+        "tests_failed",
+        "empty_patch"
+      ],
+      "handoffHops": [
+        {
+          "solver": "claude-p-fable",
+          "status": "resolved",
+          "cost_usd": 2.8402775,
+          "latency_ms": 249250,
+          "turns": 22,
+          "accepted": true
+        }
+      ],
+      "handoffAccepted": true,
+      "sec": 295
+    },
+    {
+      "instance_id": "django__django-12113",
+      "repo": "django/django",
+      "tier": "handoff:claude-p-fable",
+      "resolved": false,
+      "steps": 12,
+      "submitted": true,
+      "resolvedInLoop": false,
+      "handoffChain": [
+        "claude-p-fable"
+      ],
+      "escalationReasons": [
+        "tests_failed",
+        "empty_patch"
+      ],
+      "handoffHops": [
+        {
+          "solver": "claude-p-fable",
+          "status": "resolved",
+          "cost_usd": 0.8847595,
+          "latency_ms": 58776,
+          "turns": 3,
+          "accepted": true
+        }
+      ],
+      "handoffAccepted": true,
+      "sec": 435
+    },
+    {
+      "instance_id": "sympy__sympy-12236",
+      "repo": "sympy/sympy",
+      "tier": "handoff:claude-p-fable",
+      "resolved": false,
+      "steps": 5,
+      "submitted": true,
+      "resolvedInLoop": false,
+      "handoffChain": [
+        "claude-p-fable"
+      ],
+      "escalationReasons": [
+        "tests_failed"
+      ],
+      "handoffHops": [
+        {
+          "solver": "claude-p-fable",
+          "status": "resolved",
+          "cost_usd": 1.289285,
+          "latency_ms": 116594,
+          "turns": 7,
+          "accepted": true
+        }
+      ],
+      "handoffAccepted": true,
+      "sec": 199
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-8474",
+      "repo": "sphinx-doc/sphinx",
+      "tier": "handoff:claude-p-fable",
+      "resolved": false,
+      "steps": 8,
+      "submitted": true,
+      "resolvedInLoop": false,
+      "handoffChain": [
+        "claude-p-fable"
+      ],
+      "escalationReasons": [
+        "tests_failed",
+        "empty_patch"
+      ],
+      "handoffHops": [
+        {
+          "solver": "claude-p-fable",
+          "status": "resolved",
+          "cost_usd": 3.6634565000000006,
+          "latency_ms": 433600,
+          "turns": 18,
+          "accepted": true
+        }
+      ],
+      "handoffAccepted": true,
+      "sec": 676
+    },
+    {
+      "instance_id": "django__django-14997",
+      "repo": "django/django",
+      "tier": "handoff:claude-p-fable",
+      "resolved": false,
+      "steps": 7,
+      "submitted": true,
+      "resolvedInLoop": false,
+      "handoffChain": [
+        "claude-p-fable"
+      ],
+      "escalationReasons": [
+        "tests_failed"
+      ],
+      "handoffHops": [
+        {
+          "solver": "claude-p-fable",
+          "status": "resolved",
+          "cost_usd": 2.4676435000000003,
+          "latency_ms": 252213,
+          "turns": 14,
+          "accepted": true
+        }
+      ],
+      "handoffAccepted": true,
+      "sec": 398
+    },
+    {
+      "instance_id": "sympy__sympy-13146",
+      "repo": "sympy/sympy",
+      "tier": "handoff:claude-p-fable",
+      "resolved": false,
+      "steps": 5,
+      "submitted": true,
+      "resolvedInLoop": false,
+      "handoffChain": [
+        "claude-p-fable"
+      ],
+      "escalationReasons": [
+        "tests_failed",
+        "empty_patch"
+      ],
+      "handoffHops": [
+        {
+          "solver": "claude-p-fable",
+          "status": "resolved",
+          "cost_usd": 1.9497345000000004,
+          "latency_ms": 229079,
+          "turns": 9,
+          "accepted": true
+        }
+      ],
+      "handoffAccepted": true,
+      "sec": 346
+    },
+    {
+      "instance_id": "sympy__sympy-11897",
+      "repo": "sympy/sympy",
+      "tier": "handoff:claude-p-fable",
+      "resolved": false,
+      "steps": 15,
+      "submitted": false,
+      "resolvedInLoop": false,
+      "handoffChain": [
+        "claude-p-fable"
+      ],
+      "escalationReasons": [
+        "tests_failed",
+        "empty_patch",
+        "no_submit",
+        "thrash_repeat"
+      ],
+      "handoffHops": [
+        {
+          "solver": "claude-p-fable",
+          "status": "resolved",
+          "cost_usd": 6.239329500000001,
+          "latency_ms": 619834,
+          "turns": 19,
+          "accepted": true
+        }
+      ],
+      "handoffAccepted": true,
+      "sec": 1467
+    },
+    {
+      "instance_id": "django__django-15213",
+      "repo": "django/django",
+      "tier": "handoff:claude-p-fable",
+      "resolved": false,
+      "steps": 15,
+      "submitted": false,
+      "resolvedInLoop": false,
+      "handoffChain": [
+        "claude-p-fable"
+      ],
+      "escalationReasons": [
+        "tests_failed",
+        "no_submit",
+        "thrash_repeat"
+      ],
+      "handoffHops": [
+        {
+          "solver": "claude-p-fable",
+          "status": "resolved",
+          "cost_usd": 2.33036,
+          "latency_ms": 251765,
+          "turns": 14,
+          "accepted": true
+        }
+      ],
+      "handoffAccepted": true,
+      "sec": 1051
+    },
+    {
+      "instance_id": "django__django-15738",
+      "repo": "django/django",
+      "tier": "handoff:claude-p-fable",
+      "resolved": false,
+      "steps": 10,
+      "submitted": true,
+      "resolvedInLoop": false,
+      "handoffChain": [
+        "claude-p-fable"
+      ],
+      "escalationReasons": [
+        "tests_failed",
+        "empty_patch"
+      ],
+      "handoffHops": [
+        {
+          "solver": "claude-p-fable",
+          "status": "resolved",
+          "cost_usd": 9.3533375,
+          "latency_ms": 806443,
+          "turns": 28,
+          "accepted": true
+        }
+      ],
+      "handoffAccepted": true,
+      "sec": 938
+    },
+    {
+      "instance_id": "sympy__sympy-13895",
+      "repo": "sympy/sympy",
+      "tier": "handoff:claude-p-fable",
+      "resolved": false,
+      "steps": 15,
+      "submitted": false,
+      "resolvedInLoop": false,
+      "handoffChain": [
+        "claude-p-fable"
+      ],
+      "escalationReasons": [
+        "tests_failed",
+        "empty_patch",
+        "no_submit",
+        "thrash_repeat"
+      ],
+      "handoffHops": [
+        {
+          "solver": "claude-p-fable",
+          "status": "resolved",
+          "cost_usd": 5.3278985,
+          "latency_ms": 726123,
+          "turns": 26,
+          "accepted": true
+        }
+      ],
+      "handoffAccepted": true,
+      "sec": 1523
+    },
+    {
+      "instance_id": "sympy__sympy-13915",
+      "repo": "sympy/sympy",
+      "tier": "handoff:claude-p-fable",
+      "resolved": false,
+      "steps": 15,
+      "submitted": false,
+      "resolvedInLoop": false,
+      "handoffChain": [
+        "claude-p-fable"
+      ],
+      "escalationReasons": [
+        "tests_failed",
+        "empty_patch",
+        "no_submit"
+      ],
+      "handoffHops": [
+        {
+          "solver": "claude-p-fable",
+          "status": "resolved",
+          "cost_usd": 2.6643235000000005,
+          "latency_ms": 307685,
+          "turns": 10,
+          "accepted": true
+        }
+      ],
+      "handoffAccepted": true,
+      "sec": 762
+    },
+    {
+      "instance_id": "django__django-16408",
+      "repo": "django/django",
+      "tier": "handoff:claude-p-fable",
+      "resolved": false,
+      "steps": 15,
+      "submitted": false,
+      "resolvedInLoop": false,
+      "handoffChain": [
+        "claude-p-fable"
+      ],
+      "escalationReasons": [
+        "tests_failed",
+        "no_submit",
+        "thrash_repeat"
+      ],
+      "handoffHops": [
+        {
+          "solver": "claude-p-fable",
+          "status": "resolved",
+          "cost_usd": 1.7604090000000001,
+          "latency_ms": 161616,
+          "turns": 10,
+          "accepted": true
+        }
+      ],
+      "handoffAccepted": true,
+      "sec": 846
+    },
+    {
+      "instance_id": "sympy__sympy-14024",
+      "repo": "sympy/sympy",
+      "tier": "handoff:claude-p-fable",
+      "resolved": false,
+      "steps": 15,
+      "submitted": false,
+      "resolvedInLoop": false,
+      "handoffChain": [
+        "claude-p-fable"
+      ],
+      "escalationReasons": [
+        "tests_failed",
+        "empty_patch",
+        "no_submit",
+        "thrash_repeat"
+      ],
+      "handoffHops": [
+        {
+          "solver": "claude-p-fable",
+          "status": "resolved",
+          "cost_usd": 1.6942985,
+          "latency_ms": 149176,
+          "turns": 11,
+          "accepted": true
+        }
+      ],
+      "handoffAccepted": true,
+      "sec": 685
+    }
+  ]
+}
