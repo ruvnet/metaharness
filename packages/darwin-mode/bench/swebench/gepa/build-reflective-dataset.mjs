@@ -36,6 +36,31 @@ import { goldFiles } from './metric.mjs';
 
 // ── pure, $0-testable pieces ──────────────────────────────────────────────────────────────────────
 
+/** Fetch gold patches for a set of instance ids from the swebench venv's HF cache (scoring-side
+ * only — gold NEVER enters any executor prompt). Returns { instId: patch } or null on failure.
+ * Bench-tooling note: this shells the existing Python swebench venv; the repo's Rust-only rule
+ * covers ruOS components — bench harness tooling is the established mjs+venv surface here. */
+export function fetchGoldPatches(ids, cachePath = null) {
+  if (cachePath && existsSync(cachePath)) { try { return JSON.parse(readFileSync(cachePath, 'utf8')); } catch { /**/ } }
+  try {
+    const py = [
+      'import json,sys',
+      'from datasets import load_dataset',
+      `ids=set(json.loads(${JSON.stringify(JSON.stringify(ids))}))`,
+      "ds=load_dataset('princeton-nlp/SWE-bench_Lite',split='test')",
+      "print(json.dumps({r['instance_id']:r['patch'] for r in ds if r['instance_id'] in ids}))",
+    ].join('\n');
+    const outTxt = execSync('. /tmp/swebench-venv/bin/activate && python3 -',
+      { shell: '/bin/bash', input: py, maxBuffer: 1 << 26, timeout: 120000 }).toString();
+    const patches = JSON.parse(outTxt.trim().split('\n').at(-1));
+    if (cachePath) { try { writeFileSync(cachePath, JSON.stringify(patches)); } catch { /**/ } }
+    return patches;
+  } catch (e) {
+    console.error(`[gold-patches] unavailable (${String(e.message || e).slice(0, 120)})`);
+    return null;
+  }
+}
+
 /** Verbatim added-line overlap scan: does the advice contain gold-patch ADDED content (≥minLen chars)
  * — i.e. fix content not derivable from the transcript+diff shown? (ADR-226 §4.8's scan.) */
 export function contaminationScan(advice, goldPatch, minLen = 20) {
@@ -166,27 +191,11 @@ function main() {
   const allowUnscanned = args.includes('--allow-unscanned');
   const goldMaps = Object.fromEntries(argvAll('--gold').map((s) => { const i = s.indexOf('='); return [s.slice(0, i), s.slice(i + 1)]; }));
 
-  // gold patches: --gold-patches file, else fetch via the swebench venv's HF cache (scoring-side only).
-  let goldPatches = null;
+  // gold patches: --gold-patches cache file, else fetch via the swebench venv's HF cache (scoring-side only).
   const gpPath = argv('--gold-patches', null);
-  if (gpPath && existsSync(rel(gpPath))) goldPatches = J(rel(gpPath));
-  else {
-    try {
-      const ids = manifest.map((i) => i.instance_id);
-      const py = [
-        'import json,sys',
-        'from datasets import load_dataset',
-        `ids=set(json.loads(${JSON.stringify(JSON.stringify(ids))}))`,
-        "ds=load_dataset('princeton-nlp/SWE-bench_Lite',split='test')",
-        "print(json.dumps({r['instance_id']:r['patch'] for r in ds if r['instance_id'] in ids}))",
-      ].join('\n');
-      const outTxt = execSync('. /tmp/swebench-venv/bin/activate && python3 -',
-        { shell: '/bin/bash', input: py, maxBuffer: 1 << 26, timeout: 120000 }).toString();
-      goldPatches = JSON.parse(outTxt.trim().split('\n').at(-1));
-      if (gpPath) writeFileSync(rel(gpPath), JSON.stringify(goldPatches));
-      console.error(`[gold-patches] fetched ${Object.keys(goldPatches).length} from HF cache`);
-    } catch (e) { console.error(`[gold-patches] unavailable (${String(e.message || e).slice(0, 120)}) — contamination scan will gate records out unless --allow-unscanned`); }
-  }
+  const goldPatches = fetchGoldPatches(manifest.map((i) => i.instance_id), gpPath ? rel(gpPath) : null);
+  if (goldPatches) console.error(`[gold-patches] ${Object.keys(goldPatches).length} available`);
+  else console.error('[gold-patches] missing — contamination scan will gate records out unless --allow-unscanned');
 
   // discover arm reports (+ preds jsonl) across the given dirs
   const arms = {};
