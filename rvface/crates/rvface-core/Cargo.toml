@@ -1,0 +1,16 @@
+[package]
+name = "rvface-core"
+description = "Framework-free face pipeline math: priors, NMS, alignment, pose, similarity, image ops"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+thiserror.workspace = true
+serde.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

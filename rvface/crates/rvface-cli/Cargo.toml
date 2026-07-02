@@ -1,0 +1,26 @@
+[package]
+name = "rvface-cli"
+description = "rvFACE native CLI: detect faces, compare identities, benchmark"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "rvface"
+path = "src/main.rs"
+
+[features]
+default = ["cpu"]
+cpu = ["rvface-models/cpu"]
+webgpu = ["rvface-models/webgpu"]
+
+[dependencies]
+rvface-core.workspace = true
+rvface-models.workspace = true
+image.workspace = true
+clap.workspace = true
+anyhow.workspace = true
+serde_json.workspace = true

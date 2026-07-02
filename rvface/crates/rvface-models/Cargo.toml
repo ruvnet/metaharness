@@ -1,0 +1,23 @@
+[package]
+name = "rvface-models"
+description = "Burn ports of the rvFACE networks: slim-320 SSD detector, MobileFaceNet landmarks, IRN-50 embedder"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[features]
+default = ["cpu"]
+cpu = []
+webgpu = ["burn/wgpu"]
+
+[dependencies]
+rvface-core.workspace = true
+burn.workspace = true
+safetensors.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

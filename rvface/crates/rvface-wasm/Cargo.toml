@@ -1,0 +1,24 @@
+[package]
+name = "rvface-wasm"
+description = "wasm-bindgen bindings for rvFACE (browser: WebGPU or CPU)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["cpu"]
+cpu = ["rvface-models/cpu"]
+webgpu = ["rvface-models/webgpu"]
+
+[dependencies]
+rvface-core.workspace = true
+rvface-models.workspace = true
+wasm-bindgen.workspace = true
+js-sys.workspace = true
+serde.workspace = true
