@@ -14,13 +14,14 @@
 //   bench/swebench/solve-advisor.mjs --manifest advisor-medium-25.json --model deepseek/deepseek-chat \
 //   --advisor-model anthropic/claude-sonnet-5 --max-steps 12 --concurrency 2 --max-cost 15 \
 //   --no-test-oracle --out predictions-advisor.jsonl --report advisor-report.json
-import { mkdtempSync, writeFileSync, readFileSync, readdirSync, existsSync, appendFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, readdirSync, existsSync, appendFileSync, rmSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join, dirname, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { advisorSolve, makeAdvisorGate, buildAdvisedSystem, buildAdvisorSystem } from './advisor-loop.mjs';
 import { chebTemp, buildAgenticSystem } from './agentic-loop.mjs';
+import { loadGenome, buildSystemFromGenome, buildAdvisorSystemFromGenome } from './gepa/genome.mjs';
 import { runConformantTests } from './conformant-tests.mjs';
 import { langProfile } from './lang-profile.mjs';
 
@@ -52,6 +53,15 @@ const ADVISOR_COOLDOWN = +argv('--advisor-cooldown', 4);
 const MAX_ADVISORIES = +argv('--max-advisories', 4);
 const MAX_VETOES = +argv('--max-vetoes', 2);
 const ADVISOR_MAX_CHARS = +argv('--advisor-max-chars', 24000);
+// ADR-228 (GEPA) — additive knobs. `--genome <file>` renders the executor system prompt (and, in
+// advisor mode, the verifier prompt) from a genome JSON instead of the hard-coded builders; the
+// seed genome is byte-equivalent to the builders (gepa/genome.test.mjs), so no-mutation runs are
+// identical. `--transcripts-dir <dir>` persists per-instance transcripts for ASI feedback
+// generation (gepa/evaluate-genome.mjs). No behavior change without the flags.
+const GENOME_PATH = argv('--genome', null);
+const GENOME = GENOME_PATH ? loadGenome((p) => readFileSync(p, 'utf8'), rel(GENOME_PATH)) : null;
+const TRANSCRIPTS_DIR = argv('--transcripts-dir', null) ? rel(argv('--transcripts-dir', null)) : null;
+if (TRANSCRIPTS_DIR) mkdirSync(TRANSCRIPTS_DIR, { recursive: true });
 
 let manifest = JSON.parse(readFileSync(rel(argv('--manifest', 'advisor-medium-25.json')), 'utf8')).instances;
 if (onlyInstance) manifest = manifest.filter((i) => i.instance_id === onlyInstance);
@@ -174,8 +184,10 @@ async function runInstance(inst) {
       problem: inst.problem_statement, io, llmLow, llmAdvisor,
       gate: makeAdvisorGate({ adviseAfterFails: ADVISE_AFTER_FAILS, cooldown: ADVISOR_COOLDOWN }),
       maxSteps: MAX_STEPS,
-      system: D0 ? buildAgenticSystem(prof.exampleExt, defGlob) : buildAdvisedSystem(prof.exampleExt, defGlob),
-      advisorSystem: buildAdvisorSystem(prof.exampleExt),
+      system: GENOME
+        ? buildSystemFromGenome(GENOME, prof.exampleExt, defGlob, { advised: !D0 })
+        : (D0 ? buildAgenticSystem(prof.exampleExt, defGlob) : buildAdvisedSystem(prof.exampleExt, defGlob)),
+      advisorSystem: (GENOME && !D0 && buildAdvisorSystemFromGenome(GENOME, prof.exampleExt)) || buildAdvisorSystem(prof.exampleExt),
       maxAdvisories: MAX_ADVISORIES, maxVetoes: MAX_VETOES, advisorMaxChars: ADVISOR_MAX_CHARS,
       tempSchedule: CHEB_TEMP ? ((s, n) => chebTemp(s, n)) : undefined,
     });
@@ -188,6 +200,7 @@ async function runInstance(inst) {
     row.advisoryLog = res.advisories; // full records incl. capped advice excerpts (§4.8 contamination scan)
     row.vetoes = res.vetoes; row.executorActions = res.executorActions; row.thrash = res.thrash;
     for (const v of res.vetoedPatches) allVetoedPatches.push({ instance_id: inst.instance_id, step: v.step, diff: v.diff });
+    if (TRANSCRIPTS_DIR) { try { writeFileSync(join(TRANSCRIPTS_DIR, inst.instance_id.replace(/[^a-zA-Z0-9_.-]/g, '_') + '.json'), JSON.stringify({ instance_id: inst.instance_id, resolvedInLoop: res.resolvedInLoop, steps: res.steps, thrash: res.thrash, cost: res.cost, transcript: res.transcript })); } catch { /**/ } }
     try { rmSync(work, { recursive: true, force: true }); } catch { /**/ }
   } catch (e) { row.error = String(e).split('\n')[0].slice(0, 200); }
   appendFileSync(OUT, JSON.stringify({ instance_id: inst.instance_id, model_name_or_path: 'darwin-advisor', model_patch: patch }) + '\n');
@@ -215,6 +228,7 @@ const conformant = NO_ORACLE && !usedOracleDuringSolve;
 if (NO_ORACLE && usedOracleDuringSolve) console.error('⚠️ LEAKAGE: gold harness was called during solve despite --no-test-oracle.');
 writeFileSync(REPORT, JSON.stringify({
   mode: 'advisor', model: MODEL, advisorModel: ADVISOR_MODEL, d0: D0, maxSteps: MAX_STEPS,
+  genome: GENOME ? (GENOME.meta?.id ?? GENOME_PATH) : null,
   gate: { adviseAfterFails: ADVISE_AFTER_FAILS, cooldown: ADVISOR_COOLDOWN },
   maxAdvisories: MAX_ADVISORIES, maxVetoes: MAX_VETOES, advisorMaxChars: ADVISOR_MAX_CHARS,
   modelParams: { temperature: TEMP, chebTemp: CHEB_TEMP, maxTokens: MAX_TOKENS },
