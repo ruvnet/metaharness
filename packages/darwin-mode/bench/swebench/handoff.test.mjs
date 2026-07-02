@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 import {
   solveViaClaudeP, buildHandoffEnv, buildHandoffPrompt, readAuthToken,
   parseEscalateChain, resolveSolverSpec, acceptHop, runEscalationChain, pickChainPatch,
-  escalationSignals, shouldEscalate, diffStats, buildReceipt, testFailureRepeats,
+  escalationSignals, shouldEscalate, evaluateEscalation, diffStats, buildReceipt, testFailureRepeats,
   OR_ANTHROPIC_BASE_URL, DEFAULT_HANDOFF_MODEL, SOLVER_ALIASES,
 } from './handoff-solver.mjs';
 import { agenticSolveNative } from './agentic-loop.mjs';
@@ -49,6 +49,27 @@ test('shouldEscalate: 2-of-N — 0 or 1 signal does NOT fire, 2+ fires', () => {
   assert.deepEqual(sprawl.reasons, ['thrash_repeat', 'too_many_files']);
 });
 
+test('evaluateEscalation: policy selector — two-of-n (production) vs aggressive (hard-slice proof)', () => {
+  // Confident-but-wrong submit: darwin SUBMITTED a tight non-empty patch, tests just failed.
+  // Only 1 signal fires. two-of-n KEEPS it (measures darwin's ceiling); aggressive escalates it.
+  const confidentWrong = escalationSignals({ resolvedInLoop: false, submitted: true, thrash: 0, patch: DIFF_1FILE });
+  assert.equal(evaluateEscalation(confidentWrong, 'two-of-n').escalate, false);
+  const agg = evaluateEscalation(confidentWrong, 'aggressive');
+  assert.equal(agg.escalate, true, 'aggressive escalates every darwin miss');
+  assert.deepEqual(agg.reasons, ['tests_failed'], 'reasons stay the full firing set regardless of policy');
+  // darwin RESOLVED in-loop with a clean patch: neither policy escalates (not a miss).
+  const solved = escalationSignals({ resolvedInLoop: true, submitted: true, thrash: 0, patch: DIFF_1FILE });
+  assert.equal(evaluateEscalation(solved, 'aggressive').escalate, false, 'aggressive still keeps genuine resolves');
+  assert.equal(evaluateEscalation(solved, 'two-of-n').escalate, false);
+  // Empty patch alone: aggressive escalates (empty_patch), two-of-n does not (1 signal only if submitted).
+  const emptyOnly = escalationSignals({ resolvedInLoop: false, submitted: true, thrash: 0, patch: '' }); // tests_failed + empty_patch = 2 → both escalate
+  assert.equal(evaluateEscalation(emptyOnly, 'two-of-n').escalate, true);
+  assert.equal(evaluateEscalation(emptyOnly, 'aggressive').escalate, true);
+  // default policy is two-of-n; unknown policy throws.
+  assert.equal(evaluateEscalation(confidentWrong).escalate, false);
+  assert.throws(() => evaluateEscalation(confidentWrong, 'yolo'), /unknown escalate-policy/);
+});
+
 test('testFailureRepeats: same run_tests failure signature ≥2 fires the thrash signal', () => {
   const fail = { actionRaw: '{"tool":"run_tests"}', obs: 'FAIL tests/test_a.py::test_x — AssertionError\nlogs at /tmp/agentic-run_1.jsonl' };
   const fail2 = { actionRaw: '{"tool":"run_tests"}', obs: 'FAIL tests/test_a.py::test_x — AssertionError\nlogs at /tmp/agentic-run_2.jsonl' }; // same sig, different /tmp path
@@ -75,7 +96,7 @@ test('diffStats: files deduped, bytes counted, empty-safe', () => {
 });
 
 // ── receipt schema ───────────────────────────────────────────────────────────────────────────────
-const RECEIPT_FIELDS = ['instance_id', 'initial_solver', 'darwin_cost_usd', 'darwin_steps', 'failure_reasons', 'escalated', 'escalation_reasons', 'handoff_solver', 'handoff_cost_usd', 'handoff_latency_ms', 'final_patch_nonempty', 'diff_files', 'diff_bytes', 'ts'];
+const RECEIPT_FIELDS = ['instance_id', 'initial_solver', 'escalate_policy', 'darwin_cost_usd', 'darwin_steps', 'failure_reasons', 'escalated', 'escalation_reasons', 'handoff_solver', 'handoff_cost_usd', 'handoff_latency_ms', 'final_patch_nonempty', 'diff_files', 'diff_bytes', 'ts'];
 
 test('buildReceipt: escalated row carries every spec field with real values', () => {
   const signals = escalationSignals({ resolvedInLoop: false, submitted: false, thrash: 0, patch: '' });
@@ -84,11 +105,12 @@ test('buildReceipt: escalated row carries every spec field with real values', ()
     darwinCostUsd: 0.0312, darwinSteps: 15, signals, escalated: true,
     escalationReasons: ['tests_failed', 'empty_patch', 'no_submit'],
     handoff: { solver: 'claude-p-fable', status: 'resolved', cost_usd: 1.25, latency_ms: 210_000, turns: 31, error: '' },
-    finalPatch: DIFF_1FILE, now: () => 1750000000000,
+    finalPatch: DIFF_1FILE, escalatePolicy: 'aggressive', now: () => 1750000000000,
   });
   for (const f of RECEIPT_FIELDS) assert.ok(f in r, `missing receipt field: ${f}`);
   assert.equal(r.instance_id, 'django__django-11099');
   assert.equal(r.initial_solver, 'darwin-deepseek-chat');
+  assert.equal(r.escalate_policy, 'aggressive');
   assert.equal(r.darwin_cost_usd, 0.0312);
   assert.equal(r.darwin_steps, 15);
   assert.deepEqual(r.failure_reasons, ['tests_failed', 'empty_patch', 'no_submit']);
@@ -297,6 +319,10 @@ test('solve-agentic gating: all handoff side effects require --escalate-to', () 
   // --early-escalate is opt-in (defaults off ⇒ benchmark arms measure the spec'd behaviour).
   assert.match(src, /withHandoffSlot\(\(\) => solveViaClaudeP\(/);
   assert.match(src, /const EARLY_ESCALATE = args\.includes\('--early-escalate'\);/);
+  // Escalation policy: default is the production two-of-n cost-saver; the decision goes through
+  // evaluateEscalation(signals, ESCALATE_POLICY) so --escalate-policy aggressive is honoured.
+  assert.match(src, /const ESCALATE_POLICY = argv\('--escalate-policy', 'two-of-n'\);/);
+  assert.match(src, /evaluateEscalation\(signals, ESCALATE_POLICY\)/);
   assert.match(src, /if \(HANDOFF_CHAIN && EARLY_ESCALATE\)/);
 });
 

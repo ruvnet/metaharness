@@ -25,7 +25,7 @@ import { buildReproTest, REPRO_PATH } from './test-critic.mjs';
 // ADR-196 — execution-trace localization (the §53 dynamic-localization lever; distinct from §52's naive semantic localize).
 import { traceLocalize, formatTraceSeedForAgent, buildPyTracer, TRACE_PATH } from './trace-localize.mjs';
 // ADR-205 — harness handoff: darwin as router, claude -p as hard-tail actuator (loop handoff, NOT model embedding).
-import { parseEscalateChain, acceptHop, solveViaClaudeP, escalationSignals, shouldEscalate, buildReceipt, runEscalationChain, pickChainPatch } from './handoff-solver.mjs';
+import { parseEscalateChain, acceptHop, solveViaClaudeP, escalationSignals, evaluateEscalation, buildReceipt, runEscalationChain, pickChainPatch } from './handoff-solver.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -68,6 +68,13 @@ const NATIVE_TOOLS = args.includes('--native-tools');
 // replaces darwin's. Absent ⇒ every path below is byte-identical to pre-ADR-205 behaviour.
 const ESCALATE_TO = argv('--escalate-to', null);
 const HANDOFF_CHAIN = ESCALATE_TO ? parseEscalateChain(ESCALATE_TO) : null;
+// ADR-205 — escalation POLICY. `two-of-n` (default) is the production cost-saver: escalate only when
+// ≥2 failure signals fire (right for MIXED workloads where the cheap base resolves the easy share).
+// `aggressive` escalates EVERY darwin miss (tests_failed OR empty_patch) — the proof policy for a
+// hard slice where the base resolves ~0 (2-of-N would under-escalate confident-but-wrong submits and
+// measure darwin's ceiling, not the handoff's). Validated eagerly so a typo fails fast.
+const ESCALATE_POLICY = argv('--escalate-policy', 'two-of-n');
+if (HANDOFF_CHAIN) evaluateEscalation({ tests_failed: false, empty_patch: false, no_submit: false, thrash_repeat: false, too_many_files: false }, ESCALATE_POLICY);
 const HANDOFF_MAX_TURNS = +argv('--handoff-max-turns', 40);
 const HANDOFF_TIMEOUT_MS = +argv('--handoff-timeout', 900) * 1000;
 // ADR-205 — the solver_receipt stream (one JSONL row per instance; plus one per chain hop when a
@@ -501,8 +508,8 @@ async function runInstance(inst) {
     // explicitly future work, not invented here.
     if (HANDOFF_CHAIN && t1res) {
       const signals = escalationSignals({ resolvedInLoop: !!t1res.resolvedInLoop, submitted: !!t1res.submitted, thrash: t1res.thrash || 0, transcript: t1res.transcript, patch });
-      const { escalate, reasons } = shouldEscalate(signals);
-      const darwinBase = { instanceId: inst.instance_id, initialSolver: INITIAL_SOLVER, darwinCostUsd: t1res.cost || 0, darwinSteps: t1res.steps ?? null, signals };
+      const { escalate, reasons } = evaluateEscalation(signals, ESCALATE_POLICY);
+      const darwinBase = { instanceId: inst.instance_id, initialSolver: INITIAL_SOLVER, darwinCostUsd: t1res.cost || 0, darwinSteps: t1res.steps ?? null, signals, escalatePolicy: ESCALATE_POLICY };
       let hops = [];
       if (escalate) {
         row.handoffChain = HANDOFF_CHAIN.map((s) => s.name); row.escalationReasons = reasons;
@@ -568,5 +575,7 @@ writeFileSync(REPORT, JSON.stringify({ model: MODEL, escalateModel: ESCALATE, ca
   nativeTools: NATIVE_TOOLS,
   // ADR-205 — escalation chain active for this run (null → no handoff, pre-ADR-205 behaviour).
   escalateTo: HANDOFF_CHAIN ? HANDOFF_CHAIN.map((s) => s.name) : null,
+  escalatePolicy: HANDOFF_CHAIN ? ESCALATE_POLICY : null,
+  escalationRate: HANDOFF_CHAIN ? +(report.filter((r) => r.handoffChain).length / (report.length || 1)).toFixed(3) : null,
   cappedAtInstance: cappedAt, maxCost: MAX_COST===Infinity?null:MAX_COST, totalCost_usd: Math.round(totalCost * 10000) / 10000, blendedCostPerInst_usd: report.length ? Math.round(totalCost / report.length * 1e5) / 1e5 : 0, instances: report }, null, 2));
 console.error(`\nDONE ${report.length} | in-loop ${inloop}/${report.length} | cascade=${!!ESCALATE} escalated=${escalated} tiers=${JSON.stringify(byTier)} | native-tools=${NATIVE_TOOLS} | $${Math.round(totalCost * 10000) / 10000} (${report.length?(totalCost/report.length).toFixed(4):0}/inst) | preds → ${OUT}`);

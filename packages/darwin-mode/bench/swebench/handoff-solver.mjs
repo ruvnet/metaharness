@@ -257,15 +257,35 @@ export function shouldEscalate(signals) {
 }
 
 /**
+ * Escalation POLICY selector. `reasons` is always the full set of firing signals (honest receipt),
+ * independent of which policy made the decision.
+ *   'two-of-n'   — the PRODUCTION default (cost-optimization for MIXED workloads where the cheap
+ *                  base resolves the easy share): escalate only when ≥2 signals fire.
+ *   'aggressive' — escalate EVERY darwin miss (tests_failed OR empty_patch). Correct for a PROOF
+ *                  slice like hard-25 where the base resolves ~0, so the 2-of-N cost-saver would
+ *                  under-escalate confident-but-wrong submits and measure darwin's ceiling instead
+ *                  of the handoff's ability. Escalation rate → ~100% here (intended; the honest
+ *                  hard-25 story is "no cost win on a slice the base can't touch — the win is on
+ *                  mixed workloads only").
+ */
+export function evaluateEscalation(signals, policy = 'two-of-n') {
+  const reasons = Object.keys(signals).filter((k) => signals[k] === true);
+  if (policy === 'aggressive') return { escalate: !!(signals.tests_failed || signals.empty_patch), reasons };
+  if (policy === 'two-of-n') return { escalate: reasons.length >= 2, reasons };
+  throw new Error(`unknown escalate-policy "${policy}" (use "two-of-n" or "aggressive")`);
+}
+
+/**
  * The per-instance solver_receipt — one JSONL row per instance (escalated or not). This stream is
  * the future MetaHarness router's training data: keep it complete and honest (both classes, real
  * costs, real reasons). Extra fields beyond the base schema are allowed; missing ones are not.
  */
-export function buildReceipt({ instanceId, initialSolver, darwinCostUsd, darwinSteps, signals, escalated, escalationReasons, handoff, finalPatch, now = Date.now }) {
+export function buildReceipt({ instanceId, initialSolver, darwinCostUsd, darwinSteps, signals, escalated, escalationReasons, handoff, finalPatch, escalatePolicy = null, now = Date.now }) {
   const { files, bytes } = diffStats(finalPatch);
   return {
     instance_id: instanceId,
     initial_solver: initialSolver,
+    escalate_policy: escalatePolicy,          // which policy made the escalate/keep decision (two-of-n|aggressive)
     darwin_cost_usd: +(darwinCostUsd || 0).toFixed(6),
     darwin_steps: darwinSteps ?? null,
     failure_reasons: Object.keys(signals || {}).filter((k) => signals[k] === true),
