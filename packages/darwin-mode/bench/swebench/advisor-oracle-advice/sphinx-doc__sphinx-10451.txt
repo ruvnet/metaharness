@@ -1,0 +1,21 @@
+ORACLE ADVICE (derived from the gold patch — D-oracle probe, ADR-226 §4.8; NON-CONFORMANT by construction).
+The correct fix, as exact next actions:
+1. Edit sphinx/ext/autodoc/typehints.py around line 115. Apply exactly this change (unified-diff hunk; - lines are removed, + lines added):
+         if name == 'return':
+             continue
+ 
+-        arg = arguments.get(name, {})
++        if '*' + name in arguments:
++            name = '*' + name
++            arguments.get(name)
++        elif '**' + name in arguments:
++            name = '**' + name
++            arguments.get(name)
++        else:
++            arg = arguments.get(name, {})
++
+         if not arg.get('type'):
+             field = nodes.field()
+             field += nodes.field_name('', 'type ' + name)
+2. (further hunks elided for length — see sphinx/ext/autodoc/typehints.py line 167)
+Do not edit test files. After editing, run_tests, then submit.

@@ -1,0 +1,4 @@
+ORACLE ADVICE (derived from the gold patch — D-oracle probe, ADR-226 §4.8; NON-CONFORMANT by construction).
+The correct fix, as exact next actions:
+1. (further hunks elided for length — see sklearn/linear_model/ridge.py line 1212)
+Do not edit test files. After editing, run_tests, then submit.

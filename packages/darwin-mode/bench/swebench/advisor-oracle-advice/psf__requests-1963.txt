@@ -1,0 +1,17 @@
+ORACLE ADVICE (derived from the gold patch — D-oracle probe, ADR-226 §4.8; NON-CONFORMANT by construction).
+The correct fix, as exact next actions:
+1. Edit requests/sessions.py around line 168. Apply exactly this change (unified-diff hunk; - lines are removed, + lines added):
+             if new_auth is not None:
+                 prepared_request.prepare_auth(new_auth)
+ 
++            # Override the original request.
++            req = prepared_request
++
+             resp = self.send(
+-                prepared_request,
++                req,
+                 stream=stream,
+                 timeout=timeout,
+                 verify=verify,
+
+Do not edit test files. After editing, run_tests, then submit.

@@ -1,0 +1,13 @@
+ORACLE ADVICE (derived from the gold patch — D-oracle probe, ADR-226 §4.8; NON-CONFORMANT by construction).
+The correct fix, as exact next actions:
+1. Edit django/conf/global_settings.py around line 304. Apply exactly this change (unified-diff hunk; - lines are removed, + lines added):
+ 
+ # The numeric mode to set newly-uploaded files to. The value should be a mode
+ # you'd pass directly to os.chmod; see https://docs.python.org/library/os.html#files-and-directories.
+-FILE_UPLOAD_PERMISSIONS = None
++FILE_UPLOAD_PERMISSIONS = 0o644
+ 
+ # The numeric mode to assign to newly-created directories, when uploading files.
+ # The value should be a mode as you'd pass to os.chmod;
+
+Do not edit test files. After editing, run_tests, then submit.

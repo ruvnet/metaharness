@@ -1,0 +1,14 @@
+ORACLE ADVICE (derived from the gold patch — D-oracle probe, ADR-226 §4.8; NON-CONFORMANT by construction).
+The correct fix, as exact next actions:
+1. Edit sympy/printing/mathematica.py around line 109. Apply exactly this change (unified-diff hunk; - lines are removed, + lines added):
+     def _print_Sum(self, expr):
+         return "Hold[Sum[" + ', '.join(self.doprint(a) for a in expr.args) + "]]"
+ 
++    def _print_Derivative(self, expr):
++        return "Hold[D[" + ', '.join(self.doprint(a) for a in expr.args) + "]]"
++
+ 
+ def mathematica_code(expr, **settings):
+     r"""Converts an expr to a string of the Wolfram Mathematica code
+
+Do not edit test files. After editing, run_tests, then submit.
