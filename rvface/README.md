@@ -4,6 +4,12 @@
 [Faceplugin Open-Source-Face-Recognition-SDK](https://github.com/Faceplugin-ltd/Open-Source-Face-Recognition-SDK)
 (Python/PyTorch) to Rust, running natively and in the browser on **WebGPU or CPU**, with a web UI.
 
+![rvFACE web UI demo](docs/media/demo.gif)
+
+| Analyze: detection · 68 landmarks · pose | 1:1 compare: score gauge · threshold-75 verdict |
+|---|---|
+| ![Analyze pane](docs/media/screenshot-analyze.png) | ![Compare pane](docs/media/screenshot-compare.png) |
+
 ## Pipeline
 
 ```

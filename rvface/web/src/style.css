@@ -196,6 +196,8 @@ body {
 }
 
 .dz-hint {
+  flex: 1;
+  min-width: 0;
   color: var(--text-dim);
   font-size: 13px;
   text-align: center;
