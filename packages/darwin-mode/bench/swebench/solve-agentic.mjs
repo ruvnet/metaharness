@@ -24,6 +24,8 @@ import { reviewerSolve, parseReview, buildReviewPrompt, reviseFeedbackBlock, REV
 import { buildReproTest, REPRO_PATH } from './test-critic.mjs';
 // ADR-196 — execution-trace localization (the §53 dynamic-localization lever; distinct from §52's naive semantic localize).
 import { traceLocalize, formatTraceSeedForAgent, buildPyTracer, TRACE_PATH } from './trace-localize.mjs';
+// ADR-205 — harness handoff: darwin as router, claude -p as hard-tail actuator (loop handoff, NOT model embedding).
+import { parseEscalateChain, acceptHop, solveViaClaudeP } from './handoff-solver.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -60,6 +62,14 @@ const REVIEW_REVISIONS = +argv('--review-revisions', 2);
 // text-JSON tool protocol, byte-identical). See agentic-loop.mjs's agenticSolveNative for the loop and
 // NATIVE-TOOLUSE.md for the diagnosis that motivated it.
 const NATIVE_TOOLS = args.includes('--native-tools');
+// ADR-205 — `--escalate-to <chain>`: ordered, comma-separated escalation chain (aliases like
+// `claude-p-fable`, or generic `darwin:<model>` / `claude-p:<model>` rungs). When set, an instance
+// that FAILS darwin's cheap attempt is handed off rung-by-rung; the first ACCEPTED rung's patch
+// replaces darwin's. Absent ⇒ every path below is byte-identical to pre-ADR-205 behaviour.
+const ESCALATE_TO = argv('--escalate-to', null);
+const HANDOFF_CHAIN = ESCALATE_TO ? parseEscalateChain(ESCALATE_TO) : null;
+const HANDOFF_MAX_TURNS = +argv('--handoff-max-turns', 40);
+const HANDOFF_TIMEOUT_MS = +argv('--handoff-timeout', 900) * 1000;
 
 let manifest = JSON.parse(readFileSync(rel(argv('--manifest', 'pilot-sample-25.json')), 'utf8')).instances;
 if (onlyInstance) manifest = manifest.filter((i) => i.instance_id === onlyInstance);
@@ -290,9 +300,11 @@ async function solveTier(inst, llmFn, opts = {}) {
   const tempSchedule = CHEB_TEMP ? ((s, n) => chebTemp(s, n, CHEB_HI)) : undefined;
   // ADR-197: --native-tools swaps the text-JSON ReAct core for the native function-calling one. The
   // default path below (agenticSolve + buildAgenticSystem) is untouched and stays byte-identical.
+  // ADR-205: chain rungs may carry their own step budget (spec.maxSteps); default is the global.
+  const maxSteps = opts.maxSteps || MAX_STEPS;
   const res = NATIVE_TOOLS
-    ? await agenticSolveNative({ problem, io, llm: llmFn, maxSteps: MAX_STEPS, ext: prof.exampleExt, glob: defGlob, tempSchedule })
-    : await agenticSolve({ problem, io, llm: llmFn, maxSteps: MAX_STEPS, system: buildAgenticSystem(prof.exampleExt, defGlob), tempSchedule });
+    ? await agenticSolveNative({ problem, io, llm: llmFn, maxSteps, ext: prof.exampleExt, glob: defGlob, tempSchedule })
+    : await agenticSolve({ problem, io, llm: llmFn, maxSteps, system: buildAgenticSystem(prof.exampleExt, defGlob), tempSchedule });
   return { res, work, prof };
 }
 // Cascade tie-break: neither tier passed the repo gate — judge picks the likelier fix (cheap, conformant).
@@ -383,6 +395,42 @@ async function runReviewer(inst, basePatch, llmFn, localizeHint) {
   return r;
 }
 
+// ── ADR-205 — the escalation-chain executor. Tries each rung in order; stops at the first result
+// acceptHop accepts (non-empty patch + in-loop signal where reported). 'darwin-model' rungs rerun
+// darwin's OWN loop cold with a different model (cheap ladder rungs); 'claude-p-model' rungs shell
+// out to the claude -p subprocess solver (the loop handoff — the whole point of ADR-205). Every
+// rung's cost lands in totalCost so --max-cost gates the chain like everything else.
+// Returns hops[] = { spec, result|null, skipped? } for every rung attempted. ──
+async function runEscalationChain(inst, chain, { localizeHint, priorAttempts = [] } = {}) {
+  const hops = [];
+  for (const spec of chain) {
+    if (totalCost >= MAX_COST) { hops.push({ spec, result: null, skipped: 'budget' }); break; }
+    let result; const t0h = Date.now();
+    if (spec.kind === 'darwin-model') {
+      const hopLlm = NATIVE_TOOLS ? mkLlmNative(spec.model) : mkLlm(spec.model);
+      try {
+        const { res, work } = await solveTier(inst, hopLlm, { localizeHint, maxSteps: spec.maxSteps });
+        try { rmSync(work, { recursive: true, force: true }); } catch { /**/ }
+        totalCost += res.cost || 0;
+        result = { status: res.patch.trim() ? 'resolved' : 'failed', patch: res.patch, cost_usd: res.cost || 0, latency_ms: Date.now() - t0h, turns: res.steps, solver: spec.name, resolvedInLoop: !!res.resolvedInLoop, error: '' };
+      } catch (e) {
+        result = { status: 'failed', patch: '', cost_usd: 0, latency_ms: Date.now() - t0h, turns: 0, solver: spec.name, resolvedInLoop: false, error: String(e).split('\n')[0].slice(0, 300) };
+      }
+    } else {
+      result = await solveViaClaudeP({
+        instanceId: inst.instance_id, repo: inst.repo, baseCommit: inst.base_commit, problemStatement: inst.problem_statement,
+        model: spec.model, maxTurns: HANDOFF_MAX_TURNS, timeoutMs: HANDOFF_TIMEOUT_MS || spec.timeoutMs, priorAttempts,
+      });
+      result.solver = spec.name;
+      totalCost += result.cost_usd || 0;
+    }
+    hops.push({ spec, result });
+    if (acceptHop(result)) break;
+    priorAttempts = [...priorAttempts, { solver: spec.name, failureReasons: [result.status === 'timeout' ? 'timeout' : 'no accepted patch'], steps: result.turns }];
+  }
+  return hops;
+}
+
 async function runInstance(inst) {
   const t0 = Date.now(); const row = { instance_id: inst.instance_id, repo: inst.repo, tier: 'T1', resolved: false };
   let patch = '';
@@ -396,12 +444,14 @@ async function runInstance(inst) {
     if (TRACE_LOCALIZE) row.traceLocalized = !!traceHint;
     const localizeHint = [traceHint, semanticHint].filter(Boolean).join('\n\n');
 
+    let t1res = null; // ADR-205: the cheap attempt's raw loop result — the escalation rules read it.
     if (REPRO_GATE) {
       // ADR-195 #2: reproduction-first path replaces the base solve (it owns the iterate loop).
       const rg = await runReproGate(inst, llm, localizeHint);
       patch = rg.patch; row.tier = 'repro'; row.reproValid = rg.reproValid; row.reproPassed = rg.reproPassed; row.reproRounds = rg.rounds; row.resolved = !!rg.reproPassed;
     } else {
       const { res, work } = await solveTier(inst, llm, { localizeHint });
+      t1res = res;
       patch = res.patch; totalCost += res.cost; row.steps = res.steps; row.submitted = res.submitted; row.resolvedInLoop = res.resolvedInLoop;
       try { rmSync(work, { recursive: true, force: true }); } catch { /**/ }
       if (ESCALATE && !res.resolvedInLoop) {                       // escalate ONLY the hard tail
@@ -413,6 +463,27 @@ async function runInstance(inst) {
         else { patch = await judgePick(inst, res.patch, r2.patch); row.tier = 'judge'; }
         row.resolved = !!(res.resolvedInLoop || r2.resolvedInLoop);
       } else row.resolved = !!res.resolvedInLoop;
+    }
+
+    // ADR-205 — harness handoff: when the cheap attempt FAILS (rule-based trigger; darwin stays the
+    // router), walk the escalation chain and let the first accepted rung's patch replace darwin's.
+    // Gated entirely on --escalate-to: absent ⇒ this block never runs ⇒ byte-identical output.
+    if (HANDOFF_CHAIN && t1res) {
+      const failedCheap = !t1res.resolvedInLoop || !patch.trim();
+      if (failedCheap) {
+        row.handoffChain = HANDOFF_CHAIN.map((s) => s.name);
+        const hops = await runEscalationChain(inst, HANDOFF_CHAIN, {
+          localizeHint,
+          priorAttempts: [{ solver: `darwin-${MODEL.split('/').pop()}`, failureReasons: t1res.resolvedInLoop ? [] : ['in-loop tests failed'], steps: t1res.steps }],
+        });
+        row.handoffHops = hops.map((h) => ({ solver: h.spec.name, status: h.result?.status ?? (h.skipped ? `skipped:${h.skipped}` : 'unknown'), cost_usd: h.result?.cost_usd ?? 0, latency_ms: h.result?.latency_ms ?? 0, turns: h.result?.turns ?? 0, accepted: !!(h.result && acceptHop(h.result)) }));
+        const winner = hops.find((h) => h.result && acceptHop(h.result));
+        // Fallback: no rung was ACCEPTED, but a rung may still have produced a non-empty patch
+        // (e.g. a darwin rung that edited but didn't pass in-loop tests) — better than darwin's
+        // empty/failed patch. Prefer the last non-empty rung patch, else keep darwin's.
+        const best = winner || [...hops].reverse().find((h) => h.result && String(h.result.patch || '').trim());
+        if (best) { patch = best.result.patch; row.tier = `handoff:${best.spec.name}`; row.handoffAccepted = !!winner; }
+      }
     }
 
     // ADR-195 #3: reviewer refines the chosen patch (post-solve; off → no-op).
@@ -452,5 +523,7 @@ writeFileSync(REPORT, JSON.stringify({ model: MODEL, escalateModel: ESCALATE, ca
   phase2: { localize: LOCALIZE, gnnRerank: GNN_RERANK, reproGate: REPRO_GATE, reviewer: REVIEWER, traceLocalize: TRACE_LOCALIZE },
   // ADR-197 — native tool-calling flag active for this run (false → pre-existing text-JSON protocol).
   nativeTools: NATIVE_TOOLS,
+  // ADR-205 — escalation chain active for this run (null → no handoff, pre-ADR-205 behaviour).
+  escalateTo: HANDOFF_CHAIN ? HANDOFF_CHAIN.map((s) => s.name) : null,
   cappedAtInstance: cappedAt, maxCost: MAX_COST===Infinity?null:MAX_COST, totalCost_usd: Math.round(totalCost * 10000) / 10000, blendedCostPerInst_usd: report.length ? Math.round(totalCost / report.length * 1e5) / 1e5 : 0, instances: report }, null, 2));
 console.error(`\nDONE ${report.length} | in-loop ${inloop}/${report.length} | cascade=${!!ESCALATE} escalated=${escalated} tiers=${JSON.stringify(byTier)} | native-tools=${NATIVE_TOOLS} | $${Math.round(totalCost * 10000) / 10000} (${report.length?(totalCost/report.length).toFixed(4):0}/inst) | preds → ${OUT}`);
