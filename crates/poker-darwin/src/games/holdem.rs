@@ -384,7 +384,7 @@ impl Game for AbstractHoldem {
             // Pot-sized bet: the amount that makes the pot double after the call.
             let pot = s.contrib[0] + s.contrib[1];
             let pot_bet = s.to_call + pot; // standard pot-raise increment
-            // Only offer a pot-bet if it is strictly between a call and all-in.
+                                           // Only offer a pot-bet if it is strictly between a call and all-in.
             if pot_bet + s.to_call < stack_left {
                 acts.push(HoldemAction::PotBet);
             }
@@ -432,8 +432,11 @@ impl Game for AbstractHoldem {
                 }
             }
             HoldemAction::PotBet | HoldemAction::AllIn => {
-                t.hist[Self::street_idx(s)]
-                    .push(if matches!(a, HoldemAction::AllIn) { 'A' } else { 'r' });
+                t.hist[Self::street_idx(s)].push(if matches!(a, HoldemAction::AllIn) {
+                    'A'
+                } else {
+                    'r'
+                });
                 let me = t.to_act;
                 let stack_left = self.remaining_stack(&t, me);
                 let raise_amount = match a {
@@ -575,7 +578,11 @@ mod tests {
             } else {
                 infosets.insert(g.infoset_key(&s));
                 let acts = g.legal_actions(&s);
-                assert!(!acts.is_empty(), "no legal actions at {}", g.infoset_key(&s));
+                assert!(
+                    !acts.is_empty(),
+                    "no legal actions at {}",
+                    g.infoset_key(&s)
+                );
                 let w = 1.0 / acts.len() as f64;
                 for a in acts {
                     stack.push((g.apply(&s, a), m * w));
