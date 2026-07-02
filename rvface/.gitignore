@@ -1,0 +1,15 @@
+target/
+node_modules/
+dist/
+__pycache__/
+*.pyc
+.venv/
+models/*.pth
+models/*.pth.tar
+models/*.npy
+models/*.safetensors
+models/*.onnx
+tools/fixtures/*.npz
+tools/.cache/
+web/public/models/
+web/src/wasm/

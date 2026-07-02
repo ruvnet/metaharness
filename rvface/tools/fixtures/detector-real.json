@@ -1,0 +1,35 @@
+{
+  "fixture": "detector-real",
+  "net": "upstream face_detect slim-320 SSD, create_mb_tiny_fd(2, is_test=True), eval mode",
+  "weights": "real:models/detector-slim320.safetensors",
+  "seed": null,
+  "input_seed": 3407,
+  "input_domain": "(randint(0,256) - 127) / 128",
+  "notes": "confidences softmaxed over {background, face}; boxes decoded to corner form in normalized image units (center_variance 0.1, size_variance 0.2; priors clipped to [0,1] but decoded boxes may spill slightly outside); both recorded BEFORE thresholding/NMS",
+  "input_file": "detector-real.npz#input",
+  "output_files": [
+    "detector-real.npz#confidences",
+    "detector-real.npz#boxes"
+  ],
+  "shapes": {
+    "input": [
+      1,
+      3,
+      240,
+      320
+    ],
+    "confidences": [
+      1,
+      4420,
+      2
+    ],
+    "boxes": [
+      1,
+      4420,
+      4
+    ]
+  },
+  "dtype": "float32",
+  "tolerance": 0.00012597153186798098,
+  "tolerance_rule": "max|delta| <= 1e-4 * max(1, max|output|), absolute"
+}

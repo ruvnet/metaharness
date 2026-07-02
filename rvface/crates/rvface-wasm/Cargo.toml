@@ -1,0 +1,36 @@
+[package]
+name = "rvface-wasm"
+description = "wasm-bindgen bindings for rvFACE (browser: WebGPU or CPU)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["cpu"]
+cpu = ["rvface-models/cpu"]
+# One shipped binary carries both backends (ADR-0005): `webgpu` adds the
+# Burn wgpu backend; runtime selection + CPU fallback happen in `RvFace::new`.
+webgpu = ["rvface-models/webgpu", "burn/wgpu"]
+
+[dependencies]
+rvface-core.workspace = true
+rvface-models.workspace = true
+burn.workspace = true
+wasm-bindgen.workspace = true
+js-sys.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+wasm-bindgen-futures = "0.4"
+# Unconditional: ~2 KB, and panics without it are undebuggable in a browser.
+console_error_panic_hook = "0.1"
+
+# Burn's `rand` dependency reaches getrandom, whose wasm32-unknown-unknown
+# backend must be opted into explicitly (same pattern as rvface-models).
+[target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dependencies]
+getrandom = { version = "0.3", default-features = false, features = ["wasm_js"] }

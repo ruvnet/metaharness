@@ -1,0 +1,35 @@
+[package]
+name = "rvface-models"
+description = "Burn ports of the rvFACE networks: slim-320 SSD detector, MobileFaceNet landmarks, IRN-50 embedder"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[features]
+default = ["cpu"]
+cpu = []
+webgpu = ["burn/wgpu"]
+
+[dependencies]
+rvface-core.workspace = true
+burn.workspace = true
+safetensors.workspace = true
+thiserror.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+# Burn's `rand` dependency reaches getrandom, whose wasm32-unknown-unknown
+# backend must be opted into explicitly (getrandom >= 0.3.3 needs only the
+# `wasm_js` cargo feature).
+[target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dependencies]
+getrandom = { version = "0.3", default-features = false, features = ["wasm_js"] }
+
+[dev-dependencies]
+# Parity tests read the .npz golden fixtures (a zip of .npy members,
+# deflate-compressed by np.savez_compressed). Tests are native-only, so a
+# small dev-only zip reader is acceptable (ADR-0006); the .npy v1/v2 header
+# is parsed by hand in tests/parity.rs.
+zip = { version = "2", default-features = false, features = ["deflate"] }

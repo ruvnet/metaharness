@@ -1,0 +1,44 @@
+{
+  "tolerance_base": 0.0001,
+  "tolerance_rule": "per fixture: max|delta| <= 1e-4 * max(1, max|output|), absolute",
+  "weight_recipe": "randn-kaiming-v1",
+  "recipe_doc": "../naming.md",
+  "fixtures": [
+    {
+      "name": "detector-real",
+      "manifest": "detector-real.json",
+      "data": "detector-real.npz",
+      "weights": "real:models/detector-slim320.safetensors"
+    },
+    {
+      "name": "detector-rand",
+      "manifest": "detector-rand.json",
+      "data": "detector-rand.npz",
+      "weights": "detector-rand.safetensors"
+    },
+    {
+      "name": "landmark64-rand",
+      "manifest": "landmark64-rand.json",
+      "data": "landmark64-rand.npz",
+      "weights": "landmark64-rand.safetensors"
+    },
+    {
+      "name": "landmark-cunjian",
+      "manifest": "landmark-cunjian.json",
+      "data": "landmark-cunjian.npz",
+      "weights": "real:models/landmark-mfn68.safetensors"
+    },
+    {
+      "name": "irn50-rand",
+      "manifest": "irn50-rand.json",
+      "data": "irn50-rand.npz",
+      "weights": "irn50-rand.safetensors"
+    },
+    {
+      "name": "embedder-mfn-real",
+      "manifest": "embedder-mfn-real.json",
+      "data": "embedder-mfn-real.npz",
+      "weights": "real:models/embedder-mfn.safetensors"
+    }
+  ]
+}

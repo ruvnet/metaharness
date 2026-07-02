@@ -1,0 +1,35 @@
+[package]
+name = "rvface-cli"
+description = "rvFACE native CLI: detect faces, compare identities, benchmark"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "rvface"
+path = "src/main.rs"
+
+[features]
+default = ["cpu"]
+cpu = ["rvface-models/cpu"]
+webgpu = ["rvface-models/webgpu", "burn/wgpu"]
+
+[dependencies]
+rvface-core.workspace = true
+rvface-models.workspace = true
+burn.workspace = true
+image.workspace = true
+clap.workspace = true
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+criterion = { version = "0.5", default-features = false, features = ["cargo_bench_support"] }
+
+[[bench]]
+name = "pipeline"
+harness = false
