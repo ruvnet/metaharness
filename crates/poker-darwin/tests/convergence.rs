@@ -80,7 +80,10 @@ fn holdem_abstraction_infosets_are_tractable() {
         (50..100_000).contains(&n2),
         "2-street abstraction has {n2} infosets — expected tractable (50..100k)"
     );
-    assert!(n1 < n2, "1-street ({n1}) must be smaller than 2-street ({n2})");
+    assert!(
+        n1 < n2,
+        "1-street ({n1}) must be smaller than 2-street ({n2})"
+    );
 }
 
 #[test]
@@ -120,7 +123,10 @@ fn holdem_one_street_converges_fast() {
         ..Default::default()
     });
     let e = train_exploit(g, CfrVariant::CfrPlus, 5000);
-    assert!(e < 0.01, "1-street Hold'em CFR+ exploitability {e} should be < 0.01");
+    assert!(
+        e < 0.01,
+        "1-street Hold'em CFR+ exploitability {e} should be < 0.01"
+    );
 }
 
 #[test]

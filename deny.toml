@@ -5,7 +5,13 @@ all-features = true
 db-path = "~/.cargo/advisory-db"
 db-urls = ["https://github.com/rustsec/advisory-db"]
 yanked = "deny"
-ignore = []
+ignore = [
+    # Unmaintained-crate advisories on transitive deps (not security vulns; no fixed version available).
+    # bincode — pulled transitively; RUSTSEC-2025-0141 flags it as unmaintained.
+    "RUSTSEC-2025-0141",
+    # paste — proc-macro pulled transitively (via ML/candle stack); RUSTSEC-2024-0436 flags no-longer-maintained.
+    "RUSTSEC-2024-0436",
+]
 
 [licenses]
 allow = [
