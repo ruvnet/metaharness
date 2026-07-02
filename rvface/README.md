@@ -51,5 +51,17 @@ cd web && npm install && npm run dev        # weights served from web/public/mod
 
 ## Status
 
-Actively being ported — see ADRs for scope and `docs/adrs/0003` for why some
-upstream weights are substituted (upstream does not publish them all).
+**Complete.** All three networks ported to Burn with PyTorch golden-parity
+green (max|Δ| ~1e-7 on real weights), the full pipeline reproduces the
+upstream demo verdict on its own test images (score 78.2 → *same person*),
+and the browser runs the identical engine (wasm, 1.42 MB gzipped, CPU with
+SIMD128 or WebGPU with automatic CPU fallback) — no mocks anywhere.
+
+- 61 Rust tests: unit math, six PyTorch parity fixtures, end-to-end on the
+  upstream test images ([validation strategy](docs/adrs/0006-testing-validation-optimization.md))
+- [Benchmarks](docs/BENCHMARKS.md): native analyze 176 ms, browser ~0.5 s
+  (CPU; includes the 5× denormal-weight fix)
+- See [ADR-0003](docs/adrs/0003-models-weights-licensing.md) for why the
+  landmark/embedder default weights are openly-licensed substitutes
+  (upstream publishes only the detector's) and how to drop in the exact
+  upstream IRN-50 embedder via `--irn50`.
