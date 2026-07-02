@@ -5,7 +5,8 @@
 //! host layer. Weights load from safetensors buffers with canonical names
 //! produced by `tools/convert_weights.py` (see docs/adrs/0003).
 
-pub mod weights;
 pub mod detector;
-pub mod landmark;
 pub mod embedder;
+pub mod landmark;
+mod ops;
+pub mod weights;
