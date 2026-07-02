@@ -1,0 +1,278 @@
+// SPDX-License-Identifier: MIT
+//
+// ADR-205 unit tests — escalation rules, receipt schema, chain traversal, and the claude -p
+// subprocess seam. All mocked: $0, no network, no git, no real `claude` calls.
+// Run: node --test handoff.test.mjs
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import {
+  solveViaClaudeP, buildHandoffEnv, buildHandoffPrompt, readAuthToken,
+  parseEscalateChain, resolveSolverSpec, acceptHop, runEscalationChain, pickChainPatch,
+  escalationSignals, shouldEscalate, diffStats, buildReceipt,
+  OR_ANTHROPIC_BASE_URL, DEFAULT_HANDOFF_MODEL, SOLVER_ALIASES,
+} from './handoff-solver.mjs';
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const DIFF_1FILE = 'diff --git a/src/a.py b/src/a.py\n--- a/src/a.py\n+++ b/src/a.py\n@@ -1 +1 @@\n-x\n+y\n';
+const diffN = (n) => Array.from({ length: n }, (_, i) => `diff --git a/f${i}.py b/f${i}.py\n--- a/f${i}.py\n+++ b/f${i}.py\n@@ -1 +1 @@\n-x\n+y${i}\n`).join('');
+
+// ── 2-of-N escalation rules ──────────────────────────────────────────────────────────────────────
+test('escalationSignals: all five signals computed from loop-tracked facts', () => {
+  const s = escalationSignals({ resolvedInLoop: false, submitted: false, thrash: 3, patch: diffN(5) });
+  assert.deepEqual(s, { tests_failed: true, empty_patch: false, no_submit: true, thrash_repeat: true, too_many_files: true });
+  const clean = escalationSignals({ resolvedInLoop: true, submitted: true, thrash: 0, patch: DIFF_1FILE });
+  assert.deepEqual(clean, { tests_failed: false, empty_patch: false, no_submit: false, thrash_repeat: false, too_many_files: false });
+});
+
+test('shouldEscalate: 2-of-N — 0 or 1 signal does NOT fire, 2+ fires', () => {
+  // 0 signals: darwin solved it cleanly — never escalate.
+  assert.equal(shouldEscalate(escalationSignals({ resolvedInLoop: true, submitted: true, thrash: 0, patch: DIFF_1FILE })).escalate, false);
+  // 1 signal (tests failed but submitted a tight non-empty patch, no thrash): does not fire.
+  const one = shouldEscalate(escalationSignals({ resolvedInLoop: false, submitted: true, thrash: 0, patch: DIFF_1FILE }));
+  assert.equal(one.escalate, false);
+  assert.deepEqual(one.reasons, ['tests_failed']);
+  // 2 signals (tests failed + never submitted): fires.
+  const two = shouldEscalate(escalationSignals({ resolvedInLoop: false, submitted: false, thrash: 0, patch: DIFF_1FILE }));
+  assert.equal(two.escalate, true);
+  assert.deepEqual(two.reasons, ['tests_failed', 'no_submit']);
+  // Empty patch + budget exhaustion (the hard-25 darwin signature): fires with 3 reasons.
+  const hard = shouldEscalate(escalationSignals({ resolvedInLoop: false, submitted: false, thrash: 0, patch: '' }));
+  assert.equal(hard.escalate, true);
+  assert.deepEqual(hard.reasons, ['tests_failed', 'empty_patch', 'no_submit']);
+  // Passing tests but sprawling >3-file patch + thrash: fires (low-confidence shape).
+  const sprawl = shouldEscalate(escalationSignals({ resolvedInLoop: true, submitted: true, thrash: 2, patch: diffN(4) }));
+  assert.equal(sprawl.escalate, true);
+  assert.deepEqual(sprawl.reasons, ['thrash_repeat', 'too_many_files']);
+});
+
+test('diffStats: files deduped, bytes counted, empty-safe', () => {
+  assert.deepEqual(diffStats(''), { files: [], bytes: 0 });
+  const d = diffStats(DIFF_1FILE + DIFF_1FILE); // same file twice → 1 unique
+  assert.deepEqual(d.files, ['src/a.py']);
+  assert.equal(diffStats(diffN(4)).files.length, 4);
+  assert.equal(diffStats('x').bytes, 1);
+});
+
+// ── receipt schema ───────────────────────────────────────────────────────────────────────────────
+const RECEIPT_FIELDS = ['instance_id', 'initial_solver', 'darwin_cost_usd', 'darwin_steps', 'failure_reasons', 'escalated', 'escalation_reasons', 'handoff_solver', 'handoff_cost_usd', 'handoff_latency_ms', 'final_patch_nonempty', 'diff_files', 'diff_bytes', 'ts'];
+
+test('buildReceipt: escalated row carries every spec field with real values', () => {
+  const signals = escalationSignals({ resolvedInLoop: false, submitted: false, thrash: 0, patch: '' });
+  const r = buildReceipt({
+    instanceId: 'django__django-11099', initialSolver: 'darwin-deepseek-chat',
+    darwinCostUsd: 0.0312, darwinSteps: 15, signals, escalated: true,
+    escalationReasons: ['tests_failed', 'empty_patch', 'no_submit'],
+    handoff: { solver: 'claude-p-fable', status: 'resolved', cost_usd: 1.25, latency_ms: 210_000, turns: 31, error: '' },
+    finalPatch: DIFF_1FILE, now: () => 1750000000000,
+  });
+  for (const f of RECEIPT_FIELDS) assert.ok(f in r, `missing receipt field: ${f}`);
+  assert.equal(r.instance_id, 'django__django-11099');
+  assert.equal(r.initial_solver, 'darwin-deepseek-chat');
+  assert.equal(r.darwin_cost_usd, 0.0312);
+  assert.equal(r.darwin_steps, 15);
+  assert.deepEqual(r.failure_reasons, ['tests_failed', 'empty_patch', 'no_submit']);
+  assert.equal(r.escalated, true);
+  assert.equal(r.handoff_solver, 'claude-p-fable');
+  assert.equal(r.handoff_cost_usd, 1.25);
+  assert.equal(r.handoff_latency_ms, 210_000);
+  assert.equal(r.final_patch_nonempty, true);
+  assert.equal(r.diff_files, 1);
+  assert.ok(r.diff_bytes > 0);
+  assert.equal(r.ts, new Date(1750000000000).toISOString());
+});
+
+test('buildReceipt: non-escalated row keeps handoff_* null (the other training class)', () => {
+  const signals = escalationSignals({ resolvedInLoop: true, submitted: true, thrash: 0, patch: DIFF_1FILE });
+  const r = buildReceipt({ instanceId: 'x', initialSolver: 'darwin-deepseek-chat', darwinCostUsd: 0.01, darwinSteps: 6, signals, escalated: false, escalationReasons: [], handoff: null, finalPatch: DIFF_1FILE });
+  for (const f of RECEIPT_FIELDS) assert.ok(f in r, `missing receipt field: ${f}`);
+  assert.equal(r.escalated, false);
+  assert.deepEqual(r.escalation_reasons, []);
+  assert.deepEqual(r.failure_reasons, []);
+  assert.equal(r.handoff_solver, null);
+  assert.equal(r.handoff_cost_usd, null);
+  assert.equal(r.handoff_latency_ms, null);
+});
+
+// ── chain parsing / registry ─────────────────────────────────────────────────────────────────────
+test('parseEscalateChain: alias, generic forms, order preserved, unknown throws', () => {
+  const single = parseEscalateChain('claude-p-fable');
+  assert.equal(single.length, 1);
+  assert.equal(single[0].kind, 'claude-p-model');
+  assert.equal(single[0].model, DEFAULT_HANDOFF_MODEL);
+  const chain = parseEscalateChain('darwin:z-ai/glm, claude-p:anthropic/claude-sonnet-5 ,claude-p-fable');
+  assert.deepEqual(chain.map((s) => s.kind), ['darwin-model', 'claude-p-model', 'claude-p-model']);
+  assert.deepEqual(chain.map((s) => s.model), ['z-ai/glm', 'anthropic/claude-sonnet-5', DEFAULT_HANDOFF_MODEL]);
+  assert.throws(() => parseEscalateChain('gpt-magic'), /unknown solver/);
+  assert.throws(() => parseEscalateChain(''), /empty chain/);
+  assert.throws(() => parseEscalateChain('darwin:'), /unknown solver/);
+  assert.equal(resolveSolverSpec('nope'), null);
+  // Alias objects are copied, not shared.
+  const a = resolveSolverSpec('claude-p-fable'); a.model = 'mutated';
+  assert.equal(SOLVER_ALIASES['claude-p-fable'].model, DEFAULT_HANDOFF_MODEL);
+});
+
+test('acceptHop: non-empty patch + in-loop signal where reported', () => {
+  assert.equal(acceptHop(null), false);
+  assert.equal(acceptHop({ patch: '   ' }), false);
+  assert.equal(acceptHop({ patch: DIFF_1FILE }), true);                          // claude-p rung: patch alone decides
+  assert.equal(acceptHop({ patch: DIFF_1FILE, resolvedInLoop: false }), false);  // darwin rung: in-loop signal vetoes
+  assert.equal(acceptHop({ patch: DIFF_1FILE, resolvedInLoop: true }), true);
+});
+
+// ── chain traversal (injected rung runners — no real solvers) ───────────────────────────────────
+test('runEscalationChain: stops at first accepted rung; later rungs never run', async () => {
+  const ran = [];
+  const chain = parseEscalateChain('darwin:cheap/one,claude-p:anthropic/mid,claude-p-fable');
+  const hops = await runEscalationChain(chain, {
+    runDarwinHop: async (spec) => { ran.push(spec.name); return { status: 'failed', patch: '', cost_usd: 0.02, turns: 15, resolvedInLoop: false }; },
+    runClaudeP: async (spec) => { ran.push(spec.name); return { status: 'resolved', patch: DIFF_1FILE, cost_usd: 0.9, turns: 20 }; },
+  });
+  assert.deepEqual(ran, ['darwin:cheap/one', 'claude-p:anthropic/mid']); // fable rung never launched
+  assert.equal(hops.length, 2);
+  assert.equal(acceptHop(hops[1].result), true);
+  const pick = pickChainPatch(hops);
+  assert.equal(pick.accepted, true);
+  assert.equal(pick.hop.spec.name, 'claude-p:anthropic/mid');
+});
+
+test('runEscalationChain: failed rung feeds priorAttempts to the next rung', async () => {
+  const seenPrior = [];
+  const chain = parseEscalateChain('darwin:cheap/one,claude-p-fable');
+  await runEscalationChain(chain, {
+    priorAttempts: [{ solver: 'darwin-deepseek-chat', failureReasons: ['tests_failed', 'empty_patch'], steps: 15 }],
+    runDarwinHop: async (spec, prior) => { seenPrior.push(prior.map((p) => p.solver)); return { status: 'failed', patch: '', turns: 15, resolvedInLoop: false }; },
+    runClaudeP: async (spec, prior) => { seenPrior.push(prior.map((p) => p.solver)); return { status: 'resolved', patch: DIFF_1FILE }; },
+  });
+  assert.deepEqual(seenPrior[0], ['darwin-deepseek-chat']);
+  assert.deepEqual(seenPrior[1], ['darwin-deepseek-chat', 'darwin:cheap/one']);
+});
+
+test('runEscalationChain: budget gate blocks BEFORE launching a rung; rung errors degrade to failed hops', async () => {
+  const chain = parseEscalateChain('claude-p-fable,claude-p:anthropic/other');
+  let launched = 0;
+  const hops = await runEscalationChain(chain, {
+    overBudget: () => true,
+    runClaudeP: async () => { launched++; return { status: 'resolved', patch: DIFF_1FILE }; },
+  });
+  assert.equal(launched, 0);
+  assert.equal(hops.length, 1);
+  assert.equal(hops[0].skipped, 'budget');
+  assert.equal(hops[0].result, null);
+  assert.equal(pickChainPatch(hops), null); // nothing usable → caller keeps darwin's patch
+
+  const hops2 = await runEscalationChain(parseEscalateChain('claude-p-fable'), {
+    runClaudeP: async () => { throw new Error('subprocess exploded'); },
+  });
+  assert.equal(hops2[0].result.status, 'failed');
+  assert.match(hops2[0].result.error, /subprocess exploded/);
+});
+
+test('pickChainPatch fallback: no accepted rung → last non-empty patch wins', () => {
+  const chain = parseEscalateChain('darwin:a/b,darwin:c/d');
+  const hops = [
+    { spec: chain[0], result: { patch: DIFF_1FILE, resolvedInLoop: false } }, // non-empty but vetoed
+    { spec: chain[1], result: { patch: '', resolvedInLoop: false } },
+  ];
+  const pick = pickChainPatch(hops);
+  assert.equal(pick.accepted, false);
+  assert.equal(pick.hop.spec.name, 'darwin:a/b');
+});
+
+// ── claude -p subprocess seam (injected exec — no real claude, no network) ──────────────────────
+function mkExecMock({ claudeOut = JSON.stringify({ result: '', total_cost_usd: 1.31, num_turns: 27 }), diff = DIFF_1FILE, claudeThrows = null } = {}) {
+  const calls = [];
+  return {
+    calls,
+    exec: async (cmd, opts = {}) => {
+      calls.push({ cmd, opts });
+      if (cmd.startsWith('claude -p')) { if (claudeThrows) throw claudeThrows; return claudeOut; }
+      if (cmd === 'git diff') return diff;
+      return '';
+    },
+  };
+}
+
+test('solveViaClaudeP: OR env + no --model flag + patch from git diff (not the JSON result field)', async () => {
+  const m = mkExecMock();
+  const r = await solveViaClaudeP({
+    instanceId: 'astropy__astropy-12907', repo: 'astropy/astropy', baseCommit: 'abc123',
+    problemStatement: 'Modeling separability broken', maxTurns: 33, timeoutMs: 5000,
+    priorAttempts: [{ solver: 'darwin-deepseek-chat', failureReasons: ['tests_failed', 'empty_patch'], steps: 15 }],
+  }, { exec: m.exec, fetchRepo: async () => '/fake/work', authToken: 'sk-or-TEST' });
+
+  const claudeCall = m.calls.find((c) => c.cmd.startsWith('claude -p'));
+  assert.ok(claudeCall, 'claude -p was invoked');
+  assert.match(claudeCall.cmd, /--max-turns 33/);
+  assert.match(claudeCall.cmd, /--dangerously-skip-permissions/);
+  assert.match(claudeCall.cmd, /--output-format json/);
+  assert.ok(!/--model\s/.test(claudeCall.cmd), 'NO --model flag — ANTHROPIC_MODEL owns selection on a custom endpoint');
+  assert.equal(claudeCall.opts.env.ANTHROPIC_BASE_URL, OR_ANTHROPIC_BASE_URL);
+  assert.equal(claudeCall.opts.env.ANTHROPIC_AUTH_TOKEN, 'sk-or-TEST');
+  assert.equal(claudeCall.opts.env.ANTHROPIC_MODEL, DEFAULT_HANDOFF_MODEL);
+  assert.equal(claudeCall.opts.cwd, '/fake/work');
+  assert.equal(claudeCall.opts.timeout, 5000);
+  assert.match(claudeCall.cmd, /PRIOR ATTEMPTS/); // failed cheap attempt surfaced to the actuator
+  assert.match(claudeCall.cmd, /Modeling separability broken/);
+
+  assert.equal(r.status, 'resolved');       // 'resolved' == non-empty patch ONLY (gold-scored later)
+  assert.equal(r.patch, DIFF_1FILE);        // from git diff, NOT the JSON result field
+  assert.equal(r.cost_usd, 1.31);
+  assert.equal(r.turns, 27);
+  assert.equal(r.solver, 'claude-p-fable');
+  assert.equal(r.error, '');
+  assert.ok(r.latency_ms >= 0);
+});
+
+test('solveViaClaudeP: empty diff → failed; timeout salvages the diff; unparseable JSON keeps the patch', async () => {
+  const empty = mkExecMock({ diff: '' });
+  const r1 = await solveViaClaudeP({ repo: 'a/b', baseCommit: 'c' }, { exec: empty.exec, fetchRepo: async () => '/w' });
+  assert.equal(r1.status, 'failed');
+  assert.equal(r1.patch, '');
+
+  const to = mkExecMock({ claudeThrows: Object.assign(new Error('Command timed out'), { killed: true }), diff: DIFF_1FILE });
+  const r2 = await solveViaClaudeP({ repo: 'a/b', baseCommit: 'c' }, { exec: to.exec, fetchRepo: async () => '/w' });
+  assert.equal(r2.status, 'resolved'); // salvaged non-empty diff after timeout
+  assert.equal(r2.patch, DIFF_1FILE);
+  assert.match(r2.error, /timed out/i);
+
+  const toEmpty = mkExecMock({ claudeThrows: Object.assign(new Error('Command timed out'), { killed: true }), diff: '' });
+  const r3 = await solveViaClaudeP({ repo: 'a/b', baseCommit: 'c' }, { exec: toEmpty.exec, fetchRepo: async () => '/w' });
+  assert.equal(r3.status, 'timeout');
+
+  const badJson = mkExecMock({ claudeOut: 'not json at all' });
+  const r4 = await solveViaClaudeP({ repo: 'a/b', baseCommit: 'c' }, { exec: badJson.exec, fetchRepo: async () => '/w' });
+  assert.equal(r4.status, 'resolved'); // JSON display quirk must never lose the patch
+  assert.equal(r4.cost_usd, 0);
+});
+
+test('buildHandoffEnv/readAuthToken/buildHandoffPrompt: pure pieces', () => {
+  const env = buildHandoffEnv('anthropic/claude-fable-5', 'tok', { PATH: '/bin' });
+  assert.deepEqual(env, { PATH: '/bin', ANTHROPIC_BASE_URL: OR_ANTHROPIC_BASE_URL, ANTHROPIC_AUTH_TOKEN: 'tok', ANTHROPIC_MODEL: 'anthropic/claude-fable-5' });
+  assert.equal(readAuthToken('explicit'), 'explicit');
+  const p = buildHandoffPrompt('the issue');
+  assert.ok(!p.includes('PRIOR ATTEMPTS'), 'no prior-attempts section when none');
+  assert.match(p, /Do NOT edit test files/);
+});
+
+// ── the non-escalated path must stay byte-identical (static gating guard) ───────────────────────
+// The runtime property "absent --escalate-to ⇒ identical output" can't be exercised without paid
+// LLM calls, so guard it structurally: every ADR-205 side effect in solve-agentic.mjs (receipt
+// writes, chain execution, receipt-file truncation) must be gated on HANDOFF_CHAIN, and
+// HANDOFF_CHAIN must be null when --escalate-to is absent.
+test('solve-agentic gating: all handoff side effects require --escalate-to', () => {
+  const src = readFileSync(join(HERE, 'solve-agentic.mjs'), 'utf8');
+  assert.match(src, /const HANDOFF_CHAIN = ESCALATE_TO \? parseEscalateChain\(ESCALATE_TO\) : null;/);
+  assert.match(src, /if \(HANDOFF_CHAIN\) writeFileSync\(RECEIPTS, ''\);/);
+  assert.match(src, /if \(HANDOFF_CHAIN && t1res\) \{/);
+  // Every receipts write sits inside the HANDOFF_CHAIN-gated block: no RECEIPTS append may appear
+  // before the gate. Check by ensuring all appendFileSync(RECEIPTS…) occurrences come after the gate.
+  const gateIdx = src.indexOf('if (HANDOFF_CHAIN && t1res) {');
+  let idx = src.indexOf('appendFileSync(RECEIPTS');
+  assert.ok(idx > gateIdx, 'receipt writes only inside the gated block');
+  while (idx !== -1) { assert.ok(idx > gateIdx); idx = src.indexOf('appendFileSync(RECEIPTS', idx + 1); }
+  // The chain executor is only reachable from the gated block.
+  assert.equal(src.split('runChainFor(').length, 3, 'one definition + one gated call site');
+});

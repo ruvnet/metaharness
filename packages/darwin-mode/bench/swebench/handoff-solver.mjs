@@ -161,6 +161,40 @@ export function acceptHop(result) {
   return true;
 }
 
+/**
+ * Walk the escalation chain: try each rung in order, stop at the first ACCEPTED result. Pure
+ * traversal — the actual rung execution is injected so this is unit-testable at $0:
+ *   runDarwinHop(spec, priorAttempts)  — rerun darwin's own loop with spec.model (caller owns solveTier)
+ *   runClaudeP(spec, priorAttempts)    — the claude -p subprocess handoff
+ *   overBudget()                       — cumulative budget gate, checked BEFORE each rung launches
+ * Returns hops[] = { spec, result | null, skipped? } for every rung attempted; a failed rung feeds
+ * its failure into the next rung's priorAttempts so later rungs know the escalation history.
+ */
+export async function runEscalationChain(chain, { runDarwinHop, runClaudeP, overBudget = () => false, priorAttempts = [] }) {
+  const hops = [];
+  for (const spec of chain) {
+    if (overBudget()) { hops.push({ spec, result: null, skipped: 'budget' }); break; }
+    let result;
+    try { result = await (spec.kind === 'darwin-model' ? runDarwinHop(spec, priorAttempts) : runClaudeP(spec, priorAttempts)); }
+    catch (e) { result = { status: 'failed', patch: '', cost_usd: 0, latency_ms: 0, turns: 0, error: String(e?.message || e).slice(0, 300) }; }
+    result = result || { status: 'failed', patch: '', cost_usd: 0, latency_ms: 0, turns: 0, error: 'rung returned no result' };
+    if (!result.solver) result.solver = spec.name;
+    hops.push({ spec, result });
+    if (acceptHop(result)) break;
+    priorAttempts = [...priorAttempts, { solver: spec.name, failureReasons: [result.status === 'timeout' ? 'timeout' : 'no accepted patch'], steps: result.turns }];
+  }
+  return hops;
+}
+
+/** Pick the chain's winning patch: first ACCEPTED hop; else (fallback) the LAST hop that produced a
+ * non-empty patch — better than keeping darwin's empty/failed patch. Returns { hop, accepted } or null. */
+export function pickChainPatch(hops) {
+  const winner = hops.find((h) => h.result && acceptHop(h.result));
+  if (winner) return { hop: winner, accepted: true };
+  const best = [...hops].reverse().find((h) => h.result && String(h.result.patch || '').trim());
+  return best ? { hop: best, accepted: false } : null;
+}
+
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 // Rule-based escalation (ADR-205 §rules) — a practical subset of the spec'd router: every signal is
 // computable from what darwin's loop ALREADY tracks (no invented confidence/complexity scores —

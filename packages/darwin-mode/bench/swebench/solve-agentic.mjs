@@ -25,7 +25,7 @@ import { buildReproTest, REPRO_PATH } from './test-critic.mjs';
 // ADR-196 — execution-trace localization (the §53 dynamic-localization lever; distinct from §52's naive semantic localize).
 import { traceLocalize, formatTraceSeedForAgent, buildPyTracer, TRACE_PATH } from './trace-localize.mjs';
 // ADR-205 — harness handoff: darwin as router, claude -p as hard-tail actuator (loop handoff, NOT model embedding).
-import { parseEscalateChain, acceptHop, solveViaClaudeP, escalationSignals, shouldEscalate, buildReceipt } from './handoff-solver.mjs';
+import { parseEscalateChain, acceptHop, solveViaClaudeP, escalationSignals, shouldEscalate, buildReceipt, runEscalationChain, pickChainPatch } from './handoff-solver.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -401,40 +401,33 @@ async function runReviewer(inst, basePatch, llmFn, localizeHint) {
   return r;
 }
 
-// ── ADR-205 — the escalation-chain executor. Tries each rung in order; stops at the first result
-// acceptHop accepts (non-empty patch + in-loop signal where reported). 'darwin-model' rungs rerun
-// darwin's OWN loop cold with a different model (cheap ladder rungs); 'claude-p-model' rungs shell
-// out to the claude -p subprocess solver (the loop handoff — the whole point of ADR-205). Every
-// rung's cost lands in totalCost so --max-cost gates the chain like everything else.
-// Returns hops[] = { spec, result|null, skipped? } for every rung attempted. ──
-async function runEscalationChain(inst, chain, { localizeHint, priorAttempts = [] } = {}) {
-  const hops = [];
-  for (const spec of chain) {
-    if (totalCost >= MAX_COST) { hops.push({ spec, result: null, skipped: 'budget' }); break; }
-    let result; const t0h = Date.now();
-    if (spec.kind === 'darwin-model') {
+// ── ADR-205 — the REAL rung runners injected into handoff-solver's pure runEscalationChain
+// traversal. 'darwin-model' rungs rerun darwin's OWN loop cold with a different model (cheap ladder
+// rungs); 'claude-p-model' rungs shell out to the claude -p subprocess solver (the loop handoff —
+// the whole point of ADR-205). Every rung's cost lands in totalCost so --max-cost gates the chain
+// BEFORE each rung launches (claude -p has no mid-run budget flag; this gate is the enforcement). ──
+async function runChainFor(inst, chain, { localizeHint, priorAttempts = [] } = {}) {
+  return runEscalationChain(chain, {
+    overBudget: () => totalCost >= MAX_COST,
+    priorAttempts,
+    runDarwinHop: async (spec) => {
       const hopLlm = NATIVE_TOOLS ? mkLlmNative(spec.model) : mkLlm(spec.model);
-      try {
-        const { res, work } = await solveTier(inst, hopLlm, { localizeHint, maxSteps: spec.maxSteps });
-        try { rmSync(work, { recursive: true, force: true }); } catch { /**/ }
-        totalCost += res.cost || 0;
-        result = { status: res.patch.trim() ? 'resolved' : 'failed', patch: res.patch, cost_usd: res.cost || 0, latency_ms: Date.now() - t0h, turns: res.steps, solver: spec.name, resolvedInLoop: !!res.resolvedInLoop, error: '' };
-      } catch (e) {
-        result = { status: 'failed', patch: '', cost_usd: 0, latency_ms: Date.now() - t0h, turns: 0, solver: spec.name, resolvedInLoop: false, error: String(e).split('\n')[0].slice(0, 300) };
-      }
-    } else {
-      result = await solveViaClaudeP({
+      const t0h = Date.now();
+      const { res, work } = await solveTier(inst, hopLlm, { localizeHint, maxSteps: spec.maxSteps });
+      try { rmSync(work, { recursive: true, force: true }); } catch { /**/ }
+      totalCost += res.cost || 0;
+      return { status: res.patch.trim() ? 'resolved' : 'failed', patch: res.patch, cost_usd: res.cost || 0, latency_ms: Date.now() - t0h, turns: res.steps, solver: spec.name, resolvedInLoop: !!res.resolvedInLoop, error: '' };
+    },
+    runClaudeP: async (spec, prior) => {
+      const result = await solveViaClaudeP({
         instanceId: inst.instance_id, repo: inst.repo, baseCommit: inst.base_commit, problemStatement: inst.problem_statement,
-        model: spec.model, maxTurns: HANDOFF_MAX_TURNS, timeoutMs: HANDOFF_TIMEOUT_MS || spec.timeoutMs, priorAttempts,
+        model: spec.model, maxTurns: HANDOFF_MAX_TURNS, timeoutMs: HANDOFF_TIMEOUT_MS || spec.timeoutMs, priorAttempts: prior,
       });
       result.solver = spec.name;
       totalCost += result.cost_usd || 0;
-    }
-    hops.push({ spec, result });
-    if (acceptHop(result)) break;
-    priorAttempts = [...priorAttempts, { solver: spec.name, failureReasons: [result.status === 'timeout' ? 'timeout' : 'no accepted patch'], steps: result.turns }];
-  }
-  return hops;
+      return result;
+    },
+  });
 }
 
 async function runInstance(inst) {
@@ -484,17 +477,13 @@ async function runInstance(inst) {
       let hops = [];
       if (escalate) {
         row.handoffChain = HANDOFF_CHAIN.map((s) => s.name); row.escalationReasons = reasons;
-        hops = await runEscalationChain(inst, HANDOFF_CHAIN, {
+        hops = await runChainFor(inst, HANDOFF_CHAIN, {
           localizeHint,
           priorAttempts: [{ solver: INITIAL_SOLVER, failureReasons: reasons, steps: t1res.steps }],
         });
         row.handoffHops = hops.map((h) => ({ solver: h.spec.name, status: h.result?.status ?? (h.skipped ? `skipped:${h.skipped}` : 'unknown'), cost_usd: h.result?.cost_usd ?? 0, latency_ms: h.result?.latency_ms ?? 0, turns: h.result?.turns ?? 0, accepted: !!(h.result && acceptHop(h.result)) }));
-        const winner = hops.find((h) => h.result && acceptHop(h.result));
-        // Fallback: no rung was ACCEPTED, but a rung may still have produced a non-empty patch
-        // (e.g. a darwin rung that edited but didn't pass in-loop tests) — better than darwin's
-        // empty/failed patch. Prefer the last non-empty rung patch, else keep darwin's.
-        const best = winner || [...hops].reverse().find((h) => h.result && String(h.result.patch || '').trim());
-        if (best) { patch = best.result.patch; row.tier = `handoff:${best.spec.name}`; row.handoffAccepted = !!winner; }
+        const best = pickChainPatch(hops); // first ACCEPTED hop, else last non-empty-patch hop
+        if (best) { patch = best.hop.result.patch; row.tier = `handoff:${best.hop.spec.name}`; row.handoffAccepted = best.accepted; }
       }
       // Receipt stream: not escalated ⇒ one row (handoff_* null). Escalated ⇒ one row PER HOP
       // (hop/hop_of/hop_accepted extras); a single-rung chain therefore emits exactly the spec'd
