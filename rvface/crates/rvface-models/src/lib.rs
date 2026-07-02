@@ -9,4 +9,7 @@ pub mod detector;
 pub mod embedder;
 pub mod landmark;
 mod ops;
+pub mod pipeline;
 pub mod weights;
+
+pub use pipeline::{Embedder, Face, FacePipeline};

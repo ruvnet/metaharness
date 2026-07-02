@@ -15,12 +15,14 @@ path = "src/main.rs"
 [features]
 default = ["cpu"]
 cpu = ["rvface-models/cpu"]
-webgpu = ["rvface-models/webgpu"]
+webgpu = ["rvface-models/webgpu", "burn/wgpu"]
 
 [dependencies]
 rvface-core.workspace = true
 rvface-models.workspace = true
+burn.workspace = true
 image.workspace = true
 clap.workspace = true
 anyhow.workspace = true
+serde.workspace = true
 serde_json.workspace = true

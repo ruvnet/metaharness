@@ -2675,10 +2675,12 @@ name = "rvface-cli"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "burn",
  "clap",
  "image",
  "rvface-core",
  "rvface-models",
+ "serde",
  "serde_json",
 ]
 
