@@ -10,4 +10,5 @@ models/*.npy
 models/*.safetensors
 models/*.onnx
 tools/fixtures/*.npz
+tools/.cache/
 web/public/models/
