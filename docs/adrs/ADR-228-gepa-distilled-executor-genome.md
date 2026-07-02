@@ -131,15 +131,23 @@ Generated mechanically from the transcript (steps wasted, thrash counts, files r
 
 1 localization-failure (never read the gold files) · 2 edit-mechanics (edits attempted, failed to apply) · 3 exploration-loop (all steps read/grep/ls, empty patch) · 4 wrong-fix (right file, gold still fails) · 5 test-thrash (repeated failing run_tests without strategy change) · 6 budget-exhaustion (edits landed, ran out of steps).
 
+### 5.4 Mutation lessons — GEPA memory of what NOT to do (`regression-report.mjs`)
+
+Every candidate — accepted or rejected — is diffed against the **frozen seed baseline** (§7.1) to emit a regression report: `{candidate, target, seed_score, candidate_score, gold_seed, gold_candidate, regressed_instances[], improved_instances[], failure_modes{empty_patch, wrong_file, test_not_run, thrash, bad_submit, protocol_error}, mutation_diff, decision, lesson}`. The **lesson** is a one-line takeaway — `AVOID: mutating <component> increased <failure_mode> N→M (regressed K instances, gold X→Y) — do not repeat.` for a rejected regression; `KEEP direction` for an accepted gold gain. Failure modes are derived at **$0** from the per-instance score parts + the ASI feedback the evaluator already persisted — no re-run.
+
+This is the ASI-as-gradient mechanism made cumulative: `gepa-loop.mjs` threads accepted+rejected lessons into every subsequent reflection prompt (`priorLessons`), so the reflector gains **memory of failed mutation directions without promoting bad policy into the executor**. A rejected candidate never enters the executor genome — but its lesson steers the next proposal away from the same dead end. (Wired live in `run-gepa.mjs`; the first pilot predates the wiring and gets the lessons post-hoc via `regression-report.mjs` — the mechanism is identical, only the feedback timing differs.)
+
 ---
 
-## 6. Optimize-first order (run 1 scope)
+## 6. Optimize-first order (run 1 scope) — deliberately NARROW
 
 1. v4-pro executor prompt (`executor_preamble` + `retrieval_policy`)
 2. GLM executor prompt (same components, GLM genome)
 3. Tool policies (the seven tool-description lines)
 4. Escalation policy (advise-line + framing, advisor genomes only)
 5. Verifier prompt (pre-submit reviewer)
+
+**Genome scope is exactly these five categories** — `executor_prompt`, `tool_policy`, `test_policy`, `handoff/escalation_policy`, `verifier_prompt`. The genome contains **no routing, caching, or compression knobs**: those are frozen harness mechanics (§3's "what the genome is not"). Too many moving parts makes any improvement uninterpretable, so GEPA is structurally prevented from touching them — `run-gepa.mjs`'s `mutable` set is a subset of the five categories, and the genome has no field outside them.
 
 **NO full architecture search in run 1** — no new tools, no loop-structure mutations, no step-budget changes. Text-only mutations keep every candidate runnable by the frozen harness and every delta attributable.
 
@@ -152,6 +160,10 @@ Arms: **baseline-A** v4-pro current genome · **baseline-B** GLM-5.2 current gen
 Live context (today, gold, medium-24): deepseek-chat solo **3/24**, **GLM-5.2 solo 7/24**, cascade(deepseek→sonnet) **9/24**; v4-pro solo + Fable-advised arms landing today.
 
 **Acceptance (pre-registered):** a GEPA-evolved executor must score **≥ its own baseline + 3 of 24** AND capture **≥50% of the cascade lift** (cascade − baseline) AND come in at **$/resolved < cascade's**. **Minimum useful for GLM: ≥10/24** (baseline 7). Anything less is reported as a null per ADR-201's "report whichever way it lands" clause.
+
+### 7.1 The seed is the FROZEN baseline
+
+The seed genome (measured: GLM 3/12 on the pilot train slice, 7/24 full medium; v4-pro TBD) is the **authoritative baseline** and is never redefined by a partial candidate. `gepaOptimize`'s parent-relative accept/reject is exploration bookkeeping only — a candidate is "accepted" merely if it beats its **sampled parent's** score-sum, which keeps the search moving; it does **not** promote that candidate over the seed. A candidate becomes the new baseline **only** if it beats the seed on the SAME paired train set **AND** survives the 12-instance holdout (§9.4's holdout eval reads the seed-vs-best delta, never the training score). Every report frames the seed as baseline until a candidate clears that bar. The search budget is **not expanded** to chase a train-only winner (the $25 pilot runs to completion as-is; more spend is gated on a holdout-clearing candidate).
 
 ---
 
@@ -181,7 +193,8 @@ Plus this repo's structural guard: the seed genome is byte-equivalent to the *me
 | `metric.mjs` | `computeInstanceScore()` (§5.1), `classifyFailure()` (§5.3), `makeFeedback()` (§5.2 ASI). Pure, $0-testable. |
 | `evaluate-genome.mjs` | Runs a genome on a manifest slice via `solve-advisor.mjs --genome … --advisor-model none --transcripts-dir …`, gold-scores, emits `{scores, feedbacks, cost}` per instance. |
 | `build-reflective-dataset.mjs` | Harvests fadv-*-report.json advisoryLogs + transcripts (fable-bench worktree), advbench-* (adr226 worktree), gold reports → GEPA-format reflective records. |
-| `gepa-loop.mjs` | The GEPA loop: `paretoFrontier()`, frequency-weighted parent sampling, reflective mutation via an injected LLM, budgeted `gepaOptimize()`. Pure + dependency-injected. |
+| `gepa-loop.mjs` | The GEPA loop: `paretoFrontier()`, frequency-weighted parent sampling, reflective mutation via an injected LLM, budgeted `gepaOptimize()`, `priorLessons` threading (§5.4). Pure + dependency-injected. |
+| `regression-report.mjs` | Per-candidate mutation-lesson report vs the frozen seed (§5.4): failure-mode taxonomy, `mutation_diff`, `deriveLesson()`. Pure/$0. |
 | `run-gepa.mjs` | Real wiring: OpenRouter reflection LM + subprocess evaluator + hard $ cap + holdout scoring. |
 | `*.test.mjs` | $0 mock tests: genome round-trip byte-equivalence, metric, Pareto selection, feedback generation, end-to-end loop with scripted reflector/evaluator. |
 

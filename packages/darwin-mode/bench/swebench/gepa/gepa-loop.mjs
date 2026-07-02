@@ -80,14 +80,20 @@ export function pickTargetComponent({ feedbacks, mutable, step = 0, lastMutated 
   return rr[step % rr.length] ?? mutable[0];
 }
 
-/** Build the reflection prompt: current component text + the worst instances' ASI → propose new text. */
-export function buildReflectionPrompt({ genome, targetComponent, feedbacks, maxFeedbacks = 8 }) {
+/** Build the reflection prompt: current component text + the worst instances' ASI → propose new text.
+ * `priorLessons` (ADR-228 §5.4, coordinator directive 1) are one-line AVOID/KEEP takeaways derived
+ * from earlier rejected/accepted candidates — GEPA's memory of what NOT to do, injected so the
+ * reflector doesn't re-propose a known-bad rewrite direction (the ASI-as-gradient mechanism). */
+export function buildReflectionPrompt({ genome, targetComponent, feedbacks, maxFeedbacks = 8, priorLessons = [] }) {
   const worst = Object.entries(feedbacks || {})
     .sort((a, b) => {
       const score = (t) => { const m = String(t[1]).match(/score (-?[\d.]+)/); return m ? +m[1] : 0; };
       return score(a) - score(b);
     })
     .slice(0, maxFeedbacks);
+  const lessonBlock = (priorLessons && priorLessons.length)
+    ? ['', '--- lessons from earlier mutations (do NOT repeat rejected directions) ---', ...priorLessons.slice(-8)]
+    : [];
   return [
     'You are optimizing ONE text component of an autonomous bug-fixing agent\'s operating policy (its "genome").',
     'The component is injected verbatim into the agent\'s system prompt. Below: the current component text, then',
@@ -99,6 +105,7 @@ export function buildReflectionPrompt({ genome, targetComponent, feedbacks, maxF
     '',
     `--- component: ${targetComponent} ---`,
     genome.components[targetComponent],
+    ...lessonBlock,
     '',
     '--- execution feedback (ASI) ---',
     ...worst.map(([id, fb]) => `[${id}]\n${fb}`),
@@ -130,10 +137,15 @@ export async function gepaOptimize({
   mutable = ['retrieval_policy', 'executor_preamble', 'edit_policy', 'tool_grep', 'tool_read', 'tool_edit', 'tool_line_edit', 'test_policy', 'protocol_reminder'],
   maxCandidates = 15, maxMetricCalls = Infinity, maxCost = Infinity, maxStall = 10,
   onEvent = () => {},
+  // ADR-228 §5.4 (coordinator directive 1): when a lesson-deriver is supplied, each candidate's
+  // accept/reject decision produces a one-line lesson threaded into subsequent reflection prompts
+  // (GEPA memory of what NOT to do). Off by default → existing behaviour and tests unchanged.
+  deriveLesson = null,
 }) {
   const budget = { metricCalls: 0, evalCost: 0, reflectionCost: 0, get totalCost() { return this.evalCost + this.reflectionCost; } };
   const history = [];
   const pool = []; // { id, genome, scores, feedbacks, accepted, parent }
+  const lessons = []; // accumulated one-line AVOID/KEEP takeaways (deriveLesson supplied)
 
   async function runEval(genome, id, parent = null) {
     const r = await evaluate(genome);
@@ -159,7 +171,7 @@ export async function gepaOptimize({
     const parentId = sampleParent(pool, rng);
     const parent = pool.find((c) => c.id === parentId);
     const target = pickTargetComponent({ feedbacks: parent.feedbacks, mutable, step, lastMutated: parent.genome.meta?.mutated ?? null });
-    const prompt = buildReflectionPrompt({ genome: parent.genome, targetComponent: target, feedbacks: parent.feedbacks });
+    const prompt = buildReflectionPrompt({ genome: parent.genome, targetComponent: target, feedbacks: parent.feedbacks, priorLessons: lessons });
     let proposal = null;
     try { const r = await reflect(prompt); budget.reflectionCost += r.cost || 0; proposal = parseReflection(r.raw); }
     catch (e) { history.push({ event: 'reflection-error', step, error: String(e.message || e) }); stalled++; continue; }
@@ -184,6 +196,12 @@ export async function gepaOptimize({
     childEntry.accepted = accepted;
     if (accepted || paretoAdds) pool.push(childEntry);
     history.push({ event: accepted ? 'accepted' : paretoAdds ? 'pareto-added' : 'discarded', step, id: childEntry.id, target, parent: parentId, sumChild: sum(childEntry), sumParent: sum(parent) });
+    if (deriveLesson) {
+      try {
+        const lesson = deriveLesson({ parent, child: childEntry, target, accepted, paretoAdds });
+        if (lesson) { lessons.push(lesson); history.push({ event: 'lesson', step, id: childEntry.id, lesson }); }
+      } catch { /* lesson derivation is best-effort, never fatal */ }
+    }
     onEvent(accepted ? 'accepted' : 'rejected', { id: childEntry.id, target });
   }
 
@@ -192,6 +210,6 @@ export async function gepaOptimize({
     pool: pool.map(({ id, genome, scores, accepted, parent }) => ({ id, genome, scores, accepted, parent })),
     frontier: front.frontier, winners: front.winners, best: front.best, bestMean: front.bestMean,
     budget: { metricCalls: budget.metricCalls, evalCost: budget.evalCost, reflectionCost: budget.reflectionCost, totalCost: budget.totalCost },
-    history,
+    history, lessons,
   };
 }

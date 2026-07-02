@@ -24,6 +24,7 @@ import { join, dirname, isAbsolute } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { gepaOptimize } from './gepa-loop.mjs';
 import { loadGenome } from './genome.mjs';
+import { aggregateFailureModes, deriveLesson as deriveLessonText } from './regression-report.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const BENCH = join(HERE, '..');
@@ -94,9 +95,27 @@ async function evaluate(genome) {
 const seed = loadGenome((p) => readFileSync(p, 'utf8'), seedPath);
 console.error(`[gepa] seed=${seed.meta?.id} model=${model} reflector=${reflectionModel} train=first-${trainFirst} of ${manifest} | caps: ${maxCandidates} candidates, $${maxCost} hard`);
 
+// ADR-228 §5.4 (coordinator directive 1) — live mutation lessons threaded into later reflections.
+// Derived from the score vectors + ASI feedback the evaluator returns (goldSeed/goldCand counted as
+// scores ≥ 10; failure modes from the feedback text). The FROZEN seed is always the comparison
+// baseline (directive 2). Emitted to the log so the run is auditable.
+const seedGold = (e) => Object.values(e.scores || {}).filter((s) => s >= 10).length;
+function liveDeriveLesson({ parent, child, target, accepted, paretoAdds }) {
+  const ids = Object.keys(child.scores || {});
+  const regressed = ids.filter((id) => (child.scores[id] ?? 0) < (parent.scores[id] ?? 0));
+  const improved = ids.filter((id) => (child.scores[id] ?? 0) > (parent.scores[id] ?? 0));
+  const seedModes = aggregateFailureModes({}, parent.feedbacks || {});
+  const candModes = aggregateFailureModes({}, child.feedbacks || {});
+  const lesson = deriveLessonText({ target, decision: accepted ? 'accepted' : 'rejected', goldSeed: seedGold(parent), goldCand: seedGold(child), regressed, improved, seedModes, candModes })
+    + (paretoAdds && !accepted ? ' (kept for a per-instance win — Pareto-add)' : '');
+  console.error(`[gepa] lesson: ${lesson}`);
+  return lesson;
+}
+
 const result = await gepaOptimize({
   seed, evaluate, reflect,
   maxCandidates, maxCost, maxStall: 8,
+  deriveLesson: liveDeriveLesson,
   onEvent: (ev, d) => console.error(`[gepa] ${ev}: ${JSON.stringify(d)}`),
 });
 
@@ -127,7 +146,7 @@ writeFileSync(outPath, JSON.stringify({
   ranAt: new Date().toISOString(), seed: seed.meta?.id, model, reflectionModel, manifest, trainFirst,
   caps: { maxCandidates, maxCost, perEvalCost, maxSteps },
   frontier: result.frontier, winners: result.winners, best: result.best, bestMean: result.bestMean,
-  budget: result.budget, history: result.history, holdout,
+  budget: result.budget, history: result.history, lessons: result.lessons, holdout,
   pool: result.pool, // full genomes included — the frontier IS the deliverable, not one winner (§8)
 }, null, 2));
 console.error(`[gepa] DONE → ${outPath}`);

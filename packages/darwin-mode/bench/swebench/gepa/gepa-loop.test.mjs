@@ -121,6 +121,37 @@ test('gepaOptimize end-to-end: accepts improving mutation, Pareto-adds subset wi
   assert.ok(res.frontier.length >= 2);
 });
 
+test('buildReflectionPrompt threads priorLessons as an AVOID block', () => {
+  const p = buildReflectionPrompt({
+    genome: SEED_GENOME, targetComponent: 'retrieval_policy', feedbacks: { a: 'a: score -1' },
+    priorLessons: ['AVOID: mutating retrieval_policy increased empty_patch 4→7 — do not repeat.'],
+  });
+  assert.match(p, /lessons from earlier mutations \(do NOT repeat/);
+  assert.match(p, /AVOID: mutating retrieval_policy increased empty_patch 4→7/);
+  // absent when no lessons
+  assert.ok(!buildReflectionPrompt({ genome: SEED_GENOME, targetComponent: 'retrieval_policy', feedbacks: {} }).includes('lessons from earlier mutations'));
+});
+
+test('gepaOptimize: deriveLesson accumulates lessons and threads them into later prompts', async () => {
+  const evaluate = async (genome) => {
+    const bad = JSON.stringify(genome.components).includes('BAD');
+    return { scores: { i1: bad ? 0 : 1 }, feedbacks: { i1: `i1: score ${bad ? 0 : 1}` }, cost: 0, metricCalls: 1 };
+  };
+  const seen = [];
+  let n = 0;
+  const reflect = async (prompt) => { seen.push(prompt); return { raw: '```component\nBAD proposal number ' + (++n) + ' with enough length.\n```', cost: 0 }; };
+  const res = await gepaOptimize({
+    seed: SEED_GENOME, evaluate, reflect, rng: () => 0, mutable: ['retrieval_policy'], maxCandidates: 3,
+    deriveLesson: ({ target, accepted }) => `${accepted ? 'KEEP' : 'AVOID'}: ${target} test lesson`,
+  });
+  assert.ok(res.lessons.length >= 1, 'lessons accumulated');
+  assert.match(res.lessons[0], /AVOID: retrieval_policy test lesson/);
+  // the SECOND reflection prompt should carry the first lesson
+  assert.ok(seen.length >= 2);
+  assert.match(seen[1], /AVOID: retrieval_policy test lesson/);
+  assert.ok(res.history.some((h) => h.event === 'lesson'));
+});
+
 test('gepaOptimize: stall guard breaks the loop when nothing evaluates', async () => {
   const evaluate = async () => ({ scores: { i1: 1 }, feedbacks: {}, cost: 0, metricCalls: 1 });
   const reflect = async () => ({ raw: '', cost: 0 }); // every proposal degenerate
