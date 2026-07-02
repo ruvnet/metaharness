@@ -1,0 +1,2111 @@
+{
+  "name": "landmark-mfn68",
+  "file": "landmark-mfn68.safetensors",
+  "source_url": "https://raw.githubusercontent.com/cunjian/pytorch_face_landmark/master/checkpoint/mobilefacenet_model_best.pth.tar",
+  "source_sha256": "b994af026bfddbafc507a6f1c8737a9896bab20ed2b0cfb6ae90b81736970313",
+  "license": "no LICENSE file in cunjian/pytorch_face_landmark (MIT-lineage architecture, insightface flavor); weights are fetched at runtime and never redistributed with rvFACE (ADR-0003)",
+  "input": {
+    "width": 112,
+    "height": 112,
+    "channels": 3,
+    "colorspace": "bgr",
+    "mean": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "scale": 0.00392156862745098,
+    "layout": "nchw",
+    "note": "square crop = detector box expanded to size int(min(w,h)*1.2) about its center, zero-padded at image borders, resized to 112x112 (cv2.imread BGR, cv2.resize bilinear); see tools/fixtures/landmark-cunjian.notes.md"
+  },
+  "output": "tuple (landmarks [1,136] = 68 x,y pairs, point-major x0,y0,x1,y1,..., normalized to [0,1] crop coordinates; conv_features [1,512,7,7])",
+  "arch": {
+    "family": "mobilefacenet",
+    "style": "depthwise-residual",
+    "in_channels": 3,
+    "input_size": [
+      112,
+      112
+    ],
+    "activation": "prelu",
+    "channels": {
+      "conv1": 64,
+      "conv2_dw": 64,
+      "conv_23": 64,
+      "conv_3": 64,
+      "conv_34": 128,
+      "conv_4": 128,
+      "conv_45": 128,
+      "conv_5": 128,
+      "conv_6_sep": 512
+    },
+    "groups": {
+      "conv_23": 128,
+      "conv_3": 128,
+      "conv_34": 256,
+      "conv_4": 256,
+      "conv_45": 512,
+      "conv_5": 256
+    },
+    "residual_num_blocks": {
+      "conv_3": 4,
+      "conv_4": 6,
+      "conv_5": 2
+    },
+    "gdc_kernel": [
+      7,
+      7
+    ],
+    "gdc_linear_bias": false,
+    "embedding_size": 136,
+    "output_dim": 136
+  },
+  "tensors": {
+    "conv1.conv.weight": {
+      "shape": [
+        64,
+        3,
+        3,
+        3
+      ],
+      "dtype": "float32"
+    },
+    "conv1.bn.weight": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv1.bn.bias": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv1.bn.running_mean": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv1.bn.running_var": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv1.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv1.prelu.weight": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv2_dw.conv.weight": {
+      "shape": [
+        64,
+        1,
+        3,
+        3
+      ],
+      "dtype": "float32"
+    },
+    "conv2_dw.bn.weight": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv2_dw.bn.bias": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv2_dw.bn.running_mean": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv2_dw.bn.running_var": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv2_dw.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv2_dw.prelu.weight": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv_23.conv.conv.weight": {
+      "shape": [
+        128,
+        64,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_23.conv.bn.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_23.conv.bn.bias": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_23.conv.bn.running_mean": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_23.conv.bn.running_var": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_23.conv.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_23.conv.prelu.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_23.conv_dw.conv.weight": {
+      "shape": [
+        128,
+        1,
+        3,
+        3
+      ],
+      "dtype": "float32"
+    },
+    "conv_23.conv_dw.bn.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_23.conv_dw.bn.bias": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_23.conv_dw.bn.running_mean": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_23.conv_dw.bn.running_var": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_23.conv_dw.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_23.conv_dw.prelu.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_23.project.conv.weight": {
+      "shape": [
+        64,
+        128,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_23.project.bn.weight": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv_23.project.bn.bias": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv_23.project.bn.running_mean": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv_23.project.bn.running_var": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv_23.project.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_3.model.0.conv.conv.weight": {
+      "shape": [
+        128,
+        64,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.0.conv.bn.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.0.conv.bn.bias": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.0.conv.bn.running_mean": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.0.conv.bn.running_var": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.0.conv.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_3.model.0.conv.prelu.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.0.conv_dw.conv.weight": {
+      "shape": [
+        128,
+        1,
+        3,
+        3
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.0.conv_dw.bn.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.0.conv_dw.bn.bias": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.0.conv_dw.bn.running_mean": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.0.conv_dw.bn.running_var": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.0.conv_dw.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_3.model.0.conv_dw.prelu.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.0.project.conv.weight": {
+      "shape": [
+        64,
+        128,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.0.project.bn.weight": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.0.project.bn.bias": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.0.project.bn.running_mean": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.0.project.bn.running_var": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.0.project.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_3.model.1.conv.conv.weight": {
+      "shape": [
+        128,
+        64,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.1.conv.bn.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.1.conv.bn.bias": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.1.conv.bn.running_mean": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.1.conv.bn.running_var": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.1.conv.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_3.model.1.conv.prelu.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.1.conv_dw.conv.weight": {
+      "shape": [
+        128,
+        1,
+        3,
+        3
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.1.conv_dw.bn.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.1.conv_dw.bn.bias": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.1.conv_dw.bn.running_mean": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.1.conv_dw.bn.running_var": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.1.conv_dw.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_3.model.1.conv_dw.prelu.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.1.project.conv.weight": {
+      "shape": [
+        64,
+        128,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.1.project.bn.weight": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.1.project.bn.bias": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.1.project.bn.running_mean": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.1.project.bn.running_var": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.1.project.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_3.model.2.conv.conv.weight": {
+      "shape": [
+        128,
+        64,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.2.conv.bn.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.2.conv.bn.bias": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.2.conv.bn.running_mean": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.2.conv.bn.running_var": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.2.conv.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_3.model.2.conv.prelu.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.2.conv_dw.conv.weight": {
+      "shape": [
+        128,
+        1,
+        3,
+        3
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.2.conv_dw.bn.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.2.conv_dw.bn.bias": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.2.conv_dw.bn.running_mean": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.2.conv_dw.bn.running_var": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.2.conv_dw.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_3.model.2.conv_dw.prelu.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.2.project.conv.weight": {
+      "shape": [
+        64,
+        128,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.2.project.bn.weight": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.2.project.bn.bias": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.2.project.bn.running_mean": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.2.project.bn.running_var": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.2.project.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_3.model.3.conv.conv.weight": {
+      "shape": [
+        128,
+        64,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.3.conv.bn.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.3.conv.bn.bias": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.3.conv.bn.running_mean": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.3.conv.bn.running_var": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.3.conv.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_3.model.3.conv.prelu.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.3.conv_dw.conv.weight": {
+      "shape": [
+        128,
+        1,
+        3,
+        3
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.3.conv_dw.bn.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.3.conv_dw.bn.bias": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.3.conv_dw.bn.running_mean": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.3.conv_dw.bn.running_var": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.3.conv_dw.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_3.model.3.conv_dw.prelu.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.3.project.conv.weight": {
+      "shape": [
+        64,
+        128,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.3.project.bn.weight": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.3.project.bn.bias": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.3.project.bn.running_mean": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.3.project.bn.running_var": {
+      "shape": [
+        64
+      ],
+      "dtype": "float32"
+    },
+    "conv_3.model.3.project.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_34.conv.conv.weight": {
+      "shape": [
+        256,
+        64,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_34.conv.bn.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_34.conv.bn.bias": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_34.conv.bn.running_mean": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_34.conv.bn.running_var": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_34.conv.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_34.conv.prelu.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_34.conv_dw.conv.weight": {
+      "shape": [
+        256,
+        1,
+        3,
+        3
+      ],
+      "dtype": "float32"
+    },
+    "conv_34.conv_dw.bn.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_34.conv_dw.bn.bias": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_34.conv_dw.bn.running_mean": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_34.conv_dw.bn.running_var": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_34.conv_dw.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_34.conv_dw.prelu.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_34.project.conv.weight": {
+      "shape": [
+        128,
+        256,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_34.project.bn.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_34.project.bn.bias": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_34.project.bn.running_mean": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_34.project.bn.running_var": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_34.project.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_4.model.0.conv.conv.weight": {
+      "shape": [
+        256,
+        128,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.0.conv.bn.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.0.conv.bn.bias": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.0.conv.bn.running_mean": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.0.conv.bn.running_var": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.0.conv.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_4.model.0.conv.prelu.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.0.conv_dw.conv.weight": {
+      "shape": [
+        256,
+        1,
+        3,
+        3
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.0.conv_dw.bn.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.0.conv_dw.bn.bias": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.0.conv_dw.bn.running_mean": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.0.conv_dw.bn.running_var": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.0.conv_dw.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_4.model.0.conv_dw.prelu.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.0.project.conv.weight": {
+      "shape": [
+        128,
+        256,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.0.project.bn.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.0.project.bn.bias": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.0.project.bn.running_mean": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.0.project.bn.running_var": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.0.project.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_4.model.1.conv.conv.weight": {
+      "shape": [
+        256,
+        128,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.1.conv.bn.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.1.conv.bn.bias": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.1.conv.bn.running_mean": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.1.conv.bn.running_var": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.1.conv.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_4.model.1.conv.prelu.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.1.conv_dw.conv.weight": {
+      "shape": [
+        256,
+        1,
+        3,
+        3
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.1.conv_dw.bn.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.1.conv_dw.bn.bias": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.1.conv_dw.bn.running_mean": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.1.conv_dw.bn.running_var": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.1.conv_dw.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_4.model.1.conv_dw.prelu.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.1.project.conv.weight": {
+      "shape": [
+        128,
+        256,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.1.project.bn.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.1.project.bn.bias": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.1.project.bn.running_mean": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.1.project.bn.running_var": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.1.project.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_4.model.2.conv.conv.weight": {
+      "shape": [
+        256,
+        128,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.2.conv.bn.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.2.conv.bn.bias": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.2.conv.bn.running_mean": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.2.conv.bn.running_var": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.2.conv.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_4.model.2.conv.prelu.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.2.conv_dw.conv.weight": {
+      "shape": [
+        256,
+        1,
+        3,
+        3
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.2.conv_dw.bn.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.2.conv_dw.bn.bias": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.2.conv_dw.bn.running_mean": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.2.conv_dw.bn.running_var": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.2.conv_dw.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_4.model.2.conv_dw.prelu.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.2.project.conv.weight": {
+      "shape": [
+        128,
+        256,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.2.project.bn.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.2.project.bn.bias": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.2.project.bn.running_mean": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.2.project.bn.running_var": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.2.project.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_4.model.3.conv.conv.weight": {
+      "shape": [
+        256,
+        128,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.3.conv.bn.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.3.conv.bn.bias": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.3.conv.bn.running_mean": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.3.conv.bn.running_var": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.3.conv.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_4.model.3.conv.prelu.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.3.conv_dw.conv.weight": {
+      "shape": [
+        256,
+        1,
+        3,
+        3
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.3.conv_dw.bn.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.3.conv_dw.bn.bias": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.3.conv_dw.bn.running_mean": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.3.conv_dw.bn.running_var": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.3.conv_dw.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_4.model.3.conv_dw.prelu.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.3.project.conv.weight": {
+      "shape": [
+        128,
+        256,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.3.project.bn.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.3.project.bn.bias": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.3.project.bn.running_mean": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.3.project.bn.running_var": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.3.project.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_4.model.4.conv.conv.weight": {
+      "shape": [
+        256,
+        128,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.4.conv.bn.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.4.conv.bn.bias": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.4.conv.bn.running_mean": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.4.conv.bn.running_var": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.4.conv.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_4.model.4.conv.prelu.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.4.conv_dw.conv.weight": {
+      "shape": [
+        256,
+        1,
+        3,
+        3
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.4.conv_dw.bn.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.4.conv_dw.bn.bias": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.4.conv_dw.bn.running_mean": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.4.conv_dw.bn.running_var": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.4.conv_dw.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_4.model.4.conv_dw.prelu.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.4.project.conv.weight": {
+      "shape": [
+        128,
+        256,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.4.project.bn.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.4.project.bn.bias": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.4.project.bn.running_mean": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.4.project.bn.running_var": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.4.project.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_4.model.5.conv.conv.weight": {
+      "shape": [
+        256,
+        128,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.5.conv.bn.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.5.conv.bn.bias": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.5.conv.bn.running_mean": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.5.conv.bn.running_var": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.5.conv.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_4.model.5.conv.prelu.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.5.conv_dw.conv.weight": {
+      "shape": [
+        256,
+        1,
+        3,
+        3
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.5.conv_dw.bn.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.5.conv_dw.bn.bias": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.5.conv_dw.bn.running_mean": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.5.conv_dw.bn.running_var": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.5.conv_dw.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_4.model.5.conv_dw.prelu.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.5.project.conv.weight": {
+      "shape": [
+        128,
+        256,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.5.project.bn.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.5.project.bn.bias": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.5.project.bn.running_mean": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.5.project.bn.running_var": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_4.model.5.project.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_45.conv.conv.weight": {
+      "shape": [
+        512,
+        128,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_45.conv.bn.weight": {
+      "shape": [
+        512
+      ],
+      "dtype": "float32"
+    },
+    "conv_45.conv.bn.bias": {
+      "shape": [
+        512
+      ],
+      "dtype": "float32"
+    },
+    "conv_45.conv.bn.running_mean": {
+      "shape": [
+        512
+      ],
+      "dtype": "float32"
+    },
+    "conv_45.conv.bn.running_var": {
+      "shape": [
+        512
+      ],
+      "dtype": "float32"
+    },
+    "conv_45.conv.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_45.conv.prelu.weight": {
+      "shape": [
+        512
+      ],
+      "dtype": "float32"
+    },
+    "conv_45.conv_dw.conv.weight": {
+      "shape": [
+        512,
+        1,
+        3,
+        3
+      ],
+      "dtype": "float32"
+    },
+    "conv_45.conv_dw.bn.weight": {
+      "shape": [
+        512
+      ],
+      "dtype": "float32"
+    },
+    "conv_45.conv_dw.bn.bias": {
+      "shape": [
+        512
+      ],
+      "dtype": "float32"
+    },
+    "conv_45.conv_dw.bn.running_mean": {
+      "shape": [
+        512
+      ],
+      "dtype": "float32"
+    },
+    "conv_45.conv_dw.bn.running_var": {
+      "shape": [
+        512
+      ],
+      "dtype": "float32"
+    },
+    "conv_45.conv_dw.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_45.conv_dw.prelu.weight": {
+      "shape": [
+        512
+      ],
+      "dtype": "float32"
+    },
+    "conv_45.project.conv.weight": {
+      "shape": [
+        128,
+        512,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_45.project.bn.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_45.project.bn.bias": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_45.project.bn.running_mean": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_45.project.bn.running_var": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_45.project.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_5.model.0.conv.conv.weight": {
+      "shape": [
+        256,
+        128,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.0.conv.bn.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.0.conv.bn.bias": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.0.conv.bn.running_mean": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.0.conv.bn.running_var": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.0.conv.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_5.model.0.conv.prelu.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.0.conv_dw.conv.weight": {
+      "shape": [
+        256,
+        1,
+        3,
+        3
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.0.conv_dw.bn.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.0.conv_dw.bn.bias": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.0.conv_dw.bn.running_mean": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.0.conv_dw.bn.running_var": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.0.conv_dw.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_5.model.0.conv_dw.prelu.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.0.project.conv.weight": {
+      "shape": [
+        128,
+        256,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.0.project.bn.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.0.project.bn.bias": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.0.project.bn.running_mean": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.0.project.bn.running_var": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.0.project.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_5.model.1.conv.conv.weight": {
+      "shape": [
+        256,
+        128,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.1.conv.bn.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.1.conv.bn.bias": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.1.conv.bn.running_mean": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.1.conv.bn.running_var": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.1.conv.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_5.model.1.conv.prelu.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.1.conv_dw.conv.weight": {
+      "shape": [
+        256,
+        1,
+        3,
+        3
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.1.conv_dw.bn.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.1.conv_dw.bn.bias": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.1.conv_dw.bn.running_mean": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.1.conv_dw.bn.running_var": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.1.conv_dw.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_5.model.1.conv_dw.prelu.weight": {
+      "shape": [
+        256
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.1.project.conv.weight": {
+      "shape": [
+        128,
+        256,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.1.project.bn.weight": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.1.project.bn.bias": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.1.project.bn.running_mean": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.1.project.bn.running_var": {
+      "shape": [
+        128
+      ],
+      "dtype": "float32"
+    },
+    "conv_5.model.1.project.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_6_sep.conv.weight": {
+      "shape": [
+        512,
+        128,
+        1,
+        1
+      ],
+      "dtype": "float32"
+    },
+    "conv_6_sep.bn.weight": {
+      "shape": [
+        512
+      ],
+      "dtype": "float32"
+    },
+    "conv_6_sep.bn.bias": {
+      "shape": [
+        512
+      ],
+      "dtype": "float32"
+    },
+    "conv_6_sep.bn.running_mean": {
+      "shape": [
+        512
+      ],
+      "dtype": "float32"
+    },
+    "conv_6_sep.bn.running_var": {
+      "shape": [
+        512
+      ],
+      "dtype": "float32"
+    },
+    "conv_6_sep.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "conv_6_sep.prelu.weight": {
+      "shape": [
+        512
+      ],
+      "dtype": "float32"
+    },
+    "output_layer.conv_6_dw.conv.weight": {
+      "shape": [
+        512,
+        1,
+        7,
+        7
+      ],
+      "dtype": "float32"
+    },
+    "output_layer.conv_6_dw.bn.weight": {
+      "shape": [
+        512
+      ],
+      "dtype": "float32"
+    },
+    "output_layer.conv_6_dw.bn.bias": {
+      "shape": [
+        512
+      ],
+      "dtype": "float32"
+    },
+    "output_layer.conv_6_dw.bn.running_mean": {
+      "shape": [
+        512
+      ],
+      "dtype": "float32"
+    },
+    "output_layer.conv_6_dw.bn.running_var": {
+      "shape": [
+        512
+      ],
+      "dtype": "float32"
+    },
+    "output_layer.conv_6_dw.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    },
+    "output_layer.linear.weight": {
+      "shape": [
+        136,
+        512
+      ],
+      "dtype": "float32"
+    },
+    "output_layer.bn.weight": {
+      "shape": [
+        136
+      ],
+      "dtype": "float32"
+    },
+    "output_layer.bn.bias": {
+      "shape": [
+        136
+      ],
+      "dtype": "float32"
+    },
+    "output_layer.bn.running_mean": {
+      "shape": [
+        136
+      ],
+      "dtype": "float32"
+    },
+    "output_layer.bn.running_var": {
+      "shape": [
+        136
+      ],
+      "dtype": "float32"
+    },
+    "output_layer.bn.num_batches_tracked": {
+      "shape": [],
+      "dtype": "int64"
+    }
+  }
+}

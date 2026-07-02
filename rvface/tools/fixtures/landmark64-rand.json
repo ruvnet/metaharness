@@ -1,0 +1,29 @@
+{
+  "fixture": "landmark64-rand",
+  "net": "upstream face_landmark/MobileFaceNet.py MobileFaceNet([64,64], 136): 1-channel input, ReLU, residual blocks 3/4/2, channels 32/64, GDC kernel 4x4, Linear(512,136,bias=True)",
+  "weights": "landmark64-rand.safetensors",
+  "seed": 5678,
+  "weight_recipe": "randn-kaiming-v1",
+  "input_seed": 5679,
+  "input_domain": "randint(0,256) / 255",
+  "num_weight_tensors": 247,
+  "input_file": "landmark64-rand.npz#input",
+  "output_files": [
+    "landmark64-rand.npz#landmarks"
+  ],
+  "shapes": {
+    "input": [
+      1,
+      1,
+      64,
+      64
+    ],
+    "landmarks": [
+      1,
+      136
+    ]
+  },
+  "dtype": "float32",
+  "tolerance": 0.015444729614257814,
+  "tolerance_rule": "max|delta| <= 1e-4 * max(1, max|output|), absolute"
+}

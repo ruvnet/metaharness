@@ -55,7 +55,10 @@ on both backends.
 
 ## Consequences
 
-- CI needs only Rust + the committed JSON/safetensors fixtures (small,
-  random-weight); Python is required solely to *regenerate* fixtures.
+- Fixture JSON manifests are committed; the arrays/weights themselves are
+  regenerated locally with `tools/gen_fixtures.py` (deterministic,
+  byte-identical across runs — the IRN-50 random weights alone are 56 MB,
+  so committing them is not viable). Parity tests skip gracefully when the
+  fixture files are absent.
 - Parity failures localize immediately: tier 1 → our math, tier 2 → a layer
   port, tier 3 → glue/preprocessing.

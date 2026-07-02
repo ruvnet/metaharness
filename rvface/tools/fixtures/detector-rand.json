@@ -1,0 +1,36 @@
+{
+  "fixture": "detector-rand",
+  "net": "upstream face_detect slim-320 SSD, create_mb_tiny_fd(2, is_test=True), eval mode",
+  "weights": "detector-rand.safetensors",
+  "seed": 1234,
+  "weight_recipe": "randn-kaiming-v1",
+  "input_seed": 3407,
+  "input_domain": "(randint(0,256) - 127) / 128",
+  "num_weight_tensors": 184,
+  "input_file": "detector-rand.npz#input",
+  "output_files": [
+    "detector-rand.npz#confidences",
+    "detector-rand.npz#boxes"
+  ],
+  "shapes": {
+    "input": [
+      1,
+      3,
+      240,
+      320
+    ],
+    "confidences": [
+      1,
+      4420,
+      2
+    ],
+    "boxes": [
+      1,
+      4420,
+      4
+    ]
+  },
+  "dtype": "float32",
+  "tolerance": 0.00014289194345474244,
+  "tolerance_rule": "max|delta| <= 1e-4 * max(1, max|output|), absolute"
+}
