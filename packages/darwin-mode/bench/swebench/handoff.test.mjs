@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 import {
   solveViaClaudeP, buildHandoffEnv, buildHandoffPrompt, readAuthToken,
   parseEscalateChain, resolveSolverSpec, acceptHop, runEscalationChain, pickChainPatch,
-  escalationSignals, shouldEscalate, diffStats, buildReceipt,
+  escalationSignals, shouldEscalate, diffStats, buildReceipt, testFailureRepeats,
   OR_ANTHROPIC_BASE_URL, DEFAULT_HANDOFF_MODEL, SOLVER_ALIASES,
 } from './handoff-solver.mjs';
 import { agenticSolveNative } from './agentic-loop.mjs';
@@ -47,6 +47,23 @@ test('shouldEscalate: 2-of-N — 0 or 1 signal does NOT fire, 2+ fires', () => {
   const sprawl = shouldEscalate(escalationSignals({ resolvedInLoop: true, submitted: true, thrash: 2, patch: diffN(4) }));
   assert.equal(sprawl.escalate, true);
   assert.deepEqual(sprawl.reasons, ['thrash_repeat', 'too_many_files']);
+});
+
+test('testFailureRepeats: same run_tests failure signature ≥2 fires the thrash signal', () => {
+  const fail = { actionRaw: '{"tool":"run_tests"}', obs: 'FAIL tests/test_a.py::test_x — AssertionError\nlogs at /tmp/agentic-run_1.jsonl' };
+  const fail2 = { actionRaw: '{"tool":"run_tests"}', obs: 'FAIL tests/test_a.py::test_x — AssertionError\nlogs at /tmp/agentic-run_2.jsonl' }; // same sig, different /tmp path
+  const pass = { actionRaw: '{"tool":"run_tests"}', obs: 'ALL TARGET TESTS PASS' };
+  const nav = { actionRaw: '{"tool":"read","path":"a.py"}', obs: 'FAIL FAIL FAIL' }; // not a run_tests row
+  assert.equal(testFailureRepeats([]), 0);
+  assert.equal(testFailureRepeats(undefined), 0);
+  assert.equal(testFailureRepeats([fail, nav, pass]), 1);
+  assert.equal(testFailureRepeats([fail, fail2]), 2); // normalized: /tmp run-id path is volatile
+  const differentFail = { actionRaw: '{"tool":"run_tests"}', obs: 'FAIL tests/test_b.py::test_y — TypeError' };
+  assert.equal(testFailureRepeats([fail, differentFail]), 1); // progress (new failure) is NOT thrash
+  // Wired into the signals: submitted non-empty patch + repeated failure sig ⇒ 2 signals ⇒ escalate.
+  const sig = escalationSignals({ resolvedInLoop: false, submitted: true, thrash: 0, transcript: [fail, fail2], patch: DIFF_1FILE });
+  assert.equal(sig.thrash_repeat, true);
+  assert.equal(shouldEscalate(sig).escalate, true);
 });
 
 test('diffStats: files deduped, bytes counted, empty-safe', () => {

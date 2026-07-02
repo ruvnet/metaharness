@@ -500,7 +500,7 @@ async function runInstance(inst) {
     // tracks — learned thresholds (confidence/complexity scores) over the receipt stream are
     // explicitly future work, not invented here.
     if (HANDOFF_CHAIN && t1res) {
-      const signals = escalationSignals({ resolvedInLoop: !!t1res.resolvedInLoop, submitted: !!t1res.submitted, thrash: t1res.thrash || 0, patch });
+      const signals = escalationSignals({ resolvedInLoop: !!t1res.resolvedInLoop, submitted: !!t1res.submitted, thrash: t1res.thrash || 0, transcript: t1res.transcript, patch });
       const { escalate, reasons } = shouldEscalate(signals);
       const darwinBase = { instanceId: inst.instance_id, initialSolver: INITIAL_SOLVER, darwinCostUsd: t1res.cost || 0, darwinSteps: t1res.steps ?? null, signals };
       let hops = [];

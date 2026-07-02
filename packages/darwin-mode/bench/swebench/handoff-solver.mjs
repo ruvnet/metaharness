@@ -209,18 +209,43 @@ export function diffStats(patch) {
 }
 
 /**
+ * The spec'd thrash signal: the SAME test-failure signature repeated ≥2 times in the trajectory.
+ * Reads the loop transcript ({actionRaw, obs} rows), takes every run_tests observation that is NOT
+ * a pass, normalizes it (whitespace + volatile /tmp run-id paths), and returns the max repeat
+ * count of any one signature. Pure; transcript optional (absent ⇒ 0).
+ */
+export function testFailureRepeats(transcript) {
+  const counts = new Map();
+  let max = 0;
+  for (const t of transcript || []) {
+    if (!/"tool":"run_tests"/.test(String(t.actionRaw || ''))) continue;
+    const obs = String(t.obs || '');
+    if (/ALL TARGET TESTS PASS/.test(obs)) continue;
+    const sig = obs.replace(/\/tmp\/\S+/g, '<tmp>').replace(/\s+/g, ' ').trim().slice(0, 2000);
+    const c = (counts.get(sig) || 0) + 1;
+    counts.set(sig, c);
+    if (c > max) max = c;
+  }
+  return max;
+}
+
+/**
  * The observable failure signals after darwin's cheap attempt.
- *   res: { resolvedInLoop, submitted, thrash } — the agentic-loop result (thrash = the existing
- *        anti-thrash repeat counter: same (action→observation) state seen again in the trajectory).
+ *   res: { resolvedInLoop, submitted, thrash, transcript } — the agentic-loop result. `thrash` is
+ *        the loop's existing anti-thrash repeat counter (same read/grep/ls (action→observation)
+ *        state seen again); `transcript` feeds the spec'd repeated-test-failure-signature signal —
+ *        the anti-thrash counter alone never sees run_tests repeats, so both are combined.
  *   patch: darwin's final work-tree diff.
  */
-export function escalationSignals({ resolvedInLoop, submitted, thrash, patch }) {
+export function escalationSignals({ resolvedInLoop, submitted, thrash, transcript, patch }) {
   const { files } = diffStats(patch);
   return {
     tests_failed: !resolvedInLoop,                    // in-loop tests did not pass
     empty_patch: !String(patch || '').trim(),         // nothing was edited
     no_submit: !submitted,                            // never called submit (ran out of steps)
-    thrash_repeat: (thrash || 0) >= 2,                // same state repeated ≥2 times (thrash signal)
+    // same test-failure signature repeated ≥2× in the trajectory (OR the loop's own anti-thrash
+    // navigation-repeat counter ≥2 — both are "stuck in a loop" evidence)
+    thrash_repeat: testFailureRepeats(transcript) >= 2 || (thrash || 0) >= 2,
     too_many_files: files.length > 3,                 // sprawling patch — low-confidence shape
   };
 }
