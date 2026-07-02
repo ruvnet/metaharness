@@ -75,6 +75,22 @@ const HANDOFF_TIMEOUT_MS = +argv('--handoff-timeout', 900) * 1000;
 // not) with real costs and real reasons. Only written when --escalate-to is set.
 const RECEIPTS = rel(argv('--receipts', 'handoff-receipts.jsonl'));
 const INITIAL_SOLVER = `darwin-${MODEL.split('/').pop()}`;
+// ADR-205 perf — concurrent escalations. The claude -p rung is an independent async subprocess, so
+// under `--concurrency N` the hard tail must NOT serialize behind one handoff at a time; a small
+// semaphore caps concurrent claude -p subprocesses (default 2, keep ≤3 — endpoint rate limits).
+// darwin-model rungs are ordinary LLM calls and stay governed by --concurrency alone.
+const HANDOFF_CONCURRENCY = Math.max(1, +argv('--handoff-concurrency', 2));
+let handoffActive = 0; const handoffWaiters = [];
+async function withHandoffSlot(fn) {
+  while (handoffActive >= HANDOFF_CONCURRENCY) await new Promise((r) => handoffWaiters.push(r));
+  handoffActive++;
+  try { return await fn(); } finally { handoffActive--; const r = handoffWaiters.shift(); if (r) r(); }
+}
+// ADR-205 perf — `--early-escalate` (flag-gated, DEFAULT OFF so benchmark arms measure the spec'd
+// behaviour; noted in the ADR as the measured-next-step): if darwin has burned half its step budget
+// without a single edit/line_edit attempt, the attempt is un-recoverable often enough that finishing
+// the budget is pure overhead — abort the loop and let the 2-of-N rules escalate immediately.
+const EARLY_ESCALATE = args.includes('--early-escalate');
 
 let manifest = JSON.parse(readFileSync(rel(argv('--manifest', 'pilot-sample-25.json')), 'utf8')).instances;
 if (onlyInstance) manifest = manifest.filter((i) => i.instance_id === onlyInstance);
@@ -307,10 +323,11 @@ async function solveTier(inst, llmFn, opts = {}) {
   // ADR-197: --native-tools swaps the text-JSON ReAct core for the native function-calling one. The
   // default path below (agenticSolve + buildAgenticSystem) is untouched and stays byte-identical.
   // ADR-205: chain rungs may carry their own step budget (spec.maxSteps); default is the global.
+  // `opts.onStep` passes straight through to the loop (used by --early-escalate's abort hook).
   const maxSteps = opts.maxSteps || MAX_STEPS;
   const res = NATIVE_TOOLS
-    ? await agenticSolveNative({ problem, io, llm: llmFn, maxSteps, ext: prof.exampleExt, glob: defGlob, tempSchedule })
-    : await agenticSolve({ problem, io, llm: llmFn, maxSteps, system: buildAgenticSystem(prof.exampleExt, defGlob), tempSchedule });
+    ? await agenticSolveNative({ problem, io, llm: llmFn, maxSteps, ext: prof.exampleExt, glob: defGlob, tempSchedule, onStep: opts.onStep })
+    : await agenticSolve({ problem, io, llm: llmFn, maxSteps, system: buildAgenticSystem(prof.exampleExt, defGlob), tempSchedule, onStep: opts.onStep });
   return { res, work, prof };
 }
 // Cascade tie-break: neither tier passed the repo gate — judge picks the likelier fix (cheap, conformant).
@@ -419,10 +436,10 @@ async function runChainFor(inst, chain, { localizeHint, priorAttempts = [] } = {
       return { status: res.patch.trim() ? 'resolved' : 'failed', patch: res.patch, cost_usd: res.cost || 0, latency_ms: Date.now() - t0h, turns: res.steps, solver: spec.name, resolvedInLoop: !!res.resolvedInLoop, error: '' };
     },
     runClaudeP: async (spec, prior) => {
-      const result = await solveViaClaudeP({
+      const result = await withHandoffSlot(() => solveViaClaudeP({
         instanceId: inst.instance_id, repo: inst.repo, baseCommit: inst.base_commit, problemStatement: inst.problem_statement,
         model: spec.model, maxTurns: HANDOFF_MAX_TURNS, timeoutMs: HANDOFF_TIMEOUT_MS || spec.timeoutMs, priorAttempts: prior,
-      });
+      }));
       result.solver = spec.name;
       totalCost += result.cost_usd || 0;
       return result;
@@ -449,8 +466,20 @@ async function runInstance(inst) {
       const rg = await runReproGate(inst, llm, localizeHint);
       patch = rg.patch; row.tier = 'repro'; row.reproValid = rg.reproValid; row.reproPassed = rg.reproPassed; row.reproRounds = rg.rounds; row.resolved = !!rg.reproPassed;
     } else {
-      const { res, work } = await solveTier(inst, llm, { localizeHint });
+      // ADR-205 perf (--early-escalate): abort the cheap attempt at half budget if it has not even
+      // ATTEMPTED an edit — the dominant unrecoverable signature (all-exploration, zero edits).
+      let earlyStopped = false;
+      let earlyOnStep;
+      if (HANDOFF_CHAIN && EARLY_ESCALATE) {
+        let edited = false;
+        earlyOnStep = (step, action) => {
+          if (action.tool === 'edit' || action.tool === 'line_edit') edited = true;
+          if (!edited && step >= Math.ceil(MAX_STEPS / 2)) { earlyStopped = true; return 'stop'; }
+        };
+      }
+      const { res, work } = await solveTier(inst, llm, { localizeHint, onStep: earlyOnStep });
       t1res = res;
+      if (earlyStopped) row.earlyEscalated = true;
       patch = res.patch; totalCost += res.cost; row.steps = res.steps; row.submitted = res.submitted; row.resolvedInLoop = res.resolvedInLoop;
       try { rmSync(work, { recursive: true, force: true }); } catch { /**/ }
       if (ESCALATE && !res.resolvedInLoop) {                       // escalate ONLY the hard tail

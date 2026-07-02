@@ -14,6 +14,7 @@ import {
   escalationSignals, shouldEscalate, diffStats, buildReceipt,
   OR_ANTHROPIC_BASE_URL, DEFAULT_HANDOFF_MODEL, SOLVER_ALIASES,
 } from './handoff-solver.mjs';
+import { agenticSolveNative } from './agentic-loop.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DIFF_1FILE = 'diff --git a/src/a.py b/src/a.py\n--- a/src/a.py\n+++ b/src/a.py\n@@ -1 +1 @@\n-x\n+y\n';
@@ -275,4 +276,54 @@ test('solve-agentic gating: all handoff side effects require --escalate-to', () 
   while (idx !== -1) { assert.ok(idx > gateIdx); idx = src.indexOf('appendFileSync(RECEIPTS', idx + 1); }
   // The chain executor is only reachable from the gated block.
   assert.equal(src.split('runChainFor(').length, 3, 'one definition + one gated call site');
+  // Perf pass gating: every claude -p rung goes through the concurrency semaphore, and
+  // --early-escalate is opt-in (defaults off ⇒ benchmark arms measure the spec'd behaviour).
+  assert.match(src, /withHandoffSlot\(\(\) => solveViaClaudeP\(/);
+  assert.match(src, /const EARLY_ESCALATE = args\.includes\('--early-escalate'\);/);
+  assert.match(src, /if \(HANDOFF_CHAIN && EARLY_ESCALATE\)/);
+});
+
+// ── --early-escalate: onStep 'stop' aborts the loop's remaining budget ──────────────────────────
+test("agenticSolveNative: onStep returning 'stop' aborts at half budget when no edit was attempted", async () => {
+  // A model that only ever greps — the unrecoverable all-exploration signature.
+  const llm = async (messages) => ({
+    message: { content: null, tool_calls: [{ id: `c${messages.length}`, function: { name: 'grep', arguments: JSON.stringify({ pattern: `p${messages.length}` }) } }] },
+    cost: 0.001,
+  });
+  const io = {
+    work: '/repo', path: { join }, MAX_OUT: 4000,
+    readFile: () => '', listDir: () => [], writeFile: () => {}, exists: () => false,
+    gitDiff: () => '', grepRepo: () => 'no matches', applyEdit: () => null, isTestPath: () => false,
+    runTests: () => ({ resolved: false, logTail: 'FAIL' }),
+  };
+  const maxSteps = 10;
+  let edited = false;
+  const onStep = (step, action) => {
+    if (action.tool === 'edit' || action.tool === 'line_edit') edited = true;
+    if (!edited && step >= Math.ceil(maxSteps / 2)) return 'stop';
+  };
+  const res = await agenticSolveNative({ problem: 'bug', io, llm, maxSteps, onStep });
+  assert.equal(res.steps, Math.ceil(maxSteps / 2)); // aborted at half budget, not 10
+  assert.equal(res.submitted, false);
+  assert.equal(res.patch, '');
+  // …which is exactly the 2-of-N escalation signature (tests_failed + empty_patch + no_submit).
+  const { escalate } = shouldEscalate(escalationSignals({ resolvedInLoop: res.resolvedInLoop, submitted: res.submitted, thrash: res.thrash, patch: res.patch }));
+  assert.equal(escalate, true);
+});
+
+test('agenticSolveNative: plain onStep (undefined return) leaves the loop untouched', async () => {
+  const llm = async (messages) => ({
+    message: { content: null, tool_calls: [{ id: `c${messages.length}`, function: { name: 'grep', arguments: JSON.stringify({ pattern: `p${messages.length}` }) } }] },
+    cost: 0,
+  });
+  const io = {
+    work: '/repo', path: { join }, MAX_OUT: 4000,
+    readFile: () => '', listDir: () => [], writeFile: () => {}, exists: () => false,
+    gitDiff: () => '', grepRepo: () => 'no matches', applyEdit: () => null, isTestPath: () => false,
+    runTests: () => ({ resolved: false, logTail: 'FAIL' }),
+  };
+  const seen = [];
+  const res = await agenticSolveNative({ problem: 'bug', io, llm, maxSteps: 4, onStep: (s) => { seen.push(s); } });
+  assert.equal(res.steps, 4); // full budget — no accidental abort from a void callback
+  assert.deepEqual(seen, [1, 2, 3, 4]);
 });

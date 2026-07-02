@@ -207,7 +207,10 @@ export async function agenticSolve({ problem, io, llm, maxSteps = 20, onStep, te
     }
     const actionRaw = JSON.stringify(action.tool === 'noop' ? { raw: raw.slice(0, 200) } : action).slice(0, 400);
     transcript.push({ actionRaw, obs });
-    if (onStep) onStep(step, action, obs);
+    // ADR-205 (--early-escalate): an onStep that returns 'stop' aborts the remaining budget — used
+    // to short-circuit unrecoverable attempts (e.g. half the budget burned with zero edits) instead
+    // of finishing them. Additive: existing onStep callbacks return undefined ⇒ behaviour unchanged.
+    if (onStep && onStep(step, action, obs) === 'stop') break;
   }
   return { patch: io.gitDiff(), steps: transcript.length, submitted, resolvedInLoop, cost, thrash, transcript };
 }
@@ -317,7 +320,8 @@ export async function agenticSolveNative({ problem, io, llm, maxSteps = 20, onSt
     else messages.push({ role: 'user', content: `error: ${action.error}. Call exactly one tool.` });
     const actionRaw = JSON.stringify(action.tool === 'noop' ? { raw: String(message.content || '').slice(0, 200) } : action).slice(0, 400);
     transcript.push({ actionRaw, obs });
-    if (onStep) onStep(step, action, obs);
+    // ADR-205 (--early-escalate): 'stop' from onStep aborts the remaining budget (see agenticSolve).
+    if (onStep && onStep(step, action, obs) === 'stop') break;
   }
   return { patch: io.gitDiff(), steps: transcript.length, submitted, resolvedInLoop, cost, thrash, transcript };
 }
