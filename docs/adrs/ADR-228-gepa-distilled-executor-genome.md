@@ -80,7 +80,7 @@ What the genome is **not**: model weights, sampling params, step budgets, or har
 
 ## 4. Pipeline (12 steps)
 
-1. **Harvest paired traces**: solo-fail transcripts (cheap executor failed gold) paired with teacher-success evidence on the same instance — a Fable/Sonnet advisory log, a cascade-B success, or a D-oracle advice file (`build-reflective-dataset.mjs`).
+1. **Harvest paired traces**: solo-fail transcripts (cheap executor failed gold) paired with teacher-success evidence on the same instance — a Fable/Sonnet advisory log, a cascade-B success, or a D-oracle advice file (`build-reflective-dataset.mjs`). **Admitted records only** (§4.1).
 2. **Build the GEPA reflective dataset**: per instance — task, cheap-trace summary, teacher trace/advice summary, outcome labels, failure class 1–6 (§5.3).
 3. **Seed candidate = the extracted genome** (§3), byte-equivalent to the current policy.
 4. **Evaluator runs a candidate on the training slice**: `evaluate-genome.mjs` renders the genome into the system prompt and runs the unmodified D0 path of `solve-advisor.mjs` (new additive `--genome` knob), `--no-test-oracle`, transcripts persisted.
@@ -92,6 +92,12 @@ What the genome is **not**: model weights, sampling params, step budgets, or har
 10. **Iterate** under a hard `max_metric_calls` / dollar budget.
 11. **Best candidate becomes the next executor policy — candidate only.** Report the full frontier, not one winner.
 12. **Promote only through shadow + paired eval**: held-out slice, paired vs the incumbent genome, multiple repos — never from training-slice score alone (§8 mitigations).
+
+### 4.1 Admission gates — GEPA trains ONLY on admitted records
+
+GEPA consumes **only admitted records from ADR-227's (meta-llm) training queue** — verifier-gated: paired + verified-outcome + tests-passed + uncontaminated + provenance. Never raw traces, never unverified production output. For local benchmark artifacts (tonight's fadv/advbench runs), `build-reflective-dataset.mjs` applies the **same admission gates in the builder**: (a) *paired* — a solo-fail record must carry teacher-success evidence on the same instance; (b) *verified teacher outcome* — the teacher's success is gold-resolved (or the advice is the pre-authored, pre-registered D-oracle set), not merely claimed; (c) *contamination-scanned* — teacher advice excerpts are checked for gold-patch content not derivable from the shown transcript+diff (ADR-226 §4.8's scan), flagged records excluded; (d) *provenance* — every record names its source artifact. This makes "the pilot genome was trained only from admitted traces" a named, checkable acceptance item.
+
+**Replay-eval convertibility bar:** every record the builder accepts must be convertible to `{tenant_id, task_signature, cheap_failed_trace, strong_success_trace, successful_patch, test_proof, retrieval_keys, replay_eligible}` — if it cannot become a replay-eval row, it is not training grade: the builder **drops it and counts it** (drop reasons itemized in the dataset header).
 
 ---
 
@@ -236,8 +242,14 @@ Run the pilot ONLY IF, at the moment of launch: OpenRouter headroom (key usage �
 ### 10.1 ADR-226 (this repo) — the null this answers
 Same judgment source (strong model reading cheap traces), opposite delivery: runtime observation (measured dead: D 3/24 = D0 3/24) vs offline policy evolution (this ADR). ADR-226's harness is reused wholesale — `solve-advisor.mjs` is the rollout engine, its advisoryLogs are teacher traces in the reflective dataset, its D-oracle advice files are hand-written teacher summaries.
 
-### 10.2 ADR-227 (meta-llm, reserved) — the flywheel
-GEPA is **the genome-evolution consumer of the same trace store** the meta-llm gateway flywheel accumulates: every metered completion is a potential reflective-dataset record. Evolved genomes are also **tenant-scoped products** — "tenant-specific agent improvement without weight training first": a tenant's own failure traces evolve a tenant's own executor genome, canaried and rolled back per tenant (§8), sold as a policy artifact rather than a fine-tune.
+### 10.2 ADR-227 (meta-llm, reserved) — the flywheel, and the clean chain
+GEPA is **the genome-evolution consumer of the same trace store** the meta-llm gateway flywheel accumulates — but only through its verifier-gated training queue (§4.1), never raw traces. Evolved genomes are also **tenant-scoped products** — "tenant-specific agent improvement without weight training first": a tenant's own failure traces evolve a tenant's own executor genome, canaried and rolled back per tenant (§8), sold as a policy artifact rather than a fine-tune.
+
+**The clean chain (closed learning loop, no runtime advice):**
+
+> ADR-227 (meta-llm) captures verified interventions → **ADR-228 (this) evolves executor genomes from them** → BenchPress (ADR-206, this repo) evaluates promoted genomes (probe-based, cheap) → the gateway routes to a promoted executor only after paired-eval lift.
+
+Product positioning (verbatim): *"Cognitum records where low-cost models fail, escalates action to stronger models, verifies successful interventions, then uses those traces to improve tenant-specific execution policies over time."* — NOT "Fable teaches cheap models through advice" (that framing is the measured null of §1.1).
 
 ### 10.3 ADR-194 (this repo) — Darwin per-instance evolution
 ADR-194 evolved per-instance capability genomes with hand-rolled mutation. GEPA supplies the principled mutation operator (LLM reflection over traces) and the principled selection rule (per-instance Pareto frontier — the same "different candidates win different instances" observation ADR-194's DIAGNOSIS harness made empirically).
