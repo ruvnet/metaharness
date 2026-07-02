@@ -1,0 +1,10 @@
+# cargo-audit config (read by `cargo audit --deny warnings` in .github/workflows/security.yml).
+# These are UNMAINTAINED-crate advisories (informational, not vulnerabilities) on transitive
+# dependencies with no fixed version available. cargo-deny's deny.toml ignores the same set;
+# keep the two lists in sync.
+[advisories]
+ignore = [
+    "RUSTSEC-2025-0141", # bincode — unmaintained (transitive)
+    "RUSTSEC-2024-0436", # paste — no longer maintained (transitive proc-macro)
+    "RUSTSEC-2026-0173", # proc-macro-error2 — unmaintained (transitive)
+]
