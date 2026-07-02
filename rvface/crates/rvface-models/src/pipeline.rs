@@ -112,7 +112,31 @@ impl<B: Backend> Embedder<B> {
     /// Embeds an aligned 128x128 **RGB** crop (as produced by
     /// `align_vertical` on an RGB source). Returns the raw, not yet
     /// L2-normalized embedding.
-    fn embed(&self, mut aligned: Image, device: &B::Device) -> Result<Vec<f32>, WeightsError> {
+    fn embed(&self, aligned: Image, device: &B::Device) -> Result<Vec<f32>, WeightsError> {
+        let raw = self.embed_raw(aligned, device)?;
+        Ok(raw.into_data().to_vec().expect("embedding to host"))
+    }
+
+    /// Async-read variant of [`Self::embed`] (see [`FacePipeline::analyze_async`]).
+    async fn embed_async(
+        &self,
+        aligned: Image,
+        device: &B::Device,
+    ) -> Result<Vec<f32>, WeightsError> {
+        let raw = self.embed_raw(aligned, device)?;
+        Ok(raw
+            .into_data_async()
+            .await
+            .to_vec()
+            .expect("embedding to host"))
+    }
+
+    /// Device-side embedding forward; the result stays on the device.
+    fn embed_raw(
+        &self,
+        mut aligned: Image,
+        device: &B::Device,
+    ) -> Result<Tensor<B, 2>, WeightsError> {
         let raw = match self {
             // Adaptation (see enum docs): resize the aligned 128x128 RGB crop
             // to the net's 96x112 input, normalize (x - 127.5) / 128.
@@ -134,7 +158,7 @@ impl<B: Backend> Embedder<B> {
                 net.forward(input)?
             }
         };
-        Ok(raw.into_data().to_vec().expect("embedding to host"))
+        Ok(raw)
     }
 }
 
@@ -212,6 +236,36 @@ impl<B: Backend> FacePipeline<B> {
         Ok(faces)
     }
 
+    /// Async variant of [`Self::analyze`] for backends whose device-to-host
+    /// tensor reads cannot complete synchronously — Burn's wgpu backend on
+    /// wasm, where WebGPU buffer mapping resolves via the browser event loop.
+    /// Flow and numerics are identical to [`Self::analyze`].
+    pub async fn analyze_async(
+        &self,
+        image: &Image,
+        max_faces: usize,
+    ) -> Result<Vec<Face>, WeightsError> {
+        assert_eq!(image.channels, 3, "analyze expects an RGB8 image");
+        let detections = self.detect_async(image, max_faces).await?;
+        let mut faces = Vec::with_capacity(detections.len());
+        for detection in detections {
+            let Some(landmarks) = self.landmarks_async(image, &detection).await? else {
+                continue;
+            };
+            let pose = estimate_pose(&landmarks);
+            let aligned = align_vertical(image, &landmarks);
+            let mut embedding = self.embedder.embed_async(aligned, &self.device).await?;
+            l2_normalize(&mut embedding);
+            faces.push(Face {
+                detection,
+                landmarks,
+                pose,
+                embedding,
+            });
+        }
+        Ok(faces)
+    }
+
     /// Detection stage: resize to 320x240 (kept in f32 — see note), normalize
     /// `(x - 127) / 128`, forward, then the exact upstream postprocessing
     /// chain (`Predictor.predict` + `get_face_boundingbox`) truncated to
@@ -225,11 +279,36 @@ impl<B: Backend> FacePipeline<B> {
     /// avoids compounding that rounding, at the cost of sub-1/255-per-pixel
     /// input deltas versus Python.
     pub fn detect(&self, image: &Image, max_faces: usize) -> Result<Vec<Detection>, WeightsError> {
+        let input = self.detector_input(image);
+        let out = self.detector.forward(input)?;
+        Ok(Self::pick_detections(&out, image, max_faces))
+    }
+
+    /// Async-read variant of [`Self::detect`] (see [`Self::analyze_async`]).
+    pub async fn detect_async(
+        &self,
+        image: &Image,
+        max_faces: usize,
+    ) -> Result<Vec<Detection>, WeightsError> {
+        let input = self.detector_input(image);
+        let out = self.detector.forward_async(input).await?;
+        Ok(Self::pick_detections(&out, image, max_faces))
+    }
+
+    /// Detector preprocessing: resize + normalize + NCHW tensor upload.
+    fn detector_input(&self, image: &Image) -> Tensor<B, 4> {
         let [w, h] = SsdSlim320::<B>::IMAGE_SIZE;
         let hwc = resize_bilinear_f32(image, w, h);
         let chw = hwc_to_chw(&hwc, w, h, &DETECTOR_MEAN, DETECTOR_SCALE);
-        let input = Tensor::from_data(TensorData::new(chw, [1, 3, h, w]), &self.device);
-        let out = self.detector.forward(input)?;
+        Tensor::from_data(TensorData::new(chw, [1, 3, h, w]), &self.device)
+    }
+
+    /// Upstream postprocessing chain truncated to `max_faces`.
+    fn pick_detections(
+        out: &crate::detector::DetectorOutput,
+        image: &Image,
+        max_faces: usize,
+    ) -> Vec<Detection> {
         let mut detections = postprocess(
             &out.confidences,
             &out.boxes,
@@ -238,7 +317,7 @@ impl<B: Backend> FacePipeline<B> {
             &PostprocessParams::default(),
         );
         detections.truncate(max_faces);
-        Ok(detections)
+        detections
     }
 
     /// Landmark stage, exactly per `tools/fixtures/landmark-cunjian.notes.md`:
@@ -251,6 +330,36 @@ impl<B: Backend> FacePipeline<B> {
         image: &Image,
         detection: &Detection,
     ) -> Result<Option<Landmarks>, WeightsError> {
+        let Some((out, crop)) = self.landmarks_raw(image, detection)? else {
+            return Ok(None);
+        };
+        let raw: Vec<f32> = out.into_data().to_vec().expect("landmarks to host");
+        Ok(Some(Self::reproject_landmarks(&raw, &crop)))
+    }
+
+    /// Async-read variant of [`Self::landmarks`] (see [`Self::analyze_async`]).
+    async fn landmarks_async(
+        &self,
+        image: &Image,
+        detection: &Detection,
+    ) -> Result<Option<Landmarks>, WeightsError> {
+        let Some((out, crop)) = self.landmarks_raw(image, detection)? else {
+            return Ok(None);
+        };
+        let raw: Vec<f32> = out
+            .into_data_async()
+            .await
+            .to_vec()
+            .expect("landmarks to host");
+        Ok(Some(Self::reproject_landmarks(&raw, &crop)))
+    }
+
+    /// Device-side landmark stage: crop + forward, output on the device.
+    fn landmarks_raw(
+        &self,
+        image: &Image,
+        detection: &Detection,
+    ) -> Result<Option<(Tensor<B, 2>, LandmarkCrop)>, WeightsError> {
         let Some(crop) = LandmarkCrop::compute(image, detection) else {
             return Ok(None);
         };
@@ -259,10 +368,12 @@ impl<B: Backend> FacePipeline<B> {
         let chw = hwc_to_chw(&hwc, side, side, &[0.0; 3], LANDMARK_SCALE);
         let input = Tensor::from_data(TensorData::new(chw, [1, 3, side, side]), &self.device);
         let (out, _conv_features) = self.landmark.forward(input)?;
-        let raw: Vec<f32> = out.into_data().to_vec().expect("landmarks to host");
+        Ok(Some((out, crop)))
+    }
 
-        // Reproject [0, 1] square coordinates into source-image pixels
-        // (`BBox.reprojectLandmark`), using the padded square's true frame.
+    /// Reproject [0, 1] square coordinates into source-image pixels
+    /// (`BBox.reprojectLandmark`), using the padded square's true frame.
+    fn reproject_landmarks(raw: &[f32], crop: &LandmarkCrop) -> Landmarks {
         let mut landmarks: Landmarks = [[0.0; 2]; 68];
         for (i, p) in landmarks.iter_mut().enumerate() {
             *p = [
@@ -270,7 +381,7 @@ impl<B: Backend> FacePipeline<B> {
                 raw[2 * i + 1] * crop.square.height as f32 + crop.origin_y as f32,
             ];
         }
-        Ok(Some(landmarks))
+        landmarks
     }
 }
 

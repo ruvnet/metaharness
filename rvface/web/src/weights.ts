@@ -1,9 +1,11 @@
 /**
- * Weight fetching. Safetensors files are served from `/models/` —
- * i.e. `web/public/models/` in dev (git-ignored; populated by
- * `python3 tools/fetch_and_convert.py` then copying/symlinking
- * `rvface/models/*.safetensors` in). Their absence is not an error:
- * mock mode needs no weights.
+ * Weight + manifest fetching. Files are served from `/models/` — i.e.
+ * `web/public/models/` (git-ignored), populated by `web/build-wasm.sh`
+ * (which copies the converted safetensors + manifests from `models/`,
+ * themselves produced by `python3 tools/fetch_and_convert.py`).
+ *
+ * Missing files are a hard error: the UI runs only the real engine, so
+ * `loadWeights` throws with actionable instructions instead of degrading.
  */
 
 import type { WeightBundle } from './engine';
@@ -12,6 +14,11 @@ export const WEIGHT_FILES = {
   detector: 'detector-slim320.safetensors',
   landmark: 'landmark-mfn68.safetensors',
   embedder: 'embedder-mfn.safetensors',
+} as const;
+
+export const MANIFEST_FILES = {
+  landmark: 'landmark-mfn68.manifest.json',
+  embedder: 'embedder-mfn.manifest.json',
 } as const;
 
 export interface WeightProgress {
@@ -23,17 +30,22 @@ export interface WeightProgress {
   total: number | null;
 }
 
-/** Streaming fetch of one file with progress callbacks. */
+/** Fetch + validate one file; dev servers return index.html for misses. */
+async function fetchRaw(url: string): Promise<Response> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
+  const type = res.headers.get('content-type') ?? '';
+  if (type.includes('text/html')) throw new Error(`${url}: not found (got HTML)`);
+  return res;
+}
+
+/** Streaming fetch of one binary file with progress callbacks. */
 async function fetchWithProgress(
   url: string,
   name: string,
   onProgress?: (p: WeightProgress) => void,
 ): Promise<Uint8Array> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
-  // Dev servers happily return index.html for missing files; reject that.
-  const type = res.headers.get('content-type') ?? '';
-  if (type.includes('text/html')) throw new Error(`${url}: not found (got HTML)`);
+  const res = await fetchRaw(url);
 
   const lenHeader = res.headers.get('content-length');
   const total = lenHeader ? parseInt(lenHeader, 10) : null;
@@ -65,33 +77,29 @@ async function fetchWithProgress(
 }
 
 /**
- * Fetch all three weight files from `/models/`. Returns null if any file
- * is missing/unreachable — the caller then runs the mock engine, which
- * needs no weights.
+ * Fetch the three weight files and the two arch manifests from `/models/`.
+ * Throws (with setup instructions) when any file is missing/unreachable.
  */
 export async function loadWeights(
   onProgress?: (p: WeightProgress) => void,
   baseUrl = 'models/',
-): Promise<WeightBundle | null> {
+): Promise<WeightBundle> {
   try {
-    const [detector, landmark, embedder] = await Promise.all([
+    const [detector, landmark, embedder, landmarkManifest, embedderManifest] = await Promise.all([
       fetchWithProgress(baseUrl + WEIGHT_FILES.detector, 'detector', onProgress),
       fetchWithProgress(baseUrl + WEIGHT_FILES.landmark, 'landmark', onProgress),
       fetchWithProgress(baseUrl + WEIGHT_FILES.embedder, 'embedder', onProgress),
+      fetchRaw(baseUrl + MANIFEST_FILES.landmark).then((r) => r.text()),
+      fetchRaw(baseUrl + MANIFEST_FILES.embedder).then((r) => r.text()),
     ]);
-    return { detector, landmark, embedder };
-  } catch {
-    return null;
+    return { detector, landmark, embedder, landmarkManifest, embedderManifest };
+  } catch (err) {
+    throw new Error(
+      `model files missing from /models/ (${err instanceof Error ? err.message : err}). ` +
+        'Fix: python3 tools/fetch_and_convert.py, then ./web/build-wasm.sh ' +
+        '(it copies models/*.safetensors + manifests into web/public/models/).',
+    );
   }
-}
-
-/** Empty bundle for engines that need no weights (the mock). */
-export function emptyWeights(): WeightBundle {
-  return {
-    detector: new Uint8Array(0),
-    landmark: new Uint8Array(0),
-    embedder: new Uint8Array(0),
-  };
 }
 
 export function formatBytes(n: number): string {

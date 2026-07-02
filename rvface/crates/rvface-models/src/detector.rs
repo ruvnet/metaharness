@@ -172,6 +172,38 @@ impl<B: Backend> SsdSlim320<B> {
     /// Runs the `is_test=True` graph on a normalized `[1, 3, 240, 320]`
     /// input (`(pixel - 127) / 128`, RGB, NCHW).
     pub fn forward(&self, x: Tensor<B, 4>) -> Result<DetectorOutput, WeightsError> {
+        let (confidences, locations) = self.forward_raw(x)?;
+        let conf: Vec<f32> = confidences
+            .into_data()
+            .to_vec()
+            .expect("confidences to host");
+        let locs: Vec<f32> = locations.into_data().to_vec().expect("locations to host");
+        Ok(self.decode_output(&conf, &locs))
+    }
+
+    /// Async variant of [`Self::forward`] for backends whose device-to-host
+    /// reads cannot complete synchronously (Burn's wgpu backend on wasm:
+    /// WebGPU buffer maps resolve via the browser event loop). Numerically
+    /// identical to [`Self::forward`].
+    pub async fn forward_async(&self, x: Tensor<B, 4>) -> Result<DetectorOutput, WeightsError> {
+        let (confidences, locations) = self.forward_raw(x)?;
+        let conf: Vec<f32> = confidences
+            .into_data_async()
+            .await
+            .to_vec()
+            .expect("confidences to host");
+        let locs: Vec<f32> = locations
+            .into_data_async()
+            .await
+            .to_vec()
+            .expect("locations to host");
+        Ok(self.decode_output(&conf, &locs))
+    }
+
+    /// Device-side portion of the forward pass: everything up to and
+    /// including the class softmax; `(confidences, locations)` stay on the
+    /// device so callers pick a sync or async host read.
+    fn forward_raw(&self, x: Tensor<B, 4>) -> Result<(Tensor<B, 3>, Tensor<B, 3>), WeightsError> {
         assert_eq!(x.dims()[0], 1, "detector forward expects batch size 1");
 
         let mut confidences: Vec<Tensor<B, 3>> = Vec::with_capacity(4);
@@ -203,14 +235,14 @@ impl<B: Backend> SsdSlim320<B> {
         let confidences = Tensor::cat(confidences, 1);
         let locations = Tensor::cat(locations, 1);
 
-        // is_test=True path: softmax over classes, decode to corner form.
+        // is_test=True path: softmax over classes.
         let confidences = softmax(confidences, 2);
-        let conf: Vec<f32> = confidences
-            .into_data()
-            .to_vec()
-            .expect("confidences to host");
-        let locs: Vec<f32> = locations.into_data().to_vec().expect("locations to host");
+        Ok((confidences, locations))
+    }
 
+    /// Host-side tail of the forward pass: reshape the flat confidence /
+    /// location reads and decode locations to corner-form boxes.
+    fn decode_output(&self, conf: &[f32], locs: &[f32]) -> DetectorOutput {
         let confidences: Vec<[f32; 2]> = conf.chunks_exact(2).map(|c| [c[0], c[1]]).collect();
         let raw_locations: Vec<[f32; 4]> = locs
             .chunks_exact(4)
@@ -221,6 +253,6 @@ impl<B: Backend> SsdSlim320<B> {
             .map(center_to_corner)
             .collect();
 
-        Ok(DetectorOutput { confidences, boxes })
+        DetectorOutput { confidences, boxes }
     }
 }

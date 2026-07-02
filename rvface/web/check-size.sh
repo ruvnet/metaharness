@@ -1,24 +1,28 @@
 #!/usr/bin/env bash
 # ADR-0006 wasm size budget check: the shipped wasm binary must be
-# <= 3.5 MB gzipped. Placeholder until rvface-wasm is built — passes
-# with a notice when no wasm is present in dist/.
+# <= 3.5 MiB gzipped.
 #
-# Usage: ./check-size.sh   (after `npm run build`)
+# Usage:
+#   ./check-size.sh                 # checks every .wasm in dist/ (after `npm run build`)
+#   ./check-size.sh file.wasm ...   # checks the given artifacts (used by build-wasm.sh)
 set -euo pipefail
 
 BUDGET_BYTES=$((3670016)) # 3.5 MiB
 DIST="$(cd "$(dirname "$0")" && pwd)/dist"
 
-if [[ ! -d "$DIST" ]]; then
-  echo "check-size: dist/ not found — run 'npm run build' first" >&2
-  exit 1
-fi
-
-mapfile -t WASM_FILES < <(find "$DIST" -name '*.wasm' -type f)
-
-if [[ ${#WASM_FILES[@]} -eq 0 ]]; then
-  echo "check-size: no .wasm in dist/ (wasm module not built yet) — nothing to enforce"
-  exit 0
+declare -a WASM_FILES
+if (( $# > 0 )); then
+  WASM_FILES=("$@")
+else
+  if [[ ! -d "$DIST" ]]; then
+    echo "check-size: dist/ not found — run 'npm run build' first" >&2
+    exit 1
+  fi
+  mapfile -t WASM_FILES < <(find "$DIST" -name '*.wasm' -type f)
+  if [[ ${#WASM_FILES[@]} -eq 0 ]]; then
+    echo "check-size: FAIL — no .wasm in dist/; the UI ships the real engine only (run ./build-wasm.sh before 'npm run build')" >&2
+    exit 1
+  fi
 fi
 
 fail=0

@@ -12,3 +12,4 @@ models/*.onnx
 tools/fixtures/*.npz
 tools/.cache/
 web/public/models/
+web/src/wasm/

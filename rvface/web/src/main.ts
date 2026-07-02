@@ -1,14 +1,14 @@
 /**
- * rvFACE web demo shell. Wires the engine seam (wasm if built, mock
- * otherwise) to the three UI areas: analyze pane, 1:1 compare pane and
- * the status strip. See ADR-0005.
+ * rvFACE web demo shell. Wires the real wasm engine to the three UI areas:
+ * analyze pane, 1:1 compare pane and the status strip (ADR-0005). There is
+ * no mock: a missing wasm build or missing weights renders an error state
+ * with setup instructions.
  */
 
 import './style.css';
 import type { BackendKind, EngineFactory, RvFaceEngine, WeightBundle } from './engine';
-import { mockFactory } from './engine-mock';
 import { loadWasmFactory } from './engine-wasm';
-import { emptyWeights, loadWeights } from './weights';
+import { loadWeights } from './weights';
 import { AnalyzePane } from './ui/analyze';
 import { ComparePane } from './ui/compare';
 import { StatusBar } from './ui/statusbar';
@@ -58,26 +58,47 @@ function renderBackendToggle(): void {
   }
 }
 
-/** Pick implementation (wasm > mock) and load weights, once. */
+/** Full-width banner for unrecoverable setup problems (no mock fallback). */
+function showFatalError(title: string, steps: string[]): void {
+  document.querySelector('.fatal-error')?.remove();
+  const banner = document.createElement('div');
+  banner.className = 'fatal-error';
+  const list = steps.map((s) => `<li><code>${s}</code></li>`).join('');
+  banner.innerHTML = `
+    <strong>${title}</strong>
+    <p>This demo runs only the real Rust engine — build it, then reload:</p>
+    <ol>${list}</ol>
+  `;
+  app.querySelector('.panes')!.before(banner);
+}
+
+/** Load the wasm factory and weight bundle, once. Throws on setup problems. */
 async function resolveFactory(): Promise<{ factory: EngineFactory; weights: WeightBundle }> {
   if (factory && weights) return { factory, weights };
 
   const wasmFactory = await loadWasmFactory();
-  if (wasmFactory) {
-    status.log('wasm module found — loading weights…');
-    const bundle = await loadWeights((p) => status.weightProgress(p));
-    if (bundle) {
-      factory = wasmFactory;
-      weights = bundle;
-      return { factory, weights };
-    }
-    status.log('weights missing from /models/ — using mock engine (run tools/fetch_and_convert.py)', 'warn');
-  } else {
-    status.log('wasm module not built — using mock (build rvface-wasm into src/wasm/ to switch)', 'warn');
+  if (!wasmFactory) {
+    showFatalError('wasm module not found', [
+      'python3 tools/fetch_and_convert.py',
+      './web/build-wasm.sh',
+      'npm run dev (or npm run build)',
+    ]);
+    throw new Error('wasm module not built — run ./web/build-wasm.sh');
   }
 
-  factory = mockFactory;
-  weights = emptyWeights(); // mock mode needs no weights
+  status.log('wasm module loaded — fetching weights…');
+  let bundle: WeightBundle;
+  try {
+    bundle = await loadWeights((p) => status.weightProgress(p));
+  } catch (err) {
+    showFatalError('model weights missing', [
+      'python3 tools/fetch_and_convert.py',
+      './web/build-wasm.sh  # copies models/ into web/public/models/',
+    ]);
+    throw err;
+  }
+  factory = wasmFactory;
+  weights = bundle;
   return { factory, weights };
 }
 
@@ -98,9 +119,6 @@ async function initEngine(backend: BackendKind): Promise<void> {
     engine = next;
     status.setEngine(engine.backend, engine.kind);
     status.log(`engine ready: ${engine.kind} on ${engine.backend}`);
-    if (engine.kind === 'mock') {
-      status.log('results are simulated — MOCK engine active', 'warn');
-    }
     await analyzePane.reanalyze();
     comparePane.update();
   } catch (err) {

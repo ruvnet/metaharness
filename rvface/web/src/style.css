@@ -351,11 +351,6 @@ body {
   border-color: var(--accent);
 }
 
-.badge-mock {
-  color: var(--warn);
-  border-color: var(--warn);
-}
-
 .badge-wasm {
   color: var(--good);
   border-color: var(--good);
@@ -390,5 +385,31 @@ body {
 }
 
 .log-progress {
+  color: var(--accent);
+}
+
+/* Unrecoverable setup problems (missing wasm build / weights) — the demo
+   ships no mock, so this banner is the only degraded state. */
+.fatal-error {
+  margin: 16px 24px 0;
+  padding: 14px 18px;
+  border: 1px solid var(--bad);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bad) 8%, var(--bg-inset));
+  color: var(--text);
+  font-size: 13.5px;
+}
+
+.fatal-error strong {
+  color: var(--bad);
+  font-family: var(--mono);
+}
+
+.fatal-error ol {
+  margin: 8px 0 0 18px;
+}
+
+.fatal-error code {
+  font-family: var(--mono);
   color: var(--accent);
 }

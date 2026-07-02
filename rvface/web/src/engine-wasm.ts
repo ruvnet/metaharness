@@ -1,21 +1,29 @@
 /**
- * Adapter from the future `rvface-wasm` wasm-pack output to `RvFaceEngine`.
+ * Adapter from the `rvface-wasm` wasm-bindgen output to `RvFaceEngine`.
  *
- * The wasm-pack build (`wasm-pack build crates/rvface-wasm --target web
- * --out-dir ../../web/src/wasm`) will drop `rvface_wasm.js` +
- * `rvface_wasm_bg.wasm` into `src/wasm/` (git-ignored). Until then the
- * dynamic import fails and `loadWasmFactory()` returns null — callers fall
- * back to the mock with a visible notice.
+ * `web/build-wasm.sh` (cargo -> wasm-bindgen --target web -> wasm-opt)
+ * drops `rvface_wasm.js` + `rvface_wasm_bg.wasm` into `src/wasm/`
+ * (git-ignored). The import below is a real Vite-resolved dynamic import,
+ * so the built app bundles the glue + wasm asset; if the module is absent
+ * `loadWasmFactory()` returns null and `main.ts` shows an error state
+ * (there is no mock fallback).
  *
- * Expected module surface (ADR-0005):
- *   default init(): Promise<void>              — wasm-bindgen init
- *   RvFace.new(det, lmk, emb, backend) -> Promise<RvFace>
- *   rvface.backend: "cpu" | "webgpu"           — the backend that actually
- *                                                initialized (gpu may fall
- *                                                back to cpu)
- *   rvface.analyze(rgba, w, h, maxFaces) -> JsValue (faces array)
- *   rvface.similarity(f1, f2) -> number (0..100)
+ * Binding surface (see `crates/rvface-wasm/src/lib.rs`):
+ *   default init(): Promise<void>                 — wasm-bindgen init
+ *   RvFace.new(det, lmk, emb, lmkManifest, embManifest, backend)
+ *       -> Promise<RvFace>                        — backend "cpu" | "webgpu"
+ *   rvface.backend: "cpu" | "webgpu"              — the backend that actually
+ *                                                   initialized (webgpu falls
+ *                                                   back to cpu, never fails)
+ *   rvface.analyze(rgba, w, h, maxFaces) -> Promise<Float32Array>
+ *   rvface.similarity(a, b) -> number (0..100)
  *   rvface.free()
+ *
+ * `analyze` returns one flat Float32Array (no serde round-trip, ADR-0005):
+ *   [ nFaces, then per face:
+ *     x1, y1, x2, y2, score, yaw, pitch, roll,    (8)
+ *     136 landmark floats (x0,y0,...),            (136)
+ *     embLen, embLen embedding floats ]
  */
 
 import type {
@@ -26,32 +34,66 @@ import type {
   WeightBundle,
 } from './engine';
 
-/** Shape of the wasm-bindgen glue module we expect. */
+/** Shape of the wasm-bindgen glue module we consume. */
 interface WasmModule {
   default: (input?: unknown) => Promise<unknown>;
   RvFace: {
-    new: (
+    // A static method literally named "new" (wasm-bindgen async ctor),
+    // not a construct signature — hence the quotes.
+    'new'(
       detector: Uint8Array,
       landmark: Uint8Array,
       embedder: Uint8Array,
+      landmarkManifest: string,
+      embedderManifest: string,
       backend: string,
-    ) => Promise<WasmRvFace>;
+    ): Promise<WasmRvFace>;
   };
 }
 
 interface WasmRvFace {
   readonly backend: string;
-  analyze(rgba: Uint8Array, width: number, height: number, maxFaces: number): unknown;
+  analyze(
+    rgba: Uint8Array,
+    width: number,
+    height: number,
+    maxFaces: number,
+  ): Promise<Float32Array>;
   similarity(a: Float32Array, b: Float32Array): number;
   free(): void;
 }
 
-interface WasmFace {
-  box: number[];
-  score: number;
-  landmarks: number[] | Float32Array;
-  pose: { yaw: number; pitch: number; roll: number };
-  embedding: number[] | Float32Array;
+/** Floats per face before the variable-length embedding: box+score+pose+landmarks+embLen. */
+const FACE_HEADER = 8;
+const LANDMARK_FLOATS = 136;
+
+/** Unpacks the flat `analyze` payload documented above. */
+function unpackFaces(packed: Float32Array): FaceResult[] {
+  const faces: FaceResult[] = [];
+  let o = 0;
+  const n = packed[o++] ?? 0;
+  for (let i = 0; i < n; i++) {
+    const box: [number, number, number, number] = [
+      packed[o] ?? 0,
+      packed[o + 1] ?? 0,
+      packed[o + 2] ?? 0,
+      packed[o + 3] ?? 0,
+    ];
+    const score = packed[o + 4] ?? 0;
+    const pose = {
+      yaw: packed[o + 5] ?? 0,
+      pitch: packed[o + 6] ?? 0,
+      roll: packed[o + 7] ?? 0,
+    };
+    o += FACE_HEADER;
+    const landmarks = packed.slice(o, o + LANDMARK_FLOATS);
+    o += LANDMARK_FLOATS;
+    const embLen = packed[o++] ?? 0;
+    const embedding = packed.slice(o, o + embLen);
+    o += embLen;
+    faces.push({ box, score, landmarks, pose, embedding });
+  }
+  return faces;
 }
 
 class WasmEngine implements RvFaceEngine {
@@ -68,21 +110,8 @@ class WasmEngine implements RvFaceEngine {
     height: number,
     maxFaces: number,
   ): Promise<FaceResult[]> {
-    const raw = (await Promise.resolve(
-      this.inner.analyze(rgba, width, height, maxFaces),
-    )) as WasmFace[];
-    return raw.map((f) => ({
-      box: [f.box[0] ?? 0, f.box[1] ?? 0, f.box[2] ?? 0, f.box[3] ?? 0] as [
-        number,
-        number,
-        number,
-        number,
-      ],
-      score: f.score,
-      landmarks: f.landmarks instanceof Float32Array ? f.landmarks : new Float32Array(f.landmarks),
-      pose: f.pose,
-      embedding: f.embedding instanceof Float32Array ? f.embedding : new Float32Array(f.embedding),
-    }));
+    const packed = await this.inner.analyze(rgba, width, height, maxFaces);
+    return unpackFaces(packed);
   }
 
   similarity(a: Float32Array, b: Float32Array): number {
@@ -95,19 +124,15 @@ class WasmEngine implements RvFaceEngine {
 }
 
 /**
- * Try to load the wasm glue. Returns null (never throws) when the module
- * has not been built yet.
+ * Load the wasm glue. Returns null (never throws) when the module could
+ * not be loaded — the caller surfaces the error state.
  */
 export async function loadWasmFactory(): Promise<EngineFactory | null> {
   let mod: WasmModule;
   try {
-    // Opaque specifier + @vite-ignore: the module is git-ignored build
-    // output that may not exist, so Vite must neither resolve nor warn
-    // about it at bundle time.
-    const glue: string = './wasm/rvface_wasm.js';
-    const url = new URL(glue, import.meta.url).href;
-    mod = (await import(/* @vite-ignore */ url)) as WasmModule;
-  } catch {
+    mod = (await import('./wasm/rvface_wasm.js')) as unknown as WasmModule;
+  } catch (err) {
+    console.error('rvface wasm module failed to load:', err);
     return null;
   }
 
@@ -125,6 +150,8 @@ export async function loadWasmFactory(): Promise<EngineFactory | null> {
         weights.detector,
         weights.landmark,
         weights.embedder,
+        weights.landmarkManifest,
+        weights.embedderManifest,
         backend,
       );
       const engine = new WasmEngine(inner);

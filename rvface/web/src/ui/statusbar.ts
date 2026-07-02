@@ -31,8 +31,7 @@ export class StatusBar {
   setEngine(backend: BackendKind | null, kind: EngineKind | null): void {
     this.badgeBackend.textContent = `backend: ${backend ?? '—'}`;
     this.badgeBackend.classList.toggle('badge-gpu', backend === 'webgpu');
-    this.badgeEngine.textContent = `engine: ${kind === 'mock' ? 'MOCK' : (kind ?? '—')}`;
-    this.badgeEngine.classList.toggle('badge-mock', kind === 'mock');
+    this.badgeEngine.textContent = `engine: ${kind ?? '—'}`;
     this.badgeEngine.classList.toggle('badge-wasm', kind === 'wasm');
   }
 

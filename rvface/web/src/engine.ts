@@ -1,14 +1,15 @@
 /**
  * Engine contract — the integration seam between the UI and the
- * rvFACE pipeline. Mirrors the wasm API of ADR-0005; `engine-mock.ts`
- * implements it today, `engine-wasm.ts` adapts the real wasm-pack
- * output to it later. The UI only ever talks to `RvFaceEngine`.
+ * rvFACE pipeline. Mirrors the wasm API of ADR-0005; `engine-wasm.ts`
+ * adapts the real `rvface-wasm` wasm-bindgen output to it. The UI only
+ * ever talks to `RvFaceEngine` — there is no mock: without the built
+ * wasm module and weights the app shows an error state.
  */
 
 export type BackendKind = 'cpu' | 'webgpu';
 
 /** Which implementation is behind the interface (shown in the status badge). */
-export type EngineKind = 'mock' | 'wasm';
+export type EngineKind = 'wasm';
 
 export interface Pose {
   /** Degrees. Positive yaw = face turned to its left (image right). */
@@ -52,11 +53,19 @@ export interface RvFaceEngine {
   dispose(): void;
 }
 
-/** Raw safetensors bytes for the three networks, fetched by `weights.ts`. */
+/**
+ * Raw safetensors bytes for the three networks plus the arch-manifest JSON
+ * for the two manifest-configured nets, all fetched by `weights.ts` from
+ * `/models/` (the detector arch is fixed slim-320; it needs no manifest).
+ */
 export interface WeightBundle {
   detector: Uint8Array;
   landmark: Uint8Array;
   embedder: Uint8Array;
+  /** `landmark-mfn68.manifest.json` contents (arch hyperparameters). */
+  landmarkManifest: string;
+  /** `embedder-mfn.manifest.json` contents (arch hyperparameters). */
+  embedderManifest: string;
 }
 
 export interface EngineFactory {
