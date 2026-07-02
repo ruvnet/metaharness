@@ -6,7 +6,8 @@ import { join } from 'node:path';
 import { makeRouter, fusionSolve, buildFusionSystem, buildSidekickSystem } from './fusion-loop.mjs';
 
 // ── in-memory io implementing the makeTools contract (paths are '/repo/<rel>') ──────────────────
-function makeFakeIo(files, opts = {}) {
+// Exported for reuse by advisor-loop.test.mjs (ADR-226 §3.8) — same fake, zero duplication.
+export function makeFakeIo(files, opts = {}) {
   const store = { ...files };
   const changed = new Set();
   let testsPass = opts.testsPass ?? false;
@@ -26,7 +27,8 @@ function makeFakeIo(files, opts = {}) {
   };
 }
 // A scripted LLM: pops queued { raw, cost } responses; throws if it runs dry (test bug).
-function scripted(responses, label = 'llm') {
+// Exported for reuse by advisor-loop.test.mjs (ADR-226 §3.8).
+export function scripted(responses, label = 'llm') {
   const q = [...responses];
   return async () => {
     if (!q.length) throw new Error(`${label} script exhausted`);
