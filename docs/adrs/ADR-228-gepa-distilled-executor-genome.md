@@ -266,6 +266,30 @@ ADR-194 evolved per-instance capability genomes with hand-rolled mutation. GEPA 
 
 ---
 
+## 11a. Status note — ADR-230 Agenticow branch-memory pilot (GEPA-first)
+
+The candidate lifecycle now has an **optional** memory-transaction layer: `agenticow` copy-on-write
+branches record every GEPA candidate's lineage. Agenticow is *not* the intelligence — GEPA's
+Pareto/sum metric still decides accept/reject; agenticow only records it and, on a holdout win,
+promotes the winning genome into the seed base (the §7.1 frozen-seed rule, now enforced as a real
+memory transaction). Wired into `run-gepa.mjs` by observing `gepaOptimize`'s per-candidate
+`onEvent('accepted'|'rejected')` verdicts (this harness has no `deriveLesson` callback and strips
+feedbacks/discarded candidates from the returned pool, so each genome's genome+scores are captured in
+`evaluate()` and the branch is recorded as the verdict fires). Degrades to a no-op when the optional
+dep is absent, and exports **portable lesson JSON** (the ADR-230 minimum object) suitable for a later
+ADR-227 Firestore sync (deferred). Module + tests + measured results:
+`packages/darwin-mode/bench/swebench/gepa/{branch-memory.mjs, branch-memory.test.mjs, branch-memory-acceptance.mjs, AGENTICOW-PILOT.md}`.
+
+Pilot findings worth recording:
+- Measured branch-storage overhead **1.29%** (< 5% bar): empty COW branch = **162 B** regardless of
+  base size, vs a full-copy snapshot of the seed base (12.6 KB — seed genome + its eval traces — in
+  the acceptance replay). Verified min branch file on disk = 162 B.
+- Build against agenticow's **runtime** API, not its `.d.ts`: `@0.2.3` has no `openBase` export,
+  `ingest` stores vectors only (no `text` payload — rich JSON lives in a sidecar), and `promote()`
+  requires an explicit target. All three handled in `branch-memory.mjs`.
+- 50 GEPA tests green (44 pre-existing + 6 new); 15/15 acceptance checks over the live pilot's
+  captured cand-1..4.
+
 ## 12. References
 
 - arXiv 2507.19457 — GEPA (ICLR 2026 Oral): reflective prompt evolution, Pareto frontier definition quoted in §0/§1.3, GRPO/MIPROv2 claims, 35× rollout efficiency, ASI.
