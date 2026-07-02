@@ -84,24 +84,35 @@ replaces darwin's for that instance.
 
 ## Measured result (hard-25, gold-scored, run `handoff_hard25`)
 
-| Arm | Resolved/25 | $ total (OR-billed equiv.) | $/resolved | Escalation rate | Empty-patch rate | Median latency/inst |
+| Arm | Resolved/25 | $ total (OR-billed) | $/resolved | Escalation rate | Empty-patch rate | Median latency/inst |
 |---|---|---|---|---|---|---|
-| darwin-only (deepseek, 15 steps, native tools) | TBD | TBD | TBD | — | TBD | TBD |
-| claude-p + Fable only | TBD | TBD | TBD | — | TBD | TBD |
-| **darwin → claude-p+Fable handoff** | TBD | TBD | TBD | TBD | TBD | TBD |
+| darwin-only (deepseek, 15 steps, native tools) | **0/25** | $1.93 | — | — | 60% | 6.2 min |
+| claude-p + Fable only | **23/25** (OR: 21/25) | $60.76 best / $31.77 OR | $2.64 / $1.51 | — | 0% | ~2.5 min |
+| **darwin → claude-p+Fable handoff (aggressive)** | **24/25** | $74.58 | $3.11 | 100% | 0% | 11.0 min |
 
-(TBD values filled from the gold-scored `handoff_hard25` run before this ADR is committed.)
+**Quality bar ≥20/25: PASSED (24/25).** Only `psf__requests-2674` unresolved; all 25 handoffs
+produced non-empty patches (0 empty, 0 harness errors). darwin overhead $0.077/inst; median handoff
+236 s / $2.33 / 13 turns.
 
-Honesty notes (see HANDOFF.md for the full table + per-instance receipts):
+Honesty notes (full table + per-instance receipts in HANDOFF.md):
 
-- On hard-25 the darwin base resolves ~0 ⇒ ~everything escalates ⇒ **the handoff costs MORE than
-  Fable-only on this slice** (Fable-only cost + darwin's failed-attempt overhead of ~$0.05/inst +
-  prior-attempt context). That is expected and is the wrong slice to judge cost on: hard-25 is,
-  by construction, 100% hard tail.
-- The cost win appears on a **representative mix**: with darwin+deepseek resolving ~35% of
-  representative instances at ~$0.03-0.08 each (pilot-25 measured), the blended cost/instance of
-  the handoff is far below Fable-everywhere. The blended projection is computed in HANDOFF.md.
-- Quality bar: the handoff inherits Fable's ability on escalated instances (≥20/25 target).
+- **On hard-25 the handoff costs MORE than Fable-only, plainly** — $74.58 vs $31.77 (OR) / $60.76
+  (best). darwin resolves 0/25, so under the aggressive proof-policy 100% escalate: you pay Fable's
+  full cost + darwin's $1.93 overhead. hard-25 is 100% hard tail by construction — the wrong slice
+  to judge cost on. The ≥20/25 criterion passes on **quality** here; the **cost** win is
+  mixed-workload-only.
+- **Escalation policy honesty:** production default is `two-of-n` (escalate on ≥2 signals — the
+  mixed-workload cost-saver); the proof arm uses `aggressive` (every darwin miss). Measured: 6/25
+  fired only `tests_failed` (confident-but-wrong submits) — under two-of-n those 6 keep darwin's
+  non-resolving patch, capping the arm at ~18/25 (darwin's ceiling, not the handoff's). aggressive
+  → 24/25. Receipts record `escalate_policy` per row.
+- **Cost accounting verified:** claude's reported `total_cost_usd` ≈ actual OR billing (real OR
+  spend $28.91 vs claude estimate $28.56 at 11 instances) — $74.58 is real, not list-price inflation.
+- **Blended cost win (mixed workload):** darwin resolves ~35% of representative instances at $0.077,
+  ~65% escalate ⇒ blended cost is **~30% cheaper than Fable-everywhere at the same quality** (robust
+  to the escalated-cost assumption: $0.90 vs $1.27/inst at representative Fable cost; $1.97 vs $2.91
+  at hard-tail cost). Same resolve quality (darwin's cheap wins ⊆ Fable's), lower cost. Computed in
+  HANDOFF.md.
 
 ## The MetaHarness router (future work, enabled by this ADR)
 
