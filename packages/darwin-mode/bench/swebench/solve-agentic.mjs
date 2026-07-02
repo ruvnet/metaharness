@@ -25,7 +25,7 @@ import { buildReproTest, REPRO_PATH } from './test-critic.mjs';
 // ADR-196 — execution-trace localization (the §53 dynamic-localization lever; distinct from §52's naive semantic localize).
 import { traceLocalize, formatTraceSeedForAgent, buildPyTracer, TRACE_PATH } from './trace-localize.mjs';
 // ADR-205 — harness handoff: darwin as router, claude -p as hard-tail actuator (loop handoff, NOT model embedding).
-import { parseEscalateChain, acceptHop, solveViaClaudeP } from './handoff-solver.mjs';
+import { parseEscalateChain, acceptHop, solveViaClaudeP, escalationSignals, shouldEscalate, buildReceipt } from './handoff-solver.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -70,6 +70,11 @@ const ESCALATE_TO = argv('--escalate-to', null);
 const HANDOFF_CHAIN = ESCALATE_TO ? parseEscalateChain(ESCALATE_TO) : null;
 const HANDOFF_MAX_TURNS = +argv('--handoff-max-turns', 40);
 const HANDOFF_TIMEOUT_MS = +argv('--handoff-timeout', 900) * 1000;
+// ADR-205 — the solver_receipt stream (one JSONL row per instance; plus one per chain hop when a
+// chain runs). This is the future MetaHarness router's training data: BOTH classes (escalated and
+// not) with real costs and real reasons. Only written when --escalate-to is set.
+const RECEIPTS = rel(argv('--receipts', 'handoff-receipts.jsonl'));
+const INITIAL_SOLVER = `darwin-${MODEL.split('/').pop()}`;
 
 let manifest = JSON.parse(readFileSync(rel(argv('--manifest', 'pilot-sample-25.json')), 'utf8')).instances;
 if (onlyInstance) manifest = manifest.filter((i) => i.instance_id === onlyInstance);
@@ -264,6 +269,7 @@ async function buildLocalizeHint(inst) {
 }
 
 writeFileSync(OUT, ''); const report = []; let totalCost = 0;
+if (HANDOFF_CHAIN) writeFileSync(RECEIPTS, ''); // truncate the receipt stream per run
 // One agentic attempt in a FRESH work tree (cold). Returns {res, work}; caller cleans up.
 // ADR-195: `opts.localizeHint` (string) is prepended to the problem surface; `opts.extraContext`
 // (string) is appended as additional turn-1 context (repro test / review critique). Both default
@@ -465,16 +471,22 @@ async function runInstance(inst) {
       } else row.resolved = !!res.resolvedInLoop;
     }
 
-    // ADR-205 — harness handoff: when the cheap attempt FAILS (rule-based trigger; darwin stays the
-    // router), walk the escalation chain and let the first accepted rung's patch replace darwin's.
-    // Gated entirely on --escalate-to: absent ⇒ this block never runs ⇒ byte-identical output.
+    // ADR-205 — harness handoff: when the cheap attempt FAILS the rule-based 2-of-N trigger (darwin
+    // stays the router), walk the escalation chain and let the first accepted rung's patch replace
+    // darwin's. Gated entirely on --escalate-to: absent ⇒ this block never runs ⇒ byte-identical
+    // output. NOTE: the trigger is the practical subset computable from what the loop ALREADY
+    // tracks — learned thresholds (confidence/complexity scores) over the receipt stream are
+    // explicitly future work, not invented here.
     if (HANDOFF_CHAIN && t1res) {
-      const failedCheap = !t1res.resolvedInLoop || !patch.trim();
-      if (failedCheap) {
-        row.handoffChain = HANDOFF_CHAIN.map((s) => s.name);
-        const hops = await runEscalationChain(inst, HANDOFF_CHAIN, {
+      const signals = escalationSignals({ resolvedInLoop: !!t1res.resolvedInLoop, submitted: !!t1res.submitted, thrash: t1res.thrash || 0, patch });
+      const { escalate, reasons } = shouldEscalate(signals);
+      const darwinBase = { instanceId: inst.instance_id, initialSolver: INITIAL_SOLVER, darwinCostUsd: t1res.cost || 0, darwinSteps: t1res.steps ?? null, signals };
+      let hops = [];
+      if (escalate) {
+        row.handoffChain = HANDOFF_CHAIN.map((s) => s.name); row.escalationReasons = reasons;
+        hops = await runEscalationChain(inst, HANDOFF_CHAIN, {
           localizeHint,
-          priorAttempts: [{ solver: `darwin-${MODEL.split('/').pop()}`, failureReasons: t1res.resolvedInLoop ? [] : ['in-loop tests failed'], steps: t1res.steps }],
+          priorAttempts: [{ solver: INITIAL_SOLVER, failureReasons: reasons, steps: t1res.steps }],
         });
         row.handoffHops = hops.map((h) => ({ solver: h.spec.name, status: h.result?.status ?? (h.skipped ? `skipped:${h.skipped}` : 'unknown'), cost_usd: h.result?.cost_usd ?? 0, latency_ms: h.result?.latency_ms ?? 0, turns: h.result?.turns ?? 0, accepted: !!(h.result && acceptHop(h.result)) }));
         const winner = hops.find((h) => h.result && acceptHop(h.result));
@@ -483,6 +495,19 @@ async function runInstance(inst) {
         // empty/failed patch. Prefer the last non-empty rung patch, else keep darwin's.
         const best = winner || [...hops].reverse().find((h) => h.result && String(h.result.patch || '').trim());
         if (best) { patch = best.result.patch; row.tier = `handoff:${best.spec.name}`; row.handoffAccepted = !!winner; }
+      }
+      // Receipt stream: not escalated ⇒ one row (handoff_* null). Escalated ⇒ one row PER HOP
+      // (hop/hop_of/hop_accepted extras); a single-rung chain therefore emits exactly the spec'd
+      // one-escalated-row shape. diff stats on each row are the instance's FINAL patch.
+      if (!escalate) {
+        appendFileSync(RECEIPTS, JSON.stringify(buildReceipt({ ...darwinBase, escalated: false, escalationReasons: [], handoff: null, finalPatch: patch })) + '\n');
+      } else if (hops.length === 0) {
+        appendFileSync(RECEIPTS, JSON.stringify({ ...buildReceipt({ ...darwinBase, escalated: true, escalationReasons: reasons, handoff: null, finalPatch: patch }), handoff_skipped_reason: 'budget' }) + '\n');
+      } else {
+        hops.forEach((h, i) => {
+          const rec = buildReceipt({ ...darwinBase, escalated: true, escalationReasons: reasons, handoff: h.result ? { ...h.result, solver: h.spec.name } : null, finalPatch: patch });
+          appendFileSync(RECEIPTS, JSON.stringify({ ...rec, hop: i + 1, hop_of: hops.length, hop_accepted: !!(h.result && acceptHop(h.result)), ...(h.skipped ? { handoff_skipped_reason: h.skipped } : {}) }) + '\n');
+        });
       }
     }
 

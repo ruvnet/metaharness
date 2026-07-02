@@ -161,3 +161,66 @@ export function acceptHop(result) {
   return true;
 }
 
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+// Rule-based escalation (ADR-205 §rules) — a practical subset of the spec'd router: every signal is
+// computable from what darwin's loop ALREADY tracks (no invented confidence/complexity scores —
+// learned thresholds over the receipt stream are explicitly future work).
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+/** Files touched + byte size of a unified diff. Pure. */
+export function diffStats(patch) {
+  const p = String(patch || '');
+  const files = [...p.matchAll(/^\+\+\+ b\/(.+)$/gm)].map((m) => m[1]);
+  return { files: [...new Set(files)], bytes: Buffer.byteLength(p, 'utf8') };
+}
+
+/**
+ * The observable failure signals after darwin's cheap attempt.
+ *   res: { resolvedInLoop, submitted, thrash } — the agentic-loop result (thrash = the existing
+ *        anti-thrash repeat counter: same (action→observation) state seen again in the trajectory).
+ *   patch: darwin's final work-tree diff.
+ */
+export function escalationSignals({ resolvedInLoop, submitted, thrash, patch }) {
+  const { files } = diffStats(patch);
+  return {
+    tests_failed: !resolvedInLoop,                    // in-loop tests did not pass
+    empty_patch: !String(patch || '').trim(),         // nothing was edited
+    no_submit: !submitted,                            // never called submit (ran out of steps)
+    thrash_repeat: (thrash || 0) >= 2,                // same state repeated ≥2 times (thrash signal)
+    too_many_files: files.length > 3,                 // sprawling patch — low-confidence shape
+  };
+}
+
+/** 2-of-N rule: escalate when ANY 2 signals are true. Returns { escalate, reasons }. */
+export function shouldEscalate(signals) {
+  const reasons = Object.keys(signals).filter((k) => signals[k] === true);
+  return { escalate: reasons.length >= 2, reasons };
+}
+
+/**
+ * The per-instance solver_receipt — one JSONL row per instance (escalated or not). This stream is
+ * the future MetaHarness router's training data: keep it complete and honest (both classes, real
+ * costs, real reasons). Extra fields beyond the base schema are allowed; missing ones are not.
+ */
+export function buildReceipt({ instanceId, initialSolver, darwinCostUsd, darwinSteps, signals, escalated, escalationReasons, handoff, finalPatch, now = Date.now }) {
+  const { files, bytes } = diffStats(finalPatch);
+  return {
+    instance_id: instanceId,
+    initial_solver: initialSolver,
+    darwin_cost_usd: +(darwinCostUsd || 0).toFixed(6),
+    darwin_steps: darwinSteps ?? null,
+    failure_reasons: Object.keys(signals || {}).filter((k) => signals[k] === true),
+    escalated: !!escalated,
+    escalation_reasons: escalated ? (escalationReasons || []) : [],
+    handoff_solver: handoff ? handoff.solver : null,
+    handoff_status: handoff ? handoff.status : null,
+    handoff_cost_usd: handoff ? +(handoff.cost_usd || 0).toFixed(6) : null,
+    handoff_latency_ms: handoff ? handoff.latency_ms : null,
+    handoff_turns: handoff ? handoff.turns : null,
+    handoff_error: handoff?.error ? handoff.error : null,
+    final_patch_nonempty: !!String(finalPatch || '').trim(),
+    diff_files: files.length,
+    diff_bytes: bytes,
+    ts: new Date(now()).toISOString(),
+  };
+}
