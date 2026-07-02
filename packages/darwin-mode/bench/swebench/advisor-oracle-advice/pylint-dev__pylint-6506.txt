@@ -1,0 +1,14 @@
+ORACLE ADVICE (derived from the gold patch — D-oracle probe, ADR-226 §4.8; NON-CONFORMANT by construction).
+The correct fix, as exact next actions:
+1. Edit pylint/config/config_initialization.py around line 81. Apply exactly this change (unified-diff hunk; - lines are removed, + lines added):
+             unrecognized_options.append(opt[1:])
+     if unrecognized_options:
+         msg = ", ".join(unrecognized_options)
+-        linter.add_message("unrecognized-option", line=0, args=msg)
+-        raise _UnrecognizedOptionError(options=unrecognized_options)
++        linter._arg_parser.error(f"Unrecognized option found: {msg}")
+ 
+     # Set the current module to configuration as we don't know where
+     # the --load-plugins key is coming from
+
+Do not edit test files. After editing, run_tests, then submit.

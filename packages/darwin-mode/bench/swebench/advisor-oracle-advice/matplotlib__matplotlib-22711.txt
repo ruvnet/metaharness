@@ -1,0 +1,35 @@
+ORACLE ADVICE (derived from the gold patch — D-oracle probe, ADR-226 §4.8; NON-CONFORMANT by construction).
+The correct fix, as exact next actions:
+1. Edit lib/matplotlib/widgets.py around line 813. Apply exactly this change (unified-diff hunk; - lines are removed, + lines added):
+             val = self._max_in_bounds(pos)
+             self.set_max(val)
+         if self._active_handle:
+-            self._active_handle.set_xdata([val])
++            if self.orientation == "vertical":
++                self._active_handle.set_ydata([val])
++            else:
++                self._active_handle.set_xdata([val])
+ 
+     def _update(self, event):
+         """Update the slider position."""
+2. Edit lib/matplotlib/widgets.py around line 836. Apply exactly this change (unified-diff hunk; - lines are removed, + lines added):
+             return
+ 
+         # determine which handle was grabbed
+-        handle = self._handles[
+-            np.argmin(
++        if self.orientation == "vertical":
++            handle_index = np.argmin(
++                np.abs([h.get_ydata()[0] - event.ydata for h in self._handles])
++            )
++        else:
++            handle_index = np.argmin(
+                 np.abs([h.get_xdata()[0] - event.xdata for h in self._handles])
+             )
+-        ]
++        handle = self._handles[handle_index]
++
+         # these checks ensure smooth behavior if the handles swap which one
+         # has a higher value. i.e. if one is dragged over and past the other.
+         if handle is not self._active_handle:
+3. (further hunks elided for length — see lib/matplotlib/wi

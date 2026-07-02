@@ -1,0 +1,12 @@
+ORACLE ADVICE (derived from the gold patch — D-oracle probe, ADR-226 §4.8; NON-CONFORMANT by construction).
+The correct fix, as exact next actions:
+1. Edit src/_pytest/assertion/rewrite.py around line 676. Apply exactly this change (unified-diff hunk; - lines are removed, + lines added):
+                 expect_docstring
+                 and isinstance(item, ast.Expr)
+                 and isinstance(item.value, ast.Constant)
++                and isinstance(item.value.value, str)
+             ):
+                 doc = item.value.value
+                 if self.is_rewrite_disabled(doc):
+
+Do not edit test files. After editing, run_tests, then submit.

@@ -1,0 +1,22 @@
+ORACLE ADVICE (derived from the gold patch — D-oracle probe, ADR-226 §4.8; NON-CONFORMANT by construction).
+The correct fix, as exact next actions:
+1. Edit sphinx/ext/autodoc/__init__.py around line 109. Apply exactly this change (unified-diff hunk; - lines are removed, + lines added):
+     return {x.strip() for x in arg.split(',') if x.strip()}
+ 
+ 
+-def inherited_members_option(arg: Any) -> Union[object, Set[str]]:
++def inherited_members_option(arg: Any) -> Set[str]:
+     """Used to convert the :members: option to auto directives."""
+     if arg in (None, True):
+-        return 'object'
++        return {'object'}
++    elif arg:
++        return set(x.strip() for x in arg.split(','))
+     else:
+-        return arg
++        return set()
+ 
+ 
+ def member_order_option(arg: Any) -> Optional[str]:
+2. (further hunks elided for length — see sphinx/ext/autodoc/__init__.py line 680)
+Do not edit test files. After editing, run_tests, then submit.

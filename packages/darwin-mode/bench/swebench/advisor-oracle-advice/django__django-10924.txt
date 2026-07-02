@@ -1,0 +1,13 @@
+ORACLE ADVICE (derived from the gold patch — D-oracle probe, ADR-226 §4.8; NON-CONFORMANT by construction).
+The correct fix, as exact next actions:
+1. Edit django/db/models/fields/__init__.py around line 1709. Apply exactly this change (unified-diff hunk; - lines are removed, + lines added):
+ 
+     def formfield(self, **kwargs):
+         return super().formfield(**{
+-            'path': self.path,
++            'path': self.path() if callable(self.path) else self.path,
+             'match': self.match,
+             'recursive': self.recursive,
+             'form_class': forms.FilePathField,
+
+Do not edit test files. After editing, run_tests, then submit.

@@ -1,0 +1,16 @@
+ORACLE ADVICE (derived from the gold patch — D-oracle probe, ADR-226 §4.8; NON-CONFORMANT by construction).
+The correct fix, as exact next actions:
+1. Edit seaborn/_stats/regression.py around line 38. Apply exactly this change (unified-diff hunk; - lines are removed, + lines added):
+ 
+     def __call__(self, data, groupby, orient, scales):
+ 
+-        return groupby.apply(data, self._fit_predict)
++        return (
++            groupby
++            .apply(data.dropna(subset=["x", "y"]), self._fit_predict)
++        )
+ 
+ 
+ @dataclass
+
+Do not edit test files. After editing, run_tests, then submit.

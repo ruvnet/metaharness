@@ -1,0 +1,16 @@
+ORACLE ADVICE (derived from the gold patch — D-oracle probe, ADR-226 §4.8; NON-CONFORMANT by construction).
+The correct fix, as exact next actions:
+1. Edit pylint/checkers/misc.py around line 121. Apply exactly this change (unified-diff hunk; - lines are removed, + lines added):
+ 
+         notes = "|".join(re.escape(note) for note in self.config.notes)
+         if self.config.notes_rgx:
+-            regex_string = rf"#\s*({notes}|{self.config.notes_rgx})\b"
++            regex_string = rf"#\s*({notes}|{self.config.notes_rgx})(?=(:|\s|\Z))"
+         else:
+-            regex_string = rf"#\s*({notes})\b"
++            regex_string = rf"#\s*({notes})(?=(:|\s|\Z))"
+ 
+         self._fixme_pattern = re.compile(regex_string, re.I)
+ 
+
+Do not edit test files. After editing, run_tests, then submit.

@@ -1,0 +1,13 @@
+ORACLE ADVICE (derived from the gold patch — D-oracle probe, ADR-226 §4.8; NON-CONFORMANT by construction).
+The correct fix, as exact next actions:
+1. Edit src/_pytest/pathlib.py around line 523. Apply exactly this change (unified-diff hunk; - lines are removed, + lines added):
+ 
+     if mode is ImportMode.importlib:
+         module_name = module_name_from_path(path, root)
++        with contextlib.suppress(KeyError):
++            return sys.modules[module_name]
+ 
+         for meta_importer in sys.meta_path:
+             spec = meta_importer.find_spec(module_name, [str(path.parent)])
+
+Do not edit test files. After editing, run_tests, then submit.

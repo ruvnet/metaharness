@@ -1,0 +1,21 @@
+ORACLE ADVICE (derived from the gold patch — D-oracle probe, ADR-226 §4.8; NON-CONFORMANT by construction).
+The correct fix, as exact next actions:
+1. Edit xarray/core/variable.py around line 120. Apply exactly this change (unified-diff hunk; - lines are removed, + lines added):
+     if isinstance(obj, Variable):
+         obj = obj.copy(deep=False)
+     elif isinstance(obj, tuple):
++        if isinstance(obj[1], DataArray):
++            # TODO: change into TypeError
++            warnings.warn(
++                (
++                    "Using a DataArray object to construct a variable is"
++                    " ambiguous, please extract the data using the .data property."
++                    " This will raise a TypeError in 0.19.0."
++                ),
++                DeprecationWarning,
++            )
+         try:
+             obj = Variable(*obj)
+         except (TypeError, ValueError) as error:
+
+Do not edit test files. After editing, run_tests, then submit.

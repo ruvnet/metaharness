@@ -1,0 +1,23 @@
+ORACLE ADVICE (derived from the gold patch — D-oracle probe, ADR-226 §4.8; NON-CONFORMANT by construction).
+The correct fix, as exact next actions:
+1. Edit src/flask/config.py around line 234. Apply exactly this change (unified-diff hunk; - lines are removed, + lines added):
+         filename: str,
+         load: t.Callable[[t.IO[t.Any]], t.Mapping],
+         silent: bool = False,
++        text: bool = True,
+     ) -> bool:
+         """Update the values in the config from a file that is loaded
+         using the ``load`` parameter. The loaded data is passed to the
+2. Edit src/flask/config.py around line 244. Apply exactly this change (unified-diff hunk; - lines are removed, + lines added):
+             import json
+             app.config.from_file("config.json", load=json.load)
+ 
+-            import toml
+-            app.config.from_file("config.toml", load=toml.load)
++            import tomllib
++            app.config.from_file("config.toml", load=tomllib.load, text=False)
+ 
+         :param filename: The path to the data file. This can be an
+             absolute path or relative to the config root path.
+3. (further hunks elided for length — see src/flask/config.py line 254)
+Do not edit test files. After editing, run_tests, then submit.

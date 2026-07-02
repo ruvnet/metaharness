@@ -1,0 +1,25 @@
+ORACLE ADVICE (derived from the gold patch — D-oracle probe, ADR-226 §4.8; NON-CONFORMANT by construction).
+The correct fix, as exact next actions:
+1. Edit sympy/printing/ccode.py around line 231. Apply exactly this change (unified-diff hunk; - lines are removed, + lines added):
+         else:
+             return name
+ 
++    def _print_Relational(self, expr):
++        lhs_code = self._print(expr.lhs)
++        rhs_code = self._print(expr.rhs)
++        op = expr.rel_op
++        return ("{0} {1} {2}").format(lhs_code, op, rhs_code)
++
++    def _print_sinc(self, expr):
++        from sympy.functions.elementary.trigonometric import sin
++        from sympy.core.relational import Ne
++        from sympy.functions import Piecewise
++        _piecewise = Piecewise(
++            (sin(expr.args[0]) / expr.args[0], Ne(expr.args[0], 0)), (1, True))
++        return self._print(_piecewise)
++
+     def _print_AugmentedAssignment(self, expr):
+         lhs_code = self._print(expr.lhs)
+         op = expr.rel_op
+
+Do not edit test files. After editing, run_tests, then submit.

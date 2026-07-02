@@ -1,0 +1,15 @@
+ORACLE ADVICE (derived from the gold patch — D-oracle probe, ADR-226 §4.8; NON-CONFORMANT by construction).
+The correct fix, as exact next actions:
+1. Edit src/flask/blueprints.py around line 188. Apply exactly this change (unified-diff hunk; - lines are removed, + lines added):
+             template_folder=template_folder,
+             root_path=root_path,
+         )
++
++        if "." in name:
++            raise ValueError("'name' may not contain a dot '.' character.")
++
+         self.name = name
+         self.url_prefix = url_prefix
+         self.subdomain = subdomain
+2. (further hunks elided for length — see src/flask/blueprints.py line 360)
+Do not edit test files. After editing, run_tests, then submit.

@@ -1,0 +1,18 @@
+ORACLE ADVICE (derived from the gold patch — D-oracle probe, ADR-226 §4.8; NON-CONFORMANT by construction).
+The correct fix, as exact next actions:
+1. Edit seaborn/_oldcore.py around line 149. Apply exactly this change (unified-diff hunk; - lines are removed, + lines added):
+             # Use a value that's in the original data vector
+             value = self.lookup_table[key]
+         except KeyError:
++
++            if self.norm is None:
++                # Currently we only get here in scatterplot with hue_order,
++                # because scatterplot does not consider hue a grouping variable
++                # So unused hue levels are in the data, but not the lookup table
++                return (0, 0, 0, 0)
++
+             # Use the colormap to interpolate between existing datapoints
+             # (e.g. in the context of making a continuous legend)
+             try:
+
+Do not edit test files. After editing, run_tests, then submit.
