@@ -22,8 +22,9 @@ per stage.
 - **Decode**: center-form with `center_variance 0.1`, `size_variance 0.2`,
   then corner form.
 - **Filtering**: softmax over 2 classes, prob threshold **0.6**, per-class
-  **hard NMS** with IoU **0.3**, candidate_size 750 (upstream passes
-  `candidate_size/2`), then top-K faces (`faceMaxCount`); boxes fully inside
+  **hard NMS** with IoU **0.3**, candidate pool **1500**, at most **750**
+  picks (upstream passes `candidate_size/2` as `top_k`), then top-K faces
+  (`faceMaxCount`); boxes fully inside
   the image only (`x1≥0, y1≥0, x2<W, y2<H`), matching `get_face_boundingbox`.
 - **Embedder preprocessing**: aligned 128×128 BGR-order crop scaled by
   **1/256** (upstream divides by 256, not 255 — preserved deliberately),
