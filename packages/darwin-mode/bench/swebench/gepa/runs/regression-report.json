@@ -1,16 +1,16 @@
 {
-  "generatedAt": "2026-07-02T21:03:53.941Z",
+  "generatedAt": "2026-07-02T23:40:14.490Z",
   "seedFrozenBaseline": {
     "id": "seed-agentic-v1",
     "gold": 3,
-    "sum": 34.303,
+    "sum": 33.284,
     "n": 12,
     "frozen": true
   },
   "baseline": {
     "id": "seed-agentic-v1",
     "gold": 3,
-    "sum": 34.303,
+    "sum": 33.284,
     "n": 12,
     "frozen": true
   },
@@ -20,31 +20,145 @@
       "parent": "seed-agentic-v1",
       "target": "retrieval_policy",
       "decision": "rejected",
-      "seed_score": 34.303,
-      "candidate_score": 9.855,
+      "seed_score": 33.284,
+      "candidate_score": 11.826,
       "gold_seed": 3,
       "gold_candidate": 1,
-      "cost": 0.3225,
+      "cost": 0.3375,
       "regressed_instances": [
         "astropy__astropy-12907",
-        "astropy__astropy-14182",
-        "matplotlib__matplotlib-22711",
+        "django__django-10924",
+        "matplotlib__matplotlib-18869",
         "mwaskom__seaborn-3010",
-        "pallets__flask-4992",
-        "psf__requests-2148"
+        "pallets__flask-4045",
+        "pallets__flask-4992"
       ],
       "improved_instances": [
+        "astropy__astropy-14182",
+        "django__django-10914",
+        "matplotlib__matplotlib-22711",
+        "mwaskom__seaborn-2848",
+        "psf__requests-1963",
+        "psf__requests-2148"
+      ],
+      "failure_modes": {
+        "empty_patch": 3,
+        "wrong_file": 1,
+        "test_not_run": 4,
+        "thrash": 3,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "failure_modes_on_regressed": {
+        "empty_patch": 2,
+        "wrong_file": 0,
+        "test_not_run": 2,
+        "thrash": 2,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "seed_failure_modes": {
+        "empty_patch": 2,
+        "wrong_file": 0,
+        "test_not_run": 3,
+        "thrash": 4,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "mutation_diff": {
+        "component": "retrieval_policy",
+        "before": "Strategy: explore (read/grep/ls) to locate the fix, make minimal edit(s), run_tests, iterate on the trace, then submit once tests pass.",
+        "after": "Strategy: explore just enough to locate the fix (prefer targeted grep/read over broad scans), then commit to an edit — do not exceed 6 exploration actions before making at least one edit attempt.\n\nRules:\n1. Cap exploration: after ~5-6 read/grep/ls actions with no edit, stop searching and make your best-guess edit immediately. An imperfect edit beats an empty patch.\n2. Before editing, read enough surrounding context (the full function/class, not just the matched line) to understand call sites and related branches (e.g. sibling conditionals, orientation/mode flags) that the fix must also handle — a narrow one-line patch that ignores nearby logic often fails tests.\n3. Never repeat an identical read/grep on the same target — track what you've already seen.\n4. After run_tests fails, do not immediately rerun without changing something: re-read the failure trace, diagnose which assumption was wrong, adjust the edit (check imports, related branches, edge cases implied by the failure), then rerun. Never issue 2+ consecutive run_tests without an intervening edit.\n5. If run_tests fails twice on the same edit, broaden your view: look for other spots in the same file (or an imported module) that mirror the changed logic, since gold fixes often touch multiple related lines.\n6. Do not edit test files. Only submit after run_tests passes."
+      },
+      "lesson": "AVOID: mutating retrieval_policy increased empty_patch 2→3 (regressed 6 instances, gold 3→1) — this rewrite direction hurts; do not repeat."
+    },
+    {
+      "candidate": "cand-2",
+      "parent": "cand-1",
+      "target": "test_policy",
+      "decision": "accepted",
+      "seed_score": 33.284,
+      "candidate_score": 31.672,
+      "gold_seed": 3,
+      "gold_candidate": 3,
+      "cost": 0.413,
+      "regressed_instances": [
+        "astropy__astropy-14182",
         "django__django-10914",
         "django__django-10924",
         "matplotlib__matplotlib-18869",
-        "mwaskom__seaborn-2848",
+        "matplotlib__matplotlib-22711",
         "pallets__flask-4045",
+        "pallets__flask-4992",
         "psf__requests-1963"
       ],
+      "improved_instances": [
+        "astropy__astropy-12907",
+        "mwaskom__seaborn-2848",
+        "mwaskom__seaborn-3010",
+        "psf__requests-2148"
+      ],
       "failure_modes": {
-        "empty_patch": 4,
-        "wrong_file": 1,
-        "test_not_run": 4,
+        "empty_patch": 3,
+        "wrong_file": 0,
+        "test_not_run": 5,
+        "thrash": 2,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "failure_modes_on_regressed": {
+        "empty_patch": 2,
+        "wrong_file": 0,
+        "test_not_run": 2,
+        "thrash": 2,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "seed_failure_modes": {
+        "empty_patch": 2,
+        "wrong_file": 0,
+        "test_not_run": 3,
+        "thrash": 4,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "mutation_diff": {
+        "component": "test_policy",
+        "before": "Never edit test files.",
+        "after": "Never edit test files. Use them only to understand expected behavior.\n\nAlways make a code edit before running out of budget — do not end with an empty patch.\n\nAfter every edit, run the tests. Before submitting, tests must have been run at least once.\n\nIf a test run fails, read the failure output carefully and diagnose the actual cause; change your fix accordingly. Do not rerun the same tests unchanged more than twice without altering the code — repeated identical failures mean your fix is wrong, not that the test needs retrying.\n\nOnly submit once tests pass, or you are certain (after inspecting the failure trace) that the remaining failure is unrelated to your fix."
+      },
+      "lesson": "mutating test_policy held gold at 3 but improved shaping on 4 instances — neutral-positive, low confidence."
+    },
+    {
+      "candidate": "cand-3",
+      "parent": "cand-1",
+      "target": "test_policy",
+      "decision": "accepted",
+      "seed_score": 33.284,
+      "candidate_score": 17.625,
+      "gold_seed": 3,
+      "gold_candidate": 2,
+      "cost": 0.4384,
+      "regressed_instances": [
+        "astropy__astropy-14182",
+        "django__django-10914",
+        "django__django-10924",
+        "matplotlib__matplotlib-18869",
+        "matplotlib__matplotlib-22711",
+        "mwaskom__seaborn-3010",
+        "pallets__flask-4045",
+        "pallets__flask-4992",
+        "psf__requests-1963"
+      ],
+      "improved_instances": [
+        "astropy__astropy-12907",
+        "mwaskom__seaborn-2848",
+        "psf__requests-2148"
+      ],
+      "failure_modes": {
+        "empty_patch": 5,
+        "wrong_file": 0,
+        "test_not_run": 5,
         "thrash": 2,
         "bad_submit": 0,
         "protocol_error": 0
@@ -60,48 +174,48 @@
       "seed_failure_modes": {
         "empty_patch": 2,
         "wrong_file": 0,
-        "test_not_run": 4,
-        "thrash": 2,
+        "test_not_run": 3,
+        "thrash": 4,
         "bad_submit": 0,
         "protocol_error": 0
       },
       "mutation_diff": {
-        "component": "retrieval_policy",
-        "before": "Strategy: explore (read/grep/ls) to locate the fix, make minimal edit(s), run_tests, iterate on the trace, then submit once tests pass.",
-        "after": "Strategy: explore with a budget — at most 4 read/grep/ls before attempting an edit. Never end a run with an empty patch: if by mid-budget you have not edited any file, pick the most likely file/line from what you've read and make a concrete edit attempt now.\n\nBefore editing: read enough surrounding context (whole function/class, not just the first hit) to understand the real cause, not just the symptom line.\n\nAfter editing: run_tests. Then:\n- If tests pass: submit.\n- If tests fail: re-read the failing trace/assertion carefully, diagnose WHY (wrong file, incomplete hunk, missed related change elsewhere), and change your approach (different location, additional hunk, or revert) — do not just re-run the same code.\n- Never run_tests more than 2× in a row without changing the patch in between; a repeated failure means your fix is wrong, not that tests are flaky.\n- Do not repeat identical reads/greps you've already done; move to editing instead.\n- Never edit test files. Submit only after tests pass, or after you've made your best diagnosed attempt within budget."
+        "component": "test_policy",
+        "before": "Never edit test files.",
+        "after": "Never edit test files. Use them only to understand expected behavior.\n\nAfter making any code edit, run the test suite before submitting.\n\nIf a test run fails, re-read the failing output carefully and diagnose the mismatch before changing code again — do not just re-run tests or repeat the same edit. Change your approach or inspect surrounding code/context you may have missed.\n\nIf you have made no edit by the middle of your step budget, stop reading/grepping and attempt a concrete edit based on what you know; refine after seeing test results.\n\nNever submit with a failing test run or an empty patch."
       },
-      "lesson": "AVOID: mutating retrieval_policy increased empty_patch 2→4 (regressed 6 instances, gold 3→1) — this rewrite direction hurts; do not repeat."
+      "lesson": "mutating test_policy held gold at 2 but improved shaping on 3 instances — neutral-positive, low confidence."
     },
     {
-      "candidate": "cand-2",
-      "parent": "seed-agentic-v1",
-      "target": "retrieval_policy",
-      "decision": "rejected",
-      "seed_score": 34.303,
-      "candidate_score": 28.635,
+      "candidate": "cand-4",
+      "parent": "cand-1",
+      "target": "test_policy",
+      "decision": "accepted",
+      "seed_score": 33.284,
+      "candidate_score": 16.24,
       "gold_seed": 3,
-      "gold_candidate": 3,
-      "cost": 0.4318,
+      "gold_candidate": 2,
+      "cost": 0.3797,
       "regressed_instances": [
-        "matplotlib__matplotlib-18869",
-        "matplotlib__matplotlib-22711",
-        "mwaskom__seaborn-2848",
-        "mwaskom__seaborn-3010",
-        "pallets__flask-4045",
-        "psf__requests-1963",
-        "psf__requests-2148"
-      ],
-      "improved_instances": [
-        "astropy__astropy-12907",
         "astropy__astropy-14182",
         "django__django-10914",
         "django__django-10924",
-        "pallets__flask-4992"
+        "matplotlib__matplotlib-18869",
+        "mwaskom__seaborn-2848",
+        "mwaskom__seaborn-3010",
+        "pallets__flask-4045",
+        "pallets__flask-4992",
+        "psf__requests-1963"
+      ],
+      "improved_instances": [
+        "astropy__astropy-12907",
+        "matplotlib__matplotlib-22711",
+        "psf__requests-2148"
       ],
       "failure_modes": {
-        "empty_patch": 4,
+        "empty_patch": 5,
         "wrong_file": 0,
-        "test_not_run": 5,
+        "test_not_run": 6,
         "thrash": 4,
         "bad_submit": 0,
         "protocol_error": 0
@@ -109,7 +223,178 @@
       "failure_modes_on_regressed": {
         "empty_patch": 4,
         "wrong_file": 0,
+        "test_not_run": 5,
+        "thrash": 4,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "seed_failure_modes": {
+        "empty_patch": 2,
+        "wrong_file": 0,
+        "test_not_run": 3,
+        "thrash": 4,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "mutation_diff": {
+        "component": "test_policy",
+        "before": "Never edit test files.",
+        "after": "Never edit test files.\nAlways run the test suite after making an edit, and before submitting.\nIf a test run fails, re-read the failure output carefully and change your approach — do not re-run the same test unmodified more than twice in a row.\nIf you have spent more than half your step budget without making an edit, stop exploring and make your best-guess edit now, then verify with tests."
+      },
+      "lesson": "mutating test_policy held gold at 2 but improved shaping on 3 instances — neutral-positive, low confidence."
+    },
+    {
+      "candidate": "cand-5",
+      "parent": "cand-2",
+      "target": "retrieval_policy",
+      "decision": "rejected",
+      "seed_score": 33.284,
+      "candidate_score": 22.715,
+      "gold_seed": 3,
+      "gold_candidate": 2,
+      "cost": 0.3919,
+      "regressed_instances": [
+        "astropy__astropy-14182",
+        "django__django-10914",
+        "matplotlib__matplotlib-18869",
+        "matplotlib__matplotlib-22711",
+        "mwaskom__seaborn-3010",
+        "pallets__flask-4992",
+        "psf__requests-1963"
+      ],
+      "improved_instances": [
+        "astropy__astropy-12907",
+        "django__django-10924",
+        "mwaskom__seaborn-2848",
+        "pallets__flask-4045",
+        "psf__requests-2148"
+      ],
+      "failure_modes": {
+        "empty_patch": 3,
+        "wrong_file": 0,
         "test_not_run": 4,
+        "thrash": 1,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "failure_modes_on_regressed": {
+        "empty_patch": 2,
+        "wrong_file": 0,
+        "test_not_run": 2,
+        "thrash": 1,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "seed_failure_modes": {
+        "empty_patch": 2,
+        "wrong_file": 0,
+        "test_not_run": 3,
+        "thrash": 4,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "mutation_diff": {
+        "component": "retrieval_policy",
+        "before": "Strategy: explore (read/grep/ls) to locate the fix, make minimal edit(s), run_tests, iterate on the trace, then submit once tests pass.",
+        "after": "Strategy: explore just enough to locate the fix, then commit to an edit. Exploration is capped hard — never repeat this mistake: do not let read/grep/ls count exceed 4 before your first edit attempt, regardless of confidence. If step 5 arrives with no edit, make your best-guess edit immediately — an imperfect edit beats an empty patch.\n\nRules:\n1. Hard cap: max 4 read/grep/ls actions before the first edit. Track count explicitly; on the 4th such action, immediately plan and make an edit next — no exceptions, no \"one more grep.\"\n2. Never repeat an identical read/grep on the same target — track what you've already seen.\n3. Before editing, read the full function/class (not just the matched line) so you see sibling conditionals, related branches, mode/orientation flags, and other call sites the fix must also handle.\n4. Gold fixes often span multiple hunks in the same file: after making your first edit, scan the same function/class and nearby similar code (e.g. parallel branches, mirrored assignments, adjacent attributes) for a second spot that needs the analogous change before running tests.\n5. After run_tests fails, do not immediately rerun without changing something: re-read the failure trace, diagnose which assumption was wrong (missing import, unhandled branch, off-by-one, missing companion hunk), adjust the edit, then rerun. Never issue 2+ consecutive run_tests without an intervening edit.\n6. If run_tests fails twice on the same edit, broaden your view: look for other spots in the same file or an imported module that mirror the changed logic — the gold fix likely touches more than one line/branch.\n7. Do not edit test files. Only submit after run_tests passes."
+      },
+      "lesson": "AVOID: mutating retrieval_policy increased empty_patch 2→3 (regressed 7 instances, gold 3→2) — this rewrite direction hurts; do not repeat."
+    },
+    {
+      "candidate": "cand-6",
+      "parent": "cand-5",
+      "target": "test_policy",
+      "decision": "accepted",
+      "seed_score": 33.284,
+      "candidate_score": 57.704,
+      "gold_seed": 3,
+      "gold_candidate": 5,
+      "cost": 0.3979,
+      "regressed_instances": [
+        "astropy__astropy-14182",
+        "django__django-10914",
+        "matplotlib__matplotlib-18869",
+        "matplotlib__matplotlib-22711",
+        "pallets__flask-4045",
+        "pallets__flask-4992",
+        "psf__requests-1963"
+      ],
+      "improved_instances": [
+        "astropy__astropy-12907",
+        "django__django-10924",
+        "mwaskom__seaborn-2848",
+        "mwaskom__seaborn-3010",
+        "psf__requests-2148"
+      ],
+      "failure_modes": {
+        "empty_patch": 1,
+        "wrong_file": 0,
+        "test_not_run": 1,
+        "thrash": 1,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "failure_modes_on_regressed": {
+        "empty_patch": 1,
+        "wrong_file": 0,
+        "test_not_run": 1,
+        "thrash": 1,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "seed_failure_modes": {
+        "empty_patch": 2,
+        "wrong_file": 0,
+        "test_not_run": 3,
+        "thrash": 4,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "mutation_diff": {
+        "component": "test_policy",
+        "before": "Never edit test files.",
+        "after": "Never edit test files. Use them only to understand expected behavior.\n\nBy the midpoint of your step budget, make at least one real code edit — do not spend the whole budget reading/grepping. If you cannot find the exact fix location, edit your best-guess file anyway rather than ending with an empty patch.\n\nWhen editing, copy the exact surrounding lines (whitespace, indentation, imports) from the file before changing them — mismatched context is why edits fail to apply. Re-check the target lines exist verbatim before submitting a line_edit.\n\nAfter every edit, run the tests. Before submitting, tests must have been run at least once and must pass.\n\nIf a test run fails, read the failure output carefully and diagnose the actual cause — trace which line/condition triggered it. Do not rerun the same tests unchanged more than twice: two identical failures mean your fix is wrong, not that the test needs retrying. On the second failure, stop, re-read the traceback plus the relevant source lines again, and change your actual code logic, not just re-execute.\n\nBefore submitting, confirm your edit is in the file that the failure trace points to and that it addresses the root cause (not just a symptom or unrelated line). Only submit once tests pass, or you are certain — after inspecting the failure trace — that the remaining failure is unrelated to your fix."
+      },
+      "lesson": "mutating test_policy raised gold 3→5 (improved 5, regressed 7) — KEEP direction."
+    },
+    {
+      "candidate": "cand-7",
+      "parent": "seed-agentic-v1",
+      "target": "retrieval_policy",
+      "decision": "rejected",
+      "seed_score": 33.284,
+      "candidate_score": 25.628,
+      "gold_seed": 3,
+      "gold_candidate": 3,
+      "cost": 0.4354,
+      "regressed_instances": [
+        "astropy__astropy-14182",
+        "django__django-10924",
+        "matplotlib__matplotlib-18869",
+        "matplotlib__matplotlib-22711",
+        "mwaskom__seaborn-3010",
+        "pallets__flask-4045",
+        "pallets__flask-4992"
+      ],
+      "improved_instances": [
+        "astropy__astropy-12907",
+        "django__django-10914",
+        "mwaskom__seaborn-2848",
+        "psf__requests-1963",
+        "psf__requests-2148"
+      ],
+      "failure_modes": {
+        "empty_patch": 5,
+        "wrong_file": 0,
+        "test_not_run": 7,
+        "thrash": 3,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "failure_modes_on_regressed": {
+        "empty_patch": 4,
+        "wrong_file": 0,
+        "test_not_run": 5,
         "thrash": 3,
         "bad_submit": 0,
         "protocol_error": 0
@@ -117,49 +402,163 @@
       "seed_failure_modes": {
         "empty_patch": 2,
         "wrong_file": 0,
-        "test_not_run": 4,
-        "thrash": 2,
+        "test_not_run": 3,
+        "thrash": 4,
         "bad_submit": 0,
         "protocol_error": 0
       },
       "mutation_diff": {
         "component": "retrieval_policy",
         "before": "Strategy: explore (read/grep/ls) to locate the fix, make minimal edit(s), run_tests, iterate on the trace, then submit once tests pass.",
-        "after": "Strategy:\n1. Explore efficiently: use ls/grep to locate candidate files, then read each relevant file ONCE with enough surrounding context (function/class body, not just the matched line). Do not re-read the same file/region twice — if you need more context, read a wider span instead of repeating.\n2. By step 5-6 at the latest, you MUST attempt an edit. Never end exploration with zero edits — a partial fix beats no fix. If unsure of the exact root cause, make your best-supported edit based on what you've read, then verify via tests.\n3. After every edit, run_tests immediately.\n4. If tests fail: re-read the actual failure trace/error message before changing anything. Diagnose why the fix didn't work, then either fix nearby logic you may have missed (check surrounding lines, related branches, imports) or revise the edit. Do NOT just re-run tests without changing the code or investigating — 2 failing runs in a row without a code change is a hard stop signal to re-diagnose.\n5. Do not edit test files.\n6. Only submit after run_tests shows tests passing, or after exhausting reasonable diagnosis attempts with your best fix applied."
+        "after": "Strategy: explore (read/grep/ls) with a budget — by mid-budget (half your steps), you must have made at least one concrete edit attempt. Do not keep reading/grepping indefinitely; if unsure of exact location, pick the most likely file and inspect it fully (read enough surrounding context, including related functions/branches, not just the first match).\nBefore editing: read the full function/class containing the suspected bug, and check for similar logic elsewhere in the same file (e.g. other branches, orientations, call sites) that may need the same fix — partial fixes that miss a sibling code path are a common failure.\nMake the edit, then run_tests. If tests still fail, re-read the failing trace and the surrounding code again (not just the line you edited) — look for a second hunk or missed case before re-editing. Do not resubmit the same edit unchanged.\nNever submit with an empty patch. Never edit test files. Submit only after tests pass or you have made a genuine, context-verified fix attempt."
       },
-      "lesson": "AVOID: mutating retrieval_policy increased empty_patch 2→4 (regressed 7 instances, gold 3→3) — this rewrite direction hurts; do not repeat."
+      "lesson": "AVOID: mutating retrieval_policy increased test_not_run 3→7 (regressed 7 instances, gold 3→3) — this rewrite direction hurts; do not repeat."
     },
     {
-      "candidate": "cand-3",
-      "parent": "cand-1",
-      "target": "test_policy",
-      "decision": "accepted",
-      "seed_score": 34.303,
-      "candidate_score": 33.298,
+      "candidate": "cand-8",
+      "parent": "cand-6",
+      "target": "retrieval_policy",
+      "decision": "rejected",
+      "seed_score": 33.284,
+      "candidate_score": 31.932,
       "gold_seed": 3,
       "gold_candidate": 3,
-      "cost": 0.3506,
+      "cost": 0.5346,
       "regressed_instances": [
+        "matplotlib__matplotlib-18869",
+        "matplotlib__matplotlib-22711",
+        "mwaskom__seaborn-3010",
+        "pallets__flask-4045",
+        "pallets__flask-4992"
+      ],
+      "improved_instances": [
         "astropy__astropy-12907",
         "astropy__astropy-14182",
         "django__django-10914",
         "django__django-10924",
+        "mwaskom__seaborn-2848",
+        "psf__requests-1963",
+        "psf__requests-2148"
+      ],
+      "failure_modes": {
+        "empty_patch": 3,
+        "wrong_file": 0,
+        "test_not_run": 4,
+        "thrash": 0,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "failure_modes_on_regressed": {
+        "empty_patch": 1,
+        "wrong_file": 0,
+        "test_not_run": 2,
+        "thrash": 0,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "seed_failure_modes": {
+        "empty_patch": 2,
+        "wrong_file": 0,
+        "test_not_run": 3,
+        "thrash": 4,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "mutation_diff": {
+        "component": "retrieval_policy",
+        "before": "Strategy: explore (read/grep/ls) to locate the fix, make minimal edit(s), run_tests, iterate on the trace, then submit once tests pass.",
+        "after": "Strategy: explore just enough to locate the fix, then commit to an edit. Exploration is capped hard — never exceed 4 read/grep/ls actions before your first edit, regardless of confidence.\n\nRules:\n1. Hard cap: max 4 read/grep/ls actions before the first edit. Track count explicitly; on the 4th such action, immediately plan and make an edit next — no exceptions, no \"one more grep.\" If you hit step 5 with no edit, make your best-guess edit now.\n2. Never repeat an identical read/grep on the same target — track what you've already seen.\n3. Before editing, read the FULL function/class (not just the matched line). Explicitly look for: sibling conditionals, mode/orientation/direction flags, parallel branches (if/else, vertical/horizontal, get/set pairs), other call sites, and any imports the fix will require. A fix that only patches one branch of a flag-driven conditional is incomplete — find and patch the mirrored branch too.\n4. Gold fixes often span multiple hunks in the same file: after your first edit, re-scan the same function/class and nearby similar code (parallel branches, mirrored assignments, adjacent attributes, missing imports at top of file) for a second spot needing the analogous change, before running tests.\n5. After run_tests fails, do not immediately rerun without changing something: re-read the failure trace line-by-line, diagnose exactly which assumption was wrong (missing import, unhandled branch/flag, off-by-one, missing companion hunk), adjust the edit, then rerun. Never issue 2+ consecutive run_tests without an intervening edit.\n6. If run_tests fails twice on the same edit, broaden your view: grep the same file/module for other spots that mirror the changed logic (same flag, same pattern name) — the gold fix likely touches more than one line/branch, or needs an added import.\n7. Before submitting, diff your edit mentally against the original bug report/trace: confirm every code path implied by the report (not just the first one you found) is covered.\n8. Do not edit test files. Only submit after run_tests passes."
+      },
+      "lesson": "AVOID: mutating retrieval_policy increased empty_patch 2→3 (regressed 5 instances, gold 3→3) — this rewrite direction hurts; do not repeat."
+    },
+    {
+      "candidate": "cand-9",
+      "parent": "cand-6",
+      "target": "retrieval_policy",
+      "decision": "rejected",
+      "seed_score": 33.284,
+      "candidate_score": 36.152,
+      "gold_seed": 3,
+      "gold_candidate": 3,
+      "cost": 0.4245,
+      "regressed_instances": [
+        "astropy__astropy-14182",
+        "django__django-10914",
+        "django__django-10924",
+        "matplotlib__matplotlib-18869",
         "matplotlib__matplotlib-22711",
         "pallets__flask-4045",
         "pallets__flask-4992",
         "psf__requests-1963"
       ],
       "improved_instances": [
-        "matplotlib__matplotlib-18869",
+        "astropy__astropy-12907",
         "mwaskom__seaborn-2848",
         "mwaskom__seaborn-3010",
         "psf__requests-2148"
       ],
       "failure_modes": {
+        "empty_patch": 1,
+        "wrong_file": 0,
+        "test_not_run": 3,
+        "thrash": 1,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "failure_modes_on_regressed": {
+        "empty_patch": 1,
+        "wrong_file": 0,
+        "test_not_run": 2,
+        "thrash": 1,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "seed_failure_modes": {
+        "empty_patch": 2,
+        "wrong_file": 0,
+        "test_not_run": 3,
+        "thrash": 4,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "mutation_diff": {
+        "component": "retrieval_policy",
+        "before": "Strategy: explore (read/grep/ls) to locate the fix, make minimal edit(s), run_tests, iterate on the trace, then submit once tests pass.",
+        "after": "Strategy: explore just enough to locate the fix, then commit to a COMPLETE edit. Exploration is capped hard and must never be skipped past.\n\nRules:\n1. Hard cap: max 4 read/grep/ls actions total before your first edit. Count every read/grep/ls call as you go, including repeats. The moment you hit the 4th such action, your very next action MUST be an edit — no \"one more grep\", no exceptions, even if you feel unsure. An imperfect edit beats an empty patch.\n2. Never repeat an identical read/grep on the same target — track what you've already seen.\n3. Before editing, read the full function/class containing the match, its imports, and any sibling conditionals/branches (mode, orientation, type flags) or other call sites the fix must also handle.\n4. Treat a fix as incomplete by default. After your first edit, actively search the same file (and directly-imported modules) for: mirrored/parallel branches, matching assignments in sibling methods, required new imports, or other call sites needing the same change. Make this second-hunk check BEFORE running tests, not after a failure.\n5. After run_tests fails: do not rerun blindly. Re-read the failure trace, name the specific wrong assumption (missing import, unhandled branch/orientation, off-by-one, missing companion hunk), fix it with an edit, then rerun. Never issue 2+ consecutive run_tests without an intervening edit.\n6. If run_tests fails twice on the same edit, broaden your view to the whole file or an imported module for a missed mirrored change — the gold fix likely touches more than one spot.\n7. Do not edit test files. Only submit after run_tests passes."
+      },
+      "lesson": "AVOID: mutating retrieval_policy dropped gold 3→3 (regressed 8 instances, gold 3→3) — this rewrite direction hurts; do not repeat."
+    },
+    {
+      "candidate": "cand-10",
+      "parent": "cand-4",
+      "target": "retrieval_policy",
+      "decision": "accepted",
+      "seed_score": 33.284,
+      "candidate_score": 43.849,
+      "gold_seed": 3,
+      "gold_candidate": 4,
+      "cost": 0.3262,
+      "regressed_instances": [
+        "astropy__astropy-14182",
+        "django__django-10914",
+        "matplotlib__matplotlib-18869",
+        "mwaskom__seaborn-3010",
+        "pallets__flask-4045",
+        "pallets__flask-4992"
+      ],
+      "improved_instances": [
+        "astropy__astropy-12907",
+        "django__django-10924",
+        "matplotlib__matplotlib-22711",
+        "mwaskom__seaborn-2848",
+        "psf__requests-1963",
+        "psf__requests-2148"
+      ],
+      "failure_modes": {
         "empty_patch": 2,
         "wrong_file": 1,
-        "test_not_run": 4,
-        "thrash": 3,
+        "test_not_run": 5,
+        "thrash": 1,
         "bad_submit": 0,
         "protocol_error": 0
       },
@@ -167,87 +566,268 @@
         "empty_patch": 1,
         "wrong_file": 0,
         "test_not_run": 3,
-        "thrash": 3,
+        "thrash": 1,
         "bad_submit": 0,
         "protocol_error": 0
       },
       "seed_failure_modes": {
         "empty_patch": 2,
         "wrong_file": 0,
-        "test_not_run": 4,
+        "test_not_run": 3,
+        "thrash": 4,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "mutation_diff": {
+        "component": "retrieval_policy",
+        "before": "Strategy: explore (read/grep/ls) to locate the fix, make minimal edit(s), run_tests, iterate on the trace, then submit once tests pass.",
+        "after": "Strategy: explore just enough to locate the fix, then commit to an edit fast. Total budget is ~12 steps — treat exploration as expensive.\n\nRules:\n1. Hard cap: after at most 4 read/grep/ls actions with no edit yet, stop searching and make your best-guess edit on the next action, even if unsure. An imperfect edit beats an empty patch — emptyPatch is the worst outcome.\n2. Before that cap, read the full function/class containing the likely fix (not just the matched line) so you see sibling conditionals, related branches, and imports the fix must respect. One well-chosen read beats three shallow greps.\n3. Never issue the same read/grep on a target you've already seen — if you're about to repeat one, that is your signal to stop exploring and edit now instead.\n4. Track your step count. By step 5 you must have attempted at least one edit. If you notice you're only reading/grepping past step 5, force an edit immediately using your best current understanding.\n5. After run_tests fails, do not rerun immediately: re-read the failure trace, identify the wrong assumption, and change the edit (imports, adjacent branch, edge case) before the next run_tests. Never issue 2+ consecutive run_tests without an intervening edit change.\n6. If run_tests fails twice on the same edit, check for a mirrored/sibling spot in the same file or an imported module — gold fixes often touch more than one line.\n7. Do not edit test files. Only submit after run_tests passes."
+      },
+      "lesson": "mutating retrieval_policy raised gold 3→4 (improved 6, regressed 6) — KEEP direction."
+    },
+    {
+      "candidate": "cand-11",
+      "parent": "cand-7",
+      "target": "test_policy",
+      "decision": "rejected",
+      "seed_score": 33.284,
+      "candidate_score": 25.016,
+      "gold_seed": 3,
+      "gold_candidate": 3,
+      "cost": 0.4918,
+      "regressed_instances": [
+        "astropy__astropy-14182",
+        "django__django-10914",
+        "django__django-10924",
+        "matplotlib__matplotlib-18869",
+        "matplotlib__matplotlib-22711",
+        "pallets__flask-4045",
+        "pallets__flask-4992",
+        "psf__requests-1963"
+      ],
+      "improved_instances": [
+        "astropy__astropy-12907",
+        "mwaskom__seaborn-2848",
+        "mwaskom__seaborn-3010",
+        "psf__requests-2148"
+      ],
+      "failure_modes": {
+        "empty_patch": 6,
+        "wrong_file": 0,
+        "test_not_run": 6,
         "thrash": 2,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "failure_modes_on_regressed": {
+        "empty_patch": 4,
+        "wrong_file": 0,
+        "test_not_run": 4,
+        "thrash": 1,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "seed_failure_modes": {
+        "empty_patch": 2,
+        "wrong_file": 0,
+        "test_not_run": 3,
+        "thrash": 4,
         "bad_submit": 0,
         "protocol_error": 0
       },
       "mutation_diff": {
         "component": "test_policy",
         "before": "Never edit test files.",
-        "after": "Never edit test files (read them only for context).\nDo not just search/read indefinitely: after ~5 exploration steps (read/grep/ls), commit to an edit attempt in the source file, not test file.\nWhen editing, copy the exact surrounding lines verbatim before modifying; verify the edit applied before moving on.\nAlways run tests after every edit. If a test run fails twice in a row, stop repeating the same run: re-read the failing trace/output, identify the real cause, and change your fix strategy before retrying.\nNever submit without at least one passing run_tests call on the actual source fix."
+        "after": "Never edit test files. Always run the test suite after making a code change, and again immediately before submitting — never submit without a run_tests call. If exploration exceeds half your step budget without an edit, stop reading and make your best-guess edit immediately, then verify with tests. Confirm each edit actually applied (diff/patch present) before moving on; retry immediately if it did not land. If tests fail after edit, inspect failure output and revise the fix — do not submit a change that fails its own test run."
       },
-      "lesson": "mutating test_policy held gold at 3 but improved shaping on 4 instances — neutral-positive, low confidence."
+      "lesson": "AVOID: mutating test_policy increased empty_patch 2→6 (regressed 8 instances, gold 3→3) — this rewrite direction hurts; do not repeat."
     },
     {
-      "candidate": "cand-4",
-      "parent": "cand-2",
+      "candidate": "cand-12",
+      "parent": "cand-10",
       "target": "test_policy",
-      "decision": "rejected",
-      "seed_score": 34.303,
-      "candidate_score": 22.58,
+      "decision": "accepted",
+      "seed_score": 33.284,
+      "candidate_score": 52.725,
       "gold_seed": 3,
-      "gold_candidate": 2,
-      "cost": 0.4604,
+      "gold_candidate": 5,
+      "cost": 0.3883,
       "regressed_instances": [
-        "astropy__astropy-12907",
         "astropy__astropy-14182",
         "django__django-10914",
+        "mwaskom__seaborn-3010",
+        "pallets__flask-4045",
+        "pallets__flask-4992"
+      ],
+      "improved_instances": [
+        "astropy__astropy-12907",
         "django__django-10924",
+        "matplotlib__matplotlib-18869",
         "matplotlib__matplotlib-22711",
         "mwaskom__seaborn-2848",
+        "psf__requests-1963",
+        "psf__requests-2148"
+      ],
+      "failure_modes": {
+        "empty_patch": 3,
+        "wrong_file": 0,
+        "test_not_run": 3,
+        "thrash": 1,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "failure_modes_on_regressed": {
+        "empty_patch": 3,
+        "wrong_file": 0,
+        "test_not_run": 3,
+        "thrash": 1,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "seed_failure_modes": {
+        "empty_patch": 2,
+        "wrong_file": 0,
+        "test_not_run": 3,
+        "thrash": 4,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "mutation_diff": {
+        "component": "test_policy",
+        "before": "Never edit test files.",
+        "after": "Never edit test files.\nAfter every edit, run the full test suite before doing anything else.\nNever submit while any test is failing — if run_tests reports failures, diagnose the exact failing assertion/line and revise your edit; only submit once tests pass (or you are certain no test exists to check, in which case still run the suite to confirm no regressions).\nIf a test run fails, re-read the failure output carefully and change your approach — do not re-run the same test unmodified more than twice in a row.\nBefore editing, read enough surrounding context (the whole function/class, and related call sites) to be sure you found the true root cause, not just the first matching line — a fix in the wrong file or an incomplete fix (e.g. missing a related branch/call site) still counts as failure even if tests appear to pass locally.\nIf you have spent more than half your step budget without making an edit, stop exploring and make your best-guess edit now, then verify with tests before submitting."
+      },
+      "lesson": "mutating test_policy raised gold 3→5 (improved 7, regressed 5) — KEEP direction."
+    },
+    {
+      "candidate": "cand-13",
+      "parent": "cand-12",
+      "target": "retrieval_policy",
+      "decision": "rejected",
+      "seed_score": 33.284,
+      "candidate_score": 33.675,
+      "gold_seed": 3,
+      "gold_candidate": 3,
+      "cost": 0.4129,
+      "regressed_instances": [
+        "astropy__astropy-14182",
+        "django__django-10914",
+        "matplotlib__matplotlib-18869",
+        "matplotlib__matplotlib-22711",
         "mwaskom__seaborn-3010",
         "pallets__flask-4045",
         "pallets__flask-4992",
         "psf__requests-1963"
       ],
       "improved_instances": [
-        "matplotlib__matplotlib-18869",
+        "astropy__astropy-12907",
+        "django__django-10924",
+        "mwaskom__seaborn-2848",
         "psf__requests-2148"
       ],
       "failure_modes": {
         "empty_patch": 2,
-        "wrong_file": 0,
+        "wrong_file": 1,
         "test_not_run": 5,
-        "thrash": 4,
+        "thrash": 1,
         "bad_submit": 0,
         "protocol_error": 0
       },
       "failure_modes_on_regressed": {
-        "empty_patch": 2,
+        "empty_patch": 1,
         "wrong_file": 0,
-        "test_not_run": 4,
-        "thrash": 4,
+        "test_not_run": 2,
+        "thrash": 1,
         "bad_submit": 0,
         "protocol_error": 0
       },
       "seed_failure_modes": {
         "empty_patch": 2,
         "wrong_file": 0,
-        "test_not_run": 4,
-        "thrash": 2,
+        "test_not_run": 3,
+        "thrash": 4,
         "bad_submit": 0,
         "protocol_error": 0
       },
       "mutation_diff": {
-        "component": "test_policy",
-        "before": "Never edit test files.",
-        "after": "Never edit test files.\n\nBias toward action: budget at most 4 read/grep/ls steps before making an edit attempt.\nOnce you've located the likely file (via grep/read), stop exploring and propose a concrete patch — do not keep re-reading the same files.\n\nBefore editing, read enough surrounding context (the function/class body, not just the matched line) to understand control flow, so the fix is structurally correct, not just plausible.\n\nAfter every edit, run the tests. If a test run fails, do not immediately rerun — first re-read the failure output and the touched code, diagnose why, and change your approach before editing again. Never repeat the same run_tests call without changing the code first.\n\nIf tests still fail after 2 attempts, re-inspect the relevant code paths (including related files) instead of resubmitting the same patch.\n\nOnly submit after tests pass, or after a genuine second diagnosis attempt confirms the fix is correct."
+        "component": "retrieval_policy",
+        "before": "Strategy: explore (read/grep/ls) to locate the fix, make minimal edit(s), run_tests, iterate on the trace, then submit once tests pass.",
+        "after": "Strategy: explore just enough to locate the fix, then commit to an edit fast. Total budget is ~12 steps — treat exploration as expensive.\n\nRules:\n1. Hard numeric cap: count every read/grep/ls action as you go. The instant your count hits 4 with no edit made, STOP searching — your very next action must be an edit, even if unsure. Do not let a 5th read/grep happen \"just to be sure.\" An imperfect edit beats an empty patch — emptyPatch is the worst possible outcome.\n2. Before hitting the cap, read the full function/class containing the likely fix (not just the matched line) so you see sibling conditionals, related branches, and imports the fix must respect. One well-chosen read beats three shallow greps.\n3. Never repeat the same read/grep on a target you've already seen — that is your signal to stop exploring and edit now.\n4. Track step count explicitly. By step 5 you must have attempted at least one edit, no exceptions.\n5. Gold fixes frequently touch more than one spot in the same file (a sibling line, a matching branch, an added import). After making your first edit, grep/search the same file for structurally similar lines (same attribute, same conditional pattern, same call) before running tests — do not assume a single-line change is complete.\n6. After run_tests fails, do not rerun immediately: re-read the failure trace, identify the wrong assumption, and change the edit (imports, adjacent branch, sibling location, edge case) before the next run_tests. Never issue 2+ consecutive run_tests without an intervening edit change.\n7. If run_tests fails twice on the same edit, check for a mirrored/sibling spot in the same file or an imported module — gold fixes often touch more than one line.\n8. Do not edit test files. Only submit after run_tests passes."
       },
-      "lesson": "AVOID: mutating test_policy increased thrash 2→4 (regressed 10 instances, gold 3→2) — this rewrite direction hurts; do not repeat."
+      "lesson": "AVOID: mutating retrieval_policy increased test_not_run 3→5 (regressed 8 instances, gold 3→3) — this rewrite direction hurts; do not repeat."
+    },
+    {
+      "candidate": "cand-14",
+      "parent": "cand-6",
+      "target": "retrieval_policy",
+      "decision": "accepted",
+      "seed_score": 33.284,
+      "candidate_score": 66.245,
+      "gold_seed": 3,
+      "gold_candidate": 6,
+      "cost": 0.3761,
+      "regressed_instances": [
+        "django__django-10914",
+        "django__django-10924",
+        "matplotlib__matplotlib-18869",
+        "pallets__flask-4992"
+      ],
+      "improved_instances": [
+        "astropy__astropy-12907",
+        "astropy__astropy-14182",
+        "matplotlib__matplotlib-22711",
+        "mwaskom__seaborn-2848",
+        "mwaskom__seaborn-3010",
+        "pallets__flask-4045",
+        "psf__requests-1963",
+        "psf__requests-2148"
+      ],
+      "failure_modes": {
+        "empty_patch": 1,
+        "wrong_file": 0,
+        "test_not_run": 3,
+        "thrash": 2,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "failure_modes_on_regressed": {
+        "empty_patch": 0,
+        "wrong_file": 0,
+        "test_not_run": 1,
+        "thrash": 0,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "seed_failure_modes": {
+        "empty_patch": 2,
+        "wrong_file": 0,
+        "test_not_run": 3,
+        "thrash": 4,
+        "bad_submit": 0,
+        "protocol_error": 0
+      },
+      "mutation_diff": {
+        "component": "retrieval_policy",
+        "before": "Strategy: explore (read/grep/ls) to locate the fix, make minimal edit(s), run_tests, iterate on the trace, then submit once tests pass.",
+        "after": "Strategy: explore just enough to locate the fix, then make a COMPLETE edit (all needed hunks in one pass), then verify.\n\nRules:\n1. Hard cap: max 4 read/grep/ls actions before the first edit. Track count explicitly; on the 4th such action, immediately plan and make an edit next — no exceptions, no \"one more grep.\"\n2. Never repeat an identical read/grep on the same target — track what you've already seen.\n3. Before editing, read the full function/class (not just the matched line) so you see sibling conditionals, related branches, mode/orientation flags, and other call sites the fix must also handle.\n4. Before finalizing an edit, grep the same file for other occurrences of the symbol/attribute/condition you are changing (parallel branches, mirrored assignments, other call sites, other orientation/mode checks). If found, include the analogous change as a companion hunk in the SAME edit, not a later afterthought.\n5. If your fix introduces a new name, module, or exception, check it is imported/defined in the file; add the missing import in the same edit.\n6. Gold fixes often span multiple hunks in one file — treat a single-line fix as provisional until you've checked step 4.\n7. After run_tests fails, do not immediately rerun without changing something: re-read the failure trace, diagnose which assumption was wrong (missing import, unhandled branch, off-by-one, missing companion hunk), adjust the edit, then rerun. Never issue 2+ consecutive run_tests without an intervening edit.\n8. If run_tests fails twice on the same edit, broaden your view: search the same file (and imported modules) for other spots mirroring the changed logic — the gold fix likely touches more than one line/branch.\n9. Do not edit test files. Only submit after run_tests passes."
+      },
+      "lesson": "mutating retrieval_policy raised gold 3→6 (improved 8, regressed 4) — KEEP direction."
     }
   ],
   "lessons": [
-    "AVOID: mutating retrieval_policy increased empty_patch 2→4 (regressed 6 instances, gold 3→1) — this rewrite direction hurts; do not repeat.",
-    "AVOID: mutating retrieval_policy increased empty_patch 2→4 (regressed 7 instances, gold 3→3) — this rewrite direction hurts; do not repeat.",
+    "AVOID: mutating retrieval_policy increased empty_patch 2→3 (regressed 6 instances, gold 3→1) — this rewrite direction hurts; do not repeat.",
     "mutating test_policy held gold at 3 but improved shaping on 4 instances — neutral-positive, low confidence.",
-    "AVOID: mutating test_policy increased thrash 2→4 (regressed 10 instances, gold 3→2) — this rewrite direction hurts; do not repeat."
+    "mutating test_policy held gold at 2 but improved shaping on 3 instances — neutral-positive, low confidence.",
+    "mutating test_policy held gold at 2 but improved shaping on 3 instances — neutral-positive, low confidence.",
+    "AVOID: mutating retrieval_policy increased empty_patch 2→3 (regressed 7 instances, gold 3→2) — this rewrite direction hurts; do not repeat.",
+    "mutating test_policy raised gold 3→5 (improved 5, regressed 7) — KEEP direction.",
+    "AVOID: mutating retrieval_policy increased test_not_run 3→7 (regressed 7 instances, gold 3→3) — this rewrite direction hurts; do not repeat.",
+    "AVOID: mutating retrieval_policy increased empty_patch 2→3 (regressed 5 instances, gold 3→3) — this rewrite direction hurts; do not repeat.",
+    "AVOID: mutating retrieval_policy dropped gold 3→3 (regressed 8 instances, gold 3→3) — this rewrite direction hurts; do not repeat.",
+    "mutating retrieval_policy raised gold 3→4 (improved 6, regressed 6) — KEEP direction.",
+    "AVOID: mutating test_policy increased empty_patch 2→6 (regressed 8 instances, gold 3→3) — this rewrite direction hurts; do not repeat.",
+    "mutating test_policy raised gold 3→5 (improved 7, regressed 5) — KEEP direction.",
+    "AVOID: mutating retrieval_policy increased test_not_run 3→5 (regressed 8 instances, gold 3→3) — this rewrite direction hurts; do not repeat.",
+    "mutating retrieval_policy raised gold 3→6 (improved 8, regressed 4) — KEEP direction."
   ]
 }

@@ -1,0 +1,33 @@
+{
+  "generatedAt": "2026-07-02T22:58:11.553Z",
+  "slice": "HOLDOUT (advisor-medium-25.json instances[12:24], xarray-4094 … sympy-12171)",
+  "invocation": "evaluate-genome.mjs --skip 12 --first 12 --model z-ai/glm-5.2 --max-steps 12 --concurrency 2 --max-cost 3 (gold ON)",
+  "seed": {
+    "gold": 2,
+    "n": 12,
+    "sum": 12.815,
+    "cost": 0.5916,
+    "resolved": [
+      "pytest-dev__pytest-11143",
+      "scikit-learn__scikit-learn-10297"
+    ]
+  },
+  "cand6": {
+    "gold": 3,
+    "n": 12,
+    "sum": 23.851,
+    "cost": 0.5735,
+    "resolved": [
+      "pytest-dev__pytest-11143",
+      "scikit-learn__scikit-learn-10297",
+      "sphinx-doc__sphinx-10325"
+    ]
+  },
+  "delta": 1,
+  "train_recap": {
+    "seed": 3,
+    "cand6": 5
+  },
+  "verdict": "PROMOTE",
+  "lesson": "cand-6 mutated the executor genome`s test_policy component (parent cand-5): it sharpened the run-tests discipline — run tests after every edit; on a failing run, read the traceback and change the actual code logic rather than re-executing the same tests (hard rule: no 2+ identical run_tests without an intervening edit); and before submitting, confirm the edit sits in the file the failure trace points to and addresses root cause. On the 12-instance TRAIN slice this lifted gold 3→5. On the unseen 12-instance HOLDOUT slice the same policy scored 3/12 vs the frozen seed`s 2/12 (delta +1), resolving a STRICT SUPERSET of the seed`s wins (kept pytest-11143 and scikit-learn-10297, additionally solved sphinx-10325) — no regressions. The train-slice win therefore GENERALIZED (not overfit): the tighter test-feedback loop is a real, transferable improvement, so the test_policy mutation is promotable into the genome base."
+}

@@ -1,0 +1,277 @@
+{
+  "genome": "seed-agentic-v1",
+  "genomePath": "/home/ruvultra/projects/agent-harness-generator/.claude/worktrees/agent-a636763c41a26f512/packages/darwin-mode/bench/swebench/gepa/seed-genome.json",
+  "model": "z-ai/glm-5.2",
+  "manifest": "/home/ruvultra/projects/agent-harness-generator/.claude/worktrees/agent-a636763c41a26f512/packages/darwin-mode/bench/swebench/advisor-medium-25.json",
+  "skip": 12,
+  "first": 12,
+  "maxSteps": 12,
+  "noGold": false,
+  "runId": "holdout_seed",
+  "evaluatedAt": "2026-07-02T22:56:01.332Z",
+  "scores": {
+    "pydata__xarray-4094": -1.196,
+    "pydata__xarray-4493": -2.229,
+    "pylint-dev__pylint-5859": 0.954,
+    "pylint-dev__pylint-6506": -1.635,
+    "pytest-dev__pytest-11143": 10.922,
+    "pytest-dev__pytest-11148": -1.686,
+    "scikit-learn__scikit-learn-10297": 10.969,
+    "scikit-learn__scikit-learn-10508": 0.944,
+    "sphinx-doc__sphinx-10325": -1.536,
+    "sphinx-doc__sphinx-10451": -2.097,
+    "sympy__sympy-11400": -1.561,
+    "sympy__sympy-12171": 0.966
+  },
+  "feedbacks": {
+    "pydata__xarray-4094": "pydata__xarray-4094: score -1.196 (gold FAIL).\n12 steps: 2 grep, 5 read, 3 run_tests, 2 undefined; 0/0 edits landed; run_tests 3× (0 pass, 0 fail).\nread [\"xarray/core/dataarray.py\",\"xarray/core/dataset.py\",\"xarray/tests/test_dataset.py\"]; patch touched []; gold fix lives in [\"xarray/core/dataarray.py\"].\npenalties: emptyPatch -1, normalizedCost -0.196.\nfailure class 3 (exploration-loop (all steps read/grep/ls, empty patch)). mutation target: retrieval_policy — stop grep loops, force an edit attempt by mid-budget",
+    "pydata__xarray-4493": "pydata__xarray-4493: score -2.229 (gold FAIL).\n12 steps: 1 ls, 5 grep, 6 read; 0/0 edits landed; run_tests 0× (0 pass, 0 fail); 1 repeated-action warnings (thrash).\nread [\"xarray/core/variable.py\"]; patch touched []; gold fix lives in [\"xarray/core/variable.py\"].\npenalties: emptyPatch -1, repeatedReads -0.5, noTestsRun -0.5, normalizedCost -0.22882.\nfailure class 3 (exploration-loop (all steps read/grep/ls, empty patch)). mutation target: retrieval_policy — stop grep loops, force an edit attempt by mid-budget",
+    "pylint-dev__pylint-5859": "pylint-dev__pylint-5859: score 0.954 (gold FAIL).\n12 steps: 1 grep, 6 read, 1 edit, 1 line_edit, 2 run_tests, 1 ls; 2/2 edits landed; run_tests 2× (0 pass, 2 fail).\nread [\"pylint/checkers/misc.py\",\"tests/checkers/unittest_misc.py\"]; patch touched [\"pylint/checkers/misc.py\"]; gold fix lives in [\"pylint/checkers/misc.py\"].\npenalties: normalizedCost -0.04604.\nfailure class 4 (wrong-fix (right file, gold still fails)). mutation target: retrieval_policy + test_policy — require reading surrounding context and re-running tests before submit",
+    "pylint-dev__pylint-6506": "pylint-dev__pylint-6506: score -1.635 (gold FAIL).\n12 steps: 11 read, 1 grep; 0/0 edits landed; run_tests 0× (0 pass, 0 fail).\nread [\"pylint/config/config_initialization.py\",\"pylint/lint/run.py\",\"pylint/config/exceptions.py\",\"tests/config/test_config.py\"]; patch touched []; gold fix lives in [\"pylint/config/config_initialization.py\"].\npenalties: emptyPatch -1, noTestsRun -0.5, normalizedCost -0.13464.\nfailure class 3 (exploration-loop (all steps read/grep/ls, empty patch)). mutation target: retrieval_policy — stop grep loops, force an edit attempt by mid-budget",
+    "pytest-dev__pytest-11143": "pytest-dev__pytest-11143: score 10.922 (gold RESOLVED).\n12 steps: 4 read, 2 ls, 1 edit, 1 run_tests, 4 grep; 1/1 edits landed; run_tests 1× (0 pass, 1 fail).\nread [\"_pytest/assertion/rewrite.py\",\"src/_pytest/assertion/rewrite.py\"]; patch touched [\"src/_pytest/assertion/rewrite.py\"]; gold fix lives in [\"src/_pytest/assertion/rewrite.py\"].\npenalties: normalizedCost -0.0782.\nfailure class 0 (resolved).",
+    "pytest-dev__pytest-11148": "pytest-dev__pytest-11148: score -1.686 (gold FAIL).\n12 steps: 3 ls, 5 read, 2 grep, 2 undefined; 0/0 edits landed; run_tests 0× (0 pass, 0 fail).\nread [\"src/_pytest/pathlib.py\"]; patch touched []; gold fix lives in [\"src/_pytest/pathlib.py\"].\npenalties: emptyPatch -1, noTestsRun -0.5, normalizedCost -0.18584.\nfailure class 3 (exploration-loop (all steps read/grep/ls, empty patch)). mutation target: retrieval_policy — stop grep loops, force an edit attempt by mid-budget",
+    "scikit-learn__scikit-learn-10297": "scikit-learn__scikit-learn-10297: score 10.969 (gold RESOLVED).\n12 steps: 1 grep, 8 read, 2 line_edit, 1 run_tests; 2/2 edits landed; run_tests 1× (0 pass, 1 fail).\nread [\"sklearn/linear_model/ridge.py\"]; patch touched [\"sklearn/linear_model/ridge.py\"]; gold fix lives in [\"sklearn/linear_model/ridge.py\"].\npenalties: normalizedCost -0.03064.\nfailure class 0 (resolved).",
+    "scikit-learn__scikit-learn-10508": "scikit-learn__scikit-learn-10508: score 0.944 (gold FAIL).\n10 steps: 4 read, 3 line_edit, 1 run_tests, 1 grep, 1 submit; 1/3 edits landed; run_tests 1× (0 pass, 1 fail).\nread [\"sklearn/preprocessing/label.py\",\"sklearn/preprocessing/tests/test_label.py\"]; patch touched [\"sklearn/preprocessing/label.py\"]; gold fix lives in [\"sklearn/preprocessing/label.py\"].\npenalties: normalizedCost -0.05568.\nfailure class 4 (wrong-fix (right file, gold still fails)). mutation target: retrieval_policy + test_policy — require reading surrounding context and re-running tests before submit",
+    "sphinx-doc__sphinx-10325": "sphinx-doc__sphinx-10325: score -1.536 (gold FAIL).\n12 steps: 1 ls, 3 grep, 6 read, 2 undefined; 0/0 edits landed; run_tests 0× (0 pass, 0 fail).\nread [\"sphinx/ext/autodoc/__init__.py\",\"tests/test_ext_autodoc.py\"]; patch touched []; gold fix lives in [\"sphinx/ext/autodoc/__init__.py\"].\npenalties: emptyPatch -1, noTestsRun -0.5, normalizedCost -0.03612.\nfailure class 3 (exploration-loop (all steps read/grep/ls, empty patch)). mutation target: retrieval_policy — stop grep loops, force an edit attempt by mid-budget",
+    "sphinx-doc__sphinx-10451": "sphinx-doc__sphinx-10451: score -2.097 (gold FAIL).\n12 steps: 1 ls, 4 grep, 7 read; 0/0 edits landed; run_tests 0× (0 pass, 0 fail); 1 repeated-action warnings (thrash).\nread [\"sphinx/ext/autodoc/typehints.py\",\"tests/test_ext_autodoc_configs.py\",\"tests/roots/test-ext-autodoc/target/typehints.py\"]; patch touched []; gold fix lives in [\"sphinx/ext/autodoc/typehints.py\"].\npenalties: emptyPatch -1, repeatedReads -0.5, noTestsRun -0.5, normalizedCost -0.09652.\nfailure class 3 (exploration-loop (all steps read/grep/ls, empty patch)). mutation target: retrieval_policy — stop grep loops, force an edit attempt by mid-budget",
+    "sympy__sympy-11400": "sympy__sympy-11400: score -1.561 (gold FAIL).\n12 steps: 8 grep, 3 read, 1 undefined; 0/0 edits landed; run_tests 0× (0 pass, 0 fail).\nread [\"sympy/printing/ccode.py\",\"sympy/printing/codeprinter.py\"]; patch touched []; gold fix lives in [\"sympy/printing/ccode.py\"].\npenalties: emptyPatch -1, noTestsRun -0.5, normalizedCost -0.06096.\nfailure class 3 (exploration-loop (all steps read/grep/ls, empty patch)). mutation target: retrieval_policy — stop grep loops, force an edit attempt by mid-budget",
+    "sympy__sympy-12171": "sympy__sympy-12171: score 0.966 (gold FAIL).\n12 steps: 3 grep, 4 read, 1 line_edit, 3 run_tests, 1 submit; 1/1 edits landed; run_tests 3× (0 pass, 3 fail).\nread [\"sympy/printing/mathematica.py\",\"sympy/printing/tests/test_mathematica.py\"]; patch touched [\"sympy/printing/mathematica.py\"]; gold fix lives in [\"sympy/printing/mathematica.py\"].\npenalties: normalizedCost -0.0338.\nfailure class 5 (test-thrash (repeated failing run_tests without strategy change)). mutation target: test_policy — after 2 failing runs, require re-reading the failing trace and changing approach, not re-running"
+  },
+  "details": {
+    "pydata__xarray-4094": {
+      "gold": false,
+      "resolvedInLoop": false,
+      "failureClass": 3,
+      "steps": 12,
+      "thrash": 0,
+      "cost": 0.098,
+      "parts": {
+        "goldResolved": 0,
+        "targetedTestsPass": 0,
+        "minimalPatch": 0,
+        "touchedExpectedFiles": 0,
+        "emptyPatch": -1,
+        "repeatedReads": 0,
+        "noTestsRun": 0,
+        "testFileEdits": 0,
+        "normalizedCost": -0.196
+      }
+    },
+    "pydata__xarray-4493": {
+      "gold": false,
+      "resolvedInLoop": false,
+      "failureClass": 3,
+      "steps": 12,
+      "thrash": 1,
+      "cost": 0.11441,
+      "parts": {
+        "goldResolved": 0,
+        "targetedTestsPass": 0,
+        "minimalPatch": 0,
+        "touchedExpectedFiles": 0,
+        "emptyPatch": -1,
+        "repeatedReads": -0.5,
+        "noTestsRun": -0.5,
+        "testFileEdits": 0,
+        "normalizedCost": -0.22882
+      }
+    },
+    "pylint-dev__pylint-5859": {
+      "gold": false,
+      "resolvedInLoop": false,
+      "failureClass": 4,
+      "steps": 12,
+      "thrash": 0,
+      "cost": 0.02302,
+      "parts": {
+        "goldResolved": 0,
+        "targetedTestsPass": 0,
+        "minimalPatch": 0.5,
+        "touchedExpectedFiles": 0.5,
+        "emptyPatch": 0,
+        "repeatedReads": 0,
+        "noTestsRun": 0,
+        "testFileEdits": 0,
+        "normalizedCost": -0.04604
+      }
+    },
+    "pylint-dev__pylint-6506": {
+      "gold": false,
+      "resolvedInLoop": false,
+      "failureClass": 3,
+      "steps": 12,
+      "thrash": 0,
+      "cost": 0.06732,
+      "parts": {
+        "goldResolved": 0,
+        "targetedTestsPass": 0,
+        "minimalPatch": 0,
+        "touchedExpectedFiles": 0,
+        "emptyPatch": -1,
+        "repeatedReads": 0,
+        "noTestsRun": -0.5,
+        "testFileEdits": 0,
+        "normalizedCost": -0.13464
+      }
+    },
+    "pytest-dev__pytest-11143": {
+      "gold": true,
+      "resolvedInLoop": false,
+      "failureClass": 0,
+      "steps": 12,
+      "thrash": 0,
+      "cost": 0.0391,
+      "parts": {
+        "goldResolved": 10,
+        "targetedTestsPass": 0,
+        "minimalPatch": 0.5,
+        "touchedExpectedFiles": 0.5,
+        "emptyPatch": 0,
+        "repeatedReads": 0,
+        "noTestsRun": 0,
+        "testFileEdits": 0,
+        "normalizedCost": -0.0782
+      }
+    },
+    "pytest-dev__pytest-11148": {
+      "gold": false,
+      "resolvedInLoop": false,
+      "failureClass": 3,
+      "steps": 12,
+      "thrash": 0,
+      "cost": 0.09292,
+      "parts": {
+        "goldResolved": 0,
+        "targetedTestsPass": 0,
+        "minimalPatch": 0,
+        "touchedExpectedFiles": 0,
+        "emptyPatch": -1,
+        "repeatedReads": 0,
+        "noTestsRun": -0.5,
+        "testFileEdits": 0,
+        "normalizedCost": -0.18584
+      }
+    },
+    "scikit-learn__scikit-learn-10297": {
+      "gold": true,
+      "resolvedInLoop": false,
+      "failureClass": 0,
+      "steps": 12,
+      "thrash": 0,
+      "cost": 0.01532,
+      "parts": {
+        "goldResolved": 10,
+        "targetedTestsPass": 0,
+        "minimalPatch": 0.5,
+        "touchedExpectedFiles": 0.5,
+        "emptyPatch": 0,
+        "repeatedReads": 0,
+        "noTestsRun": 0,
+        "testFileEdits": 0,
+        "normalizedCost": -0.03064
+      }
+    },
+    "scikit-learn__scikit-learn-10508": {
+      "gold": false,
+      "resolvedInLoop": false,
+      "failureClass": 4,
+      "steps": 10,
+      "thrash": 0,
+      "cost": 0.02784,
+      "parts": {
+        "goldResolved": 0,
+        "targetedTestsPass": 0,
+        "minimalPatch": 0.5,
+        "touchedExpectedFiles": 0.5,
+        "emptyPatch": 0,
+        "repeatedReads": 0,
+        "noTestsRun": 0,
+        "testFileEdits": 0,
+        "normalizedCost": -0.05568
+      }
+    },
+    "sphinx-doc__sphinx-10325": {
+      "gold": false,
+      "resolvedInLoop": false,
+      "failureClass": 3,
+      "steps": 12,
+      "thrash": 0,
+      "cost": 0.01806,
+      "parts": {
+        "goldResolved": 0,
+        "targetedTestsPass": 0,
+        "minimalPatch": 0,
+        "touchedExpectedFiles": 0,
+        "emptyPatch": -1,
+        "repeatedReads": 0,
+        "noTestsRun": -0.5,
+        "testFileEdits": 0,
+        "normalizedCost": -0.03612
+      }
+    },
+    "sphinx-doc__sphinx-10451": {
+      "gold": false,
+      "resolvedInLoop": false,
+      "failureClass": 3,
+      "steps": 12,
+      "thrash": 1,
+      "cost": 0.04826,
+      "parts": {
+        "goldResolved": 0,
+        "targetedTestsPass": 0,
+        "minimalPatch": 0,
+        "touchedExpectedFiles": 0,
+        "emptyPatch": -1,
+        "repeatedReads": -0.5,
+        "noTestsRun": -0.5,
+        "testFileEdits": 0,
+        "normalizedCost": -0.09652
+      }
+    },
+    "sympy__sympy-11400": {
+      "gold": false,
+      "resolvedInLoop": false,
+      "failureClass": 3,
+      "steps": 12,
+      "thrash": 0,
+      "cost": 0.03048,
+      "parts": {
+        "goldResolved": 0,
+        "targetedTestsPass": 0,
+        "minimalPatch": 0,
+        "touchedExpectedFiles": 0,
+        "emptyPatch": -1,
+        "repeatedReads": 0,
+        "noTestsRun": -0.5,
+        "testFileEdits": 0,
+        "normalizedCost": -0.06096
+      }
+    },
+    "sympy__sympy-12171": {
+      "gold": false,
+      "resolvedInLoop": false,
+      "failureClass": 5,
+      "steps": 12,
+      "thrash": 0,
+      "cost": 0.0169,
+      "parts": {
+        "goldResolved": 0,
+        "targetedTestsPass": 0,
+        "minimalPatch": 0.5,
+        "touchedExpectedFiles": 0.5,
+        "emptyPatch": 0,
+        "repeatedReads": 0,
+        "noTestsRun": 0,
+        "testFileEdits": 0,
+        "normalizedCost": -0.0338
+      }
+    }
+  },
+  "goldResolved": 2,
+  "n": 12,
+  "sumScore": 12.815,
+  "meanScore": 1.068,
+  "cost": 0.5916,
+  "metricCalls": 12,
+  "artifacts": null
+}

@@ -1,0 +1,277 @@
+{
+  "genome": "cand-3",
+  "genomePath": "/home/ruvultra/projects/agent-harness-generator/.claude/worktrees/agent-a636763c41a26f512/packages/darwin-mode/bench/swebench/gepa/runs/genome-04-cand-3.json",
+  "model": "z-ai/glm-5.2",
+  "manifest": "/home/ruvultra/projects/agent-harness-generator/.claude/worktrees/agent-a636763c41a26f512/packages/darwin-mode/bench/swebench/advisor-medium-25.json",
+  "skip": 0,
+  "first": 12,
+  "maxSteps": 12,
+  "noGold": false,
+  "runId": "gepa_04_cand_3",
+  "evaluatedAt": "2026-07-02T21:50:53.268Z",
+  "scores": {
+    "astropy__astropy-12907": 10.905,
+    "astropy__astropy-14182": 0.277,
+    "django__django-10914": 10.934,
+    "django__django-10924": -2.067,
+    "matplotlib__matplotlib-18869": 0.968,
+    "matplotlib__matplotlib-22711": 0.912,
+    "mwaskom__seaborn-2848": -1.576,
+    "mwaskom__seaborn-3010": -1.544,
+    "pallets__flask-4045": -1.534,
+    "pallets__flask-4992": 0.949,
+    "psf__requests-1963": 0.957,
+    "psf__requests-2148": -1.556
+  },
+  "feedbacks": {
+    "astropy__astropy-12907": "astropy__astropy-12907: score 10.905 (gold RESOLVED).\n12 steps: 4 read, 1 line_edit, 5 undefined, 1 run_tests, 1 grep; 1/1 edits landed; run_tests 1× (0 pass, 1 fail).\nread [\"astropy/modeling/separable.py\",\"astropy/modeling/tests/test_separable.py\"]; patch touched [\"astropy/modeling/separable.py\"]; gold fix lives in [\"astropy/modeling/separable.py\"].\npenalties: normalizedCost -0.09548.\nfailure class 0 (resolved).\nteacher (paired success/advice): [advbench-B-med/acting-success] resolved gold with a patch touching [\"astropy/modeling/separable.py\"]",
+    "astropy__astropy-14182": "astropy__astropy-14182: score 0.277 (gold FAIL).\n12 steps: 2 grep, 8 read, 1 edit, 1 run_tests; 1/1 edits landed; run_tests 1× (0 pass, 1 fail); 1 repeated-action warnings (thrash).\nread [\"astropy/io/ascii/rst.py\",\"astropy/io/ascii/fixedwidth.py\"]; patch touched [\"astropy/io/ascii/rst.py\"]; gold fix lives in [\"astropy/io/ascii/rst.py\"].\npenalties: repeatedReads -0.5, normalizedCost -0.2229.\nfailure class 4 (wrong-fix (right file, gold still fails)). mutation target: retrieval_policy + test_policy — require reading surrounding context and re-running tests before submit\nteacher (paired success/advice): [D-oracle/oracle-advice] ORACLE ADVICE (derived from the gold patch — D-oracle probe, ADR-226 §4.8; NON-CONFORMANT by construction).\nThe correct fix, as exact next actions:\n1. Edit astropy/io/ascii/rst.py around line 27. Apply exactly this change (unified-diff hunk; - lines are removed, + lines added):\n \n \n class SimpleRSTData(FixedWidthData):\n-    start_line = 3\n     end_line = -1\n     splitter_class = FixedWidthTwoLineDataSplitter\n \n2. (further hunks elided for length — see astropy/io/ascii/rst.py line 39)\nDo not edit test files. After editing, run_tests, then submit.",
+    "django__django-10914": "django__django-10914: score 10.934 (gold RESOLVED).\n12 steps: 3 grep, 5 read, 1 edit, 2 run_tests, 1 ls; 1/1 edits landed; run_tests 2× (0 pass, 2 fail).\nread [\"django/conf/global_settings.py\",\"tests/test_utils/tests.py\",\"docs/ref/settings.txt\"]; patch touched [\"django/conf/global_settings.py\"]; gold fix lives in [\"django/conf/global_settings.py\"].\npenalties: normalizedCost -0.0662.\nfailure class 0 (resolved).",
+    "django__django-10924": "django__django-10924: score -2.067 (gold FAIL).\n12 steps: 1 ls, 2 grep, 6 read, 3 undefined; 0/0 edits landed; run_tests 0× (0 pass, 0 fail); 1 repeated-action warnings (thrash).\nread [\"django/db/models/fields/__init__.py\",\"django/forms/fields.py\",\"tests/model_fields/test_filepathfield.py\",\"tests/forms_tests/field_tests/test_filepathfield.py\"]; patch touched []; gold fix lives in [\"django/db/models/fields/__init__.py\"].\npenalties: emptyPatch -1, repeatedReads -0.5, noTestsRun -0.5, normalizedCost -0.06744.\nfailure class 3 (exploration-loop (all steps read/grep/ls, empty patch)). mutation target: retrieval_policy — stop grep loops, force an edit attempt by mid-budget\nteacher (paired success/advice): [advbench-B-med/acting-success] resolved gold with a patch touching [\"django/db/models/fields/__init__.py\"]",
+    "matplotlib__matplotlib-18869": "matplotlib__matplotlib-18869: score 0.968 (gold FAIL).\n12 steps: 6 grep, 3 read, 1 edit, 1 run_tests, 1 ls; 1/1 edits landed; run_tests 1× (0 pass, 1 fail).\nread [\"lib/matplotlib/__init__.py\",\"lib/matplotlib/tests/test_api.py\"]; patch touched [\"lib/matplotlib/__init__.py\"]; gold fix lives in [\"lib/matplotlib/__init__.py\"].\npenalties: normalizedCost -0.03244.\nfailure class 4 (wrong-fix (right file, gold still fails)). mutation target: retrieval_policy + test_policy — require reading surrounding context and re-running tests before submit\nteacher (paired success/advice): [D-oracle/oracle-advice] ORACLE ADVICE (derived from the gold patch — D-oracle probe, ADR-226 §4.8; NON-CONFORMANT by construction).\nThe correct fix, as exact next actions:\n1. (further hunks elided for length — see lib/matplotlib/__init__.py line 129)\nDo not edit test files. After editing, run_tests, then submit.",
+    "matplotlib__matplotlib-22711": "matplotlib__matplotlib-22711: score 0.912 (gold FAIL).\n11 steps: 4 read, 2 line_edit, 2 grep, 2 run_tests, 1 submit; 1/2 edits landed; run_tests 2× (0 pass, 2 fail).\nread [\"lib/matplotlib/widgets.py\",\"lib/matplotlib/tests/test_widgets.py\"]; patch touched [\"lib/matplotlib/widgets.py\"]; gold fix lives in [\"lib/matplotlib/widgets.py\"].\npenalties: normalizedCost -0.088.\nfailure class 4 (wrong-fix (right file, gold still fails)). mutation target: retrieval_policy + test_policy — require reading surrounding context and re-running tests before submit\nteacher (paired success/advice): [D-oracle/oracle-advice] ORACLE ADVICE (derived from the gold patch — D-oracle probe, ADR-226 §4.8; NON-CONFORMANT by construction).\nThe correct fix, as exact next actions:\n1. Edit lib/matplotlib/widgets.py around line 813. Apply exactly this change (unified-diff hunk; - lines are removed, + lines added):\n             val = self._max_in_bounds(pos)\n             self.set_max(val)\n         if self._active_handle:\n-            self._active_handle.set_xdata([val])\n+            if self.orientation == \"vertical\":\n+                self._active_handle.set_ydata([val])\n+            else:\n+                self._active_handle.set_xdata([val])\n \n     def _update(self, event):\n         \"\"\"Update the slid",
+    "mwaskom__seaborn-2848": "mwaskom__seaborn-2848: score -1.576 (gold FAIL).\n12 steps: 6 grep, 4 read, 2 undefined; 0/0 edits landed; run_tests 0× (0 pass, 0 fail).\nread [\"seaborn/_oldcore.py\",\"seaborn/axisgrid.py\"]; patch touched []; gold fix lives in [\"seaborn/_oldcore.py\"].\npenalties: emptyPatch -1, noTestsRun -0.5, normalizedCost -0.0764.\nfailure class 3 (exploration-loop (all steps read/grep/ls, empty patch)). mutation target: retrieval_policy — stop grep loops, force an edit attempt by mid-budget\nteacher (paired success/advice): [D-oracle/oracle-advice] ORACLE ADVICE (derived from the gold patch — D-oracle probe, ADR-226 §4.8; NON-CONFORMANT by construction).\nThe correct fix, as exact next actions:\n1. Edit seaborn/_oldcore.py around line 149. Apply exactly this change (unified-diff hunk; - lines are removed, + lines added):\n             # Use a value that's in the original data vector\n             value = self.lookup_table[key]\n         except KeyError:\n+\n+            if self.norm is None:\n+                # Currently we only get here in scatterplot with hue_order,\n+                # because scatterplot does not consider hue a grouping variable\n+                # So unused hue levels are in the data, but not the loo",
+    "mwaskom__seaborn-3010": "mwaskom__seaborn-3010: score -1.544 (gold FAIL).\n12 steps: 1 read, 11 line_edit; 0/11 edits landed; run_tests 0× (0 pass, 0 fail).\nread [\"seaborn/_stats/regression.py\"]; patch touched []; gold fix lives in [\"seaborn/_stats/regression.py\"].\npenalties: emptyPatch -1, noTestsRun -0.5, normalizedCost -0.0437.\nfailure class 2 (edit-mechanics (edits attempted, failed to apply)). mutation target: edit_policy / tool_edit description — push harder toward line_edit and exact-copy discipline",
+    "pallets__flask-4045": "pallets__flask-4045: score -1.534 (gold FAIL).\n12 steps: 10 grep, 2 read; 0/0 edits landed; run_tests 0× (0 pass, 0 fail).\nread [\"src/flask/blueprints.py\"]; patch touched []; gold fix lives in [\"src/flask/blueprints.py\"].\npenalties: emptyPatch -1, noTestsRun -0.5, normalizedCost -0.03354.\nfailure class 3 (exploration-loop (all steps read/grep/ls, empty patch)). mutation target: retrieval_policy — stop grep loops, force an edit attempt by mid-budget\nteacher (paired success/advice): [D-oracle/oracle-advice] ORACLE ADVICE (derived from the gold patch — D-oracle probe, ADR-226 §4.8; NON-CONFORMANT by construction).\nThe correct fix, as exact next actions:\n1. Edit src/flask/blueprints.py around line 188. Apply exactly this change (unified-diff hunk; - lines are removed, + lines added):\n             template_folder=template_folder,\n             root_path=root_path,\n         )\n+\n+        if \".\" in name:\n+            raise ValueError(\"'name' may not contain a dot '.' character.\")\n+\n         self.name = name\n         self.url_prefix = url_prefix\n         self.subdomain = subdomain\n2. (further hunks elided for length — see src/flask/blueprints.py line 360)\nDo not edit test files",
+    "pallets__flask-4992": "pallets__flask-4992: score 0.949 (gold FAIL).\n12 steps: 2 grep, 4 read, 1 line_edit, 2 run_tests, 1 undefined, 2 ls; 1/1 edits landed; run_tests 2× (0 pass, 2 fail).\nread [\"src/flask/config.py\",\"tests/test_config.py\"]; patch touched [\"src/flask/config.py\"]; gold fix lives in [\"src/flask/config.py\"].\npenalties: normalizedCost -0.05148.\nfailure class 4 (wrong-fix (right file, gold still fails)). mutation target: retrieval_policy + test_policy — require reading surrounding context and re-running tests before submit\nteacher (paired success/advice): [advbench-B-med/acting-success] resolved gold with a patch touching [\"src/flask/config.py\"]",
+    "psf__requests-1963": "psf__requests-1963: score 0.957 (gold FAIL).\n12 steps: 3 grep, 4 read, 1 line_edit, 1 run_tests, 3 ls; 1/1 edits landed; run_tests 1× (0 pass, 1 fail).\nread [\"requests/sessions.py\"]; patch touched [\"requests/sessions.py\"]; gold fix lives in [\"requests/sessions.py\"].\npenalties: normalizedCost -0.04292.\nfailure class 4 (wrong-fix (right file, gold still fails)). mutation target: retrieval_policy + test_policy — require reading surrounding context and re-running tests before submit\nteacher (paired success/advice): [D-oracle/oracle-advice] ORACLE ADVICE (derived from the gold patch — D-oracle probe, ADR-226 §4.8; NON-CONFORMANT by construction).\nThe correct fix, as exact next actions:\n1. Edit requests/sessions.py around line 168. Apply exactly this change (unified-diff hunk; - lines are removed, + lines added):\n             if new_auth is not None:\n                 prepared_request.prepare_auth(new_auth)\n \n+            # Override the original request.\n+            req = prepared_request\n+\n             resp = self.send(\n-                prepared_request,\n+                req,\n                 stream=stream,\n                 timeout=timeout,\n                 verify=verify,\n\nDo not edit test files. After ",
+    "psf__requests-2148": "psf__requests-2148: score -1.556 (gold FAIL).\n12 steps: 3 ls, 5 read, 3 grep, 1 undefined; 0/0 edits landed; run_tests 0× (0 pass, 0 fail).\nread [\"requests/models.py\",\"requests/exceptions.py\",\"requests/packages/urllib3/exceptions.py\"]; patch touched []; gold fix lives in [\"requests/models.py\"].\npenalties: emptyPatch -1, noTestsRun -0.5, normalizedCost -0.0562.\nfailure class 3 (exploration-loop (all steps read/grep/ls, empty patch)). mutation target: retrieval_policy — stop grep loops, force an edit attempt by mid-budget\nteacher (paired success/advice): [D-oracle/oracle-advice] ORACLE ADVICE (derived from the gold patch — D-oracle probe, ADR-226 §4.8; NON-CONFORMANT by construction).\nThe correct fix, as exact next actions:\n1. Edit requests/models.py around line 9. Apply exactly this change (unified-diff hunk; - lines are removed, + lines added):\n \n import collections\n import datetime\n+import socket\n \n from io import BytesIO, UnsupportedOperation\n from .hooks import default_hooks\n2. Edit requests/models.py around line 22. Apply exactly this change (unified-diff hunk; - lines are removed, + lines added):\n from .packages.urllib3.exceptions import DecodeError\n from .exceptions import (\n     HTTPError, RequestException, MissingSchema, InvalidURL"
+  },
+  "details": {
+    "astropy__astropy-12907": {
+      "gold": true,
+      "resolvedInLoop": false,
+      "failureClass": 0,
+      "steps": 12,
+      "thrash": 0,
+      "cost": 0.04774,
+      "parts": {
+        "goldResolved": 10,
+        "targetedTestsPass": 0,
+        "minimalPatch": 0.5,
+        "touchedExpectedFiles": 0.5,
+        "emptyPatch": 0,
+        "repeatedReads": 0,
+        "noTestsRun": 0,
+        "testFileEdits": 0,
+        "normalizedCost": -0.09548
+      }
+    },
+    "astropy__astropy-14182": {
+      "gold": false,
+      "resolvedInLoop": false,
+      "failureClass": 4,
+      "steps": 12,
+      "thrash": 1,
+      "cost": 0.11145,
+      "parts": {
+        "goldResolved": 0,
+        "targetedTestsPass": 0,
+        "minimalPatch": 0.5,
+        "touchedExpectedFiles": 0.5,
+        "emptyPatch": 0,
+        "repeatedReads": -0.5,
+        "noTestsRun": 0,
+        "testFileEdits": 0,
+        "normalizedCost": -0.2229
+      }
+    },
+    "django__django-10914": {
+      "gold": true,
+      "resolvedInLoop": false,
+      "failureClass": 0,
+      "steps": 12,
+      "thrash": 0,
+      "cost": 0.0331,
+      "parts": {
+        "goldResolved": 10,
+        "targetedTestsPass": 0,
+        "minimalPatch": 0.5,
+        "touchedExpectedFiles": 0.5,
+        "emptyPatch": 0,
+        "repeatedReads": 0,
+        "noTestsRun": 0,
+        "testFileEdits": 0,
+        "normalizedCost": -0.0662
+      }
+    },
+    "django__django-10924": {
+      "gold": false,
+      "resolvedInLoop": false,
+      "failureClass": 3,
+      "steps": 12,
+      "thrash": 1,
+      "cost": 0.03372,
+      "parts": {
+        "goldResolved": 0,
+        "targetedTestsPass": 0,
+        "minimalPatch": 0,
+        "touchedExpectedFiles": 0,
+        "emptyPatch": -1,
+        "repeatedReads": -0.5,
+        "noTestsRun": -0.5,
+        "testFileEdits": 0,
+        "normalizedCost": -0.06744
+      }
+    },
+    "matplotlib__matplotlib-18869": {
+      "gold": false,
+      "resolvedInLoop": false,
+      "failureClass": 4,
+      "steps": 12,
+      "thrash": 0,
+      "cost": 0.01622,
+      "parts": {
+        "goldResolved": 0,
+        "targetedTestsPass": 0,
+        "minimalPatch": 0.5,
+        "touchedExpectedFiles": 0.5,
+        "emptyPatch": 0,
+        "repeatedReads": 0,
+        "noTestsRun": 0,
+        "testFileEdits": 0,
+        "normalizedCost": -0.03244
+      }
+    },
+    "matplotlib__matplotlib-22711": {
+      "gold": false,
+      "resolvedInLoop": false,
+      "failureClass": 4,
+      "steps": 11,
+      "thrash": 0,
+      "cost": 0.044,
+      "parts": {
+        "goldResolved": 0,
+        "targetedTestsPass": 0,
+        "minimalPatch": 0.5,
+        "touchedExpectedFiles": 0.5,
+        "emptyPatch": 0,
+        "repeatedReads": 0,
+        "noTestsRun": 0,
+        "testFileEdits": 0,
+        "normalizedCost": -0.088
+      }
+    },
+    "mwaskom__seaborn-2848": {
+      "gold": false,
+      "resolvedInLoop": false,
+      "failureClass": 3,
+      "steps": 12,
+      "thrash": 0,
+      "cost": 0.0382,
+      "parts": {
+        "goldResolved": 0,
+        "targetedTestsPass": 0,
+        "minimalPatch": 0,
+        "touchedExpectedFiles": 0,
+        "emptyPatch": -1,
+        "repeatedReads": 0,
+        "noTestsRun": -0.5,
+        "testFileEdits": 0,
+        "normalizedCost": -0.0764
+      }
+    },
+    "mwaskom__seaborn-3010": {
+      "gold": false,
+      "resolvedInLoop": false,
+      "failureClass": 2,
+      "steps": 12,
+      "thrash": 0,
+      "cost": 0.02185,
+      "parts": {
+        "goldResolved": 0,
+        "targetedTestsPass": 0,
+        "minimalPatch": 0,
+        "touchedExpectedFiles": 0,
+        "emptyPatch": -1,
+        "repeatedReads": 0,
+        "noTestsRun": -0.5,
+        "testFileEdits": 0,
+        "normalizedCost": -0.0437
+      }
+    },
+    "pallets__flask-4045": {
+      "gold": false,
+      "resolvedInLoop": false,
+      "failureClass": 3,
+      "steps": 12,
+      "thrash": 0,
+      "cost": 0.01677,
+      "parts": {
+        "goldResolved": 0,
+        "targetedTestsPass": 0,
+        "minimalPatch": 0,
+        "touchedExpectedFiles": 0,
+        "emptyPatch": -1,
+        "repeatedReads": 0,
+        "noTestsRun": -0.5,
+        "testFileEdits": 0,
+        "normalizedCost": -0.03354
+      }
+    },
+    "pallets__flask-4992": {
+      "gold": false,
+      "resolvedInLoop": false,
+      "failureClass": 4,
+      "steps": 12,
+      "thrash": 0,
+      "cost": 0.02574,
+      "parts": {
+        "goldResolved": 0,
+        "targetedTestsPass": 0,
+        "minimalPatch": 0.5,
+        "touchedExpectedFiles": 0.5,
+        "emptyPatch": 0,
+        "repeatedReads": 0,
+        "noTestsRun": 0,
+        "testFileEdits": 0,
+        "normalizedCost": -0.05148
+      }
+    },
+    "psf__requests-1963": {
+      "gold": false,
+      "resolvedInLoop": false,
+      "failureClass": 4,
+      "steps": 12,
+      "thrash": 0,
+      "cost": 0.02146,
+      "parts": {
+        "goldResolved": 0,
+        "targetedTestsPass": 0,
+        "minimalPatch": 0.5,
+        "touchedExpectedFiles": 0.5,
+        "emptyPatch": 0,
+        "repeatedReads": 0,
+        "noTestsRun": 0,
+        "testFileEdits": 0,
+        "normalizedCost": -0.04292
+      }
+    },
+    "psf__requests-2148": {
+      "gold": false,
+      "resolvedInLoop": false,
+      "failureClass": 3,
+      "steps": 12,
+      "thrash": 0,
+      "cost": 0.0281,
+      "parts": {
+        "goldResolved": 0,
+        "targetedTestsPass": 0,
+        "minimalPatch": 0,
+        "touchedExpectedFiles": 0,
+        "emptyPatch": -1,
+        "repeatedReads": 0,
+        "noTestsRun": -0.5,
+        "testFileEdits": 0,
+        "normalizedCost": -0.0562
+      }
+    }
+  },
+  "goldResolved": 2,
+  "n": 12,
+  "sumScore": 17.625,
+  "meanScore": 1.469,
+  "cost": 0.4384,
+  "metricCalls": 12,
+  "artifacts": null
+}
