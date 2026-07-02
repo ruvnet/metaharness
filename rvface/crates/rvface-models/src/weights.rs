@@ -60,10 +60,19 @@ impl<B: Backend> Weights<B> {
             if view.dtype() != safetensors::Dtype::F32 {
                 continue;
             }
+            // Flush near-zero weights to exact zero. Trained checkpoints can
+            // carry huge numbers of denormal floats (the cunjian landmark
+            // checkpoint has them in 75% of its weights), and denormal
+            // arithmetic runs ~100x slower on x86 and in wasm, where FTZ
+            // cannot be enabled. A 1e-30 weight contributes at most ~1e-27
+            // to any activation — 23 orders of magnitude below the fp32
+            // parity tolerance — so flushing is numerically free.
+            const FLUSH_THRESHOLD: f32 = 1e-30;
             let values: Vec<f32> = view
                 .data()
                 .chunks_exact(4)
                 .map(|c| f32::from_le_bytes([c[0], c[1], c[2], c[3]]))
+                .map(|v| if v.abs() < FLUSH_THRESHOLD { 0.0 } else { v })
                 .collect();
             let shape = view.shape().to_vec();
             let len = values.len();
