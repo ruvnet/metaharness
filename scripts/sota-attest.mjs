@@ -160,8 +160,18 @@ const VEC = (vector, result, evidence, harness_gap) =>
  * Structural-immunity claims are justified from the harness, not asserted; everything else is skip
  * until an artifact proves it.
  */
-export function vectorAudit(gold, solver, predictions = null) {
+export function vectorAudit(gold, solver, predictions = null, trajectory = null) {
   const v = [];
+  // ADR-231 forward-contract — the solver-trajectory.jsonl (one record per instance) is the serialized
+  // artifact that upgrades three vectors from skip/attested-by-flag to enforceable. Present + non-empty →
+  // we PROVE (or disprove) no_gold_in_loop / localization_no_gold / best_of_n_selector_conformant from it;
+  // absent → each stays a skip/attested-by-flag exactly as before (never a false pass). `hasTraj` gates
+  // every override so a run without a trajectory is byte-identical to pre-ADR-231-forward-contract.
+  const hasTraj = Array.isArray(trajectory) && trajectory.length > 0;
+  // Gold signal tokens a conformant winner-selector must NEVER rank on (gold FAIL_TO_PASS/PASS_TO_PASS
+  // or the official Docker oracle). Matches the `gold-oracle` marker solver-trajectory.mjs records for a
+  // non-conformant (oracle-in-loop) run, and any explicit fail_to_pass/pass_to_pass signal.
+  const GOLD_SIGNAL_RE = /gold|oracle|fail_to_pass|pass_to_pass/i;
 
   // ── Structurally immune (justified from harness code) ──
   v.push(VEC('answer_db_leakage', 'immune',
@@ -226,10 +236,10 @@ export function vectorAudit(gold, solver, predictions = null) {
       `k/best-of-N config disclosed: cascade=${solver.cascade}, escalateModel=${solver.escalateModel ?? 'none'}, `
       + `k=${kN ?? 'n/a'}, selector=${selector}. `
       + `noTestOracle=${solver.noTestOracle} (if false, no gold oracle picked the winner).`));
-    if (selector === 'unknown' || solver.winnerSelector == null) {
+    if ((selector === 'unknown' || solver.winnerSelector == null) && !hasTraj) {
       v.push(VEC('best_of_n_selector_conformant', 'skip', 'winner-selection method not serialized',
         'k-sample N is disclosed but the SELECTOR is not proven conformant (must be repro-tests, never gold '
-        + 'FAIL_TO_PASS). Serialize the selector to prove no oracle leakage in the pick.'));
+        + 'FAIL_TO_PASS). Pass --trajectory to serialize selector.ranked_on and prove no oracle leakage in the pick.'));
     }
   } else {
     v.push(VEC('best_of_n_disclosure', 'skip', 'no solver report / no k-sample config present',
@@ -262,18 +272,54 @@ export function vectorAudit(gold, solver, predictions = null) {
     temp != null ? undefined : 'temperature/seed not in report — pin them to make the run reproducible'));
 
   // (6) Localization / ADR-195 retrieval must not surface gold tests (the FRAMES answer-leakage analog).
-  v.push(VEC('localization_no_gold', 'skip', 'phase2 localize/trace-localize trajectory not serialized',
-    'SAME forward-contract gap as FRAMES answer-leakage (INTEGRITY-AUDIT.md): localize.mjs / '
-    + 'ruvector-localize.mjs / trace-localize run over repo source and conformant-tests.mjs never applies '
-    + 'the gold test_patch, so gold is not in the corpus by construction — but we cannot PROVE the retrieved '
-    + 'context excluded gold FAIL_TO_PASS without serializing the localization inputs. ADR-167 §4 fix applies.'));
+  //     ENFORCEABLE with the trajectory: every localization_sources[] path is linted with the SAME
+  //     gold-test-path heuristic as patch_touches_tests (isTestFile). Any test path a localizer surfaced
+  //     into the agent's context is a conformance breach (the conformant localizer skips all test dirs by
+  //     construction — localize.mjs SKIP_DIRS). No trajectory → skip + forward-contract gap, as before.
+  if (hasTraj) {
+    const allSources = trajectory.flatMap((r) => Array.isArray(r.localization_sources) ? r.localization_sources : []);
+    const goldHits = [...new Set(allSources.filter(isTestFile))];
+    if (goldHits.length) {
+      v.push(VEC('localization_no_gold', 'fail',
+        `localizer surfaced ${goldHits.length} gold test path(s) into agent context (e.g. ${goldHits.slice(0, 5).join(', ')}) `
+        + `— retrieval leaked gold FAIL_TO_PASS`));
+    } else {
+      v.push(VEC('localization_no_gold', 'pass',
+        `${trajectory.length} instance trajector${trajectory.length === 1 ? 'y' : 'ies'} serialized; ${allSources.length} localization source path(s) surfaced, `
+        + `0 are gold test paths (conformant retrieval — localize.mjs/trace-localize point only at source)`));
+    }
+  } else {
+    v.push(VEC('localization_no_gold', 'skip', 'phase2 localize/trace-localize trajectory not serialized',
+      'SAME forward-contract gap as FRAMES answer-leakage (INTEGRITY-AUDIT.md): localize.mjs / '
+      + 'ruvector-localize.mjs / trace-localize run over repo source and conformant-tests.mjs never applies '
+      + 'the gold test_patch, so gold is not in the corpus by construction — but we cannot PROVE the retrieved '
+      + 'context excluded gold FAIL_TO_PASS without serializing the localization inputs. Pass --trajectory '
+      + '<solver-trajectory.jsonl> (ADR-231 forward-contract) to turn this into a provable pass/fail.'));
+  }
 
   // (7) No-gold-in-loop conformance flag (the SOTA_HORIZON honor-system claim, upgraded).
   //     Two machine-readable corroborations: leaderboardConformant AND noTestOracle (the --no-test-oracle
   //     switch: the solver ran with NO gold test oracle in-loop). Still `attested-by-flag`, not a full
   //     `pass` — a full pass needs the in-loop trajectory serialized (forward contract) — but the paired
   //     noTestOracle=true flag is a stronger, machine-checkable signal than the honor-system claim alone.
-  if (solver && solver.leaderboardConformant === true) {
+  //     ENFORCEABLE with the trajectory: the serialized per-instance gold_test_paths_accessed is the
+  //     machine proof. Empty on EVERY instance → the solver provably never read the gold FAIL_TO_PASS/
+  //     PASS_TO_PASS suite (or the gold test_patch) in-loop → PASS. Any instance with a non-empty set →
+  //     a gold oracle ran in-loop → CRITICAL fail (a TDR/oracle run is NOT leaderboard-conformant).
+  if (hasTraj) {
+    const accessed = trajectory.filter((r) => Array.isArray(r.gold_test_paths_accessed) && r.gold_test_paths_accessed.length > 0);
+    if (accessed.length) {
+      v.push({ ...VEC('no_gold_in_loop', 'fail',
+        `${accessed.length}/${trajectory.length} instance(s) accessed the gold test suite in-loop `
+        + `(e.g. ${accessed.slice(0, 5).map((r) => r.instance_id).join(', ')}) — NON-conformant (gold oracle seen during solving)`),
+        critical: true });
+    } else {
+      v.push({ ...VEC('no_gold_in_loop', 'pass',
+        `${trajectory.length} instance trajector${trajectory.length === 1 ? 'y' : 'ies'} serialized; gold_test_paths_accessed empty on ALL `
+        + `— machine-proven the solver never read gold FAIL_TO_PASS/PASS_TO_PASS in-loop (conformant-tests.mjs enforced, now trajectory-verified)`),
+        critical: true });
+    }
+  } else if (solver && solver.leaderboardConformant === true) {
     const noOracle = solver.noTestOracle === true;
     v.push(VEC('no_gold_in_loop', 'attested-by-flag',
       `solver report leaderboardConformant=true${noOracle ? ' AND noTestOracle=true (ran with --no-test-oracle: '
@@ -283,7 +329,26 @@ export function vectorAudit(gold, solver, predictions = null) {
   } else {
     v.push(VEC('no_gold_in_loop', 'skip', 'leaderboardConformant flag absent/false',
       'The core conformance claim is unattested for this run. Attach a solver report with '
-      + 'leaderboardConformant=true, and serialize the trajectory to upgrade to a provable pass.'));
+      + 'leaderboardConformant=true, and serialize the trajectory (--trajectory) to upgrade to a provable pass.'));
+  }
+
+  // (8) Best-of-N winner-SELECTOR conformance — ENFORCEABLE with the trajectory (ADR-231 forward-contract).
+  //     The per-instance selector.ranked_on records the exact signal(s) the winner-pick used. A conformant
+  //     selector ranks on repro tests / self-written repro / an LLM judge / a handoff-accept heuristic —
+  //     NEVER on gold. Any gold signal in ranked_on (e.g. the `gold-oracle` marker a non-conformant run
+  //     records) → fail. No trajectory → the skip emitted in the best_of_n block above stands.
+  if (hasTraj) {
+    const rankedOn = trajectory.flatMap((r) => (r.selector && Array.isArray(r.selector.ranked_on)) ? r.selector.ranked_on : []);
+    const goldSignals = [...new Set(rankedOn.map(String).filter((s) => GOLD_SIGNAL_RE.test(s)))];
+    if (goldSignals.length) {
+      v.push(VEC('best_of_n_selector_conformant', 'fail',
+        `winner-selector ranked on gold signal(s): ${goldSignals.join(', ')} — a gold oracle picked the best-of-N/cascade winner`));
+    } else {
+      const methods = [...new Set(trajectory.map((r) => r.selector && r.selector.method).filter(Boolean))];
+      v.push(VEC('best_of_n_selector_conformant', 'pass',
+        `selector ranked_on across ${trajectory.length} instance(s) carries no gold signal (methods: ${methods.join(', ') || 'single'}); `
+        + `winner chosen on non-gold signal only (repro/self-repro/judge/handoff-heuristic)`));
+    }
   }
 
   return v;
@@ -302,10 +367,11 @@ export function witnessHash(bodyObj) {
 }
 
 /** Build the full attestation object from a gold report (+ optional solver report). */
-export function buildAttestation(gold, solver, { split, dataset, harnessVersion, now, predictions } = {}) {
+export function buildAttestation(gold, solver, { split, dataset, harnessVersion, now, predictions, trajectory } = {}) {
   const total = gold.total_instances, resolved = gold.resolved_instances;
   const sp = split || deriveSplit(total);
-  const vectors = vectorAudit(gold, solver, predictions);
+  const vectors = vectorAudit(gold, solver, predictions, trajectory);
+  const hasTraj = Array.isArray(trajectory) && trajectory.length > 0;
   const body = {
     attestation_version: '1.0',
     adr: 'ADR-231',
@@ -331,6 +397,13 @@ export function buildAttestation(gold, solver, { split, dataset, harnessVersion,
       winner_selector: solver?.winnerSelector ?? null,
     },
     patches_linted: Array.isArray(predictions) ? predictions.length : null,
+    // ADR-231 forward-contract — the serialized solver-trajectory summary (null when no --trajectory).
+    trajectory: hasTraj ? {
+      instances: trajectory.length,
+      gold_test_paths_accessed_instances: trajectory.filter((r) => Array.isArray(r.gold_test_paths_accessed) && r.gold_test_paths_accessed.length).length,
+      localization_sources_total: trajectory.reduce((a, r) => a + (Array.isArray(r.localization_sources) ? r.localization_sources.length : 0), 0),
+      selector_methods: [...new Set(trajectory.map((r) => r.selector && r.selector.method).filter(Boolean))],
+    } : null,
     cost: {
       total_usd: solver?.totalCost_usd ?? null,
       per_inst_usd: solver?.blendedCostPerInst_usd ?? null,
@@ -447,7 +520,8 @@ export function integrityGateDecision(att, { maxSkips = 4 } = {}) {
 function argv(k, d) { const i = process.argv.indexOf(k); return i >= 0 && process.argv[i + 1] ? process.argv[i + 1] : d; }
 
 const USAGE = 'usage: sota-attest.mjs --gold-report <official-report.json> [--solver-report <r.json>] '
-  + '[--predictions <predictions.jsonl>] [--split lite|verified] [--out <path>] [--sign] [--seed-hex <64hex>|--key <file>]\n'
+  + '[--predictions <predictions.jsonl>] [--trajectory <solver-trajectory.jsonl>] [--split lite|verified] '
+  + '[--out <path>] [--sign] [--seed-hex <64hex>|--key <file>]\n'
   + '       sota-attest.mjs --verify <integrity-attestation.json>';
 
 /** Resolve the Ed25519 signing seed (64-hex) from --seed-hex, --key <file>, or $SOTA_SIGNING_SEED_HEX. Never logged. */
@@ -489,11 +563,19 @@ function main() {
     if (!existsSync(predPath)) console.error(`WARN: predictions not found: ${predPath} — patch_touches_tests will skip`);
     else predictions = parsePredictionsJsonl(readFileSync(predPath, 'utf8'));
   }
+  // ADR-231 forward-contract — the solver-trajectory.jsonl (same JSONL parse as predictions). Absent →
+  // no_gold_in_loop / localization_no_gold / best_of_n_selector_conformant stay skip/attested-by-flag.
+  const trajPath = argv('--trajectory');
+  let trajectory = null;
+  if (trajPath) {
+    if (!existsSync(trajPath)) console.error(`WARN: trajectory not found: ${trajPath} — no_gold_in_loop/localization_no_gold/best_of_n_selector_conformant will not be enforced`);
+    else trajectory = parsePredictionsJsonl(readFileSync(trajPath, 'utf8'));
+  }
 
   let harnessVersion = 'unknown';
   try { harnessVersion = execSync('git rev-parse --short HEAD', { cwd: dirname(resolve(goldPath)), encoding: 'utf8' }).trim(); } catch { /**/ }
 
-  let att = buildAttestation(gold, solver, { split: argv('--split'), dataset: argv('--dataset'), harnessVersion, predictions });
+  let att = buildAttestation(gold, solver, { split: argv('--split'), dataset: argv('--dataset'), harnessVersion, predictions, trajectory });
 
   // ── optional real Ed25519 signing at emit time ──
   if (process.argv.includes('--sign')) {
@@ -508,7 +590,7 @@ function main() {
   const { split, n, resolved, resolve_pct, wilson_ci } = att.run;
   console.log(`integrity-attestation → ${out}`);
   console.log(`  claim: ${split} ${resolved}/${n} = ${resolve_pct}% (Wilson ${wilson_ci?.[0]}–${wilson_ci?.[1]}%), gold-oracle=official-docker`);
-  console.log(`  empty_patch_rate: ${att.empty_patch_rate != null ? (att.empty_patch_rate * 100).toFixed(1) + '%' : 'skip'}   cost: ${att.cost.source}   patches_linted: ${att.patches_linted ?? 'none'}   witness: ${att.signature.witness_sha256.slice(0, 16)}…`);
+  console.log(`  empty_patch_rate: ${att.empty_patch_rate != null ? (att.empty_patch_rate * 100).toFixed(1) + '%' : 'skip'}   cost: ${att.cost.source}   patches_linted: ${att.patches_linted ?? 'none'}   trajectory: ${att.trajectory ? att.trajectory.instances + ' inst' : 'none'}   witness: ${att.signature.witness_sha256.slice(0, 16)}…`);
   console.log(`  signature: ${att.signature.sig ? 'SIGNED (ed25519, pubkey ' + att.signature.pubkey.slice(0, 16) + '…)' : 'unsigned (sig=null)'}`);
   console.log('  per-vector:');
   for (const v of att.vectors) console.log(`    ${v.result.toUpperCase().padEnd(16)} ${v.vector}${v.critical ? ' *CRITICAL*' : ''}${v.harness_gap ? '  [gap]' : ''}`);
@@ -516,8 +598,14 @@ function main() {
   const gate = integrityGateDecision(att);
   console.log(`  gate: ${gate.open ? 'OPEN' : 'FAIL-CLOSED'} — ${gate.reason}`);
   const hasFail = att.vectors.some((v) => v.result === 'fail');
-  if (hasFail) console.log('  VERDICT: FAIL — a vector failed; this number is NOT a credible SOTA claim.');
-  else if (!att.signature.sig) console.log('  VERDICT: attestation emitted (skips are honest gaps, not passes). Sign witness_sha256 (--sign) to make it a SOTA-eligible claim.');
+  if (hasFail) {
+    // ADR-231: a failed vector (e.g. a trajectory-proven gold-in-loop access, a gold path in
+    // localization, or a gold-signal selector) is a hard integrity finding — exit non-zero so CI and
+    // the publish pipeline fail-closed on it. The attestation file is still written (the finding is the
+    // product); only the exit code signals the failure.
+    console.log(`  VERDICT: FAIL — vector(s) failed: ${att.vectors.filter((v) => v.result === 'fail').map((v) => v.vector).join(', ')}; this number is NOT a credible SOTA claim.`);
+    process.exit(1);
+  } else if (!att.signature.sig) console.log('  VERDICT: attestation emitted (skips are honest gaps, not passes). Sign witness_sha256 (--sign) to make it a SOTA-eligible claim.');
   else console.log('  VERDICT: SIGNED attestation emitted — recompute + verify with `--verify`.');
 }
 

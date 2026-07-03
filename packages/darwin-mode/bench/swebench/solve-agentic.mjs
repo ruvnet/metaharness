@@ -26,6 +26,10 @@ import { buildReproTest, REPRO_PATH } from './test-critic.mjs';
 import { traceLocalize, formatTraceSeedForAgent, buildPyTracer, TRACE_PATH } from './trace-localize.mjs';
 // ADR-205 — harness handoff: darwin as router, claude -p as hard-tail actuator (loop handoff, NOT model embedding).
 import { parseEscalateChain, acceptHop, solveViaClaudeP, escalationSignals, evaluateEscalation, buildReceipt, runEscalationChain, pickChainPatch } from './handoff-solver.mjs';
+// ADR-231 forward-contract — the solver-trajectory serializer. Off by default (only when --trajectory
+// is set), so a default run is byte-identical. Captures the audit-relevant signals sota-attest needs to
+// PROVE no_gold_in_loop / localization_no_gold / best_of_n_selector_conformant (see solver-trajectory.mjs).
+import { createTrajectoryRecorder } from './solver-trajectory.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -82,6 +86,10 @@ const HANDOFF_TIMEOUT_MS = +argv('--handoff-timeout', 900) * 1000;
 // not) with real costs and real reasons. Only written when --escalate-to is set.
 const RECEIPTS = rel(argv('--receipts', 'handoff-receipts.jsonl'));
 const INITIAL_SOLVER = `darwin-${MODEL.split('/').pop()}`;
+// ADR-231 — `--trajectory <path>`: emit the redacted, size-bounded solver-trajectory.jsonl (one record
+// per instance) that scripts/sota-attest.mjs --trajectory consumes. Absent ⇒ no file written, path
+// unchanged from pre-ADR-231. The recorder is constructed lazily below (after OUT is set up).
+const TRAJECTORY = args.includes('--trajectory') ? rel(argv('--trajectory', 'solver-trajectory.jsonl')) : null;
 // ADR-205 perf — concurrent escalations. The claude -p rung is an independent async subprocess, so
 // under `--concurrency N` the hard tail must NOT serialize behind one handoff at a time; a small
 // semaphore caps concurrent claude -p subprocesses (default 2, keep ≤3 — endpoint rate limits).
@@ -280,19 +288,24 @@ function readRepoFiles(work, maxFiles = 6000) {
 }
 // Build the localization seed text for an instance. Clones a scratch tree, indexes it via ruvector,
 // returns the agent hint string. Empty string on any failure — localization never blocks the solve.
+// Returns { hint, seed }: `hint` is the agent-facing string (empty on any failure), `seed` is the raw
+// localizeSeed result ({files:[{file}], …}) so ADR-231 can record which paths the localizer surfaced.
 async function buildLocalizeHint(inst) {
   let work;
   try {
     work = fetchRepo(inst.repo, inst.base_commit);
     const files = readRepoFiles(work);
     const seed = await localizeSeed({ files, problem: inst.problem_statement, embed: (t) => embedAll(t), makeIndex: makeRuvectorIndex, k: LOCALIZE_K, gnn: GNN_RERANK });
-    return formatSeedForAgent(seed);
-  } catch (e) { console.error(`[localize] ${inst.instance_id} skipped: ${String(e.message || e).slice(0, 120)}`); return ''; }
+    return { hint: formatSeedForAgent(seed), seed };
+  } catch (e) { console.error(`[localize] ${inst.instance_id} skipped: ${String(e.message || e).slice(0, 120)}`); return { hint: '', seed: null }; }
   finally { if (work) try { rmSync(work, { recursive: true, force: true }); } catch { /**/ } }
 }
 
 writeFileSync(OUT, ''); const report = []; let totalCost = 0;
 if (HANDOFF_CHAIN) writeFileSync(RECEIPTS, ''); // truncate the receipt stream per run
+// ADR-231 — the per-run trajectory recorder (truncates its file on construction). Null when --trajectory
+// is absent, so every record() call site is a no-op guard away from pre-ADR-231 behaviour.
+const trajectoryRecorder = TRAJECTORY ? createTrajectoryRecorder(TRAJECTORY) : null;
 // One agentic attempt in a FRESH work tree (cold). Returns {res, work}; caller cleans up.
 // ADR-195: `opts.localizeHint` (string) is prepended to the problem surface; `opts.extraContext`
 // (string) is appended as additional turn-1 context (repro test / review critique). Both default
@@ -400,8 +413,8 @@ async function buildTraceHint(inst, llmFn) {
     k: LOCALIZE_K,
   });
   totalCost += r.cost;
-  if (!r.seed) { console.error(`[trace-localize] ${inst.instance_id} no seed (${r.stats?.note || 'miss'})`); return ''; }
-  return formatTraceSeedForAgent(r.seed);
+  if (!r.seed) { console.error(`[trace-localize] ${inst.instance_id} no seed (${r.stats?.note || 'miss'})`); return { hint: '', seed: null }; }
+  return { hint: formatTraceSeedForAgent(r.seed), seed: r.seed };
 }
 
 // ── ADR-195 Phase-2 #3: reviewer + bounded revise loop (wires reviewerSolve to the review LLM + a
@@ -457,14 +470,21 @@ async function runChainFor(inst, chain, { localizeHint, priorAttempts = [] } = {
 async function runInstance(inst) {
   const t0 = Date.now(); const row = { instance_id: inst.instance_id, repo: inst.repo, tier: 'T1', resolved: false };
   let patch = '';
+  // ADR-231 — accumulate the audit signals for the trajectory record as the real solve path produces
+  // them (no-op unless --trajectory is set). Seeds capture what the localizer surfaced; transcripts
+  // capture tool/file-read use; the finished `row` + NO_ORACLE drive the selector + gold-oracle proof.
+  const trajTranscripts = [];
+  const trajLocalizeSeeds = [];
   try {
     // ADR-195 #1: compute the localization hint once (off → empty string → identical to before).
-    const semanticHint = LOCALIZE ? await buildLocalizeHint(inst) : '';
+    const { hint: semanticHint, seed: semanticSeed } = LOCALIZE ? await buildLocalizeHint(inst) : { hint: '', seed: null };
     if (LOCALIZE) row.localized = !!semanticHint;
+    if (semanticSeed) trajLocalizeSeeds.push(semanticSeed);
     // ADR-196 #4: execution-trace localization hint (dynamic; composes with the semantic seed). Off →
     // empty. Trace evidence leads (it's observed-execution, the stronger signal) when both are on.
-    const traceHint = TRACE_LOCALIZE ? await buildTraceHint(inst, ESCALATE ? llmEsc : llm) : '';
+    const { hint: traceHint, seed: traceSeed } = TRACE_LOCALIZE ? await buildTraceHint(inst, ESCALATE ? llmEsc : llm) : { hint: '', seed: null };
     if (TRACE_LOCALIZE) row.traceLocalized = !!traceHint;
+    if (traceSeed) trajLocalizeSeeds.push(traceSeed);
     const localizeHint = [traceHint, semanticHint].filter(Boolean).join('\n\n');
 
     let t1res = null; // ADR-205: the cheap attempt's raw loop result — the escalation rules read it.
@@ -486,12 +506,14 @@ async function runInstance(inst) {
       }
       const { res, work } = await solveTier(inst, llm, { localizeHint, onStep: earlyOnStep });
       t1res = res;
+      if (res.transcript) trajTranscripts.push(res.transcript); // ADR-231: base-attempt tool/file trail
       if (earlyStopped) row.earlyEscalated = true;
       patch = res.patch; totalCost += res.cost; row.steps = res.steps; row.submitted = res.submitted; row.resolvedInLoop = res.resolvedInLoop;
       try { rmSync(work, { recursive: true, force: true }); } catch { /**/ }
       if (ESCALATE && !res.resolvedInLoop) {                       // escalate ONLY the hard tail
         row.escalated = true;
         const { res: r2, work: w2 } = await solveTier(inst, llmEsc, { localizeHint }); // COLD tier-2
+        if (r2.transcript) trajTranscripts.push(r2.transcript); // ADR-231: cascade tier-2 tool/file trail
         totalCost += r2.cost; row.steps2 = r2.steps; row.resolvedInLoop2 = r2.resolvedInLoop;
         try { rmSync(w2, { recursive: true, force: true }); } catch { /**/ }
         if (r2.resolvedInLoop) { patch = r2.patch; row.tier = 'T2'; }
@@ -548,6 +570,18 @@ async function runInstance(inst) {
   const predRow = { instance_id: inst.instance_id, model_name_or_path: 'darwin-agentic', model_patch: patch };
   if (TRACE_LOCALIZE) predRow.traceLocalized = !!row.traceLocalized;
   appendFileSync(OUT, JSON.stringify(predRow) + '\n');
+  // ADR-231 — emit the redacted, size-bounded trajectory record (no-op unless --trajectory is set).
+  // gold_test_paths_accessed is [] under conformance (NO_ORACLE): the gold Docker oracle is the ONLY
+  // in-loop gold-surfacing path and it never runs with --no-test-oracle. Recorded honestly so a
+  // non-conformant (oracle-in-loop) run PROVABLY fails no_gold_in_loop / selector-conformance.
+  if (trajectoryRecorder) trajectoryRecorder.record({
+    instance_id: inst.instance_id,
+    transcripts: trajTranscripts,
+    localizeSeeds: trajLocalizeSeeds,
+    row,
+    noTestOracle: NO_ORACLE,
+    usedGoldOracle: !NO_ORACLE,
+  });
   row.sec = Math.round((Date.now() - t0) / 1000); report.push(row);
   console.error(`[${report.length}/${manifest.length}] ${inst.instance_id} tier=${row.tier} esc=${!!row.escalated} inloop=${row.resolvedInLoop}/${row.resolvedInLoop2 ?? '-'} ${row.sec}s ${row.error ? 'ERR:' + row.error : ''}`);
 }
@@ -573,6 +607,10 @@ writeFileSync(REPORT, JSON.stringify({ model: MODEL, escalateModel: ESCALATE, ca
   phase2: { localize: LOCALIZE, gnnRerank: GNN_RERANK, reproGate: REPRO_GATE, reviewer: REVIEWER, traceLocalize: TRACE_LOCALIZE },
   // ADR-197 — native tool-calling flag active for this run (false → pre-existing text-JSON protocol).
   nativeTools: NATIVE_TOOLS,
+  // ADR-231 — the solver-trajectory forward-contract artifact path (null → not emitted this run). Feed
+  // it to scripts/sota-attest.mjs --trajectory to flip no_gold_in_loop / localization_no_gold /
+  // best_of_n_selector_conformant from skip/attested-by-flag to enforceable.
+  trajectoryPath: TRAJECTORY,
   // ADR-205 — escalation chain active for this run (null → no handoff, pre-ADR-205 behaviour).
   escalateTo: HANDOFF_CHAIN ? HANDOFF_CHAIN.map((s) => s.name) : null,
   escalatePolicy: HANDOFF_CHAIN ? ESCALATE_POLICY : null,

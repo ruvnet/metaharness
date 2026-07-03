@@ -212,4 +212,64 @@ t('integrityGateDecision: gold-only (6 skips) exceeds the skip budget → FAIL-C
   assert.equal(integrityGateDecision(att, { maxSkips: 4 }).open, false);
 });
 
+// ── ADR-231 forward-contract: the solver-trajectory flips 3 vectors from skip/attested-by-flag → enforceable ──
+const CONFORMANT_SOLVER = { leaderboardConformant: true, noTestOracle: true, cascade: true, escalateModel: 'm', k: 5, totalCost_usd: 1, modelParams: { temperature: 0, seed: 42 } };
+// A clean trajectory: no gold access, source-only localization, non-gold selector.
+const CLEAN_TRAJ = [
+  { instance_id: 'a', tools_used: ['read', 'edit'], files_read: ['pkg/mod.py'], gold_test_paths_accessed: [], localization_sources: ['pkg/mod.py', 'pkg/util.py'], selector: { method: 'cascade', candidates_n: 2, ranked_on: ['conformant-repro-tests'], winner: 'T2' }, no_test_oracle: true },
+  { instance_id: 'b', tools_used: ['read'], files_read: ['pkg/other.py'], gold_test_paths_accessed: [], localization_sources: ['pkg/other.py'], selector: { method: 'single', candidates_n: 1, ranked_on: ['conformant-repro-tests'], winner: 'T1' }, no_test_oracle: true },
+];
+
+t('trajectory (clean): no_gold_in_loop / localization_no_gold / best_of_n_selector_conformant all PASS', () => {
+  const by = Object.fromEntries(vectorAudit(GOLD, CONFORMANT_SOLVER, null, CLEAN_TRAJ).map((x) => [x.vector, x]));
+  assert.equal(by.no_gold_in_loop.result, 'pass', 'gold_test_paths_accessed empty on all → proven pass');
+  assert.equal(by.no_gold_in_loop.critical, true, 'no_gold_in_loop is a fail-closed vector');
+  assert.equal(by.localization_no_gold.result, 'pass', 'no gold path in localization → pass');
+  assert.equal(by.best_of_n_selector_conformant.result, 'pass', 'selector ranked on non-gold → pass');
+});
+
+t('trajectory (dirty gold access): no_gold_in_loop CRITICAL fail', () => {
+  const dirty = [{ ...CLEAN_TRAJ[0], gold_test_paths_accessed: ['<official-docker-oracle:FAIL_TO_PASS+PASS_TO_PASS>'] }, CLEAN_TRAJ[1]];
+  const by = Object.fromEntries(vectorAudit(GOLD, CONFORMANT_SOLVER, null, dirty).map((x) => [x.vector, x]));
+  assert.equal(by.no_gold_in_loop.result, 'fail');
+  assert.equal(by.no_gold_in_loop.critical, true);
+});
+
+t('trajectory (dirty localization): a gold test path in localization_sources → localization_no_gold fail', () => {
+  const dirty = [{ ...CLEAN_TRAJ[0], localization_sources: ['pkg/mod.py', 'tests/test_mod.py'] }, CLEAN_TRAJ[1]];
+  const by = Object.fromEntries(vectorAudit(GOLD, CONFORMANT_SOLVER, null, dirty).map((x) => [x.vector, x]));
+  assert.equal(by.localization_no_gold.result, 'fail');
+});
+
+t('trajectory (dirty selector): a gold signal in selector.ranked_on → best_of_n_selector_conformant fail', () => {
+  const dirty = [{ ...CLEAN_TRAJ[0], selector: { ...CLEAN_TRAJ[0].selector, ranked_on: ['gold-oracle'] } }, CLEAN_TRAJ[1]];
+  const by = Object.fromEntries(vectorAudit(GOLD, CONFORMANT_SOLVER, null, dirty).map((x) => [x.vector, x]));
+  assert.equal(by.best_of_n_selector_conformant.result, 'fail');
+});
+
+t('trajectory absent → the 3 vectors stay skip/attested-by-flag (never false-pass) — discipline preserved', () => {
+  const by = Object.fromEntries(vectorAudit(GOLD, CONFORMANT_SOLVER, null, null).map((x) => [x.vector, x]));
+  assert.equal(by.no_gold_in_loop.result, 'attested-by-flag');
+  assert.equal(by.localization_no_gold.result, 'skip');
+  assert.equal(by.best_of_n_selector_conformant.result, 'skip');
+});
+
+t('buildAttestation + clean trajectory → gate OPEN and trajectory summary bound into the body', () => {
+  const preds = [{ instance_id: 'x', model_patch: 'diff --git a/pkg/m.py b/pkg/m.py\n--- a/pkg/m.py\n+++ b/pkg/m.py\n@@ -1 +1 @@\n-x\n+y\n' }];
+  const att = buildAttestation(GOLD, CONFORMANT_SOLVER, { now: 'x', harnessVersion: 'y', predictions: preds, trajectory: CLEAN_TRAJ });
+  assert.equal(att.trajectory.instances, 2);
+  assert.equal(att.trajectory.gold_test_paths_accessed_instances, 0);
+  assert.equal(integrityGateDecision(att).open, true, 'clean trajectory + full triple → OPEN');
+  const by = Object.fromEntries(att.vectors.map((x) => [x.vector, x]));
+  assert.equal(by.no_gold_in_loop.result, 'pass');
+});
+
+t('buildAttestation + gold-access trajectory → CRITICAL fail blocks the gate', () => {
+  const dirty = [{ ...CLEAN_TRAJ[0], gold_test_paths_accessed: ['<official-docker-oracle:FAIL_TO_PASS+PASS_TO_PASS>'] }];
+  const att = buildAttestation(GOLD, CONFORMANT_SOLVER, { now: 'x', harnessVersion: 'y', trajectory: dirty });
+  const g = integrityGateDecision(att);
+  assert.equal(g.open, false);
+  assert.ok(g.criticalFails.includes('no_gold_in_loop'));
+});
+
 console.log(`\n${pass} passed`);
