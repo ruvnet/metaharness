@@ -224,6 +224,8 @@ function main() {
   const seedGenome = JSON.parse(readFileSync(seedPath, 'utf8'));
   const seedId = seedGenome.meta?.id || basename(seedPath);
 
+  // Base args are safe to echo (no key-named token). The --api-key-env pair is kept OUT of this
+  // array so it never flows to a log; it's appended only for the real exec below.
   const gepaArgs = [
     '--no-warnings', join(HERE, 'run-gepa.mjs'),
     '--seed', seedPath, '--model', model, '--manifest', slice,
@@ -234,15 +236,14 @@ function main() {
     // namespace the Docker run-ids per (host,model) so parallel learn runs on the same slice don't collide
     '--run-tag', `gepa_${hostSlug}_${modelSlug}`.slice(0, 48),
     ...(baseUrl ? ['--base-url', baseUrl] : []),
-    ...(apiKeyEnv ? ['--api-key-env', apiKeyEnv] : []),
     '--work-dir', workDir, '--out', runOut,
   ];
+  const keyEnvArgs = apiKeyEnv ? ['--api-key-env', apiKeyEnv] : [];
 
   if (dryRun) {
     console.error('[learn] DRY-RUN — no spend. Would execute:');
-    // Redact the --api-key-env value in the echoed command so no key-named token is logged.
-    const shownArgs = gepaArgs.map((a, i) => (gepaArgs[i - 1] === '--api-key-env' ? '<env>' : a));
-    console.error(`  node ${shownArgs.join(' ')}`);
+    // gepaArgs carries no key-named token; the --api-key-env value is shown as a constant placeholder.
+    console.error(`  node ${gepaArgs.join(' ')}${apiKeyEnv ? ' --api-key-env <env>' : ''}`);
     console.error(`[learn] seed=${seedId} host=${host} model=${model} slice=${slice} trainFirst=${trainFirst} maxCost=$${maxCost}`);
     console.error(`[learn] report → ${reportOut}, key template → ${compositeKey({ host, model, ...keyMeta, genome_version: '<candidate>' })}`);
     return;
@@ -252,7 +253,7 @@ function main() {
   if (!KEY) { console.error('FATAL: no API key (set OPENROUTER_API_KEY, or the env var named by --api-key-env)'); process.exit(1); }
 
   console.error(`[learn] host=${host} model=${model} slice=${slice} seed=${seedId} — launching GEPA (cap $${maxCost})${baseUrl ? ` via ${baseUrl}` : ''}`);
-  execFileSync('node', gepaArgs, { stdio: ['ignore', 'inherit', 'inherit'], timeout: 8 * 3600 * 1000, env: { ...process.env, [keyEnvName]: KEY } });
+  execFileSync('node', [...gepaArgs, ...keyEnvArgs], { stdio: ['ignore', 'inherit', 'inherit'], timeout: 8 * 3600 * 1000, env: { ...process.env, [keyEnvName]: KEY } });
 
   const run = JSON.parse(readFileSync(runOut, 'utf8'));
   const bestId = run.best;
