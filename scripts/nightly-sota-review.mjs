@@ -256,7 +256,10 @@ export function runIntegrityGate({ goldPath, solverPath, predictionsPath, maxSki
 // Markdown per-vector table + witness + signature line, embedded into the PR/issue body on a clean gate.
 export function attestationSection(att) {
   if (!att) return '';
-  const rows = att.vectors.map((v) => `| \`${v.vector}\` | ${v.result.toUpperCase()}${v.critical ? ' **(critical)**' : ''} | ${(v.evidence || '').replace(/\|/g, '\\|').slice(0, 160)} |`).join('\n');
+  // Markdown-table-cell escape: backslash FIRST (else it double-escapes / leaves input backslashes
+  // unescaped — CodeQL js/incomplete-sanitization), then pipe, then flatten newlines.
+  const cell = (s) => String(s ?? '').replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\r?\n/g, ' ').slice(0, 160);
+  const rows = att.vectors.map((v) => `| \`${v.vector}\` | ${v.result.toUpperCase()}${v.critical ? ' **(critical)**' : ''} | ${cell(v.evidence)} |`).join('\n');
   const sig = att.signature.sig ? `\`ed25519:${att.signature.sig.slice(0, 24)}…\` (pubkey \`${att.signature.pubkey.slice(0, 24)}…\`)` : '`unsigned` — sign at publish';
   return `
 
