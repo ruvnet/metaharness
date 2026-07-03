@@ -145,11 +145,32 @@ export function buildReflectionPrompt({ genome, targetComponent, feedbacks, maxF
   ].join('\n');
 }
 
+/**
+ * Linear-time fenced-block scan (CodeQL js/polynomial-redos: the equivalent
+ * /```component\s*\n([\s\S]*?)```/ backtracks polynomially on adversarial
+ * whitespace). Semantics preserved: an opener counts only when nothing but
+ * whitespace sits between it and a newline; invalid openers are skipped and
+ * the scan continues forward, exactly like regex .match would.
+ */
+function extractFence(s: string, opener: string): string | null {
+  let from = 0;
+  for (;;) {
+    const start = s.indexOf(opener, from);
+    if (start < 0) return null;
+    const nl = s.indexOf('\n', start + opener.length);
+    if (nl >= 0 && s.slice(start + opener.length, nl).trim() === '') {
+      const close = s.indexOf('```', nl + 1);
+      if (close >= 0) return s.slice(nl + 1, close);
+    }
+    from = start + opener.length;
+  }
+}
+
 /** Extract the proposed component text from the reflection LM's reply. null = unusable proposal. */
 export function parseReflection(raw: unknown): string | null {
   const s = String(raw ?? '');
-  const fence = s.match(/```component\s*\n([\s\S]*?)```/) || s.match(/```\s*\n([\s\S]*?)```/);
-  const text = (fence ? fence[1] : s).trim();
+  const fence = extractFence(s, '```component') ?? extractFence(s, '```');
+  const text = (fence ?? s).trim();
   return text.length >= 8 ? text : null; // degenerate/empty proposals are rejected
 }
 
