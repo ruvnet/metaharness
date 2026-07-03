@@ -55,6 +55,17 @@ const SKIP_FILES = new Set([
   'packages/create-agent-harness/src/validate.ts',
   // Rust hook-matcher test uses `/tmp` as a deliberate hooks-input fixture.
   'crates/kernel/src/hooks.rs',
+  // Linux-only GCP ops scripts (same rationale as the bench/ dir skip above):
+  // they drive/run on Linux VMs where `/tmp/.orkey` + `/tmp/startup-*.sh` are
+  // the repo's documented conventions, are never run on Windows, and ship in
+  // no npm tarball. Mechanically "fixing" them with os.tmpdir() would change
+  // real nightly-loop behavior on the machines they target.
+  'scripts/gcp-cluster.mjs',
+  'scripts/tbench-gcp.mjs',
+  'scripts/nightly-sota-review.mjs',
+  // weight-eft's reward-hacking detector defines /tmp-shaped DETECTION
+  // regexes as data (same class as the scanner itself, first entry above).
+  'packages/weight-eft/src/reward-hack.ts',
 ]);
 
 const BAD_PATTERNS = [
