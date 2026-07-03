@@ -2,6 +2,28 @@
 
 All notable changes to this package. Dates UTC.
 
+## 0.8.0 — 2026-07-03
+
+- **NEW subpath export `@metaharness/darwin/gepa` — the GEPA prompt-policy learning engine
+  (ADR-228, arXiv 2507.19457).** TypeScript port of the four portable modules from the in-repo
+  bench implementation (`bench/swebench/gepa/`), behavior-preserving (the bench test suites were
+  ported with assertions unchanged and pass against the TS port):
+  - `genome` — genome load/validate/mutate/component algebra + the frozen `SEED_GENOME`
+    (byte-equivalence to the bench prompt builders enforced by test);
+  - `metric` — the pre-registered §5.1 per-instance score, §5.3 failure-class taxonomy, and
+    §5.2 ASI feedback generation;
+  - `loop` — the budgeted GEPA optimize loop (Pareto pool, sum-driven accept/reject,
+    Pareto-add, reflective mutation, stall guard, metric-call/$ budgets) with the **evaluator
+    as an injected async callback** — zero SWE-bench/Docker coupling;
+  - `promotion` — the STRICT promote-on-holdout rule (`evaluatePromotion`), `summarizeEval`,
+    `compositeKey`, `buildPromotionReport`.
+- **Ships cand-6** (`genomes/genome-promoted-cand6-edit-by-midpoint.json` + provenance note) —
+  the first holdout-confirmed cheap-tier policy promotion (holdout gold 2/12 → 3/12, zero
+  regressions, empty-patch 0.583 → 0.333). Exported as `CAND6_GENOME_PATH` / `loadCand6Genome()`.
+- **Non-goal:** the SWE-bench/Docker evaluator does not ship — `bench/swebench/gepa/` remains
+  the in-repo reference wiring (unchanged; the .mjs originals keep running as-is).
+- Root export unchanged (non-breaking).
+
 ## 0.7.1 — 2026-06-26
 
 - **SWE-bench Verified (500) — conformant GLM→Opus empty-patch cascade: 55.6% (278/500),

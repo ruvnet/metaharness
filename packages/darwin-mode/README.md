@@ -252,6 +252,53 @@ The package also re-exports the building blocks behind `evolve`: `profileRepo`,
 `scoreWeights`, `Archive`, `inspectVariant` / `validateGeneratedCode`, plus the
 `SURFACES`, `FILE_BY_SURFACE`, and `APPROVED_FILES` constants.
 
+## GEPA — the prompt-policy learning engine (`@metaharness/darwin/gepa`, ADR-228)
+
+"Freeze the model, evolve the harness" applied to **prompt policy**. The cheap executor's
+operating policy is a **genome** of named text components; a reflection LM reads per-instance
+textual feedback (ASI) and proposes targeted single-component mutations; **Pareto selection**
+over per-instance score vectors keeps candidates that win on different task subsets; a
+**strict holdout promotion rule** (gold-no-regress AND empty-patch-improves AND
+cost/resolved-not-worse) gates what ships.
+
+**What ships:** the engine — genome algebra (`genome`), the pre-registered metric +
+failure-class taxonomy + ASI generation (`metric`), the budgeted optimize loop with a
+**pluggable evaluator** (`loop`), the promotion rule + report helpers (`promotion`) — plus
+**cand-6**, the first holdout-confirmed promoted genome (edit-by-midpoint: holdout gold
+2/12 → 3/12, zero regressions, empty-patch rate 0.583 → 0.333; provenance in
+`genomes/PROVENANCE.md`).
+
+**What does NOT ship:** the SWE-bench/Docker evaluator. It is repo-bound and remains in-repo
+as the reference wiring at
+[`packages/darwin-mode/bench/swebench/gepa/`](https://github.com/ruvnet/metaharness/tree/main/packages/darwin-mode/bench/swebench/gepa)
+(`evaluate-genome.mjs`, `run-gepa.mjs`, `learn.mjs`). You bring the evaluator: any
+`async (genome) => { scores, feedbacks, cost, metricCalls }` over your own task slice.
+
+```ts
+import { gepaOptimize, loadCand6Genome, buildSystemFromGenome } from '@metaharness/darwin/gepa';
+
+const seed = loadCand6Genome(); // or SEED_GENOME, or your own dict[str,str] genome
+const result = await gepaOptimize({
+  seed,
+  // toy in-memory evaluator — replace with your real harness rollout + scoring
+  evaluate: async (genome) => {
+    const sys = buildSystemFromGenome(genome, 'py', '*.py');
+    const scores = { 'task-1': sys.includes('line_edit') ? 1 : 0, 'task-2': 0 };
+    return { scores, feedbacks: { 'task-2': 'task-2: score 0 (gold FAIL).\nmutation target: retrieval_policy' }, cost: 0 };
+  },
+  // the reflection LM — wire your own chat call; must return the proposal text
+  reflect: async (prompt) => ({ raw: '```component\nStrategy: read the traceback file first, edit by mid-budget.\n```', cost: 0 }),
+  maxCandidates: 3,
+});
+result.best;     // id of the highest-mean candidate
+result.frontier; // the FULL Pareto frontier (candidates best on ≥1 instance)
+result.pool;     // evaluated genomes with per-instance score vectors
+```
+
+Promotion is a separate, deliberate step: run your holdout slice through `summarizeEval` and
+`evaluatePromotion({ seed, cand })` — it only says `promote` when the candidate strictly
+improves out-of-sample without losing anything the seed already solved.
+
 ## Evolutionary stack (ADR-084–105)
 
 The baseline above is the frozen core. On top of it, a set of **opt-in, additive,
