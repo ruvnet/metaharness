@@ -21,20 +21,38 @@
 // not `pending`. So `done`, `in_progress_elsewhere` (the acceptance run's jobs), `deferred`, and
 // `placeholder` are all left alone — a new session continues mid-queue with zero duplicate spend.
 //
-// $0 SAFETY: the pure decision functions (job selection, budget gate, promotion application, registry
-// mutation) are exported and unit-tested with a MOCKED learn runner in overnight-train.test.mjs.
-// Nothing here calls an LLM by itself — spend happens only inside learn.mjs → run-gepa.mjs, which
-// require OPENROUTER_API_KEY. `--dry-run` performs NO spend (prints the plan for each pending job).
+// CONCURRENCY (`--concurrency N`, default 4): instead of one job per wake, a BOUNDED POOL runs up to N
+// queue jobs at once (each job's own rollouts are already concurrent inside evaluate-genome). A shared
+// client-side budget RESERVATION (reservedSpend over in-flight jobs) guarantees the pool can never
+// collectively overshoot the global cap: a job is only claimed if cumulativeSpend + reservedSpend +
+// its reserve still fits. On a 429 / budget-reject (deferrable error) a job is marked `deferred`
+// (not `failed`) so a later wake retries it.
+//
+// GATEWAY (`--via-gateway`): points every rollout + reflection at the cognitum meta-llm Completions API
+// (host-normalization + shared genome-prefix response/prompt cache + central metering in usage_ledger).
+// It flows `--base-url` + `--api-key-env` + `--model cognitum-low` down learn.mjs → run-gepa.mjs →
+// evaluate-genome.mjs → solve-advisor.mjs. The gateway's SERVER-SIDE Reserve-and-Commit budget +
+// rate-limits govern the AGGREGATE, so even many concurrent training jobs can't collectively overspend.
+// The direct-OpenRouter path stays the DEFAULT fallback (no `--via-gateway` ⇒ unchanged behaviour).
+// (API for bulk rollouts here; MCP tools are for interactive dev — see OVERNIGHT-TRAINING.md.)
+//
+// $0 SAFETY: the pure decision functions (job selection, budget gates, promotion application, registry
+// mutation, the concurrency claim + defer logic) are exported and unit-tested with a MOCKED learn
+// runner in overnight-train.test.mjs. Nothing here calls an LLM by itself — spend happens only inside
+// learn.mjs → run-gepa.mjs (OPENROUTER_API_KEY) or, with --via-gateway, the cognitum key env.
+// `--dry-run` performs NO spend (prints the plan for each pending job).
 //
 // Usage:
 //   OPENROUTER_API_KEY=... node gepa/overnight-train.mjs [--max-total-cost 100] [--max-cost 12]
-//                                 [--max-jobs 1] [--sleep 0] [--state <file>] [--registry <file>]
+//                                 [--concurrency 4] [--max-jobs 0] [--state <file>] [--registry <file>]
 //                                 [--dry-run] [--status] [--reset]
+//   # gateway-governed, concurrent (key from env, NEVER logged):
+//   COGNITUM_DEV_KEY=... node gepa/overnight-train.mjs --via-gateway --concurrency 4
 //   node gepa/overnight-train.mjs --status         # inspect the queue + spend, no spend, no mutation
 //   node gepa/overnight-train.mjs --dry-run        # plan the next pending job(s), no spend
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { join, dirname, isAbsolute } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -44,8 +62,18 @@ const rel = (p) => (isAbsolute(p) ? p : join(BENCH, p));
 
 export const DEFAULT_MAX_TOTAL_COST = 100; // global cap for the whole overnight run ($)
 export const DEFAULT_PER_JOB_MAX_COST = 12; // per-job cap ($) — also passed to learn.mjs --max-cost
+export const DEFAULT_CONCURRENCY = 4; // bounded pool size (queue jobs run at once)
 
-// Statuses that are terminal / not-runnable and are always skipped on resume.
+// The cognitum meta-llm Completions API backing --via-gateway (ADR-203/204). The key lives ONLY in the
+// COGNITUM_DEV_KEY env var (fetched from the COGNITUM_TEST_API_KEY secret by the caller) and is NEVER
+// logged or persisted. cognitum-low routes server-side to the governed cheap tier (glm-5.2).
+export const GATEWAY_BASE_URL = 'https://apicompletions-63rzcdswba-uc.a.run.app/v1';
+export const GATEWAY_API_KEY_ENV = 'COGNITUM_DEV_KEY';
+export const GATEWAY_MODEL = 'cognitum-low';
+
+// Statuses that are terminal / not-runnable and are always skipped on resume. `in_progress` is NOT here
+// (it is a live-pool status); a crash leaves in_progress jobs, which reclaimInProgress() flips back to
+// pending on the next load so they are retried, not orphaned.
 export const SKIP_STATUSES = new Set(['done', 'in_progress_elsewhere', 'deferred', 'placeholder', 'failed']);
 
 // ── seed queue ────────────────────────────────────────────────────────────────────────────────────
@@ -135,6 +163,18 @@ export function freshState({ maxTotalCost = DEFAULT_MAX_TOTAL_COST, perJobMaxCos
 
 export function freshRegistry() {
   return { version: 1, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), shadows: [] };
+}
+
+/**
+ * Two TRIVIAL pending jobs for the ≤$0.20 gateway smoke (used with `--smoke --via-gateway --reset`).
+ * They exercise the concurrency pool + the gateway backend resolution, but the smoke runner replaces
+ * the GEPA rollout with a pair of cheap cognitum-low completions — see makeSmokeRunLearn.
+ */
+export function smokeSeedQueue() {
+  return [
+    { id: 'smoke-job-1', model: 'z-ai/glm-5.2', workflow: 'code-repair', seed_genome: 'gepa/seed-genome.json', manifest: 'advisor-medium-25.json', train_first: 1, max_cost: 0.1, status: 'pending', note: 'gateway smoke — cheap cognitum-low completions, no GEPA', result: null },
+    { id: 'smoke-job-2', model: 'z-ai/glm-5.2', workflow: 'code-repair', seed_genome: 'gepa/seed-genome.json', manifest: 'advisor-medium-25.json', train_first: 1, max_cost: 0.1, status: 'pending', note: 'gateway smoke — shares the genome-prefix so the repeat is a cache-hit', result: null },
+  ];
 }
 
 // ── pure decision helpers ($0-tested) ───────────────────────────────────────────────────────────
@@ -309,6 +349,159 @@ export async function iterateOnce({ state, registry, runLearn, dryRun = false })
   return { status: 'ran', done: false, job, promoted, summary, message: summaryLine(summary) };
 }
 
+// ── gateway backend resolution ($0-tested) ────────────────────────────────────────────────────────
+
+/**
+ * Resolve the LLM backend for this wake. --via-gateway ⇒ the cognitum meta-llm Completions API
+ * (base-url + COGNITUM_DEV_KEY env + cognitum-low), overridable per flag. Default ⇒ OpenRouter-direct
+ * (baseUrl/apiKeyEnv null ⇒ learn.mjs uses its OPENROUTER_API_KEY default). PURE.
+ */
+export function resolveBackend({ viaGateway = false, baseUrl = null, apiKeyEnv = null, model = null } = {}) {
+  if (viaGateway) {
+    return {
+      viaGateway: true,
+      baseUrl: (baseUrl || GATEWAY_BASE_URL).replace(/\/$/, ''),
+      apiKeyEnv: apiKeyEnv || GATEWAY_API_KEY_ENV,
+      modelOverride: model || GATEWAY_MODEL,
+    };
+  }
+  return { viaGateway: false, baseUrl: baseUrl || null, apiKeyEnv: apiKeyEnv || null, modelOverride: model || null };
+}
+
+// ── concurrency: bounded pool with shared budget reservation ($0-tested) ──────────────────────────
+
+/** $ currently RESERVED by in-flight (`in_progress`) jobs — the pool's client-side over-spend guard. */
+export function reservedSpend(queue = [], perJobMaxCost = DEFAULT_PER_JOB_MAX_COST) {
+  return queue
+    .filter((j) => j.status === 'in_progress')
+    .reduce((s, j) => s + budgetReserve(j, perJobMaxCost), 0);
+}
+
+/**
+ * Concurrent budget gate: a job is claimable only if committed spend + all in-flight reservations +
+ * this job's reserve still fit under the cap. This is what stops N concurrent jobs from collectively
+ * overshooting the client-side cap (the gateway enforces the same server-side when --via-gateway).
+ */
+export function canAffordConcurrent(state, job) {
+  const reserve = budgetReserve(job, state.perJobMaxCost);
+  return state.cumulativeSpend + reservedSpend(state.queue, state.perJobMaxCost) + reserve <= state.maxTotalCost + 1e-9;
+}
+
+/**
+ * Claim the next runnable job for the pool. Returns:
+ *   { kind:'claimed', job } — marked `in_progress` (reserved); caller must run it.
+ *   { kind:'budget',  job } — a pending job exists but its reserve doesn't fit RIGHT NOW.
+ *   { kind:'empty' }        — no pending jobs left.
+ * Mutates the claimed job's status only. PURE otherwise.
+ */
+export function claimNextJob(state) {
+  const job = selectNextJob(state.queue);
+  if (!job) return { kind: 'empty' };
+  if (!canAffordConcurrent(state, job)) return { kind: 'budget', job };
+  job.status = 'in_progress';
+  return { kind: 'claimed', job };
+}
+
+/** On resume, flip any `in_progress` jobs (left by a crashed pool) back to `pending` so they retry. */
+export function reclaimInProgress(state) {
+  let n = 0;
+  for (const j of state.queue) {
+    if (j.status === 'in_progress') { j.status = 'pending'; j.result = { ...(j.result || {}), reclaimed: true }; n++; }
+  }
+  return n;
+}
+
+/** A deferrable error is a 429 / rate-limit / budget-reject — retry it later, don't mark it `failed`. */
+export function isDeferrableError(err) {
+  const m = String((err && (err.message || err.stderrTail)) || err || '').toLowerCase();
+  return /\b429\b|rate.?limit|too many requests|budget|reserve.?reject|quota|insufficient|over.?cap/.test(m);
+}
+
+/** Exponential backoff (ms) for a deferred-retry, capped at 60s. */
+export function backoffMs(attempt) { return Math.min(60000, 1000 * 2 ** Math.max(0, attempt)); }
+
+/**
+ * The BOUNDED CONCURRENCY POOL. Drains the queue this wake, running up to `concurrency` jobs at once.
+ * `runLearn(job, ctx)` MUST return { report, cost, reportPath } (spawns learn.mjs in prod; a mock in
+ * tests). Budget is reserved on claim and reconciled to actual on commit (applyLearnResult). NO I/O of
+ * its own beyond the injected runLearn + optional persist/sleep hooks, so it is fully unit-testable.
+ *   - deferrable error (429/budget) → job `deferred` (+ backoff), pool keeps going.
+ *   - hard error                    → job `failed`, pool keeps going (other jobs are independent).
+ *   - next job unaffordable + nothing in flight → defer all remaining pending, stop.
+ */
+export async function runPool({
+  state, registry, runLearn, concurrency = DEFAULT_CONCURRENCY, dryRun = false, maxJobs = 0,
+  persist = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)),
+}) {
+  const results = [];
+  const N = Math.max(1, concurrency);
+
+  if (dryRun) {
+    for (const job of state.queue.filter((j) => j.status === 'pending')) {
+      results.push({
+        status: 'planned', job,
+        message: `[overnight] PLAN ${job.id} (${job.model}) seed=${job.seed_genome} slice=${job.manifest}`
+          + ` cap=$${budgetReserve(job, state.perJobMaxCost)} spend=$${state.cumulativeSpend}/$${state.maxTotalCost}`,
+      });
+    }
+    return { results, deferredBudget: false };
+  }
+
+  const active = new Map(); // tagged-promise -> itself (so we can delete the settled one)
+  let launched = 0;
+  let deferredBudget = false;
+
+  const runOne = async (job) => {
+    try {
+      const { report, cost, reportPath } = await runLearn(job, { state });
+      const { promoted, summary } = applyLearnResult({ state, registry, job, report, cost, reportPath });
+      return { status: 'ran', job, promoted, summary, message: summaryLine(summary) };
+    } catch (err) {
+      const msg = String((err && err.message) || err);
+      if (isDeferrableError(err)) {
+        const attempt = (job.result?.deferAttempts || 0) + 1;
+        job.status = 'deferred';
+        job.result = { deferred: true, reason: msg, deferAttempts: attempt, backoffMs: backoffMs(attempt), ranAt: new Date().toISOString() };
+        await sleep(backoffMs(attempt));
+        return { status: 'deferred', job, message: `[overnight] JOB ${job.id} DEFERRED (429/budget, retry later): ${msg}` };
+      }
+      job.status = 'failed';
+      job.result = { error: msg, ranAt: new Date().toISOString() };
+      return { status: 'failed', job, message: `[overnight] JOB ${job.id} FAILED: ${msg}` };
+    } finally {
+      state.updatedAt = new Date().toISOString();
+    }
+  };
+
+  const launch = (job) => {
+    const tagged = runOne(job).then((r) => ({ tagged, r }));
+    active.set(tagged, tagged);
+    launched++;
+    return tagged;
+  };
+
+  while (true) {
+    // fill the pool up to N (respecting maxJobs cap and the concurrent budget gate)
+    while (active.size < N && (maxJobs <= 0 || launched < maxJobs)) {
+      const c = claimNextJob(state);
+      if (c.kind === 'empty') break;
+      if (c.kind === 'budget') {
+        // Can't fit the next job's reserve right now. If jobs are in flight, wait — their commit may
+        // free budget (actual < reserve). If nothing is in flight, budget is truly exhausted: defer all.
+        if (active.size === 0) { deferRemaining(state.queue, `budget cap $${state.maxTotalCost} reached (spend $${state.cumulativeSpend})`); deferredBudget = true; }
+        break;
+      }
+      launch(c.job);
+    }
+    if (active.size === 0) break;
+    const { tagged, r } = await Promise.race(active.values());
+    active.delete(tagged);
+    results.push(r);
+    persist(); // persist after every commit so a mid-pool crash is resumable
+  }
+  return { results, deferredBudget };
+}
+
 // ── state / registry persistence ────────────────────────────────────────────────────────────────
 
 export function loadJson(path, fallbackFactory) {
@@ -321,15 +514,20 @@ export function saveJson(path, obj) {
 }
 
 // ── production learn runner (spawns learn.mjs; the ONLY place that can spend) ──────────────────────
-function makeRealRunLearn({ statePath }) {
-  return async (job) => {
-    const KEY = (process.env.OPENROUTER_API_KEY || '').trim();
-    if (!KEY) throw new Error('no OPENROUTER_API_KEY — refusing to run a live job');
-    const modelSlug = job.model.replace(/[^a-zA-Z0-9_-]/g, '_');
+// ASYNC spawn (not execFileSync): the concurrency pool needs non-blocking children, and async spawn
+// lets us TEE the child's stderr live while capturing its tail so a 429/budget line surfaces as a
+// deferrable error (isDeferrableError). `backend` selects OpenRouter-direct vs the cognitum gateway.
+function makeRealRunLearn({ backend = { viaGateway: false } }) {
+  return (job) => new Promise((resolve, reject) => {
+    const keyEnvName = backend.apiKeyEnv || 'OPENROUTER_API_KEY';
+    const KEY = (process.env[keyEnvName] || '').trim();
+    if (!KEY) { reject(new Error(`no ${keyEnvName} — refusing to run a live job`)); return; }
+    const effModel = backend.modelOverride || job.model;        // e.g. cognitum-low under --via-gateway
+    const modelSlug = job.model.replace(/[^a-zA-Z0-9_-]/g, '_'); // slug from the LOGICAL model (stable paths)
     const reportOut = rel(`gepa/runs/promotion-report-overnight-${modelSlug}.json`);
     const args = [
       '--no-warnings', join(HERE, 'learn.mjs'),
-      '--model', job.model,
+      '--model', effModel,
       '--slice', job.manifest,
       '--seed', rel(job.seed_genome),
       '--train-first', String(job.train_first ?? 12),
@@ -338,15 +536,70 @@ function makeRealRunLearn({ statePath }) {
       '--report', reportOut,
       '--work-dir', rel(`gepa/runs/overnight-${modelSlug}`),
       '--run-id', `overnight_${job.id}`.replace(/[^a-zA-Z0-9_]/g, '_'),
+      ...(backend.baseUrl ? ['--base-url', backend.baseUrl] : []),
+      ...(backend.apiKeyEnv ? ['--api-key-env', backend.apiKeyEnv] : []),
     ];
-    execFileSync('node', args, {
-      stdio: ['ignore', 'inherit', 'inherit'],
-      timeout: 8 * 3600 * 1000,
-      env: { ...process.env, OPENROUTER_API_KEY: KEY },
+    const child = spawn('node', args, { env: { ...process.env, [keyEnvName]: KEY } });
+    let tail = '';
+    const to = setTimeout(() => { try { child.kill('SIGKILL'); } catch { /* noop */ } }, 8 * 3600 * 1000);
+    child.stdout.on('data', (d) => process.stdout.write(d));
+    child.stderr.on('data', (d) => { process.stderr.write(d); tail = (tail + d.toString()).slice(-4000); });
+    child.on('error', (e) => { clearTimeout(to); reject(e); });
+    child.on('close', (code) => {
+      clearTimeout(to);
+      if (code !== 0) { const e = new Error(`learn.mjs exited ${code}: ${tail.slice(-500)}`); e.code = code; e.stderrTail = tail; reject(e); return; }
+      try {
+        const report = JSON.parse(readFileSync(reportOut, 'utf8'));
+        const cost = report?.run?.budget?.totalCost ?? budgetReserve(job, DEFAULT_PER_JOB_MAX_COST);
+        resolve({ report, cost, reportPath: reportOut });
+      } catch (e) { reject(e); }
     });
-    const report = JSON.parse(readFileSync(reportOut, 'utf8'));
-    const cost = report?.run?.budget?.totalCost ?? budgetReserve(job, DEFAULT_PER_JOB_MAX_COST);
-    return { report, cost, reportPath: reportOut };
+  });
+}
+
+// ── smoke runner (proves --via-gateway WIRING cheaply; NO GEPA / Docker rollout) ──────────────────
+// A real learn.mjs run needs Docker SWE-bench + dollars, so it can't fit a ≤$0.20 smoke. This instead
+// fires two IDENTICAL cognitum-low completions per job over a shared genome-prefix system prompt: it
+// proves (1) rollouts route via cognitum-low → the resolved tier/model, (2) each call is metered in the
+// usage_ledger, and (3) the repeated genome-prefix hits the response/prompt cache (cheaper 2nd call).
+// Returns a synthetic `reject` report (never promotes) with the tiny real token cost.
+export const SMOKE_GENOME_PREFIX =
+  'You are a SWE-bench code-repair executor operating under a fixed genome. GENOME-PREFIX v1 '
+  + '(shared across rollouts so the gateway can cache it): '.repeat(48)
+  + 'Always answer tersely.';
+function makeSmokeRunLearn({ backend, fetchImpl = fetch }) {
+  return async (job) => {
+    const keyEnvName = backend.apiKeyEnv || GATEWAY_API_KEY_ENV;
+    const KEY = (process.env[keyEnvName] || '').trim();
+    if (!KEY) throw new Error(`no ${keyEnvName} — refusing to run the gateway smoke`);
+    const base = (backend.baseUrl || GATEWAY_BASE_URL).replace(/\/$/, '');
+    const model = backend.modelOverride || GATEWAY_MODEL;
+    let cost = 0, tier = null, resolved = null;
+    for (let i = 0; i < 2; i++) { // 1st warms the cache, 2nd (identical) should hit it
+      const res = await fetchImpl(`${base}/chat/completions`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: 'system', content: SMOKE_GENOME_PREFIX }, { role: 'user', content: `Reply with only: OK (${job.id})` }],
+          max_tokens: 4, temperature: 0,
+        }),
+      });
+      if (res.status === 429) throw new Error('429 rate-limited by gateway (Reserve-and-Commit backstop)');
+      if (!res.ok) throw new Error(`gateway ${res.status} ${res.statusText || ''}`.trim());
+      tier = res.headers.get('x-cognitum-resolved-tier') || tier;
+      resolved = res.headers.get('x-cognitum-resolved-model') || resolved;
+      const j = await res.json();
+      cost += ((j.usage?.total_tokens || 0)) * 1e-7; // negligible synthetic $; real metering is server-side
+    }
+    const report = {
+      verdict: 'reject', // smoke never promotes
+      key: `smoke+${job.model}+${job.workflow}`,
+      reason: `SMOKE ok: routed tier=${tier} resolved=${resolved} (2 metered calls, repeat cache-warm)`,
+      checks: null, holdout: null,
+      run: { budget: { totalCost: cost } },
+    };
+    return { report, cost, reportPath: null };
   };
 }
 
@@ -358,16 +611,27 @@ async function main() {
   const registryPath = rel(argv('--registry', 'gepa/runs/genome-registry.json'));
   const maxTotalCost = +argv('--max-total-cost', DEFAULT_MAX_TOTAL_COST);
   const perJobMaxCost = +argv('--max-cost', DEFAULT_PER_JOB_MAX_COST);
-  const maxJobs = +argv('--max-jobs', 1);
-  const sleepSec = +argv('--sleep', 0);
+  const concurrency = +argv('--concurrency', DEFAULT_CONCURRENCY);
+  const maxJobs = +argv('--max-jobs', 0); // 0 ⇒ drain the queue this wake (bounded by budget)
   const dryRun = args.includes('--dry-run');
   const reset = args.includes('--reset');
+  const smoke = args.includes('--smoke');
+
+  // Backend: --via-gateway → cognitum meta-llm Completions API (key from env, NEVER logged). Default =
+  // OpenRouter-direct. --base-url / --api-key-env / --model override the resolved backend.
+  const backend = resolveBackend({
+    viaGateway: args.includes('--via-gateway'),
+    baseUrl: argv('--base-url', null),
+    apiKeyEnv: argv('--api-key-env', null),
+    model: argv('--model', null),
+  });
 
   if (reset) {
     const st = freshState({ maxTotalCost, perJobMaxCost });
+    if (smoke) st.queue = smokeSeedQueue(); // --smoke --reset seeds the 2 trivial gateway jobs
     saveJson(statePath, st);
     saveJson(registryPath, freshRegistry());
-    console.error(`[overnight] RESET state → ${statePath} (${st.queue.length} jobs, cap $${maxTotalCost})`);
+    console.error(`[overnight] RESET state → ${statePath} (${st.queue.length} jobs, cap $${maxTotalCost}${smoke ? ', SMOKE queue' : ''})`);
     return;
   }
 
@@ -377,10 +641,14 @@ async function main() {
   if (state.perJobMaxCost !== perJobMaxCost) { console.error(`[overnight] per-job cap: $${state.perJobMaxCost} → $${perJobMaxCost}`); state.perJobMaxCost = perJobMaxCost; }
   const registry = loadJson(registryPath, freshRegistry);
 
+  // resume-safety: any job left `in_progress` by a crashed pool → back to pending (retried, not lost)
+  const reclaimed = reclaimInProgress(state);
+  if (reclaimed) console.error(`[overnight] reclaimed ${reclaimed} in_progress job(s) from a prior crash → pending`);
+
   if (args.includes('--status')) {
     const byStatus = state.queue.reduce((m, j) => { m[j.status] = (m[j.status] || 0) + 1; return m; }, {});
     console.log(`[overnight] STATE ${statePath}`);
-    console.log(`[overnight] spend $${state.cumulativeSpend}/$${state.maxTotalCost} · per-job cap $${state.perJobMaxCost} · jobs ${JSON.stringify(byStatus)}`);
+    console.log(`[overnight] spend $${state.cumulativeSpend}/$${state.maxTotalCost} · per-job cap $${state.perJobMaxCost} · concurrency ${concurrency} · jobs ${JSON.stringify(byStatus)}`);
     console.log(`[overnight] SHADOW winners: ${registry.shadows.length}`);
     for (const j of state.queue) {
       const v = j.result?.verdict ? ` [${j.result.verdict}]` : '';
@@ -389,20 +657,18 @@ async function main() {
     return;
   }
 
-  const runLearn = makeRealRunLearn({ statePath });
-  let ran = 0;
-  for (let i = 0; i < Math.max(1, maxJobs); i++) {
-    const out = await iterateOnce({ state, registry, runLearn, dryRun });
-    // persist after EVERY iteration so a crash mid-queue is still resumable
-    saveJson(statePath, state);
-    saveJson(registryPath, registry);
-    console.log(out.message);
-    if (out.status === 'ran' || out.status === 'planned') ran++;
-    if (out.done) break;
-    if (out.status === 'failed') break; // stop the batch on a hard failure; state is persisted
-    if (sleepSec > 0 && i < maxJobs - 1) await new Promise((r) => setTimeout(r, sleepSec * 1000));
-  }
-  if (!ran) console.log('[overnight] nothing to do (no pending jobs or budget exhausted)');
+  if (backend.viaGateway) console.error(`[overnight] BACKEND gateway ${backend.baseUrl} model=${backend.modelOverride} key-env=${backend.apiKeyEnv} (key not logged)`);
+  else console.error('[overnight] BACKEND OpenRouter-direct (default)');
+
+  const runLearn = smoke ? makeSmokeRunLearn({ backend }) : makeRealRunLearn({ backend });
+  const persist = () => { saveJson(statePath, state); saveJson(registryPath, registry); };
+
+  const { results, deferredBudget } = await runPool({ state, registry, runLearn, concurrency, dryRun, maxJobs, persist });
+  persist();
+  for (const r of results) console.log(r.message);
+  const ran = results.filter((r) => r.status === 'ran' || r.status === 'planned').length;
+  if (deferredBudget) console.log(`[overnight] budget cap $${state.maxTotalCost} reached at $${state.cumulativeSpend}; remaining jobs deferred`);
+  if (!ran && !results.length) console.log('[overnight] nothing to do (no pending jobs or budget exhausted)');
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();

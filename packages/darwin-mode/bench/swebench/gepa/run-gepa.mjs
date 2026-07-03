@@ -46,10 +46,16 @@ const outPath = rel(argv('--out', 'gepa/pilot-result.json'));
 const reflective = argv('--reflective', 'gepa/reflective-dataset.json');
 const noHoldout = args.includes('--no-holdout');
 const workDir = rel(argv('--work-dir', 'gepa/runs'));
+// Gateway backend (ADR-210/204): route rollouts + reflection through the meta-llm Completions API so
+// they get host-normalization, the shared response/prompt cache, and central metering. When absent,
+// behaviour is unchanged (OpenRouter-direct). --api-key-env names the ENV VAR holding the key.
+const baseUrl = (argv('--base-url', null) || '').replace(/\/$/, '') || null;
+const apiKeyEnv = argv('--api-key-env', null);
+const keyEnvName = apiKeyEnv || 'OPENROUTER_API_KEY';
 mkdirSync(workDir, { recursive: true });
 
-const KEY = (process.env.OPENROUTER_API_KEY || (() => { try { return readFileSync('/tmp/.orkey', 'utf8'); } catch { return ''; } })()).trim();
-if (!KEY) { console.error('FATAL: no OPENROUTER_API_KEY'); process.exit(1); }
+const KEY = (process.env[keyEnvName] || (!apiKeyEnv ? (() => { try { return readFileSync('/tmp/.orkey', 'utf8'); } catch { return ''; } })() : '')).trim();
+if (!KEY) { console.error(`FATAL: no ${keyEnvName}`); process.exit(1); }
 
 // ── reflect: one stateless completion on the reflection model (temp 0) ────────────────────────────
 async function reflect(prompt) {
@@ -57,7 +63,7 @@ async function reflect(prompt) {
   for (let attempt = 0; attempt < 5; attempt++) {
     if (attempt) await new Promise((r) => setTimeout(r, 2000 * 2 ** (attempt - 1)));
     try {
-      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const res = await fetch(`${baseUrl || 'https://openrouter.ai/api/v1'}/chat/completions`, {
         method: 'POST', headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ model: reflectionModel, messages: [{ role: 'user', content: prompt }], max_tokens: 2048, temperature: 0 }),
       });
@@ -77,8 +83,10 @@ function runEvaluator(genomeFile, { skip, first, tag }) {
     '--genome', genomeFile, '--manifest', manifest, '--skip', String(skip), '--first', String(first),
     '--model', model, '--max-steps', String(maxSteps), '--concurrency', String(concurrency),
     '--max-cost', String(perEvalCost), '--reflective', reflective,
+    ...(baseUrl ? ['--base-url', baseUrl] : []),
+    ...(apiKeyEnv ? ['--api-key-env', apiKeyEnv] : []),
     '--run-id', `gepa_${tag}`.replace(/[^a-zA-Z0-9_]/g, '_'), '--out', out,
-  ], { stdio: ['ignore', 'inherit', 'inherit'], timeout: 4 * 3600 * 1000, env: { ...process.env, OPENROUTER_API_KEY: KEY } });
+  ], { stdio: ['ignore', 'inherit', 'inherit'], timeout: 4 * 3600 * 1000, env: { ...process.env, [keyEnvName]: KEY } });
   return JSON.parse(readFileSync(out, 'utf8'));
 }
 async function evaluate(genome) {

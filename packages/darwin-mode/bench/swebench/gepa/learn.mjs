@@ -207,6 +207,12 @@ function main() {
   const maxSteps = argv('--max-steps', '12');
   const concurrency = argv('--concurrency', '2');
   const perEvalCost = argv('--per-eval-max-cost', '3');
+  // Gateway backend (ADR-210/204): forward --base-url + --api-key-env to run-gepa (→ evaluate-genome →
+  // solve-advisor + the reflection call) so rollouts + reflection route through the meta-llm Completions
+  // API (host-normalization + shared genome-prefix cache + central metering). Absent ⇒ OpenRouter-direct.
+  const baseUrl = argv('--base-url', null);
+  const apiKeyEnv = argv('--api-key-env', null);
+  const keyEnvName = apiKeyEnv || 'OPENROUTER_API_KEY';
 
   const modelSlug = model.replace(/[^a-zA-Z0-9_-]/g, '_');
   const hostSlug = host.replace(/[^a-zA-Z0-9_-]/g, '_');
@@ -227,6 +233,8 @@ function main() {
     '--per-eval-max-cost', String(perEvalCost),
     // namespace the Docker run-ids per (host,model) so parallel learn runs on the same slice don't collide
     '--run-tag', `gepa_${hostSlug}_${modelSlug}`.slice(0, 48),
+    ...(baseUrl ? ['--base-url', baseUrl] : []),
+    ...(apiKeyEnv ? ['--api-key-env', apiKeyEnv] : []),
     '--work-dir', workDir, '--out', runOut,
   ];
 
@@ -238,11 +246,11 @@ function main() {
     return;
   }
 
-  const KEY = (process.env.OPENROUTER_API_KEY || '').trim();
-  if (!KEY) { console.error('FATAL: no OPENROUTER_API_KEY'); process.exit(1); }
+  const KEY = (process.env[keyEnvName] || '').trim();
+  if (!KEY) { console.error(`FATAL: no ${keyEnvName}`); process.exit(1); }
 
-  console.error(`[learn] host=${host} model=${model} slice=${slice} seed=${seedId} — launching GEPA (cap $${maxCost})`);
-  execFileSync('node', gepaArgs, { stdio: ['ignore', 'inherit', 'inherit'], timeout: 8 * 3600 * 1000, env: { ...process.env, OPENROUTER_API_KEY: KEY } });
+  console.error(`[learn] host=${host} model=${model} slice=${slice} seed=${seedId} — launching GEPA (cap $${maxCost})${baseUrl ? ` via ${baseUrl}` : ''}`);
+  execFileSync('node', gepaArgs, { stdio: ['ignore', 'inherit', 'inherit'], timeout: 8 * 3600 * 1000, env: { ...process.env, [keyEnvName]: KEY } });
 
   const run = JSON.parse(readFileSync(runOut, 'utf8'));
   const bestId = run.best;
