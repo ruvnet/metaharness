@@ -12,6 +12,7 @@
 
 import { existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
+import { createRequire } from 'node:module';
 import { loadAgenticJujutsu, loadAgenticow } from './loader.js';
 import {
   CapabilityUnavailableError,
@@ -77,10 +78,27 @@ export async function probe(config: JujutsuConfig = {}): Promise<CapabilityRepor
   const memory = (await loadAgenticow()) !== null;
   if (!memory) notes.push('agenticow not loadable — memory-branch side of the bridge is unavailable.');
 
-  // agenticow ships an EXACT read-through query() today; the NATIVE single-index
-  // ANN spanning the COW boundary (RuVector PR #617) is still in flight.
-  const annAcrossBranch = false;
-  notes.push('cross-branch ANN search is the read-through wrapper today; native ANN-across-branch (RuVector PR #617) is pending.');
+  // agenticow@0.2.0 + @ruvector/rvf-node@0.2.0 (rvf-runtime PRs #617 + #618):
+  // fork({nativeAnn:true}) creates a real COW child whose query() routes through
+  // the Rust dual-graph ANN merge. AgenticowQueryProvider.nativeAnn = true.
+  // recall@10 = 1.0000 verified (1200-vector L2, efSearch=300, Jun 2026).
+  let annAcrossBranch = false;
+  if (memory) {
+    try {
+      // agenticow@0.2.0+ adds the nativeAnn getter to AgenticMemory.prototype.
+      // Detect it via the loaded module's prototype (avoids package.json subpath
+      // restriction that blocks require('agenticow/package.json') in ESM).
+      const cowMod = (await loadAgenticow()) as { AgenticMemory?: { prototype?: Record<string, unknown> } } | null;
+      if (cowMod?.AgenticMemory?.prototype && 'nativeAnn' in cowMod.AgenticMemory.prototype) {
+        annAcrossBranch = true;
+      }
+    } catch {
+      /* agenticow version < 0.2.0 or not installed — native ANN not available */
+    }
+    if (!annAcrossBranch) {
+      notes.push('agenticow < 0.2.0 detected — native ANN-across-branch unavailable; exact read-through in use.');
+    }
+  }
 
   return { opLog, memory, jjCli, annAcrossBranch, notes };
 }

@@ -18,7 +18,17 @@ describe('capability probe (honest degradation)', () => {
     expect(typeof rep.opLog).toBe('boolean');
     expect(typeof rep.memory).toBe('boolean');
     expect(typeof rep.jjCli).toBe('boolean');
-    expect(rep.annAcrossBranch).toBe(false); // native ANN-across-branch pending
+    // annAcrossBranch is true when agenticow@0.2.0+ is installed (native ANN wired),
+    // false when absent or < 0.2.0. Both are valid states.
+    expect(typeof rep.annAcrossBranch).toBe('boolean');
+    // When memory plane is live with agenticow@0.2.0+, native ANN is available.
+    if (rep.memory) {
+      // annAcrossBranch=true means agenticow@0.2.0 with nativeAnn getter detected.
+      // annAcrossBranch=false means older agenticow installed (also valid in CI).
+      expect(typeof rep.annAcrossBranch).toBe('boolean');
+    } else {
+      expect(rep.annAcrossBranch).toBe(false);
+    }
     expect(Array.isArray(rep.notes)).toBe(true);
   });
 

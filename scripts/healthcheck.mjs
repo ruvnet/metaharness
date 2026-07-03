@@ -66,6 +66,15 @@ const CHECKS = {
       // @metaharness/projects (Darwin Shield / defensive zero-day harness, ADR-155+)
       // is a standalone published library on its own semver, like @metaharness/darwin.
       '@metaharness/projects',
+      // @metaharness/redblue (defensive red/blue adversarial testing, ADR-197) ships
+      // on its own semver (0.1.2 → 0.1.4 across the HackerOne-integration arc).
+      '@metaharness/redblue',
+      // @metaharness/weight-eft (evolutionary fine-tuning, ADR-198) likewise —
+      // published 0.1.1 with the umbrella-CLI wiring.
+      '@metaharness/weight-eft',
+      // @metaharness/jujutsu (version-control-for-agents + agenticow bridge, ADR-202)
+      // likewise — npm 0.2.0 was published on its own cadence.
+      '@metaharness/jujutsu',
       '@metaharness/kernel',
       '@metaharness/host-claude-code',
       '@metaharness/host-codex',
