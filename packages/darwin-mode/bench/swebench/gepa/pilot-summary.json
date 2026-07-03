@@ -1,0 +1,189 @@
+{
+  "pilot": "ADR-228 GEPA GLM-5.2 executor-genome, medium-12 train / medium-12 holdout",
+  "note": "run-gepa crashed at its built-in holdout (killed to avoid double-spend with the dedicated holdout agent); this summary is reconstructed from the persisted eval-*.json artifacts. The authoritative holdout is gepa/runs/holdout-report.json (dedicated agent).",
+  "seed_frozen_baseline": {
+    "train_gold": 3,
+    "train_n": 12,
+    "holdout_gold": 2,
+    "holdout_n": 12
+  },
+  "train_leaderboard": [
+    {
+      "eval": 1,
+      "candidate": "seed-agentic-v1",
+      "target": "seed",
+      "gold": 3,
+      "n": 12,
+      "sum": 33.28,
+      "cost": 0.358,
+      "decision": "baseline"
+    },
+    {
+      "eval": 2,
+      "candidate": "cand-1",
+      "target": "retrieval_policy",
+      "gold": 1,
+      "n": 12,
+      "sum": 11.83,
+      "cost": 0.338,
+      "decision": "rejected"
+    },
+    {
+      "eval": 3,
+      "candidate": "cand-2",
+      "target": "test_policy",
+      "gold": 3,
+      "n": 12,
+      "sum": 31.67,
+      "cost": 0.413,
+      "decision": "accepted"
+    },
+    {
+      "eval": 4,
+      "candidate": "cand-3",
+      "target": "test_policy",
+      "gold": 2,
+      "n": 12,
+      "sum": 17.62,
+      "cost": 0.438,
+      "decision": "accepted"
+    },
+    {
+      "eval": 5,
+      "candidate": "cand-4",
+      "target": "test_policy",
+      "gold": 2,
+      "n": 12,
+      "sum": 16.24,
+      "cost": 0.38,
+      "decision": "accepted"
+    },
+    {
+      "eval": 6,
+      "candidate": "cand-5",
+      "target": "retrieval_policy",
+      "gold": 2,
+      "n": 12,
+      "sum": 22.71,
+      "cost": 0.392,
+      "decision": "rejected"
+    },
+    {
+      "eval": 7,
+      "candidate": "cand-6",
+      "target": "test_policy",
+      "gold": 5,
+      "n": 12,
+      "sum": 57.7,
+      "cost": 0.398,
+      "decision": "accepted"
+    },
+    {
+      "eval": 8,
+      "candidate": "cand-7",
+      "target": "retrieval_policy",
+      "gold": 3,
+      "n": 12,
+      "sum": 25.63,
+      "cost": 0.435,
+      "decision": "rejected"
+    },
+    {
+      "eval": 9,
+      "candidate": "cand-8",
+      "target": "retrieval_policy",
+      "gold": 3,
+      "n": 12,
+      "sum": 31.93,
+      "cost": 0.535,
+      "decision": "rejected"
+    },
+    {
+      "eval": 10,
+      "candidate": "cand-9",
+      "target": "retrieval_policy",
+      "gold": 3,
+      "n": 12,
+      "sum": 36.15,
+      "cost": 0.424,
+      "decision": "rejected"
+    },
+    {
+      "eval": 11,
+      "candidate": "cand-10",
+      "target": "retrieval_policy",
+      "gold": 4,
+      "n": 12,
+      "sum": 43.85,
+      "cost": 0.326,
+      "decision": "accepted"
+    },
+    {
+      "eval": 12,
+      "candidate": "cand-11",
+      "target": "test_policy",
+      "gold": 3,
+      "n": 12,
+      "sum": 25.02,
+      "cost": 0.492,
+      "decision": "rejected"
+    },
+    {
+      "eval": 13,
+      "candidate": "cand-12",
+      "target": "test_policy",
+      "gold": 5,
+      "n": 12,
+      "sum": 52.73,
+      "cost": 0.388,
+      "decision": "accepted"
+    },
+    {
+      "eval": 14,
+      "candidate": "cand-13",
+      "target": "retrieval_policy",
+      "gold": 3,
+      "n": 12,
+      "sum": 33.67,
+      "cost": 0.413,
+      "decision": "rejected"
+    },
+    {
+      "eval": 15,
+      "candidate": "cand-14",
+      "target": "retrieval_policy",
+      "gold": 6,
+      "n": 12,
+      "sum": 66.25,
+      "cost": 0.376,
+      "decision": "accepted"
+    }
+  ],
+  "train_leader": {
+    "candidate": "cand-14",
+    "target": "retrieval_policy",
+    "train_gold": 6,
+    "holdout": "UNVERIFIED \u2014 emerged as last candidate after the holdout agent had started; retrieval_policy regressed in all 6 other candidates touching it \u2192 high overfit/noise risk; NOT promoted on train alone (ADR-228 \u00a77.1)"
+  },
+  "holdout_verified_winner": {
+    "candidate": "cand-6",
+    "target": "test_policy",
+    "train_gold": 5,
+    "holdout_gold": 3,
+    "holdout_delta": 1,
+    "superset": true,
+    "verdict": "PROMOTE"
+  },
+  "frontier_note": "two independent test_policy mutations (cand-6, cand-12) both reached 5/12 train \u2014 corroborated; cand-14 (retrieval_policy 6/12) is a single unreplicated draw",
+  "cost_usd": {
+    "train_15_evals": 6.11,
+    "holdout_agent": 1.17,
+    "my_holdout_leak": 0.07,
+    "reflection_est": 0.7
+  },
+  "acceptance_ADR228_s7": {
+    "bar": "GLM >= baseline+3 (>=10/24 equiv) AND >=50% cascade lift AND $/resolved<cascade",
+    "holdout_result": "cand-6 3/12 holdout = ~6/24 equiv, below the >=10/24 useful bar; +1 vs seed is a real but SUB-threshold generalizing lift",
+    "verdict": "screening signal POSITIVE (test_policy mutation generalizes, strict superset) but BELOW the pre-registered useful bar \u2192 not a headline win; funds a larger confirmatory run, does not claim success"
+  }
+}

@@ -1,0 +1,137 @@
+{
+  "generatedNote": "medium-24 A/B computed $0 from persisted gold-scored eval artifacts (no fresh run). Train half is in-sample (cand-6 was SELECTED there); holdout half is the clean out-of-sample signal.",
+  "cascadeCostPerResolved": 0.324,
+  "train": {
+    "seed": {
+      "n": 12,
+      "gold": 3,
+      "cost": 0.3579,
+      "empty": 2,
+      "emptyRate": 0.167,
+      "thrash": 6,
+      "costPerResolved": 0.1193,
+      "resolvedIds": [
+        "astropy__astropy-12907",
+        "django__django-10914",
+        "mwaskom__seaborn-3010"
+      ]
+    },
+    "cand6": {
+      "n": 12,
+      "gold": 5,
+      "cost": 0.3979,
+      "empty": 1,
+      "emptyRate": 0.083,
+      "thrash": 2,
+      "costPerResolved": 0.0796,
+      "resolvedIds": [
+        "astropy__astropy-12907",
+        "django__django-10914",
+        "django__django-10924",
+        "mwaskom__seaborn-2848",
+        "mwaskom__seaborn-3010"
+      ]
+    }
+  },
+  "holdout": {
+    "seed": {
+      "n": 12,
+      "gold": 2,
+      "cost": 0.5916,
+      "empty": 7,
+      "emptyRate": 0.583,
+      "thrash": 2,
+      "costPerResolved": 0.2958,
+      "resolvedIds": [
+        "pytest-dev__pytest-11143",
+        "scikit-learn__scikit-learn-10297"
+      ]
+    },
+    "cand6": {
+      "n": 12,
+      "gold": 3,
+      "cost": 0.5735,
+      "empty": 4,
+      "emptyRate": 0.333,
+      "thrash": 4,
+      "costPerResolved": 0.1912,
+      "resolvedIds": [
+        "pytest-dev__pytest-11143",
+        "scikit-learn__scikit-learn-10297",
+        "sphinx-doc__sphinx-10325"
+      ]
+    }
+  },
+  "medium24_aggregate": {
+    "seed": {
+      "n": 24,
+      "gold": 5,
+      "cost": 0.9495,
+      "empty": 9,
+      "emptyRate": 0.375,
+      "thrash": 8,
+      "costPerResolved": 0.1899,
+      "resolvedIds": [
+        "astropy__astropy-12907",
+        "django__django-10914",
+        "mwaskom__seaborn-3010",
+        "pytest-dev__pytest-11143",
+        "scikit-learn__scikit-learn-10297"
+      ]
+    },
+    "cand6": {
+      "n": 24,
+      "gold": 8,
+      "cost": 0.9714,
+      "empty": 5,
+      "emptyRate": 0.208,
+      "thrash": 6,
+      "costPerResolved": 0.1214,
+      "resolvedIds": [
+        "astropy__astropy-12907",
+        "django__django-10914",
+        "django__django-10924",
+        "mwaskom__seaborn-2848",
+        "mwaskom__seaborn-3010",
+        "pytest-dev__pytest-11143",
+        "scikit-learn__scikit-learn-10297",
+        "sphinx-doc__sphinx-10325"
+      ]
+    },
+    "goldDelta": 3,
+    "regressions": [],
+    "gains": [
+      "django__django-10924",
+      "mwaskom__seaborn-2848",
+      "sphinx-doc__sphinx-10325"
+    ]
+  },
+  "acceptance_test": {
+    "zero_regressions": {
+      "pass": true,
+      "detail": "0 regressions"
+    },
+    "beat_seed_ge2of24": {
+      "pass": true,
+      "detail": "+3/24"
+    },
+    "reduce_empty_patch_rate": {
+      "clean_holdout_pass": true,
+      "detail": "holdout 0.583->0.333; aggregate 0.375->0.208"
+    },
+    "reduce_rerun_thrash": {
+      "clean_holdout_pass": false,
+      "detail": "holdout 2->4 (DID NOT generalize); aggregate 8->6 was train-only"
+    },
+    "cost_per_resolved_below_cascade": {
+      "pass": true,
+      "detail": "$0.1214 < $0.324"
+    }
+  },
+  "preRegisteredUsefulBar": {
+    "bar": "gold >= 10/24-equiv",
+    "cand6_holdout": "3/12 (~6/24-equiv)",
+    "meets": false,
+    "framing": "POSITIVE screening signal (evolved genome beats frozen seed on unseen data); below useful bar; funds a confirmatory run, not a headline win"
+  }
+}

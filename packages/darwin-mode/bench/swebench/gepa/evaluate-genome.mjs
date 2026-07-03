@@ -116,6 +116,10 @@ function main() {
   const maxSteps = +argv('--max-steps', 12);
   const concurrency = +argv('--concurrency', 2);
   const maxCost = +argv('--max-cost', 3);
+  // Gateway backend passthrough (ADR-210/204): forward --base-url + --api-key-env to solve-advisor so
+  // rollouts route through the meta-llm Completions API (cache + metering). Absent ⇒ OpenRouter-direct.
+  const baseUrl = argv('--base-url', null);
+  const apiKeyEnv = argv('--api-key-env', null);
   const noGold = args.includes('--no-gold');
   const runId = (argv('--run-id', `gepa_${genome.meta?.id || 'genome'}_${Date.now().toString(36)}`)).replace(/[^a-zA-Z0-9_]/g, '_');
   const outPath = rel(argv('--out', `gepa/eval-${runId}.json`));
@@ -138,6 +142,8 @@ function main() {
     '--manifest', tmpManifest, '--model', model, '--advisor-model', 'none',
     '--max-steps', String(maxSteps), '--concurrency', String(concurrency), '--max-cost', String(maxCost),
     '--no-test-oracle', '--genome', genomePath, '--transcripts-dir', tdir,
+    ...(baseUrl ? ['--base-url', baseUrl] : []),
+    ...(apiKeyEnv ? ['--api-key-env', apiKeyEnv] : []),
     '--out', preds, '--report', reportPath,
   ], { stdio: ['ignore', 'inherit', 'inherit'], timeout: 3 * 3600 * 1000 });
 
