@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/jujutsu",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Lock-free version-control-for-agents capability for MetaHarness. Wraps agentic-jujutsu (jj/Jujutsu op-log, QuantumDAG agent coordination, ReasoningBank trajectories, ML-DSA signing) as a removable augmentation, and bridges it to agenticow COW memory branching for dual-state (code-branch + memory-branch) agent lifecycles.",
   "type": "module",
   "main": "./dist/index.js",
@@ -63,7 +63,7 @@
     "vitest": "^2.0.0"
   },
   "peerDependencies": {
-    "agenticow": "^0.1.0",
+    "agenticow": "^0.2.0",
     "agentic-jujutsu": "^2.3.6"
   },
   "peerDependenciesMeta": {
