@@ -72,7 +72,7 @@ describe('evolve — cost circuit-breaker (ADR-072)', () => {
     for (const record of result.records) {
       expect(await inspectVariant(record.variant.dir)).toEqual([]);
     }
-  });
+  }, 30_000); // one full evolve run — 5s default flakes on slow CI runners (macos matrix)
 
   it('a generous budget produces at least as many scored records as a tiny one', async () => {
     const tiny = await evolve({
