@@ -56,7 +56,7 @@ const keyEnvName = apiKeyEnv || 'OPENROUTER_API_KEY';
 mkdirSync(workDir, { recursive: true });
 
 const KEY = (process.env[keyEnvName] || (!apiKeyEnv ? (() => { try { return readFileSync('/tmp/.orkey', 'utf8'); } catch { return ''; } })() : '')).trim();
-if (!KEY) { console.error(`FATAL: no ${keyEnvName}`); process.exit(1); }
+if (!KEY) { console.error('FATAL: no API key (set OPENROUTER_API_KEY, or the env var named by --api-key-env)'); process.exit(1); }
 
 // ── reflect: one stateless completion on the reflection model (temp 0) ────────────────────────────
 async function reflect(prompt) {

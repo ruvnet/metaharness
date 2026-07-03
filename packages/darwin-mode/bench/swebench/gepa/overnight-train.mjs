@@ -657,7 +657,7 @@ async function main() {
     return;
   }
 
-  if (backend.viaGateway) console.error(`[overnight] BACKEND gateway ${backend.baseUrl} model=${backend.modelOverride} key-env=${backend.apiKeyEnv} (key not logged)`);
+  if (backend.viaGateway) console.error(`[overnight] BACKEND gateway ${backend.baseUrl} model=${backend.modelOverride} (api key from configured env var, not logged)`);
   else console.error('[overnight] BACKEND OpenRouter-direct (default)');
 
   const runLearn = smoke ? makeSmokeRunLearn({ backend }) : makeRealRunLearn({ backend });

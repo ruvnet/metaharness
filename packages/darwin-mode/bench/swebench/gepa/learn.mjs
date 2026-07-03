@@ -240,14 +240,16 @@ function main() {
 
   if (dryRun) {
     console.error('[learn] DRY-RUN — no spend. Would execute:');
-    console.error(`  node ${gepaArgs.join(' ')}`);
+    // Redact the --api-key-env value in the echoed command so no key-named token is logged.
+    const shownArgs = gepaArgs.map((a, i) => (gepaArgs[i - 1] === '--api-key-env' ? '<env>' : a));
+    console.error(`  node ${shownArgs.join(' ')}`);
     console.error(`[learn] seed=${seedId} host=${host} model=${model} slice=${slice} trainFirst=${trainFirst} maxCost=$${maxCost}`);
     console.error(`[learn] report → ${reportOut}, key template → ${compositeKey({ host, model, ...keyMeta, genome_version: '<candidate>' })}`);
     return;
   }
 
   const KEY = (process.env[keyEnvName] || '').trim();
-  if (!KEY) { console.error(`FATAL: no ${keyEnvName}`); process.exit(1); }
+  if (!KEY) { console.error('FATAL: no API key (set OPENROUTER_API_KEY, or the env var named by --api-key-env)'); process.exit(1); }
 
   console.error(`[learn] host=${host} model=${model} slice=${slice} seed=${seedId} — launching GEPA (cap $${maxCost})${baseUrl ? ` via ${baseUrl}` : ''}`);
   execFileSync('node', gepaArgs, { stdio: ['ignore', 'inherit', 'inherit'], timeout: 8 * 3600 * 1000, env: { ...process.env, [keyEnvName]: KEY } });
