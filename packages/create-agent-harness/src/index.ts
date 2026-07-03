@@ -595,6 +595,17 @@ async function runMetaHarnessSubcommand(sub: string, rest: string[]): Promise<nu
       for (const line of r.lines) console.log(line);
       return r.code;
     }
+    case 'learn': {
+      // `metaharness learn --host <h> --model <m> --slice <manifest> [--seed cand6]
+      //  [--train-first N] [--max-cost $] [--via-gateway] [--run]` — ADR-235: cheap-tier
+      // optimization as a managed learning service. Delegates to the repo's GEPA harness
+      // (gepa/learn.mjs); REPO-CHECKOUT-GATED (the harness needs bench scripts + Docker +
+      // SWE-bench and cannot ship in the tarball). $0 by default: --dry-run is always
+      // forwarded unless --run is passed. `--seed cand6` resolves to the packaged
+      // holdout-confirmed cand-6 genome (genomes/).
+      const { learnCmd } = await import('./learn.js');
+      return learnCmd(rest);
+    }
     case 'redblue': {
       // `metaharness redblue <init|run|attack|patch|retest|report>` — delegates to
       // @metaharness/redblue: defensive red/blue adversarial testing of an AI
@@ -687,6 +698,7 @@ export async function main(argv: string[]): Promise<number> {
     console.log('       npx metaharness score <repo> [--json]   (scorecard: fit/cost/safety for a repo — ADR-041)');
     console.log('       npx metaharness analyze <repo>           (recommend a harness plan, no-exec)');
     console.log('       npx metaharness genome <repo>            (7-section repo readiness)');
+    console.log('       npx metaharness learn --host <h> --model <m> --slice <manifest>   (ADR-235 GEPA learning run — $0 dry-run by default, --run to spend; needs a repo checkout)');
     console.log('       npx metaharness --from-existing [./path]');
     console.log('       npx metaharness --wizard          (iter 100 — interactive picker)');
     console.log('       npx metaharness --list            (browse all templates)');
