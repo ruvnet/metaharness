@@ -15,16 +15,25 @@ Reach a legitimate, leaderboard-conformant top placement on SWE-bench Lite (300 
 
 **Authoritative numbers only**: batch-eval resolve rates with Wilson 95% CIs. No fabricated or extrapolated leaderboard claims.
 
+### Integrity Gate (ADR-231) — the conformance claim is now signed, not honor-system
+
+UC Berkeley RDI (Apr 2026) showed all 8 major agent benchmarks were gamed to ~98–100% *without solving a task*, so a **self-declared** "conformant" number is worthless. Per **[ADR-231](./adrs/ADR-231-provably-clean-sota.md)**, a milestone number is a SOTA claim only as the triple **`(score, cost, integrity-attestation)`**:
+
+- Every milestone number must ship a signed **`integrity-attestation.json`** — a per-vector RDI exploit audit produced by `scripts/sota-attest.mjs`, binding the **official gold report** (`swebench.harness.run_evaluation`, `resolved_instances`/`empty_patch_instances`/…) to the **solver report** (cost, k-sample config, `leaderboardConformant`). Any vector unprovable from the artifacts returns **`skip`+`harness_gap`, never a false `pass`** (the `gaia-audit.mjs` / FRAMES `INTEGRITY-AUDIT.md` discipline).
+- The nightly pipeline (`scripts/nightly-sota-review.mjs`) attaches it: on an n=300/500 confirm it runs `sota-attest.mjs` and **embeds the attestation + `witness_sha256` into the SOTA PR/issue it opens** — fail-closed if a vector `fail`s.
+- The attestation is Ed25519-signed like the ADR-103 witness manifest (`verify-witness` skill) — so the "no gold in-loop" property above becomes a recomputable, signed artifact instead of an assertion.
+- Darwin SWE-bench is *structurally immune* to four RDI vectors (answer-DB leakage, normalization collision, external grader-tampering, no-work-scores-a-pass — the Docker-oracle + binary-test advantages GAIA lacks); the rest are attestable checks. Three (`patch_touches_tests`, `localization_no_gold`, machine-proven `no_gold_in_loop`) stay `skip`/`attested-by-flag` until the ADR-167 §4 trajectory-serialization forward-contract lands on the darwin bench harness.
+
 ---
 
 ## Milestone Status Table
 
-| ID | Milestone | Target | Status | Measured State (2026-06-22) |
-|----|-----------|--------|--------|----------------------------|
-| M1 | Conformant Top-10 Lite | >=45% resolve | IN PROGRESS | DeepSeek-only floor: 5/25=20.0% [Wilson: 8.9%, 39.1%]. Reasoning deficit confirmed as primary wall. Combined pilot (line+repro-gap fix, k=5) result pending — this is the definitive DeepSeek ceiling. |
-| M2 | Beat SOTA #1 Lite | >60.33% resolve | PENDING | Not started. Requires Opus-4.8 Sniper + SWE Conductor (ADR-176). |
-| M3 | Verified Top-10 | >=55% resolve | PENDING | Not started. Lite M1 must complete first. |
-| M4 | Pareto Crown | Lowest $/resolve in top-20 Lite | PENDING | Pareto thesis survives only as hybrid (cheap evidence + frontier sniper). Pure-cheap falsified. |
+| ID | Milestone | Target | Status | Integrity (ADR-231) | Measured State (2026-06-22) |
+|----|-----------|--------|--------|---------------------|----------------------------|
+| M1 | Conformant Top-10 Lite | >=45% resolve | IN PROGRESS | NOT YET ATTESTED — pilot numbers pre-date the gate; the milestone-closing n=300 run must ship a signed `integrity-attestation.json` | DeepSeek-only floor: 5/25=20.0% [Wilson: 8.9%, 39.1%]. Reasoning deficit confirmed as primary wall. Combined pilot (line+repro-gap fix, k=5) result pending — this is the definitive DeepSeek ceiling. |
+| M2 | Beat SOTA #1 Lite | >60.33% resolve | PENDING | REQUIRED at claim time | Not started. Requires Opus-4.8 Sniper + SWE Conductor (ADR-176). |
+| M3 | Verified Top-10 | >=55% resolve | PENDING | REQUIRED at claim time (`darwin-agentic.verified-500-cascade-local.json` 278/500 = 55.6% attests today with 4 immune / 1 pass / 6 skip — skips need the paired solver report + forward-contract) | Not started. Lite M1 must complete first. |
+| M4 | Pareto Crown | Lowest $/resolve in top-20 Lite | PENDING | REQUIRED — Pareto claims need `cost_measured=pass` (measured, not inferred) | Pareto thesis survives only as hybrid (cheap evidence + frontier sniper). Pure-cheap falsified. |
 
 **Current milestone**: M1 — Conformant Top-10 Lite (>=45%)
 **Current milestone completion criteria**: Gold-graded batch eval on full 300-instance Lite yields >=45% with conformant scaffold (no gold oracle in-loop). Wilson lower bound >=38%.
