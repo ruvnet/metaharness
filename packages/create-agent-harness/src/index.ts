@@ -705,7 +705,11 @@ export async function main(argv: string[]): Promise<number> {
     console.log('');
     console.log(`Templates: ${TEMPLATES.join(', ')}`);
     console.log(`Hosts: ${HOSTS.join(', ')}`);
-    return 2;
+    // #73: bare `metaharness` prints help/usage — that is a successful
+    // invocation, not a failure, so it exits 0. (An invoked *subcommand*
+    // missing required args, e.g. `from-repo`/`analyze`, still returns a
+    // non-zero usage code from its own branch — those are genuine errors.)
+    return 0;
   }
 
   // GH #10: support a multi-host harness. The first --host is primary (drives
