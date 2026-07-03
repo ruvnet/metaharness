@@ -27,7 +27,7 @@
 //       not a crash). Callers (nightly-sota-review.mjs) decide whether a `fail`/too-many-`skip` blocks a
 //       SOTA issue from opening — see ADR-231 §"Nightly integration".
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { createHash } from 'node:crypto';
+import { createHash, createPrivateKey, createPublicKey, sign as edSign, verify as edVerify } from 'node:crypto';
 import { execSync } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
 
@@ -68,6 +68,89 @@ export function isOfficialGoldReport(gold) {
     && Array.isArray(gold.resolved_ids) && Array.isArray(gold.empty_patch_ids);
 }
 
+// ─────────────────────────── patch-lint (the grader-sabotage vector, ADR-231) ───────────────────────────
+// The residual of the RDI grader-tampering vector: the agent's `model_patch` IS applied inside the grading
+// image, so a diff that edits/deletes a test file could sabotage its own FAIL_TO_PASS scoring. This is a
+// PURE, unit-tested check that runs off predictions.jsonl alone — no trajectory, no Docker, no network.
+
+/** Is `p` a test file by SWE-bench convention? test_*.py, *_test.py, conftest.py, or under tests/ or test/. */
+export function isTestFile(p) {
+  if (!p || p === '/dev/null') return false;
+  const posix = p.replace(/\\/g, '/').replace(/^\.\//, '');
+  const base = posix.split('/').pop() || '';
+  if (/^test_.+\.py$/.test(base) || /.+_test\.py$/.test(base) || base === 'conftest.py') return true;
+  // any path segment is exactly `tests` or `test` (django/tests/…, requests/test/…)
+  return posix.split('/').slice(0, -1).some((seg) => seg === 'tests' || seg === 'test');
+}
+
+/**
+ * Extract the (a-side, b-side) file paths touched by a unified diff and whether any is a whole-file
+ * deletion. Robust to patches with or without a `diff --git` header — reads `--- a/…` / `+++ b/…` too.
+ * Returns { files:Set<string>, deletedFiles:Set<string> } (paths POSIX-normalised, a/ b/ stripped).
+ */
+export function parsePatchPaths(patch) {
+  const files = new Set(), deletedFiles = new Set();
+  if (typeof patch !== 'string' || !patch) return { files, deletedFiles };
+  const strip = (s) => s.replace(/^[ab]\//, '').replace(/\t.*$/, '').trim();
+  const lines = patch.split('\n');
+  let cur = null; // path of the file the current hunk-header block is about (b-side preferred)
+  for (let i = 0; i < lines.length; i++) {
+    const ln = lines[i];
+    let m;
+    if ((m = ln.match(/^diff --git (\S+) (\S+)/))) {
+      const a = strip(m[1]), b = strip(m[2]);
+      if (a && a !== '/dev/null') files.add(a);
+      if (b && b !== '/dev/null') files.add(b);
+      cur = (b && b !== '/dev/null') ? b : a;
+    } else if (/^deleted file mode/.test(ln) && cur) {
+      deletedFiles.add(cur);
+    } else if ((m = ln.match(/^--- (.+)$/))) {
+      const a = strip(m[1]);
+      if (a && a !== '/dev/null') files.add(a);
+    } else if ((m = ln.match(/^\+\+\+ (.+)$/))) {
+      const b = strip(m[1]);
+      if (b && b !== '/dev/null') { files.add(b); cur = b; }
+      else if (b === '/dev/null' && cur) deletedFiles.add(cur); // +++ /dev/null → file removed
+    }
+  }
+  return { files, deletedFiles };
+}
+
+/** Lint one patch: which test files it touches / deletes. Pure. */
+export function lintPatch(patch) {
+  const { files, deletedFiles } = parsePatchPaths(patch);
+  const testFiles = [...files].filter(isTestFile);
+  const deletedTestFiles = [...deletedFiles].filter(isTestFile);
+  return {
+    touchesTests: testFiles.length > 0,
+    deletesTests: deletedTestFiles.length > 0,
+    testFiles,
+  };
+}
+
+/**
+ * Lint a whole predictions.jsonl (array of {instance_id, model_patch}). Marks each entry `resolved` if its
+ * instance_id is in the gold resolved set — a resolved instance that edits tests is the CRITICAL case.
+ */
+export function lintPredictions(preds, { resolvedIds } = {}) {
+  const resolvedSet = new Set(resolvedIds || []);
+  return (preds || []).map((p) => {
+    const l = lintPatch(p.model_patch);
+    return { instance_id: p.instance_id, resolved: resolvedSet.has(p.instance_id), ...l };
+  });
+}
+
+/** Parse a predictions.jsonl string into an array (skips blank lines / bad JSON lines defensively). */
+export function parsePredictionsJsonl(text) {
+  const out = [];
+  for (const line of String(text).split('\n')) {
+    const s = line.trim();
+    if (!s) continue;
+    try { out.push(JSON.parse(s)); } catch { /* skip malformed line */ }
+  }
+  return out;
+}
+
 const VEC = (vector, result, evidence, harness_gap) =>
   harness_gap ? { vector, result, evidence, harness_gap } : { vector, result, evidence };
 
@@ -77,7 +160,7 @@ const VEC = (vector, result, evidence, harness_gap) =>
  * Structural-immunity claims are justified from the harness, not asserted; everything else is skip
  * until an artifact proves it.
  */
-export function vectorAudit(gold, solver) {
+export function vectorAudit(gold, solver, predictions = null) {
   const v = [];
 
   // ── Structurally immune (justified from harness code) ──
@@ -102,27 +185,46 @@ export function vectorAudit(gold, solver) {
 
   // ── Needs explicit attestation (NOT immune) ──
 
-  // (1) Grader-tampering-via-PATCH — the ONE residual of the grader vector. The agent's patch IS applied
-  //     inside the grading image, so a diff that edits test files / conftest / deletes tests could sabotage
-  //     scoring. Not provable without the submitted diffs serialized → skip unless a patch-lint is present.
-  if (solver && Array.isArray(solver.patchLint)) {
-    const bad = solver.patchLint.filter((p) => p.touchesTests || p.deletesTests);
-    v.push(bad.length
-      ? VEC('patch_touches_tests', 'fail', `${bad.length} submitted patch(es) edit/delete test files`)
-      : VEC('patch_touches_tests', 'pass', 'no submitted patch edits or deletes test files (patchLint clean)'));
+  // (1) Grader-tampering-via-PATCH — THE CRITICAL residual of the grader vector (ADR-231). The agent's patch
+  //     IS applied inside the grading image, so a diff that edits/deletes a test file / conftest could
+  //     sabotage its own FAIL_TO_PASS scoring. Now PROVEN directly off predictions.jsonl (no trajectory
+  //     needed): parse each model_patch, flag any hunk touching a test file. A RESOLVED instance whose patch
+  //     edits tests → CRITICAL fail. A patch-lint array on the solver report (legacy shape) is honored too.
+  const patchLint = Array.isArray(predictions) ? lintPredictions(predictions, { resolvedIds: gold.resolved_ids })
+    : (solver && Array.isArray(solver.patchLint)) ? solver.patchLint : null;
+  if (patchLint) {
+    const flagged = patchLint.filter((p) => p.touchesTests || p.deletesTests);
+    const resolvedSet = new Set(gold.resolved_ids || []);
+    // CRITICAL = a test-touching patch on a RESOLVED instance (may have sabotaged the scored verdict).
+    // Legacy patch-lint entries carry no instance_id → treated as critical (conservative, never a false pass).
+    const critical = flagged.filter((p) => (p.instance_id ? resolvedSet.has(p.instance_id) : true) || p.resolved);
+    const total = patchLint.length;
+    if (critical.length) {
+      const ids = critical.filter((p) => p.instance_id).map((p) => p.instance_id).slice(0, 8);
+      v.push({ ...VEC('patch_touches_tests', 'fail',
+        `${critical.length} RESOLVED instance patch(es) edit/delete test files → possible grader sabotage of the scored verdict`
+        + `${ids.length ? ` (e.g. ${ids.join(', ')})` : ''}`), critical: true });
+    } else {
+      const unresolvedNote = flagged.length
+        ? `; ${flagged.length}/${total} patch(es) touch tests but on UNRESOLVED instances (did not sabotage a scored pass)`
+        : '';
+      v.push({ ...VEC('patch_touches_tests', 'pass',
+        `${total} submitted patch(es) linted off predictions.jsonl; 0 RESOLVED-instance patch edits or deletes a test file${unresolvedNote}`), critical: true });
+    }
   } else {
-    v.push(VEC('patch_touches_tests', 'skip', 'no per-instance patch-lint in the report',
-      'FORWARD-CONTRACT GAP (ADR-167 §4 / ruflo#2550): submitted diffs are not serialized, so we cannot '
-      + 'prove the patch did not edit conftest/tests. Apply the trajectory-serialization contract to the '
-      + 'darwin bench harness to turn this skip into a provable pass.'));
+    v.push({ ...VEC('patch_touches_tests', 'skip', 'no predictions.jsonl and no per-instance patch-lint',
+      'Pass --predictions <predictions.jsonl> (or serialize a patch-lint into the solver report) to lint the '
+      + 'submitted diffs against test-file edits and turn this skip into a provable pass/fail.'), critical: true });
   }
 
   // (2) Best-of-N / k-sample disclosure + CONFORMANT winner selection.
-  if (solver && (typeof solver.kSampleN === 'number' || solver.cascade != null || solver.escalateModel != null)) {
+  //     Darwin solver reports disclose the k-sample count as `k` (MCTS/BoN) or via `cascade`/`escalateModel`.
+  const kN = typeof solver?.kSampleN === 'number' ? solver.kSampleN : (typeof solver?.k === 'number' ? solver.k : null);
+  if (solver && (kN != null || solver.cascade != null || solver.escalateModel != null)) {
     const selector = solver.winnerSelector || (solver.noTestOracle === false ? 'unknown' : 'conformant-repro?');
     v.push(VEC('best_of_n_disclosure', 'pass',
       `k/best-of-N config disclosed: cascade=${solver.cascade}, escalateModel=${solver.escalateModel ?? 'none'}, `
-      + `kSampleN=${solver.kSampleN ?? 'n/a'}, selector=${selector}. `
+      + `k=${kN ?? 'n/a'}, selector=${selector}. `
       + `noTestOracle=${solver.noTestOracle} (if false, no gold oracle picked the winner).`));
     if (selector === 'unknown' || solver.winnerSelector == null) {
       v.push(VEC('best_of_n_selector_conformant', 'skip', 'winner-selection method not serialized',
@@ -167,11 +269,17 @@ export function vectorAudit(gold, solver) {
     + 'context excluded gold FAIL_TO_PASS without serializing the localization inputs. ADR-167 §4 fix applies.'));
 
   // (7) No-gold-in-loop conformance flag (the SOTA_HORIZON honor-system claim, upgraded).
+  //     Two machine-readable corroborations: leaderboardConformant AND noTestOracle (the --no-test-oracle
+  //     switch: the solver ran with NO gold test oracle in-loop). Still `attested-by-flag`, not a full
+  //     `pass` — a full pass needs the in-loop trajectory serialized (forward contract) — but the paired
+  //     noTestOracle=true flag is a stronger, machine-checkable signal than the honor-system claim alone.
   if (solver && solver.leaderboardConformant === true) {
+    const noOracle = solver.noTestOracle === true;
     v.push(VEC('no_gold_in_loop', 'attested-by-flag',
-      'solver report leaderboardConformant=true; conformant-tests.mjs is the enforcing gate (never applies '
-      + 'gold test_patch). Downgraded from "proven" to "attested-by-flag" until the in-loop trajectory is '
-      + 'serialized to make the no-gold-access property machine-checkable.'));
+      `solver report leaderboardConformant=true${noOracle ? ' AND noTestOracle=true (ran with --no-test-oracle: '
+        + 'no gold oracle in-loop)' : ' (noTestOracle not asserted — weaker)'}; conformant-tests.mjs is the `
+      + 'enforcing gate (never applies gold test_patch). "attested-by-flag" (not "proven") until the in-loop '
+      + 'trajectory is serialized to make the no-gold-access property fully machine-checkable.'));
   } else {
     v.push(VEC('no_gold_in_loop', 'skip', 'leaderboardConformant flag absent/false',
       'The core conformance claim is unattested for this run. Attach a solver report with '
@@ -194,10 +302,10 @@ export function witnessHash(bodyObj) {
 }
 
 /** Build the full attestation object from a gold report (+ optional solver report). */
-export function buildAttestation(gold, solver, { split, dataset, harnessVersion, now } = {}) {
+export function buildAttestation(gold, solver, { split, dataset, harnessVersion, now, predictions } = {}) {
   const total = gold.total_instances, resolved = gold.resolved_instances;
   const sp = split || deriveSplit(total);
-  const vectors = vectorAudit(gold, solver);
+  const vectors = vectorAudit(gold, solver, predictions);
   const body = {
     attestation_version: '1.0',
     adr: 'ADR-231',
@@ -217,11 +325,12 @@ export function buildAttestation(gold, solver, { split, dataset, harnessVersion,
     },
     empty_patch_rate: emptyPatchRate(gold),
     k_sample: {
-      N: solver?.kSampleN ?? null,
+      N: solver?.kSampleN ?? solver?.k ?? null,
       cascade: solver?.cascade ?? null,
       escalate_model: solver?.escalateModel ?? null,
       winner_selector: solver?.winnerSelector ?? null,
     },
+    patches_linted: Array.isArray(predictions) ? predictions.length : null,
     cost: {
       total_usd: solver?.totalCost_usd ?? null,
       per_inst_usd: solver?.blendedCostPerInst_usd ?? null,
@@ -245,35 +354,171 @@ export function buildAttestation(gold, solver, { split, dataset, harnessVersion,
   };
 }
 
+// ─────────────────────────── Ed25519 signing (ADR-103, node-native, zero-dep) ───────────────────────────
+// Uses Node's built-in Ed25519 (no @noble, no external key infra). Keys are the same raw-hex convention the
+// harness witness manifest uses (32-byte/64-hex pubkey, 64-byte/128-hex signature — see witness-client.ts).
+// We sign the raw 32-byte witness digest (SHA-256 of the canonical attestation body). The signature is
+// produced ONLY when a seed is explicitly provided; the script NEVER fabricates or persists a key.
+
+// Fixed DER prefixes to wrap a raw 32-byte Ed25519 seed / public key into PKCS8 / SPKI for node's crypto.
+const PKCS8_ED25519_PREFIX = Buffer.from('302e020100300506032b657004220420', 'hex'); // + 32-byte seed
+const SPKI_ED25519_PREFIX = Buffer.from('302a300506032b6570032100', 'hex');           // + 32-byte pubkey
+
+/** Import a raw 32-byte Ed25519 seed (Buffer or 64-hex string) into a node private KeyObject. */
+export function privKeyFromSeed(seed) {
+  const raw = Buffer.isBuffer(seed) ? seed : Buffer.from(String(seed).trim(), 'hex');
+  if (raw.length !== 32) throw new Error(`ed25519 seed must be 32 bytes (got ${raw.length})`);
+  return createPrivateKey({ key: Buffer.concat([PKCS8_ED25519_PREFIX, raw]), format: 'der', type: 'pkcs8' });
+}
+
+/** Import a raw 32-byte Ed25519 public key (Buffer or 64-hex) into a node public KeyObject. */
+export function pubKeyFromRaw(pub) {
+  const raw = Buffer.isBuffer(pub) ? pub : Buffer.from(String(pub).trim(), 'hex');
+  if (raw.length !== 32) throw new Error(`ed25519 public key must be 32 bytes (got ${raw.length})`);
+  return createPublicKey({ key: Buffer.concat([SPKI_ED25519_PREFIX, raw]), format: 'der', type: 'spki' });
+}
+
+/** Extract the raw 32-byte public key (hex) from a private KeyObject. */
+export function rawPublicHex(privKey) {
+  const spki = createPublicKey(privKey).export({ format: 'der', type: 'spki' });
+  return Buffer.from(spki.subarray(spki.length - 32)).toString('hex');
+}
+
+/**
+ * Sign an attestation with a raw Ed25519 seed. Returns a NEW attestation whose `signature` block carries the
+ * real 128-hex signature + 64-hex pubkey over the witness digest. Recomputes the witness first so a signature
+ * is always bound to the exact body being signed.
+ */
+export function signAttestation(att, seed) {
+  const { signature, ...body } = att;
+  const witness_sha256 = witnessHash(body);
+  const priv = privKeyFromSeed(seed);
+  const sig = edSign(null, Buffer.from(witness_sha256, 'hex'), priv);
+  return {
+    ...body,
+    signature: {
+      alg: 'ed25519',
+      witness_sha256,
+      sig: sig.toString('hex'),
+      pubkey: rawPublicHex(priv),
+    },
+  };
+}
+
+/**
+ * Verify a signed attestation: (a) recompute the witness over the body and confirm it matches the embedded
+ * witness_sha256 (catches ANY body tampering), then (b) Ed25519-verify the signature over that digest with
+ * the embedded pubkey. Returns { valid, reason, witnessMatch, sigValid }.
+ */
+export function verifyAttestation(att) {
+  if (!att || typeof att !== 'object' || !att.signature) return { valid: false, reason: 'no signature block' };
+  const { signature, ...body } = att;
+  const recomputed = witnessHash(body);
+  const witnessMatch = recomputed === signature.witness_sha256;
+  if (!witnessMatch) return { valid: false, witnessMatch: false, reason: `witness_sha256 mismatch — body tampered (recomputed ${recomputed.slice(0, 16)}… ≠ embedded ${String(signature.witness_sha256).slice(0, 16)}…)` };
+  if (!signature.sig || !signature.pubkey) return { valid: false, witnessMatch: true, sigValid: false, reason: 'unsigned (sig/pubkey null) — witness matches but no Ed25519 signature to verify' };
+  let sigValid = false;
+  try {
+    sigValid = edVerify(null, Buffer.from(signature.witness_sha256, 'hex'), pubKeyFromRaw(signature.pubkey), Buffer.from(signature.sig, 'hex'));
+  } catch (e) { return { valid: false, witnessMatch: true, sigValid: false, reason: `signature verify error: ${e.message}` }; }
+  return sigValid ? { valid: true, witnessMatch: true, sigValid: true } : { valid: false, witnessMatch: true, sigValid: false, reason: 'Ed25519 signature does not verify against pubkey' };
+}
+
+/**
+ * The fail-closed gate decision (used by nightly-sota-review.mjs). A number is publishable as SOTA only if
+ * NO vector `fail`s (a CRITICAL fail — e.g. patch_touches_tests — always blocks) AND the number of honest
+ * `skip`s does not exceed `maxSkips`. `immune`/`pass`/`attested-by-flag` do not count against the budget.
+ */
+export function integrityGateDecision(att, { maxSkips = 4 } = {}) {
+  const vectors = att?.vectors || [];
+  const fails = vectors.filter((v) => v.result === 'fail');
+  const criticalFails = fails.filter((v) => v.critical);
+  const skips = vectors.filter((v) => v.result === 'skip');
+  const open = fails.length === 0 && skips.length <= maxSkips;
+  const reasons = [];
+  if (criticalFails.length) reasons.push(`CRITICAL fail: ${criticalFails.map((v) => v.vector).join(', ')}`);
+  if (fails.length && !criticalFails.length) reasons.push(`fail: ${fails.map((v) => v.vector).join(', ')}`);
+  if (skips.length > maxSkips) reasons.push(`${skips.length} skips > threshold ${maxSkips}: ${skips.map((v) => v.vector).join(', ')}`);
+  if (open) reasons.push(`clean: 0 fails, ${skips.length}/${maxSkips} skips within budget`);
+  return { open, fails: fails.map((v) => v.vector), criticalFails: criticalFails.map((v) => v.vector), skipCount: skips.length, maxSkips, reason: reasons.join('; ') };
+}
+
 // ─────────────────────────── CLI ───────────────────────────
 function argv(k, d) { const i = process.argv.indexOf(k); return i >= 0 && process.argv[i + 1] ? process.argv[i + 1] : d; }
 
+const USAGE = 'usage: sota-attest.mjs --gold-report <official-report.json> [--solver-report <r.json>] '
+  + '[--predictions <predictions.jsonl>] [--split lite|verified] [--out <path>] [--sign] [--seed-hex <64hex>|--key <file>]\n'
+  + '       sota-attest.mjs --verify <integrity-attestation.json>';
+
+/** Resolve the Ed25519 signing seed (64-hex) from --seed-hex, --key <file>, or $SOTA_SIGNING_SEED_HEX. Never logged. */
+function resolveSeed() {
+  const inline = argv('--seed-hex');
+  if (inline) return inline.trim();
+  const keyFile = argv('--key');
+  if (keyFile) {
+    if (!existsSync(keyFile)) { console.error(`--key file not found: ${keyFile}`); process.exit(1); }
+    return readFileSync(keyFile, 'utf8').trim();
+  }
+  if (process.env.SOTA_SIGNING_SEED_HEX) return process.env.SOTA_SIGNING_SEED_HEX.trim();
+  return null;
+}
+
 function main() {
+  // ── verify mode ──
+  const verifyPath = argv('--verify');
+  if (verifyPath) {
+    if (!existsSync(verifyPath)) { console.error(`attestation not found: ${verifyPath}`); process.exit(1); }
+    const att = JSON.parse(readFileSync(verifyPath, 'utf8'));
+    const r = verifyAttestation(att);
+    console.log(`verify ${verifyPath}`);
+    console.log(`  witness match: ${r.witnessMatch === false ? 'NO' : 'yes'}   signature: ${r.sigValid ? 'VALID' : (r.sigValid === false ? 'invalid/absent' : 'n/a')}`);
+    console.log(`  VERDICT: ${r.valid ? 'VALID — attestation is authentic and untampered' : `INVALID — ${r.reason}`}`);
+    process.exit(r.valid ? 0 : 1);
+  }
+
   const goldPath = argv('--gold-report');
-  if (!goldPath) { console.error('usage: sota-attest.mjs --gold-report <official-report.json> [--solver-report <r.json>] [--split lite|verified] [--out <path>]'); process.exit(1); }
+  if (!goldPath) { console.error(USAGE); process.exit(1); }
   if (!existsSync(goldPath)) { console.error(`gold report not found: ${goldPath}`); process.exit(1); }
   const gold = JSON.parse(readFileSync(goldPath, 'utf8'));
   const solverPath = argv('--solver-report');
   const solver = solverPath && existsSync(solverPath) ? JSON.parse(readFileSync(solverPath, 'utf8')) : null;
   if (solverPath && !solver) console.error(`WARN: solver report not found: ${solverPath} — cost/k-sample vectors will skip`);
+  const predPath = argv('--predictions');
+  let predictions = null;
+  if (predPath) {
+    if (!existsSync(predPath)) console.error(`WARN: predictions not found: ${predPath} — patch_touches_tests will skip`);
+    else predictions = parsePredictionsJsonl(readFileSync(predPath, 'utf8'));
+  }
 
   let harnessVersion = 'unknown';
   try { harnessVersion = execSync('git rev-parse --short HEAD', { cwd: dirname(resolve(goldPath)), encoding: 'utf8' }).trim(); } catch { /**/ }
 
-  const att = buildAttestation(gold, solver, { split: argv('--split'), dataset: argv('--dataset'), harnessVersion });
+  let att = buildAttestation(gold, solver, { split: argv('--split'), dataset: argv('--dataset'), harnessVersion, predictions });
+
+  // ── optional real Ed25519 signing at emit time ──
+  if (process.argv.includes('--sign')) {
+    const seed = resolveSeed();
+    if (!seed) { console.error('--sign requires a key: --seed-hex <64hex>, --key <file>, or $SOTA_SIGNING_SEED_HEX'); process.exit(1); }
+    att = signAttestation(att, seed);
+  }
+
   const out = argv('--out', join(dirname(resolve(goldPath)), 'integrity-attestation.json'));
   writeFileSync(out, JSON.stringify(att, null, 2));
 
   const { split, n, resolved, resolve_pct, wilson_ci } = att.run;
   console.log(`integrity-attestation → ${out}`);
   console.log(`  claim: ${split} ${resolved}/${n} = ${resolve_pct}% (Wilson ${wilson_ci?.[0]}–${wilson_ci?.[1]}%), gold-oracle=official-docker`);
-  console.log(`  empty_patch_rate: ${att.empty_patch_rate != null ? (att.empty_patch_rate * 100).toFixed(1) + '%' : 'skip'}   cost: ${att.cost.source}   witness: ${att.signature.witness_sha256.slice(0, 16)}…`);
+  console.log(`  empty_patch_rate: ${att.empty_patch_rate != null ? (att.empty_patch_rate * 100).toFixed(1) + '%' : 'skip'}   cost: ${att.cost.source}   patches_linted: ${att.patches_linted ?? 'none'}   witness: ${att.signature.witness_sha256.slice(0, 16)}…`);
+  console.log(`  signature: ${att.signature.sig ? 'SIGNED (ed25519, pubkey ' + att.signature.pubkey.slice(0, 16) + '…)' : 'unsigned (sig=null)'}`);
   console.log('  per-vector:');
-  for (const v of att.vectors) console.log(`    ${v.result.toUpperCase().padEnd(16)} ${v.vector}${v.harness_gap ? '  [gap]' : ''}`);
+  for (const v of att.vectors) console.log(`    ${v.result.toUpperCase().padEnd(16)} ${v.vector}${v.critical ? ' *CRITICAL*' : ''}${v.harness_gap ? '  [gap]' : ''}`);
   console.log(`  summary: ${JSON.stringify(att.summary)}`);
+  const gate = integrityGateDecision(att);
+  console.log(`  gate: ${gate.open ? 'OPEN' : 'FAIL-CLOSED'} — ${gate.reason}`);
   const hasFail = att.vectors.some((v) => v.result === 'fail');
   if (hasFail) console.log('  VERDICT: FAIL — a vector failed; this number is NOT a credible SOTA claim.');
-  else console.log('  VERDICT: attestation emitted (skips are honest gaps, not passes). Sign witness_sha256 to make it a SOTA-eligible claim.');
+  else if (!att.signature.sig) console.log('  VERDICT: attestation emitted (skips are honest gaps, not passes). Sign witness_sha256 (--sign) to make it a SOTA-eligible claim.');
+  else console.log('  VERDICT: SIGNED attestation emitted — recompute + verify with `--verify`.');
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

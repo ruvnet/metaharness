@@ -24,6 +24,7 @@ import { readFileSync, existsSync, writeFileSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { buildAttestation, integrityGateDecision, parsePredictionsJsonl } from './sota-attest.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(__dirname, '..');
@@ -46,6 +47,13 @@ const POLL_MIN = +opt('poll-min', '90');
 const SA_KEY = opt('sa-key', '/home/ruvultra/.config/darwin-nightly-sa.json');
 const NO_AUTH = flag('no-auth');
 const CANDIDATES = opts('candidate');
+// ADR-231 integrity gate: the (gold, solver, predictions) triple to attest the confirmed run against.
+// In --dry-run these default to the committed Verified-500 gold report to demonstrate fail-closed on real data.
+const SWEBENCH_DIR = join(REPO, 'packages/darwin-mode/bench/swebench');
+const GOLD_REPORT = opt('gold-report', join(SWEBENCH_DIR, 'darwin-agentic.verified-500-cascade-local.json'));
+const SOLVER_REPORT = opt('solver-report', null);
+const PREDICTIONS = opt('predictions', null);
+const ATTEST_MAX_SKIPS = +opt('attest-max-skips', '4');
 
 // ── isolated gcloud config so we never clobber the user's interactive ruv@ruv.net login ──
 const GCLOUD_CONFIG = process.env.CLOUDSDK_CONFIG || mkdtempSync(join(tmpdir(), 'darwin-nightly-gcloud-'));
@@ -230,8 +238,43 @@ function dispatchScout(cand, n = '25') {
   return name;
 }
 
+// ═══════════════ ADR-231: submission-integrity gate (fail-closed) ═══════════════
+// Build the integrity attestation for a (gold, solver, predictions) triple and apply the fail-closed gate.
+// Returns { att, gate } or null if the gold report can't be read. Pure I/O + the pure sota-attest logic —
+// $0, no network, no Docker. Exported for the unit test.
+export function runIntegrityGate({ goldPath, solverPath, predictionsPath, maxSkips = 4, harnessVersion } = {}) {
+  if (!goldPath || !existsSync(goldPath)) return null;
+  const gold = JSON.parse(readFileSync(goldPath, 'utf8'));
+  const solver = solverPath && existsSync(solverPath) ? JSON.parse(readFileSync(solverPath, 'utf8')) : null;
+  const predictions = predictionsPath && existsSync(predictionsPath)
+    ? parsePredictionsJsonl(readFileSync(predictionsPath, 'utf8')) : null;
+  const att = buildAttestation(gold, solver, { harnessVersion, predictions });
+  const gate = integrityGateDecision(att, { maxSkips });
+  return { att, gate };
+}
+
+// Markdown per-vector table + witness + signature line, embedded into the PR/issue body on a clean gate.
+export function attestationSection(att) {
+  if (!att) return '';
+  const rows = att.vectors.map((v) => `| \`${v.vector}\` | ${v.result.toUpperCase()}${v.critical ? ' **(critical)**' : ''} | ${(v.evidence || '').replace(/\|/g, '\\|').slice(0, 160)} |`).join('\n');
+  const sig = att.signature.sig ? `\`ed25519:${att.signature.sig.slice(0, 24)}…\` (pubkey \`${att.signature.pubkey.slice(0, 24)}…\`)` : '`unsigned` — sign at publish';
+  return `
+
+### Integrity attestation (ADR-231)
+
+**witness_sha256:** \`${att.signature.witness_sha256}\`
+**signature:** ${sig}
+**summary:** ${JSON.stringify(att.summary)}
+
+| vector | result | evidence |
+|---|---|---|
+${rows}
+
+_Recompute + verify: \`node scripts/sota-attest.mjs --verify integrity-attestation.json\`._`;
+}
+
 // ═══════════════ PR + issue rendering (opened only in a real, confirmed run) ═══════════════
-function renderPRBody(cand, n300) {
+function renderPRBody(cand, n300, att) {
   return `## New Darwin SOTA candidate confirmed at n=300
 
 **Config:** \`${cand.model}\` (${cand.mode})
@@ -245,10 +288,12 @@ ${cand.verdict.reason}
 - \`apps/web-ui/public/assets/swe-pareto.json\` — add/update the Lite entry + refresh the Pareto frontier
 - \`packages/darwin-mode/bench/swebench/LEARNINGS.md\` — record the new SOTA + evidence
 - \`packages/darwin-mode/bench/swebench/RESULTS.md\` — append the n=300 confirmation row
+- \`integrity-attestation.json\` — signed ADR-231 exploit-audit committed beside the report
+${attestationSection(att)}
 
 🤖 Generated with [claude-flow](https://github.com/ruvnet/claude-flow)`;
 }
-function renderIssue(cand, n300) {
+function renderIssue(cand, n300, att) {
   return {
     title: `Darwin SOTA: ${cand.model} (${cand.mode}) → ${n300.pct}% Lite @ $${n300.cost}/inst (n=300 confirmed)`,
     body: `Nightly SOTA-review confirmed a new Pareto-optimal Darwin config.
@@ -256,15 +301,41 @@ function renderIssue(cand, n300) {
 **Evidence chain:** n=25 scout (${cand.resolve}%, CI ${cand.ci[0].toFixed(1)}–${cand.ci[1].toFixed(1)}%) → escalated → **n=300 confirm ${n300.pct}%** (${n300.resolved}/${n300.total}, gold, conformant).
 **Pareto verdict:** ${cand.verdict.reason}
 **Cost:** $${n300.cost}/inst (measured OpenRouter spend).
+**Integrity (ADR-231):** ${att ? `attested — witness \`${att.signature.witness_sha256.slice(0, 16)}…\`, summary ${JSON.stringify(att.summary)}` : 'attestation pending'}.
 
 Pipeline: \`scripts/nightly-sota-review.mjs\` · run ${ts()}.
+${attestationSection(att)}
 
 🤖 Generated with [claude-flow](https://github.com/ruvnet/claude-flow)`,
   };
 }
 
+// ═══════════════ --gate-only: run JUST the ADR-231 integrity gate (no GCP, $0, CI-safe) ═══════════════
+// Renders the fail-closed gate decision on the (gold, solver, predictions) triple and the PR/issue body it
+// would embed. Opens nothing, dispatches nothing, touches no cloud — the pure integrity path in isolation.
+function gateOnly() {
+  log(`nightly-sota-review GATE-ONLY  gold=${GOLD_REPORT.split('/').pop()}  solver=${SOLVER_REPORT ? SOLVER_REPORT.split('/').pop() : '(none)'}  predictions=${PREDICTIONS ? PREDICTIONS.split('/').pop() : '(none)'}  max-skips=${ATTEST_MAX_SKIPS}`);
+  const gated = runIntegrityGate({ goldPath: GOLD_REPORT, solverPath: SOLVER_REPORT, predictionsPath: PREDICTIONS, maxSkips: ATTEST_MAX_SKIPS });
+  if (!gated) { warn(`gold report not found at ${GOLD_REPORT} — fail-closed (cannot attest).`); process.exit(2); }
+  const { att, gate } = gated;
+  log(`attestation: summary ${JSON.stringify(att.summary)}   witness ${att.signature.witness_sha256.slice(0, 16)}…   patches_linted ${att.patches_linted ?? 'none'}`);
+  for (const v of att.vectors) log(`    ${v.result.toUpperCase().padEnd(16)} ${v.vector}${v.critical ? ' *CRITICAL*' : ''}`);
+  if (gate.open) {
+    log(`GATE: OPEN — ${gate.reason}`);
+    const sample = { model: 'confirmed-config', mode: 'cascade', resolve: att.run.resolve_pct, cost: att.cost.per_inst_usd ?? '?', k: 0, n: 25, ci: att.run.wilson_ci || [0, 0], verdict: { reason: 'ADR-231 gate demo — integrity attestation embedded' } };
+    const n300 = { resolved: att.run.resolved, total: att.run.n, pct: att.run.resolve_pct, cost: att.cost.per_inst_usd ?? '?' };
+    log('── would-open PR body (attestation embedded) ──\n' + renderPRBody(sample, n300, att));
+    log('nightly-sota-review GATE-ONLY DONE — clean, WOULD open.');
+    process.exit(0);
+  }
+  log(`GATE: FAIL-CLOSED — would NOT open a SOTA issue/PR: ${gate.reason}`);
+  log('nightly-sota-review GATE-ONLY DONE — fail-closed, opened nothing.');
+  process.exit(0);
+}
+
 // ═══════════════ main ═══════════════
 async function main() {
+  if (flag('gate-only')) return gateOnly();
   log(`nightly-sota-review START  mode=${DRY ? 'DRY-RUN' : SCOUT_ONLY ? 'SCOUT-ONLY' : 'FULL'}  project=${PROJECT}  max-cost=$${MAX_COST}  max-vms=${MAX_VMS}`);
 
   // ── Step 1: auth + health ──
@@ -320,11 +391,22 @@ async function main() {
       else if (verdict.promising) log(`  promising (NOT conclusive at n=25): ${cand.model}/${cand.mode} ${pct}% $${cost} — ${verdict.reason}`);
     }
     log(`  → decision: ${anyNeedle ? 'WOULD escalate ≥1 candidate to n=300' : 'NO SOTA change — nothing moves the frontier with CI considered'}`);
+    // ── ADR-231 integrity gate demo on REAL committed artifacts ($0, fail-closed) ──
+    const gated = runIntegrityGate({ goldPath: GOLD_REPORT, solverPath: SOLVER_REPORT, predictionsPath: PREDICTIONS, maxSkips: ATTEST_MAX_SKIPS });
+    let attForRender = null;
+    if (gated) {
+      const { att, gate } = gated;
+      log(`── DRY-RUN: ADR-231 integrity gate on ${GOLD_REPORT.split('/').pop()}${SOLVER_REPORT ? ' + ' + SOLVER_REPORT.split('/').pop() : ' (gold-only)'} ──`);
+      log(`  summary ${JSON.stringify(att.summary)}   witness ${att.signature.witness_sha256.slice(0, 16)}…`);
+      for (const v of att.vectors) log(`    ${v.result.toUpperCase().padEnd(16)} ${v.vector}${v.critical ? ' *CRITICAL*' : ''}`);
+      if (gate.open) { log(`  GATE: OPEN — ${gate.reason}. Attestation WOULD be embedded + committed beside the report.`); attForRender = att; }
+      else log(`  GATE: FAIL-CLOSED — would NOT open a SOTA issue/PR: ${gate.reason}`);
+    } else log(`  GATE: gold report not found at ${GOLD_REPORT} — cannot attest (fail-closed).`);
     // Render a sample PR + issue so the path is exercised without opening anything.
     const sample = { model: champ?.name || 'sample', mode: 'single', resolve: champ?.resolve || 0, cost: champ?.cost || 0, k: 0, n: 25, ci: [0, 0], verdict: { reason: '(dry-run sample render — not a real verdict)' } };
     const n300sample = { resolved: 0, total: 300, pct: 0, cost: champ?.cost || 0 };
-    log('── DRY-RUN: rendered PR body (NOT opened) ──\n' + renderPRBody(sample, n300sample));
-    const iss = renderIssue(sample, n300sample);
+    log('── DRY-RUN: rendered PR body (NOT opened) ──\n' + renderPRBody(sample, n300sample, attForRender));
+    const iss = renderIssue(sample, n300sample, attForRender);
     log('── DRY-RUN: rendered tracking issue (NOT opened) ──\nTITLE: ' + iss.title + '\n' + iss.body);
     log(`plan: would dispatch ${cands.length} scout VM(s): ${cands.map(c => `${c.model}:${c.mode}`).join(', ') || '(none)'}`);
     log('nightly-sota-review DONE (dry-run, zero side effects)');
@@ -397,11 +479,21 @@ async function main() {
     dispatchScout({ model: m.model, mode: m.mode }, '300');
     log(`escalate: n=300 dispatched for ${m.key} — this run does NOT block on the full result (hours).`);
     log(`escalate: a follow-up run will read the n=300 Firestore row; n=300 is the only SOTA verdict.`);
+    // ── ADR-231 fail-closed gate: a SOTA issue/PR opens ONLY if the confirmed run's (gold, solver,
+    //    predictions) triple passes the exploit audit. If the confirm artifacts already exist on disk
+    //    (a follow-up run), attest now; otherwise the follow-up run that opens the PR runs the gate. A
+    //    missing/dirty attestation is fail-closed: we do NOT open.
+    const gated = runIntegrityGate({ goldPath: GOLD_REPORT, solverPath: SOLVER_REPORT, predictionsPath: PREDICTIONS, maxSkips: ATTEST_MAX_SKIPS });
+    if (!gated || !gated.gate.open) {
+      warn(`GATE FAIL-CLOSED for ${m.key}: ${gated ? gated.gate.reason : 'no gold report to attest'} — NOT opening a SOTA issue/PR.`);
+      continue;
+    }
+    log(`GATE OPEN for ${m.key}: ${gated.gate.reason} — attestation will be embedded + committed.`);
     // Step 5 PR/issue path is exercised by rendering (real open happens once n=300 is in Firestore in a
-    // subsequent run; we never open on n=25 alone).
-    log('── would-open PR body (after n=300 confirms) ──\n' + renderPRBody({ ...m }, { resolved: '?', total: 300, pct: '?', cost: m.cost }));
+    // subsequent run; we never open on n=25 alone). The attestation is embedded into the body.
+    log('── would-open PR body (after n=300 confirms) ──\n' + renderPRBody({ ...m }, { resolved: '?', total: 300, pct: '?', cost: m.cost }, gated.att));
   }
   log('nightly-sota-review DONE (escalated; PR/issue open deferred to n=300 confirmation)');
 }
 
-main().catch(e => die(e.stack || e.message));
+if (import.meta.url === `file://${process.argv[1]}`) main().catch(e => die(e.stack || e.message));

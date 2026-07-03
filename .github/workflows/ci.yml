@@ -137,6 +137,15 @@ jobs:
       - name: Path-handling guard (the /tmp Windows bug regression test)
         shell: bash
         run: node scripts/path-guard.mjs
+      - name: SOTA integrity-attestation gate (ADR-231)
+        # Pure-logic unit tests for scripts/sota-attest.mjs (patch_touches_tests,
+        # Ed25519 sign→verify + tamper detection, fail-closed gate) plus the
+        # nightly-sota-review.mjs gate wiring against the real committed reports.
+        # $0, no network/Docker/GCP.
+        shell: bash
+        run: |
+          node scripts/sota-attest.test.mjs
+          node scripts/nightly-sota-gate.test.mjs
       - name: Native-router interop guard (ADR-043 — CJS default-unwrap regression)
         # tiny-dancer is CJS; vitest's interop masks the ESM `.default` unwrap, so
         # this runs under plain `node` (the real install condition) and fails if a

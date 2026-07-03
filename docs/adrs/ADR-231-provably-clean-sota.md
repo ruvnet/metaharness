@@ -1,6 +1,6 @@
 # ADR-231: Provably-clean SOTA — submission-integrity attestation as a required leaderboard gate
 
-- **Status**: Proposed
+- **Status**: Accepted — implemented (PR #76)
 - **Date**: 2026-07-03
 - **Deciders**: ruv
 - **Tags**: metaharness, swebench, gaia, frames, sota, leaderboard, integrity, attestation, reward-hacking, security, evals
@@ -8,7 +8,7 @@
 - **Extends**: [[ADR-173]] (leaderboard-conformant path), [[ADR-179]] (cost-Pareto leaderboard), [[ADR-103]] (Ed25519 witness manifest), [[ADR-184]] (nightly SOTA-review pipeline)
 - **Generalizes**: ruflo **ADR-167 §4** (GAIA pre-submission exploit audit + Ed25519-signed attestation; `gaia-audit.mjs`), and the metaharness **FRAMES self-audit** (`packages/darwin-mode/bench/gaia/INTEGRITY-AUDIT.md`)
 - **Lineage**: the `beyond-sota` thread — [[ADR-038]] / [[ADR-039]] (beyond-SOTA is a durable *property*, not a higher number)
-- **Reference implementation**: `scripts/sota-attest.mjs` (+ `scripts/sota-attest.test.mjs`, 11 passing pure-logic tests)
+- **Reference implementation**: `scripts/sota-attest.mjs` (+ `scripts/sota-attest.test.mjs`, 25 passing pure-logic tests) — now a **working, enforced, Ed25519-signed** gate: patch-lint off `predictions.jsonl`, real signing/verification, and a fail-closed hook wired into `scripts/nightly-sota-review.mjs` (`--gate-only`, `scripts/nightly-sota-gate.test.mjs`). CI runs both test suites (ADR-231 step in `ci.yml`).
 
 ---
 
@@ -51,15 +51,15 @@ SWE-bench has **structural advantages GAIA lacks**, and pretending otherwise wou
 | **Normalization / substring collision** | **immune** | Scoring is binary test execution (`FAIL_TO_PASS` flips fail→pass **and** `PASS_TO_PASS` stays pass). There is no relaxed/substring metric to collide — contrast GAIA's `acc_relaxed`. |
 | **Grader monkey-patching** (o3/3.7, 30%+) | **immune (external form)** | The grader is a **separate post-hoc process** on a fresh image, outside the agent tool sandbox, *after the agent has stopped*. The agent emits only a `predictions.jsonl` patch; it cannot write the grader process. |
 | **No-work / no-LLM "pass"** | **immune (that direction)** | An empty patch cannot flip a failing test, so no-work structurally scores **0** — the inverse of GAIA's "empty answer scores 100%". |
-| **Grader tampering *via the submitted patch*** | **attest** | The residual of the grader vector: the patch **is** applied inside the grading image, so a diff that edits `conftest.py`/tests or deletes tests could sabotage scoring. → `patch_touches_tests` check. Not provable today without serialized diffs (forward-contract gap). |
-| **Undisclosed best-of-N / k-sample** | **attest** | Darwin genuinely uses best-of-N (temp>0 N trajectories in `solve-agentic.mjs`), MCTS best-of-3, cross-model best-of-N (`xbo`), and ADR-205 cascade escalation. A BoN number is legitimate only if the **winner is selected by a conformant selector** (repro tests), never by gold. → `best_of_n_disclosure` + `best_of_n_selector_conformant`. |
-| **No-work rate hidden in denominator** | **attest** | Empties can't pass, but the *rate* must be disclosed and counted as unresolved (our runs carry real `empty_patch_instances`: 52/500, 109/300, …). → `empty_patch_rate_disclosed`. |
-| **Cost under-reporting** (Pareto claims) | **attest** | The official gold report structurally carries **no cost**; only the solver report does. Absent it, $/resolve is *inferred* (see `inferCost` in `nightly-sota-review.mjs`) — not attestable. → `cost_measured`. |
-| **Cherry-picked seed / non-reproducible** | **attest** | n + split are in the gold report; seed/temperature only in the solver report. → `reproducibility`. |
-| **Retrieval surfacing gold** (ADR-195 localization) | **attest (open gap)** | `localize.mjs` / `ruvector-localize.mjs` / trace-localize run over repo source, and `conformant-tests.mjs` never stages gold — so gold is out of the corpus *by construction*, but we cannot **prove** the retrieved context excluded gold `FAIL_TO_PASS` without serializing the localization inputs. Same forward-contract gap as FRAMES answer-leakage. → `localization_no_gold`. |
-| **No-gold-in-loop conformance** (the SOTA_HORIZON honor claim) | **attest** | Enforced by `conformant-tests.mjs`, flagged by `leaderboardConformant`, but not machine-checkable until the in-loop trajectory is serialized. → downgraded to `attested-by-flag`, honestly, until the trajectory contract lands. |
+| **Grader tampering *via the submitted patch*** | **ENFORCED** | The residual of the grader vector: the patch **is** applied inside the grading image, so a diff that edits `conftest.py`/tests or deletes tests could sabotage scoring. → **`patch_touches_tests` — now a real, unit-tested pure check off `predictions.jsonl`**: parse each `model_patch` unified diff, flag any hunk touching a test file (`test_*.py`, `*_test.py`, `conftest.py`, paths under `tests/`/`test/`). A **RESOLVED** instance whose patch edits/deletes a test → **CRITICAL fail** (always fail-closed). Marked `critical: true`. Real number on every committed darwin predictions file: **0** test-touching patches (the conformant harness is clean). No trajectory needed. |
+| **Undisclosed best-of-N / k-sample** | **ENFORCED (with solver)** | Darwin genuinely uses best-of-N (temp>0 N trajectories in `solve-agentic.mjs`), MCTS best-of-3, cross-model best-of-N (`xbo`), and ADR-205 cascade escalation. A BoN number is legitimate only if the **winner is selected by a conformant selector** (repro tests), never by gold. → `best_of_n_disclosure` **passes** when the solver report discloses `k`/`kSampleN`/`cascade`/`escalateModel`; `best_of_n_selector_conformant` remains `skip` until the winner-selector is serialized. |
+| **No-work rate hidden in denominator** | **ENFORCED** | Empties can't pass, but the *rate* must be disclosed and counted as unresolved (our runs carry real `empty_patch_instances`: 52/500, 14/300, …). → `empty_patch_rate_disclosed` **passes** straight off the gold report. |
+| **Cost under-reporting** (Pareto claims) | **ENFORCED (with solver)** | The official gold report structurally carries **no cost**; only the solver report does. → `cost_measured` **passes** when `totalCost_usd` is present (measured); `skip` otherwise (never inferred into a pass). |
+| **Cherry-picked seed / non-reproducible** | **ENFORCED (with solver)** | n + split are in the gold report; seed/temperature only in the solver report. → `reproducibility` **passes** when `modelParams.temperature` is present; `skip` otherwise. |
+| **Retrieval surfacing gold** (ADR-195 localization) | **attest (open gap)** | `localize.mjs` / `ruvector-localize.mjs` / trace-localize run over repo source, and `conformant-tests.mjs` never stages gold — so gold is out of the corpus *by construction*, but we cannot **prove** the retrieved context excluded gold `FAIL_TO_PASS` without serializing the localization inputs. Same forward-contract gap as FRAMES answer-leakage. → `localization_no_gold` stays `skip`. |
+| **No-gold-in-loop conformance** (the SOTA_HORIZON honor claim) | **attested-by-flag** | Enforced by `conformant-tests.mjs`, corroborated by **two** machine-readable flags (`leaderboardConformant=true` **and** `noTestOracle=true`/`--no-test-oracle`), but a full `pass` needs the in-loop trajectory serialized. → `no_gold_in_loop` = `attested-by-flag`, honestly, until the trajectory contract lands. |
 
-**Net:** four vectors are structurally immune with a code-level justification; the rest are real and each maps to a concrete attestable check. We do **not** claim immunity we cannot justify.
+**Net:** four vectors are structurally immune with a code-level justification; `patch_touches_tests`, `best_of_n_disclosure`, `empty_patch_rate_disclosed`, `cost_measured`, and `reproducibility` are **enforced** (real pass/fail from the committed artifacts); `no_gold_in_loop` is `attested-by-flag`; `localization_no_gold` + `best_of_n_selector_conformant` remain `skip` pending the trajectory forward-contract. We do **not** claim immunity or a pass we cannot justify.
 
 ### The gate — `integrity-attestation.json`
 
@@ -80,13 +80,26 @@ Every SOTA/leaderboard number must carry an `integrity-attestation.json` (produc
     "resolved": 278, "resolve_pct": 55.6, "wilson_ci": [51.2, 59.9]
   },
   "empty_patch_rate": 0.104,                    // empty_patch_instances / total — honest denominator
-  "k_sample": { "N": null, "cascade": true, "escalate_model": "…", "winner_selector": "conformant-repro" },
+  "k_sample": { "N": 5, "cascade": true, "escalate_model": "…", "winner_selector": null }, // N reads `k` or `kSampleN`
+  "patches_linted": 500,                        // count of predictions.jsonl entries linted (null if no --predictions)
   "cost": { "total_usd": 137.4, "per_inst_usd": 0.27, "source": "measured" },
-  "vectors": [ { "vector": "answer_db_leakage", "result": "immune", "evidence": "…" }, … ],
-  "summary": { "immune": 4, "pass": 5, "skip": 2 },
-  "signature": { "alg": "ed25519", "witness_sha256": "<sha256 of canonical body>", "sig": null, "pubkey": null }
+  "vectors": [
+    { "vector": "answer_db_leakage", "result": "immune", "evidence": "…" },
+    { "vector": "patch_touches_tests", "result": "pass", "critical": true, "evidence": "500 patches linted; 0 resolved-instance test edits" },
+    { "vector": "localization_no_gold", "result": "skip", "evidence": "…", "harness_gap": "forward-contract" }
+    // … one entry per RDI vector, each pass | fail | skip | immune | attested-by-flag
+  ],
+  "summary": { "immune": 4, "pass": 4, "skip": 3, "attested-by-flag": 1 },
+  "signature": {
+    "alg": "ed25519",
+    "witness_sha256": "<sha256 of canonical body, sorted keys>",
+    "sig": "<128-hex ed25519 over the 32-byte witness digest, or null until signed>",
+    "pubkey": "<64-hex raw ed25519 public key, or null until signed>"
+  }
 }
 ```
+
+**As-built vs. draft:** `critical: true` marks the fail-closed vector(s) (`patch_touches_tests`); `patches_linted` records the predictions count; `k_sample.N` reads the darwin `k` field (or `kSampleN`); the `signature` block carries a **real** 128-hex Ed25519 signature once signed (never fabricated — `sig`/`pubkey` are `null` until `--sign`).
 
 **Two report schemas, bound by the attestation.** The gate's honesty comes from binding two artifacts that each carry half the truth:
 - the **official gold report** (`{total_instances, resolved_instances, empty_patch_instances, resolved_ids, …, schema_version}`) — the post-hoc Docker-oracle verdict; carries **no cost, no k-sample, no conformance flag**;
@@ -94,17 +107,17 @@ Every SOTA/leaderboard number must carry an `integrity-attestation.json` (produc
 
 The attestation is the join. Where a field is absent, the vector returns **`skip` + `harness_gap`, never a false `pass`** — the exact discipline of `gaia-audit.mjs` / the FRAMES INTEGRITY-AUDIT ("*Verdict per check is measured from the committed artifacts, not asserted*").
 
-**Signing (ADR-103).** `sota-attest.mjs` computes `witness_sha256` = SHA-256 over the canonical (sorted-key) attestation body. At publish it is signed with the publisher **Ed25519** key — the same `.harness/witness.json` mechanism the `verify-witness` skill checks and that ruflo's ADR-167 uses for its GAIA attestation. The script **never fabricates a signature** (`sig: null` until signed).
+**Signing (ADR-103) — implemented.** `sota-attest.mjs` computes `witness_sha256` = SHA-256 over the canonical (sorted-key) attestation body, then signs the raw 32-byte digest with a publisher **Ed25519** key using Node's built-in `crypto` (zero-dep; the same raw-hex convention as the harness `witness.json` — 64-hex pubkey, 128-hex signature). Signing is an explicit opt-in: `--sign` with `--seed-hex <64hex>`, `--key <file>`, or `$SOTA_SIGNING_SEED_HEX` (no key material is committed or logged). `--verify <attestation>` recomputes the witness over the body (catching **any** tamper) and Ed25519-verifies the signature. The script **never fabricates a signature** (`sig: null` until `--sign`). Proven: sign→verify round-trips; a one-field body edit fails with a witness mismatch; a flipped signature byte fails the Ed25519 check.
 
 ### Nightly-pipeline integration point (`scripts/nightly-sota-review.mjs`)
 
-The nightly pipeline already escalates a needle-mover to an n=300 confirm and, on confirmation, renders `renderPRBody()` + `renderIssue()` and opens them ("*opened only in a real run*"). ADR-231 slots in there:
+The nightly pipeline escalates a needle-mover to an n=300 confirm and, on confirmation, renders `renderPRBody()` + `renderIssue()`. ADR-231 is **wired in** (`runIntegrityGate()` + `attestationSection()` in `scripts/nightly-sota-review.mjs`):
 
-1. After the n=300/500 confirm row lands (the run that **measures** OpenRouter spend), run `sota-attest.mjs --gold-report <confirm-report> --solver-report <solver-report>`.
-2. **Fail-closed gate:** if any vector is `fail`, do **not** open the SOTA issue/PR — a failing exploit audit means the number is not a SOTA claim.
-3. On pass, **embed the attestation** (per-vector table + `witness_sha256`) into `renderPRBody()` **and** `renderIssue()`, and commit `integrity-attestation.json` beside the report. A confirmed-SOTA issue that lacks a signed attestation is, by this ADR, not a SOTA announcement.
+1. On the n=300/500 confirm (the run that **measures** OpenRouter spend), `runIntegrityGate({goldPath, solverPath, predictionsPath, maxSkips})` builds the attestation over the `(gold, solver, predictions)` triple.
+2. **Fail-closed gate (`integrityGateDecision`):** any vector `fail` (a **critical** fail always blocks) **or** more `skip`s than `--attest-max-skips` (default 4) ⇒ the pipeline logs *why* and does **not** open the SOTA issue/PR. A gold-only report (6 skips — cost/conformance unprovable) is correctly refused.
+3. On a clean gate, the attestation (per-vector table + `witness_sha256` + signature) is **embedded** into `renderPRBody()` **and** `renderIssue()`, and `integrity-attestation.json` is committed beside the report.
 
-This makes the honor-system conformance claim into a machine-emitted, signed, per-vector artifact attached to the pipeline's own output.
+The gate runs at $0 with no cloud: `node scripts/nightly-sota-review.mjs --gate-only [--gold-report … --solver-report … --predictions …]` exercises the whole path in isolation (CI-safe). The gate decision is unit-tested (`scripts/nightly-sota-gate.test.mjs`): fail-closed on the real gold-only Verified-500, opens on a full conformant triple, fail-closed on a fabricated critical fail. This makes the honor-system conformance claim a machine-emitted, signed, per-vector artifact attached to the pipeline's own output.
 
 ---
 
@@ -118,26 +131,57 @@ This makes the honor-system conformance claim into a machine-emitted, signed, pe
 **Negative / honest limitations**
 - **An audit reduces but cannot eliminate reward-hacking.** It raises the cost and narrows the surface; it is not a proof of honesty.
 - **SWE-bench's structural advantages do not transfer to GAIA/FRAMES.** The immunity claims above are earned by the Docker-oracle + binary-test design; GAIA has neither and must lean harder on the forward contract.
-- **Three checks remain `skip` until a forward contract lands:** `patch_touches_tests`, `localization_no_gold`, and the full-strength `no_gold_in_loop` all need the **trajectory-serialization contract of ADR-167 §4 (ruflo #2550)** applied to the Darwin bench harness — serialize the submitted diffs, the localization inputs, and the in-loop tool calls (secret-redacted, size-bounded). Until then those vectors are honestly `attested-by-flag` or `skip`, never `pass`.
+- **`patch_touches_tests` is now enforced** off `predictions.jsonl` (the submitted diffs *are* the serialized artifact for this vector), so only **two** checks still need the trajectory forward-contract: `localization_no_gold` (needs the serialized localization inputs) and the full-strength `no_gold_in_loop` (needs the in-loop tool calls to upgrade from `attested-by-flag` to a machine-proven `pass`). Both need the **trajectory-serialization contract of ADR-167 §4 (ruflo #2550)** applied to the Darwin bench harness (secret-redacted, size-bounded). `best_of_n_selector_conformant` similarly stays `skip` until the winner-selector is serialized. Until then those vectors are honestly `attested-by-flag` or `skip`, never `pass`.
+- **The gate audits integrity, not SOTA-worthiness.** `integrityGateDecision` opens on a *clean* attestation regardless of the resolve number — whether a config is Pareto-optimal is the nightly pipeline's separate Wilson/Pareto logic. A low-resolve run with a clean attestation opens the gate; that is by design (the two concerns are orthogonal).
 
 ---
 
 ## Reference implementation
 
-`scripts/sota-attest.mjs` — pure, dependency-free, $0. Exports `wilson`, `deriveSplit`, `emptyPatchRate`, `isOfficialGoldReport`, `vectorAudit`, `canonicalize`, `witnessHash`, `buildAttestation`. `scripts/sota-attest.test.mjs` — 11 passing tests, including the load-bearing discipline test (*gold-only input → cost/k-sample/no-gold-in-loop must `skip`, never `pass`*) and *a patch that edits tests is a `fail`, not a `skip`*.
+`scripts/sota-attest.mjs` — pure, dependency-free, $0. Exports `wilson`, `deriveSplit`, `emptyPatchRate`, `isOfficialGoldReport`, `vectorAudit`, `canonicalize`, `witnessHash`, `buildAttestation`, plus the as-built additions: `isTestFile`, `parsePatchPaths`, `lintPatch`, `lintPredictions`, `parsePredictionsJsonl`, `signAttestation`, `verifyAttestation`, `integrityGateDecision`. `scripts/sota-attest.test.mjs` — **25 passing tests**, including the load-bearing discipline test (*gold-only input → cost/k-sample/no-gold-in-loop must `skip`, never `pass`*), the patch-lint suite (*a RESOLVED instance whose patch edits tests is a CRITICAL `fail`*), the Ed25519 sign→verify + tamper suite, and the fail-closed gate decision.
 
-Real run against the committed Verified gold report:
+**Case A — the committed Verified gold report, gold-only (honest 6 skips → fail-closed):**
 
 ```
 $ node scripts/sota-attest.mjs --gold-report packages/darwin-mode/bench/swebench/darwin-agentic.verified-500-cascade-local.json
   claim: verified 278/500 = 55.6% (Wilson 51.2–59.9%), gold-oracle=official-docker
-  empty_patch_rate: 10.4%   cost: skip   witness: 9aa0f0f00cd0e4dd…
+  empty_patch_rate: 10.4%   cost: skip   patches_linted: none   witness: e81e81dd8b1c63ee…
     IMMUNE  answer_db_leakage · normalization_collision · grader_tampering_external · no_work_scores_a_pass
     PASS    empty_patch_rate_disclosed
-    SKIP    patch_touches_tests[gap] · best_of_n_disclosure[gap] · cost_measured[gap] ·
-            reproducibility[gap] · localization_no_gold[gap] · no_gold_in_loop[gap]
+    SKIP    patch_touches_tests *CRITICAL* · best_of_n_disclosure · cost_measured · reproducibility ·
+            localization_no_gold · no_gold_in_loop
   summary: {"immune":4,"skip":6,"pass":1}
-  VERDICT: attestation emitted (skips are honest gaps, not passes). Sign witness_sha256 to make it SOTA-eligible.
+  gate: FAIL-CLOSED — 6 skips > threshold 4
 ```
 
-The six `skip`s are the honest truth for a gold report submitted *without* its paired solver report: cost/k-sample/conformance are unprovable from the Docker-oracle output alone. Attaching the solver report (`--solver-report`) upgrades `cost_measured`, `best_of_n_disclosure`, `reproducibility`, and `no_gold_in_loop` — as the unit tests demonstrate. This is the gate working as designed: **it refuses to pass what it cannot prove.**
+The Verified-500 run has **no committed solver-side report or predictions** (`verified-500.json` is the task manifest, not a solver report), so cost/k-sample/conformance are genuinely unprovable — the gate honestly refuses it.
+
+**Case B — a full committed conformant triple (gold + solver + predictions), skips drop 6 → 3:**
+
+```
+$ node scripts/sota-attest.mjs \
+    --gold-report   packages/darwin-mode/bench/swebench/mcts-pilot25-eval-report.json \
+    --solver-report packages/darwin-mode/bench/swebench/solve-mcts-pilot25.json \
+    --predictions   packages/darwin-mode/bench/swebench/predictions-mcts-pilot25.jsonl
+  empty_patch_rate: 4.7%   cost: measured   patches_linted: 25   witness: a6fb052cd5433ee0…
+    IMMUNE            answer_db_leakage · normalization_collision · grader_tampering_external · no_work_scores_a_pass
+    PASS  *CRITICAL*  patch_touches_tests   (25 patches linted; 0 resolved-instance test edits)
+    PASS              best_of_n_disclosure (k=5) · empty_patch_rate_disclosed · cost_measured ($0.587)
+    SKIP              best_of_n_selector_conformant · reproducibility · localization_no_gold
+    ATTESTED-BY-FLAG  no_gold_in_loop
+  summary: {"immune":4,"pass":4,"skip":3,"attested-by-flag":1}
+  gate: OPEN
+```
+
+`--solver-report` upgrades `cost_measured`/`best_of_n_disclosure`; `--predictions` turns the CRITICAL `patch_touches_tests` skip into a real pass (linting all 25 submitted diffs). Signing + verifying:
+
+```
+$ node scripts/sota-attest.mjs --gold-report … --solver-report … --predictions … --sign --seed-hex <64hex> --out att.json
+  signature: SIGNED (ed25519, pubkey e4148bd9…)
+$ node scripts/sota-attest.mjs --verify att.json
+  VERDICT: VALID — attestation is authentic and untampered
+# after editing any body field:
+  VERDICT: INVALID — witness_sha256 mismatch — body tampered
+```
+
+This is the gate working as designed: **it refuses to pass what it cannot prove, and cryptographically binds what it can.** Across every committed darwin `predictions*.jsonl` the real `patch_touches_tests` count is **0** — the conformant harness never edits its own grader.
