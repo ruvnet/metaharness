@@ -26,6 +26,11 @@ import { buildReproTest, REPRO_PATH } from './test-critic.mjs';
 import { traceLocalize, formatTraceSeedForAgent, buildPyTracer, TRACE_PATH } from './trace-localize.mjs';
 // ADR-205 — harness handoff: darwin as router, claude -p as hard-tail actuator (loop handoff, NOT model embedding).
 import { parseEscalateChain, acceptHop, solveViaClaudeP, escalationSignals, evaluateEscalation, buildReceipt, runEscalationChain, pickChainPatch } from './handoff-solver.mjs';
+// ADR-232 — cost-aware output-mode decoder policy. Off by default (only when --output-modes is set),
+// so a default run is byte-identical. When on, the Fable rung is forced to a FableOutputMode
+// (minimal_patch/verdict_only — never full_prose, enforced by assertFableLoopMode), each Fable call
+// emits an append-only audit line, and detectErosion flags any smuggled prose at report time.
+import { chooseFableMode, assertFableLoopMode, fableAuditLine, detectErosion, FABLE_FULL_PROSE_ALLOWED, estTokens as omEstTokens } from './output-modes.mjs';
 // ADR-231 forward-contract — the solver-trajectory serializer. Off by default (only when --trajectory
 // is set), so a default run is byte-identical. Captures the audit-relevant signals sota-attest needs to
 // PROVE no_gold_in_loop / localization_no_gold / best_of_n_selector_conformant (see solver-trajectory.mjs).
@@ -66,6 +71,11 @@ const REVIEW_REVISIONS = +argv('--review-revisions', 2);
 // text-JSON tool protocol, byte-identical). See agentic-loop.mjs's agenticSolveNative for the loop and
 // NATIVE-TOOLUSE.md for the diagnosis that motivated it.
 const NATIVE_TOOLS = args.includes('--native-tools');
+// ADR-232 — `--output-modes`: force the Fable/claude-p rung to a terse FableOutputMode (minimal_patch
+// by default; never full_prose) + emit the per-Fable-call audit stream. Absent ⇒ pre-ADR-232 behaviour.
+const OUTPUT_MODES = args.includes('--output-modes');
+const FABLE_AUDIT = OUTPUT_MODES ? rel(argv('--fable-audit', 'fable-audit.jsonl')) : null;
+const fableAudit = []; // in-memory append-only stream; also written to FABLE_AUDIT when set
 // ADR-205 — `--escalate-to <chain>`: ordered, comma-separated escalation chain (aliases like
 // `claude-p-fable`, or generic `darwin:<model>` / `claude-p:<model>` rungs). When set, an instance
 // that FAILS darwin's cheap attempt is handed off rung-by-rung; the first ACCEPTED rung's patch
@@ -303,6 +313,7 @@ async function buildLocalizeHint(inst) {
 
 writeFileSync(OUT, ''); const report = []; let totalCost = 0;
 if (HANDOFF_CHAIN) writeFileSync(RECEIPTS, ''); // truncate the receipt stream per run
+if (FABLE_AUDIT) writeFileSync(FABLE_AUDIT, ''); // ADR-232 — truncate the Fable audit stream per run
 // ADR-231 — the per-run trajectory recorder (truncates its file on construction). Null when --trajectory
 // is absent, so every record() call site is a no-op guard away from pre-ADR-231 behaviour.
 const trajectoryRecorder = TRAJECTORY ? createTrajectoryRecorder(TRAJECTORY) : null;
@@ -456,12 +467,26 @@ async function runChainFor(inst, chain, { localizeHint, priorAttempts = [] } = {
       return { status: res.patch.trim() ? 'resolved' : 'failed', patch: res.patch, cost_usd: res.cost || 0, latency_ms: Date.now() - t0h, turns: res.steps, solver: spec.name, resolvedInLoop: !!res.resolvedInLoop, error: '' };
     },
     runClaudeP: async (spec, prior) => {
+      // ADR-232: under --output-modes the Fable rung runs in a terse FableOutputMode. chooseFableMode
+      // returns minimal_patch for a coding handoff; assertFableLoopMode guarantees it can never be
+      // full_prose (throws otherwise) — the governance switch FABLE_FULL_PROSE_ALLOWED is not
+      // prompt-settable, so no task field can smuggle prose back in.
+      const fableMode = OUTPUT_MODES ? assertFableLoopMode(chooseFableMode({ needsCodeChange: true })) : null;
       const result = await withHandoffSlot(() => solveViaClaudeP({
         instanceId: inst.instance_id, repo: inst.repo, baseCommit: inst.base_commit, problemStatement: inst.problem_statement,
         model: spec.model, maxTurns: HANDOFF_MAX_TURNS, timeoutMs: HANDOFF_TIMEOUT_MS || spec.timeoutMs, priorAttempts: prior,
+        outputMode: fableMode,
       }));
       result.solver = spec.name;
       totalCost += result.cost_usd || 0;
+      // ADR-232: append-only audit line per Fable call. output_tokens is estimated from the captured
+      // patch (claude -p JSON does not expose the input/output split); the load-bearing field is
+      // `mode` — detectErosion scans it to prove no prose escaped the loop.
+      if (OUTPUT_MODES && spec.kind === 'claude-p-model') {
+        const line = fableAuditLine({ mode: fableMode, inputTokens: 0, outputTokens: omEstTokens(result.patch || ''), contractOk: result.status !== 'failed', receiptId: `${inst.instance_id}:${spec.name}` });
+        fableAudit.push(line);
+        if (FABLE_AUDIT) { try { appendFileSync(FABLE_AUDIT, JSON.stringify(line) + '\n'); } catch { /**/ } }
+      }
       return result;
     },
   });
@@ -615,5 +640,16 @@ writeFileSync(REPORT, JSON.stringify({ model: MODEL, escalateModel: ESCALATE, ca
   escalateTo: HANDOFF_CHAIN ? HANDOFF_CHAIN.map((s) => s.name) : null,
   escalatePolicy: HANDOFF_CHAIN ? ESCALATE_POLICY : null,
   escalationRate: HANDOFF_CHAIN ? +(report.filter((r) => r.handoffChain).length / (report.length || 1)).toFixed(3) : null,
+  // ADR-232 — cost-aware output-mode policy summary. `erosionOffenders` MUST be 0: any Fable call whose
+  // mode escaped {verdict_only,minimal_patch,need_context,blocked} is a runtime-contract violation.
+  outputModes: OUTPUT_MODES ? {
+    enabled: true,
+    fableFullProseAllowed: FABLE_FULL_PROSE_ALLOWED,
+    fableCalls: fableAudit.length,
+    fableOutputTokensEst: fableAudit.reduce((s, l) => s + (l.output_tokens || 0), 0),
+    modesUsed: [...new Set(fableAudit.map((l) => l.mode))],
+    erosionOffenders: detectErosion(fableAudit).length,
+    auditStream: FABLE_AUDIT,
+  } : null,
   cappedAtInstance: cappedAt, maxCost: MAX_COST===Infinity?null:MAX_COST, totalCost_usd: Math.round(totalCost * 10000) / 10000, blendedCostPerInst_usd: report.length ? Math.round(totalCost / report.length * 1e5) / 1e5 : 0, instances: report }, null, 2));
 console.error(`\nDONE ${report.length} | in-loop ${inloop}/${report.length} | cascade=${!!ESCALATE} escalated=${escalated} tiers=${JSON.stringify(byTier)} | native-tools=${NATIVE_TOOLS} | $${Math.round(totalCost * 10000) / 10000} (${report.length?(totalCost/report.length).toFixed(4):0}/inst) | preds → ${OUT}`);

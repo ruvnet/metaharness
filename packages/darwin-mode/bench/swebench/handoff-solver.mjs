@@ -29,6 +29,10 @@ import { exec as _exec } from 'node:child_process';
 import { readFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+// ADR-232 — cost-aware output-mode contract for the Fable rung. assertFableLoopMode makes it
+// structurally impossible to request full_prose from Fable inside a loop turn (throws). Import is
+// side-effect-free; when no outputMode is passed the handoff prompt is byte-identical to before.
+import { assertFableLoopMode } from './output-modes.mjs';
 
 export const OR_ANTHROPIC_BASE_URL = 'https://openrouter.ai/api';
 export const DEFAULT_HANDOFF_MODEL = 'anthropic/claude-fable-5';
@@ -55,12 +59,27 @@ export function buildHandoffEnv(model, authToken, baseEnv = process.env) {
 }
 
 /** The handoff prompt: same contract as the 23/25 clean-comparator run, plus an honest, compact
- * note about the failed cheap attempt (priorAttempts) so the actuator doesn't repeat its mistakes. */
-export function buildHandoffPrompt(problemStatement, priorAttempts = []) {
+ * note about the failed cheap attempt (priorAttempts) so the actuator doesn't repeat its mistakes.
+ *
+ * ADR-232: when `opts.outputMode` is set (a FableOutputMode), an OUTPUT CONTRACT is appended that
+ * forbids a prose narration/explanation in the final message — the patch is captured from the code
+ * changes (git diff), never from prose, so a final essay is pure billed-and-discarded output. This
+ * is the prompt-side half of "make Fable write less"; the direct-API rungs add the hard max_tokens
+ * cap. `outputMode` is asserted (full_prose throws) so prose can never be requested here. Absent ⇒
+ * byte-identical to the pre-ADR-232 prompt. */
+export function buildHandoffPrompt(problemStatement, priorAttempts = [], opts = {}) {
   let p = `You are fixing a bug in this repository. Edit the source code to resolve the issue below. Make the minimal change that fixes it. Do NOT edit test files. Do not run the test suite.\n\n--- ISSUE ---\n${problemStatement}`;
   if (priorAttempts.length) {
     const notes = priorAttempts.map((a) => `- ${a.solver || 'unknown'}: ${a.failureReasons?.length ? a.failureReasons.join(', ') : 'failed'}${a.steps ? ` (${a.steps} steps)` : ''}`).join('\n');
     p += `\n\n--- PRIOR ATTEMPTS (a cheaper agent already tried and failed) ---\n${notes}`;
+  }
+  if (opts.outputMode) {
+    assertFableLoopMode(opts.outputMode); // full_prose is structurally forbidden here (throws)
+    if (opts.outputMode === 'verdict_only') {
+      p += '\n\n--- OUTPUT CONTRACT (verdict_only) ---\nWhen done, your FINAL message must be ONLY a JSON verdict {"verdict":"accept|revise|escalate","blocking_issues":[]}. No prose, no explanation, no summary.';
+    } else {
+      p += '\n\n--- OUTPUT CONTRACT (minimal_patch) ---\nApply the fix as source-code edits. Your FINAL message must be EMPTY or a single short line — do NOT narrate, explain, or summarize your reasoning. The patch is read from the code changes, not from your prose, so any explanatory text is wasted. Keep the diff minimal.';
+    }
   }
   return p;
 }
@@ -82,6 +101,7 @@ export function buildHandoffPrompt(problemStatement, priorAttempts = []) {
 export async function solveViaClaudeP({
   instanceId, repo, baseCommit, problemStatement,
   model = DEFAULT_HANDOFF_MODEL, maxTurns = 40, timeoutMs = 900_000, budgetUsd, priorAttempts = [],
+  outputMode = null, // ADR-232 — FableOutputMode contract (default null ⇒ pre-ADR-232 prompt)
 } = {}, deps = {}) {
   const exec = deps.exec || defaultExec;
   const now = deps.now || Date.now;
@@ -95,7 +115,7 @@ export async function solveViaClaudeP({
       try { await exec(`git fetch --depth 1 -q origin ${baseCommit} && git checkout -q FETCH_HEAD`, { cwd: work, timeout: 300_000 }); }
       catch { await exec(`git fetch --depth 200 -q origin && git checkout -q ${baseCommit}`, { cwd: work, timeout: 600_000 }); }
     }
-    const prompt = buildHandoffPrompt(problemStatement, priorAttempts);
+    const prompt = buildHandoffPrompt(problemStatement, priorAttempts, { outputMode });
     const env = buildHandoffEnv(model, readAuthToken(deps.authToken));
     // NO --model flag: ANTHROPIC_MODEL owns model selection on a custom endpoint (measured quirk).
     const cmd = `claude -p ${JSON.stringify(prompt)} --max-turns ${maxTurns} --dangerously-skip-permissions --output-format json`;
@@ -112,7 +132,7 @@ export async function solveViaClaudeP({
     if (work && deps.cleanup) { try { deps.cleanup(work); } catch { /**/ } }
   }
   const status = patch.trim() ? 'resolved' : (timedOut ? 'timeout' : 'failed');
-  return { status, patch, cost_usd: cost, latency_ms: now() - t0, turns, solver: 'claude-p-fable', error };
+  return { status, patch, cost_usd: cost, latency_ms: now() - t0, turns, solver: 'claude-p-fable', error, output_mode: outputMode };
 }
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
