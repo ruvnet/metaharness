@@ -1,7 +1,27 @@
 # ADR-226: Advisor-loop — strong-model read-only advisor over a cheap-model agentic harness
 
-**Status:** Proposed — design + pre-registered benchmark plan; no code written yet (`advisor-loop.mjs` / `solve-advisor.mjs` are specified below, not built)
-**Date:** 2026-07-02
+**Status:** **Accepted — NULL result, advisor track KILLED.** The harness WAS built (`advisor-loop.mjs` / `solve-advisor.mjs` shipped; the "no code written yet" below is the stale pre-registration header). The pre-registered experiment ran, and its extension — the ADR-240 **G3 replay** with the GEPA-tuned **cand-6** executor swapped in — was measured on 2026-07-04. **A read-only strong advisor does NOT convert to task success, even on top of a GEPA-tuned executor.** See the Measured-result block immediately below. Consequence: the advisor track is killed and cand-6 live-injection (which ADR-235 §4.1 gated on this replay confirming transfer) stays **unwired**.
+**Date:** 2026-07-02 (measured + accepted 2026-07-04)
+
+---
+
+## MEASURED RESULT — ADR-240 G3 replay (2026-07-04): advisor does NOT transfer, even with cand-6
+
+**Question (the honest, isolated one).** cand-6 (the holdout-confirmed GEPA executor genome; edit-by-midpoint) already lifts the cheap loop on its own — persisted GEPA medium-24 D0-cand6 = 8/24 with **no advisor**. So the directive's "advisor real if ≥6/24" bar is a **methodological trap**: it would credit the *advisor* for cand-6's *executor* lift. The only honest test is the advisor's **marginal** effect **on top of** cand-6: **D-cand6 (cand-6 + Sonnet-5 read-only advisor, all three triggers) vs D0-cand6 (cand-6, no advisor)**, both run fresh in the same session (no model-snapshot drift assumption), same 24-instance `advisor-medium-25.json` slice, gold-scored via the official swebench harness.
+
+**Result (matched subset — instances gold-scored in BOTH arms, n=19):**
+
+| Arm | Gold | Advisories fired | Vetoes | Spend |
+|---|---|---|---|---|
+| **D0-cand6** (no advisor) | **3/19** | 0 | 0 | $0.19 |
+| **D-cand6** (Sonnet-5 advisor) | **3/19** | 33 (advise 15, checkpoint 10, pre-submit 8) | 3 | $1.03 (**5.4×**) |
+
+- **Marginal advisor delta = 0/19.** The advisor gained exactly one instance (`pylint-dev__pylint-5859`) and regressed exactly one (`pytest-dev__pytest-11143`) — a wash, not a lift.
+- The advisor was **genuinely active** (33 advisories + 3 vetoes across the slice), not silently disabled — it fired and converted **nothing net**, at 5.4× the cost.
+- **Robustness of the null:** 5 instances failed to gold-score in D (harness/Docker no-report: xarray-4094/4493, sklearn-10297, sphinx-10451, pytest-11148) and 1 in D0 (pytest-11148). Every one of those was **non-resolved in D0 too**, so the drops hide no hidden advisor win — the 3-vs-3 stands. n=19 is small (wide CI, directional), but the direction converges with the original fusion/advisor null and the 5.4× cost overhang.
+- **Drift caveat (honest):** this fresh D0-cand6 = 3/19 is far below the persisted GEPA D0-cand6 = 8/24. That gap is a mix of harness eval no-reports + `deepseek-chat` provider-alias drift since the GEPA run — and it does **not** affect the advisor verdict, which is a **matched same-session D-vs-D0 comparison** where both arms share whatever the current baseline is.
+
+**Verdict.** The advice→action impedance ADR-226 originally identified **persists even when the executor follows a standing GEPA operating policy** (cand-6's edit-by-midpoint). Giving a weak-but-policy-driven executor a strong read-only advisor buys **zero marginal resolves at 5.4× cost**. The advisor track is **killed**. The only lever that ever moved the cheap tier remains *evolving the executor's own policy* (GEPA/cand-6), not *injecting a stronger model's advice*. Reproduce: `solve-advisor.mjs --genome gepa/genome-promoted-cand6-edit-by-midpoint.json --advisor-model {none|anthropic/claude-sonnet-5} --manifest advisor-medium-25.json --max-steps 12 --no-test-oracle` then gold-score both with the swebench harness. Cross-links: **ADR-240 G3** (this replay is that gate), **ADR-235 §4.1** (cand-6 injection was gated on this → stays unwired).
 **Related:** ADR-222 *(meta-llm repo — competing with Devin Fusion; this ADR inverts its Bet-3 sidekick)*, ADR-225 *(meta-llm, unmerged worktree — GLM-5.2 → Sonnet-5 → Fable-5 escalation ladder; roadmap, not landed)*, ADR-221 *(meta-llm, Accepted — availability-gated Fable-5 escalation)*, ADR-201 *(this repo — vector-memory cheap-model lift; H1/H5 nulls)*, ADR-205 *(this repo, `feat/darwin-handoff-adr205` branch — darwin harness-side ladder proof)*, ADR-216 *(meta-llm — calibrated escalation threshold, shadow-mode instrumented)*, `packages/darwin-mode/bench/swebench/{agentic-loop.mjs, fusion-loop.mjs, FUSION-BENCHMARK.md}`, cognition.com/blog/devin-fusion.
 
 > **Numbering note.** This ADR continues the cross-repo 2xx decision thread: ADR-207–225 live in the meta-llm repo (`cognitum-one/meta-llm`, `docs/adr/`), and that repo's numbers **collide** with this repo's own ADR-204–206 (here: ADR-205 = darwin handoff, ADR-206 = BenchPress, both on branches; there: ADR-205 = free-trial Stripe, ADR-206/207 = pod/host layer). **226 is free in both repos.** Every cross-repo citation in this document is annotated with its repo; ADR-225 additionally exists only on an unmerged meta-llm worktree (`tier-pools-glm-sonnet-fable`) and is cited as roadmap, never as a landed result.
