@@ -618,6 +618,17 @@ async function runMetaHarnessSubcommand(sub: string, rest: string[]): Promise<nu
       for (const line of r.lines) console.log(line);
       return r.code;
     }
+    case 'flywheel': {
+      // `metaharness flywheel <run|replay|graph>` — delegates to @metaharness/flywheel: the reusable
+      // promotion loop (run→measure→mutate→verify→promote). `run <config.mjs>` turns the wheel from a
+      // user config; `replay <bundle.json>` independently verifies a proof bundle (receipts + lineage +
+      // frozen-gate fingerprint); `graph <bundle.json>` prints the compounding lift curve. Host- and
+      // benchmark-agnostic — the flywheel knows only candidates, scores, gates, receipts, and lineage.
+      const { dispatch } = await import('@metaharness/flywheel/cli');
+      const r = await dispatch(rest[0], rest.slice(1));
+      for (const line of r.lines) console.log(line);
+      return r.code;
+    }
     default:
       return null; // not a known subcommand
   }

@@ -1,0 +1,33 @@
+{
+  "name": "@metaharness/flywheel",
+  "version": "0.1.1",
+  "description": "A verifiable self-improvement loop for agent harnesses. Freeze the model. Evolve the harness. Promote only what proves lift.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./cli": {
+      "types": "./dist/cli.d.ts",
+      "import": "./dist/cli.js"
+    }
+  },
+  "files": ["dist", "README.md"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": ["agent", "harness", "self-improvement", "flywheel", "promotion", "lineage", "receipts", "metaharness"],
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  }
+}
