@@ -75,6 +75,10 @@ const CHECKS = {
       // @metaharness/jujutsu (version-control-for-agents + agenticow bridge, ADR-202)
       // likewise — npm 0.2.0 was published on its own cadence.
       '@metaharness/jujutsu',
+      // @metaharness/flywheel (the reusable promotion-loop engine) is a standalone
+      // published library on its own semver (published 0.1.1 with the umbrella-CLI
+      // wiring, like weight-eft/redblue).
+      '@metaharness/flywheel',
       '@metaharness/kernel',
       '@metaharness/host-claude-code',
       '@metaharness/host-codex',
