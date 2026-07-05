@@ -1,7 +1,7 @@
 {
   "name": "@metaharness/darwin",
   "version": "0.8.0",
-  "description": "Freeze the model, evolve the harness. Two measured applications: (1) SWE-bench code-repair — conformant GLM->Opus empty-patch cascade resolves 51.3% Lite (n=300) and 55.6% Verified (278/500, Wilson 95% CI [51.2, 59.9], official swebench gold eval, no gold tests in-loop, ~$0.15/instance est.); the same cheap->frontier cascade generalizes across both splits at ~56x cheaper than frontier-only; (2) Darwin Shield (v0.3.0) — a defensive zero-day discovery harness (Semgrep + fuzz oracles, safety-gated, deterministic replay). The harness, not the model, is the lever. Dependency-free (Node built-ins).",
+  "description": "Freeze the model, evolve the harness. Two measured applications: (1) SWE-bench code-repair \u2014 conformant GLM->Opus empty-patch cascade resolves 51.3% Lite (n=300) and 55.6% Verified (278/500, Wilson 95% CI [51.2, 59.9], official swebench gold eval, no gold tests in-loop, ~$0.15/instance est.); the same cheap->frontier cascade generalizes across both splits at ~56x cheaper than frontier-only; (2) Darwin Shield (v0.3.0) \u2014 a defensive zero-day discovery harness (Semgrep + fuzz oracles, safety-gated, deterministic replay). The harness, not the model, is the lever. Dependency-free (Node built-ins).",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -60,7 +60,8 @@
   },
   "devDependencies": {
     "typescript": "^5.4.0",
-    "vitest": "^2.0.0"
+    "vitest": "^2.0.0",
+    "@metaharness/flywheel": "^0.1.1"
   },
   "publishConfig": {
     "access": "public"
