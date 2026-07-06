@@ -21,7 +21,7 @@ export interface NormalizedCall {
 
 // Match a `name(...)` functional-call form on a single logical span. No backtracking-prone nesting: capture
 // the callee ident and the parenthesized body lazily to the first close paren at depth handled below.
-const FUNC_RE = /([A-Za-z_][\w.]*)\s*\(([\s\S]*)\)\s*$/;
+const FUNC_RE = /^([A-Za-z_][\w.]*)\s*\(([\s\S]*)\)\s*$/;
 
 /** Pull a call out of raw model output, then canonicalize per argFormat. Accepts three shapes, cheapest
  *  first: a JSON object `{name, arguments}` / `{name, args}`; a fenced ```json block; or `func(a=1, b="x")`. */
@@ -45,7 +45,7 @@ export function normalizeCall(raw: string, format: ArgFormat, normalize: boolean
 /** Try the three accepted call shapes. Returns the raw (un-canonicalized) name + args, or null. */
 function parseCall(text: string): ToolCall | null {
   // 1) fenced ```json … ``` → unwrap and fall through to JSON.
-  const fenced = text.match(/```(?:json|tool_call)?\s*([\s\S]*?)```/i);
+  const fenced = text.match(/```(?:json|tool_call)?([\s\S]*?)```/i);
   const body = fenced ? fenced[1].trim() : text;
 
   // 2) a JSON object anywhere in the (last) body span.
