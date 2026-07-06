@@ -1,0 +1,1069 @@
+{
+  "data_source": "LIVE",
+  "root_id": "root",
+  "chain": [
+    {
+      "id": "root",
+      "generation": 0,
+      "parents": [],
+      "mutation": null,
+      "primaryDelta": 0,
+      "anchorScore": 0.8,
+      "verdict": "ROOT",
+      "failureReasons": [],
+      "receipt": {
+        "payload": {
+          "kind": "root",
+          "root": "root"
+        },
+        "signature": "90nK6KwHjRnoeuLLKF9eYnOX/kIU4V/0d2Do7Ey2VIRm6ixCEZ5GF4P3H3KyneQkxw9I7WN0J4/5b9jY2XLYCg==",
+        "publicKey": "MCowBQYDK2VwAyEAy8Dz8pZBaCURtCIOPtMTvdBx0gT3Mn8QVwcYZhRM9Gw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "gen-0"
+    }
+  ],
+  "all_commits": [
+    {
+      "id": "root__verificationMode_gen1",
+      "generation": 1,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "verificationMode",
+        "summary": "adapt verificationMode"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__verificationMode_gen1",
+          "target": "verificationMode",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "5BOXW3S9TscqGVHi2SkbF0sHURlGWZqr+M+OeLWqCjwcYWAlMwuQfq2kJSs6iTrMh3tpf+hshRqP0VTtPdhvCA==",
+        "publicKey": "MCowBQYDK2VwAyEAy8Dz8pZBaCURtCIOPtMTvdBx0gT3Mn8QVwcYZhRM9Gw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "gen-1",
+      "baselineScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0.05,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      },
+      "candidateScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0.05,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      }
+    },
+    {
+      "id": "root__maxCandidates_gen1",
+      "generation": 1,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "maxCandidates",
+        "summary": "adapt maxCandidates"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__maxCandidates_gen1",
+          "target": "maxCandidates",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "ZTKX0Lye7G79bV8iylH/KCVXozqxyMGFQvw2+nbjwUUEmESTeuiyA+yqqSEbP5HhFOPsAXC0katT6ZSIURGFAw==",
+        "publicKey": "MCowBQYDK2VwAyEAy8Dz8pZBaCURtCIOPtMTvdBx0gT3Mn8QVwcYZhRM9Gw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "gen-1",
+      "baselineScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0.05,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      },
+      "candidateScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0.05,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      }
+    },
+    {
+      "id": "root__confidenceRule_gen1",
+      "generation": 1,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "confidenceRule",
+        "summary": "adapt confidenceRule"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__confidenceRule_gen1",
+          "target": "confidenceRule",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "zoJzRcM4mQiaXjReMnvBSQtKpyHVN2Nv0ZZCUC3a+BPn7l+4ua0eEDYIuPUpzcveQDjVk0eil0PiXzHziPxcCA==",
+        "publicKey": "MCowBQYDK2VwAyEAy8Dz8pZBaCURtCIOPtMTvdBx0gT3Mn8QVwcYZhRM9Gw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "gen-1",
+      "baselineScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0.05,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      },
+      "candidateScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0,
+        "abstentionRate": 0.05,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      }
+    },
+    {
+      "id": "root__normalizeFinalAnswer_gen1",
+      "generation": 1,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "normalizeFinalAnswer",
+        "summary": "adapt normalizeFinalAnswer"
+      },
+      "primaryDelta": -0.15000000000000002,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "primary_regressed",
+        "immaterial_no_accuracy_or_cost_win"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__normalizeFinalAnswer_gen1",
+          "target": "normalizeFinalAnswer",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.15000000000000002
+        },
+        "signature": "iMtdQAaG1YULirILl/fvHBGBIvpInthnnDpBVfnUg7w37k6UHMTUNs3WfncvpjwEcjKElvn8x1Y/QyEHykq7DQ==",
+        "publicKey": "MCowBQYDK2VwAyEAy8Dz8pZBaCURtCIOPtMTvdBx0gT3Mn8QVwcYZhRM9Gw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "gen-1",
+      "baselineScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0.05,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      },
+      "candidateScore": {
+        "primary": 0.65,
+        "noopRate": 0,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.65,
+        "costPerCorrect": 0,
+        "calibrationError": 0.15000000000000002,
+        "formatErrorRate": 0,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.6666666666666666,
+          "arithmetic": 0.6
+        },
+        "n": 20,
+        "correct": 13
+      }
+    },
+    {
+      "id": "root__verificationMode_gen2",
+      "generation": 2,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "verificationMode",
+        "summary": "adapt verificationMode"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__verificationMode_gen2",
+          "target": "verificationMode",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "bvQ0uAFVoVA/s3cIXE0hN6D9q9VAy7GbbsHs2BplzPFON7m4ApljlYJ/ln3F86VYd3RWceZQrYPcSNVnGYy1Bg==",
+        "publicKey": "MCowBQYDK2VwAyEAy8Dz8pZBaCURtCIOPtMTvdBx0gT3Mn8QVwcYZhRM9Gw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "gen-2",
+      "baselineScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0.05,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      },
+      "candidateScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0.05,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      }
+    },
+    {
+      "id": "root__maxCandidates_gen2",
+      "generation": 2,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "maxCandidates",
+        "summary": "adapt maxCandidates"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__maxCandidates_gen2",
+          "target": "maxCandidates",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "8SwnSwK9VqR+O8+0qptwPe1+uw7sLUrMHxiwfsxgZa0fFg6M8tMIF/9Nb0tovf/y2je+ESR4+lGYA4Wa10z2Aw==",
+        "publicKey": "MCowBQYDK2VwAyEAy8Dz8pZBaCURtCIOPtMTvdBx0gT3Mn8QVwcYZhRM9Gw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "gen-2",
+      "baselineScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0.05,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      },
+      "candidateScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0.05,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      }
+    },
+    {
+      "id": "root__confidenceRule_gen2",
+      "generation": 2,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "confidenceRule",
+        "summary": "adapt confidenceRule"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__confidenceRule_gen2",
+          "target": "confidenceRule",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "NiiSWXkC28m+69YX1YFPk/UQkokzOaleohCmySRNxP12nDBL2nCo5W0BuvWq29Ur/jV4Sh/p0Qa4C6ZxM4D6CQ==",
+        "publicKey": "MCowBQYDK2VwAyEAy8Dz8pZBaCURtCIOPtMTvdBx0gT3Mn8QVwcYZhRM9Gw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "gen-2",
+      "baselineScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0.05,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      },
+      "candidateScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0,
+        "abstentionRate": 0.05,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      }
+    },
+    {
+      "id": "root__normalizeFinalAnswer_gen2",
+      "generation": 2,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "normalizeFinalAnswer",
+        "summary": "adapt normalizeFinalAnswer"
+      },
+      "primaryDelta": -0.15000000000000002,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "primary_regressed",
+        "immaterial_no_accuracy_or_cost_win"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__normalizeFinalAnswer_gen2",
+          "target": "normalizeFinalAnswer",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.15000000000000002
+        },
+        "signature": "BosN6z1JGjmXzUcSc0okmngWh89vgcL3mfyveNPU7tWK8svsTGyQbcDBa5DZlpALb/CfpRIx4qnvRwAo9Q9VCA==",
+        "publicKey": "MCowBQYDK2VwAyEAy8Dz8pZBaCURtCIOPtMTvdBx0gT3Mn8QVwcYZhRM9Gw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "gen-2",
+      "baselineScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0.05,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      },
+      "candidateScore": {
+        "primary": 0.65,
+        "noopRate": 0,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.65,
+        "costPerCorrect": 0,
+        "calibrationError": 0.15000000000000002,
+        "formatErrorRate": 0,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.6666666666666666,
+          "arithmetic": 0.6
+        },
+        "n": 20,
+        "correct": 13
+      }
+    },
+    {
+      "id": "root__verificationMode_gen3",
+      "generation": 3,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "verificationMode",
+        "summary": "adapt verificationMode"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__verificationMode_gen3",
+          "target": "verificationMode",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "5PjLz/bZc9lpqdF7LHLMwvSqQTsFt6Zg6M+/FgfbnhAnefF6nPaZgGLfX7Q0vN6klW17yXuPk5PrYF8MpcVcAA==",
+        "publicKey": "MCowBQYDK2VwAyEAy8Dz8pZBaCURtCIOPtMTvdBx0gT3Mn8QVwcYZhRM9Gw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "gen-3",
+      "baselineScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0.05,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      },
+      "candidateScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0.05,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      }
+    },
+    {
+      "id": "root__maxCandidates_gen3",
+      "generation": 3,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "maxCandidates",
+        "summary": "adapt maxCandidates"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__maxCandidates_gen3",
+          "target": "maxCandidates",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "+adbHoYAPPrfYKhbEpBEAHnJnNG4dCaQaHc2JP9x4EosA0f8P1Zqh0uS/puF6I3ThS2EpOnvHHn1pOFZcjx5AA==",
+        "publicKey": "MCowBQYDK2VwAyEAy8Dz8pZBaCURtCIOPtMTvdBx0gT3Mn8QVwcYZhRM9Gw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "gen-3",
+      "baselineScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0.05,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      },
+      "candidateScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0.05,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      }
+    },
+    {
+      "id": "root__confidenceRule_gen3",
+      "generation": 3,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "confidenceRule",
+        "summary": "adapt confidenceRule"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__confidenceRule_gen3",
+          "target": "confidenceRule",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "X9j0qX6GCnDYm7VyMEhPQV3R+qSyVrYsQeq8iJsFuzfemyDPveW1kmtgCyAvdP9c5EYHUPeWMDPjUjSpn4ZYDg==",
+        "publicKey": "MCowBQYDK2VwAyEAy8Dz8pZBaCURtCIOPtMTvdBx0gT3Mn8QVwcYZhRM9Gw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "gen-3",
+      "baselineScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0.05,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      },
+      "candidateScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0,
+        "abstentionRate": 0.05,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      }
+    },
+    {
+      "id": "root__normalizeFinalAnswer_gen3",
+      "generation": 3,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "normalizeFinalAnswer",
+        "summary": "adapt normalizeFinalAnswer"
+      },
+      "primaryDelta": -0.15000000000000002,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "primary_regressed",
+        "immaterial_no_accuracy_or_cost_win"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__normalizeFinalAnswer_gen3",
+          "target": "normalizeFinalAnswer",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.15000000000000002
+        },
+        "signature": "yQs1zfPTaHFcVb74lVZ4frJw8UiyNcVXsC9Qj93WXHEJcf1Ee1n/iSsad9UJ1XoWD6v1dWYr5J7s9x3bT5ToCw==",
+        "publicKey": "MCowBQYDK2VwAyEAy8Dz8pZBaCURtCIOPtMTvdBx0gT3Mn8QVwcYZhRM9Gw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "gen-3",
+      "baselineScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0.05,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      },
+      "candidateScore": {
+        "primary": 0.65,
+        "noopRate": 0,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.65,
+        "costPerCorrect": 0,
+        "calibrationError": 0.15000000000000002,
+        "formatErrorRate": 0,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.6666666666666666,
+          "arithmetic": 0.6
+        },
+        "n": 20,
+        "correct": 13
+      }
+    },
+    {
+      "id": "root__verificationMode_gen4",
+      "generation": 4,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "verificationMode",
+        "summary": "adapt verificationMode"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__verificationMode_gen4",
+          "target": "verificationMode",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "Juuzdij4RV16J0muoiAqgtkF7c6xFwP3JRFwWBMyV75I2mRdtn/kuheCPQj1kbYem4kuTufwGlH5NPLwfYGmAg==",
+        "publicKey": "MCowBQYDK2VwAyEAy8Dz8pZBaCURtCIOPtMTvdBx0gT3Mn8QVwcYZhRM9Gw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "gen-4",
+      "baselineScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0.05,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      },
+      "candidateScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0.05,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      }
+    },
+    {
+      "id": "root__maxCandidates_gen4",
+      "generation": 4,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "maxCandidates",
+        "summary": "adapt maxCandidates"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__maxCandidates_gen4",
+          "target": "maxCandidates",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "JH7mSZaHR3XBYXAJwjtcQw1G+gY0ImgCxCV5sqQYviDZW5Q6azHP4YQSL3so6S508xChoKfHk+XHHws9xtFuAg==",
+        "publicKey": "MCowBQYDK2VwAyEAy8Dz8pZBaCURtCIOPtMTvdBx0gT3Mn8QVwcYZhRM9Gw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "gen-4",
+      "baselineScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0.05,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      },
+      "candidateScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0.05,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      }
+    },
+    {
+      "id": "root__confidenceRule_gen4",
+      "generation": 4,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "confidenceRule",
+        "summary": "adapt confidenceRule"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__confidenceRule_gen4",
+          "target": "confidenceRule",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "gcqs/T0hUYCXXjp53BsQ/glJ7aARm72BFJynbQZuK6VOBs4zBVD9iBGxNsnxYKs9OzjyIifLiieVzXIAJjrPBA==",
+        "publicKey": "MCowBQYDK2VwAyEAy8Dz8pZBaCURtCIOPtMTvdBx0gT3Mn8QVwcYZhRM9Gw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "gen-4",
+      "baselineScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0.05,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      },
+      "candidateScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0,
+        "abstentionRate": 0.05,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      }
+    },
+    {
+      "id": "root__normalizeFinalAnswer_gen4",
+      "generation": 4,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "normalizeFinalAnswer",
+        "summary": "adapt normalizeFinalAnswer"
+      },
+      "primaryDelta": -0.15000000000000002,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "primary_regressed",
+        "immaterial_no_accuracy_or_cost_win"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__normalizeFinalAnswer_gen4",
+          "target": "normalizeFinalAnswer",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.15000000000000002
+        },
+        "signature": "Pl4Yt+g+gqAwJ3bupPdUGG1kTapgozL0GbYn59HrOf7Rujvdmi23E8eyMw7feHv04eUvvJ7VQaxtcl/oZ19HAQ==",
+        "publicKey": "MCowBQYDK2VwAyEAy8Dz8pZBaCURtCIOPtMTvdBx0gT3Mn8QVwcYZhRM9Gw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "gen-4",
+      "baselineScore": {
+        "primary": 0.8,
+        "noopRate": 0.05,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.8,
+        "costPerCorrect": 0,
+        "calibrationError": 0.3421052631578947,
+        "formatErrorRate": 0.05,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.8,
+          "arithmetic": 0.8
+        },
+        "n": 20,
+        "correct": 16
+      },
+      "candidateScore": {
+        "primary": 0.65,
+        "noopRate": 0,
+        "costPerWin": 0,
+        "regressed": false,
+        "accuracy": 0.65,
+        "costPerCorrect": 0,
+        "calibrationError": 0.15000000000000002,
+        "formatErrorRate": 0,
+        "abstentionRate": 0,
+        "perSubjectAccuracy": {
+          "wordproblem": 0.6666666666666666,
+          "arithmetic": 0.6
+        },
+        "n": 20,
+        "correct": 13
+      }
+    }
+  ],
+  "lift_curve": [
+    {
+      "generation": 0,
+      "primary": 0.8,
+      "delta": 0,
+      "anchor": 0.8
+    }
+  ],
+  "gate_fingerprint": "a4700911b88e525218a40258dc062c62338f31df32ab737d8e27452f7a01371a",
+  "verified_improvements": 0,
+  "anchor_surviving_improvements": 0,
+  "milestone_reached": false,
+  "created_at": "gen-4"
+}
