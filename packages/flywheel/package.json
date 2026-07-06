@@ -1,30 +1,47 @@
 {
   "name": "@metaharness/flywheel",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "A verifiable self-improvement loop for agent harnesses. Freeze the model. Evolve the harness. Promote only what proves lift.",
   "type": "module",
-  "main": "./dist/index.js",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "require": "./dist/cjs/index.js"
     },
     "./cli": {
       "types": "./dist/cli.d.ts",
-      "import": "./dist/cli.js"
+      "import": "./dist/cli.js",
+      "require": "./dist/cjs/cli.js"
     }
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run build:cjs",
+    "build:cjs": "tsc -p tsconfig.cjs.json && node -e \"require('fs').writeFileSync('dist/cjs/package.json','{\\\"type\\\":\\\"commonjs\\\"}\\n')\"",
     "test": "vitest run",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "verify:dual": "npm run build && node scripts/verify-dual.mjs"
   },
-  "keywords": ["agent", "harness", "self-improvement", "flywheel", "promotion", "lineage", "receipts", "metaharness"],
+  "keywords": [
+    "agent",
+    "harness",
+    "self-improvement",
+    "flywheel",
+    "promotion",
+    "lineage",
+    "receipts",
+    "metaharness"
+  ],
   "license": "MIT",
   "devDependencies": {
     "typescript": "^5.4.0",
