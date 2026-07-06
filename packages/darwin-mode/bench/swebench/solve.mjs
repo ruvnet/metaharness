@@ -131,7 +131,12 @@ for (const inst of manifest) {
     // ADR-192: the FILE: path extension and worked example are templated to the instance's language
     // so a weak model is shown an in-language pattern (js example for a js instance, etc.).
     const ext = prof.exampleExt;
-    const sys = `You are a non-conversational code-patching tool. Output ONLY search/replace edit blocks. NEVER write prose, explanations, summaries, or markdown fences. Each edit is EXACTLY:\nFILE: path/to/file.${ext}\n<<<SEARCH\n<lines copied verbatim from the file, incl. indentation>\n=======\n<replacement lines>\n>>>REPLACE\nExample of a valid response:\nFILE: pkg/util.${ext}\n<<<SEARCH\n${prof.exampleSnippet}\n>>>REPLACE`;
+    const sysBase = `You are a non-conversational code-patching tool. Output ONLY search/replace edit blocks. NEVER write prose, explanations, summaries, or markdown fences. Each edit is EXACTLY:\nFILE: path/to/file.${ext}\n<<<SEARCH\n<lines copied verbatim from the file, incl. indentation>\n=======\n<replacement lines>\n>>>REPLACE\nExample of a valid response:\nFILE: pkg/util.${ext}\n<<<SEARCH\n${prof.exampleSnippet}\n>>>REPLACE`;
+    // D1-S3 (flywheel domain-scale): an OPERATING-POLICY seam. SWE_POLICY_SYSTEM (set by the flywheel's
+    // SWE-bench runSolver from the candidate policy's levers) is appended to the system prompt so the
+    // flywheel can evolve HOW this cheap solver operates. Unset ⇒ byte-identical to before (backward-safe).
+    const POLICY_SYSTEM = (process.env.SWE_POLICY_SYSTEM || '').trim();
+    const sys = POLICY_SYSTEM ? `${sysBase}\n${POLICY_SYSTEM}` : sysBase;
     const prompt = `Fix the bug described below by editing the selected real source files. Emit one or more edit blocks in the exact format from the system message. The SEARCH text must match the file character-for-character (incl. indentation). No prose outside blocks.\n--- problem statement ---\n${inst.problem_statement.slice(0, 6000)}\n--- selected source files ---\n${seen}\n`;
     const res = await fetch(CHAT_URL, { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, messages: [{ role: 'system', content: sys }, { role: 'user', content: prompt }], max_tokens: 4096, temperature: 0 }) });
     const j = await res.json();
