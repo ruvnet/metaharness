@@ -2,7 +2,8 @@
 import { describe, it, expect } from 'vitest';
 import {
   meetsPromotionRule, gateFingerprint, makeSigner, verifyReceipt, canon,
-  InMemoryLineageStore, computeLiftCurve, type Score, type LineageCommit, type PromotionReceipt,
+  InMemoryLineageStore, computeLiftCurve, verifyReplayBundle,
+  type Score, type LineageCommit, type PromotionReceipt, type ReplayBundle,
 } from '../src/index.js';
 
 const S = (over: Partial<Score> = {}): Score => ({ primary: 5, noopRate: 0.3, costPerWin: 1, regressed: false, ...over });
@@ -56,5 +57,32 @@ describe('lineage + lift curve', () => {
     expect(chain[chain.length - 1]!.parents).toEqual([]);
     const curve = computeLiftCurve(chain, 5); // root primary 5
     expect(curve.map((p) => p.primary)).toEqual([5, 7, 10]); // 5 → +2 → +3
+  });
+});
+
+describe('verifyReplayBundle — an HONEST-NULL run (0 promotions) is VALID (regression: ADR-235)', () => {
+  const signer = makeSigner();
+  const root: LineageCommit = {
+    id: 'root', generation: 0, parents: [], mutation: null, primaryDelta: 0, anchorScore: null,
+    verdict: 'ROOT', failureReasons: [], receipt: signer.sign({ kind: 'root', root: 'root' }), createdAt: 'gen-0',
+  };
+  const bundle: ReplayBundle = {
+    data_source: 'LIVE', root_id: 'root', chain: [root], all_commits: [],
+    lift_curve: [{ generation: 0, primary: 1, delta: 0, anchor: null }],
+    gate_fingerprint: gateFingerprint(meetsPromotionRule),
+    verified_improvements: 0, anchor_surviving_improvements: 0, milestone_reached: false, created_at: 'gen-0',
+  };
+
+  it('a root-only chain (the flywheel found no lift) PASSES replay — not an invalid bundle', () => {
+    const v = verifyReplayBundle(bundle, { pinnedGateFingerprint: gateFingerprint(meetsPromotionRule) });
+    expect(v.checks.allPromoted).toBe(true);   // vacuously true: no non-root commits to be un-promoted
+    expect(v.checks.reachesRoot).toBe(true);
+    expect(v.pass).toBe(true);
+  });
+
+  it('still REJECTS a chain with a smuggled non-PROMOTED commit', () => {
+    const rejected: LineageCommit = { ...root, id: 'c1', generation: 1, parents: ['root'], verdict: 'REJECTED', mutation: { target: 'x', summary: 'x' } };
+    const bad: ReplayBundle = { ...bundle, chain: [rejected, root] };
+    expect(verifyReplayBundle(bad).checks.allPromoted).toBe(false);
   });
 });

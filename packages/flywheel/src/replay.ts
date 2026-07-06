@@ -37,8 +37,13 @@ export function verifyReplayBundle(bundle: ReplayBundle, opts: { pinnedGateFinge
   }
   if (!contiguousParents) failures.push('contiguousParents');
 
+  // Every non-root commit on the promoted chain must be PROMOTED (no rejected node smuggled in). An
+  // HONEST-NULL run — the flywheel found no improvement, so the chain is just the immutable gen-0 root —
+  // is VALID and replayable: an empty set of non-root commits satisfies this VACUOUSLY. (Requiring
+  // ≥1 promotion here was a bug: it failed replay on a legitimate 0-promotion result, e.g. a weak model
+  // that resolves nothing — the negative is a real, verifiable outcome, not an invalid bundle.)
   const promos = chain.filter((c) => c.verdict !== 'ROOT');
-  const allPromoted = promos.length > 0 && promos.every((c) => c.verdict === 'PROMOTED');
+  const allPromoted = promos.every((c) => c.verdict === 'PROMOTED');
   if (!allPromoted) failures.push('allPromoted');
 
   const gateUnchanged = opts.pinnedGateFingerprint ? bundle.gate_fingerprint === opts.pinnedGateFingerprint : true;
