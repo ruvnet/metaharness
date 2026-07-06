@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { homedir } from 'node:os';
 import { spawnSync } from 'node:child_process';
-import { runFlywheelGenerations, makeSigner, verifyReplayBundle, gateFingerprint, meetsPromotionRule } from '@metaharness/flywheel';
+import { runFlywheelGenerations, makeSigner, verifyReplayBundle, gateFingerprint, meetsPromotionRule, analyzeBundle, formatAnalysis } from '@metaharness/flywheel';
 import { makeSwebenchEvaluator, makeSwebenchProposer } from './flywheel-swebench-evaluator.mjs';
 import { makeCliSolver } from './swebench-solver-cli.mjs';
 import { makeSwebenchGrader } from './swebench-grade.mjs';
@@ -163,4 +163,13 @@ console.log('\n── LIFT CURVE (resolved, root→current) ──');
 for (const p of result.liftCurve) console.log(`  gen${p.generation}: resolved=${p.primary}/${holdout.length} ${p.delta > 0 ? `(+${p.delta})` : ''} anchor=${p.anchor}/${anchor.length}`);
 console.log(`\nspend=$${spend.toFixed(4)} | verified=${result.replayBundle.verified_improvements} anchor-surviving=${result.replayBundle.anchor_surviving_improvements} milestone=${result.milestoneReached}`);
 console.log(`replay: ${v.pass ? 'PASS' : 'FAIL'} | bundle: ${out}`);
+
+// F-P2 mutation-effectiveness + cost economics — auto-emitted so the D1-S5 evidence package includes
+// WHICH policy levers earned promotions and at what cost (not just the lift curve). Also written as a
+// durable, machine-readable artifact next to the proof bundle.
+const analysis = analyzeBundle(result.replayBundle);
+const analysisOut = join(HERE, 'analyze-swebench.json');
+writeFileSync(analysisOut, JSON.stringify(analysis, null, 2));
+console.log('\n' + formatAnalysis(analysis, `${SOLVER} run`).join('\n'));
+console.log(`analysis artifact: ${analysisOut}`);
 console.log('SCOPE: REAL SWE-bench (official harness gold-scored). This is domain evidence, not the reasoning proxy.');
