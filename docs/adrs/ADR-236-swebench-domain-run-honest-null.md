@@ -57,3 +57,20 @@ The forward-path run was executed for real (user-authorized): `d1s4-live-run.mjs
 - **The anti-Goodhart guard actively fired:** of the 2 candidate policies proposed over 2 generations, one *improved the holdout* (best Δ +1 on `editPolicy`) but **regressed the frozen anchor** — so the gate **rejected it** (`anchor-regressed=1` in `analyze-swebench.json`). The anchor suite did exactly its job: it refused a holdout-overfit.
 
 **What this does NOT prove (the honest limit):** **compounding is still NULL** — 0 promotions over 2 generations, `milestone_reached=false`. A short 2-generation run with a single mutation lever (`editPolicy`) found no *genuine* policy improvement that survived the anchor. So this ADR is amended to **MECHANISM-PROVEN on real SWE-bench with a demonstrated anti-Goodhart rejection, but compounding-null** — NOT "domain-proven compounding." Removing the "reasoning-proxy" caveat is earned (the mechanism ran on real code-repair, gold-scored); claiming compounding lift is NOT. Forward path to a *positive compounding* result: more generations, more/other mutation levers (`escalationPolicy`, `verifierPolicy`), and a base with more headroom (3/25 leaves little room for a policy to compound on 25 instances) — e.g. a larger holdout so the gate's noise floor is lower.
+
+## 5. The budget gate is removed — a $0 LOCAL endpoint path (2026-07-06)
+
+§4's forward path to *positive compounding* (more generations, more levers, a larger holdout) was blocked on ONE thing: **money.** A hosted cheap model over dozens of instances × generations × agentic steps is real $ + hours, so the flagship run stayed confirm-gated and small. That gate is now removed for anyone with a local OpenAI-compatible server (`ruvllm serve`, or an ollama endpoint at `http://localhost:11434/v1`): the SAME agentic solver and the SAME official-harness gold-scoring, at **$0 inference**.
+
+`d1s4-live-run.mjs` gained `--api-key-env` and a local-no-auth path (`swebench-endpoint.mjs → resolveEndpointAuth`, pure + unit-tested): an `--api-key-env NONE` or a `localhost` `--base-url` is treated as keyless and **$0** — the proposer's spend and the solver's `costUsd` are both zeroed, and the auth header is omitted. So a full positive-compounding run is now:
+
+```
+d1s4-live-run.mjs --solver agentic --holdout 25 --generations 4 --targets editPolicy,escalationPolicy,verifierPolicy \
+  --base-url http://localhost:11434/v1 --api-key-env NONE --model qwen2.5-coder:32b --proposer qwen2.5-coder:32b
+```
+
+Two honesty guards ship with it:
+- **Only the official swebench Docker harness gold-scores.** A local model changes the $, never the scoring — the gate, anchor, and signed replay bundle are byte-identical to a hosted run.
+- **A local-models pre-flight** (`--plan`, $0 `GET /v1/models`): because the runner shares ONE endpoint for solve *and* propose, a hosted-style `--proposer` (the default `anthropic/claude-sonnet-5`) against a local server would silently yield **zero mutations** — a wasted null run. `--plan` now reports `local models served: BLOCKED` and refuses to launch unless both the solver and proposer models are actually served locally.
+
+**This ADR is still NOT amended to "domain-proven compounding."** Removing the budget gate makes a longer/larger run *cheap to attempt*; it does not manufacture a result. The positive-compounding claim is earned only when a run produces a real, anchor-surviving, replayable lift curve (`milestone_reached=true`) — gold-scored by the official harness, as always. What changed is that attempting it no longer costs money or a confirmation — it is a one-command `$0` launch, and the machine-load of a multi-hour agentic + Docker run is the only remaining reason to run it watched rather than fire-and-forget.

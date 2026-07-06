@@ -13,6 +13,7 @@ import { runFlywheelGenerations, makeSigner, verifyReplayBundle, gateFingerprint
 import { makeSwebenchEvaluator, makeSwebenchProposer } from './flywheel-swebench-evaluator.mjs';
 import { makeCliSolver } from './swebench-solver-cli.mjs';
 import { makeSwebenchGrader } from './swebench-grade.mjs';
+import { resolveEndpointAuth } from './swebench-endpoint.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const arg = (n, d) => { const i = process.argv.indexOf(n); return i >= 0 ? process.argv[i + 1] : d; };
@@ -27,9 +28,17 @@ const BASE_URL = arg('--base-url', 'https://openrouter.ai/api/v1');
 const K = +arg('--k', 1); // samples per instance — 1 keeps a single generation from overshooting the cap
 // which policy levers to mutate per generation (fewer = fewer candidates/gen = tighter cost bound)
 const TARGETS = arg('--targets', 'editPolicy').split(',').map((s) => s.trim()).filter(Boolean);
-// Tolerant key read: the live run needs it, but `--plan` (dry-run) does not — so a missing key reports
-// as a pre-flight gap instead of crashing before the plan can print.
-const KEY = (process.env.OPENROUTER_API_KEY || (existsSync('/tmp/.orkey') ? readFileSync('/tmp/.orkey', 'utf-8') : '')).trim();
+// Endpoint auth: hosted (OpenRouter default) needs a key; a LOCAL no-auth endpoint (`--api-key-env NONE`
+// or a localhost --base-url, e.g. `ruvllm serve` / ollama at http://localhost:11434/v1) needs none and
+// costs $0. This removes the budget gate from the D1 positive-compounding run — same real solver + REAL
+// official-harness gold-scoring, $0 inference. Tolerant read: `--plan` reports a missing hosted key as a
+// pre-flight gap instead of crashing. (Only the official swebench harness gold-scores — a local model
+// changes the $, never the honesty.)
+const API_KEY_ENV = arg('--api-key-env', 'OPENROUTER_API_KEY');
+const { noAuth: NO_AUTH, key: KEY } = resolveEndpointAuth({
+  apiKeyEnv: API_KEY_ENV, baseUrl: BASE_URL, env: process.env,
+  orkey: existsSync('/tmp/.orkey') ? readFileSync('/tmp/.orkey', 'utf-8') : '',
+});
 
 const holdout = JSON.parse(readFileSync(join(HERE, 'swebench-holdout-frozen.json'), 'utf-8')).instances.slice(0, HOLDOUT_N);
 const anchor = JSON.parse(readFileSync(join(HERE, 'swebench-anchor-frozen.json'), 'utf-8')).instances.slice(0, ANCHOR_N);
@@ -52,8 +61,9 @@ async function fetchJSON(url, init, tries = 5) {
 }
 async function complete(model, prompt) {
   try {
-    const j = await fetchJSON(`${BASE_URL}/chat/completions`, { method: 'POST', headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], max_tokens: 400, temperature: 0.4 }) });
-    spend += j.usage?.cost ?? priceOf(j.usage, model);
+    const headers = { 'Content-Type': 'application/json', ...(KEY ? { Authorization: `Bearer ${KEY}` } : {}) };
+    const j = await fetchJSON(`${BASE_URL}/chat/completions`, { method: 'POST', headers, body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], max_tokens: 400, temperature: 0.4 }) });
+    spend += NO_AUTH ? 0 : (j.usage?.cost ?? priceOf(j.usage, model)); // local inference is $0
     return j.choices?.[0]?.message?.content ?? '';
   } catch (e) {
     // Degrade: an unrecoverable proposer error yields NO mutation (safe) rather than killing the run.
@@ -76,9 +86,9 @@ const solverExtraArgs = SOLVER === 'agentic'
 // real solver cost feeds the shared spend via its returned costUsd (summed inside the evaluator wrapper).
 const cliSolver = makeCliSolver({
   solveScript: new URL(SOLVER_SCRIPT, import.meta.url).pathname,
-  baseUrl: BASE_URL, model: MODEL, apiKeyEnv: 'OPENROUTER_API_KEY', k: K, extraArgs: solverExtraArgs,
+  baseUrl: BASE_URL, model: MODEL, apiKeyEnv: API_KEY_ENV, k: K, extraArgs: solverExtraArgs,
 });
-const runSolver = async (policy, instances) => { const preds = await cliSolver(policy, instances); spend += preds.reduce((s, p) => s + (p.costUsd || 0), 0); return preds; };
+const runSolver = async (policy, instances) => { const preds = await cliSolver(policy, instances); spend += NO_AUTH ? 0 : preds.reduce((s, p) => s + (p.costUsd || 0), 0); return preds; };
 const grader = makeSwebenchGrader({ dataset: arg('--dataset', 'princeton-nlp/SWE-bench_Lite'), maxWorkers: 4 });
 
 const evaluator = makeSwebenchEvaluator({ runSolver, gradePredictions: grader });
@@ -109,11 +119,31 @@ if (process.argv.includes('--plan') || process.argv.includes('--dry-run')) {
   const dockerOk = spawnSync('docker', ['ps'], { stdio: 'ignore' }).status === 0;
   const harnessOk = existsSync(venvPython);
   const suitesOk = holdout.length >= HOLDOUT_N && anchor.length >= ANCHOR_N;
-  const keyOk = KEY.length > 0;
+  const keyOk = NO_AUTH || KEY.length > 0;
   const candPerGen = TARGETS.length;
   const holdoutEvals = 1 + GENERATIONS * candPerGen;              // root + one per candidate
   const solverInstanceRuns = holdoutEvals * holdout.length + GENERATIONS * anchor.length; // holdout + winner-anchor evals
   const ck = (ok) => (ok ? 'GREEN' : 'BLOCKED');
+  // Local-endpoint model check: the runner shares ONE endpoint for solve + propose, so a hosted-style
+  // --proposer (e.g. the default anthropic/claude-sonnet-5) against a local server would silently yield
+  // NO mutations — a wasted null run. For a $0 local run, verify BOTH models are actually served ($0 GET).
+  let localModelsOk = true, localModelsLine = null;
+  if (NO_AUTH) {
+    let served = null;
+    try {
+      const r = await fetch(`${BASE_URL}/models`, { signal: AbortSignal.timeout(5000) });
+      served = new Set(((await r.json())?.data ?? []).map((m) => m.id));
+    } catch { served = null; }
+    if (!served) {
+      localModelsOk = false;
+      localModelsLine = `  local models served:      BLOCKED  — ${BASE_URL}/models unreachable (is the local server up?)`;
+    } else {
+      const hasSolver = served.has(MODEL), hasProposer = served.has(PROPOSER);
+      localModelsOk = hasSolver && hasProposer;
+      localModelsLine = `  local models served:      ${ck(localModelsOk)}  (solver ${MODEL} ${hasSolver ? '✓' : '✗ NOT SERVED'}, proposer ${PROPOSER} ${hasProposer ? '✓' : '✗ NOT SERVED → pick a local --proposer or the run gets 0 mutations'})`;
+    }
+  }
+  const ready = dockerOk && harnessOk && suitesOk && keyOk && localModelsOk;
   const lines = [
     '── D1-S4 RUN PLAN (dry-run — no spend) ──',
     `  solver=${SOLVER}${SOLVER === 'agentic' ? ` (max-steps=${arg('--max-steps', '20')}, concurrency=${arg('--concurrency', '2')})` : ''}  model=${MODEL}  proposer=${PROPOSER}`,
@@ -127,13 +157,15 @@ if (process.argv.includes('--plan') || process.argv.includes('--dry-run')) {
     `  Docker daemon:            ${ck(dockerOk)}`,
     `  swebench gold-scorer venv: ${ck(harnessOk)}  (${venvPython})`,
     `  frozen holdout+anchor:    ${ck(suitesOk)}`,
-    `  OpenRouter key available: ${ck(keyOk)}${keyOk ? ` (prefix ${KEY.slice(0, 12)})` : ' — set OPENROUTER_API_KEY or /tmp/.orkey'}`,
+    `  endpoint:                 ${MODEL} @ ${BASE_URL}`,
+    `  auth:                     ${ck(keyOk)}${NO_AUTH ? '  — LOCAL no-auth endpoint ($0 inference)' : (keyOk ? ` (key ${API_KEY_ENV} prefix ${KEY.slice(0, 12)})` : ` — set ${API_KEY_ENV} or /tmp/.orkey`)}`,
+    ...(localModelsLine ? [localModelsLine] : []),
     '',
-    `  READY TO LAUNCH: ${dockerOk && harnessOk && suitesOk && keyOk ? 'YES — drop --plan to run for real' : 'NO — resolve the BLOCKED item(s) above'}`,
+    `  READY TO LAUNCH: ${ready ? 'YES — drop --plan to run for real' : 'NO — resolve the BLOCKED item(s) above'}`,
     '  SCOPE: only the official swebench harness gold-scores; nothing here is a real result (dry-run).',
   ];
   console.log(lines.join('\n'));
-  process.exit(dockerOk && harnessOk && suitesOk && keyOk ? 0 : 1);
+  process.exit(ready ? 0 : 1);
 }
 
 console.log(`D1-S4 LIVE SWE-bench flywheel: solver=${SOLVER} holdout=${holdout.length} anchor=${anchor.length} gens=${GENERATIONS} cap=$${BUDGET_USD} model=${MODEL}${resumeFrom ? ' [RESUME]' : ''}`);
