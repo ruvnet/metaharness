@@ -82,6 +82,9 @@ const CHECKS = {
       // @metaharness/evals-hle (HLE benchmark adapter for the flywheel, ADR-233) is a
       // standalone published adapter on its own semver — not core, not umbrella-bundled.
       '@metaharness/evals-hle',
+      // @metaharness/evals-extract (structured-extraction benchmark adapter for the
+      // flywheel) is likewise a standalone published adapter on its own semver.
+      '@metaharness/evals-extract',
       '@metaharness/kernel',
       '@metaharness/host-claude-code',
       '@metaharness/host-codex',
