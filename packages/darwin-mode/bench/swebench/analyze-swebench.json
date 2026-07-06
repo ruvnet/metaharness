@@ -1,0 +1,19 @@
+{
+  "generations": 2,
+  "candidates": 2,
+  "promotions": 0,
+  "rejections": 2,
+  "anchorRegressed": 1,
+  "byTarget": [
+    {
+      "target": "editPolicy",
+      "attempts": 2,
+      "promotions": 0,
+      "rejections": 2,
+      "promoteRate": 0,
+      "avgDeltaPromoted": 0,
+      "avgDeltaAll": 0,
+      "bestDelta": 1
+    }
+  ]
+}
