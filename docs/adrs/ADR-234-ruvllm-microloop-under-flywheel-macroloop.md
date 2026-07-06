@@ -54,6 +54,38 @@ The anchor suite is exactly the "did it forget?" oracle: a MicroLoRA that improv
   - **DESIGN CLAIM (unproven):** that this composition yields net capability lift on a real benchmark. That must clear the **same holdout gate** — a promoted ruvllm adaptation beating baseline on private validation, preserving the anchor, confirmed once on a frozen holdout, signed. Until then it is architecture, not a result. In particular, the "most advanced local setup" verdict is a hypothesis this ADR makes *testable*, not a measured finding.
 - **Next experiment (to move it from claim to result):** serve a local model via ruvllm (initialize wasm / load a GGUF), run a task stream, distill the SONA/MicroLoRA adaptation into a flywheel policy candidate, and gate it exactly like the HLE/SWE-bench adapters — emitting a signed replay bundle. Concretely reuses the ADR-233 four-set contract + frozen anchor.
 
-## 5. Notes
+## 5. Realistic ceiling — error recovery, not intelligence creation
+
+The two-layer system is **error recovery, not intelligence creation.** It cannot manufacture knowledge, reasoning depth, or world-model capacity the base model and its data never contained. A working capability model:
+
+```
+final capability = base capability
+                 + recovered preventable errors
+                 + domain-adaptation gain
+                 + routing/verification gain
+                 − drift − overfit − latency − cost penalties
+```
+
+**Realistic gains by where the failure lives** (the closer to policy/routing/memory/formatting/verification, the bigger; the closer to missing pretraining/reasoning, the smaller):
+
+| Task type | Expected lift | Why |
+|---|---|---|
+| General open-ended reasoning | **+1–5 pp** | most errors are true capability gaps, not policy mistakes |
+| HLE-style expert QA | **+4–10 pp** | if adapters + subject policy + normalization + verification + promotion all work; >+10 is suspicious without a frozen holdout |
+| Narrow enterprise domain | **+10–30 pp** | latent ability present but missing company memory/terminology/formats/workflow |
+| Agentic coding / ops | **+20–60 pp** | when failures are harness-bound (tool order, retry policy, context packing, acceptance checks, routing) |
+| Local small-model usability | **2×–5× apparent usefulness** | the system stops wasting limited competence — not "5× smarter" |
+
+Framed as **headroom recovery**: broad benchmark → recover ~5–15% of current errors; narrow domain → ~20–50%; harness-bound agents → ~30–70%. *(Example: 40% on a domain task with a 75% ceiling = 35 pp headroom; recovering 30–50% ≈ +10–18 pp. The same system on a 52% HLE model with a ~60% class ceiling might add only +3–6 pp.)*
+
+**Six hard limits set the ceiling:** (1) base-model latent capability — LoRA steers/specializes, it does not make a weak base frontier; (2) adapter capacity — a rank-2 adapter shapes style/routing/local correction, not whole new disciplines; (3) feedback quality — the flywheel only improves what it can measure, and a noisy/exploitable/public-benchmark-adjacent reward overfits; (4) stability vs plasticity — EWC++ reduces forgetting but the tradeoff remains (too much plasticity drifts, too much stability stops learning); (5) information availability — adaptation cannot invent facts/tools/proofs absent from memory/retrieval/environment; (6) evaluation ceiling — tasks needing new architecture/pretraining/data/test-time-compute plateau (scaling laws mean serving-side adaptation cannot erase the gap to a much stronger pretrained model).
+
+**The warning label is our own [[ADR-226]]:** a strong read-only advisor added **3/19 vs 3/19 — zero marginal resolves at 5.4× cost.** The winning lever was not advice; it was **evolving the executor policy and promoting only proven changes.** Assume no improvement loop helps until the gate says it did.
+
+**Best claim:** ruvllm + flywheel can make a model *dramatically* better at a measured workflow, *modestly* better at general intelligence.
+
+**Acceptance test (frozen 500-task holdout):** run three arms — **adapter off** vs **adapter on** vs **adapter + flywheel on**. Count it real only if it clears **at least one** of: **+≥3 pp accuracy**, **−≥25% cost per correct**, or **−≥50% regression rate** — **with no anchor degradation.** This is the same holdout/anchor discipline as the HLE ([[ADR-233]]) and SWE-bench adapters; a promotion that clears it ships a signed replay bundle.
+
+## 6. Notes
 
 This ADR was authored **concurrently** with a live budgeted SWE-bench flywheel run (D1-S4) — the macro-loop exercising a real gold-scored holdout while the micro-loop primitives were verified. The two loops are independent by design; that they can run at once is the point.
