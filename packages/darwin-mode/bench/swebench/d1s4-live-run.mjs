@@ -7,6 +7,8 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { homedir } from 'node:os';
+import { spawnSync } from 'node:child_process';
 import { runFlywheelGenerations, makeSigner, verifyReplayBundle, gateFingerprint, meetsPromotionRule } from '@metaharness/flywheel';
 import { makeSwebenchEvaluator, makeSwebenchProposer } from './flywheel-swebench-evaluator.mjs';
 import { makeCliSolver } from './swebench-solver-cli.mjs';
@@ -25,7 +27,9 @@ const BASE_URL = arg('--base-url', 'https://openrouter.ai/api/v1');
 const K = +arg('--k', 1); // samples per instance — 1 keeps a single generation from overshooting the cap
 // which policy levers to mutate per generation (fewer = fewer candidates/gen = tighter cost bound)
 const TARGETS = arg('--targets', 'editPolicy').split(',').map((s) => s.trim()).filter(Boolean);
-const KEY = (process.env.OPENROUTER_API_KEY || readFileSync('/tmp/.orkey', 'utf-8')).trim();
+// Tolerant key read: the live run needs it, but `--plan` (dry-run) does not — so a missing key reports
+// as a pre-flight gap instead of crashing before the plan can print.
+const KEY = (process.env.OPENROUTER_API_KEY || (existsSync('/tmp/.orkey') ? readFileSync('/tmp/.orkey', 'utf-8') : '')).trim();
 
 const holdout = JSON.parse(readFileSync(join(HERE, 'swebench-holdout-frozen.json'), 'utf-8')).instances.slice(0, HOLDOUT_N);
 const anchor = JSON.parse(readFileSync(join(HERE, 'swebench-anchor-frozen.json'), 'utf-8')).instances.slice(0, ANCHOR_N);
@@ -95,6 +99,41 @@ if (process.argv.includes('--resume') && existsSync(ckpt)) {
   } else {
     console.log('[resume] partial file has no resumeState (pre-0.1.5 checkpoint) — starting fresh');
   }
+}
+
+// --plan / --dry-run: print the run plan + a $0 pre-flight (Docker, gold-scorer venv, frozen suites,
+// key) and EXIT — no LLM call, no Docker run, no spend. Makes launching the (budget-gated) flagship a
+// confident one-command action. Exit 0 iff every pre-flight check is GREEN.
+if (process.argv.includes('--plan') || process.argv.includes('--dry-run')) {
+  const venvPython = process.env.SWEBENCH_VENV_PYTHON || join(homedir(), '.cache', 'swebench-venv', 'bin', 'python');
+  const dockerOk = spawnSync('docker', ['ps'], { stdio: 'ignore' }).status === 0;
+  const harnessOk = existsSync(venvPython);
+  const suitesOk = holdout.length >= HOLDOUT_N && anchor.length >= ANCHOR_N;
+  const keyOk = KEY.length > 0;
+  const candPerGen = TARGETS.length;
+  const holdoutEvals = 1 + GENERATIONS * candPerGen;              // root + one per candidate
+  const solverInstanceRuns = holdoutEvals * holdout.length + GENERATIONS * anchor.length; // holdout + winner-anchor evals
+  const ck = (ok) => (ok ? 'GREEN' : 'BLOCKED');
+  const lines = [
+    '── D1-S4 RUN PLAN (dry-run — no spend) ──',
+    `  solver=${SOLVER}${SOLVER === 'agentic' ? ` (max-steps=${arg('--max-steps', '20')}, concurrency=${arg('--concurrency', '2')})` : ''}  model=${MODEL}  proposer=${PROPOSER}`,
+    `  holdout=${holdout.length}  anchor=${anchor.length}  generations=${GENERATIONS}  targets=[${TARGETS.join(',')}]  k=${K}`,
+    `  candidates/gen=${candPerGen}  →  ${GENERATIONS * candPerGen} candidate policy-evaluations over the run`,
+    `  solver instance-runs (upper bound): ~${solverInstanceRuns}  (agentic ⇒ each ≤ max-steps LLM calls + Docker gold-test)`,
+    `  HARD budget cap: $${BUDGET_USD}  — the loop STOPS at the generation boundary once spend ≥ cap (never a soft target)`,
+    `  resilience: per-generation checkpoint → proof-bundle-swebench.partial.json ; --resume continues from the last gen`,
+    '',
+    '── PRE-FLIGHT ──',
+    `  Docker daemon:            ${ck(dockerOk)}`,
+    `  swebench gold-scorer venv: ${ck(harnessOk)}  (${venvPython})`,
+    `  frozen holdout+anchor:    ${ck(suitesOk)}`,
+    `  OpenRouter key available: ${ck(keyOk)}${keyOk ? ` (prefix ${KEY.slice(0, 12)})` : ' — set OPENROUTER_API_KEY or /tmp/.orkey'}`,
+    '',
+    `  READY TO LAUNCH: ${dockerOk && harnessOk && suitesOk && keyOk ? 'YES — drop --plan to run for real' : 'NO — resolve the BLOCKED item(s) above'}`,
+    '  SCOPE: only the official swebench harness gold-scores; nothing here is a real result (dry-run).',
+  ];
+  console.log(lines.join('\n'));
+  process.exit(dockerOk && harnessOk && suitesOk && keyOk ? 0 : 1);
 }
 
 console.log(`D1-S4 LIVE SWE-bench flywheel: solver=${SOLVER} holdout=${holdout.length} anchor=${anchor.length} gens=${GENERATIONS} cap=$${BUDGET_USD} model=${MODEL}${resumeFrom ? ' [RESUME]' : ''}`);
