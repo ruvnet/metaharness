@@ -94,6 +94,9 @@ const CHECKS = {
       // @metaharness/evals-extract (structured-extraction benchmark adapter for the
       // flywheel) is likewise a standalone published adapter on its own semver.
       '@metaharness/evals-extract',
+      // @metaharness/evals-servedmodel (ruvllm served-model / SONA-MicroLoRA adapter for the
+      // flywheel, ADR-234) is likewise a standalone published adapter on its own semver.
+      '@metaharness/evals-servedmodel',
       '@metaharness/kernel',
       '@metaharness/host-claude-code',
       '@metaharness/host-codex',

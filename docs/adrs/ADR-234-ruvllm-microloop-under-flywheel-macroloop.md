@@ -1,11 +1,12 @@
 # ADR-234: Two-layer learning — ruvllm micro-loop (SONA/MicroLoRA/EWC++) under the flywheel macro-loop auditor
 
-- **Status**: Proposed — ruvllm adaptation primitives verified by execution; the combined-lift claim is a DESIGN claim, gated on the same holdout discipline (unproven end-to-end)
-- **Date**: 2026-07-05
+- **Status**: Accepted — with evidence. `@metaharness/evals-servedmodel@0.1.0` (tracking issue [ruvnet/metaharness#109]) proves the full ruvllm-policy → frozen-gate → signed-replay-bundle pipeline END-TO-END on a $0 SYNTHETIC fixture (12/12 tests green, replay `gateReExecutes: true`). The COMBINED real-served-model lift claim (§5's acceptance test on an actually-loaded, actually-served model) remains an explicit, honest **DEFERRED / null** — no model was loaded or served this session either; see §7.
+- **Date**: 2026-07-05 (updated 2026-07-06 — §7, Track #1 closure)
 - **Deciders**: ruv
 - **Tags**: ruvllm, ruvector, flywheel, microlora, sona, ewc, catastrophic-forgetting, two-layer-learning, local-inference, promotion-gate, metaharness
 - **Extends**: the `@metaharness/flywheel` engine (frozen `meetsPromotionRule`, anchor suite, signed receipts, replay bundles), [[ADR-233]] (HLE policy-evolution adapter — the answer-production policy the macro-loop tunes)
 - **Verified this session (by execution, not help text)**: `ruvllm_status`, `ruvllm_microlora_create` + `ruvllm_microlora_adapt`, `ruvllm_sona_create` + `ruvllm_sona_adapt`.
+- **Verified 2026-07-06 (by execution — the adapter package, not the MCP surface)**: `@metaharness/evals-servedmodel`'s full `runFlywheelGenerations` loop on a deterministic synthetic fixture; see §7 for numbers.
 
 ---
 
@@ -89,3 +90,32 @@ Framed as **headroom recovery**: broad benchmark → recover ~5–15% of current
 ## 6. Notes
 
 This ADR was authored **concurrently** with a live budgeted SWE-bench flywheel run (D1-S4) — the macro-loop exercising a real gold-scored holdout while the micro-loop primitives were verified. The two loops are independent by design; that they can run at once is the point.
+
+## 7. Track #1 closure (2026-07-06) — the served-model → flywheel pipeline, end-to-end, on synthetic data
+
+Tracking issue: [ruvnet/metaharness#109]. This closes the specific gap §1.1 and §4 named: "we exercised the adaptation primitives, not a served local model doing MicroLoRA-during-inference end-to-end." It does **not** close the gap by loading a real model — it closes it by building and proving, on a deterministic $0 fixture, the exact pipeline a real run would use, so that a future real run only has to swap the SolveFn, not invent new machinery.
+
+### 7.1 What was built — `@metaharness/evals-servedmodel@0.1.0`
+
+Mirrors `@metaharness/evals-hle`'s adapter shape exactly (typed genome → evaluator → composite gate → $0 synthetic test), applied to the ruvllm serving policy instead of an answer-production policy:
+
+- **`ServedModelPolicyGenome`** (`src/genome.ts`) — every lever a bounded enum or clamped number, never free text: `microloraRank` [1,4], `ewcLambda` [0,1], `emaDecay` [0,1], `qualityThreshold` [0,1], `routingDepth` [1,8], `adaptationMode` (off/conservative/balanced/aggressive), `memoryRoutingMode`, `distillationTrigger`, `minSamplesForDistillation`. The gen-0 root is pinned to the exact values §1.1 verified live (rank 2, `ewcLambda` 0.1, `emaDecay` 0.95, `qualityThreshold` 0.5) — not guessed.
+- **`makeServedModelEvaluator`** (`src/evaluator.ts`) — the `ServedModelSolveFn` seam projects a served model's per-task behaviour under a genome onto a `ServedModelScore` (mean adapted quality, cost per adapted win, p50 latency, no-commit rate, **retained-'core'-capability quality**, structural drift-risk flag).
+- **`distillPolicyFromState`** (`src/state.ts`) — the pure, deterministic function this ADR's §4 "next experiment" asked for: a promoted MicroLoRA/SONA state summary (rank, scaling, samples_seen, quality_sum, weight magnitude; EWC/EMA/quality-threshold config, quality_ema) → a genome candidate the flywheel can gate. Gated on `samples_seen` eligibility (`checkDistillationEligibility`) before distillation is even attempted — a low-sample state is noise, not signal.
+- **`detectDriftRisk` / `driftRisky`** (`src/driftguard.ts`) — the STRUCTURAL half of §3's "two independent guards": a genome-only, data-free scan that fails closed on `aggressive` mode + sub-floor `ewcLambda`, or max routing depth with no forgetting guard at all. This is checked *before* any suite is even scored — defense in depth ahead of the measured anchor check.
+- **`servedModelPromotionRule`** (`src/gate.ts`) — calls `meetsPromotionRule` **VERBATIM**, unchanged, then ANDs: the structural drift-risk flag, a retained-capability tolerance on 'core'-item quality, a commit-rate-must-not-worsen clause, and a latency-growth cap. `gateFingerprint(servedModelPromotionRule) !== gateFingerprint(meetsPromotionRule)` — proven a strict superset, not an edit.
+- **`ruvllmClient.ts`** — a REAL, network-calling `ServedModelSolveFn` against a live `ruvllm serve` endpoint (same OpenAI-compatible contract as `packages/darwin-mode/src/ruvllm-mutator.ts`), gated: it **throws** unless `live: true` / `EVALS_SERVEDMODEL_LIVE=true` is explicitly set, so a caller can never silently get synthetic numbers mislabeled as live. This file is wired but **not exercised** — see §7.3.
+
+### 7.2 Proven (measured, by execution — `npm test` in `packages/evals-servedmodel`, 12/12 green)
+
+- **Compounding, replayable lift on the $0 synthetic fixture** (400 synthetic tasks, 1/3 tagged `'core'` = retained-capability items the anchor suite draws from): root holdout `primary` 0.3404 → final promoted `primary` 0.4021 (**+6.2pp**) across **2 anchor-surviving promotions** (`routingDepth` gen 1, `microloraRank` gen 2) out of 8 generations run — `milestoneReached: true`. The anchor score **rose** alongside the holdout score for both promotions (0.3823 → 0.4070 → 0.4367), i.e. the winners did not trade retained capability for live-task lift in this run.
+- **Replay bundle verifies** with the pinned composite-gate fingerprint: `receipts/reachesRoot/contiguousParents/allPromoted/gateUnchanged/gateReExecutes` all `true` (ADR-235 gate re-execution — the verdict is re-derived from sealed scores, not trusted from a log).
+- **The structural drift guard fails closed**: an `aggressive` + `ewcLambda=0.02` + `routingDepth=8` genome is flagged `driftRisk: true` and `regressed: true` purely from its own settings, independent of any suite.
+- **EWC++ measurably protects retained capability (the benchmark)** — `packages/evals-servedmodel/__tests__/bench/ewc-benchmark.test.ts`, isolating `ewcLambda` as the only variable at maximum drift settings (rank 4, routing depth 8, `aggressive`): `ewcLambda=0.02` → core-item quality 0.168 (`driftRisk: true`) vs `ewcLambda=0.6` → core-item quality 0.392 (`driftRisk: false`) — a **+22.45pp retained-capability gain**, at a **-7.52pp** cost to live-task quality (the stability/plasticity tradeoff §5 names as limit 4 — never free). A second bench case shows deeper adaptation (rank 4 / depth 8 / `balanced`) beating shallow (rank 1 / depth 1 / `off`) on BOTH quality (0.605 vs 0.262) and cost-per-win (0.0029 vs 0.0060 USD) — more adaptation surface amortizes cost by rescuing more items over the commit threshold.
+- **Distillation is deterministic**: the same `PromotedAdaptationState` always distills to the same genome (bit-for-bit equal), so a replay bundle built from a distilled candidate stays reproducible.
+
+### 7.3 Still deferred — the honest boundary (unchanged in kind from §1.1)
+
+**No ruvllm model was loaded or served this session.** `ruvllmClient.ts` is real, wired, and gated exactly like `packages/darwin-mode/src/ruvllm-mutator.ts` and `evals-hle`'s `loadHleFromHub` — it throws a clear, actionable error rather than ever silently substituting synthetic data for a live number. The remaining "next experiment" from §4 (serve a local model via ruvllm, run a real interaction stream, distill its actual SONA/MicroLoRA state, gate the resulting candidate on a real holdout) is **not attempted here** — it needs a running `ruvllm serve` instance with a loaded model (a real infra dependency this session did not stand up, and this task was explicitly scoped away from touching the concurrently-running live SWE-bench Docker harness). What moved: the machinery that a real run would plug into now exists, is tested, and is fingerprint-pinned — the honest gap shrank from "does this pipeline work at all" to "point the same SolveFn at a real endpoint."
+
+[ruvnet/metaharness#109]: https://github.com/ruvnet/metaharness/issues/109

@@ -1,0 +1,33 @@
+{
+  "name": "@metaharness/evals-servedmodel",
+  "version": "0.1.0",
+  "description": "ruvllm served-model adapter for @metaharness/flywheel (ADR-234) — treats a distilled SONA/MicroLoRA adaptation policy as a flywheel candidate, gated through the frozen meetsPromotionRule plus a stricter forgetting-guard clause. Closes the unproven end-to-end piece of ADR-234 with a $0 synthetic proof; a real ruvllm serve run is a separate, explicitly labelled LIVE mode.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "README.md"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "bench": "vitest run __tests__/bench",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": ["ruvllm", "sona", "microlora", "ewc", "benchmark", "eval", "flywheel", "metaharness", "policy-evolution", "llm", "agent-harness"],
+  "license": "MIT",
+  "dependencies": {
+    "@metaharness/flywheel": "^0.1.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  }
+}
