@@ -170,7 +170,9 @@ if (process.argv.includes('--plan') || process.argv.includes('--dry-run')) {
 
 console.log(`D1-S4 LIVE SWE-bench flywheel: solver=${SOLVER} holdout=${holdout.length} anchor=${anchor.length} gens=${GENERATIONS} cap=$${BUDGET_USD} model=${MODEL}${resumeFrom ? ' [RESUME]' : ''}`);
 const result = await runFlywheelGenerations({
-  rootPolicy: { editPolicy: '', escalationPolicy: '', verifierPolicy: '' },
+  // solverCapabilities = the STRUCTURAL lever (ADR-236 §6): '' ⇒ no capability flags ⇒ byte-identical
+  // default. Add it to --targets (agentic solver only) to let the flywheel evolve --repro-gate/--reviewer.
+  rootPolicy: { editPolicy: '', escalationPolicy: '', verifierPolicy: '', solverCapabilities: '' },
   proposer, evaluator, promotionRule: meetsPromotionRule,
   holdout: { id: 'swebench-holdout', items: holdout },
   anchor: { id: 'swebench-anchor', items: anchor },

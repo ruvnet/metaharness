@@ -58,13 +58,33 @@ export function makeSwebenchEvaluator({ runSolver, gradePredictions, emptyPatch 
 
 /**
  * Build a @metaharness/flywheel `Proposer` for SWE-bench operating-policy levers. Frontier call that
- * improves ONE lever's text. INJECTED `complete(model, prompt) -> text`. (Real = an OpenRouter/cognitum
- * chat call; mock in tests.) The proposer is domain-flavored only in its PROMPT — the flywheel core
- * never sees it.
+ * improves ONE lever. INJECTED `complete(model, prompt) -> text`. (Real = an OpenRouter/cognitum chat
+ * call; mock in tests.) The proposer is domain-flavored only in its PROMPT — the flywheel core never
+ * sees it.
+ *
+ * Most levers are PROSE (free-text system-prompt instructions). The STRUCTURAL capability lever
+ * (`capabilityLever`, default 'solverCapabilities') is different: the model picks a bounded subset from a
+ * fixed MENU of real solver capabilities, and the pick is filtered to the menu so the stored policy /
+ * lineage stays clean (the solver-cli re-allowlists it too — defence in depth). ADR-236 §6.
  */
-export function makeSwebenchProposer({ complete, proposerModel }) {
+export function makeSwebenchProposer({ complete, proposerModel, capabilityLever = 'solverCapabilities', capabilityMenu = ['repro-gate', 'reviewer'] }) {
   return async function swebenchPropose(base, target) {
     const current = base.policy?.[target] ?? '(none)';
+    if (target === capabilityLever) {
+      const menu = new Set(capabilityMenu);
+      const prompt =
+        `You tune a cheap code-repair agent's STRUCTURAL capabilities to resolve more SWE-bench instances. ` +
+        `Choose a subset (space-separated) of these capability tokens to enable — or fewer/none:\n` +
+        `  repro-gate = write a failing reproduction test FIRST, then iterate the patch against it\n` +
+        `  reviewer   = a critic sub-agent reviews the patch and drives a bounded revise loop\n` +
+        `More capabilities are more thorough but slower (more model calls). Current: "${current || '(none)'}".\n` +
+        `Return ONLY space-separated tokens from the list above (or an empty line for none), no preamble.`;
+      const text = (await complete(proposerModel, prompt)) || '';
+      // Keep only menu tokens (deduped, order-stable) so the policy value can NEVER carry anything else.
+      const seen = new Set();
+      const picked = text.split(/[\s,]+/).map((t) => t.trim().toLowerCase()).filter((t) => menu.has(t) && !seen.has(t) && seen.add(t));
+      return picked.join(' '); // '' = none (byte-identical default); a valid subset otherwise
+    }
     const prompt =
       `You optimize a cheap code-repair agent's OPERATING POLICY so it resolves more SWE-bench ` +
       `instances (tests pass) and gives up less often (fewer empty patches). Improve ONLY its "${target}" ` +

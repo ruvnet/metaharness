@@ -74,3 +74,38 @@ Two honesty guards ship with it:
 - **A local-models pre-flight** (`--plan`, $0 `GET /v1/models`): because the runner shares ONE endpoint for solve *and* propose, a hosted-style `--proposer` (the default `anthropic/claude-sonnet-5`) against a local server would silently yield **zero mutations** — a wasted null run. `--plan` now reports `local models served: BLOCKED` and refuses to launch unless both the solver and proposer models are actually served locally.
 
 **This ADR is still NOT amended to "domain-proven compounding."** Removing the budget gate makes a longer/larger run *cheap to attempt*; it does not manufacture a result. The positive-compounding claim is earned only when a run produces a real, anchor-surviving, replayable lift curve (`milestone_reached=true`) — gold-scored by the official harness, as always. What changed is that attempting it no longer costs money or a confirmation — it is a one-command `$0` launch, and the machine-load of a multi-hour agentic + Docker run is the only remaining reason to run it watched rather than fire-and-forget.
+
+## 6. Structural capability levers — giving the flywheel a REAL knob (2026-07-06)
+
+§4's null and §5's ceiling analysis both point at the same root cause: the D1 policy levers (`editPolicy`,
+`escalationPolicy`, `verifierPolicy`) only **append system-prompt prose**. That is the ADR-226
+"zero-marginal-advisor" shape — a mutation adds a *hint*, and a weak base model is free to ignore it, so
+there is little for a promotion to compound on. A policy that can only talk to the solver cannot change
+what the solver *does*.
+
+So the flywheel now gets a **structural** lever, `solverCapabilities`, that evolves WHICH real solver
+capabilities are on rather than what the prompt says:
+
+- **`repro-gate`** → `--repro-gate`: write a failing reproduction test first, then iterate the patch against it.
+- **`reviewer`** → `--reviewer`: a critic sub-agent reviews the patch and drives a bounded revise loop.
+
+Both hit the *same* chat endpoint, so they stay **$0** on the local endpoint from §5 (unlike `--localize`,
+which needs a hosted embedder and is deliberately not on the menu). The lever is wired end-to-end in the
+darwin-mode SWE-bench **adapter** — `@metaharness/flywheel` and `meetsPromotionRule` are **untouched**:
+
+1. **Proposer** (`makeSwebenchProposer`): for this lever the model picks a bounded subset from a fixed
+   MENU (not free text); the pick is filtered to the menu so the stored policy / lineage stays clean.
+2. **Solver-cli** (`makeCliSolver`): the structural lever is split out of the prose levers — it maps to
+   allowlisted argv flags (behaviour), never to `SWE_POLICY_SYSTEM` (prose). `''` ⇒ no flags ⇒
+   byte-identical to the pre-lever default (backward-safe).
+3. **Security**: the lever value is produced by an LLM proposer, so it is **never passed through**.
+   `capabilitiesToFlags` keeps only exact allowlist tokens (`repro-gate`, `reviewer`) and maps them to
+   known flag strings; anything else (shell metacharacters, hallucinated flags, `--repro-gate` in flag
+   form) is dropped — fail-closed. `spawnSync` uses an argv array, so tokens are never shell-interpreted
+   even if they slipped through. Input validation at the process boundary.
+
+Tests: `capability-lever.test.mjs` 6/6 (allowlist + dedupe + injection-safety + prose/structural split +
+proposer menu); full swebench bench suite 139/139. **This still does not amend the "compounding null"
+verdict** — it removes the *reason* the null was over-determined (prose-only levers). Whether the flywheel
+now finds a genuine, anchor-surviving structural improvement is an empirical question the $0 local run
+(`--targets solverCapabilities`, §5) will answer — gold-scored by the official harness, as always.
