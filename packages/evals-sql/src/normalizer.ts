@@ -52,8 +52,8 @@ export function canonSql(sql: string, _dialect: SqlDialect): string {
     // collapse all whitespace runs to a single space
     .replace(/\s+/g, ' ')
     // tighten spacing around punctuation/operators so `a , b` == `a,b`
-    .replace(/\s*([(),])\s*/g, '$1')
-    .replace(/\s*([=<>])\s*/g, '$1')
+    .replace(/ ?([(),]) ?/g, '$1')
+    .replace(/ ?([=<>]) ?/g, '$1')
     .trim();
 }
 
