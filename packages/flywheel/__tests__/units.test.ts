@@ -133,8 +133,8 @@ describe('verifyReplayBundle — gateReExecutes: re-run the rule on sealed score
 });
 
 describe('analyzeBundle — F-P2 mutation-effectiveness', () => {
-  const mk = (target: string, gen: number, verdict: 'PROMOTED' | 'REJECTED', primaryDelta: number, failureReasons: string[] = []): LineageCommit =>
-    ({ id: `${target}-${gen}`, generation: gen, parents: [], mutation: { target, summary: '' }, primaryDelta, anchorScore: null, verdict, failureReasons } as LineageCommit);
+  const mk = (target: string, gen: number, verdict: 'PROMOTED' | 'REJECTED', primaryDelta: number, failureReasons: string[] = [], costPerWin = 1): LineageCommit =>
+    ({ id: `${target}-${gen}`, generation: gen, parents: [], mutation: { target, summary: '' }, primaryDelta, anchorScore: null, verdict, failureReasons, candidateScore: { primary: 0, noopRate: 0, costPerWin, regressed: false } } as LineageCommit);
   const bundle = (all: LineageCommit[]): ReplayBundle =>
     ({ data_source: 'SYNTHETIC', root_id: 'root', chain: [], all_commits: all, lift_curve: [], gate_fingerprint: null, verified_improvements: 0, anchor_surviving_improvements: 0, milestone_reached: false, created_at: 'x' } as ReplayBundle);
 
@@ -151,9 +151,20 @@ describe('analyzeBundle — F-P2 mutation-effectiveness', () => {
     expect(a.byTarget[0]!.target).toBe('edit');            // most promotions ranks first
     expect(a.byTarget[0]!.promoteRate).toBe(1);
     expect(a.byTarget[0]!.avgDeltaPromoted).toBeCloseTo(2.5);
+    expect(a.byTarget[0]!.avgCostPerWinPromoted).toBeCloseTo(1); // edit's promoted candidates each cost 1/win
+    expect(a.byTarget[0]!.bestCostPerWin).toBe(1);
     const escalate = a.byTarget.find((t) => t.target === 'escalate')!;
     expect(escalate.promotions).toBe(0);
     expect(escalate.rejections).toBe(2);
+  });
+
+  it('cost-per-win trajectory follows the promoted chain root→current + flags the direction', () => {
+    // chain is stored current→root; wins get cheaper toward the root's original 3 → 2 → 1
+    const chain = [mk('t', 2, 'PROMOTED', 1, [], 1), mk('t', 1, 'PROMOTED', 1, [], 2), mk('root', 0, 'PROMOTED', 0, [], 3)];
+    const b = { ...bundle([]), chain };
+    const a = analyzeBundle(b);
+    expect(a.costPerWinTrend).toEqual([3, 2, 1]);                 // root→current
+    expect(formatAnalysis(a, 'trend').join('\n')).toContain('cheaper ↓');
   });
 
   it('an honest-null (no candidates) analyzes cleanly + formats without throwing', () => {
