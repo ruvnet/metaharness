@@ -9,7 +9,13 @@
     "url": "https://github.com/ruvnet/agent-harness-generator.git"
   },
   "license": "MIT",
+  "keywords": ["pi-package", "agent-harness", "scaffolding", "mcp"],
   "author": "rUv <ruv@ruv.net>",
+  "pi": {
+    "skills": [
+      ".claude-plugin/skills"
+    ]
+  },
   "type": "module",
   "workspaces": [
     "packages/*"
