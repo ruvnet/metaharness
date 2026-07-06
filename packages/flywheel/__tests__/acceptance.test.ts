@@ -96,6 +96,35 @@ describe('ACCEPTANCE — one runFlywheelGenerations() API, three domains, no ben
     expect(seen[seen.length - 1]!.chainLen).toBe(result.replayBundle.chain.length);
   });
 
+  it('resumeFrom reproduces an uninterrupted run: (2 gens + resume) === (5 gens straight)', async () => {
+    const mk = () => makeAdapter('resume', [1, 1, 2, 3, 4, 5, 6], [1, 2]);
+    const cfg = (a: ReturnType<typeof makeAdapter>, extra: Record<string, unknown>) => ({
+      rootPolicy: a.rootPolicy, proposer: a.proposer, evaluator: a.evaluator,
+      promotionRule: meetsPromotionRule, holdout: a.holdout, anchor: a.anchor,
+      signer: makeSigner(), dataSource: 'SYNTHETIC' as const, ...extra,
+    });
+
+    // A. the reference: 5 generations, uninterrupted.
+    const full = await runFlywheelGenerations(cfg(mk(), { maxGenerations: 5 }));
+
+    // B. run only 2 generations, capturing the resume state at the boundary (as if we crashed after gen 2).
+    let saved: any = null;
+    await runFlywheelGenerations(cfg(mk(), { maxGenerations: 2, onGeneration: (i: any) => { saved = i.resumeState; } }));
+    expect(saved).toBeTruthy();
+    expect(saved.fromGeneration).toBe(2);
+
+    // C. resume from the checkpoint and finish (gens 3→5).
+    const resumed = await runFlywheelGenerations(cfg(mk(), { maxGenerations: 5, resumeFrom: saved }));
+
+    // The deterministic proposer/evaluator ⇒ the resumed run must reproduce the reference EXACTLY:
+    // identical promoted chain (same commit ids), final policy, lift curve, and milestone.
+    expect(resumed.replayBundle.chain.map((c) => c.id)).toEqual(full.replayBundle.chain.map((c) => c.id));
+    expect(resumed.finalPolicy).toEqual(full.finalPolicy);
+    expect(resumed.liftCurve.map((p) => p.primary)).toEqual(full.liftCurve.map((p) => p.primary));
+    expect(resumed.milestoneReached).toBe(full.milestoneReached);
+    expect(verifyReplayBundle(resumed.replayBundle, { pinnedGateFingerprint: PIN }).pass).toBe(true);
+  });
+
   it('a THROWING onGeneration hook never aborts a valid run (checkpoint is observational)', async () => {
     const a = makeAdapter('ckpt-throw', [1, 1, 2, 3, 4], [1, 2]);
     const result = await runFlywheelGenerations({

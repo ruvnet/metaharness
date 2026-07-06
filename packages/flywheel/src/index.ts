@@ -34,4 +34,5 @@ export type {
   LiftCurve,
   ReplayBundle,
   GenerationCheckpoint,
+  ResumeState,
 } from './types.js';

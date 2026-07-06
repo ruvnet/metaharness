@@ -4,7 +4,7 @@
 // over generations on the FROZEN holdout. HARD $-cap (default $10) via a shared spend counter that
 // throttles the flywheel's budget guard. Emits the lift curve + a signed, replayable ReplayBundle.
 // Scope-honest: this is the ONLY place a REAL SWE-bench gold score is produced (the official harness).
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { runFlywheelGenerations, makeSigner, verifyReplayBundle, gateFingerprint, meetsPromotionRule } from '@metaharness/flywheel';
@@ -83,7 +83,21 @@ const proposer = makeSwebenchProposer({ complete, proposerModel: PROPOSER });
 const out = join(HERE, 'proof-bundle-swebench.json');
 const ckpt = join(HERE, 'proof-bundle-swebench.partial.json');
 
-console.log(`D1-S4 LIVE SWE-bench flywheel: solver=${SOLVER} holdout=${holdout.length} anchor=${anchor.length} gens=${GENERATIONS} cap=$${BUDGET_USD} model=${MODEL}`);
+// --resume: continue a crashed run from the last checkpoint instead of re-spending from gen 1. Reads
+// the persisted { resumeState, spent } from the partial file and seeds the spend counter.
+let resumeFrom;
+if (process.argv.includes('--resume') && existsSync(ckpt)) {
+  const saved = JSON.parse(readFileSync(ckpt, 'utf-8'));
+  if (saved.resumeState) {
+    resumeFrom = saved.resumeState;
+    spend = saved.spent || 0;
+    console.log(`[resume] continuing from gen ${resumeFrom.fromGeneration} (prior spend=$${spend.toFixed(4)}) — gens ${resumeFrom.fromGeneration + 1}→${GENERATIONS}`);
+  } else {
+    console.log('[resume] partial file has no resumeState (pre-0.1.5 checkpoint) — starting fresh');
+  }
+}
+
+console.log(`D1-S4 LIVE SWE-bench flywheel: solver=${SOLVER} holdout=${holdout.length} anchor=${anchor.length} gens=${GENERATIONS} cap=$${BUDGET_USD} model=${MODEL}${resumeFrom ? ' [RESUME]' : ''}`);
 const result = await runFlywheelGenerations({
   rootPolicy: { editPolicy: '', escalationPolicy: '', verifierPolicy: '' },
   proposer, evaluator, promotionRule: meetsPromotionRule,
@@ -92,11 +106,12 @@ const result = await runFlywheelGenerations({
   maxGenerations: GENERATIONS, signer: makeSigner(), dataSource: 'LIVE',
   mutationTargets: TARGETS,
   budget: { total: BUDGET_USD, spent: () => spend },
+  resumeFrom,
   // Incremental checkpoint: a LIVE agentic run spans HOURS; persist a complete, replay-verifiable
-  // bundle after each generation so a crash/OOM/rate-limit keeps the generations already completed
-  // (the prior single-shot run crashed at ~45min with no checkpoint and lost everything).
+  // bundle + the resume state after each generation so a crash/OOM/rate-limit keeps the generations
+  // already completed AND can CONTINUE (--resume) instead of re-spending from generation 1.
   onGeneration: (info) => {
-    writeFileSync(ckpt, JSON.stringify(info.partialBundle, null, 2));
+    writeFileSync(ckpt, JSON.stringify({ partialBundle: info.partialBundle, resumeState: info.resumeState, spent: info.spent }, null, 2));
     console.log(`[checkpoint] gen ${info.generation}/${GENERATIONS} persisted (spend=$${info.spent.toFixed(4)}) → ${ckpt}`);
   },
 });

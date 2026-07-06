@@ -144,6 +144,26 @@ export interface ReplayBundle {
   created_at: string;
 }
 
+/** Everything needed to RESUME a run from a checkpoint — the mutable engine state at a generation
+ *  boundary, made explicit so it can be persisted and handed back as {@link FlywheelConfig.resumeFrom}.
+ *  A crashed multi-hour run continues from `fromGeneration + 1` instead of re-spending from generation 1. */
+export interface ResumeState {
+  /** The gen-0 baseline score (the lift-curve origin) — NOT re-evaluated on resume. */
+  rootScore: Score;
+  /** The frozen anchor's root score (or null when no anchor) — the never-regress bar. */
+  rootAnchor: number | null;
+  /** The current promoted head the next generation re-bases on. */
+  parentId: string;
+  /** The current promoted policy (the levers evolved so far). */
+  policy: Policy;
+  /** The current promoted policy's holdout score. */
+  score: Score;
+  /** The last COMPLETED generation (resume starts at this + 1). */
+  fromGeneration: number;
+  /** Every commit so far (root + candidates) — re-seeds the lineage store so the chain reconstructs. */
+  priorCommits: LineageCommit[];
+}
+
 /** Handed to the optional per-generation checkpoint hook at the END of each generation. Carries a fully
  *  assembled, replay-verifiable {@link ReplayBundle} for the run SO FAR — so a long (multi-hour) run can
  *  persist incremental progress and a crash is recoverable (the completed generations survive). Purely
@@ -157,4 +177,6 @@ export interface GenerationCheckpoint {
   partialBundle: ReplayBundle;
   /** Cumulative spend if a budget was supplied (else 0). */
   spent: number;
+  /** Persist this + pass it back as `resumeFrom` to CONTINUE from this generation after a crash. */
+  resumeState: ResumeState;
 }

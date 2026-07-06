@@ -8,7 +8,7 @@ import { meetsPromotionRule, gateFingerprint } from './gate.js';
 import type {
   Policy, PolicyGenome, Proposer, Evaluator, PromotionRule, Signer,
   HoldoutSuite, AnchorSuite, LineageStore, LineageCommit, LiftCurve, ReplayBundle, Score,
-  GenerationCheckpoint,
+  GenerationCheckpoint, ResumeState,
 } from './types.js';
 
 export interface FlywheelConfig {
@@ -36,6 +36,11 @@ export interface FlywheelConfig {
    *  progress so a crash keeps the completed generations. Observation-only: never affects promotion.
    *  Errors thrown by the hook are swallowed (a bad checkpoint must not kill a valid run). */
   onGeneration?: (info: GenerationCheckpoint) => void | Promise<void>;
+  /** Resume a crashed run from a persisted {@link GenerationCheckpoint.resumeState}. When set, the gen-0
+   *  root is NOT re-evaluated or re-created — the prior lineage is re-seeded and the loop continues from
+   *  `resumeFrom.fromGeneration + 1`. Unset ⇒ a fresh run (identical to before). The caller is
+   *  responsible for restoring any external spend counter from the checkpoint's `spent`. */
+  resumeFrom?: ResumeState;
   lineageStore?: LineageStore;
   rootId?: string;
 }
@@ -61,19 +66,35 @@ export async function runFlywheelGenerations(cfg: FlywheelConfig): Promise<Flywh
   const anchorOf = async (p: Policy): Promise<number | null> =>
     cfg.anchor ? (await cfg.evaluator(p, cfg.anchor)).primary : null;
 
-  // ── gen-0: the immutable root. Evaluate it once (the baseline) + its anchor (the frozen bar). ──
-  const rootScore = await cfg.evaluator(cfg.rootPolicy, cfg.holdout);
-  const rootAnchor = await anchorOf(cfg.rootPolicy);
-  await store.append({
-    id: rootId, generation: 0, parents: [], mutation: null, primaryDelta: 0, anchorScore: rootAnchor,
-    verdict: 'ROOT', failureReasons: [], receipt: cfg.signer.sign({ kind: 'root', root: rootId }), createdAt: now(0),
-  });
-
-  let parentId = rootId;
-  let policy: Policy = { ...cfg.rootPolicy };
-  let score: Score = rootScore;
+  let rootScore: Score;
+  let rootAnchor: number | null;
+  let parentId: string;
+  let policy: Policy;
+  let score: Score;
   const allCommits: LineageCommit[] = [];
   let generationsRun = 0;
+  let startGen = 1;
+
+  if (cfg.resumeFrom) {
+    // ── RESUME: re-seed the prior lineage and restore the mutable state; DON'T re-evaluate the root. ──
+    const r = cfg.resumeFrom;
+    for (const c of r.priorCommits) await store.append(c);
+    allCommits.push(...r.priorCommits.filter((c) => c.verdict !== 'ROOT')); // allCommits excludes the root
+    rootScore = r.rootScore; rootAnchor = r.rootAnchor;
+    parentId = r.parentId; policy = { ...r.policy }; score = r.score;
+    generationsRun = r.fromGeneration; startGen = r.fromGeneration + 1;
+  } else {
+    // ── gen-0: the immutable root. Evaluate it once (the baseline) + its anchor (the frozen bar). ──
+    rootScore = await cfg.evaluator(cfg.rootPolicy, cfg.holdout);
+    rootAnchor = await anchorOf(cfg.rootPolicy);
+    await store.append({
+      id: rootId, generation: 0, parents: [], mutation: null, primaryDelta: 0, anchorScore: rootAnchor,
+      verdict: 'ROOT', failureReasons: [], receipt: cfg.signer.sign({ kind: 'root', root: rootId }), createdAt: now(0),
+    });
+    parentId = rootId;
+    policy = { ...cfg.rootPolicy };
+    score = rootScore;
+  }
 
   // Assemble a self-consistent replay bundle for the run SO FAR (or final). Pure over the current
   // lineage; used both for the per-generation checkpoint and the final return so the two can never
@@ -96,7 +117,7 @@ export async function runFlywheelGenerations(cfg: FlywheelConfig): Promise<Flywh
     };
   };
 
-  for (let gen = 1; gen <= cfg.maxGenerations; gen++) {
+  for (let gen = startGen; gen <= cfg.maxGenerations; gen++) {
     if (cfg.budget && cfg.budget.spent() >= cfg.budget.total) break;
     generationsRun = gen;
 
@@ -151,6 +172,11 @@ export async function runFlywheelGenerations(cfg: FlywheelConfig): Promise<Flywh
           generationsRun,
           partialBundle: buildBundle(partialChain, now(gen)),
           spent: cfg.budget ? cfg.budget.spent() : 0,
+          resumeState: {
+            rootScore, rootAnchor, parentId, policy, score,
+            fromGeneration: gen,
+            priorCommits: await store.list(), // root + every candidate — re-seeds the store on resume
+          },
         };
         await cfg.onGeneration(info);
       } catch { /* checkpoint is observational — never let it abort a valid run */ }
