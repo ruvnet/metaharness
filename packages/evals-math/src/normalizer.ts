@@ -45,7 +45,7 @@ export function normalizeAnswer(raw: string, format: AnswerFormat, normalize: bo
       return { value: canonNumber(n[0]), formatValid: true };
     }
     case 'fraction': {
-      const f = candidate.replace(/\s+/g, '').match(/(-?\d+)\/(\d+)/);
+      const f = candidate.replace(/\s+/g, '').match(/(-?\d{1,15})\/(\d{1,15})/);
       if (f) return { value: canonFraction(f[1], f[2]), formatValid: true };
       // a bare number is a valid fraction with denominator 1
       const n = stripNumeric(candidate).match(/-?\d+(?:\.\d+)?/);
