@@ -13,7 +13,9 @@ export interface NormalizedAnswer {
   formatValid: boolean;
 }
 
-const FINAL_RE = /(?:final answer|answer|answer is|therefore|=)\s*[:\-]?\s*([^\n.]*?)\s*$/i;
+// Match an explicit final-answer marker on a SINGLE line, capturing greedily to the first '.' or end. No
+// trailing `\s*$` anchor and no lazy quantifier → strictly linear (no polynomial-ReDoS backtracking).
+const FINAL_RE = /(?:final answer|answer is|answer|therefore|=)[\s:\-]*([^.]*)/i;
 
 /** Pull the last "answer-like" span, then canonicalize per format. */
 export function normalizeAnswer(raw: string, format: AnswerFormat, normalize: boolean): NormalizedAnswer {
@@ -21,10 +23,11 @@ export function normalizeAnswer(raw: string, format: AnswerFormat, normalize: bo
   if (!trimmed) return { value: null, formatValid: false };
 
   // Prefer an explicit "final answer: X" tail; else take the last non-empty line.
-  let candidate = '';
-  const m = trimmed.match(FINAL_RE);
-  if (m && m[1].trim()) candidate = m[1].trim();
-  else candidate = trimmed.split('\n').map((l) => l.trim()).filter(Boolean).pop() ?? '';
+  // Take the last non-empty line, then pull an explicit final-answer marker from THAT line (single-line
+  // match keeps FINAL_RE linear); fall back to the whole last line.
+  const lastLine = trimmed.split('\n').map((l) => l.trim()).filter(Boolean).pop() ?? '';
+  const m = lastLine.match(FINAL_RE);
+  const candidate = m && m[1].trim() ? m[1].trim() : lastLine;
   if (!candidate) return { value: null, formatValid: false };
 
   if (!normalize) return { value: candidate, formatValid: true };
