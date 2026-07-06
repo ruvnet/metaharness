@@ -1,0 +1,32 @@
+{
+  "name": "@metaharness/evals-math",
+  "version": "0.1.0",
+  "description": "GSM8K-style math word-problem benchmark adapter for @metaharness/flywheel — evolve the answering policy, not the model. Subject routing, symbolic-recompute verifier stack, numeric answer normalization, calibration, and a stricter composite promotion gate.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "README.md"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": ["gsm8k", "math", "word-problems", "benchmark", "eval", "flywheel", "metaharness", "policy-evolution", "llm", "agent-harness"],
+  "license": "MIT",
+  "dependencies": {
+    "@metaharness/flywheel": "^0.1.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  }
+}
