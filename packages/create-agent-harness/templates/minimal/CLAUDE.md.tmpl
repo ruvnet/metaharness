@@ -5,7 +5,7 @@
 ## Behavioral rules
 
 - Use the harness's MCP tools (`mcp__{{name}}__*`) for orchestration
-- Memory and routing are handled by the kernel — you don't need to learn them
+- Memory ranking and routing are kernel primitives (`@metaharness/kernel`) the harness uses internally — there are no separate CLI subcommands for them
 - Defer destructive operations to the user
 
 ## Commands
@@ -14,9 +14,12 @@ After `{{name}} init`, the following are available:
 
 | Command | What it does |
 |---|---|
+| `{{name}} init` | Scaffold the harness into the current project |
 | `{{name}} doctor` | Health check the install |
-| `{{name}} memory search <query>` | Semantic search across stored patterns |
-| `{{name}} route <task>` | Get the routing tier recommendation |
+
+Run `{{name}} --help` for the full list. Memory ranking and routing are kernel
+primitives used programmatically (see [@metaharness/kernel](https://www.npmjs.com/package/@metaharness/kernel)),
+not CLI subcommands.
 
 ## Architecture
 

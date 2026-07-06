@@ -176,3 +176,39 @@ describe('generated templates scaffold cleanly', () => {
     });
   }
 });
+
+// Regression for issue #48: docs↔code command fidelity across EVERY scaffold-able template (not just
+// the `generate:true` catalog subset — `minimal` is `generate:false` yet ships a CLI + CLAUDE.md, and
+// was the one advertising phantom `memory`/`route` commands the CLI answers with "Unknown command").
+// A scaffold that documents a command its own bin/cli.js has no `case` for is a false promise to the
+// agent reading CLAUDE.md.
+describe('docs↔code command fidelity (#48)', () => {
+  for (const template of TEMPLATES) {
+    it(`${template}: every CLAUDE.md-documented subcommand has a CLI dispatch case`, async () => {
+      const root = await mkdtemp(join(tmpdir(), 'fidelity-'));
+      const name = 'demo-harness';
+      const target = join(root, name);
+      const r = await scaffold({
+        name, template, host: 'claude-code', description: 'demo harness', targetDir: target, generatorVersion: '0.1.0',
+      });
+      if (!r.paths.includes('CLAUDE.md')) return; // no docs to check
+      const pkg = JSON.parse(await readFile(join(target, 'package.json'), 'utf-8'));
+      const binPath = Object.values(pkg.bin ?? {})[0] as string | undefined;
+      if (!binPath) return; // no CLI to check against
+
+      const claudeMd = await readFile(join(target, 'CLAUDE.md'), 'utf-8');
+      // A documented command = the first token after the harness name in a `| `name cmd …` |` table row.
+      const documented = [
+        ...claudeMd.matchAll(new RegExp('\\|\\s*`' + name + '\\s+([a-z][\\w-]*)', 'g')),
+      ].map((m) => m[1]!);
+      const cli = await readFile(join(target, binPath), 'utf-8');
+      const cased = new Set([...cli.matchAll(/case\s+'([a-z][\w-]*)'/g)].map((m) => m[1]!));
+      for (const cmd of documented) {
+        expect(
+          cased.has(cmd),
+          `${template}: CLAUDE.md documents \`${name} ${cmd}\` but bin/cli.js has no \`case '${cmd}'\` (#48 docs↔code drift)`,
+        ).toBe(true);
+      }
+    });
+  }
+});
