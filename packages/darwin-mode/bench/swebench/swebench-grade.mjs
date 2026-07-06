@@ -10,7 +10,10 @@ import { spawnSync } from 'node:child_process';
 
 export function makeSwebenchGrader({
   venvPython = '/tmp/swebench-venv/bin/python',
-  dataset = 'princeton-nlp/SWE-bench_Verified',
+  // The frozen holdout/anchor (from full-300.json) are SWE-bench_LITE instance IDs — verified 40/40 ∩ Lite
+  // vs only 11/40 ∩ Verified. The grader MUST pass the dataset that actually contains the IDs, or
+  // run_evaluation aborts with "Some prediction IDs not found in dataset!" (the D1-S4 smoke's exact failure).
+  dataset = 'princeton-nlp/SWE-bench_Lite',
   split = 'test',
   maxWorkers = 4,
   runIdPrefix = 'fw',

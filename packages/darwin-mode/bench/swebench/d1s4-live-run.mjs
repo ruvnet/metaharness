@@ -38,7 +38,7 @@ async function complete(model, prompt) {
 // real solver cost feeds the shared spend via its returned costUsd (summed inside the evaluator wrapper).
 const cliSolver = makeCliSolver({ baseUrl: BASE_URL, model: MODEL, apiKeyEnv: 'OPENROUTER_API_KEY', k: 12 });
 const runSolver = async (policy, instances) => { const preds = await cliSolver(policy, instances); spend += preds.reduce((s, p) => s + (p.costUsd || 0), 0); return preds; };
-const grader = makeSwebenchGrader({ dataset: 'princeton-nlp/SWE-bench_Verified', maxWorkers: 4 });
+const grader = makeSwebenchGrader({ dataset: arg('--dataset', 'princeton-nlp/SWE-bench_Lite'), maxWorkers: 4 });
 
 const evaluator = makeSwebenchEvaluator({ runSolver, gradePredictions: grader });
 const proposer = makeSwebenchProposer({ complete, proposerModel: PROPOSER });
