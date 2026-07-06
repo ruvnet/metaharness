@@ -86,3 +86,47 @@ describe('verifyReplayBundle — an HONEST-NULL run (0 promotions) is VALID (reg
     expect(verifyReplayBundle(bad).checks.allPromoted).toBe(false);
   });
 });
+
+describe('verifyReplayBundle — gateReExecutes: re-run the rule on sealed scores (ADR-235)', () => {
+  const signer = makeSigner();
+  const S2 = (o: Partial<Score> = {}): Score => ({ primary: 5, noopRate: 0.3, costPerWin: 1, regressed: false, ...o });
+  const root: LineageCommit = {
+    id: 'root', generation: 0, parents: [], mutation: null, primaryDelta: 0, anchorScore: null,
+    verdict: 'ROOT', failureReasons: [], receipt: signer.sign({ kind: 'root', root: 'root' }), createdAt: 'g0',
+  };
+  const promoted = (baselineScore: Score, candidateScore: Score): LineageCommit => ({
+    id: 'c1', generation: 1, parents: ['root'], mutation: { target: 't', summary: 'adapt t' }, primaryDelta: 1,
+    anchorScore: null, verdict: 'PROMOTED', failureReasons: [], receipt: signer.sign({ kind: 'candidate', id: 'c1' }),
+    createdAt: 'g1', baselineScore, candidateScore,
+  });
+  const bundleOf = (c1: LineageCommit): ReplayBundle => ({
+    data_source: 'SYNTHETIC', root_id: 'root', chain: [c1, root], all_commits: [c1],
+    lift_curve: [], gate_fingerprint: gateFingerprint(meetsPromotionRule),
+    verified_improvements: 1, anchor_surviving_improvements: 1, milestone_reached: false, created_at: 'g1',
+  });
+
+  it('a PROMOTED commit whose sealed scores RE-PASS the rule → gateReExecutes true, pass', () => {
+    const b = bundleOf(promoted(S2(), S2({ primary: 6, noopRate: 0.2 })));
+    const v = verifyReplayBundle(b, { pinnedGateFingerprint: gateFingerprint(meetsPromotionRule), promotionRule: meetsPromotionRule });
+    expect(v.checks.gateReExecutes).toBe(true);
+    expect(v.pass).toBe(true);
+  });
+
+  it('a FORGED promotion (verdict PROMOTED but scores the rule would REJECT) → gateReExecutes false', () => {
+    const b = bundleOf(promoted(S2(), S2({ primary: 4, noopRate: 0.2 }))); // primary regressed → rule.promote=false
+    const v = verifyReplayBundle(b, { promotionRule: meetsPromotionRule });
+    expect(v.checks.gateReExecutes).toBe(false);
+    expect(v.pass).toBe(false);
+  });
+
+  it('a WRONG (fingerprint-mismatched) rule → gateReExecutes false', () => {
+    const b = bundleOf(promoted(S2(), S2({ primary: 6, noopRate: 0.2 })));
+    const otherRule = () => ({ promote: true, reasons: [] as string[] }); // different source ⇒ different fingerprint
+    expect(verifyReplayBundle(b, { promotionRule: otherRule }).checks.gateReExecutes).toBe(false);
+  });
+
+  it('backward-compatible: NO rule supplied ⇒ gateReExecutes unchecked (true)', () => {
+    const b = bundleOf(promoted(S2(), S2({ primary: 6, noopRate: 0.2 })));
+    expect(verifyReplayBundle(b, { pinnedGateFingerprint: gateFingerprint(meetsPromotionRule) }).checks.gateReExecutes).toBe(true);
+  });
+});

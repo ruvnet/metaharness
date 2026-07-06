@@ -101,6 +101,11 @@ export interface LineageCommit {
   failureReasons: string[];
   receipt: PromotionReceipt;
   createdAt: string;
+  /** ADR-235 — the sealed baseline+candidate Score this commit's verdict was decided from. Lets an
+   *  external reviewer RE-RUN the promotion rule and confirm the verdict reproduces (trust the gate
+   *  re-run, not the logged verdict). Absent on the gen-0 root (nothing was compared). */
+  baselineScore?: Score;
+  candidateScore?: Score;
 }
 
 export interface LineageStore {
