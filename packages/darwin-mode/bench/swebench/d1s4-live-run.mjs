@@ -22,6 +22,9 @@ const BUDGET_USD = +arg('--budget', 10);
 const MODEL = arg('--model', 'z-ai/glm-5.2');
 const PROPOSER = arg('--proposer', 'anthropic/claude-sonnet-5');
 const BASE_URL = arg('--base-url', 'https://openrouter.ai/api/v1');
+const K = +arg('--k', 1); // samples per instance — 1 keeps a single generation from overshooting the cap
+// which policy levers to mutate per generation (fewer = fewer candidates/gen = tighter cost bound)
+const TARGETS = arg('--targets', 'editPolicy').split(',').map((s) => s.trim()).filter(Boolean);
 const KEY = (process.env.OPENROUTER_API_KEY || readFileSync('/tmp/.orkey', 'utf-8')).trim();
 
 const holdout = JSON.parse(readFileSync(join(HERE, 'swebench-holdout-frozen.json'), 'utf-8')).instances.slice(0, HOLDOUT_N);
@@ -36,7 +39,7 @@ async function complete(model, prompt) {
 }
 
 // real solver cost feeds the shared spend via its returned costUsd (summed inside the evaluator wrapper).
-const cliSolver = makeCliSolver({ baseUrl: BASE_URL, model: MODEL, apiKeyEnv: 'OPENROUTER_API_KEY', k: 12 });
+const cliSolver = makeCliSolver({ baseUrl: BASE_URL, model: MODEL, apiKeyEnv: 'OPENROUTER_API_KEY', k: K });
 const runSolver = async (policy, instances) => { const preds = await cliSolver(policy, instances); spend += preds.reduce((s, p) => s + (p.costUsd || 0), 0); return preds; };
 const grader = makeSwebenchGrader({ dataset: arg('--dataset', 'princeton-nlp/SWE-bench_Lite'), maxWorkers: 4 });
 
@@ -50,6 +53,7 @@ const result = await runFlywheelGenerations({
   holdout: { id: 'swebench-holdout', items: holdout },
   anchor: { id: 'swebench-anchor', items: anchor },
   maxGenerations: GENERATIONS, signer: makeSigner(), dataSource: 'LIVE',
+  mutationTargets: TARGETS,
   budget: { total: BUDGET_USD, spent: () => spend },
 });
 
