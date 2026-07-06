@@ -29,6 +29,7 @@ export function makeCliSolver({
   k = 12,
   policyToSystem = defaultPolicyToSystem,
   nodeArgs = [],
+  extraArgs = [], // appended to the solver argv (e.g. agentic's --max-steps/--concurrency); unknown flags are ignored
   timeoutMs = 20 * 60 * 1000,
 } = {}) {
   return async function runSolver(policy, instances) {
@@ -41,7 +42,7 @@ export function makeCliSolver({
       const res = spawnSync(
         'node',
         [...nodeArgs, solveScript, '--manifest', manifest, '--base-url', baseUrl, '--model', model,
-          '--api-key-env', apiKeyEnv, '--out', preds, '--report', report, '--k', String(k)],
+          '--api-key-env', apiKeyEnv, '--out', preds, '--report', report, '--k', String(k), ...extraArgs],
         { env: { ...process.env, SWE_POLICY_SYSTEM: policyToSystem(policy) }, encoding: 'utf-8', timeout: timeoutMs, maxBuffer: 1 << 28 },
       );
       if (res.status !== 0 && !existsSync(preds)) {

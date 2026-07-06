@@ -44,6 +44,19 @@ export function buildAgenticSystem(ext = 'py', glob = '*.py') {
 /** The default (Python) system prompt — kept as a stable export for backward compatibility. */
 export const AGENTIC_SYSTEM = buildAgenticSystem();
 
+/**
+ * The flywheel OPERATING-POLICY seam. `SWE_POLICY_SYSTEM` (set by the flywheel's SWE-bench runSolver
+ * from a candidate policy's levers) is appended to a solver's base system prompt so the flywheel can
+ * evolve HOW a solver operates — WITHOUT touching the solver's core loop. Pure + backward-safe: when
+ * the env is unset/blank the base is returned byte-identical (no policy ⇒ no change). Shared by the
+ * single-shot solver (solve.mjs) and the multi-shot agentic solver (solve-agentic.mjs) so the seam has
+ * ONE definition. D1-S3/D1 domain-scale.
+ */
+export function applyPolicySystem(base, policyEnv = process.env.SWE_POLICY_SYSTEM) {
+  const policy = (policyEnv || '').trim();
+  return policy ? `${base}\n${policy}` : base;
+}
+
 /** Parse the model's turn into a single action object, tolerating stray prose/fences around the JSON. */
 export function parseAction(raw) {
   if (!raw || typeof raw !== 'string') return { tool: 'noop', error: 'empty model output' };

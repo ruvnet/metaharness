@@ -18,6 +18,7 @@ import { generateBaselineHarness } from '../../dist/generator.js';
 import { profileRepo } from '../../dist/repo_profiler.js';
 import { selectFiles } from '../swe-bench-runner.mjs';
 import { langProfile } from './lang-profile.mjs';
+import { applyPolicySystem } from './agentic-loop.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -135,8 +136,7 @@ for (const inst of manifest) {
     // D1-S3 (flywheel domain-scale): an OPERATING-POLICY seam. SWE_POLICY_SYSTEM (set by the flywheel's
     // SWE-bench runSolver from the candidate policy's levers) is appended to the system prompt so the
     // flywheel can evolve HOW this cheap solver operates. Unset ⇒ byte-identical to before (backward-safe).
-    const POLICY_SYSTEM = (process.env.SWE_POLICY_SYSTEM || '').trim();
-    const sys = POLICY_SYSTEM ? `${sysBase}\n${POLICY_SYSTEM}` : sysBase;
+    const sys = applyPolicySystem(sysBase); // shared flywheel seam (agentic-loop.mjs) — unset ⇒ identical
     const prompt = `Fix the bug described below by editing the selected real source files. Emit one or more edit blocks in the exact format from the system message. The SEARCH text must match the file character-for-character (incl. indentation). No prose outside blocks.\n--- problem statement ---\n${inst.problem_statement.slice(0, 6000)}\n--- selected source files ---\n${seen}\n`;
     const res = await fetch(CHAT_URL, { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, messages: [{ role: 'system', content: sys }, { role: 'user', content: prompt }], max_tokens: 4096, temperature: 0, usage: { include: true } }) });
     const j = await res.json();

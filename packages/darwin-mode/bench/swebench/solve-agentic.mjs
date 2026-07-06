@@ -14,7 +14,7 @@ import { execSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join, dirname, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { agenticSolve, agenticSolveNative, chebTemp, buildAgenticSystem } from './agentic-loop.mjs';
+import { agenticSolve, agenticSolveNative, chebTemp, buildAgenticSystem, applyPolicySystem } from './agentic-loop.mjs';
 import { runConformantTests } from './conformant-tests.mjs';
 import { langProfile } from './lang-profile.mjs';
 // ADR-195 Phase-2 capability stack (all opt-in; off by default — backward-compatible).
@@ -358,7 +358,9 @@ async function solveTier(inst, llmFn, opts = {}) {
   const maxSteps = opts.maxSteps || MAX_STEPS;
   const res = NATIVE_TOOLS
     ? await agenticSolveNative({ problem, io, llm: llmFn, maxSteps, ext: prof.exampleExt, glob: defGlob, tempSchedule, onStep: opts.onStep })
-    : await agenticSolve({ problem, io, llm: llmFn, maxSteps, system: buildAgenticSystem(prof.exampleExt, defGlob), tempSchedule, onStep: opts.onStep });
+    // D1 flywheel seam: append SWE_POLICY_SYSTEM (candidate policy levers) so the flywheel can evolve
+    // HOW the agentic solver operates. Unset ⇒ byte-identical to before (backward-safe).
+    : await agenticSolve({ problem, io, llm: llmFn, maxSteps, system: applyPolicySystem(buildAgenticSystem(prof.exampleExt, defGlob)), tempSchedule, onStep: opts.onStep });
   return { res, work, prof };
 }
 // Cascade tie-break: neither tier passed the repo gate — judge picks the likelier fix (cheap, conformant).

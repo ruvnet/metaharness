@@ -58,15 +58,29 @@ async function complete(model, prompt) {
   }
 }
 
+// --solver selects the code-repair solver the flywheel evolves. 'single' = solve.mjs (open-loop
+// single-shot; D1-S4 honest-null baseline). 'agentic' = solve-agentic.mjs (multi-shot explore→edit→
+// run_tests→iterate; the D1 POSITIVE-path candidate — it has real headroom for a policy to compound).
+// Both honor the SWE_POLICY_SYSTEM seam (agentic-loop.mjs applyPolicySystem) so the flywheel evolves
+// HOW the solver operates in either mode. Agentic passes --max-steps/--concurrency via extraArgs.
+const SOLVER = arg('--solver', 'single');
+const SOLVER_SCRIPT = { single: 'solve.mjs', agentic: 'solve-agentic.mjs' }[SOLVER];
+if (!SOLVER_SCRIPT) { console.error(`--solver must be 'single' or 'agentic' (got '${SOLVER}')`); process.exit(2); }
+const solverExtraArgs = SOLVER === 'agentic'
+  ? ['--max-steps', arg('--max-steps', '20'), '--concurrency', arg('--concurrency', '2')]
+  : [];
 // real solver cost feeds the shared spend via its returned costUsd (summed inside the evaluator wrapper).
-const cliSolver = makeCliSolver({ baseUrl: BASE_URL, model: MODEL, apiKeyEnv: 'OPENROUTER_API_KEY', k: K });
+const cliSolver = makeCliSolver({
+  solveScript: new URL(SOLVER_SCRIPT, import.meta.url).pathname,
+  baseUrl: BASE_URL, model: MODEL, apiKeyEnv: 'OPENROUTER_API_KEY', k: K, extraArgs: solverExtraArgs,
+});
 const runSolver = async (policy, instances) => { const preds = await cliSolver(policy, instances); spend += preds.reduce((s, p) => s + (p.costUsd || 0), 0); return preds; };
 const grader = makeSwebenchGrader({ dataset: arg('--dataset', 'princeton-nlp/SWE-bench_Lite'), maxWorkers: 4 });
 
 const evaluator = makeSwebenchEvaluator({ runSolver, gradePredictions: grader });
 const proposer = makeSwebenchProposer({ complete, proposerModel: PROPOSER });
 
-console.log(`D1-S4 LIVE SWE-bench flywheel: holdout=${holdout.length} anchor=${anchor.length} gens=${GENERATIONS} cap=$${BUDGET_USD} model=${MODEL}`);
+console.log(`D1-S4 LIVE SWE-bench flywheel: solver=${SOLVER} holdout=${holdout.length} anchor=${anchor.length} gens=${GENERATIONS} cap=$${BUDGET_USD} model=${MODEL}`);
 const result = await runFlywheelGenerations({
   rootPolicy: { editPolicy: '', escalationPolicy: '', verifierPolicy: '' },
   proposer, evaluator, promotionRule: meetsPromotionRule,
