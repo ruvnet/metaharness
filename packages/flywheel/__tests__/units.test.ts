@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import {
   meetsPromotionRule, gateFingerprint, makeSigner, verifyReceipt, canon,
   InMemoryLineageStore, computeLiftCurve, verifyReplayBundle,
+  analyzeBundle, formatAnalysis,
   type Score, type LineageCommit, type PromotionReceipt, type ReplayBundle,
 } from '../src/index.js';
 
@@ -128,5 +129,38 @@ describe('verifyReplayBundle — gateReExecutes: re-run the rule on sealed score
   it('backward-compatible: NO rule supplied ⇒ gateReExecutes unchecked (true)', () => {
     const b = bundleOf(promoted(S2(), S2({ primary: 6, noopRate: 0.2 })));
     expect(verifyReplayBundle(b, { pinnedGateFingerprint: gateFingerprint(meetsPromotionRule) }).checks.gateReExecutes).toBe(true);
+  });
+});
+
+describe('analyzeBundle — F-P2 mutation-effectiveness', () => {
+  const mk = (target: string, gen: number, verdict: 'PROMOTED' | 'REJECTED', primaryDelta: number, failureReasons: string[] = []): LineageCommit =>
+    ({ id: `${target}-${gen}`, generation: gen, parents: [], mutation: { target, summary: '' }, primaryDelta, anchorScore: null, verdict, failureReasons } as LineageCommit);
+  const bundle = (all: LineageCommit[]): ReplayBundle =>
+    ({ data_source: 'SYNTHETIC', root_id: 'root', chain: [], all_commits: all, lift_curve: [], gate_fingerprint: null, verified_improvements: 0, anchor_surviving_improvements: 0, milestone_reached: false, created_at: 'x' } as ReplayBundle);
+
+  it('ranks the most-promoted lever first + computes per-lever rate, avg lift, anchor-regressions', () => {
+    const a = analyzeBundle(bundle([
+      mk('edit', 1, 'PROMOTED', 2), mk('edit', 2, 'PROMOTED', 3),           // edit: 2/2 promoted, avgΔ 2.5
+      mk('escalate', 1, 'REJECTED', 0), mk('escalate', 2, 'REJECTED', -1, ['anchor_regressed']),
+      mk('verify', 3, 'PROMOTED', 1),                                        // verify: 1/1 promoted
+    ]));
+    expect(a.candidates).toBe(5);
+    expect(a.promotions).toBe(3);
+    expect(a.rejections).toBe(2);
+    expect(a.anchorRegressed).toBe(1);
+    expect(a.byTarget[0]!.target).toBe('edit');            // most promotions ranks first
+    expect(a.byTarget[0]!.promoteRate).toBe(1);
+    expect(a.byTarget[0]!.avgDeltaPromoted).toBeCloseTo(2.5);
+    const escalate = a.byTarget.find((t) => t.target === 'escalate')!;
+    expect(escalate.promotions).toBe(0);
+    expect(escalate.rejections).toBe(2);
+  });
+
+  it('an honest-null (no candidates) analyzes cleanly + formats without throwing', () => {
+    const a = analyzeBundle(bundle([]));
+    expect(a.candidates).toBe(0);
+    expect(a.byTarget).toEqual([]);
+    const lines = formatAnalysis(a, 'null-run');
+    expect(lines.join('\n')).toContain('honest-null');
   });
 });

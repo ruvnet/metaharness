@@ -9,6 +9,7 @@ import { pathToFileURL } from 'node:url';
 import { runFlywheelGenerations, type FlywheelConfig } from './run.js';
 import { verifyReplayBundle } from './replay.js';
 import { makeSigner } from './receipts.js';
+import { analyzeBundle, formatAnalysis } from './analyze.js';
 import type { ReplayBundle } from './types.js';
 
 export interface CliResult {
@@ -25,6 +26,8 @@ const USAGE = [
   '      Independently verify a bundle: receipts + lineage-to-root + (optional) frozen-gate fingerprint.',
   '  metaharness flywheel graph <proof-bundle.json>',
   '      Print the promoted lineage chain and the compounding lift curve.',
+  '  metaharness flywheel analyze <proof-bundle.json>',
+  '      F-P2 mutation-effectiveness: which policy levers earn promotions and how much lift each produces.',
 ];
 
 function loadBundle(path?: string): ReplayBundle {
@@ -52,6 +55,11 @@ async function replay(args: string[]): Promise<CliResult> {
     `ACCEPTANCE: ${v.pass ? 'PASS' : 'FAIL (' + v.failures.join(', ') + ')'}`,
   ];
   return { code: v.pass ? 0 : 1, lines };
+}
+
+function analyze(args: string[]): CliResult {
+  const bundle = loadBundle(args[0]);
+  return { code: 0, lines: formatAnalysis(analyzeBundle(bundle), `${args[0]}  [data_source=${bundle.data_source}]`) };
 }
 
 function graph(args: string[]): CliResult {
@@ -89,6 +97,7 @@ export async function dispatch(sub: string | undefined, args: string[]): Promise
   switch (sub) {
     case 'replay': return replay(args);
     case 'graph': return graph(args);
+    case 'analyze': return analyze(args);
     case 'run': return run(args);
     case undefined:
     case 'help':

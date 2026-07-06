@@ -12,6 +12,8 @@ export { makeSigner, verifyReceipt, canon } from './receipts.js';
 export { InMemoryLineageStore, computeLiftCurve, liftPoint } from './lineage.js';
 export { verifyReplayBundle } from './replay.js';
 export type { ReplayVerdict } from './replay.js';
+export { analyzeBundle, formatAnalysis } from './analyze.js';
+export type { BundleAnalysis, TargetStat } from './analyze.js';
 
 export type {
   Policy,
