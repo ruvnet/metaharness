@@ -92,8 +92,15 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-      - name: Build wasm
-        run: wasm-pack build crates/kernel-wasm --target bundler --release --out-dir ../../packages/kernel-js/pkg
+      # GH #20 — build the NODEJS target, not `bundler`. The runtime loader (kernel-js loadWasm())
+      # `import('../pkg/ruflo_kernel_wasm.js')` expects wasm-pack's --target nodejs (CommonJS shim that
+      # auto-initialises the wasm on require, + pkg/package.json {"type":"commonjs"}). A `bundler`-target
+      # artifact is ESM that needs a bundler + an explicit init() call, so loadWasm() cannot load it and
+      # the kernel silently falls back to the JS floor — the exact #20 symptom. `npm run build:wasm` is
+      # the single source of truth (correct target + the .gitignore/package.json fixups).
+      - name: Build wasm (nodejs target — matches the runtime loader)
+        working-directory: packages/kernel-js
+        run: npm run build:wasm
       - name: Upload wasm artifact
         uses: actions/upload-artifact@v4
         with:

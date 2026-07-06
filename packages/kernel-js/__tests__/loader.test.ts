@@ -102,3 +102,41 @@ describe('METAHARNESS_KERNEL_BACKEND selection (GH #22)', () => {
     expect(typeof d.reasons).toBe('object');
   });
 });
+
+// GH #20 — the published @metaharness/kernel must ship a LOADABLE wasm artifact so a plain
+// `npm install` can reach the fast Rust backend, not silently fall to the JS floor. The bug was the
+// publish workflow building `wasm-pack --target bundler` while the runtime loader expects `--target
+// nodejs` (CommonJS auto-init) — an unloadable mismatch.
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const kjsRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
+const wasmShim = join(kjsRoot, 'pkg', 'ruflo_kernel_wasm.js');
+
+describe('GH #20 — publish ships a loadable wasm (nodejs target)', () => {
+  it('the publish workflow builds the wasm NODEJS target, not bundler', () => {
+    const wf = readFileSync(join(kjsRoot, '..', '..', '.github', 'workflows', 'publish.yml'), 'utf8');
+    // a raw bundler-target build is the #20 regression — the runtime loader can't load it
+    expect(wf).not.toMatch(/wasm-pack build[^\n]*--target\s+bundler/);
+    // it must use build:wasm (nodejs target + fixups) or an explicit --target nodejs
+    expect(/build:wasm|--target\s+nodejs/.test(wf)).toBe(true);
+  });
+
+  // Only runs where the wasm artifact has been built (locally after `npm run build:wasm`, and in the
+  // publish flow); asserts the artifact is the correct, LOADABLE target — a bundler artifact would make
+  // a `wasm`-requested load throw / fall back rather than resolve the wasm backend.
+  it.skipIf(!existsSync(wasmShim))('a present wasm artifact resolves the wasm backend', async () => {
+    const prev = process.env.METAHARNESS_KERNEL_BACKEND;
+    process.env.METAHARNESS_KERNEL_BACKEND = 'wasm';
+    _resetKernelCacheForTests();
+    try {
+      const k = await loadKernel();
+      expect(k.backend).toBe('wasm');
+    } finally {
+      if (prev === undefined) delete process.env.METAHARNESS_KERNEL_BACKEND;
+      else process.env.METAHARNESS_KERNEL_BACKEND = prev;
+      _resetKernelCacheForTests();
+    }
+  });
+});
