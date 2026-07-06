@@ -24,6 +24,16 @@ import { resolve, join } from 'node:path';
 
 export type SubcommandResult = { code: number; lines: string[] };
 
+/**
+ * #15 — schema discriminator for the `harness score` badge JSON (`--json` / `--out`). It lets a
+ * downstream consumer detect this shape at the data layer and REFUSE the wrong one: `harness score`
+ * (this flat badge set) and `metaharness score` (the repo-scorecard, numeric `schema: 1`) are
+ * DIFFERENT operations with different keys, and an unmarked badge blob silently mis-parsed as the
+ * metaharness scorecard (every numeric field defaulting to 0). A string id is unambiguously distinct
+ * from the numeric `schema: 1`.
+ */
+export const HARNESS_SCORE_SCHEMA = 'harness-quickcheck-v1';
+
 interface DimensionScore {
   name: string;
   weight: number; // 0..1
@@ -402,10 +412,16 @@ export async function scoreCmd(args: string[]): Promise<SubcommandResult> {
   }
 
   const sc = buildScorecard(dir);
+  // #15 — carry the schema discriminator on the badge output so a consumer can detect this shape at
+  // the DATA layer. `harness score` and `metaharness score` are DIFFERENT operations with different
+  // JSON shapes; an unmarked badge blob was silently mis-parsed as the `metaharness score` scorecard
+  // (every field defaulting to 0). The metaharness scorecard uses numeric `schema: 1`; this string id
+  // is unambiguously distinct so downstream code can refuse the wrong shape instead of guessing.
+  const badgeOutput = { schema: HARNESS_SCORE_SCHEMA, ...sc.badges };
 
   if (outPath) {
     try {
-      writeFileSync(resolve(outPath), JSON.stringify(sc.badges, null, 2) + '\n', 'utf-8');
+      writeFileSync(resolve(outPath), JSON.stringify(badgeOutput, null, 2) + '\n', 'utf-8');
     } catch (e) {
       const err = { schema: 1 as const, error: 'out-write-failed', detail: String(e), exitCode: 2 };
       return { code: 2, lines: [bundle || json ? JSON.stringify(err, null, 2) : `harness score: failed to write --out: ${String(e)}`] };
@@ -416,7 +432,7 @@ export async function scoreCmd(args: string[]): Promise<SubcommandResult> {
     return { code: sc.exitCode, lines: [JSON.stringify(sanitise(sc), null, 2)] };
   }
   if (json) {
-    return { code: sc.exitCode, lines: [JSON.stringify(sc.badges, null, 2)] };
+    return { code: sc.exitCode, lines: [JSON.stringify(badgeOutput, null, 2)] };
   }
   return { code: sc.exitCode, lines: formatScorecard(sc) };
 }

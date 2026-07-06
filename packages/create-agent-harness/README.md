@@ -59,8 +59,23 @@ Multi-host: pass `--host` multiple times.
 harness sign      # produce/update the witness manifest
 harness verify    # check signature
 harness doctor    # smoke-check a scaffolded harness
+harness score     # runtime-readiness badges for a local repo
 harness help
 ```
+
+### `harness score` vs `metaharness score` — two different scorecards (#15)
+
+The two CLIs both accept `score` but emit **different, purpose-specific JSON** — so check the schema
+discriminator before parsing:
+
+| Command | Purpose | JSON discriminator |
+|---|---|---|
+| `harness score <dir> --json` | Runtime-readiness **badges** (score + mcpRisk / releaseReady / testsDetected / sbom / witnessSigned) | `"schema": "harness-quickcheck-v1"` (string) |
+| `metaharness score <dir> --json` | 5-dimension harness-fit **scorecard** (harnessFit / compileConfidence / …) | `"schema": 1` (number) |
+
+They are **not interchangeable**. A consumer wiring one into a pipeline expecting the other should
+branch on `schema` (`typeof out.schema === 'string'` ⇒ harness badges; `=== 1` ⇒ metaharness
+scorecard) and refuse the wrong shape rather than silently defaulting missing fields to `0`.
 
 ## Eject from ruflo
 
