@@ -24,10 +24,11 @@ const PHASES = [
   // (@metaharness/flywheel) is likewise dependency-free (node:crypto only) and
   // create-agent-harness imports its /cli — so it MUST build here in phase 1.
   ['kernel-js', 'router', 'harness', 'darwin-mode', 'projects', 'redblue', 'weight-eft', 'jujutsu', 'flywheel'],
-  // Phase 2: vertical-base — vertical-trading imports from it. evals-hle
-  // (@metaharness/evals-hle) depends on @metaharness/flywheel's dist, so it must
-  // build AFTER phase 1 (a same-phase parallel build would race the .d.ts).
-  ['vertical-base', 'evals-hle'],
+  // Phase 2: vertical-base — vertical-trading imports from it. evals-hle +
+  // evals-sql (@metaharness/evals-hle, @metaharness/evals-sql) depend on
+  // @metaharness/flywheel's dist, so they must build AFTER phase 1 (a same-phase
+  // parallel build would race the .d.ts).
+  ['vertical-base', 'evals-hle', 'evals-sql'],
   // Phase 3: hosts + sdk + cli — all depend on kernel-js
   [
     'host-claude-code',
