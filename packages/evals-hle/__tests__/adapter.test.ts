@@ -133,9 +133,11 @@ describe('@metaharness/evals-hle — end-to-end flywheel produces a compounding,
     expect(curve[curve.length - 1].primary).toBeGreaterThan(curve[0].primary);
     expect(result.milestoneReached).toBe(true); // ≥2 anchor-surviving verified improvements
 
-    // external replay verifies against the PINNED composite-gate fingerprint
-    const v = verifyReplayBundle(result.replayBundle, { pinnedGateFingerprint: gateFingerprint(hlePromotionRule) });
+    // external replay verifies against the PINNED composite-gate fingerprint AND re-executes the gate
+    // (ADR-235): every promoted commit must re-pass hlePromotionRule on its sealed scores.
+    const v = verifyReplayBundle(result.replayBundle, { pinnedGateFingerprint: gateFingerprint(hlePromotionRule), promotionRule: hlePromotionRule });
     expect(v.pass).toBe(true);
+    expect(v.checks.gateReExecutes).toBe(true);
     expect(result.replayBundle.data_source).toBe('SYNTHETIC');
     expect(result.replayBundle.gate_fingerprint).toBe(gateFingerprint(hlePromotionRule));
   });

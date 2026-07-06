@@ -79,7 +79,9 @@ const result = await runFlywheelGenerations({
 
 const out = join(HERE, 'proof-bundle-swebench.json');
 writeFileSync(out, JSON.stringify(result.replayBundle, null, 2));
-const v = verifyReplayBundle(result.replayBundle, { pinnedGateFingerprint: gateFingerprint(meetsPromotionRule) });
+// ADR-235 — also RE-EXECUTE the gate: every promoted commit must re-pass meetsPromotionRule on its sealed
+// scores (catches a forged promotion the frozen gate wouldn't grant — not just a changed fingerprint).
+const v = verifyReplayBundle(result.replayBundle, { pinnedGateFingerprint: gateFingerprint(meetsPromotionRule), promotionRule: meetsPromotionRule });
 console.log('\n── LIFT CURVE (resolved, root→current) ──');
 for (const p of result.liftCurve) console.log(`  gen${p.generation}: resolved=${p.primary}/${holdout.length} ${p.delta > 0 ? `(+${p.delta})` : ''} anchor=${p.anchor}/${anchor.length}`);
 console.log(`\nspend=$${spend.toFixed(4)} | verified=${result.replayBundle.verified_improvements} anchor-surviving=${result.replayBundle.anchor_surviving_improvements} milestone=${result.milestoneReached}`);
