@@ -25,7 +25,7 @@ const PHASES = [
   // create-agent-harness imports its /cli — so it MUST build here in phase 1.
   ['kernel-js', 'router', 'harness', 'darwin-mode', 'projects', 'redblue', 'weight-eft', 'jujutsu', 'flywheel'],
   // evals-* adapters depend on @metaharness/flywheel's dist → build AFTER phase 1 (avoid .d.ts race).
-  ['vertical-base', 'evals-hle', 'evals-sql', 'evals-extract'],
+  ['vertical-base', 'evals-hle', 'evals-sql', 'evals-extract', 'evals-math'],
   // Phase 3: hosts + sdk + cli — all depend on kernel-js
   [
     'host-claude-code',

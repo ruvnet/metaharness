@@ -105,6 +105,8 @@ export async function runFlywheelGenerations(cfg: FlywheelConfig): Promise<Flywh
         failureReasons: isWinner ? [] : c === winner && !anchorSurvives ? ['anchor_regressed'] : c.reasons,
         receipt: cfg.signer.sign({ kind: 'candidate', id, target: c.target, verdict: isWinner ? 'PROMOTED' : 'REJECTED', primaryDelta }),
         createdAt: now(gen),
+        baselineScore: score,       // ADR-235 — sealed so the gate can be re-run in replay
+        candidateScore: c.score,
       };
       await store.append(commit);
       allCommits.push(commit);
