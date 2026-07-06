@@ -4,12 +4,18 @@
 // ONLY thing that gold-scores SWE-bench — the flywheel/adapter never re-implements it. Heavy (Docker +
 // minutes/instance); used only for the budgeted live run.
 import { mkdtempSync, writeFileSync, readFileSync, readdirSync, existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { tmpdir, homedir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
+// The venv holding the official `swebench` harness. DURABLE by default: `/tmp` is wiped on reboot, which
+// silently deleted the harness between sessions (a run then can't gold-score). Default to a persistent
+// path under $HOME; override with SWEBENCH_VENV_PYTHON. One-time setup:
+//   python3 -m venv ~/.cache/swebench-venv && ~/.cache/swebench-venv/bin/pip install swebench
+const DEFAULT_VENV_PYTHON = process.env.SWEBENCH_VENV_PYTHON || join(homedir(), '.cache', 'swebench-venv', 'bin', 'python');
+
 export function makeSwebenchGrader({
-  venvPython = '/tmp/swebench-venv/bin/python',
+  venvPython = DEFAULT_VENV_PYTHON,
   // The frozen holdout/anchor (from full-300.json) are SWE-bench_LITE instance IDs — verified 40/40 ∩ Lite
   // vs only 11/40 ∩ Verified. The grader MUST pass the dataset that actually contains the IDs, or
   // run_evaluation aborts with "Some prediction IDs not found in dataset!" (the D1-S4 smoke's exact failure).
@@ -20,6 +26,16 @@ export function makeSwebenchGrader({
   timeoutPerInstance = 1800,
 } = {}) {
   let n = 0;
+  // Fail LOUDLY + actionably if the harness venv is missing, rather than a cryptic spawn ENOENT mid-run
+  // (this is the ONLY gold-scorer — a missing venv must never be mistaken for "0 resolved").
+  if (!existsSync(venvPython)) {
+    throw new Error(
+      `swebench harness venv not found at ${venvPython}. It is the official gold-scorer and cannot be skipped.\n` +
+      `Set it up once (durable, survives reboot):\n` +
+      `  python3 -m venv ${join(homedir(), '.cache', 'swebench-venv')} && ${join(homedir(), '.cache', 'swebench-venv', 'bin', 'pip')} install swebench\n` +
+      `Or point SWEBENCH_VENV_PYTHON at an existing venv's python.`,
+    );
+  }
   return async function gradePredictions(predictions) {
     const work = mkdtempSync(join(tmpdir(), 'fw-grade-'));
     const runId = `${runIdPrefix}-${n++}`;
