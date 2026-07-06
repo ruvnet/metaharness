@@ -85,6 +85,9 @@ const CHECKS = {
       // @metaharness/evals-toolcall (BFCL-style function-calling / tool-use adapter for the
       // flywheel) is likewise a standalone published adapter on its own semver.
       '@metaharness/evals-toolcall',
+      // @metaharness/evals-extract (structured-extraction benchmark adapter for the
+      // flywheel) is likewise a standalone published adapter on its own semver.
+      '@metaharness/evals-extract',
       '@metaharness/kernel',
       '@metaharness/host-claude-code',
       '@metaharness/host-codex',

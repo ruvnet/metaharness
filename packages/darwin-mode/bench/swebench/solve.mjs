@@ -97,7 +97,7 @@ async function localize(problem, work, files, buildContext, k, prof, pre = 120) 
   const prompt = `A bug is reported below. From the candidate files (path + top signatures), list ONLY the file paths most likely to contain the fix, most-likely first, one per line, at most ${k}. Output paths verbatim, nothing else.\n--- problem ---\n${problem.slice(0, 4000)}\n--- candidate files ---\n${listing.slice(0, 24000)}\n`;
   let cost = 0;
   try {
-    const res = await fetch(CHAT_URL, { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, messages: [{ role: 'user', content: prompt }], max_tokens: 400, temperature: 0 }) });
+    const res = await fetch(CHAT_URL, { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, messages: [{ role: 'user', content: prompt }], max_tokens: 400, temperature: 0, usage: { include: true } }) });
     const j = await res.json(); cost = j.usage?.cost ?? 0;
     const raw = j.choices?.[0]?.message?.content ?? '';
     const picked = raw.split('\n').map((l) => l.trim().replace(/^[-*\d.\s]+/, '')).filter((l) => files.includes(l));
@@ -138,7 +138,7 @@ for (const inst of manifest) {
     const POLICY_SYSTEM = (process.env.SWE_POLICY_SYSTEM || '').trim();
     const sys = POLICY_SYSTEM ? `${sysBase}\n${POLICY_SYSTEM}` : sysBase;
     const prompt = `Fix the bug described below by editing the selected real source files. Emit one or more edit blocks in the exact format from the system message. The SEARCH text must match the file character-for-character (incl. indentation). No prose outside blocks.\n--- problem statement ---\n${inst.problem_statement.slice(0, 6000)}\n--- selected source files ---\n${seen}\n`;
-    const res = await fetch(CHAT_URL, { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, messages: [{ role: 'system', content: sys }, { role: 'user', content: prompt }], max_tokens: 4096, temperature: 0 }) });
+    const res = await fetch(CHAT_URL, { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, messages: [{ role: 'system', content: sys }, { role: 'user', content: prompt }], max_tokens: 4096, temperature: 0, usage: { include: true } }) });
     const j = await res.json();
     totalTok += j.usage?.total_tokens ?? 0; totalCost += j.usage?.cost ?? 0; row.cost_usd = j.usage?.cost ?? 0;
     const raw = j.choices?.[0]?.message?.content ?? '';
