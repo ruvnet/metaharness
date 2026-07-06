@@ -75,6 +75,40 @@ describe('ACCEPTANCE — one runFlywheelGenerations() API, three domains, no ben
     });
   }
 
+  it('onGeneration checkpoints fire per generation, each an independently-replayable bundle (crash-recoverable)', async () => {
+    const a = makeAdapter('checkpoint', [1, 1, 2, 3, 4, 5, 6], [1, 2]);
+    const seen: Array<{ generation: number; chainLen: number; pass: boolean }> = [];
+    const result = await runFlywheelGenerations({
+      rootPolicy: a.rootPolicy, proposer: a.proposer, evaluator: a.evaluator,
+      promotionRule: meetsPromotionRule, holdout: a.holdout, anchor: a.anchor,
+      maxGenerations: 5, signer: makeSigner(), dataSource: 'SYNTHETIC',
+      onGeneration: (info) => {
+        // Every checkpoint must be a COMPLETE, externally-replayable bundle for the run so far —
+        // that is what makes a crashed multi-hour run recoverable from the last checkpoint.
+        const v = verifyReplayBundle(info.partialBundle, { pinnedGateFingerprint: PIN });
+        seen.push({ generation: info.generation, chainLen: info.partialBundle.chain.length, pass: v.pass });
+      },
+    });
+    expect(seen.length).toBe(result.generationsRun);              // one checkpoint per generation run
+    expect(seen.map((s) => s.generation)).toEqual(seen.map((_, i) => i + 1)); // strictly 1,2,3,…
+    expect(seen.every((s) => s.pass)).toBe(true);                 // each mid-run bundle replays
+    // the final checkpoint reflects the same terminal chain as the returned result
+    expect(seen[seen.length - 1]!.chainLen).toBe(result.replayBundle.chain.length);
+  });
+
+  it('a THROWING onGeneration hook never aborts a valid run (checkpoint is observational)', async () => {
+    const a = makeAdapter('ckpt-throw', [1, 1, 2, 3, 4], [1, 2]);
+    const result = await runFlywheelGenerations({
+      rootPolicy: a.rootPolicy, proposer: a.proposer, evaluator: a.evaluator,
+      promotionRule: meetsPromotionRule, holdout: a.holdout, anchor: a.anchor,
+      maxGenerations: 4, signer: makeSigner(), dataSource: 'SYNTHETIC',
+      onGeneration: () => { throw new Error('disk full'); },
+    });
+    // the run still completes and produces a valid, replayable bundle
+    expect(verifyReplayBundle(result.replayBundle, { pinnedGateFingerprint: PIN }).pass).toBe(true);
+    expect(result.generationsRun).toBeGreaterThan(0);
+  });
+
   it('the flywheel core is domain-agnostic: same import, same config keys for every domain', async () => {
     // Structural proof — the three adapters were built from ONE factory; only the suites differ.
     const configKeys = (a: ReturnType<typeof makeAdapter>) =>

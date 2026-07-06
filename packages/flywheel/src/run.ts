@@ -8,6 +8,7 @@ import { meetsPromotionRule, gateFingerprint } from './gate.js';
 import type {
   Policy, PolicyGenome, Proposer, Evaluator, PromotionRule, Signer,
   HoldoutSuite, AnchorSuite, LineageStore, LineageCommit, LiftCurve, ReplayBundle, Score,
+  GenerationCheckpoint,
 } from './types.js';
 
 export interface FlywheelConfig {
@@ -30,6 +31,11 @@ export interface FlywheelConfig {
   now?: (generation: number) => string;
   /** Stamped on the replay bundle — 'SYNTHETIC' | 'LIVE' | …. NEVER a benchmark name. */
   dataSource?: string;
+  /** Optional per-generation checkpoint hook — called at the END of each generation with a fully
+   *  assembled replay bundle for the run so far. Lets a long (multi-hour) run persist incremental
+   *  progress so a crash keeps the completed generations. Observation-only: never affects promotion.
+   *  Errors thrown by the hook are swallowed (a bad checkpoint must not kill a valid run). */
+  onGeneration?: (info: GenerationCheckpoint) => void | Promise<void>;
   lineageStore?: LineageStore;
   rootId?: string;
 }
@@ -68,6 +74,27 @@ export async function runFlywheelGenerations(cfg: FlywheelConfig): Promise<Flywh
   let score: Score = rootScore;
   const allCommits: LineageCommit[] = [];
   let generationsRun = 0;
+
+  // Assemble a self-consistent replay bundle for the run SO FAR (or final). Pure over the current
+  // lineage; used both for the per-generation checkpoint and the final return so the two can never
+  // diverge. `rootScore`, `rootAnchor`, `allCommits`, `rule`, `rootId`, `cfg` are captured by closure.
+  const buildBundle = (chainNow: LineageCommit[], createdAt: string): ReplayBundle => {
+    const promoted = chainNow.filter((c) => c.verdict === 'PROMOTED');
+    const verifiedN = promoted.filter((c) => c.primaryDelta > 0).length;
+    const anchorSurvivingN = promoted.filter((c) => c.primaryDelta > 0 && (rootAnchor === null || (c.anchorScore ?? -Infinity) >= rootAnchor)).length;
+    return {
+      data_source: cfg.dataSource ?? 'UNSPECIFIED',
+      root_id: rootId,
+      chain: chainNow,
+      all_commits: allCommits,
+      lift_curve: computeLiftCurve(chainNow, rootScore.primary),
+      gate_fingerprint: gateFingerprint(rule),
+      verified_improvements: verifiedN,
+      anchor_surviving_improvements: anchorSurvivingN,
+      milestone_reached: anchorSurvivingN >= 2,
+      created_at: createdAt,
+    };
+  };
 
   for (let gen = 1; gen <= cfg.maxGenerations; gen++) {
     if (cfg.budget && cfg.budget.spent() >= cfg.budget.total) break;
@@ -113,30 +140,30 @@ export async function runFlywheelGenerations(cfg: FlywheelConfig): Promise<Flywh
     }
 
     if (promotedWinner) { parentId = `${parentId}__${promotedWinner.target}_gen${gen}`; policy = promotedWinner.policy; score = promotedWinner.score; }
+
+    // Per-generation checkpoint — a fully assembled, replay-verifiable bundle for the run so far, so a
+    // long run can persist incremental progress. Fail-safe: a throwing hook must NOT kill a valid run.
+    if (cfg.onGeneration) {
+      try {
+        const partialChain = await store.walkToRoot(parentId);
+        const info: GenerationCheckpoint = {
+          generation: gen,
+          generationsRun,
+          partialBundle: buildBundle(partialChain, now(gen)),
+          spent: cfg.budget ? cfg.budget.spent() : 0,
+        };
+        await cfg.onGeneration(info);
+      } catch { /* checkpoint is observational — never let it abort a valid run */ }
+    }
   }
 
   const chain = await store.walkToRoot(parentId);
-  const liftCurve = computeLiftCurve(chain, rootScore.primary);
+  const replayBundle = buildBundle(chain, now(cfg.maxGenerations));
   const promotions = chain.filter((c) => c.verdict === 'PROMOTED');
-  const verified = promotions.filter((c) => c.primaryDelta > 0).length;
-  const anchorSurviving = promotions.filter((c) => c.primaryDelta > 0 && (rootAnchor === null || (c.anchorScore ?? -Infinity) >= rootAnchor)).length;
-
-  const replayBundle: ReplayBundle = {
-    data_source: cfg.dataSource ?? 'UNSPECIFIED',
-    root_id: rootId,
-    chain,
-    all_commits: allCommits,
-    lift_curve: liftCurve,
-    gate_fingerprint: gateFingerprint(rule),
-    verified_improvements: verified,
-    anchor_surviving_improvements: anchorSurviving,
-    milestone_reached: anchorSurviving >= 2,
-    created_at: now(cfg.maxGenerations),
-  };
 
   return {
-    liftCurve, promotions, lineage: store, replayBundle,
+    liftCurve: replayBundle.lift_curve, promotions, lineage: store, replayBundle,
     generationsRun,
-    milestoneReached: anchorSurviving >= 2, finalPolicy: policy,
+    milestoneReached: replayBundle.milestone_reached, finalPolicy: policy,
   };
 }

@@ -80,6 +80,9 @@ const grader = makeSwebenchGrader({ dataset: arg('--dataset', 'princeton-nlp/SWE
 const evaluator = makeSwebenchEvaluator({ runSolver, gradePredictions: grader });
 const proposer = makeSwebenchProposer({ complete, proposerModel: PROPOSER });
 
+const out = join(HERE, 'proof-bundle-swebench.json');
+const ckpt = join(HERE, 'proof-bundle-swebench.partial.json');
+
 console.log(`D1-S4 LIVE SWE-bench flywheel: solver=${SOLVER} holdout=${holdout.length} anchor=${anchor.length} gens=${GENERATIONS} cap=$${BUDGET_USD} model=${MODEL}`);
 const result = await runFlywheelGenerations({
   rootPolicy: { editPolicy: '', escalationPolicy: '', verifierPolicy: '' },
@@ -89,9 +92,15 @@ const result = await runFlywheelGenerations({
   maxGenerations: GENERATIONS, signer: makeSigner(), dataSource: 'LIVE',
   mutationTargets: TARGETS,
   budget: { total: BUDGET_USD, spent: () => spend },
+  // Incremental checkpoint: a LIVE agentic run spans HOURS; persist a complete, replay-verifiable
+  // bundle after each generation so a crash/OOM/rate-limit keeps the generations already completed
+  // (the prior single-shot run crashed at ~45min with no checkpoint and lost everything).
+  onGeneration: (info) => {
+    writeFileSync(ckpt, JSON.stringify(info.partialBundle, null, 2));
+    console.log(`[checkpoint] gen ${info.generation}/${GENERATIONS} persisted (spend=$${info.spent.toFixed(4)}) → ${ckpt}`);
+  },
 });
 
-const out = join(HERE, 'proof-bundle-swebench.json');
 writeFileSync(out, JSON.stringify(result.replayBundle, null, 2));
 // ADR-235 — also RE-EXECUTE the gate: every promoted commit must re-pass meetsPromotionRule on its sealed
 // scores (catches a forged promotion the frozen gate wouldn't grant — not just a changed fingerprint).

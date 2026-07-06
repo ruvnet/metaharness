@@ -143,3 +143,18 @@ export interface ReplayBundle {
   milestone_reached: boolean;
   created_at: string;
 }
+
+/** Handed to the optional per-generation checkpoint hook at the END of each generation. Carries a fully
+ *  assembled, replay-verifiable {@link ReplayBundle} for the run SO FAR — so a long (multi-hour) run can
+ *  persist incremental progress and a crash is recoverable (the completed generations survive). Purely
+ *  observational: the hook never influences promotion. */
+export interface GenerationCheckpoint {
+  /** 1-based generation index just completed. */
+  generation: number;
+  /** Total generations run so far (== generation unless the budget stopped it early). */
+  generationsRun: number;
+  /** A complete, self-consistent replay bundle for the run up to this generation. */
+  partialBundle: ReplayBundle;
+  /** Cumulative spend if a budget was supplied (else 0). */
+  spent: number;
+}
