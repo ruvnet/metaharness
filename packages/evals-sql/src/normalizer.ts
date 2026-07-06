@@ -21,7 +21,7 @@ export interface NormalizedSql {
 // no catastrophic alternation → strictly linear (no polynomial-ReDoS backtracking).
 const STMT_RE = /\b(?:with|select)\b[\s\S]*/i;
 // A fenced ```sql ... ``` block, if present.
-const FENCE_RE = /```(?:sql)?\s*([\s\S]*?)```/i;
+const FENCE_RE = /```(?:sql)?([\s\S]*?)```/i;
 
 /** Extract the SQL statement, then canonicalize per dialect. */
 export function normalizeSql(raw: string, dialect: SqlDialect, normalize: boolean): NormalizedSql {
