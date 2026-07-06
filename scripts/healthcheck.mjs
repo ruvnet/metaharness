@@ -79,6 +79,9 @@ const CHECKS = {
       // published library on its own semver (published 0.1.1 with the umbrella-CLI
       // wiring, like weight-eft/redblue).
       '@metaharness/flywheel',
+      // @metaharness/evals-hle (HLE benchmark adapter for the flywheel, ADR-233) is a
+      // standalone published adapter on its own semver — not core, not umbrella-bundled.
+      '@metaharness/evals-hle',
       '@metaharness/kernel',
       '@metaharness/host-claude-code',
       '@metaharness/host-codex',
