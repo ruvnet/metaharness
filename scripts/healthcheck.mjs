@@ -85,6 +85,9 @@ const CHECKS = {
       // @metaharness/evals-sql (text-to-SQL / Spider-style benchmark adapter for the
       // flywheel) is likewise a standalone published adapter on its own semver.
       '@metaharness/evals-sql',
+      // @metaharness/evals-extract (structured-extraction benchmark adapter for the
+      // flywheel) is likewise a standalone published adapter on its own semver.
+      '@metaharness/evals-extract',
       '@metaharness/kernel',
       '@metaharness/host-claude-code',
       '@metaharness/host-codex',

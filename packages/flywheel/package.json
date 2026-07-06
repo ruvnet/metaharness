@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/flywheel",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A verifiable self-improvement loop for agent harnesses. Freeze the model. Evolve the harness. Promote only what proves lift.",
   "type": "module",
   "main": "./dist/index.js",
