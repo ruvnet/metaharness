@@ -32,10 +32,30 @@ const anchor = JSON.parse(readFileSync(join(HERE, 'swebench-anchor-frozen.json')
 
 let spend = 0;
 const priceOf = (u, model) => { const inn = model.includes('sonnet') ? 3e-6 : 0.93e-6, out = model.includes('sonnet') ? 15e-6 : 3e-6; return (u?.prompt_tokens ?? 0) * inn + (u?.completion_tokens ?? 0) * out; };
+// Resilient POST: retry transient network errors (EPIPE/ECONNRESET/"fetch failed") + 5xx/429 with
+// exponential backoff. A single transient blip must NEVER crash a multi-hour run (the 2026-07-06 EPIPE crash).
+async function fetchJSON(url, init, tries = 5) {
+  let lastErr;
+  for (let i = 0; i < tries; i++) {
+    try {
+      const r = await fetch(url, init);
+      if (r.status >= 500 || r.status === 429) { lastErr = new Error(`http_${r.status}`); }
+      else return await r.json();
+    } catch (e) { lastErr = e; }
+    await new Promise((s) => setTimeout(s, Math.min(30000, 1000 * 2 ** i)));
+  }
+  throw lastErr;
+}
 async function complete(model, prompt) {
-  const r = await fetch(`${BASE_URL}/chat/completions`, { method: 'POST', headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], max_tokens: 400, temperature: 0.4 }) });
-  const j = await r.json(); spend += j.usage?.cost ?? priceOf(j.usage, model);
-  return j.choices?.[0]?.message?.content ?? '';
+  try {
+    const j = await fetchJSON(`${BASE_URL}/chat/completions`, { method: 'POST', headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], max_tokens: 400, temperature: 0.4 }) });
+    spend += j.usage?.cost ?? priceOf(j.usage, model);
+    return j.choices?.[0]?.message?.content ?? '';
+  } catch (e) {
+    // Degrade: an unrecoverable proposer error yields NO mutation (safe) rather than killing the run.
+    console.error(`[complete] gave up after retries: ${String(e).slice(0, 120)}`);
+    return '';
+  }
 }
 
 // real solver cost feeds the shared spend via its returned costUsd (summed inside the evaluator wrapper).
