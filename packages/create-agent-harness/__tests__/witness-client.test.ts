@@ -58,6 +58,37 @@ describe('verifyWitness — shape gate', () => {
     });
     expect(r.valid).toBe(true);
   });
+
+  // GH #4 (mutation finding): the length/schema gates use EXACT checks (=== 64 / === 128 / === 1).
+  // The existing tests only cover UNDER-length ('short') and schema 999, so a boundary mutant that
+  // relaxes `!== 64` → `< 64` (or `!== 1` → `> 1`) would accept OVER-length keys/sigs and schema 0/
+  // negative and survive. These pin the OTHER side of each boundary.
+  describe('boundary bounds (mutation guard, #4)', () => {
+    const base = {
+      schema: 1, harness: 'x', version: '0.1.0', entries: [],
+      public_key: 'a'.repeat(64), signature: 'b'.repeat(128),
+    };
+
+    it('rejects an OVER-length public_key (65)', async () => {
+      const r = await verifyWitness({ ...base, public_key: 'a'.repeat(65) });
+      expect(r.valid).toBe(false);
+      expect(r.reason).toMatch(/public_key/);
+    });
+
+    it('rejects an OVER-length signature (129)', async () => {
+      const r = await verifyWitness({ ...base, signature: 'b'.repeat(129) });
+      expect(r.valid).toBe(false);
+      expect(r.reason).toMatch(/signature/);
+    });
+
+    it('rejects schema 0 and negative (not just >1)', async () => {
+      for (const schema of [0, -1]) {
+        const r = await verifyWitness({ ...base, schema });
+        expect(r.valid).toBe(false);
+        expect(r.reason).toMatch(/schema/);
+      }
+    });
+  });
 });
 
 describe('findWitness', () => {
