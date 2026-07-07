@@ -1,0 +1,42 @@
+{
+  "name": "@metaharness/workspace-lens",
+  "version": "0.1.0",
+  "description": "Jacobian-Lens interpretability primitive for open-weight LLMs (Anthropic 2026-07-06, 'Verbalizable Representations Form a Global Workspace'). Reads the model's functional workspace at inference time — lens_l(h)=unembed(J_l·h) — into workspace tokens, layer-trajectory, drift/entropy scores, vectorized safety flags, and a signable interpretability receipt. Runtime-only (fitting is external); model-agnostic; dependency-free.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "README.md"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "jacobian-lens",
+    "interpretability",
+    "logit-lens",
+    "global-workspace",
+    "mechanistic-governance",
+    "intops",
+    "ai-safety",
+    "prompt-injection",
+    "llm",
+    "open-weight",
+    "metaharness",
+    "agent-harness"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  }
+}

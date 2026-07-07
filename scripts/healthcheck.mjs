@@ -97,6 +97,9 @@ const CHECKS = {
       // @metaharness/evals-servedmodel (ruvllm served-model / SONA-MicroLoRA adapter for the
       // flywheel, ADR-234) is likewise a standalone published adapter on its own semver.
       '@metaharness/evals-servedmodel',
+      // @metaharness/workspace-lens (Jacobian-Lens interpretability primitive, ADR-238) is a standalone
+      // published library on its own semver — a runtime measurement primitive, not core/umbrella-bundled.
+      '@metaharness/workspace-lens',
       '@metaharness/kernel',
       '@metaharness/host-claude-code',
       '@metaharness/host-codex',
