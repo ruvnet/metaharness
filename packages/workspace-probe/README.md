@@ -37,6 +37,35 @@ const verdict = gradeMutationByWorkspace(baselineReceipts, mutantReceipts);
 if (!verdict.keep) rejectMutation(verdict.reasons);   // structurally brittle
 ```
 
+## CLI
+
+For audit workflows that don't want to write TypeScript. All inputs are JSON, all output is JSON on
+stdout (composes with `jq`):
+
+```bash
+npx @metaharness/workspace-probe diag           lens.json
+npx @metaharness/workspace-probe readout        lens.json activations.json [--top-k N]
+npx @metaharness/workspace-probe probe          receipts.json [--drift-threshold F]
+npx @metaharness/workspace-probe grade-mutation baseline-receipts.json mutant-receipts.json
+```
+
+- `diag` → the fitted lens's metadata (model/lens id, dModel, fitted layers, vocab size).
+- `readout` → the workspace tokens per activation (`{layer, position, h}[]`).
+- `probe` → the `workspaceProbeScore` over a receipt set.
+- `grade-mutation` → the keep/veto verdict comparing two receipt sets.
+
+Exit codes: `0` ok, `2` usage error, `1` runtime error. A fitted lens artifact is produced out-of-band
+(open-weight model + backward pass — see `@metaharness/workspace-lens`).
+
+## Runnable demo
+
+[`examples/demo.mjs`](./examples/demo.mjs) is a `$0`, no-model end-to-end walk-through (synthetic lens →
+readout → receipts → probe score → mutation veto):
+
+```bash
+node packages/workspace-probe/examples/demo.mjs
+```
+
 ## Links
 
 - **workspace-lens (the primitive):** https://www.npmjs.com/package/@metaharness/workspace-lens

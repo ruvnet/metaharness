@@ -1,16 +1,50 @@
 {
   "name": "@metaharness/workspace-probe",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Evaluation + Darwin-Mode bridge for @metaharness/workspace-lens: turn Jacobian-Lens interpretability receipts into a flywheel-consumable workspace_probe score, and reject structurally-brittle prompt/policy mutations (final answer up, workspace grip down). Pure, dependency-light, deterministic.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
-  "files": ["dist", "README.md"],
-  "publishConfig": { "access": "public" },
-  "scripts": { "build": "tsc", "test": "vitest run", "lint": "tsc --noEmit" },
-  "keywords": ["jacobian-lens", "workspace-lens", "interpretability", "darwin-mode", "mutation-evidence", "flywheel", "eval", "ai-safety", "metaharness", "agent-harness"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "bin",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "jacobian-lens",
+    "workspace-lens",
+    "interpretability",
+    "darwin-mode",
+    "mutation-evidence",
+    "flywheel",
+    "eval",
+    "ai-safety",
+    "metaharness",
+    "agent-harness"
+  ],
   "license": "MIT",
-  "dependencies": { "@metaharness/workspace-lens": "^0.1.0" },
-  "devDependencies": { "typescript": "^5.4.0", "vitest": "^2.0.0" }
+  "dependencies": {
+    "@metaharness/workspace-lens": "^0.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  },
+  "bin": {
+    "workspace-probe": "./bin/workspace-probe.mjs"
+  }
 }
