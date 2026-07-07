@@ -21,6 +21,7 @@
 
 import { existsSync, statSync, writeFileSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve, join } from 'node:path';
+import { redactSecretsDeep } from './redact.js';
 
 export type SubcommandResult = { code: number; lines: string[] };
 
@@ -344,17 +345,9 @@ export function formatScorecard(sc: Scorecard): string[] {
 
 const SECRET_RE = /(secret|token|key|password|passphrase)/i;
 
+// GH #4 (HIGH-2): redact by KEY name AND by VALUE shape (redact.ts — single source of truth, #7).
 function sanitise(v: unknown): unknown {
-  if (v == null) return v;
-  if (Array.isArray(v)) return v.map(sanitise);
-  if (typeof v === 'object') {
-    const out: Record<string, unknown> = {};
-    for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
-      out[k] = SECRET_RE.test(k) ? '[REDACTED]' : sanitise(val);
-    }
-    return out;
-  }
-  return v;
+  return redactSecretsDeep(v, { keyRe: SECRET_RE, replacement: '[REDACTED]' });
 }
 
 // --- dispatch --------------------------------------------------------------

@@ -21,6 +21,7 @@ import { readFile } from 'node:fs/promises';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { redactSecretsDeep } from './redact.js';
 /** Mirror of subcommands.ts's exported shape — kept local to avoid a
  *  cyclic import (subcommands.ts imports from diag.ts via diagCmd). */
 export type SubcommandResult = { code: number; lines: string[] };
@@ -393,16 +394,11 @@ export interface SupportBundle {
 
 const REDACT_KEY_RE = /^(secret|token|key|password|api[-_]?key)/i;
 
+// GH #4 (HIGH-2): redact by KEY name AND by VALUE shape — a secret-shaped value in a non-secret-named
+// field (e.g. a token pasted into a `vars` entry) must not survive into a bundle a user pastes into an
+// issue. Value-aware detection lives in redact.ts (single source of truth, finding #7).
 function sanitiseManifest(m: unknown): unknown {
-  if (m === null || typeof m !== 'object') return m;
-  if (Array.isArray(m)) return m.map(sanitiseManifest);
-  const out: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(m as Record<string, unknown>)) {
-    if (REDACT_KEY_RE.test(k)) out[k] = '<redacted>';
-    else if (typeof v === 'string' && REDACT_KEY_RE.test(k)) out[k] = '<redacted>';
-    else out[k] = sanitiseManifest(v);
-  }
-  return out;
+  return redactSecretsDeep(m, { keyRe: REDACT_KEY_RE, replacement: '<redacted>' });
 }
 
 export async function buildSupportBundle(harnessDir: string): Promise<SupportBundle> {

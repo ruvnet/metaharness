@@ -22,6 +22,7 @@
 import { existsSync, statSync, writeFileSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
 import { inventory, analyzeFiles, recommendPlan, type RepoProfile, type HarnessPlan } from './analyze-repo.js';
+import { redactSecretsDeep } from './redact.js';
 import {
   resolveAgentTopology,
   scoreMcpRisk,
@@ -177,17 +178,9 @@ export function formatGenomeReport(r: GenomeReport): string[] {
 
 const SECRET_RE = /(secret|token|key|password|passphrase)/i;
 
+// GH #4 (HIGH-2): redact by KEY name AND by VALUE shape (redact.ts — single source of truth, #7).
 function sanitiseValue(v: unknown): unknown {
-  if (v == null) return v;
-  if (Array.isArray(v)) return v.map(sanitiseValue);
-  if (typeof v === 'object') {
-    const out: Record<string, unknown> = {};
-    for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
-      out[k] = SECRET_RE.test(k) ? '[REDACTED]' : sanitiseValue(val);
-    }
-    return out;
-  }
-  return v;
+  return redactSecretsDeep(v, { keyRe: SECRET_RE, replacement: '[REDACTED]' });
 }
 
 // --- dispatch --------------------------------------------------------------
