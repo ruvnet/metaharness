@@ -33,6 +33,13 @@ export interface WitnessManifest {
 export interface VerificationResult {
   valid: boolean;
   reason?: string;
+  /**
+   * GH #4 (HIGH-1): true when the manifest passed SHAPE checks but its signature was NOT
+   * cryptographically verified (no kernel `witnessVerify` available — the shape-only degraded mode).
+   * `valid` stays true so read-only diagnostics (`verify`/`doctor`) keep reporting shape validity, but a
+   * caller that acts on the signature (publish) MUST treat `unverified` as "not actually signed".
+   */
+  unverified?: boolean;
 }
 
 /**
@@ -83,7 +90,11 @@ export async function verifyWitness(manifest: unknown): Promise<VerificationResu
     // truth; local-dev can skip the crypto verify).
   }
 
-  return { valid: true, reason: 'shape verified; kernel not loaded (degraded)' };
+  return {
+    valid: true,
+    unverified: true,
+    reason: 'shape verified; kernel witnessVerify unavailable — signature NOT cryptographically checked (degraded)',
+  };
 }
 
 /**

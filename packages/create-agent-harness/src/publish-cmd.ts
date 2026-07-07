@@ -23,9 +23,13 @@ export async function publishCmd(args: string[]): Promise<SubcommandResult> {
   const positional = args.filter(a => !a.startsWith('--'));
   const dir = resolve(positional[0] ?? process.cwd());
   const confirm = args.includes('--confirm');
+  const allowUnverified = args.includes('--allow-unverified-witness');
   const nameOverride = args.find(a => a.startsWith('--name='))?.slice('--name='.length);
 
   const lines: string[] = [`harness publish — ${dir} ${confirm ? '(CONFIRMED)' : '(DRY-RUN)'}`];
+  if (allowUnverified) {
+    lines.push('  ⚠️  --allow-unverified-witness: the witness signature will NOT be cryptographically checked.');
+  }
 
   if (confirm) {
     const jwt = process.env.PINATA_JWT;
@@ -47,6 +51,7 @@ export async function publishCmd(args: string[]): Promise<SubcommandResult> {
       },
       confirm,
       name: nameOverride,
+      allowUnverified,
     });
     lines.push(`  manifest CID: ${r.manifestCid}`);
     lines.push(`  size: ${r.manifestSize} bytes`);

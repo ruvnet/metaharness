@@ -89,6 +89,12 @@ export interface HarnessPublishOptions {
   confirm: boolean;
   /** Optional override of the harness's name (defaults to manifest.vars.name). */
   name?: string;
+  /**
+   * GH #4 (HIGH-1): explicitly publish even when a present witness could NOT be cryptographically
+   * verified (no verifier available). Off by default — publishing is fail-closed on an unverified
+   * witness so a garbage signature can't masquerade as signed. The signature is NOT checked when set.
+   */
+  allowUnverified?: boolean;
 }
 
 export interface PublishResult {
@@ -127,6 +133,17 @@ export async function publishHarness(opts: HarnessPublishOptions): Promise<Publi
     const { result } = await readAndVerify(witnessPath);
     if (!result.valid) {
       throw new Error(`witness verification failed: ${result.reason ?? 'unknown'}`);
+    }
+    // GH #4 (HIGH-1): a witness whose signature was NOT cryptographically verified (shape-only
+    // degraded mode — no kernel verifier) must NOT be published as "signed". Before this, that path
+    // returned valid:true, so a shape-valid witness carrying a garbage signature published silently as
+    // verified. Fail closed unless the caller explicitly opts in (and is then told the sig was unchecked).
+    if (result.unverified && !opts.allowUnverified) {
+      throw new Error(
+        `witness present at ${witnessPath} but its signature was NOT cryptographically verified ` +
+        `(${result.reason ?? 'no verifier available'}). Refusing to publish this harness as signed. ` +
+        `Re-run with --allow-unverified-witness to publish anyway — the signature will NOT have been checked.`,
+      );
     }
   }
 
