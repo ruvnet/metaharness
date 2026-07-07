@@ -54,7 +54,10 @@ export class WorkspaceLens {
     name: string,
     opts: { baseUrl: string; fetchImpl?: typeof fetch },
   ): Promise<WorkspaceLens> {
-    const base = opts.baseUrl.replace(/\/+$/, '');
+    // Strip trailing slashes with a linear loop (NOT a `/\/+$/` regex — that backtracks on many-slash
+    // input, a ReDoS the CodeQL js/redos-on-library-input query flags).
+    let base = opts.baseUrl;
+    while (base.endsWith('/')) base = base.slice(0, -1);
     return WorkspaceLens.fromUrl(`${base}/${encodeURIComponent(name)}.json`, { fetchImpl: opts.fetchImpl });
   }
 
