@@ -519,6 +519,8 @@ async function runInstance(inst) {
       // ADR-195 #2: reproduction-first path replaces the base solve (it owns the iterate loop).
       const rg = await runReproGate(inst, llm, localizeHint);
       patch = rg.patch; row.tier = 'repro'; row.reproValid = rg.reproValid; row.reproPassed = rg.reproPassed; row.reproRounds = rg.rounds; row.resolved = !!rg.reproPassed;
+      // ADR-175 §63 / #47: record the non-gating symptom-binding confidence of the self-written repro.
+      if (rg.symptomBinding) row.symptomBinding = rg.symptomBinding;
     } else {
       // ADR-205 perf (--early-escalate): abort the cheap attempt at half budget if it has not even
       // ATTEMPTED an edit — the dominant unrecoverable signature (all-exploration, zero edits).

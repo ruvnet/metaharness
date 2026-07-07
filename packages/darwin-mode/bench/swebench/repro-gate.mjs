@@ -47,6 +47,10 @@ export async function reproGateSolve({ writeRepro, solveRound, runRepro, maxRoun
 
   const rb = await writeRepro();
   cost += rb.cost || 0;
+  // ADR-175 §63 / #47: carry the non-gating symptom-binding confidence through so run reports can
+  // record how well the self-written repro binds to the issue's symptom (undefined if the writer
+  // didn't compute it, e.g. an invalid repro).
+  const symptomBinding = rb.symptomBinding;
 
   // Gate could not arm — no valid failing repro. Do ONE plain solve round so we still return a patch,
   // and report reproValid=false so this instance is not counted as repro-gated.
@@ -54,7 +58,7 @@ export async function reproGateSolve({ writeRepro, solveRound, runRepro, maxRoun
     const r = await solveRound({ round: 1, reproTrace: '', prevPatch: '' });
     cost += r.cost || 0;
     history.push({ round: 1, repro: 'invalid', resolvedInLoop: !!r.resolvedInLoop });
-    return { patch: r.patch || '', reproValid: false, reproPassed: false, rounds: 1, cost, history };
+    return { patch: r.patch || '', reproValid: false, reproPassed: false, rounds: 1, cost, history, symptomBinding };
   }
 
   const repro = rb.repro;
@@ -78,13 +82,13 @@ export async function reproGateSolve({ writeRepro, solveRound, runRepro, maxRoun
     const passed = !!(rr.ran && rr.passed);
     history.push({ round, ran: !!rr.ran, reproPassed: passed, resolvedInLoop: !!r.resolvedInLoop });
     if (passed) {
-      return { patch: r.patch, reproValid: true, reproPassed: true, rounds: round, cost, history };
+      return { patch: r.patch, reproValid: true, reproPassed: true, rounds: round, cost, history, symptomBinding };
     }
     // Feed the repro failure trace back so the next round iterates toward making the repro pass.
     reproTrace = (rr.logTail || '').slice(-2500);
   }
 
-  return { patch: lastPatch, reproValid: true, reproPassed: false, rounds: history.length, cost, history };
+  return { patch: lastPatch, reproValid: true, reproPassed: false, rounds: history.length, cost, history, symptomBinding };
 }
 
 /**

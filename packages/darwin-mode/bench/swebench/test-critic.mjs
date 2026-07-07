@@ -32,6 +32,70 @@ function classify(r) {
   return 'failed'; // raised a real exception/assertion → reproduces the bug ✓
 }
 
+// ── ADR-175 §63 / GH #47 — SYMPTOM-BINDING signal (NON-GATING, measurement only). ───────────────
+// The `failed` verdict above proves the repro raises a REAL exception on the buggy code — but not that
+// the failure is THE issue's symptom rather than an unrelated/friendlier assertion the agent authored
+// (the Goodhart trap #47 flags: a self-written test with narrower scope or weaker assertions). ADR-175
+// names "strengthening it to assert the issue's specific symptom" as follow-up. Hard-GATING on this
+// would risk rejecting valid repros → lower the load-bearing conformant resolve, so this is deliberately
+// a NON-GATING confidence signal: the measurement you'd want BEFORE deciding whether a gate is safe.
+// Pure (issue text + repro source + failure trace → a bounded score) so it unit-tests offline.
+
+const EXC_RE = /\b([A-Z][A-Za-z0-9_]*(?:Error|Exception|Warning))\b/g;
+
+/** Distinct exception/error TYPE names named in a blob (e.g. "raises TypeError"). */
+function exceptionTypes(text) {
+  const out = new Set();
+  for (const m of String(text || '').matchAll(EXC_RE)) out.add(m[1]);
+  return [...out];
+}
+
+/** Salient identifiers the issue calls out: `backtick-quoted` tokens + `foo()` call names (len ≥ 3).
+ *  Conservative on purpose — noise here only weakens a NON-gating score, never rejects a repro. */
+function issueIdentifiers(problemStatement) {
+  const s = String(problemStatement || '');
+  const out = new Set();
+  for (const m of s.matchAll(/`([A-Za-z_][A-Za-z0-9_.]{2,})`/g)) out.add(m[1].split('.').pop());
+  for (const m of s.matchAll(/\b([A-Za-z_][A-Za-z0-9_]{2,})\s*\(/g)) out.add(m[1]);
+  // Drop generic English/code stopwords that would match trivially.
+  const STOP = new Set(['the', 'and', 'for', 'this', 'that', 'with', 'not', 'test', 'def', 'from', 'import', 'return', 'value', 'error', 'function', 'method', 'class', 'object', 'result']);
+  return [...out].filter(w => !STOP.has(w.toLowerCase()));
+}
+
+/**
+ * Heuristic confidence that a conformant repro exercises the ISSUE'S symptom (not just *a* failure).
+ * NON-GATING (ADR-175 §63 / #47) — recorded for analysis, never used to reject a repro.
+ *
+ *   { assessable, score, issueExceptions, boundExceptionType, matchedExceptions,
+ *     issueIdentifierCount, matchedIdentifiers }
+ *
+ * score ∈ [0,1]: +0.5 when the failure trace raises an exception TYPE the issue names
+ * (`boundExceptionType`), +0.5 × the fraction of (up to 3) salient issue identifiers the repro
+ * references. `assessable=false` when the issue names neither an exception nor a salient identifier
+ * (score null) — we don't fabricate confidence from nothing.
+ */
+export function symptomBindingScore(problemStatement, repro, logTail) {
+  const issueExc = exceptionTypes(problemStatement);
+  const traceExc = exceptionTypes(logTail);
+  const idents = issueIdentifiers(problemStatement);
+  const reproText = String(repro || '');
+
+  const matchedExceptions = issueExc.filter(e => traceExc.includes(e));
+  const boundExceptionType = matchedExceptions.length > 0;
+
+  const salient = idents.slice(0, 3);
+  const matchedIdentifiers = salient.filter(id => reproText.includes(id));
+
+  const assessable = issueExc.length > 0 || idents.length > 0;
+  if (!assessable) {
+    return { assessable: false, score: null, issueExceptions: issueExc, boundExceptionType: false, matchedExceptions: [], issueIdentifierCount: idents.length, matchedIdentifiers: [] };
+  }
+  const excPart = boundExceptionType ? 0.5 : 0;
+  const idPart = salient.length > 0 ? 0.5 * (matchedIdentifiers.length / salient.length) : 0;
+  const score = Math.round((excPart + idPart) * 1000) / 1000;
+  return { assessable: true, score, issueExceptions: issueExc, boundExceptionType, matchedExceptions, issueIdentifierCount: idents.length, matchedIdentifiers };
+}
+
 // Framework-aware repro guidance — the recurring repro-gap (django/sympy ~30% of Lite need scaffolding
 // before a self-contained pytest can import the project). Keyed off the SWE-bench instance prefix.
 function frameworkHint(instanceId) {
@@ -65,7 +129,12 @@ export async function buildReproTest(instanceId, problemStatement, llm, opts = {
     });
     lastTail = r.logTail;
     const verdict = r.ran ? classify(r) : 'error';
-    if (verdict === 'failed') return { valid: true, repro, attempts: att, cost, logTail: r.logTail };
+    if (verdict === 'failed') {
+      // ADR-175 §63 / #47: attach the NON-GATING symptom-binding confidence (valid stays true — this
+      // never rejects a repro; it's recorded so a future decision to gate can be measured, not guessed).
+      const symptomBinding = symptomBindingScore(problemStatement, repro, r.logTail);
+      return { valid: true, repro, attempts: att, cost, logTail: r.logTail, symptomBinding };
+    }
     feedback = verdict === 'passed'
       ? `\n--- attempt ${att}: your test PASSED on the unmodified buggy code, so it does NOT reproduce the bug. Rewrite it to assert the CORRECT behavior described in the issue, so it FAILS on the current code. ---`
       : `\n--- attempt ${att}: your test could not run (${verdict}). Output:\n${r.logTail.slice(-800)}\nFix imports/collection so a single test function runs. ---`;

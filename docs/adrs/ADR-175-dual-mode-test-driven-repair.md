@@ -60,8 +60,14 @@ Consumers evaluating these modes must account for their fundamentally different 
 Direction matters: for the **benchmark**, a gamed self-repro can only *lower* the gold `FAIL_TO_PASS`
 score (it can't inflate a leaderboard number); for **product use with no ground truth there is no such
 backstop** — hence the `--pause-for-test-review` mode below. Partial mitigation today (ADR-174
-Test-Critic): the repro is validated to *fail on the unmodified code*; strengthening it to assert the
-issue's specific symptom is follow-up.
+Test-Critic): the repro is validated to *fail on the unmodified code*, and the failure must be a real
+assertion/exception (not an ImportError/collection error). Toward "assert the issue's *specific*
+symptom": `test-critic.symptomBindingScore` now computes a **non-gating** confidence that the repro's
+failure binds to the issue (does the trace raise an exception *type* the issue names? does the repro
+reference the issue's salient identifiers?), recorded per-instance (`row.symptomBinding`). It is
+deliberately **not** a gate — hard-rejecting low-binding repros risks lowering the load-bearing
+conformant resolve, so we ship the *measurement* first; a gate is a follow-up decision that a live
+A/B on the frozen holdout can now inform.
 
 ## Consequences
 - Product default = oracle-ON (TDR). Leaderboard/no-test = oracle-OFF. Both documented in the darwin

@@ -147,6 +147,7 @@ jobs:
           node scripts/sota-attest.test.mjs
           node scripts/nightly-sota-gate.test.mjs
           node packages/darwin-mode/bench/swebench/solver-trajectory.test.mjs
+          node packages/darwin-mode/bench/swebench/test-critic.test.mjs
       - name: Native-router interop guard (ADR-043 — CJS default-unwrap regression)
         # tiny-dancer is CJS; vitest's interop masks the ESM `.default` unwrap, so
         # this runs under plain `node` (the real install condition) and fails if a
