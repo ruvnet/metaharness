@@ -100,6 +100,9 @@ const CHECKS = {
       // @metaharness/workspace-lens (Jacobian-Lens interpretability primitive, ADR-238) is a standalone
       // published library on its own semver — a runtime measurement primitive, not core/umbrella-bundled.
       '@metaharness/workspace-lens',
+      // @metaharness/workspace-probe (evaluation + Darwin-Mode bridge for workspace-lens, ADR-239) is
+      // likewise a standalone published library on its own semver.
+      '@metaharness/workspace-probe',
       '@metaharness/kernel',
       '@metaharness/host-claude-code',
       '@metaharness/host-codex',
