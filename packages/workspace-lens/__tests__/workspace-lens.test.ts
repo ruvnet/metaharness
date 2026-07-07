@@ -76,6 +76,39 @@ describe('WorkspaceLens', () => {
   });
 });
 
+describe('fromUrl / fromRegistry (HTTP lens loading)', () => {
+  // A fetch-shaped stub: 200 returns the artifact JSON; non-200 returns { ok:false, status }.
+  function fetchStub(status: number, body: unknown): typeof fetch {
+    return (async (_url: string) => ({
+      ok: status >= 200 && status < 300,
+      status,
+      json: async () => body,
+    })) as unknown as typeof fetch;
+  }
+
+  it('fromUrl fetches + constructs a lens from a served artifact', async () => {
+    const lens = await WorkspaceLens.fromUrl('https://cdn.example/qwen.json', {
+      fetchImpl: fetchStub(200, synthArtifact()),
+    });
+    expect(lens.modelId).toBe('synth-3d');
+    expect(lens.readout({ layer: 5, position: 0, h: [0, 0, 5] }).tokens[0].token).toBe('wrong');
+  });
+
+  it('fromUrl fails loudly on a non-2xx response', async () => {
+    await expect(
+      WorkspaceLens.fromUrl('https://cdn.example/missing.json', { fetchImpl: fetchStub(404, {}) }),
+    ).rejects.toThrow(/HTTP 404/);
+  });
+
+  it('fromRegistry builds `${baseUrl}/${name}.json` (trailing slash tolerated) and constructs', async () => {
+    let seen = '';
+    const capture = (async (url: string) => { seen = url; return { ok: true, status: 200, json: async () => synthArtifact() }; }) as unknown as typeof fetch;
+    const lens = await WorkspaceLens.fromRegistry('qwen-2.5-7b-jlens', { baseUrl: 'https://cdn.example/lenses/', fetchImpl: capture });
+    expect(seen).toBe('https://cdn.example/lenses/qwen-2.5-7b-jlens.json');
+    expect(lens.lensId).toBe('jlens-synth-v1');
+  });
+});
+
 describe('safety triggers (vectorized, tokenizer-agnostic)', () => {
   const lens = WorkspaceLens.fromArtifact(synthArtifact());
   const states: HiddenState[] = [{ layer: 5, position: 3, h: [0, 0, 5] }];

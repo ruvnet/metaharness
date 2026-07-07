@@ -32,6 +32,32 @@ export class WorkspaceLens {
     return new WorkspaceLens(JSON.parse(raw) as LensArtifact);
   }
 
+  /**
+   * Load a fitted lens over HTTP — fetch a serialized `LensArtifact` JSON from any URL (a CDN, an
+   * artifact store, a raw gist). The typical deploy path: fit a lens offline, publish the artifact,
+   * `fromUrl` it at startup. Inject `fetchImpl` for tests or non-global-fetch runtimes (defaults to the
+   * global `fetch`). Fails loudly on a non-2xx response so a bad URL never silently yields a broken lens.
+   */
+  static async fromUrl(url: string, opts: { fetchImpl?: typeof fetch } = {}): Promise<WorkspaceLens> {
+    const doFetch = opts.fetchImpl ?? fetch;
+    const res = await doFetch(url);
+    if (!res.ok) throw new Error(`WorkspaceLens.fromUrl: ${url} → HTTP ${res.status}`);
+    return new WorkspaceLens((await res.json()) as LensArtifact);
+  }
+
+  /**
+   * Convenience: load a lens by NAME from a registry base URL (e.g. a CDN of community pre-fit lenses).
+   * No registry is hardcoded — the caller supplies `baseUrl`, and the artifact is fetched from
+   * `${baseUrl}/${name}.json`. Keeps the package free of any assumed/embedded endpoint.
+   */
+  static async fromRegistry(
+    name: string,
+    opts: { baseUrl: string; fetchImpl?: typeof fetch },
+  ): Promise<WorkspaceLens> {
+    const base = opts.baseUrl.replace(/\/+$/, '');
+    return WorkspaceLens.fromUrl(`${base}/${encodeURIComponent(name)}.json`, { fetchImpl: opts.fetchImpl });
+  }
+
   get modelId(): string { return this.artifact.modelId; }
   get lensId(): string { return this.artifact.lensId; }
   get dModel(): number { return this.artifact.dModel; }
