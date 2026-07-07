@@ -33,6 +33,10 @@ jobs:
   rust:
     name: Rust / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    # No CI job should be able to hang for the 6h GitHub default — a slow/stuck Windows `cargo test`
+    # once blocked every open PR from merging. Generous ceiling (observed worst ~45min) that fails a
+    # genuinely-hung job fast enough to rerun, without false-failing a legitimately-slow run.
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
@@ -64,6 +68,7 @@ jobs:
   wasm:
     name: WASM / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
@@ -117,6 +122,7 @@ jobs:
   node:
     name: Node ${{ matrix.node }} / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     needs: [wasm]
     strategy:
       fail-fast: false
@@ -177,6 +183,7 @@ jobs:
   pack-install:
     name: pack+install / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     needs: [node]
     strategy:
       fail-fast: false
@@ -204,6 +211,7 @@ jobs:
   bench:
     name: Bench (smoke)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: [node]
     steps:
       - uses: actions/checkout@v4
