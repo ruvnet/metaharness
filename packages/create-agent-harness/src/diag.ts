@@ -20,7 +20,7 @@ import { createRequire } from 'node:module';
 import { readFile } from 'node:fs/promises';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 /** Mirror of subcommands.ts's exported shape — kept local to avoid a
  *  cyclic import (subcommands.ts imports from diag.ts via diagCmd). */
 export type SubcommandResult = { code: number; lines: string[] };
@@ -50,6 +50,69 @@ export function skewVerdict(manifestVer: string | undefined, localVer: string | 
   if (m.minor !== l.minor) return 'minor-diff';
   if (m.patch !== l.patch) return 'patch-diff';
   return 'match';
+}
+
+/** GH #22: the kernel backend that actually answered on this machine. */
+export type KernelBackendTier = 'native' | 'wasm' | 'js';
+
+/**
+ * GH #22: resolve WHICH kernel backend the harness actually loads on this
+ * machine (native > wasm > js), the backend explicitly requested via
+ * METAHARNESS_KERNEL_BACKEND (if any), and the reason each higher tier was
+ * unavailable. The version diagnostic above answers "is the kernel the right
+ * VERSION?"; this answers "am I getting the FAST kernel, and if not, why not?"
+ * — the #1 support question after version skew (silent js fallback, GH #22).
+ *
+ * Never throws — consistent with the rest of diag. Two ways the fast path is
+ * absent are BOTH captured: (a) auto mode fell through to js → `kernelDiagnostics`
+ * carries the per-tier reasons; (b) a specific backend was REQUESTED but can't
+ * load → `loadKernel` throws, and we surface that throw under the requested tier
+ * (that throw message IS the diagnostic the operator asked for).
+ */
+async function resolveKernelBackend(harnessDir: string): Promise<{
+  backend: KernelBackendTier | undefined;
+  requested: string | null;
+  reasons: { native?: string; wasm?: string };
+}> {
+  const requested = (process.env.METAHARNESS_KERNEL_BACKEND || '').trim().toLowerCase() || null;
+  const entry = resolveKernelEntry(harnessDir);
+  if (!entry) return { backend: undefined, requested, reasons: {} };
+  try {
+    const mod = (await import(pathToFileURL(entry).href)) as {
+      kernelDiagnostics?: () => Promise<{
+        resolved: KernelBackendTier;
+        requested: string | null;
+        reasons: { native?: string; wasm?: string };
+      }>;
+    };
+    if (typeof mod.kernelDiagnostics === 'function') {
+      const d = await mod.kernelDiagnostics();
+      return { backend: d.resolved, requested: d.requested ?? requested, reasons: d.reasons ?? {} };
+    }
+    // Kernel present but predates kernelDiagnostics() (GH #22) — can't report the backend.
+    return { backend: undefined, requested, reasons: {} };
+  } catch (e) {
+    // A REQUESTED-but-unavailable backend makes loadKernel throw — capture that
+    // reason under the requested tier so the operator sees exactly why.
+    const reasons: { native?: string; wasm?: string } = {};
+    if (requested === 'native' || requested === 'wasm') reasons[requested] = (e as Error).message;
+    return { backend: undefined, requested, reasons };
+  }
+}
+
+/**
+ * Resolve the @metaharness/kernel entry module the same way we resolve its
+ * version — from the harness's own node_modules first, then the workspace
+ * checkout — so the reported backend matches the kernel the harness loads.
+ */
+function resolveKernelEntry(harnessDir: string): string | undefined {
+  try {
+    const require = createRequire(join(harnessDir, 'package.json'));
+    return require.resolve('@metaharness/kernel');
+  } catch {
+    const wsEntry = resolve(__dirname, '..', '..', 'kernel-js', 'dist', 'index.js');
+    return existsSync(wsEntry) ? wsEntry : undefined;
+  }
 }
 
 /**
@@ -131,6 +194,13 @@ export interface DiagReport {
   manifestGeneratorVersion: string | undefined;
   localGeneratorVersion: string | undefined;
   generatorVerdict: SkewVerdict;
+  // GH #22: which kernel backend actually answers on this machine (native/wasm/js),
+  // the backend requested via METAHARNESS_KERNEL_BACKEND (null if unset), and why a
+  // higher tier was unavailable. `kernelBackend` is undefined when the kernel can't
+  // be loaded at all (not installed, or a requested backend that threw).
+  kernelBackend: KernelBackendTier | undefined;
+  requestedBackend: string | null;
+  backendReasons: { native?: string; wasm?: string };
 }
 
 export async function buildDiagReport(harnessDir: string): Promise<DiagReport> {
@@ -155,6 +225,7 @@ export async function buildDiagReport(harnessDir: string): Promise<DiagReport> {
   const verdict = skewVerdict(manifestKernelVersion, localKernelVersion);
   const localGeneratorVersion = resolveLocalGeneratorVersion();
   const generatorVerdict = skewVerdict(manifestGeneratorVersion, localGeneratorVersion);
+  const kb = await resolveKernelBackend(harnessDir);
   let actionable: string | undefined;
   if (verdict === 'major-diff') {
     actionable = `Run: npm install @metaharness/kernel@${manifestKernelVersion} (major skew — APIs may break)`;
@@ -175,6 +246,9 @@ export async function buildDiagReport(harnessDir: string): Promise<DiagReport> {
     manifestGeneratorVersion,
     localGeneratorVersion,
     generatorVerdict,
+    kernelBackend: kb.backend,
+    requestedBackend: kb.requested,
+    backendReasons: kb.reasons,
   };
 }
 
@@ -195,6 +269,23 @@ export function formatDiagReport(report: DiagReport): SubcommandResult {
   lines.push(`  surface:              ${report.surface ?? '(unknown — pre-iter-56 manifest)'}`);
   lines.push(`  manifest kernel:      ${report.manifestKernelVersion ?? '(unset — pre-iter-58 manifest)'}`);
   lines.push(`  installed kernel:     ${report.localKernelVersion ?? '(not installed)'}`);
+  // GH #22: which backend actually answers + (if a specific one was requested) that request.
+  const reqSuffix = report.requestedBackend ? `  [requested: ${report.requestedBackend}]` : '';
+  // When no backend resolved, the reason differs: a REQUESTED tier that threw
+  // (kernel is installed, that tier just isn't) vs. the kernel not resolving at all.
+  const unresolvedLabel = report.requestedBackend
+    ? '(requested backend unavailable — see below)'
+    : '(not loadable — kernel not installed?)';
+  lines.push(`  kernel backend:       ${report.kernelBackend ?? unresolvedLabel}${reqSuffix}`);
+  // GH #22: WHY the faster tiers didn't answer — the whole point of the issue
+  // (a silent js fallback with no explanation). Only show a tier that failed
+  // AND isn't the one that ended up answering.
+  if (report.backendReasons.native && report.kernelBackend !== 'native') {
+    lines.push(`     native unavailable — ${report.backendReasons.native}`);
+  }
+  if (report.backendReasons.wasm && report.kernelBackend !== 'wasm') {
+    lines.push(`     wasm unavailable — ${report.backendReasons.wasm}`);
+  }
   lines.push(`  manifest generator:   ${report.manifestGeneratorVersion ?? '(unset)'}`);
   lines.push(`  installed generator:  ${report.localGeneratorVersion ?? '(not installed)'}`);
   lines.push('');
