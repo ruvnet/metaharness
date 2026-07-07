@@ -95,6 +95,42 @@ describe('scanMcp', () => {
   });
 });
 
+// GH #4 (mutation finding): the CI security gate blocks (exit 1) iff a HIGH finding is present, so a
+// mutation that downgrades a HIGH rule to MEDIUM silently flips the gate to pass. The existing tests
+// assert finding IDs + the aggregate `worst`, which misses such a downgrade whenever another HIGH
+// finding co-occurs (e.g. the "flags shell access" case has three HIGHs). These pin each security-
+// critical rule's OWN severity and prove that each HIGH condition ALONE still blocks the gate.
+describe('per-finding HIGH severity is pinned (mutation guard — GH #4)', () => {
+  it('allow-shell ALONE is HIGH and blocks the gate (exit 1)', async () => {
+    // Same clean setup as "passes a safe default-deny harness" (worst=info) but with allowShell:true,
+    // so allow-shell is the SOLE non-info finding — its downgrade can't hide behind another HIGH.
+    const dir = await makeHarness({
+      policy: { ...SAFE, allowShell: true },
+      allow: ['mcp__bot__*'],
+      deps: { '@metaharness/kernel': '0.1.0' },
+    });
+    const r = scanMcp(dir);
+    const nonInfo = r.findings.filter((f) => f.severity !== 'info');
+    expect(nonInfo.map((f) => f.id)).toEqual(['allow-shell']);
+    expect(nonInfo[0].severity).toBe('high');   // kills the allow-shell HIGH→MEDIUM mutant
+    expect(r.worst).toBe('high');
+    expect(mcpScanCmd([dir]).code).toBe(1);      // kills the gate exit 1→0 flip
+  });
+
+  it('each security-critical rule keeps its HIGH severity', async () => {
+    const noPolicy = scanMcp(await makeHarness({ policy: null, allow: ['mcp__bot__*'] }));
+    expect(noPolicy.findings.find((f) => f.id === 'no-policy')?.severity).toBe('high');
+
+    const bad = scanMcp(await makeHarness({
+      policy: { ...SAFE, defaultDeny: false },
+      allow: ['mcp__*__*'],
+      deps: { '@metaharness/kernel': '0.1.0' },
+    }));
+    expect(bad.findings.find((f) => f.id === 'no-default-deny')?.severity).toBe('high');
+    expect(bad.findings.find((f) => f.id === 'wildcard-tool-perm')?.severity).toBe('high');
+  });
+});
+
 describe('mcpScanCmd', () => {
   it('exits 1 on a HIGH finding and 0 on a clean harness', async () => {
     const bad = await makeHarness({ policy: null, allow: ['mcp__bot__*'] });
