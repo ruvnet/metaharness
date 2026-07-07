@@ -30,6 +30,22 @@ describe('render', () => {
     expect(render('{{x}}-{{x}}-{{x}}', { x: 'a' }).output).toBe('a-a-a');
   });
 
+  // GH #4 (mutation finding): the {{var}} name charset is deliberately strict —
+  // `[a-zA-Z_][a-zA-Z0-9_]*` — so a template can't reference dotted/hyphenated/leading-digit keys
+  // (e.g. `{{a.b}}`, `{{../x}}`, path-like or prototype-walking names). Mutation testing showed the
+  // regex can be loosened to admit `.`/`-`/leading-digit and every existing test still passes. These
+  // pin the boundary: such tokens must be left LITERAL (not interpolated), even when vars would match.
+  it('does NOT interpolate dotted/hyphenated/leading-digit names (injection-safety, #4)', () => {
+    // A loosened regex would substitute these; the strict one leaves them untouched.
+    const dotted = render('{{foo.bar}}', { 'foo.bar': 'INJECTED', foo: 'X' });
+    expect(dotted.output).toBe('{{foo.bar}}');
+    expect(dotted.unresolved).toEqual([]);   // no var matched at all
+
+    expect(render('{{foo-bar}}', { 'foo-bar': 'INJECTED' }).output).toBe('{{foo-bar}}');
+    expect(render('{{1foo}}', { '1foo': 'INJECTED' }).output).toBe('{{1foo}}');
+    expect(render('{{a b}}', { 'a b': 'INJECTED' }).output).toBe('{{a b}}');
+  });
+
   it('ignores malformed braces', () => {
     // Single braces shouldn't trigger substitution.
     expect(render('{name}', { name: 'x' }).output).toBe('{name}');
@@ -43,6 +59,11 @@ describe('extractVarReferences', () => {
 
   it('returns [] when no vars are referenced', () => {
     expect(extractVarReferences('no template vars')).toEqual([]);
+  });
+
+  // GH #4: same strict charset as render() — dotted/hyphenated/leading-digit tokens are not references.
+  it('does not extract dotted/hyphenated/leading-digit tokens (#4)', () => {
+    expect(extractVarReferences('{{a.b}} {{c-d}} {{1e}}')).toEqual([]);
   });
 });
 
