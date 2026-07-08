@@ -1,6 +1,8 @@
 # ADR-235: Independent re-executing verifiers + honest-null replay for flywheel proof bundles
 
-- **Status**: Accepted — verifier bug fixed + regression-tested (`@metaharness/flywheel` 0.1.2); the re-execution enhancement is the forward plan
+- **Status**: Accepted — verifier bug fixed + regression-tested; gate re-execution is implemented in
+  `@metaharness/flywheel` and the fixed package is published (latest checked: 0.1.7). Remaining work is
+  consumer bumps / removing downstream compatibility shims.
 - **Date**: 2026-07-06
 - **Deciders**: ruv
 - **Tags**: flywheel, replay, verifier, receipts, honest-null, provenance, metaharness
@@ -26,13 +28,13 @@ The `promos.length > 0 &&` guard requires **≥1 promotion** for a bundle to ver
 
 ## 2. Decision
 
-1. **Honest-null runs are VALID and must replay-PASS.** Fixed the gate: `allPromoted = promos.every((c) => c.verdict === 'PROMOTED')` (vacuously true for a root-only chain). A run that produces zero verified improvements is a real, replayable outcome — not a broken bundle. Regression tests pin both directions: a root-only chain PASSES; a chain with a smuggled non-`PROMOTED` commit still FAILS. Shipped in `@metaharness/flywheel` **0.1.2**.
+1. **Honest-null runs are VALID and must replay-PASS.** Fixed the gate: `allPromoted = promos.every((c) => c.verdict === 'PROMOTED')` (vacuously true for a root-only chain). A run that produces zero verified improvements is a real, replayable outcome — not a broken bundle. Regression tests pin both directions: a root-only chain PASSES; a chain with a smuggled non-`PROMOTED` commit still FAILS. First shipped in `@metaharness/flywheel` **0.1.2**; latest published fixed release checked here is **0.1.7**.
 
-2. **Adopt the re-executing-verifier discipline as the metaharness standard** (from PR #64, forward plan): a replay verifier should not merely check that a *signed decision* is well-formed — it should **RE-RUN the gate function on the sealed scores and assert the recorded verdict reproduces bit-for-bit**. Today `verifyReplayBundle` verifies (receipts ∧ reaches-root ∧ contiguous-parents ∧ all-promoted ∧ gate-fingerprint) but cannot re-run `meetsPromotionRule` because a `LineageCommit` does not carry the baseline+candidate `Score`. The enhancement: **store `baselineScore` + `candidateScore` on each `LineageCommit`**, and add a `gateReExecutes` check to `verifyReplayBundle` that recomputes `promotionRule({baseline, candidate})` and asserts `promote === (verdict === 'PROMOTED')` for every commit. This closes the gap between "a signature over a claimed verdict" and "the verdict is what the frozen gate actually decides" — catching a signed-but-wrong promotion, which the current fingerprint check cannot.
+2. **Adopt the re-executing-verifier discipline as the metaharness standard** (from PR #64). A replay verifier should not merely check that a *signed decision* is well-formed — it should **RE-RUN the gate function on the sealed scores and assert the recorded verdict reproduces bit-for-bit**. This is now implemented: `LineageCommit` carries optional `baselineScore` + `candidateScore`, and `verifyReplayBundle(..., { promotionRule })` adds a `gateReExecutes` check that recomputes `promotionRule({baseline, candidate})` and asserts a `PROMOTED` commit still promotes under the supplied fingerprint-matched rule. This closes the gap between "a signature over a claimed verdict" and "the verdict is what the frozen gate actually decides" — catching a signed-but-wrong promotion that the fingerprint check alone cannot.
 
 ## 3. Consequences
 
 - **Correctness:** the D1-S4 honest-null bundle now verifies (`pass: true`). Every future weak/plateaued run replays honestly instead of masquerading as broken — which matters precisely because we must be able to publish negatives (a weak cheap model resolving `1/25` is a real, signed result, not a bug).
-- **Trust model strengthened (forward):** re-executing the gate on sealed scores means an external reviewer trusts *the gate re-run*, not *our logged verdict* — the ADR-249/PR#64 "trust none of the logs" property, applied to promotion decisions.
+- **Trust model strengthened:** re-executing the gate on sealed scores means an external reviewer trusts *the gate re-run*, not *our logged verdict* — the ADR-249/PR#64 "trust none of the logs" property, applied to promotion decisions.
 - **Scope-honesty preserved:** this ADR does not change `meetsPromotionRule` (still frozen); it makes the *verifier* stricter and the *null case* honest.
-- **Follow-up:** bump `LineageCommit` (minor, additive `baselineScore?`/`candidateScore?`) + wire the `gateReExecutes` check; republish flywheel; and — separately — the D1-S4 run itself needs a stronger solver or more instances before it is domain *evidence* (the `$0.0086` spend shows the cheap solver barely executed; this is an honest null, not a proof).
+- **Follow-up:** bump downstream consumers that still pin `@metaharness/flywheel@0.1.1` and delete their local honest-null replay shims; separately, the D1-S4 run itself needs a stronger solver or more instances before it is domain *evidence* (the `$0.0086` spend shows the cheap solver barely executed; this is an honest null, not a proof).
