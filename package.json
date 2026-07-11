@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "description": "Scaffold your own focused AI agent harness — workspace root",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator",
+  "homepage": "https://github.com/ruvnet/metaharness",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator.git"
+    "url": "https://github.com/ruvnet/metaharness.git"
   },
   "license": "MIT",
   "author": "rUv <ruv@ruv.net>",

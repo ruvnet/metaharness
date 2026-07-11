@@ -10,7 +10,7 @@
 
 [![Open the Studio](https://img.shields.io/badge/Studio-open_in_browser_↗-7c5cff?style=for-the-badge&logo=githubpages&logoColor=white)](https://ruvnet.github.io/metaharness/)
 [![User guide](https://img.shields.io/badge/User_guide-plain_language-22c55e?style=for-the-badge)](docs/USERGUIDE.md)
-[![Tests — 568 passing](https://img.shields.io/badge/tests-568%20passing-22c55e?style=for-the-badge)](docs/ARCHITECTURE.md)
+[![Tests — 2,254 passing](https://img.shields.io/badge/tests-2%2C254%20passing-22c55e?style=for-the-badge)](docs/ARCHITECTURE.md)
 [![npm publish smoke](https://github.com/ruvnet/metaharness/actions/workflows/published-smoke.yml/badge.svg)](https://github.com/ruvnet/metaharness/actions/workflows/published-smoke.yml)
 [![License MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 
@@ -262,13 +262,13 @@ across Rust × 3 OS + WASM × 3 OS + Node 20+22 × 3 OS + Bench + pack+install �
 | Layer | Status |
 |---|---|
 | Rust kernel (WASM + NAPI-RS) | Shipped — 7 subsystems |
-| 6 host adapters | claude-code · codex · pi-dev · hermes · openclaw · rvm |
+| 9 host adapters | claude-code · codex · pi-dev · hermes · openclaw · rvm · copilot · opencode · github-actions |
 | 17 `harness` subcommands | Shipped |
 | 7 Codex skills | Shipped |
 | Claude marketplace plugin | Shipped + schema-validated |
 | Witness signing (Ed25519) | Shipped + tamper-tested |
 | MCP tool dispatch | 11 end-to-end cases |
-| Test suite | **568/568** across 67 files |
+| Test suite | **2,254 passing** across 246 files (CI green on `main`) |
 | CI matrix | 16 jobs green |
 | Security pipeline | cargo-audit · cargo-deny · npm-audit · CodeQL · SBOM (SPDX-2.3) |
 | Publish pipeline | GCP WIF + 2 gates + 11 packages + IPFS pin |
@@ -291,7 +291,7 @@ You (harness author)
 
 You operate the factory. The factory produces your harness. Your users never see the factory — only the brand and CLI you ship. The kernel ships as `@metaharness/kernel` (Rust → wasm-pack + NAPI-RS); your content stays yours.
 
-📖 Deeper: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/adrs/INDEX.md](docs/adrs/INDEX.md) (31 ADRs)
+📖 Deeper: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/adrs/INDEX.md](docs/adrs/INDEX.md) (219 ADRs)
 
 ---
 
