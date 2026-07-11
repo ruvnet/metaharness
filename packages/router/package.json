@@ -19,7 +19,8 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "bench": "npm run build && node bench/route-throughput.mjs"
   },
   "keywords": [
     "model-routing",
@@ -33,10 +34,10 @@
   ],
   "author": "rUv <ruv@ruv.net>",
   "license": "MIT",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator",
+  "homepage": "https://github.com/ruvnet/metaharness",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator"
+    "url": "https://github.com/ruvnet/metaharness"
   },
   "engines": {
     "node": ">=20.0.0"

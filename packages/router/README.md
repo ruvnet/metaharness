@@ -54,6 +54,26 @@ DRACO measured it honestly: structure degrades quality, and a cheap model
 matches frontier quality at ~10× lower cost. The leverage is **choosing** the
 model, not wrapping it. This is that choice as a library.
 
+## Performance
+
+`route()` is called once per query against a fixed candidate set, so
+`Router` caches each candidate's example norms by object identity
+(`WeakMap<RouterCandidate, Float64Array>`) instead of recomputing them
+inside `cosine()` on every call, and computes the query's own norm once per
+`route()` call instead of once per (candidate, example) pair. Behaviour is
+unchanged — same k-NN, same tie-breaking, same public API — only the
+redundant arithmetic is gone. Measured on `bench/route-throughput.mjs`
+(`npm run bench`, deterministic synthetic data, 6 candidates):
+
+| examples/candidate | embedding dim | before | after |
+|---|---|---|---|
+| 20 | 128 | 26,197 routes/s | 30,770 routes/s |
+| 200 | 128 | 2,430 routes/s | 2,801 routes/s |
+| 20 | 1536 | 4,332 routes/s | 5,236 routes/s |
+| 200 | 1536 | 421 routes/s | 498 routes/s |
+
+~15–21% faster across the board. Full results in `bench/results/`.
+
 MIT.
 
 ## Trained router (kernel ridge regression)

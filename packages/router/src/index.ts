@@ -23,6 +23,24 @@ export function cosine(a: number[], b: number[]): number {
   return na && nb ? dot / (Math.sqrt(na) * Math.sqrt(nb)) : 0;
 }
 
+function l2norm(v: number[]): number {
+  let s = 0;
+  for (let i = 0; i < v.length; i++) s += v[i] * v[i];
+  return Math.sqrt(s);
+}
+
+function dotProduct(a: number[], b: number[]): number {
+  let s = 0;
+  const n = Math.min(a.length, b.length);
+  for (let i = 0; i < n; i++) s += a[i] * b[i];
+  return s;
+}
+
+/** cosine(a, b) given precomputed norms — same formula as `cosine()`, no recompute. */
+function cosineWithNorms(a: number[], aNorm: number, b: number[], bNorm: number): number {
+  return aNorm && bNorm ? dotProduct(a, b) / (aNorm * bNorm) : 0;
+}
+
 /** One labelled observation: on a query with this embedding, the candidate scored `quality`. */
 export interface RouterExample {
   embedding: number[];
@@ -57,6 +75,24 @@ export interface RouteResult {
   costPerMTok: number;
   /** true if this pick cleared the quality bar (or no bar was set). */
   metBar: boolean;
+}
+
+// Per-candidate example norms, cached by object identity so repeated route()
+// calls against the same (unmutated) candidate set never recompute them. This
+// is the hot-path cost: cosine's norm terms depend only on the example
+// embeddings, which never change after construction, so recomputing them on
+// every route() call was pure waste (measured ~600x the cost of the k-NN sort
+// at 200 examples/candidate x 1536-dim embeddings — see bench/route-throughput.mjs).
+const exampleNormsCache = new WeakMap<RouterCandidate, Float64Array>();
+
+function exampleNorms(candidate: RouterCandidate): Float64Array {
+  let norms = exampleNormsCache.get(candidate);
+  if (!norms || norms.length !== candidate.examples.length) {
+    norms = new Float64Array(candidate.examples.length);
+    for (let i = 0; i < candidate.examples.length; i++) norms[i] = l2norm(candidate.examples[i].embedding);
+    exampleNormsCache.set(candidate, norms);
+  }
+  return norms;
 }
 
 /**
@@ -100,20 +136,32 @@ export class Router {
 
   /** Predict a candidate's quality on `queryEmbedding` via k-NN over its examples. */
   predict(candidate: RouterCandidate, queryEmbedding: number[]): number {
-    if (candidate.examples.length === 0) return 0;
-    const nn = candidate.examples
-      .map((e) => [e.quality, cosine(queryEmbedding, e.embedding)] as const)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, Math.min(this.k, candidate.examples.length));
+    return this.predictWithQueryNorm(candidate, queryEmbedding, l2norm(queryEmbedding));
+  }
+
+  /** Same as `predict()`, but takes the query's precomputed norm — avoids
+   *  recomputing it once per candidate when `route()` calls this per-candidate
+   *  for the SAME query. */
+  private predictWithQueryNorm(candidate: RouterCandidate, queryEmbedding: number[], queryNorm: number): number {
+    const examples = candidate.examples;
+    if (examples.length === 0) return 0;
+    const norms = exampleNorms(candidate);
+    const scored: Array<readonly [number, number]> = new Array(examples.length);
+    for (let i = 0; i < examples.length; i++) {
+      scored[i] = [examples[i].quality, cosineWithNorms(queryEmbedding, queryNorm, examples[i].embedding, norms[i])];
+    }
+    scored.sort((a, b) => b[1] - a[1]);
+    const nn = scored.slice(0, Math.min(this.k, scored.length));
     return nn.reduce((s, [q]) => s + q, 0) / nn.length;
   }
 
   /** Route a query to the cost-optimal candidate. */
   route(queryEmbedding: number[]): RouteResult {
+    const queryNorm = l2norm(queryEmbedding);
     const scored = this.candidates.map((c) => ({
       id: c.id,
       costPerMTok: c.costPerMTok,
-      predictedQuality: this.predict(c, queryEmbedding),
+      predictedQuality: this.predictWithQueryNorm(c, queryEmbedding, queryNorm),
     }));
     if (this.qualityBar != null) {
       const clearing = scored.filter((s) => s.predictedQuality >= this.qualityBar!);

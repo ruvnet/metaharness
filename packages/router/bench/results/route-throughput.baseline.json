@@ -1,0 +1,41 @@
+{
+  "generatedFrom": "bench/route-throughput.mjs",
+  "results": [
+    {
+      "numCandidates": 6,
+      "examplesPerCandidate": 20,
+      "dim": 128,
+      "calls": 2000,
+      "elapsedMs": 76.35,
+      "callsPerSec": 26197,
+      "sinkCheck": true
+    },
+    {
+      "numCandidates": 6,
+      "examplesPerCandidate": 200,
+      "dim": 128,
+      "calls": 2000,
+      "elapsedMs": 823.07,
+      "callsPerSec": 2430,
+      "sinkCheck": true
+    },
+    {
+      "numCandidates": 6,
+      "examplesPerCandidate": 20,
+      "dim": 1536,
+      "calls": 2000,
+      "elapsedMs": 461.69,
+      "callsPerSec": 4332,
+      "sinkCheck": true
+    },
+    {
+      "numCandidates": 6,
+      "examplesPerCandidate": 200,
+      "dim": 1536,
+      "calls": 500,
+      "elapsedMs": 1187.28,
+      "callsPerSec": 421,
+      "sinkCheck": true
+    }
+  ]
+}
