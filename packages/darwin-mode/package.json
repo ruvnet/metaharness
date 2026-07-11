@@ -31,7 +31,8 @@
     "build": "tsc",
     "test": "vitest run",
     "lint": "tsc --noEmit",
-    "bench:shield": "npm run build && node bench/security/darwin-shield-bench.mjs"
+    "bench:shield": "npm run build && node bench/security/darwin-shield-bench.mjs",
+    "bench:clade": "npm run build && node bench/selection/clade-throughput.mjs"
   },
   "keywords": [
     "llm",

@@ -86,6 +86,54 @@ export function cladeOutcomes(archive: Archive, rootId: string): { passes: numbe
 }
 
 /**
+ * `cladeOutcomes` for EVERY node in the archive at once, via a single
+ * bottom-up (post-order) pass instead of one full subtree walk per node.
+ * `cladeThompsonSelect` used to call `cladeOutcomes` once per scored record —
+ * O(n) per call, O(n) calls, so O(n * avg-subtree-size) total, which degrades
+ * to O(n²) on a roughly linear lineage (each generation's subtree walk almost
+ * entirely re-walks its parent's). Here, each node's subtree outcome is its
+ * own outcome plus the sum of its already-computed children — so every node
+ * and every parent-child edge is visited exactly once, O(n) total.
+ *
+ * Memoized recursion, not a naive DFS: a node revisited while still "in
+ * progress" (`visiting`) contributes zero from that edge — the same cycle
+ * defense `cladeOutcomes`'s `seen` set gives a single walk. The archive is a
+ * tree/forest by construction (`Archive.addVariant` only appends a child once
+ * its parent already exists), so this should never trigger in practice.
+ */
+function cladeOutcomesAll(archive: Archive): Map<string, { passes: number; failures: number }> {
+  const memo = new Map<string, { passes: number; failures: number }>();
+  const visiting = new Set<string>();
+
+  function compute(id: string): { passes: number; failures: number } {
+    const cached = memo.get(id);
+    if (cached) return cached;
+    if (visiting.has(id)) return { passes: 0, failures: 0 }; // cycle guard, see doc above
+    visiting.add(id);
+    let passes = 0, failures = 0;
+    const rec = archive.get(id);
+    if (rec) {
+      if (rec.score !== null) {
+        if (rec.score.promoted) passes += 1;
+        else failures += 1;
+      }
+      for (const child of rec.children) {
+        const c = compute(child);
+        passes += c.passes;
+        failures += c.failures;
+      }
+    }
+    visiting.delete(id);
+    const result = { passes, failures };
+    memo.set(id, result);
+    return result;
+  }
+
+  for (const rec of archive.all()) compute(rec.variant.id);
+  return memo;
+}
+
+/**
  * Clade-metaproductivity Thompson selection: for every scored variant draw
  * `u ~ Beta(τ·passes+1, τ·failures+1)` over its subtree outcomes and return the
  * top-`limit` variants by `u`. Seeded → reproducible. Returns `[]` when nothing
@@ -105,9 +153,10 @@ export function cladeThompsonSelect(
   const t = Math.max(0, tau);
   const scored = archive.all().filter((r) => r.score !== null);
   if (scored.length === 0) return [];
+  const outcomes = cladeOutcomesAll(archive);
   const ranked = scored
     .map((r) => {
-      const { passes, failures } = cladeOutcomes(archive, r.variant.id);
+      const { passes, failures } = outcomes.get(r.variant.id) ?? { passes: 0, failures: 0 };
       const u = sampleBeta(rng, t * passes + 1, t * failures + 1);
       return { variant: r.variant, u };
     })

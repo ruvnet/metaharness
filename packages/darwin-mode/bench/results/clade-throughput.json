@@ -1,0 +1,37 @@
+{
+  "generatedFrom": "bench/selection/clade-throughput.mjs",
+  "results": [
+    {
+      "label": "chain n=200",
+      "archiveSize": 201,
+      "calls": 50,
+      "elapsedMs": 19.24,
+      "callsPerSec": 2599,
+      "sinkCheck": true
+    },
+    {
+      "label": "chain n=800",
+      "archiveSize": 801,
+      "calls": 20,
+      "elapsedMs": 15.13,
+      "callsPerSec": 1322,
+      "sinkCheck": true
+    },
+    {
+      "label": "branching n=800 bf=4",
+      "archiveSize": 801,
+      "calls": 20,
+      "elapsedMs": 14.15,
+      "callsPerSec": 1413,
+      "sinkCheck": true
+    },
+    {
+      "label": "branching n=3000 bf=4",
+      "archiveSize": 3001,
+      "calls": 10,
+      "elapsedMs": 30.86,
+      "callsPerSec": 324,
+      "sinkCheck": true
+    }
+  ]
+}
