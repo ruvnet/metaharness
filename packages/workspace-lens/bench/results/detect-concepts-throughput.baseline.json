@@ -1,0 +1,45 @@
+{
+  "generatedFrom": "bench/detect-concepts-throughput.mjs",
+  "results": [
+    {
+      "dModel": 128,
+      "layers": 4,
+      "numConcepts": 200,
+      "numStates": 20,
+      "calls": 300,
+      "elapsedMs": 732.7,
+      "callsPerSec": 409,
+      "sinkCheck": true
+    },
+    {
+      "dModel": 128,
+      "layers": 4,
+      "numConcepts": 1000,
+      "numStates": 20,
+      "calls": 100,
+      "elapsedMs": 1021.83,
+      "callsPerSec": 98,
+      "sinkCheck": true
+    },
+    {
+      "dModel": 256,
+      "layers": 4,
+      "numConcepts": 1000,
+      "numStates": 40,
+      "calls": 40,
+      "elapsedMs": 1707.97,
+      "callsPerSec": 23,
+      "sinkCheck": true
+    },
+    {
+      "dModel": 256,
+      "layers": 4,
+      "numConcepts": 3000,
+      "numStates": 40,
+      "calls": 15,
+      "elapsedMs": 1841.34,
+      "callsPerSec": 8,
+      "sinkCheck": true
+    }
+  ]
+}

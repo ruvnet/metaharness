@@ -9,7 +9,27 @@
 
 import type { WorkspaceLens } from './lens.js';
 import type { HiddenState, ConceptVector, ConceptTrigger, SafetyFlags } from './types.js';
-import { cosine } from './linalg.js';
+import { dot, norm } from './linalg.js';
+
+// Concept vectors are pre-fitted, static directions — the same ConceptVector
+// objects get passed to detectConcepts() call after call (once per governed
+// decision/trace, per the module doc above). cosine()'s norm(b) term doesn't
+// change across those calls, so caching it by object identity turns an
+// O(states x concepts) re-derivation into an O(concepts) one-time cost
+// amortized across every future call with this concept library. norm(z) is
+// hoisted out of the inner `concepts` loop below for the same reason within a
+// single call: it's the same projected activation for every concept checked
+// against it.
+const conceptNormCache = new WeakMap<ConceptVector, number>();
+
+function conceptNorm(c: ConceptVector): number {
+  let n = conceptNormCache.get(c);
+  if (n === undefined) {
+    n = norm(c.vector);
+    conceptNormCache.set(c, n);
+  }
+  return n;
+}
 
 /** Canonical concept names that map onto the four headline SafetyFlags. */
 export const FLAG_CONCEPTS = {
@@ -39,10 +59,12 @@ export function detectConcepts(
   for (const state of states) {
     if (!lens.hasLayer(state.layer)) continue;
     const z = lens.project(state);
+    const nz = norm(z); // same z for every concept below — compute its norm once, not per concept
     for (const c of concepts) {
       if (c.modelId !== lens.modelId) continue; // never cross-apply a concept from another model
       if (c.vector.length !== z.length) continue;
-      const score = cosine(z, c.vector);
+      const nc = conceptNorm(c);
+      const score = nz === 0 || nc === 0 ? 0 : dot(z, c.vector) / (nz * nc);
       if (score >= threshold) {
         triggers.push({ concept: c.concept, layer: state.layer, position: state.position, score, critical: !!c.critical });
       }

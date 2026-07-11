@@ -21,7 +21,8 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "bench": "npm run build && node bench/detect-concepts-throughput.mjs"
   },
   "keywords": [
     "jacobian-lens",

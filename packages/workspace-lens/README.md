@@ -153,6 +153,28 @@ This is a **measurement primitive**, not a product and **not** a consciousness c
 the connection to a global workspace as *functional* and leaves the philosophy open. The practical claim
 is enough: a measurable window into hidden reasoning.
 
+## Performance
+
+`detectConcepts()` scores every `(state × concept)` pair, and runs once per
+governed decision/trace against a concept library that's fitted ahead of time
+and doesn't change. It caches each concept vector's norm by object identity
+(`WeakMap<ConceptVector, number>`) instead of recomputing it inside `cosine()`
+on every call, and hoists the projected activation's own norm out of the
+per-concept inner loop. Same scores, same thresholds, same triggers — only
+the redundant norm walks are gone. Measured on
+`bench/detect-concepts-throughput.mjs` (`npm run bench`, deterministic
+synthetic lens + concept library):
+
+| concepts | states | dModel | before | after |
+|---|---|---|---|---|
+| 200 | 20 | 128 | 409 calls/s | 758 calls/s |
+| 1,000 | 20 | 128 | 98 calls/s | 216 calls/s |
+| 1,000 | 40 | 256 | 23 calls/s | 52 calls/s |
+| 3,000 | 40 | 256 | 8 calls/s | 20 calls/s |
+
+~1.9–2.5× faster, growing with concept-library size. Full results in
+`bench/results/`.
+
 ## License
 
 MIT.
