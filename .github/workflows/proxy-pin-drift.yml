@@ -1,0 +1,50 @@
+# proxy-pin-drift — watch META_PROXY_VERSION against meta-proxy-dist releases.
+#
+# The pin lives in THIS repo (the package users install via `npx metaharness`);
+# the pre-existing watcher was built in cognitum-one/metaharness guarding a
+# different constant, so drift here went unnoticed (#149). This ports the check
+# to the repo that actually publishes the pin.
+name: proxy-pin-drift
+
+on:
+  schedule:
+    - cron: '23 5 * * 1'   # Mondays 05:23 UTC (off-peak minute)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare META_PROXY_VERSION to meta-proxy-dist latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PINNED=$(grep -oP "META_PROXY_VERSION = '\K[^']+" packages/create-agent-harness/src/meta-proxy.ts)
+          LATEST=$(gh release list --repo cognitum-one/meta-proxy-dist --limit 1 --json tagName --jq '.[0].tagName' | sed 's/^v//')
+          echo "pinned=$PINNED  latest=$LATEST"
+          if [ -z "$LATEST" ]; then echo "could not read meta-proxy-dist latest release — skipping (not a drift)"; exit 0; fi
+          if [ "$PINNED" = "$LATEST" ]; then echo "✓ META_PROXY_VERSION is current."; exit 0; fi
+          TITLE="meta-proxy pin drift — META_PROXY_VERSION ($PINNED) is behind meta-proxy-dist v$LATEST"
+          BODY_FILE=/tmp/body.md
+          {
+            echo "\`META_PROXY_VERSION\` is pinned at \`$PINNED\` but \`cognitum-one/meta-proxy-dist\`"
+            echo "latest release is \`v$LATEST\`. \`metaharness proxy install\` downloads the pinned"
+            echo "version, so users are getting a stale proxy and being told it succeeded."
+            echo ""
+            echo "**To resolve:** confirm \`META_PROXY_SIGNING_PUBKEY_PEM\` still matches meta-proxy's"
+            echo "\`signing-key.pub.pem\` for \`v$LATEST\` (re-pin it in the same change if the key"
+            echo "rotated), then bump \`META_PROXY_VERSION\` in"
+            echo "\`packages/create-agent-harness/src/meta-proxy.ts\` and publish the CLI."
+          } > "$BODY_FILE"
+          EXISTING=$(gh issue list --repo "$GITHUB_REPOSITORY" --search "$TITLE in:title" --state open --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --repo "$GITHUB_REPOSITORY" --body-file "$BODY_FILE"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --label bug --body-file "$BODY_FILE"
+          fi
