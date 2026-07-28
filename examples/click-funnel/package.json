@@ -6,6 +6,7 @@
   "description": "FunnelWheel — a verifiably self-improving click funnel: @metaharness/darwin proposes variants, @metaharness/flywheel promotes only signed, gate-clearing, anchor-surviving lift.",
   "scripts": {
     "evolve": "node src/run.mjs",
+    "timeline": "node src/dashboard-data.mjs",
     "score": "metaharness score ."
   },
   "dependencies": {

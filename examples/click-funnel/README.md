@@ -26,6 +26,12 @@ npm run evolve    # ~2s, fully deterministic, no network, no API key
 Outputs `results/summary.json` (business-facing report) and
 `results/replay-bundle.json` (the signed, independently verifiable bundle).
 
+Then `npm run timeline` replays the deterministic run to reconstruct the full
+per-generation timeline (`results/timeline.json`) that powers the interactive
+**self-learning console** in `presentation/funnelwheel-brief.html` — a
+play-through dashboard where you watch the policy genome mutate, the gate log
+stream verdicts, and the lift curve compound, generation by generation.
+
 ## What a run produces (SYNTHETIC traffic, seeded + deterministic)
 
 - **CVR 1.48% → 8.66% (5.86×)** on the 9,000-visitor holdout; CAC **$57.99 → $9.90**;

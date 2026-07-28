@@ -1,0 +1,1719 @@
+{
+ "levers": {
+  "headline": [
+   "generic_welcome",
+   "benefit_direct",
+   "curiosity_gap",
+   "social_proof_led",
+   "urgency_led"
+  ],
+  "cta": [
+   "generic_submit",
+   "value_button",
+   "first_person",
+   "risk_reversal"
+  ],
+  "form": [
+   "full_profile",
+   "email_name",
+   "email_only"
+  ],
+  "page_weight": [
+   "heavy_rich",
+   "balanced",
+   "lean_fast"
+  ],
+  "social_proof": [
+   "none",
+   "logos",
+   "testimonials",
+   "live_counter"
+  ],
+  "offer_framing": [
+   "feature_list",
+   "outcome_promise",
+   "guarantee_led",
+   "anchored_discount"
+  ],
+  "checkout": [
+   "multi_step",
+   "single_page",
+   "express_wallet"
+  ],
+  "urgency": [
+   "none",
+   "honest_deadline",
+   "fake_countdown"
+  ]
+ },
+ "gateFingerprint": "5b1bab00ee41fe1cd320776ad7ed7fab2cc1a9acba56e9f993ae485a83c292f0",
+ "replayVerdict": {
+  "pass": true,
+  "checks": {
+   "receipts": true,
+   "reachesRoot": true,
+   "contiguousParents": true,
+   "allPromoted": true,
+   "gateUnchanged": true,
+   "gateReExecutes": true
+  },
+  "failures": [],
+  "chainSummary": "gen7(headline) → gen6(checkout) → gen5(cta) → gen4(social_proof) → gen3(page_weight) → gen2(offer_framing) → gen1(form) → gen0(root)"
+ },
+ "sampleReceipt": {
+  "payload": {
+   "kind": "candidate",
+   "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7",
+   "target": "headline",
+   "verdict": "PROMOTED",
+   "primaryDelta": 0.010333333333333333
+  },
+  "signature": "+DtRReojv59Zx86dN2q5ib7A4S2sULJ+JQ7iyl0D71TIbRAt17LarQZXxl1Xvbq8DATdbZ5QUBPC0N2m46S6Bw==",
+  "publicKey": "MCowBQYDK2VwAyEAl7PL3QuHbZ325o6vy0vq2S9sOfLxkWQ3C3rK1uD9y8U=",
+  "alg": "ed25519"
+ },
+ "milestoneReached": true,
+ "generations": [
+  {
+   "gen": 0,
+   "promoted": null,
+   "policy": {
+    "headline": "generic_welcome",
+    "cta": "generic_submit",
+    "form": "full_profile",
+    "page_weight": "heavy_rich",
+    "social_proof": "none",
+    "offer_framing": "feature_list",
+    "checkout": "multi_step",
+    "urgency": "none"
+   },
+   "holdout": {
+    "cvr": 0.014777777777777779,
+    "cac": 57.99248120300752,
+    "bounce": 0.5807777777777778,
+    "roas": 1.1319849604563723,
+    "rpv": 0.9701111111111111,
+    "revenue": 8731,
+    "stages": {
+     "visitors": 9000,
+     "engaged": 3773,
+     "optins": 695,
+     "net": 133
+    }
+   },
+   "anchor": {
+    "cvr": 0.012714285714285714
+   },
+   "candidates": []
+  },
+  {
+   "gen": 1,
+   "promoted": {
+    "target": "form",
+    "from": "full_profile",
+    "to": "email_only"
+   },
+   "policy": {
+    "headline": "generic_welcome",
+    "cta": "generic_submit",
+    "form": "email_only",
+    "page_weight": "heavy_rich",
+    "social_proof": "none",
+    "offer_framing": "feature_list",
+    "checkout": "multi_step",
+    "urgency": "none"
+   },
+   "holdout": {
+    "cvr": 0.022444444444444444,
+    "cac": 38.18316831683168,
+    "bounce": 0.5806666666666667,
+    "roas": 1.7567742771943473,
+    "rpv": 1.5055555555555555,
+    "revenue": 13550,
+    "stages": {
+     "visitors": 9000,
+     "engaged": 3774,
+     "optins": 1235,
+     "net": 202
+    }
+   },
+   "anchor": {
+    "cvr": 0.018714285714285715
+   },
+   "candidates": [
+    {
+     "target": "headline",
+     "from": "generic_welcome",
+     "to": "curiosity_gap",
+     "verdict": "REJECTED",
+     "reasons": [],
+     "cvr": 0.016444444444444446,
+     "cac": 52.11486486486486,
+     "regressed": false
+    },
+    {
+     "target": "cta",
+     "from": "generic_submit",
+     "to": "value_button",
+     "verdict": "REJECTED",
+     "reasons": [],
+     "cvr": 0.017777777777777778,
+     "cac": 48.20625,
+     "regressed": false
+    },
+    {
+     "target": "form",
+     "from": "full_profile",
+     "to": "email_only",
+     "verdict": "PROMOTED",
+     "reasons": [],
+     "cvr": 0.022444444444444444,
+     "cac": 38.18316831683168,
+     "regressed": false
+    },
+    {
+     "target": "page_weight",
+     "from": "heavy_rich",
+     "to": "balanced",
+     "verdict": "REJECTED",
+     "reasons": [],
+     "cvr": 0.015444444444444445,
+     "cac": 55.489208633093526,
+     "regressed": false
+    },
+    {
+     "target": "social_proof",
+     "from": "none",
+     "to": "testimonials",
+     "verdict": "REJECTED",
+     "reasons": [],
+     "cvr": 0.019222222222222224,
+     "cac": 44.58381502890173,
+     "regressed": false
+    },
+    {
+     "target": "offer_framing",
+     "from": "feature_list",
+     "to": "outcome_promise",
+     "verdict": "REJECTED",
+     "reasons": [],
+     "cvr": 0.017666666666666667,
+     "cac": 48.509433962264154,
+     "regressed": false
+    },
+    {
+     "target": "checkout",
+     "from": "multi_step",
+     "to": "express_wallet",
+     "verdict": "REJECTED",
+     "reasons": [],
+     "cvr": 0.018444444444444444,
+     "cac": 46.463855421686745,
+     "regressed": false
+    },
+    {
+     "target": "urgency",
+     "from": "none",
+     "to": "fake_countdown",
+     "verdict": "REJECTED",
+     "reasons": [
+      "compliance_regressed"
+     ],
+     "cvr": 0.019222222222222224,
+     "cac": 44.58381502890173,
+     "regressed": true
+    }
+   ]
+  },
+  {
+   "gen": 2,
+   "promoted": {
+    "target": "offer_framing",
+    "from": "feature_list",
+    "to": "anchored_discount"
+   },
+   "policy": {
+    "headline": "generic_welcome",
+    "cta": "generic_submit",
+    "form": "email_only",
+    "page_weight": "heavy_rich",
+    "social_proof": "none",
+    "offer_framing": "anchored_discount",
+    "checkout": "multi_step",
+    "urgency": "none"
+   },
+   "holdout": {
+    "cvr": 0.03111111111111111,
+    "cac": 27.54642857142857,
+    "bounce": 0.5776666666666667,
+    "roas": 2.406326980422663,
+    "rpv": 2.062222222222222,
+    "revenue": 18560,
+    "stages": {
+     "visitors": 9000,
+     "engaged": 3801,
+     "optins": 1226,
+     "net": 280
+    }
+   },
+   "anchor": {
+    "cvr": 0.024428571428571428
+   },
+   "candidates": [
+    {
+     "target": "headline",
+     "from": "generic_welcome",
+     "to": "urgency_led",
+     "verdict": "REJECTED",
+     "reasons": [],
+     "cvr": 0.024444444444444446,
+     "cac": 35.05909090909091,
+     "regressed": false
+    },
+    {
+     "target": "cta",
+     "from": "generic_submit",
+     "to": "risk_reversal",
+     "verdict": "REJECTED",
+     "reasons": [
+      "bounce_worsened"
+     ],
+     "cvr": 0.026444444444444444,
+     "cac": 32.40756302521008,
+     "regressed": false
+    },
+    {
+     "target": "form",
+     "from": "email_only",
+     "to": "email_name",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.017555555555555557,
+     "cac": 48.81645569620253,
+     "regressed": false
+    },
+    {
+     "target": "page_weight",
+     "from": "heavy_rich",
+     "to": "lean_fast",
+     "verdict": "REJECTED",
+     "reasons": [],
+     "cvr": 0.027777777777777776,
+     "cac": 30.852,
+     "regressed": false
+    },
+    {
+     "target": "social_proof",
+     "from": "none",
+     "to": "testimonials",
+     "verdict": "REJECTED",
+     "reasons": [],
+     "cvr": 0.02988888888888889,
+     "cac": 28.6728624535316,
+     "regressed": false
+    },
+    {
+     "target": "offer_framing",
+     "from": "feature_list",
+     "to": "anchored_discount",
+     "verdict": "PROMOTED",
+     "reasons": [],
+     "cvr": 0.03111111111111111,
+     "cac": 27.54642857142857,
+     "regressed": false
+    },
+    {
+     "target": "checkout",
+     "from": "multi_step",
+     "to": "express_wallet",
+     "verdict": "REJECTED",
+     "reasons": [],
+     "cvr": 0.03111111111111111,
+     "cac": 27.54642857142857,
+     "regressed": false
+    },
+    {
+     "target": "urgency",
+     "from": "none",
+     "to": "fake_countdown",
+     "verdict": "REJECTED",
+     "reasons": [
+      "compliance_regressed"
+     ],
+     "cvr": 0.029333333333333333,
+     "cac": 29.21590909090909,
+     "regressed": true
+    }
+   ]
+  },
+  {
+   "gen": 3,
+   "promoted": {
+    "target": "page_weight",
+    "from": "heavy_rich",
+    "to": "lean_fast"
+   },
+   "policy": {
+    "headline": "generic_welcome",
+    "cta": "generic_submit",
+    "form": "email_only",
+    "page_weight": "lean_fast",
+    "social_proof": "none",
+    "offer_framing": "anchored_discount",
+    "checkout": "multi_step",
+    "urgency": "none"
+   },
+   "holdout": {
+    "cvr": 0.042888888888888886,
+    "cac": 19.981865284974095,
+    "bounce": 0.45844444444444443,
+    "roas": 3.3141449500842732,
+    "rpv": 2.840222222222222,
+    "revenue": 25562,
+    "stages": {
+     "visitors": 9000,
+     "engaged": 4874,
+     "optins": 1575,
+     "net": 386
+    }
+   },
+   "anchor": {
+    "cvr": 0.037142857142857144
+   },
+   "candidates": [
+    {
+     "target": "headline",
+     "from": "generic_welcome",
+     "to": "benefit_direct",
+     "verdict": "REJECTED",
+     "reasons": [],
+     "cvr": 0.03588888888888889,
+     "cac": 23.879256965944272,
+     "regressed": false
+    },
+    {
+     "target": "cta",
+     "from": "generic_submit",
+     "to": "risk_reversal",
+     "verdict": "REJECTED",
+     "reasons": [],
+     "cvr": 0.036444444444444446,
+     "cac": 23.515243902439025,
+     "regressed": false
+    },
+    {
+     "target": "form",
+     "from": "email_only",
+     "to": "email_name",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.02666666666666667,
+     "cac": 32.1375,
+     "regressed": false
+    },
+    {
+     "target": "page_weight",
+     "from": "heavy_rich",
+     "to": "lean_fast",
+     "verdict": "PROMOTED",
+     "reasons": [],
+     "cvr": 0.042888888888888886,
+     "cac": 19.981865284974095,
+     "regressed": false
+    },
+    {
+     "target": "social_proof",
+     "from": "none",
+     "to": "live_counter",
+     "verdict": "REJECTED",
+     "reasons": [],
+     "cvr": 0.03322222222222222,
+     "cac": 25.795986622073578,
+     "regressed": false
+    },
+    {
+     "target": "offer_framing",
+     "from": "anchored_discount",
+     "to": "guarantee_led",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.028666666666666667,
+     "cac": 29.8953488372093,
+     "regressed": false
+    },
+    {
+     "target": "checkout",
+     "from": "multi_step",
+     "to": "single_page",
+     "verdict": "REJECTED",
+     "reasons": [],
+     "cvr": 0.036555555555555556,
+     "cac": 23.443768996960486,
+     "regressed": false
+    },
+    {
+     "target": "urgency",
+     "from": "none",
+     "to": "fake_countdown",
+     "verdict": "REJECTED",
+     "reasons": [
+      "compliance_regressed"
+     ],
+     "cvr": 0.03411111111111111,
+     "cac": 25.123778501628664,
+     "regressed": true
+    }
+   ]
+  },
+  {
+   "gen": 4,
+   "promoted": {
+    "target": "social_proof",
+    "from": "none",
+    "to": "testimonials"
+   },
+   "policy": {
+    "headline": "generic_welcome",
+    "cta": "generic_submit",
+    "form": "email_only",
+    "page_weight": "lean_fast",
+    "social_proof": "testimonials",
+    "offer_framing": "anchored_discount",
+    "checkout": "multi_step",
+    "urgency": "none"
+   },
+   "holdout": {
+    "cvr": 0.04922222222222222,
+    "cac": 17.41083521444695,
+    "bounce": 0.4602222222222222,
+    "roas": 3.803059769220796,
+    "rpv": 3.2592222222222222,
+    "revenue": 29333,
+    "stages": {
+     "visitors": 9000,
+     "engaged": 4858,
+     "optins": 1795,
+     "net": 443
+    }
+   },
+   "anchor": {
+    "cvr": 0.049428571428571426
+   },
+   "candidates": [
+    {
+     "target": "headline",
+     "from": "generic_welcome",
+     "to": "benefit_direct",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.042555555555555555,
+     "cac": 20.138381201044385,
+     "regressed": false
+    },
+    {
+     "target": "cta",
+     "from": "generic_submit",
+     "to": "first_person",
+     "verdict": "REJECTED",
+     "reasons": [
+      "bounce_worsened"
+     ],
+     "cvr": 0.049,
+     "cac": 17.489795918367346,
+     "regressed": false
+    },
+    {
+     "target": "form",
+     "from": "email_only",
+     "to": "email_name",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.035555555555555556,
+     "cac": 24.103125,
+     "regressed": false
+    },
+    {
+     "target": "page_weight",
+     "from": "lean_fast",
+     "to": "balanced",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "bounce_worsened",
+      "cac_worsened"
+     ],
+     "cvr": 0.035222222222222224,
+     "cac": 24.331230283911673,
+     "regressed": false
+    },
+    {
+     "target": "social_proof",
+     "from": "none",
+     "to": "testimonials",
+     "verdict": "PROMOTED",
+     "reasons": [],
+     "cvr": 0.04922222222222222,
+     "cac": 17.41083521444695,
+     "regressed": false
+    },
+    {
+     "target": "offer_framing",
+     "from": "anchored_discount",
+     "to": "guarantee_led",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "bounce_worsened",
+      "cac_worsened"
+     ],
+     "cvr": 0.036,
+     "cac": 23.805555555555557,
+     "regressed": false
+    },
+    {
+     "target": "checkout",
+     "from": "multi_step",
+     "to": "express_wallet",
+     "verdict": "REJECTED",
+     "reasons": [
+      "bounce_worsened"
+     ],
+     "cvr": 0.04911111111111111,
+     "cac": 17.45022624434389,
+     "regressed": false
+    },
+    {
+     "target": "urgency",
+     "from": "none",
+     "to": "fake_countdown",
+     "verdict": "REJECTED",
+     "reasons": [
+      "compliance_regressed"
+     ],
+     "cvr": 0.05377777777777778,
+     "cac": 15.935950413223141,
+     "regressed": true
+    }
+   ]
+  },
+  {
+   "gen": 5,
+   "promoted": {
+    "target": "cta",
+    "from": "generic_submit",
+    "to": "risk_reversal"
+   },
+   "policy": {
+    "headline": "generic_welcome",
+    "cta": "risk_reversal",
+    "form": "email_only",
+    "page_weight": "lean_fast",
+    "social_proof": "testimonials",
+    "offer_framing": "anchored_discount",
+    "checkout": "multi_step",
+    "urgency": "none"
+   },
+   "holdout": {
+    "cvr": 0.057777777777777775,
+    "cac": 14.832692307692307,
+    "bounce": 0.4638888888888889,
+    "roas": 4.449371191494879,
+    "rpv": 3.813111111111111,
+    "revenue": 34318,
+    "stages": {
+     "visitors": 9000,
+     "engaged": 4825,
+     "optins": 1886,
+     "net": 520
+    }
+   },
+   "anchor": {
+    "cvr": 0.053714285714285714
+   },
+   "candidates": [
+    {
+     "target": "headline",
+     "from": "generic_welcome",
+     "to": "benefit_direct",
+     "verdict": "REJECTED",
+     "reasons": [],
+     "cvr": 0.05633333333333333,
+     "cac": 15.21301775147929,
+     "regressed": false
+    },
+    {
+     "target": "cta",
+     "from": "generic_submit",
+     "to": "risk_reversal",
+     "verdict": "PROMOTED",
+     "reasons": [],
+     "cvr": 0.057777777777777775,
+     "cac": 14.832692307692307,
+     "regressed": false
+    },
+    {
+     "target": "form",
+     "from": "email_only",
+     "to": "email_name",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.04555555555555556,
+     "cac": 18.81219512195122,
+     "regressed": false
+    },
+    {
+     "target": "page_weight",
+     "from": "lean_fast",
+     "to": "balanced",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "bounce_worsened",
+      "cac_worsened"
+     ],
+     "cvr": 0.048666666666666664,
+     "cac": 17.60958904109589,
+     "regressed": false
+    },
+    {
+     "target": "social_proof",
+     "from": "testimonials",
+     "to": "live_counter",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.04122222222222222,
+     "cac": 20.78975741239892,
+     "regressed": false
+    },
+    {
+     "target": "offer_framing",
+     "from": "anchored_discount",
+     "to": "guarantee_led",
+     "verdict": "REJECTED",
+     "reasons": [],
+     "cvr": 0.051,
+     "cac": 16.80392156862745,
+     "regressed": false
+    },
+    {
+     "target": "checkout",
+     "from": "multi_step",
+     "to": "express_wallet",
+     "verdict": "REJECTED",
+     "reasons": [
+      "bounce_worsened"
+     ],
+     "cvr": 0.060333333333333336,
+     "cac": 14.204419889502763,
+     "regressed": false
+    },
+    {
+     "target": "urgency",
+     "from": "none",
+     "to": "fake_countdown",
+     "verdict": "REJECTED",
+     "reasons": [
+      "bounce_worsened",
+      "compliance_regressed"
+     ],
+     "cvr": 0.057444444444444444,
+     "cac": 14.918762088974855,
+     "regressed": true
+    }
+   ]
+  },
+  {
+   "gen": 6,
+   "promoted": {
+    "target": "checkout",
+    "from": "multi_step",
+    "to": "express_wallet"
+   },
+   "policy": {
+    "headline": "generic_welcome",
+    "cta": "risk_reversal",
+    "form": "email_only",
+    "page_weight": "lean_fast",
+    "social_proof": "testimonials",
+    "offer_framing": "anchored_discount",
+    "checkout": "express_wallet",
+    "urgency": "none"
+   },
+   "holdout": {
+    "cvr": 0.07622222222222222,
+    "cac": 11.243440233236152,
+    "bounce": 0.4568888888888889,
+    "roas": 5.723583560223,
+    "rpv": 4.905111111111111,
+    "revenue": 44146,
+    "stages": {
+     "visitors": 9000,
+     "engaged": 4888,
+     "optins": 2016,
+     "net": 686
+    }
+   },
+   "anchor": {
+    "cvr": 0.07357142857142857
+   },
+   "candidates": [
+    {
+     "target": "headline",
+     "from": "generic_welcome",
+     "to": "benefit_direct",
+     "verdict": "REJECTED",
+     "reasons": [],
+     "cvr": 0.06888888888888889,
+     "cac": 12.44032258064516,
+     "regressed": false
+    },
+    {
+     "target": "cta",
+     "from": "risk_reversal",
+     "to": "first_person",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "bounce_worsened",
+      "cac_worsened"
+     ],
+     "cvr": 0.05466666666666667,
+     "cac": 15.676829268292684,
+     "regressed": false
+    },
+    {
+     "target": "form",
+     "from": "email_only",
+     "to": "email_name",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.052,
+     "cac": 16.48076923076923,
+     "regressed": false
+    },
+    {
+     "target": "page_weight",
+     "from": "lean_fast",
+     "to": "balanced",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "bounce_worsened"
+     ],
+     "cvr": 0.05811111111111111,
+     "cac": 14.747609942638624,
+     "regressed": false
+    },
+    {
+     "target": "social_proof",
+     "from": "testimonials",
+     "to": "logos",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.052222222222222225,
+     "cac": 16.41063829787234,
+     "regressed": false
+    },
+    {
+     "target": "offer_framing",
+     "from": "anchored_discount",
+     "to": "guarantee_led",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.05522222222222222,
+     "cac": 15.519114688128772,
+     "regressed": false
+    },
+    {
+     "target": "checkout",
+     "from": "multi_step",
+     "to": "express_wallet",
+     "verdict": "PROMOTED",
+     "reasons": [],
+     "cvr": 0.07622222222222222,
+     "cac": 11.243440233236152,
+     "regressed": false
+    },
+    {
+     "target": "urgency",
+     "from": "none",
+     "to": "fake_countdown",
+     "verdict": "REJECTED",
+     "reasons": [
+      "compliance_regressed"
+     ],
+     "cvr": 0.07,
+     "cac": 12.242857142857142,
+     "regressed": true
+    }
+   ]
+  },
+  {
+   "gen": 7,
+   "promoted": {
+    "target": "headline",
+    "from": "generic_welcome",
+    "to": "benefit_direct"
+   },
+   "policy": {
+    "headline": "benefit_direct",
+    "cta": "risk_reversal",
+    "form": "email_only",
+    "page_weight": "lean_fast",
+    "social_proof": "testimonials",
+    "offer_framing": "anchored_discount",
+    "checkout": "express_wallet",
+    "urgency": "none"
+   },
+   "holdout": {
+    "cvr": 0.08655555555555555,
+    "cac": 9.901155327342748,
+    "bounce": 0.4007777777777778,
+    "roas": 6.593673019577337,
+    "rpv": 5.650777777777778,
+    "revenue": 50857,
+    "stages": {
+     "visitors": 9000,
+     "engaged": 5393,
+     "optins": 2235,
+     "net": 779
+    }
+   },
+   "anchor": {
+    "cvr": 0.08671428571428572
+   },
+   "candidates": [
+    {
+     "target": "headline",
+     "from": "generic_welcome",
+     "to": "benefit_direct",
+     "verdict": "PROMOTED",
+     "reasons": [],
+     "cvr": 0.08655555555555555,
+     "cac": 9.901155327342748,
+     "regressed": false
+    },
+    {
+     "target": "cta",
+     "from": "risk_reversal",
+     "to": "value_button",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.07044444444444445,
+     "cac": 12.165615141955836,
+     "regressed": false
+    },
+    {
+     "target": "form",
+     "from": "email_only",
+     "to": "email_name",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.06566666666666666,
+     "cac": 13.050761421319796,
+     "regressed": false
+    },
+    {
+     "target": "page_weight",
+     "from": "lean_fast",
+     "to": "balanced",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "bounce_worsened",
+      "cac_worsened"
+     ],
+     "cvr": 0.067,
+     "cac": 12.791044776119403,
+     "regressed": false
+    },
+    {
+     "target": "social_proof",
+     "from": "testimonials",
+     "to": "live_counter",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.069,
+     "cac": 12.420289855072463,
+     "regressed": false
+    },
+    {
+     "target": "offer_framing",
+     "from": "anchored_discount",
+     "to": "guarantee_led",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.07288888888888889,
+     "cac": 11.757621951219512,
+     "regressed": false
+    },
+    {
+     "target": "checkout",
+     "from": "express_wallet",
+     "to": "single_page",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.07022222222222223,
+     "cac": 12.204113924050633,
+     "regressed": false
+    },
+    {
+     "target": "urgency",
+     "from": "none",
+     "to": "honest_deadline",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "bounce_worsened",
+      "cac_worsened"
+     ],
+     "cvr": 0.07522222222222222,
+     "cac": 11.392909896602658,
+     "regressed": false
+    }
+   ]
+  },
+  {
+   "gen": 8,
+   "promoted": null,
+   "policy": {
+    "headline": "benefit_direct",
+    "cta": "risk_reversal",
+    "form": "email_only",
+    "page_weight": "lean_fast",
+    "social_proof": "testimonials",
+    "offer_framing": "anchored_discount",
+    "checkout": "express_wallet",
+    "urgency": "none"
+   },
+   "holdout": {
+    "cvr": 0.08655555555555555,
+    "cac": 9.901155327342748,
+    "bounce": 0.4007777777777778,
+    "roas": 6.593673019577337,
+    "rpv": 5.650777777777778,
+    "revenue": 50857,
+    "stages": {
+     "visitors": 9000,
+     "engaged": 5393,
+     "optins": 2235,
+     "net": 779
+    }
+   },
+   "anchor": {
+    "cvr": 0.08671428571428572
+   },
+   "candidates": [
+    {
+     "target": "headline",
+     "from": "benefit_direct",
+     "to": "curiosity_gap",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "bounce_worsened",
+      "cac_worsened"
+     ],
+     "cvr": 0.07633333333333334,
+     "cac": 11.22707423580786,
+     "regressed": false
+    },
+    {
+     "target": "cta",
+     "from": "risk_reversal",
+     "to": "first_person",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.08511111111111111,
+     "cac": 10.069190600522193,
+     "regressed": false
+    },
+    {
+     "target": "form",
+     "from": "email_only",
+     "to": "email_name",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.07388888888888889,
+     "cac": 11.598496240601504,
+     "regressed": false
+    },
+    {
+     "target": "page_weight",
+     "from": "lean_fast",
+     "to": "balanced",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "bounce_worsened",
+      "cac_worsened"
+     ],
+     "cvr": 0.07711111111111112,
+     "cac": 11.113832853025936,
+     "regressed": false
+    },
+    {
+     "target": "social_proof",
+     "from": "testimonials",
+     "to": "live_counter",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.07733333333333334,
+     "cac": 11.081896551724139,
+     "regressed": false
+    },
+    {
+     "target": "offer_framing",
+     "from": "anchored_discount",
+     "to": "guarantee_led",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.08033333333333334,
+     "cac": 10.66804979253112,
+     "regressed": false
+    },
+    {
+     "target": "checkout",
+     "from": "express_wallet",
+     "to": "single_page",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.07511111111111111,
+     "cac": 11.409763313609467,
+     "regressed": false
+    },
+    {
+     "target": "urgency",
+     "from": "none",
+     "to": "fake_countdown",
+     "verdict": "REJECTED",
+     "reasons": [
+      "bounce_worsened",
+      "compliance_regressed"
+     ],
+     "cvr": 0.09811111111111111,
+     "cac": 8.734994337485844,
+     "regressed": true
+    }
+   ]
+  },
+  {
+   "gen": 9,
+   "promoted": null,
+   "policy": {
+    "headline": "benefit_direct",
+    "cta": "risk_reversal",
+    "form": "email_only",
+    "page_weight": "lean_fast",
+    "social_proof": "testimonials",
+    "offer_framing": "anchored_discount",
+    "checkout": "express_wallet",
+    "urgency": "none"
+   },
+   "holdout": {
+    "cvr": 0.08655555555555555,
+    "cac": 9.901155327342748,
+    "bounce": 0.4007777777777778,
+    "roas": 6.593673019577337,
+    "rpv": 5.650777777777778,
+    "revenue": 50857,
+    "stages": {
+     "visitors": 9000,
+     "engaged": 5393,
+     "optins": 2235,
+     "net": 779
+    }
+   },
+   "anchor": {
+    "cvr": 0.08671428571428572
+   },
+   "candidates": [
+    {
+     "target": "headline",
+     "from": "benefit_direct",
+     "to": "urgency_led",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "bounce_worsened",
+      "cac_worsened"
+     ],
+     "cvr": 0.08288888888888889,
+     "cac": 10.339142091152816,
+     "regressed": false
+    },
+    {
+     "target": "cta",
+     "from": "risk_reversal",
+     "to": "first_person",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.08511111111111111,
+     "cac": 10.069190600522193,
+     "regressed": false
+    },
+    {
+     "target": "form",
+     "from": "email_only",
+     "to": "email_name",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.07388888888888889,
+     "cac": 11.598496240601504,
+     "regressed": false
+    },
+    {
+     "target": "page_weight",
+     "from": "lean_fast",
+     "to": "balanced",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "bounce_worsened",
+      "cac_worsened"
+     ],
+     "cvr": 0.07711111111111112,
+     "cac": 11.113832853025936,
+     "regressed": false
+    },
+    {
+     "target": "social_proof",
+     "from": "testimonials",
+     "to": "logos",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.07655555555555556,
+     "cac": 11.194484760522496,
+     "regressed": false
+    },
+    {
+     "target": "offer_framing",
+     "from": "anchored_discount",
+     "to": "guarantee_led",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.08033333333333334,
+     "cac": 10.66804979253112,
+     "regressed": false
+    },
+    {
+     "target": "checkout",
+     "from": "express_wallet",
+     "to": "single_page",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.07511111111111111,
+     "cac": 11.409763313609467,
+     "regressed": false
+    },
+    {
+     "target": "urgency",
+     "from": "none",
+     "to": "fake_countdown",
+     "verdict": "REJECTED",
+     "reasons": [
+      "bounce_worsened",
+      "compliance_regressed"
+     ],
+     "cvr": 0.09811111111111111,
+     "cac": 8.734994337485844,
+     "regressed": true
+    }
+   ]
+  },
+  {
+   "gen": 10,
+   "promoted": null,
+   "policy": {
+    "headline": "benefit_direct",
+    "cta": "risk_reversal",
+    "form": "email_only",
+    "page_weight": "lean_fast",
+    "social_proof": "testimonials",
+    "offer_framing": "anchored_discount",
+    "checkout": "express_wallet",
+    "urgency": "none"
+   },
+   "holdout": {
+    "cvr": 0.08655555555555555,
+    "cac": 9.901155327342748,
+    "bounce": 0.4007777777777778,
+    "roas": 6.593673019577337,
+    "rpv": 5.650777777777778,
+    "revenue": 50857,
+    "stages": {
+     "visitors": 9000,
+     "engaged": 5393,
+     "optins": 2235,
+     "net": 779
+    }
+   },
+   "anchor": {
+    "cvr": 0.08671428571428572
+   },
+   "candidates": [
+    {
+     "target": "headline",
+     "from": "benefit_direct",
+     "to": "social_proof_led",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "bounce_worsened",
+      "cac_worsened"
+     ],
+     "cvr": 0.08033333333333334,
+     "cac": 10.66804979253112,
+     "regressed": false
+    },
+    {
+     "target": "cta",
+     "from": "risk_reversal",
+     "to": "first_person",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.08511111111111111,
+     "cac": 10.069190600522193,
+     "regressed": false
+    },
+    {
+     "target": "form",
+     "from": "email_only",
+     "to": "email_name",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.07388888888888889,
+     "cac": 11.598496240601504,
+     "regressed": false
+    },
+    {
+     "target": "page_weight",
+     "from": "lean_fast",
+     "to": "balanced",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "bounce_worsened",
+      "cac_worsened"
+     ],
+     "cvr": 0.07711111111111112,
+     "cac": 11.113832853025936,
+     "regressed": false
+    },
+    {
+     "target": "social_proof",
+     "from": "testimonials",
+     "to": "live_counter",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.07733333333333334,
+     "cac": 11.081896551724139,
+     "regressed": false
+    },
+    {
+     "target": "offer_framing",
+     "from": "anchored_discount",
+     "to": "outcome_promise",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "bounce_worsened",
+      "cac_worsened"
+     ],
+     "cvr": 0.07544444444444444,
+     "cac": 11.359351988217968,
+     "regressed": false
+    },
+    {
+     "target": "checkout",
+     "from": "express_wallet",
+     "to": "single_page",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.07511111111111111,
+     "cac": 11.409763313609467,
+     "regressed": false
+    },
+    {
+     "target": "urgency",
+     "from": "none",
+     "to": "fake_countdown",
+     "verdict": "REJECTED",
+     "reasons": [
+      "bounce_worsened",
+      "compliance_regressed"
+     ],
+     "cvr": 0.09811111111111111,
+     "cac": 8.734994337485844,
+     "regressed": true
+    }
+   ]
+  },
+  {
+   "gen": 11,
+   "promoted": null,
+   "policy": {
+    "headline": "benefit_direct",
+    "cta": "risk_reversal",
+    "form": "email_only",
+    "page_weight": "lean_fast",
+    "social_proof": "testimonials",
+    "offer_framing": "anchored_discount",
+    "checkout": "express_wallet",
+    "urgency": "none"
+   },
+   "holdout": {
+    "cvr": 0.08655555555555555,
+    "cac": 9.901155327342748,
+    "bounce": 0.4007777777777778,
+    "roas": 6.593673019577337,
+    "rpv": 5.650777777777778,
+    "revenue": 50857,
+    "stages": {
+     "visitors": 9000,
+     "engaged": 5393,
+     "optins": 2235,
+     "net": 779
+    }
+   },
+   "anchor": {
+    "cvr": 0.08671428571428572
+   },
+   "candidates": [
+    {
+     "target": "headline",
+     "from": "benefit_direct",
+     "to": "urgency_led",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "bounce_worsened",
+      "cac_worsened"
+     ],
+     "cvr": 0.08288888888888889,
+     "cac": 10.339142091152816,
+     "regressed": false
+    },
+    {
+     "target": "cta",
+     "from": "risk_reversal",
+     "to": "first_person",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.08511111111111111,
+     "cac": 10.069190600522193,
+     "regressed": false
+    },
+    {
+     "target": "form",
+     "from": "email_only",
+     "to": "email_name",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.07388888888888889,
+     "cac": 11.598496240601504,
+     "regressed": false
+    },
+    {
+     "target": "page_weight",
+     "from": "lean_fast",
+     "to": "balanced",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "bounce_worsened",
+      "cac_worsened"
+     ],
+     "cvr": 0.07711111111111112,
+     "cac": 11.113832853025936,
+     "regressed": false
+    },
+    {
+     "target": "social_proof",
+     "from": "testimonials",
+     "to": "live_counter",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.07733333333333334,
+     "cac": 11.081896551724139,
+     "regressed": false
+    },
+    {
+     "target": "offer_framing",
+     "from": "anchored_discount",
+     "to": "feature_list",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.067,
+     "cac": 12.791044776119403,
+     "regressed": false
+    },
+    {
+     "target": "checkout",
+     "from": "express_wallet",
+     "to": "single_page",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.07511111111111111,
+     "cac": 11.409763313609467,
+     "regressed": false
+    },
+    {
+     "target": "urgency",
+     "from": "none",
+     "to": "fake_countdown",
+     "verdict": "REJECTED",
+     "reasons": [
+      "bounce_worsened",
+      "compliance_regressed"
+     ],
+     "cvr": 0.09811111111111111,
+     "cac": 8.734994337485844,
+     "regressed": true
+    }
+   ]
+  },
+  {
+   "gen": 12,
+   "promoted": null,
+   "policy": {
+    "headline": "benefit_direct",
+    "cta": "risk_reversal",
+    "form": "email_only",
+    "page_weight": "lean_fast",
+    "social_proof": "testimonials",
+    "offer_framing": "anchored_discount",
+    "checkout": "express_wallet",
+    "urgency": "none"
+   },
+   "holdout": {
+    "cvr": 0.08655555555555555,
+    "cac": 9.901155327342748,
+    "bounce": 0.4007777777777778,
+    "roas": 6.593673019577337,
+    "rpv": 5.650777777777778,
+    "revenue": 50857,
+    "stages": {
+     "visitors": 9000,
+     "engaged": 5393,
+     "optins": 2235,
+     "net": 779
+    }
+   },
+   "anchor": {
+    "cvr": 0.08671428571428572
+   },
+   "candidates": [
+    {
+     "target": "headline",
+     "from": "benefit_direct",
+     "to": "curiosity_gap",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "bounce_worsened",
+      "cac_worsened"
+     ],
+     "cvr": 0.07633333333333334,
+     "cac": 11.22707423580786,
+     "regressed": false
+    },
+    {
+     "target": "cta",
+     "from": "risk_reversal",
+     "to": "first_person",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.08511111111111111,
+     "cac": 10.069190600522193,
+     "regressed": false
+    },
+    {
+     "target": "form",
+     "from": "email_only",
+     "to": "email_name",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.07388888888888889,
+     "cac": 11.598496240601504,
+     "regressed": false
+    },
+    {
+     "target": "page_weight",
+     "from": "lean_fast",
+     "to": "balanced",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "bounce_worsened",
+      "cac_worsened"
+     ],
+     "cvr": 0.07711111111111112,
+     "cac": 11.113832853025936,
+     "regressed": false
+    },
+    {
+     "target": "social_proof",
+     "from": "testimonials",
+     "to": "live_counter",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.07733333333333334,
+     "cac": 11.081896551724139,
+     "regressed": false
+    },
+    {
+     "target": "offer_framing",
+     "from": "anchored_discount",
+     "to": "outcome_promise",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "bounce_worsened",
+      "cac_worsened"
+     ],
+     "cvr": 0.07544444444444444,
+     "cac": 11.359351988217968,
+     "regressed": false
+    },
+    {
+     "target": "checkout",
+     "from": "express_wallet",
+     "to": "single_page",
+     "verdict": "REJECTED",
+     "reasons": [
+      "cvr_lift_below_2pct",
+      "cac_worsened"
+     ],
+     "cvr": 0.07511111111111111,
+     "cac": 11.409763313609467,
+     "regressed": false
+    },
+    {
+     "target": "urgency",
+     "from": "none",
+     "to": "fake_countdown",
+     "verdict": "REJECTED",
+     "reasons": [
+      "bounce_worsened",
+      "compliance_regressed"
+     ],
+     "cvr": 0.09811111111111111,
+     "cac": 8.734994337485844,
+     "regressed": true
+    }
+   ]
+  }
+ ]
+}

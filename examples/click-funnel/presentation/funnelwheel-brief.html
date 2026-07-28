@@ -1,566 +1,496 @@
-<title>FunnelWheel — Verified Funnel Lift</title>
+<title>FunnelWheel — Self-Learning Funnel Console</title>
 <style>
   /* ── tokens ──────────────────────────────────────────────────────────── */
   :root {
     color-scheme: light;
-    --surface: #fcfcfb;
-    --surface-2: #f4f4f1;
-    --card: #ffffff;
-    --line: #e3e2dc;
-    --line-strong: #c9c8c0;
-    --ink: #0b0b0b;
-    --ink-2: #52514e;
-    --ink-3: #8a887f;
-    --blue: #2a78d6;
-    --blue-soft: #2a78d61f;
+    --surface: #f6f6f4; --panel: #ffffff; --panel-2: #efefec; --inset: #f8f8f6;
+    --line: #e0dfd9; --line-strong: #c6c5bd;
+    --ink: #101010; --ink-2: #52514e; --ink-3: #8a887f;
+    --blue: #2a78d6; --blue-soft: #2a78d618;
     --aqua: #1baf7a;
-    --good: #0ca30c;
-    --good-soft: #0ca30c1a;
-    --bad: #e34948;
-    --bad-soft: #e349481a;
-    --neutral-bar: #b9b8b0;
-    --grid: #ebeae5;
+    --good: #0ca30c; --good-soft: #0ca30c16;
+    --bad: #e34948; --bad-soft: #e3494814;
+    --warn: #b97a00;
+    --neutral-bar: #c2c1b9; --grid: #eae9e4;
   }
   @media (prefers-color-scheme: dark) {
     :root:where(:not([data-theme="light"])) {
       color-scheme: dark;
-      --surface: #1a1a19;
-      --surface-2: #222221;
-      --card: #232322;
-      --line: #383836;
-      --line-strong: #4c4c49;
-      --ink: #ffffff;
-      --ink-2: #c3c2b7;
-      --ink-3: #8f8e85;
-      --blue: #3987e5;
-      --blue-soft: #3987e52b;
+      --surface: #151514; --panel: #1e1e1d; --panel-2: #242423; --inset: #191918;
+      --line: #333331; --line-strong: #4a4a47;
+      --ink: #f4f4f0; --ink-2: #c3c2b7; --ink-3: #8f8e85;
+      --blue: #3987e5; --blue-soft: #3987e522;
       --aqua: #199e70;
-      --good: #35b135;
-      --good-soft: #35b13524;
-      --bad: #e66767;
-      --bad-soft: #e6676724;
-      --neutral-bar: #62615c;
-      --grid: #2c2c2a;
+      --good: #35b135; --good-soft: #35b13520;
+      --bad: #e66767; --bad-soft: #e6676720;
+      --warn: #d99c1e;
+      --neutral-bar: #55544f; --grid: #2a2a28;
     }
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
-    --surface: #1a1a19;
-    --surface-2: #222221;
-    --card: #232322;
-    --line: #383836;
-    --line-strong: #4c4c49;
-    --ink: #ffffff;
-    --ink-2: #c3c2b7;
-    --ink-3: #8f8e85;
-    --blue: #3987e5;
-    --blue-soft: #3987e52b;
+    --surface: #151514; --panel: #1e1e1d; --panel-2: #242423; --inset: #191918;
+    --line: #333331; --line-strong: #4a4a47;
+    --ink: #f4f4f0; --ink-2: #c3c2b7; --ink-3: #8f8e85;
+    --blue: #3987e5; --blue-soft: #3987e522;
     --aqua: #199e70;
-    --good: #35b135;
-    --good-soft: #35b13524;
-    --bad: #e66767;
-    --bad-soft: #e6676724;
-    --neutral-bar: #62615c;
-    --grid: #2c2c2a;
+    --good: #35b135; --good-soft: #35b13520;
+    --bad: #e66767; --bad-soft: #e6676720;
+    --warn: #d99c1e;
+    --neutral-bar: #55544f; --grid: #2a2a28;
   }
   :root[data-theme="light"] {
     color-scheme: light;
-    --surface: #fcfcfb;
-    --surface-2: #f4f4f1;
-    --card: #ffffff;
-    --line: #e3e2dc;
-    --line-strong: #c9c8c0;
-    --ink: #0b0b0b;
-    --ink-2: #52514e;
-    --ink-3: #8a887f;
-    --blue: #2a78d6;
-    --blue-soft: #2a78d61f;
+    --surface: #f6f6f4; --panel: #ffffff; --panel-2: #efefec; --inset: #f8f8f6;
+    --line: #e0dfd9; --line-strong: #c6c5bd;
+    --ink: #101010; --ink-2: #52514e; --ink-3: #8a887f;
+    --blue: #2a78d6; --blue-soft: #2a78d618;
     --aqua: #1baf7a;
-    --good: #0ca30c;
-    --good-soft: #0ca30c1a;
-    --bad: #e34948;
-    --bad-soft: #e349481a;
-    --neutral-bar: #b9b8b0;
-    --grid: #ebeae5;
+    --good: #0ca30c; --good-soft: #0ca30c16;
+    --bad: #e34948; --bad-soft: #e3494814;
+    --warn: #b97a00;
+    --neutral-bar: #c2c1b9; --grid: #eae9e4;
   }
 
   /* ── base ────────────────────────────────────────────────────────────── */
   * { box-sizing: border-box; }
   body {
-    margin: 0;
-    background: var(--surface);
-    color: var(--ink);
-    font: 16px/1.6 -apple-system, "Segoe UI", system-ui, sans-serif;
+    margin: 0; background: var(--surface); color: var(--ink);
+    font: 14px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif;
   }
-  .serif { font-family: Charter, Georgia, "Times New Roman", serif; }
   .mono, code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
-  .wrap { max-width: 1020px; margin: 0 auto; padding: 0 28px; }
-  section { padding: 56px 0; border-top: 1px solid var(--line); }
-  .eyebrow {
-    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
-    color: var(--ink-3); margin: 0 0 14px;
-  }
-  h1, h2, h3 { font-family: Charter, Georgia, "Times New Roman", serif; text-wrap: balance; margin: 0; }
-  h2 { font-size: 30px; line-height: 1.2; margin-bottom: 10px; }
-  p.lede { color: var(--ink-2); max-width: 62ch; margin: 8px 0 0; }
-  a { color: var(--blue); }
   .num { font-variant-numeric: tabular-nums; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 20px 48px; }
   :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  button { font: inherit; color: inherit; }
 
-  /* ── hero ────────────────────────────────────────────────────────────── */
-  header { padding: 72px 0 48px; }
-  header h1 { font-size: clamp(38px, 6vw, 58px); line-height: 1.06; letter-spacing: -0.01em; }
-  header h1 em { font-style: italic; color: var(--blue); }
-  header .sub { color: var(--ink-2); max-width: 66ch; font-size: 18px; margin-top: 18px; }
-  .synth {
-    display: inline-block; margin-top: 16px; padding: 4px 10px;
-    border: 1px solid var(--line-strong); border-radius: 3px;
+  /* ── header ──────────────────────────────────────────────────────────── */
+  .top {
+    display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: center;
+    padding: 18px 0 14px; border-bottom: 1px solid var(--line);
+  }
+  .top h1 { font-size: 17px; margin: 0; font-weight: 650; letter-spacing: -0.01em; }
+  .top h1 .dim { color: var(--ink-3); font-weight: 450; }
+  .badge {
     font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-    font-size: 12px; letter-spacing: 0.08em; color: var(--ink-2);
+    font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line-strong); color: var(--ink-2);
   }
+  .badge.ok { border-color: transparent; background: var(--good-soft); color: var(--good); }
+  .top .spacer { flex: 1; }
+  .stackline { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 11.5px; color: var(--ink-3); }
+  .stackline b { color: var(--ink-2); font-weight: 600; }
 
-  /* ── stat tiles ──────────────────────────────────────────────────────── */
-  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-top: 36px; }
-  .tile { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 18px 18px 16px; }
-  .tile .lbl { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 11.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
-  .tile .big { font-family: Charter, Georgia, serif; font-size: 34px; line-height: 1.1; margin-top: 8px; font-variant-numeric: tabular-nums; }
-  .tile .from { color: var(--ink-3); font-size: 13.5px; margin-top: 4px; font-variant-numeric: tabular-nums; }
-  .chip {
-    display: inline-block; margin-top: 10px; padding: 2px 8px; border-radius: 999px;
+  /* ── player rail ─────────────────────────────────────────────────────── */
+  .player {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+    padding: 12px 16px; margin-top: 16px;
+  }
+  .pbtn {
+    border: 1px solid var(--line-strong); background: var(--panel-2); border-radius: 6px;
+    padding: 7px 14px; cursor: pointer; font-weight: 600; font-size: 13px;
+    display: inline-flex; align-items: center; gap: 7px;
+  }
+  .pbtn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .pbtn:disabled { opacity: 0.45; cursor: default; }
+  .scrub { flex: 1; min-width: 220px; display: flex; align-items: center; gap: 12px; }
+  .scrub input[type=range] { flex: 1; accent-color: var(--blue); }
+  .genlabel { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px; color: var(--ink-2); min-width: 118px; }
+  .genlabel b { color: var(--ink); font-size: 14px; }
+  .gen-event { font-size: 12.5px; color: var(--ink-2); min-width: 200px; }
+  .gen-event .promo { color: var(--good); font-weight: 600; }
+  .gen-event .none { color: var(--ink-3); }
+
+  /* ── KPI strip ───────────────────────────────────────────────────────── */
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 12px; margin-top: 12px; }
+  .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 13px 15px 11px; position: relative; overflow: hidden; }
+  .kpi .lbl { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 10.5px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-3); }
+  .kpi .val { font-size: 27px; font-weight: 680; letter-spacing: -0.02em; margin-top: 5px; font-variant-numeric: tabular-nums; }
+  .kpi .delta { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 11.5px; margin-top: 2px; color: var(--ink-3); }
+  .kpi .delta.up { color: var(--good); }
+  .kpi svg { position: absolute; right: 10px; bottom: 8px; opacity: 0.9; }
+  .kpi .spark { stroke: var(--blue); fill: none; stroke-width: 1.6; }
+  .kpi .sparkfill { fill: var(--blue-soft); stroke: none; }
+
+  /* ── grid ────────────────────────────────────────────────────────────── */
+  .grid { display: grid; grid-template-columns: 340px 1fr 1fr; gap: 12px; margin-top: 12px; align-items: start; }
+  @media (max-width: 1080px) { .grid { grid-template-columns: 1fr 1fr; } .col-genome { grid-column: span 2; } }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } .col-genome { grid-column: span 1; } }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+  .panel h2 {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--ink-3); margin: 0 0 12px; font-weight: 600;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .panel h2 .live { width: 7px; height: 7px; border-radius: 50%; background: var(--good); }
+  @media (prefers-reduced-motion: no-preference) {
+    .playing .panel h2 .live { animation: pulse 1.4s ease-in-out infinite; }
+    @keyframes pulse { 50% { opacity: 0.25; } }
+  }
+  .panel .note { font-size: 12px; color: var(--ink-3); margin-top: 10px; line-height: 1.5; }
+
+  /* genome */
+  .gene { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7.5px 0; border-bottom: 1px solid var(--line); }
+  .gene:last-of-type { border-bottom: none; }
+  .gene .k { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12px; color: var(--ink-2); }
+  .gene .v {
     font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12px;
-    background: var(--good-soft); color: var(--good);
-  }
-
-  /* ── stack cards ─────────────────────────────────────────────────────── */
-  .stack { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-top: 26px; }
-  .pkg { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 20px; }
-  .pkg code.name { font-size: 15px; color: var(--ink); display: block; margin-bottom: 6px; }
-  .pkg .role { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--blue); }
-  .pkg p { color: var(--ink-2); font-size: 14.5px; margin: 8px 0 0; }
-
-  /* ── loop strip ──────────────────────────────────────────────────────── */
-  .loop { display: flex; flex-wrap: wrap; gap: 10px; align-items: stretch; margin-top: 26px; }
-  .step { flex: 1 1 150px; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 14px; position: relative; }
-  .step .k { font-family: Charter, Georgia, serif; font-size: 18px; }
-  .step .d { color: var(--ink-2); font-size: 13px; margin-top: 4px; line-height: 1.45; }
-  .step .tag { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
-  .step::after { content: "→"; position: absolute; right: -12px; top: 42%; color: var(--ink-3); z-index: 1; }
-  .step:last-child::after { content: "⟲"; }
-
-  /* ── charts ──────────────────────────────────────────────────────────── */
-  .figure { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 22px; margin-top: 26px; }
-  .figure .cap { font-size: 13.5px; color: var(--ink-2); margin-top: 12px; max-width: 78ch; }
-  .chartbox { overflow-x: auto; }
-  svg text { font-family: -apple-system, "Segoe UI", system-ui, sans-serif; }
-  svg .axis { fill: var(--ink-3); font-size: 11.5px; }
-  svg .gridline { stroke: var(--grid); stroke-width: 1; }
-  svg .l-hold { stroke: var(--blue); fill: none; stroke-width: 2; }
-  svg .l-anchor { stroke: var(--aqua); fill: none; stroke-width: 2; stroke-dasharray: 5 4; }
-  svg .dot-hold { fill: var(--blue); stroke: var(--card); stroke-width: 2; }
-  svg .dot-anchor { fill: var(--aqua); stroke: var(--card); stroke-width: 2; }
-  svg .ptlabel { fill: var(--ink-2); font-size: 11px; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
-  svg .serieslabel { font-size: 12px; font-weight: 600; }
-  svg .bar-root { fill: var(--neutral-bar); }
-  svg .bar-final { fill: var(--blue); }
-  svg .barlabel { fill: var(--ink); font-size: 12.5px; font-variant-numeric: tabular-nums; }
-  svg .barlabel.sub { fill: var(--ink-2); font-size: 11px; }
-  svg .sc-prom { fill: var(--good); stroke: var(--card); stroke-width: 1.5; }
-  svg .sc-rej { fill: none; stroke: var(--ink-3); stroke-width: 1.4; }
-  svg .sc-comp { stroke: var(--bad); stroke-width: 2; fill: none; }
-  svg .rbar { fill: var(--neutral-bar); }
-  svg .rbar.comp { fill: var(--bad); }
-  .legend { display: flex; flex-wrap: wrap; gap: 18px; margin: 4px 0 14px; font-size: 13px; color: var(--ink-2); align-items: center; }
-  .legend .sw { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 7px; }
-  .legend .swdot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: -1px; margin-right: 7px; }
-
-  .tt {
-    position: fixed; pointer-events: none; z-index: 10; display: none;
-    background: var(--ink); color: var(--surface); border-radius: 5px;
-    padding: 8px 11px; font-size: 12.5px; line-height: 1.5; max-width: 260px;
-    font-variant-numeric: tabular-nums;
-  }
-
-  details.tbl { margin-top: 14px; }
-  details.tbl summary { cursor: pointer; font-size: 13.5px; color: var(--ink-2); }
-  table { border-collapse: collapse; margin-top: 10px; font-size: 13.5px; font-variant-numeric: tabular-nums; }
-  th, td { text-align: right; padding: 6px 14px 6px 0; border-bottom: 1px solid var(--line); }
-  th:first-child, td:first-child { text-align: left; }
-  th { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); font-weight: 500; }
-
-  /* ── gate section ────────────────────────────────────────────────────── */
-  .callout { border-left: 3px solid var(--bad); background: var(--bad-soft); border-radius: 0 6px 6px 0; padding: 18px 20px; margin-top: 26px; }
-  .callout .h { font-family: Charter, Georgia, serif; font-size: 19px; }
-  .callout p { margin: 6px 0 0; color: var(--ink-2); font-size: 14.5px; max-width: 74ch; }
-  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 26px; }
-  @media (max-width: 760px) { .split { grid-template-columns: 1fr; } }
-
-  /* ── receipts ────────────────────────────────────────────────────────── */
-  .checks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
-  .check {
-    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px;
-    padding: 6px 12px; border-radius: 999px; background: var(--good-soft); color: var(--good);
+    padding: 3px 10px; border-radius: 999px; background: var(--panel-2); color: var(--ink-2);
     border: 1px solid transparent;
   }
-  .receipt {
-    margin-top: 22px; background: var(--surface-2); border: 1px dashed var(--line-strong);
-    border-radius: 6px; padding: 20px 22px; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-    font-size: 12.5px; line-height: 1.75; overflow-x: auto; white-space: pre; color: var(--ink-2);
+  .gene .v.evolved { background: var(--blue-soft); color: var(--blue); font-weight: 600; }
+  .gene .v.just { border-color: var(--good); background: var(--good-soft); color: var(--good); font-weight: 650; }
+  @media (prefers-reduced-motion: no-preference) { .gene .v { transition: background 300ms, color 300ms, border-color 300ms; } }
+
+  /* gate log */
+  .log { max-height: 430px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; padding-right: 4px; }
+  .loggen { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 11px; letter-spacing: 0.08em; color: var(--ink-3); padding: 9px 0 4px; text-transform: uppercase; }
+  .loggen b { color: var(--ink-2); }
+  .lrow {
+    display: flex; align-items: baseline; gap: 8px;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 11.8px;
+    padding: 4px 8px; border-radius: 5px; background: var(--inset);
   }
-  .receipt b { color: var(--ink); font-weight: 600; }
-  .chain { margin-top: 18px; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 13px; color: var(--ink-2); overflow-x: auto; white-space: nowrap; padding-bottom: 4px; }
-  .chain b { color: var(--blue); }
-
-  footer { border-top: 1px solid var(--line); padding: 40px 0 64px; color: var(--ink-2); font-size: 14px; }
-  footer code { background: var(--surface-2); padding: 2px 7px; border-radius: 4px; font-size: 13px; }
-
+  .lrow .verdict { flex: none; width: 14px; text-align: center; font-weight: 700; }
+  .lrow.p { background: var(--good-soft); } .lrow.p .verdict { color: var(--good); }
+  .lrow.x { background: var(--bad-soft); } .lrow.x .verdict { color: var(--bad); }
+  .lrow.r .verdict { color: var(--ink-3); }
+  .lrow .mut { color: var(--ink); }
+  .lrow .mut .arrow { color: var(--ink-3); }
+  .lrow .why { color: var(--ink-3); margin-left: auto; text-align: right; font-size: 11px; }
+  .lrow.p .why { color: var(--good); } .lrow.x .why { color: var(--bad); }
   @media (prefers-reduced-motion: no-preference) {
-    .tile, .pkg, .figure { transition: border-color 160ms ease; }
-    .tile:hover, .pkg:hover { border-color: var(--line-strong); }
+    .lrow.fresh { animation: slidein 340ms ease-out; }
+    @keyframes slidein { from { opacity: 0; transform: translateY(-5px); } }
   }
+
+  /* charts */
+  .chartbox { overflow-x: auto; }
+  svg text { font-family: -apple-system, "Segoe UI", system-ui, sans-serif; }
+  svg .axis { fill: var(--ink-3); font-size: 10.5px; }
+  svg .gridline { stroke: var(--grid); stroke-width: 1; }
+  svg .l-hold { stroke: var(--blue); fill: none; stroke-width: 2; stroke-linejoin: round; }
+  svg .l-anchor { stroke: var(--aqua); fill: none; stroke-width: 2; stroke-dasharray: 5 4; stroke-linejoin: round; }
+  svg .dot-hold { fill: var(--blue); stroke: var(--panel); stroke-width: 2; }
+  svg .dot-anchor { fill: var(--aqua); stroke: var(--panel); stroke-width: 2; }
+  svg .ptlabel { fill: var(--ink-2); font-size: 10.5px; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  svg .serieslabel { font-size: 11.5px; font-weight: 600; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 8px; font-size: 12px; color: var(--ink-2); }
+  .legend .sw { display: inline-block; width: 13px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+  .legend .swghost { display: inline-block; width: 11px; height: 11px; border: 1.5px dashed var(--line-strong); border-radius: 3px; vertical-align: -2px; margin-right: 6px; }
+  .legend .swfill { display: inline-block; width: 11px; height: 11px; background: var(--blue); border-radius: 3px; vertical-align: -2px; margin-right: 6px; }
+
+  /* funnel bars */
+  .fstage { margin-bottom: 12px; }
+  .fstage .frow { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: var(--ink-2); margin-bottom: 4px; }
+  .fstage .frow b { color: var(--ink); font-variant-numeric: tabular-nums; font-size: 13px; }
+  .fstage .track { position: relative; height: 16px; background: var(--inset); border-radius: 4px; overflow: hidden; }
+  .fstage .ghost { position: absolute; inset: 0 auto 0 0; border: 1.5px dashed var(--line-strong); border-radius: 4px; }
+  .fstage .fill { position: absolute; inset: 2px auto 2px 0; background: var(--blue); border-radius: 3px; min-width: 2px; }
+  @media (prefers-reduced-motion: no-preference) { .fstage .fill { transition: width 450ms cubic-bezier(.22,.9,.35,1); } }
+
+  /* proof ledger */
+  .proofrow { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .pill {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 11.5px;
+    padding: 5px 11px; border-radius: 999px; background: var(--panel-2); color: var(--ink-3);
+  }
+  .pill.on { background: var(--good-soft); color: var(--good); }
+  .chain { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 11.5px; color: var(--ink-2); line-height: 1.9; word-break: break-word; }
+  .chain b { color: var(--blue); }
+  .fingerprint { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 11px; color: var(--ink-3); margin-top: 10px; word-break: break-all; }
+  .fingerprint b { color: var(--ink-2); }
+
+  /* footer */
+  .foot { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 14px; font-size: 12.5px; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 8px 24px; }
+  .foot code { background: var(--panel-2); padding: 1.5px 6px; border-radius: 4px; font-size: 11.5px; }
 </style>
 
 <div class="wrap">
-  <header>
-    <p class="eyebrow">FunnelWheel · run report № 1 · for the team</p>
-    <h1>A click funnel that <em>proves</em> its own lift.</h1>
-    <p class="sub">
-      We wired a five-stage funnel — ad click, landing, opt-in, checkout, upsell — into the
-      MetaHarness stack. <strong>Darwin proposes</strong> one lever change at a time,
-      <strong>the flywheel promotes</strong> only what clears a frozen gate on held-out traffic
-      <em>and</em> a never-optimized-against anchor cohort, and every promotion ships with an
-      Ed25519-signed receipt an outsider can replay. Twelve generations later:
-    </p>
-    <span class="synth">DATA SOURCE: SYNTHETIC — seeded simulator, fully reproducible, no live traffic</span>
+  <div class="top">
+    <h1>FunnelWheel <span class="dim">· self-learning funnel console</span></h1>
+    <span class="badge ok" id="verified-badge">replay verified 6/6</span>
+    <span class="badge">synthetic · seeded · deterministic</span>
+    <span class="spacer"></span>
+    <span class="stackline"><b>metaharness</b> mints · <b>@metaharness/darwin</b> mutates · <b>@metaharness/flywheel</b> promotes</span>
+  </div>
 
-    <div class="tiles">
-      <div class="tile">
-        <div class="lbl">Conversion rate</div>
-        <div class="big num">8.66%</div>
-        <div class="from num">was 1.48% at gen-0</div>
-        <span class="chip">5.86× lift</span>
-      </div>
-      <div class="tile">
-        <div class="lbl">Cost per acquisition</div>
-        <div class="big num">$9.90</div>
-        <div class="from num">was $57.99 at gen-0</div>
-        <span class="chip">−83% CAC</span>
-      </div>
-      <div class="tile">
-        <div class="lbl">Return on ad spend</div>
-        <div class="big num">6.59×</div>
-        <div class="from num">was 1.13× at gen-0</div>
-        <span class="chip">+$4.68 rev/visitor</span>
-      </div>
-      <div class="tile">
-        <div class="lbl">Bounce rate</div>
-        <div class="big num">40.1%</div>
-        <div class="from num">was 58.1% at gen-0</div>
-        <span class="chip">−18 pts</span>
-      </div>
+  <div class="player" id="player">
+    <button class="pbtn primary" id="play">▶ Watch it learn</button>
+    <button class="pbtn" id="stepb" aria-label="Step back">‹</button>
+    <button class="pbtn" id="stepf" aria-label="Step forward">›</button>
+    <div class="scrub">
+      <span class="genlabel">generation <b id="gennum">0</b> / 12</span>
+      <input type="range" id="scrub" min="0" max="12" value="0" step="1" aria-label="Generation">
     </div>
-  </header>
+    <div class="gen-event" id="event"></div>
+  </div>
 
-  <section>
-    <p class="eyebrow">01 · The stack</p>
-    <h2>Three npm packages, one loop</h2>
-    <p class="lede">Everything below is the published MetaHarness stack — installed from npm, not forked.
-      The funnel is just the domain we pointed it at.</p>
-    <div class="stack">
-      <div class="pkg">
-        <span class="role">Harness factory</span>
-        <code class="name">metaharness</code>
-        <p>Mints the harness around the project and scores it: this example gets
-           <strong>100/100 tool safety</strong> at an estimated <strong>$0.048 per run</strong>
-           (<code>npm run score</code>).</p>
-      </div>
-      <div class="pkg">
-        <span class="role">Mutation engine</span>
-        <code class="name">@metaharness/darwin</code>
-        <p>Proposes one lever change per candidate and picks variants with
-           <code>paretoFront</code> over CVR × −CAC × revenue/visitor — deliberately
-           compliance-blind, like a growth team chasing raw conversion.</p>
-      </div>
-      <div class="pkg">
-        <span class="role">Promotion loop</span>
-        <code class="name">@metaharness/flywheel</code>
-        <p><code>runFlywheelGenerations</code>: frozen conjunctive gate, holdout + frozen anchor,
-           Ed25519 receipts, lineage DAG, lift curve, and independent
-           <code>verifyReplayBundle</code>.</p>
-      </div>
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid">
+    <div class="panel col-genome">
+      <h2><span class="live"></span>Policy genome — 8 levers</h2>
+      <div id="genome"></div>
+      <div class="note">The operating policy under evolution. A lever lights up when a signed
+        promotion re-bases the funnel on it. <span style="color:var(--blue)">Blue</span> = evolved
+        away from the gen-0 default.</div>
     </div>
-  </section>
 
-  <section>
-    <p class="eyebrow">02 · The loop</p>
-    <h2>Run → measure → mutate → verify → promote</h2>
-    <p class="lede">The traffic model is frozen; the funnel's <em>operating policy</em> — eight levers from
-      headline strategy to checkout flow — is what evolves. Each generation re-bases on the previous
-      promoted winner, so verified wins compound.</p>
-    <div class="loop">
-      <div class="step"><span class="tag">run</span><div class="k">Simulate cohort</div><div class="d">9,000-visitor holdout, seeded &amp; deterministic.</div></div>
-      <div class="step"><span class="tag">measure</span><div class="k">Score 4 axes</div><div class="d">CVR · bounce · CAC · compliance flag.</div></div>
-      <div class="step"><span class="tag">mutate</span><div class="k">Darwin proposes</div><div class="d">One lever, Pareto-selected on an exploration cohort.</div></div>
-      <div class="step"><span class="tag">verify</span><div class="k">Frozen gate</div><div class="d">≥2% relative lift, no CAC/bounce/compliance regression, anchor survives.</div></div>
-      <div class="step"><span class="tag">promote</span><div class="k">Sign &amp; re-base</div><div class="d">Ed25519 receipt joins the lineage; next gen builds on it.</div></div>
+    <div class="panel">
+      <h2><span class="live"></span>Gate log — every candidate, every verdict</h2>
+      <div class="log" id="log" aria-live="polite"></div>
+      <div class="note">Darwin's exploration is compliance-blind; the frozen gate is where standards
+        live. <span style="color:var(--bad)">✕</span> = dark pattern (<code>fake_countdown</code>)
+        blocked — 11 of 11 attempts.</div>
     </div>
-  </section>
 
-  <section>
-    <p class="eyebrow">03 · The climb</p>
-    <h2>Seven promotions, each one earned</h2>
-    <p class="lede">Conversion rate by generation. Every marker is a signed promotion, labeled with the lever
-      that won it. The dashed line is the <strong>frozen mobile-heavy anchor</strong> — traffic the loop never
-      optimizes against. It climbed from 1.27% to 8.67% too: the lift generalizes, it isn't Goodharted onto
-      the holdout.</p>
-    <div class="figure">
+    <div class="panel">
+      <h2><span class="live"></span>Lift curve — compounding, not searching</h2>
       <div class="legend">
-        <span><span class="sw" style="background:var(--blue)"></span>Holdout CVR (optimized against)</span>
-        <span><span class="sw" style="background:var(--aqua)"></span>Anchor CVR (frozen, mobile-heavy)</span>
+        <span><span class="sw" style="background:var(--blue)"></span>holdout CVR</span>
+        <span><span class="sw" style="background:var(--aqua)"></span>anchor CVR (frozen, never optimized against)</span>
       </div>
-      <div class="chartbox"><svg id="lift" width="940" height="360" role="img" aria-label="Lift curve: holdout and anchor conversion rate by generation"></svg></div>
-      <div class="cap">Gate rule per promotion: ≥2% <em>relative</em> CVR lift, bounce and CAC must not worsen, no
-        compliance flag, anchor must not regress. Generations 8–12 proposed 40 more candidates; none cleared the
-        gate — the curve plateaus honestly instead of chasing noise.</div>
-      <details class="tbl"><summary>View as table</summary>
-        <table id="lift-table" aria-label="Lift curve data"></table>
-      </details>
-    </div>
-  </section>
+      <div class="chartbox"><svg id="lift" width="520" height="240" role="img" aria-label="Holdout and anchor conversion rate by generation"></svg></div>
+      <div class="note">Each marker is an Ed25519-signed promotion. Generations 8–12 promoted
+        nothing — the curve plateaus honestly instead of chasing noise.</div>
 
-  <section>
-    <p class="eyebrow">04 · Before / after</p>
-    <h2>Where the funnel stopped leaking</h2>
-    <p class="lede">Same 9,000-visitor holdout cohort, gen-0 policy vs. the promoted gen-7 policy.
-      Every stage widened: faster pages engage more visitors, a one-field form triples opt-ins,
-      express checkout and a guarantee-framed offer convert them.</p>
-    <div class="figure">
+      <h2 style="margin-top:20px"><span class="live"></span>Funnel — gen-0 ghost vs. now</h2>
       <div class="legend">
-        <span><span class="swdot" style="background:var(--neutral-bar)"></span>Gen-0 baseline</span>
-        <span><span class="swdot" style="background:var(--blue)"></span>Gen-7 promoted</span>
+        <span><span class="swghost"></span>gen-0 baseline</span>
+        <span><span class="swfill"></span>current generation</span>
       </div>
-      <div class="chartbox"><svg id="funnel" width="940" height="330" role="img" aria-label="Funnel stages before and after: visitors, engaged, opt-ins, net purchases"></svg></div>
-      <div class="cap">Net purchases are after refunds. Revenue on this cohort: <strong>$8,731 → $50,857</strong>
-        on identical ad spend ($7,713).</div>
+      <div id="funnel"></div>
     </div>
-  </section>
+  </div>
 
-  <section>
-    <p class="eyebrow">05 · The gate</p>
-    <h2>96 candidates. 7 promoted. The gate held.</h2>
-    <p class="lede">The proposer is intentionally greedy — its exploration pass never checks compliance. The
-      frozen gate is where standards live, and it rejected 89 of 96 candidates.</p>
-
-    <div class="callout">
-      <div class="h">The dark pattern that never shipped</div>
-      <p>The single biggest raw-CVR lever in the simulator is <code>urgency: fake_countdown</code> — a fake
-        scarcity timer. Darwin proposed it <strong>11 times across 11 generations</strong> (raw CVR up to 5.74%
-        mid-run). The gate rejected it <strong>11 out of 11 times</strong> with
-        <code>compliance_regressed</code>. The shipped funnel converts 5.86× better with
-        <code>urgency: none</code> — the lift is real, not extracted from users.</p>
+  <div class="grid" style="grid-template-columns: 1fr 1fr; margin-top: 12px">
+    <div class="panel">
+      <h2>Promotion ledger</h2>
+      <div class="proofrow" id="ledger"></div>
+      <div class="chain" id="chain"></div>
     </div>
-
-    <div class="split">
-      <div class="figure" style="margin-top:0">
-        <h3 style="font-size:18px">Why candidates were rejected</h3>
-        <div class="chartbox"><svg id="reasons" width="440" height="200" role="img" aria-label="Rejection reasons histogram"></svg></div>
-        <div class="cap">A candidate can fail several clauses; counts overlap. Compliance rejections are the
-          gate doing its most important job.</div>
-      </div>
-      <div class="figure" style="margin-top:0">
-        <h3 style="font-size:18px">Every candidate, CVR vs. CAC</h3>
-        <div class="legend" style="margin-top:8px">
-          <span><span class="swdot" style="background:var(--good)"></span>● promoted</span>
-          <span><span class="swdot" style="background:transparent;border:1.5px solid var(--ink-3)"></span>○ rejected</span>
-          <span style="color:var(--bad)">× compliance-blocked</span>
-        </div>
-        <div class="chartbox"><svg id="scatter" width="440" height="260" role="img" aria-label="Scatter of all 96 candidates: conversion rate vs cost per acquisition"></svg></div>
-        <div class="cap">Down and to the right is better. Promotions ride the frontier; the × marks converted
-          well and were rejected anyway.</div>
-      </div>
+    <div class="panel">
+      <h2>Independent replay — trust the signature, not the machine</h2>
+      <div class="proofrow" id="checks"></div>
+      <div class="fingerprint">gate sha256 <b id="fp"></b> <span>(pinned · unchanged · re-executed on sealed scores)</span></div>
+      <div class="note">Anyone can run <code>verifyReplayBundle(bundle, { pinnedGateFingerprint, promotionRule })</code>
+        on <code>results/replay-bundle.json</code> and reconstruct this entire dashboard with zero trust in the
+        machine that produced it.</div>
     </div>
-  </section>
+  </div>
 
-  <section>
-    <p class="eyebrow">06 · The proof</p>
-    <h2>Don't trust us — replay it</h2>
-    <p class="lede">The run emits a replay bundle. <code>verifyReplayBundle</code> checks the signatures,
-      reconstructs the lineage to the gen-0 root, confirms no rejected candidate was smuggled into the chain,
-      matches the pinned gate fingerprint, and <strong>re-executes the gate</strong> against each promotion's
-      sealed scores. All six checks pass with zero trust in the machine that produced the run.</p>
-    <div class="checks">
-      <span class="check">✓ receipts</span>
-      <span class="check">✓ reaches root</span>
-      <span class="check">✓ contiguous parents</span>
-      <span class="check">✓ all promoted</span>
-      <span class="check">✓ gate unchanged</span>
-      <span class="check">✓ gate re-executes</span>
-    </div>
-    <div class="chain">chain&nbsp;&nbsp;<b>gen7</b>(headline) → <b>gen6</b>(checkout) → <b>gen5</b>(cta) → <b>gen4</b>(social_proof) → <b>gen3</b>(page_weight) → <b>gen2</b>(offer_framing) → <b>gen1</b>(form) → <b>gen0</b>(root)</div>
-    <div class="receipt"><b>PROMOTION RECEIPT</b>  ·  alg ed25519  ·  gen 7  ·  target: headline
-payload    { kind: "candidate", verdict: "PROMOTED", primaryDelta: +0.01033 }
-signature  +DtRReojv59Zx86dN2q5ib7A4S2sULJ+JQ7iyl0D71TIbRAt17LarQZXxl1Xvbq8DATd…
-pubkey     MCowBQYDK2VwAyEAl7PL3QuHbZ325o6vy0vq2S9sOfLxkWQ3C3rK1uD…
-gate sha256 <b>5b1bab00ee41fe1c</b>d320776ad7ed7fab2cc1a9acba56e9f993ae485a83c292f0  (pinned · unchanged)</div>
-  </section>
-
-  <footer class="wrap" style="padding-left:0;padding-right:0">
-    <p><strong>Reproduce it:</strong> <code>cd examples/click-funnel && npm install && npm run evolve</code> —
-      ~2 seconds, deterministic, no network, no API key. Outputs <code>results/summary.json</code> and the
-      signed <code>results/replay-bundle.json</code>.</p>
-    <p style="margin-top:10px">Traffic is a seeded simulator (stamped <code>SYNTHETIC</code> in the bundle) so the
-      loop is free and replayable. Pointing it at production means swapping one function — the simulator — for
-      your analytics query and stamping the bundle <code>LIVE</code>. The gate, receipts, lineage, and replay
-      stay identical.</p>
-  </footer>
+  <div class="foot">
+    <span><b>Reproduce:</b> <code>cd examples/click-funnel && npm install && npm run evolve</code> — ~2s, no network, no API key.</span>
+    <span>Traffic is a seeded simulator (<code>SYNTHETIC</code> in the bundle). Swap <code>simulate()</code> for your analytics query to go <code>LIVE</code>; the gate, receipts, and replay stay identical.</span>
+  </div>
 </div>
 
-<div class="tt" id="tt"></div>
-
 <script>
-const DATA = {"lift":[{"g":0,"hold":0.014777777777777779,"anchor":0.012714285714285714,"delta":0,"target":null,"lever":null},{"g":1,"hold":0.022444444444444444,"anchor":0.018714285714285715,"delta":0.007666666666666665,"target":"form","lever":"email_only"},{"g":2,"hold":0.03111111111111111,"anchor":0.024428571428571428,"delta":0.008666666666666666,"target":"offer_framing","lever":"anchored_discount"},{"g":3,"hold":0.042888888888888886,"anchor":0.037142857142857144,"delta":0.011777777777777776,"target":"page_weight","lever":"lean_fast"},{"g":4,"hold":0.04922222222222222,"anchor":0.049428571428571426,"delta":0.006333333333333337,"target":"social_proof","lever":"testimonials"},{"g":5,"hold":0.057777777777777775,"anchor":0.053714285714285714,"delta":0.008555555555555552,"target":"cta","lever":"risk_reversal"},{"g":6,"hold":0.07622222222222222,"anchor":0.07357142857142857,"delta":0.018444444444444444,"target":"checkout","lever":"express_wallet"},{"g":7,"hold":0.08655555555555555,"anchor":0.08671428571428572,"delta":0.010333333333333333,"target":"headline","lever":"benefit_direct"}],"funnel":[{"label":"Ad clicks","root":9000,"final":9000,"rootRate":"paid traffic in","finalRate":"paid traffic in"},{"label":"Engaged","root":3773,"final":5393,"rootRate":"41.9% of clicks","finalRate":"59.9% of clicks"},{"label":"Opt-ins","root":695,"final":2235,"rootRate":"18.4% of engaged","finalRate":"41.4% of engaged"},{"label":"Net purchases","root":133,"final":779,"rootRate":"CVR 1.48%","finalRate":"CVR 8.66%"}],"reasons":[{"label":"CVR lift < 2%","n":57,"comp":false,"note":"No vanity promotions: improvement must beat noise."},{"label":"CAC worsened","n":56,"comp":false,"note":"Lift that raises acquisition cost is not lift."},{"label":"Bounce worsened","n":29,"comp":false,"note":"No buying conversion with worse landing UX."},{"label":"Compliance","n":11,"comp":true,"note":"Dark pattern / refund spike — hard stop, 11/11 blocked."}],"cands":[{"g":1,"t":"headline","cvr":0.01644,"cac":52.11,"v":"R","comp":false,"why":"—"},{"g":1,"t":"cta","cvr":0.01778,"cac":48.21,"v":"R","comp":false,"why":"—"},{"g":1,"t":"form","cvr":0.02244,"cac":38.18,"v":"P","comp":false,"why":"—"},{"g":1,"t":"page_weight","cvr":0.01544,"cac":55.49,"v":"R","comp":false,"why":"—"},{"g":1,"t":"social_proof","cvr":0.01922,"cac":44.58,"v":"R","comp":false,"why":"—"},{"g":1,"t":"offer_framing","cvr":0.01767,"cac":48.51,"v":"R","comp":false,"why":"—"},{"g":1,"t":"checkout","cvr":0.01844,"cac":46.46,"v":"R","comp":false,"why":"—"},{"g":1,"t":"urgency","cvr":0.01922,"cac":44.58,"v":"R","comp":true,"why":"compliance regressed"},{"g":2,"t":"headline","cvr":0.02444,"cac":35.06,"v":"R","comp":false,"why":"—"},{"g":2,"t":"cta","cvr":0.02644,"cac":32.41,"v":"R","comp":false,"why":"bounce worsened"},{"g":2,"t":"form","cvr":0.01756,"cac":48.82,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":2,"t":"page_weight","cvr":0.02778,"cac":30.85,"v":"R","comp":false,"why":"—"},{"g":2,"t":"social_proof","cvr":0.02989,"cac":28.67,"v":"R","comp":false,"why":"—"},{"g":2,"t":"offer_framing","cvr":0.03111,"cac":27.55,"v":"P","comp":false,"why":"—"},{"g":2,"t":"checkout","cvr":0.03111,"cac":27.55,"v":"R","comp":false,"why":"—"},{"g":2,"t":"urgency","cvr":0.02933,"cac":29.22,"v":"R","comp":true,"why":"compliance regressed"},{"g":3,"t":"headline","cvr":0.03589,"cac":23.88,"v":"R","comp":false,"why":"—"},{"g":3,"t":"cta","cvr":0.03644,"cac":23.52,"v":"R","comp":false,"why":"—"},{"g":3,"t":"form","cvr":0.02667,"cac":32.14,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":3,"t":"page_weight","cvr":0.04289,"cac":19.98,"v":"P","comp":false,"why":"—"},{"g":3,"t":"social_proof","cvr":0.03322,"cac":25.8,"v":"R","comp":false,"why":"—"},{"g":3,"t":"offer_framing","cvr":0.02867,"cac":29.9,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":3,"t":"checkout","cvr":0.03656,"cac":23.44,"v":"R","comp":false,"why":"—"},{"g":3,"t":"urgency","cvr":0.03411,"cac":25.12,"v":"R","comp":true,"why":"compliance regressed"},{"g":4,"t":"headline","cvr":0.04256,"cac":20.14,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":4,"t":"cta","cvr":0.049,"cac":17.49,"v":"R","comp":false,"why":"bounce worsened"},{"g":4,"t":"form","cvr":0.03556,"cac":24.1,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":4,"t":"page_weight","cvr":0.03522,"cac":24.33,"v":"R","comp":false,"why":"cvr lift below 2pct, bounce worsened, cac worsened"},{"g":4,"t":"social_proof","cvr":0.04922,"cac":17.41,"v":"P","comp":false,"why":"—"},{"g":4,"t":"offer_framing","cvr":0.036,"cac":23.81,"v":"R","comp":false,"why":"cvr lift below 2pct, bounce worsened, cac worsened"},{"g":4,"t":"checkout","cvr":0.04911,"cac":17.45,"v":"R","comp":false,"why":"bounce worsened"},{"g":4,"t":"urgency","cvr":0.05378,"cac":15.94,"v":"R","comp":true,"why":"compliance regressed"},{"g":5,"t":"headline","cvr":0.05633,"cac":15.21,"v":"R","comp":false,"why":"—"},{"g":5,"t":"cta","cvr":0.05778,"cac":14.83,"v":"P","comp":false,"why":"—"},{"g":5,"t":"form","cvr":0.04556,"cac":18.81,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":5,"t":"page_weight","cvr":0.04867,"cac":17.61,"v":"R","comp":false,"why":"cvr lift below 2pct, bounce worsened, cac worsened"},{"g":5,"t":"social_proof","cvr":0.04122,"cac":20.79,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":5,"t":"offer_framing","cvr":0.051,"cac":16.8,"v":"R","comp":false,"why":"—"},{"g":5,"t":"checkout","cvr":0.06033,"cac":14.2,"v":"R","comp":false,"why":"bounce worsened"},{"g":5,"t":"urgency","cvr":0.05744,"cac":14.92,"v":"R","comp":true,"why":"bounce worsened, compliance regressed"},{"g":6,"t":"headline","cvr":0.06889,"cac":12.44,"v":"R","comp":false,"why":"—"},{"g":6,"t":"cta","cvr":0.05467,"cac":15.68,"v":"R","comp":false,"why":"cvr lift below 2pct, bounce worsened, cac worsened"},{"g":6,"t":"form","cvr":0.052,"cac":16.48,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":6,"t":"page_weight","cvr":0.05811,"cac":14.75,"v":"R","comp":false,"why":"cvr lift below 2pct, bounce worsened"},{"g":6,"t":"social_proof","cvr":0.05222,"cac":16.41,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":6,"t":"offer_framing","cvr":0.05522,"cac":15.52,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":6,"t":"checkout","cvr":0.07622,"cac":11.24,"v":"P","comp":false,"why":"—"},{"g":6,"t":"urgency","cvr":0.07,"cac":12.24,"v":"R","comp":true,"why":"compliance regressed"},{"g":7,"t":"headline","cvr":0.08656,"cac":9.9,"v":"P","comp":false,"why":"—"},{"g":7,"t":"cta","cvr":0.07044,"cac":12.17,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":7,"t":"form","cvr":0.06567,"cac":13.05,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":7,"t":"page_weight","cvr":0.067,"cac":12.79,"v":"R","comp":false,"why":"cvr lift below 2pct, bounce worsened, cac worsened"},{"g":7,"t":"social_proof","cvr":0.069,"cac":12.42,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":7,"t":"offer_framing","cvr":0.07289,"cac":11.76,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":7,"t":"checkout","cvr":0.07022,"cac":12.2,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":7,"t":"urgency","cvr":0.07522,"cac":11.39,"v":"R","comp":false,"why":"cvr lift below 2pct, bounce worsened, cac worsened"},{"g":8,"t":"headline","cvr":0.07633,"cac":11.23,"v":"R","comp":false,"why":"cvr lift below 2pct, bounce worsened, cac worsened"},{"g":8,"t":"cta","cvr":0.08511,"cac":10.07,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":8,"t":"form","cvr":0.07389,"cac":11.6,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":8,"t":"page_weight","cvr":0.07711,"cac":11.11,"v":"R","comp":false,"why":"cvr lift below 2pct, bounce worsened, cac worsened"},{"g":8,"t":"social_proof","cvr":0.07733,"cac":11.08,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":8,"t":"offer_framing","cvr":0.08033,"cac":10.67,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":8,"t":"checkout","cvr":0.07511,"cac":11.41,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":8,"t":"urgency","cvr":0.09811,"cac":8.73,"v":"R","comp":true,"why":"bounce worsened, compliance regressed"},{"g":9,"t":"headline","cvr":0.08289,"cac":10.34,"v":"R","comp":false,"why":"cvr lift below 2pct, bounce worsened, cac worsened"},{"g":9,"t":"cta","cvr":0.08511,"cac":10.07,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":9,"t":"form","cvr":0.07389,"cac":11.6,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":9,"t":"page_weight","cvr":0.07711,"cac":11.11,"v":"R","comp":false,"why":"cvr lift below 2pct, bounce worsened, cac worsened"},{"g":9,"t":"social_proof","cvr":0.07656,"cac":11.19,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":9,"t":"offer_framing","cvr":0.08033,"cac":10.67,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":9,"t":"checkout","cvr":0.07511,"cac":11.41,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":9,"t":"urgency","cvr":0.09811,"cac":8.73,"v":"R","comp":true,"why":"bounce worsened, compliance regressed"},{"g":10,"t":"headline","cvr":0.08033,"cac":10.67,"v":"R","comp":false,"why":"cvr lift below 2pct, bounce worsened, cac worsened"},{"g":10,"t":"cta","cvr":0.08511,"cac":10.07,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":10,"t":"form","cvr":0.07389,"cac":11.6,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":10,"t":"page_weight","cvr":0.07711,"cac":11.11,"v":"R","comp":false,"why":"cvr lift below 2pct, bounce worsened, cac worsened"},{"g":10,"t":"social_proof","cvr":0.07733,"cac":11.08,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":10,"t":"offer_framing","cvr":0.07544,"cac":11.36,"v":"R","comp":false,"why":"cvr lift below 2pct, bounce worsened, cac worsened"},{"g":10,"t":"checkout","cvr":0.07511,"cac":11.41,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":10,"t":"urgency","cvr":0.09811,"cac":8.73,"v":"R","comp":true,"why":"bounce worsened, compliance regressed"},{"g":11,"t":"headline","cvr":0.08289,"cac":10.34,"v":"R","comp":false,"why":"cvr lift below 2pct, bounce worsened, cac worsened"},{"g":11,"t":"cta","cvr":0.08511,"cac":10.07,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":11,"t":"form","cvr":0.07389,"cac":11.6,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":11,"t":"page_weight","cvr":0.07711,"cac":11.11,"v":"R","comp":false,"why":"cvr lift below 2pct, bounce worsened, cac worsened"},{"g":11,"t":"social_proof","cvr":0.07733,"cac":11.08,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":11,"t":"offer_framing","cvr":0.067,"cac":12.79,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":11,"t":"checkout","cvr":0.07511,"cac":11.41,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":11,"t":"urgency","cvr":0.09811,"cac":8.73,"v":"R","comp":true,"why":"bounce worsened, compliance regressed"},{"g":12,"t":"headline","cvr":0.07633,"cac":11.23,"v":"R","comp":false,"why":"cvr lift below 2pct, bounce worsened, cac worsened"},{"g":12,"t":"cta","cvr":0.08511,"cac":10.07,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":12,"t":"form","cvr":0.07389,"cac":11.6,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":12,"t":"page_weight","cvr":0.07711,"cac":11.11,"v":"R","comp":false,"why":"cvr lift below 2pct, bounce worsened, cac worsened"},{"g":12,"t":"social_proof","cvr":0.07733,"cac":11.08,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":12,"t":"offer_framing","cvr":0.07544,"cac":11.36,"v":"R","comp":false,"why":"cvr lift below 2pct, bounce worsened, cac worsened"},{"g":12,"t":"checkout","cvr":0.07511,"cac":11.41,"v":"R","comp":false,"why":"cvr lift below 2pct, cac worsened"},{"g":12,"t":"urgency","cvr":0.09811,"cac":8.73,"v":"R","comp":true,"why":"bounce worsened, compliance regressed"}]};
+const T = {"levers":{"headline":["generic_welcome","benefit_direct","curiosity_gap","social_proof_led","urgency_led"],"cta":["generic_submit","value_button","first_person","risk_reversal"],"form":["full_profile","email_name","email_only"],"page_weight":["heavy_rich","balanced","lean_fast"],"social_proof":["none","logos","testimonials","live_counter"],"offer_framing":["feature_list","outcome_promise","guarantee_led","anchored_discount"],"checkout":["multi_step","single_page","express_wallet"],"urgency":["none","honest_deadline","fake_countdown"]},"gateFingerprint":"5b1bab00ee41fe1cd320776ad7ed7fab2cc1a9acba56e9f993ae485a83c292f0","replayVerdict":{"pass":true,"checks":{"receipts":true,"reachesRoot":true,"contiguousParents":true,"allPromoted":true,"gateUnchanged":true,"gateReExecutes":true},"failures":[],"chainSummary":"gen7(headline) → gen6(checkout) → gen5(cta) → gen4(social_proof) → gen3(page_weight) → gen2(offer_framing) → gen1(form) → gen0(root)"},"sampleReceipt":{"payload":{"kind":"candidate","id":"root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7","target":"headline","verdict":"PROMOTED","primaryDelta":0.010333333333333333},"signature":"+DtRReojv59Zx86dN2q5ib7A4S2sULJ+JQ7iyl0D71TIbRAt17LarQZXxl1Xvbq8DATdbZ5QUBPC0N2m46S6Bw==","publicKey":"MCowBQYDK2VwAyEAl7PL3QuHbZ325o6vy0vq2S9sOfLxkWQ3C3rK1uD9y8U=","alg":"ed25519"},"milestoneReached":true,"generations":[{"gen":0,"promoted":null,"policy":{"headline":"generic_welcome","cta":"generic_submit","form":"full_profile","page_weight":"heavy_rich","social_proof":"none","offer_framing":"feature_list","checkout":"multi_step","urgency":"none"},"holdout":{"cvr":0.01478,"cac":57.99,"bounce":0.5808,"roas":1.132,"rpv":0.97,"revenue":8731,"stages":{"visitors":9000,"engaged":3773,"optins":695,"net":133}},"anchor":{"cvr":0.01271},"candidates":[]},{"gen":1,"promoted":{"target":"form","from":"full_profile","to":"email_only"},"policy":{"headline":"generic_welcome","cta":"generic_submit","form":"email_only","page_weight":"heavy_rich","social_proof":"none","offer_framing":"feature_list","checkout":"multi_step","urgency":"none"},"holdout":{"cvr":0.02244,"cac":38.18,"bounce":0.5807,"roas":1.757,"rpv":1.506,"revenue":13550,"stages":{"visitors":9000,"engaged":3774,"optins":1235,"net":202}},"anchor":{"cvr":0.01871},"candidates":[{"target":"headline","from":"generic_welcome","to":"curiosity_gap","verdict":"REJECTED","reasons":[],"cvr":0.01644,"cac":52.11},{"target":"cta","from":"generic_submit","to":"value_button","verdict":"REJECTED","reasons":[],"cvr":0.01778,"cac":48.21},{"target":"form","from":"full_profile","to":"email_only","verdict":"PROMOTED","reasons":[],"cvr":0.02244,"cac":38.18},{"target":"page_weight","from":"heavy_rich","to":"balanced","verdict":"REJECTED","reasons":[],"cvr":0.01544,"cac":55.49},{"target":"social_proof","from":"none","to":"testimonials","verdict":"REJECTED","reasons":[],"cvr":0.01922,"cac":44.58},{"target":"offer_framing","from":"feature_list","to":"outcome_promise","verdict":"REJECTED","reasons":[],"cvr":0.01767,"cac":48.51},{"target":"checkout","from":"multi_step","to":"express_wallet","verdict":"REJECTED","reasons":[],"cvr":0.01844,"cac":46.46},{"target":"urgency","from":"none","to":"fake_countdown","verdict":"REJECTED","reasons":["compliance_regressed"],"cvr":0.01922,"cac":44.58}]},{"gen":2,"promoted":{"target":"offer_framing","from":"feature_list","to":"anchored_discount"},"policy":{"headline":"generic_welcome","cta":"generic_submit","form":"email_only","page_weight":"heavy_rich","social_proof":"none","offer_framing":"anchored_discount","checkout":"multi_step","urgency":"none"},"holdout":{"cvr":0.03111,"cac":27.55,"bounce":0.5777,"roas":2.406,"rpv":2.062,"revenue":18560,"stages":{"visitors":9000,"engaged":3801,"optins":1226,"net":280}},"anchor":{"cvr":0.02443},"candidates":[{"target":"headline","from":"generic_welcome","to":"urgency_led","verdict":"REJECTED","reasons":[],"cvr":0.02444,"cac":35.06},{"target":"cta","from":"generic_submit","to":"risk_reversal","verdict":"REJECTED","reasons":["bounce_worsened"],"cvr":0.02644,"cac":32.41},{"target":"form","from":"email_only","to":"email_name","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.01756,"cac":48.82},{"target":"page_weight","from":"heavy_rich","to":"lean_fast","verdict":"REJECTED","reasons":[],"cvr":0.02778,"cac":30.85},{"target":"social_proof","from":"none","to":"testimonials","verdict":"REJECTED","reasons":[],"cvr":0.02989,"cac":28.67},{"target":"offer_framing","from":"feature_list","to":"anchored_discount","verdict":"PROMOTED","reasons":[],"cvr":0.03111,"cac":27.55},{"target":"checkout","from":"multi_step","to":"express_wallet","verdict":"REJECTED","reasons":[],"cvr":0.03111,"cac":27.55},{"target":"urgency","from":"none","to":"fake_countdown","verdict":"REJECTED","reasons":["compliance_regressed"],"cvr":0.02933,"cac":29.22}]},{"gen":3,"promoted":{"target":"page_weight","from":"heavy_rich","to":"lean_fast"},"policy":{"headline":"generic_welcome","cta":"generic_submit","form":"email_only","page_weight":"lean_fast","social_proof":"none","offer_framing":"anchored_discount","checkout":"multi_step","urgency":"none"},"holdout":{"cvr":0.04289,"cac":19.98,"bounce":0.4584,"roas":3.314,"rpv":2.84,"revenue":25562,"stages":{"visitors":9000,"engaged":4874,"optins":1575,"net":386}},"anchor":{"cvr":0.03714},"candidates":[{"target":"headline","from":"generic_welcome","to":"benefit_direct","verdict":"REJECTED","reasons":[],"cvr":0.03589,"cac":23.88},{"target":"cta","from":"generic_submit","to":"risk_reversal","verdict":"REJECTED","reasons":[],"cvr":0.03644,"cac":23.52},{"target":"form","from":"email_only","to":"email_name","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.02667,"cac":32.14},{"target":"page_weight","from":"heavy_rich","to":"lean_fast","verdict":"PROMOTED","reasons":[],"cvr":0.04289,"cac":19.98},{"target":"social_proof","from":"none","to":"live_counter","verdict":"REJECTED","reasons":[],"cvr":0.03322,"cac":25.8},{"target":"offer_framing","from":"anchored_discount","to":"guarantee_led","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.02867,"cac":29.9},{"target":"checkout","from":"multi_step","to":"single_page","verdict":"REJECTED","reasons":[],"cvr":0.03656,"cac":23.44},{"target":"urgency","from":"none","to":"fake_countdown","verdict":"REJECTED","reasons":["compliance_regressed"],"cvr":0.03411,"cac":25.12}]},{"gen":4,"promoted":{"target":"social_proof","from":"none","to":"testimonials"},"policy":{"headline":"generic_welcome","cta":"generic_submit","form":"email_only","page_weight":"lean_fast","social_proof":"testimonials","offer_framing":"anchored_discount","checkout":"multi_step","urgency":"none"},"holdout":{"cvr":0.04922,"cac":17.41,"bounce":0.4602,"roas":3.803,"rpv":3.259,"revenue":29333,"stages":{"visitors":9000,"engaged":4858,"optins":1795,"net":443}},"anchor":{"cvr":0.04943},"candidates":[{"target":"headline","from":"generic_welcome","to":"benefit_direct","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.04256,"cac":20.14},{"target":"cta","from":"generic_submit","to":"first_person","verdict":"REJECTED","reasons":["bounce_worsened"],"cvr":0.049,"cac":17.49},{"target":"form","from":"email_only","to":"email_name","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.03556,"cac":24.1},{"target":"page_weight","from":"lean_fast","to":"balanced","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","bounce_worsened","cac_worsened"],"cvr":0.03522,"cac":24.33},{"target":"social_proof","from":"none","to":"testimonials","verdict":"PROMOTED","reasons":[],"cvr":0.04922,"cac":17.41},{"target":"offer_framing","from":"anchored_discount","to":"guarantee_led","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","bounce_worsened","cac_worsened"],"cvr":0.036,"cac":23.81},{"target":"checkout","from":"multi_step","to":"express_wallet","verdict":"REJECTED","reasons":["bounce_worsened"],"cvr":0.04911,"cac":17.45},{"target":"urgency","from":"none","to":"fake_countdown","verdict":"REJECTED","reasons":["compliance_regressed"],"cvr":0.05378,"cac":15.94}]},{"gen":5,"promoted":{"target":"cta","from":"generic_submit","to":"risk_reversal"},"policy":{"headline":"generic_welcome","cta":"risk_reversal","form":"email_only","page_weight":"lean_fast","social_proof":"testimonials","offer_framing":"anchored_discount","checkout":"multi_step","urgency":"none"},"holdout":{"cvr":0.05778,"cac":14.83,"bounce":0.4639,"roas":4.449,"rpv":3.813,"revenue":34318,"stages":{"visitors":9000,"engaged":4825,"optins":1886,"net":520}},"anchor":{"cvr":0.05371},"candidates":[{"target":"headline","from":"generic_welcome","to":"benefit_direct","verdict":"REJECTED","reasons":[],"cvr":0.05633,"cac":15.21},{"target":"cta","from":"generic_submit","to":"risk_reversal","verdict":"PROMOTED","reasons":[],"cvr":0.05778,"cac":14.83},{"target":"form","from":"email_only","to":"email_name","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.04556,"cac":18.81},{"target":"page_weight","from":"lean_fast","to":"balanced","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","bounce_worsened","cac_worsened"],"cvr":0.04867,"cac":17.61},{"target":"social_proof","from":"testimonials","to":"live_counter","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.04122,"cac":20.79},{"target":"offer_framing","from":"anchored_discount","to":"guarantee_led","verdict":"REJECTED","reasons":[],"cvr":0.051,"cac":16.8},{"target":"checkout","from":"multi_step","to":"express_wallet","verdict":"REJECTED","reasons":["bounce_worsened"],"cvr":0.06033,"cac":14.2},{"target":"urgency","from":"none","to":"fake_countdown","verdict":"REJECTED","reasons":["bounce_worsened","compliance_regressed"],"cvr":0.05744,"cac":14.92}]},{"gen":6,"promoted":{"target":"checkout","from":"multi_step","to":"express_wallet"},"policy":{"headline":"generic_welcome","cta":"risk_reversal","form":"email_only","page_weight":"lean_fast","social_proof":"testimonials","offer_framing":"anchored_discount","checkout":"express_wallet","urgency":"none"},"holdout":{"cvr":0.07622,"cac":11.24,"bounce":0.4569,"roas":5.724,"rpv":4.905,"revenue":44146,"stages":{"visitors":9000,"engaged":4888,"optins":2016,"net":686}},"anchor":{"cvr":0.07357},"candidates":[{"target":"headline","from":"generic_welcome","to":"benefit_direct","verdict":"REJECTED","reasons":[],"cvr":0.06889,"cac":12.44},{"target":"cta","from":"risk_reversal","to":"first_person","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","bounce_worsened","cac_worsened"],"cvr":0.05467,"cac":15.68},{"target":"form","from":"email_only","to":"email_name","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.052,"cac":16.48},{"target":"page_weight","from":"lean_fast","to":"balanced","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","bounce_worsened"],"cvr":0.05811,"cac":14.75},{"target":"social_proof","from":"testimonials","to":"logos","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.05222,"cac":16.41},{"target":"offer_framing","from":"anchored_discount","to":"guarantee_led","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.05522,"cac":15.52},{"target":"checkout","from":"multi_step","to":"express_wallet","verdict":"PROMOTED","reasons":[],"cvr":0.07622,"cac":11.24},{"target":"urgency","from":"none","to":"fake_countdown","verdict":"REJECTED","reasons":["compliance_regressed"],"cvr":0.07,"cac":12.24}]},{"gen":7,"promoted":{"target":"headline","from":"generic_welcome","to":"benefit_direct"},"policy":{"headline":"benefit_direct","cta":"risk_reversal","form":"email_only","page_weight":"lean_fast","social_proof":"testimonials","offer_framing":"anchored_discount","checkout":"express_wallet","urgency":"none"},"holdout":{"cvr":0.08656,"cac":9.9,"bounce":0.4008,"roas":6.594,"rpv":5.651,"revenue":50857,"stages":{"visitors":9000,"engaged":5393,"optins":2235,"net":779}},"anchor":{"cvr":0.08671},"candidates":[{"target":"headline","from":"generic_welcome","to":"benefit_direct","verdict":"PROMOTED","reasons":[],"cvr":0.08656,"cac":9.9},{"target":"cta","from":"risk_reversal","to":"value_button","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.07044,"cac":12.17},{"target":"form","from":"email_only","to":"email_name","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.06567,"cac":13.05},{"target":"page_weight","from":"lean_fast","to":"balanced","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","bounce_worsened","cac_worsened"],"cvr":0.067,"cac":12.79},{"target":"social_proof","from":"testimonials","to":"live_counter","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.069,"cac":12.42},{"target":"offer_framing","from":"anchored_discount","to":"guarantee_led","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.07289,"cac":11.76},{"target":"checkout","from":"express_wallet","to":"single_page","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.07022,"cac":12.2},{"target":"urgency","from":"none","to":"honest_deadline","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","bounce_worsened","cac_worsened"],"cvr":0.07522,"cac":11.39}]},{"gen":8,"promoted":null,"policy":{"headline":"benefit_direct","cta":"risk_reversal","form":"email_only","page_weight":"lean_fast","social_proof":"testimonials","offer_framing":"anchored_discount","checkout":"express_wallet","urgency":"none"},"holdout":{"cvr":0.08656,"cac":9.9,"bounce":0.4008,"roas":6.594,"rpv":5.651,"revenue":50857,"stages":{"visitors":9000,"engaged":5393,"optins":2235,"net":779}},"anchor":{"cvr":0.08671},"candidates":[{"target":"headline","from":"benefit_direct","to":"curiosity_gap","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","bounce_worsened","cac_worsened"],"cvr":0.07633,"cac":11.23},{"target":"cta","from":"risk_reversal","to":"first_person","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.08511,"cac":10.07},{"target":"form","from":"email_only","to":"email_name","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.07389,"cac":11.6},{"target":"page_weight","from":"lean_fast","to":"balanced","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","bounce_worsened","cac_worsened"],"cvr":0.07711,"cac":11.11},{"target":"social_proof","from":"testimonials","to":"live_counter","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.07733,"cac":11.08},{"target":"offer_framing","from":"anchored_discount","to":"guarantee_led","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.08033,"cac":10.67},{"target":"checkout","from":"express_wallet","to":"single_page","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.07511,"cac":11.41},{"target":"urgency","from":"none","to":"fake_countdown","verdict":"REJECTED","reasons":["bounce_worsened","compliance_regressed"],"cvr":0.09811,"cac":8.73}]},{"gen":9,"promoted":null,"policy":{"headline":"benefit_direct","cta":"risk_reversal","form":"email_only","page_weight":"lean_fast","social_proof":"testimonials","offer_framing":"anchored_discount","checkout":"express_wallet","urgency":"none"},"holdout":{"cvr":0.08656,"cac":9.9,"bounce":0.4008,"roas":6.594,"rpv":5.651,"revenue":50857,"stages":{"visitors":9000,"engaged":5393,"optins":2235,"net":779}},"anchor":{"cvr":0.08671},"candidates":[{"target":"headline","from":"benefit_direct","to":"urgency_led","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","bounce_worsened","cac_worsened"],"cvr":0.08289,"cac":10.34},{"target":"cta","from":"risk_reversal","to":"first_person","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.08511,"cac":10.07},{"target":"form","from":"email_only","to":"email_name","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.07389,"cac":11.6},{"target":"page_weight","from":"lean_fast","to":"balanced","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","bounce_worsened","cac_worsened"],"cvr":0.07711,"cac":11.11},{"target":"social_proof","from":"testimonials","to":"logos","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.07656,"cac":11.19},{"target":"offer_framing","from":"anchored_discount","to":"guarantee_led","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.08033,"cac":10.67},{"target":"checkout","from":"express_wallet","to":"single_page","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.07511,"cac":11.41},{"target":"urgency","from":"none","to":"fake_countdown","verdict":"REJECTED","reasons":["bounce_worsened","compliance_regressed"],"cvr":0.09811,"cac":8.73}]},{"gen":10,"promoted":null,"policy":{"headline":"benefit_direct","cta":"risk_reversal","form":"email_only","page_weight":"lean_fast","social_proof":"testimonials","offer_framing":"anchored_discount","checkout":"express_wallet","urgency":"none"},"holdout":{"cvr":0.08656,"cac":9.9,"bounce":0.4008,"roas":6.594,"rpv":5.651,"revenue":50857,"stages":{"visitors":9000,"engaged":5393,"optins":2235,"net":779}},"anchor":{"cvr":0.08671},"candidates":[{"target":"headline","from":"benefit_direct","to":"social_proof_led","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","bounce_worsened","cac_worsened"],"cvr":0.08033,"cac":10.67},{"target":"cta","from":"risk_reversal","to":"first_person","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.08511,"cac":10.07},{"target":"form","from":"email_only","to":"email_name","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.07389,"cac":11.6},{"target":"page_weight","from":"lean_fast","to":"balanced","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","bounce_worsened","cac_worsened"],"cvr":0.07711,"cac":11.11},{"target":"social_proof","from":"testimonials","to":"live_counter","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.07733,"cac":11.08},{"target":"offer_framing","from":"anchored_discount","to":"outcome_promise","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","bounce_worsened","cac_worsened"],"cvr":0.07544,"cac":11.36},{"target":"checkout","from":"express_wallet","to":"single_page","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.07511,"cac":11.41},{"target":"urgency","from":"none","to":"fake_countdown","verdict":"REJECTED","reasons":["bounce_worsened","compliance_regressed"],"cvr":0.09811,"cac":8.73}]},{"gen":11,"promoted":null,"policy":{"headline":"benefit_direct","cta":"risk_reversal","form":"email_only","page_weight":"lean_fast","social_proof":"testimonials","offer_framing":"anchored_discount","checkout":"express_wallet","urgency":"none"},"holdout":{"cvr":0.08656,"cac":9.9,"bounce":0.4008,"roas":6.594,"rpv":5.651,"revenue":50857,"stages":{"visitors":9000,"engaged":5393,"optins":2235,"net":779}},"anchor":{"cvr":0.08671},"candidates":[{"target":"headline","from":"benefit_direct","to":"urgency_led","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","bounce_worsened","cac_worsened"],"cvr":0.08289,"cac":10.34},{"target":"cta","from":"risk_reversal","to":"first_person","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.08511,"cac":10.07},{"target":"form","from":"email_only","to":"email_name","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.07389,"cac":11.6},{"target":"page_weight","from":"lean_fast","to":"balanced","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","bounce_worsened","cac_worsened"],"cvr":0.07711,"cac":11.11},{"target":"social_proof","from":"testimonials","to":"live_counter","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.07733,"cac":11.08},{"target":"offer_framing","from":"anchored_discount","to":"feature_list","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.067,"cac":12.79},{"target":"checkout","from":"express_wallet","to":"single_page","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.07511,"cac":11.41},{"target":"urgency","from":"none","to":"fake_countdown","verdict":"REJECTED","reasons":["bounce_worsened","compliance_regressed"],"cvr":0.09811,"cac":8.73}]},{"gen":12,"promoted":null,"policy":{"headline":"benefit_direct","cta":"risk_reversal","form":"email_only","page_weight":"lean_fast","social_proof":"testimonials","offer_framing":"anchored_discount","checkout":"express_wallet","urgency":"none"},"holdout":{"cvr":0.08656,"cac":9.9,"bounce":0.4008,"roas":6.594,"rpv":5.651,"revenue":50857,"stages":{"visitors":9000,"engaged":5393,"optins":2235,"net":779}},"anchor":{"cvr":0.08671},"candidates":[{"target":"headline","from":"benefit_direct","to":"curiosity_gap","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","bounce_worsened","cac_worsened"],"cvr":0.07633,"cac":11.23},{"target":"cta","from":"risk_reversal","to":"first_person","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.08511,"cac":10.07},{"target":"form","from":"email_only","to":"email_name","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.07389,"cac":11.6},{"target":"page_weight","from":"lean_fast","to":"balanced","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","bounce_worsened","cac_worsened"],"cvr":0.07711,"cac":11.11},{"target":"social_proof","from":"testimonials","to":"live_counter","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.07733,"cac":11.08},{"target":"offer_framing","from":"anchored_discount","to":"outcome_promise","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","bounce_worsened","cac_worsened"],"cvr":0.07544,"cac":11.36},{"target":"checkout","from":"express_wallet","to":"single_page","verdict":"REJECTED","reasons":["cvr_lift_below_2pct","cac_worsened"],"cvr":0.07511,"cac":11.41},{"target":"urgency","from":"none","to":"fake_countdown","verdict":"REJECTED","reasons":["bounce_worsened","compliance_regressed"],"cvr":0.09811,"cac":8.73}]}]};
 
-const svgNS = 'http://www.w3.org/2000/svg';
-const el = (name, attrs, parent, text) => {
-  const n = document.createElementNS(svgNS, name);
-  for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
-  if (text != null) n.textContent = text;
-  parent.appendChild(n);
-  return n;
-};
-const tt = document.getElementById('tt');
-const showTT = (html, ev) => {
-  tt.innerHTML = html; tt.style.display = 'block';
-  const pad = 14;
-  let x = ev.clientX + pad, y = ev.clientY + pad;
-  const r = tt.getBoundingClientRect();
-  if (x + r.width > innerWidth - 8) x = ev.clientX - r.width - pad;
-  if (y + r.height > innerHeight - 8) y = ev.clientY - r.height - pad;
-  tt.style.left = x + 'px'; tt.style.top = y + 'px';
-};
-const hideTT = () => { tt.style.display = 'none'; };
+const GENS = T.generations, LAST = GENS.length - 1;
+const $ = (id) => document.getElementById(id);
 const pct = (x, d = 2) => (100 * x).toFixed(d) + '%';
 const usd = (x) => '$' + x.toFixed(2);
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ── KPI tiles ── */
+const KPIS = [
+  { key: 'cvr', label: 'Conversion rate', fmt: (v) => pct(v), better: 'up' },
+  { key: 'cac', label: 'Cost / acquisition', fmt: usd, better: 'down' },
+  { key: 'roas', label: 'Return on ad spend', fmt: (v) => v.toFixed(2) + '×', better: 'up' },
+  { key: 'bounce', label: 'Bounce rate', fmt: (v) => pct(v, 1), better: 'down' },
+];
+$('kpis').innerHTML = KPIS.map((k) => `
+  <div class="kpi">
+    <div class="lbl">${k.label}</div>
+    <div class="val num" id="kpi-${k.key}"></div>
+    <div class="delta" id="kpid-${k.key}"></div>
+    <svg id="kpis-${k.key}" width="86" height="30" aria-hidden="true"></svg>
+  </div>`).join('');
+
+function spark(svgEl, values, max) {
+  const W = 86, H = 30;
+  const x = (i) => (i / LAST) * (W - 4) + 2;
+  const y = (v) => H - 3 - (v / max) * (H - 8);
+  const line = values.map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ',' + y(v).toFixed(1)).join(' ');
+  const area = line + ` L${x(values.length - 1).toFixed(1)},${H - 1} L2,${H - 1} Z`;
+  svgEl.innerHTML = `<path class="sparkfill" d="${area}"></path><path class="spark" d="${line}"></path>`;
+}
+
+function renderKpis(g) {
+  const now = GENS[g].holdout, root = GENS[0].holdout;
+  for (const k of KPIS) {
+    $('kpi-' + k.key).textContent = k.fmt(now[k.key]);
+    const d = $('kpid-' + k.key);
+    if (g === 0) { d.textContent = 'gen-0 baseline'; d.className = 'delta'; }
+    else {
+      const improved = k.better === 'up' ? now[k.key] > root[k.key] : now[k.key] < root[k.key];
+      const txt = k.key === 'cvr' ? (now.cvr / root.cvr).toFixed(2) + '× vs gen-0'
+        : k.key === 'cac' ? (100 * (now.cac / root.cac - 1)).toFixed(0) + '% vs gen-0'
+        : k.key === 'roas' ? '+' + (now.roas - root.roas).toFixed(2) + ' vs gen-0'
+        : (100 * (now.bounce - root.bounce)).toFixed(1) + ' pts vs gen-0';
+      d.textContent = txt; d.className = 'delta' + (improved ? ' up' : '');
+    }
+    const hist = GENS.slice(0, g + 1).map((x) => x.holdout[k.key]);
+    const max = Math.max(...GENS.map((x) => x.holdout[k.key]));
+    spark($('kpis-' + k.key), hist, max * 1.05);
+  }
+}
+
+/* ── genome ── */
+function renderGenome(g) {
+  const pol = GENS[g].policy, root = GENS[0].policy;
+  const just = GENS[g].promoted;
+  $('genome').innerHTML = Object.keys(T.levers).map((k) => {
+    const cls = just && just.target === k ? 'v just' : pol[k] !== root[k] ? 'v evolved' : 'v';
+    return `<div class="gene"><span class="k">${k}</span><span class="${cls}">${pol[k]}</span></div>`;
+  }).join('');
+}
+
+/* ── gate log ── */
+const WHY = {
+  cvr_lift_below_2pct: 'lift &lt; 2%', cac_worsened: 'CAC ↑', bounce_worsened: 'bounce ↑',
+  compliance_regressed: 'DARK PATTERN', anchor_regressed: 'anchor ↓',
+};
+let lastLogGen = -1;
+function renderLog(g, fresh) {
+  const rows = [];
+  for (let i = g; i >= 1; i--) {
+    const gen = GENS[i];
+    const head = gen.promoted
+      ? `promoted <b>${gen.promoted.target} → ${gen.promoted.to}</b>`
+      : '<b>no promotion</b> — plateau holds';
+    rows.push(`<div class="loggen">gen ${i} — ${head}</div>`);
+    for (const c of gen.candidates) {
+      const comp = c.reasons.includes('compliance_regressed');
+      const cls = c.verdict === 'PROMOTED' ? 'p' : comp ? 'x' : 'r';
+      const mark = c.verdict === 'PROMOTED' ? '✓' : comp ? '✕' : '·';
+      const why = c.verdict === 'PROMOTED' ? 'PROMOTED'
+        : c.reasons.length === 0 ? 'cleared gate, outscored'
+        : c.reasons.map((r) => WHY[r] || r).join(' · ');
+      const freshCls = fresh && i === g && !reduced ? ' fresh' : '';
+      rows.push(`<div class="lrow ${cls}${freshCls}"><span class="verdict">${mark}</span>` +
+        `<span class="mut">${c.target}<span class="arrow"> → </span>${c.to}</span>` +
+        `<span class="why">${why}</span></div>`);
+    }
+  }
+  if (g === 0) rows.push('<div class="loggen">gen 0 — root policy scored. Press play.</div>');
+  $('log').innerHTML = rows.join('');
+  $('log').scrollTop = 0;
+  lastLogGen = g;
+}
 
 /* ── lift curve ── */
-(() => {
-  const svg = document.getElementById('lift');
-  const W = 940, H = 360, m = { t: 44, r: 130, b: 34, l: 52 };
-  const pts = DATA.lift;
-  const maxY = 0.095;
-  const x = (g) => m.l + (g / 7) * (W - m.l - m.r);
+const svgNS = 'http://www.w3.org/2000/svg';
+function renderLift(g) {
+  const svg = $('lift');
+  const W = 520, H = 240, m = { t: 16, r: 88, b: 26, l: 40 };
+  const maxY = 0.098;
+  const x = (i) => m.l + (i / LAST) * (W - m.l - m.r);
   const y = (v) => H - m.b - (v / maxY) * (H - m.t - m.b);
+  const parts = [];
   for (let v = 0; v <= 0.09; v += 0.03) {
-    el('line', { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: 'gridline' }, svg);
-    el('text', { x: m.l - 8, y: y(v) + 4, 'text-anchor': 'end', class: 'axis' }, svg, pct(v, 0));
+    parts.push(`<line class="gridline" x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}"></line>`);
+    parts.push(`<text class="axis" x="${m.l - 6}" y="${y(v) + 3.5}" text-anchor="end">${pct(v, 0)}</text>`);
   }
-  for (const p of pts) el('text', { x: x(p.g), y: H - m.b + 20, 'text-anchor': 'middle', class: 'axis' }, svg, 'gen ' + p.g);
-  const path = (key) => pts.map((p, i) => (i ? 'L' : 'M') + x(p.g) + ',' + y(p[key])).join(' ');
-  el('path', { d: path('anchor'), class: 'l-anchor' }, svg);
-  el('path', { d: path('hold'), class: 'l-hold' }, svg);
-  el('text', { x: W - m.r + 14, y: y(pts[7].hold) - 14, class: 'serieslabel', fill: 'var(--blue)' }, svg, 'holdout 8.66%');
-  el('text', { x: W - m.r + 14, y: y(pts[7].anchor) + 26, class: 'serieslabel', fill: 'var(--aqua)' }, svg, 'anchor 8.67%');
-  for (const p of pts) {
-    if (p.lever) {
-      const side = p.g >= 6; // right-edge points label to their left, in open space
-      el('text', {
-        x: x(p.g) - (side ? 12 : 0),
-        y: y(p.hold) - (side ? (p.g === 7 ? 10 : 6) : 14),
-        'text-anchor': side ? 'end' : 'middle', class: 'ptlabel',
-      }, svg, p.lever);
+  for (let i = 0; i <= LAST; i += 2) parts.push(`<text class="axis" x="${x(i)}" y="${H - m.b + 16}" text-anchor="middle">${i}</text>`);
+  parts.push(`<text class="axis" x="${(m.l + W - m.r) / 2}" y="${H - 2}" text-anchor="middle">generation</text>`);
+  const pts = GENS.slice(0, g + 1);
+  const path = (get) => pts.map((p, i) => (i ? 'L' : 'M') + x(i) + ',' + y(get(p))).join(' ');
+  if (g > 0) {
+    parts.push(`<path class="l-anchor" d="${path((p) => p.anchor.cvr)}"></path>`);
+    parts.push(`<path class="l-hold" d="${path((p) => p.holdout.cvr)}"></path>`);
+  }
+  pts.forEach((p, i) => {
+    if (i === 0 || p.promoted) {
+      parts.push(`<circle class="dot-anchor" cx="${x(i)}" cy="${y(p.anchor.cvr)}" r="3.5"></circle>`);
+      parts.push(`<circle class="dot-hold" cx="${x(i)}" cy="${y(p.holdout.cvr)}" r="4.5"></circle>`);
     }
-    el('circle', { cx: x(p.g), cy: y(p.anchor), r: 4.5, class: 'dot-anchor' }, svg);
-    const dot = el('circle', { cx: x(p.g), cy: y(p.hold), r: 5.5, class: 'dot-hold' }, svg);
-    const hit = el('circle', { cx: x(p.g), cy: y(p.hold), r: 16, fill: 'transparent' }, svg);
-    hit.addEventListener('mousemove', (ev) => showTT(
-      '<b>Generation ' + p.g + '</b>' + (p.lever ? ' · promoted <b>' + p.target + ' → ' + p.lever + '</b>' : ' · gen-0 root') +
-      '<br>holdout CVR ' + pct(p.hold) + (p.g ? ' (Δ +' + pct(p.delta) + ')' : '') +
-      '<br>anchor CVR ' + pct(p.anchor), ev));
-    hit.addEventListener('mouseleave', hideTT);
-  }
-  const table = document.getElementById('lift-table');
-  table.innerHTML = '<tr><th>Gen</th><th>Promoted lever</th><th>Holdout CVR</th><th>Δ</th><th>Anchor CVR</th></tr>' +
-    pts.map((p) => '<tr><td>' + p.g + '</td><td>' + (p.lever ? p.target + ' → ' + p.lever : 'root') + '</td><td>' +
-      pct(p.hold) + '</td><td>' + (p.g ? '+' + pct(p.delta) : '—') + '</td><td>' + pct(p.anchor) + '</td></tr>').join('');
-})();
-
-/* ── funnel before/after ── */
-(() => {
-  const svg = document.getElementById('funnel');
-  const W = 940, H = 330, m = { t: 10, r: 30, b: 10, l: 118 };
-  const stages = DATA.funnel;
-  const maxV = 9000;
-  const x = (v) => m.l + (v / maxV) * (W - m.l - m.r);
-  const rowH = (H - m.t - m.b) / stages.length;
-  stages.forEach((s, i) => {
-    const yTop = m.t + i * rowH;
-    const barH = 26, gap = 2;
-    el('text', { x: m.l - 12, y: yTop + rowH / 2 + 4, 'text-anchor': 'end', class: 'axis', 'font-size': 13 }, svg, s.label);
-    const mk = (v, cls, dy, name, ratePart) => {
-      const r = el('rect', { x: m.l, y: yTop + dy, width: Math.max(2, x(v) - m.l), height: barH, rx: 4, class: cls }, svg);
-      r.addEventListener('mousemove', (ev) => showTT('<b>' + name + '</b> · ' + s.label + '<br>' +
-        v.toLocaleString('en-US') + ' visitors' + (ratePart ? '<br>' + ratePart : ''), ev));
-      r.addEventListener('mouseleave', hideTT);
-      el('text', { x: x(v) + 8, y: yTop + dy + barH / 2 + 4.5, class: 'barlabel' }, svg,
-        v.toLocaleString('en-US') + (s.rate ? '' : ''));
-    };
-    mk(s.root, 'bar-root', rowH / 2 - barH - gap / 2, 'Gen-0 baseline', s.rootRate);
-    mk(s.final, 'bar-final', rowH / 2 + gap / 2, 'Gen-7 promoted', s.finalRate);
   });
-})();
+  const cur = GENS[g];
+  parts.push(`<text class="serieslabel" fill="var(--blue)" x="${x(g) + 8}" y="${y(cur.holdout.cvr) - 6}">${pct(cur.holdout.cvr)}</text>`);
+  if (g > 0) parts.push(`<text class="serieslabel" fill="var(--aqua)" x="${x(g) + 8}" y="${y(cur.anchor.cvr) + 14}">${pct(cur.anchor.cvr)}</text>`);
+  if (GENS[g].promoted) parts.push(`<text class="ptlabel" x="${x(g)}" y="${y(cur.holdout.cvr) - 16}" text-anchor="end">${GENS[g].promoted.to}</text>`);
+  svg.innerHTML = parts.join('');
+}
 
-/* ── rejection reasons ── */
-(() => {
-  const svg = document.getElementById('reasons');
-  const W = 440, H = 200, m = { t: 8, r: 46, b: 8, l: 150 };
-  const rows = DATA.reasons;
-  const maxV = 60;
-  const x = (v) => m.l + (v / maxV) * (W - m.l - m.r);
-  const rowH = (H - m.t - m.b) / rows.length;
-  rows.forEach((r, i) => {
-    const yTop = m.t + i * rowH, barH = 20;
-    el('text', { x: m.l - 10, y: yTop + rowH / 2 + 4, 'text-anchor': 'end', class: 'axis', 'font-size': 12 }, svg, r.label);
-    const rect = el('rect', { x: m.l, y: yTop + rowH / 2 - barH / 2, width: x(r.n) - m.l, height: barH, rx: 4, class: 'rbar' + (r.comp ? ' comp' : '') }, svg);
-    rect.addEventListener('mousemove', (ev) => showTT('<b>' + r.label + '</b><br>' + r.n + ' of 96 candidates<br>' + r.note, ev));
-    rect.addEventListener('mouseleave', hideTT);
-    el('text', { x: x(r.n) + 8, y: yTop + rowH / 2 + 4.5, class: 'barlabel' }, svg, r.n);
-  });
-})();
+/* ── funnel ── */
+const STAGES = [
+  { key: 'visitors', label: 'Ad clicks' }, { key: 'engaged', label: 'Engaged' },
+  { key: 'optins', label: 'Opt-ins' }, { key: 'net', label: 'Net purchases' },
+];
+$('funnel').innerHTML = STAGES.map((s) => `
+  <div class="fstage">
+    <div class="frow"><span>${s.label}</span><b id="fv-${s.key}"></b></div>
+    <div class="track"><div class="ghost" id="fg-${s.key}"></div><div class="fill" id="ff-${s.key}"></div></div>
+  </div>`).join('');
+function renderFunnel(g) {
+  const now = GENS[g].holdout.stages, root = GENS[0].holdout.stages, max = root.visitors;
+  for (const s of STAGES) {
+    $('fv-' + s.key).textContent = now[s.key].toLocaleString('en-US');
+    $('fg-' + s.key).style.width = (100 * root[s.key] / max) + '%';
+    $('ff-' + s.key).style.width = Math.max(0.4, 100 * now[s.key] / max) + '%';
+  }
+}
 
-/* ── candidate scatter ── */
-(() => {
-  const svg = document.getElementById('scatter');
-  const W = 440, H = 260, m = { t: 12, r: 18, b: 34, l: 46 };
-  const maxX = Math.max(0.095, ...DATA.cands.map((c) => c.cvr)) * 1.06, maxY = 90;
-  const x = (v) => m.l + (v / maxX) * (W - m.l - m.r);
-  const y = (v) => m.t + (v / maxY) * (H - m.t - m.b);
-  for (let v = 0; v <= 0.09; v += 0.03) {
-    el('line', { x1: x(v), x2: x(v), y1: m.t, y2: H - m.b, class: 'gridline' }, svg);
-    el('text', { x: x(v), y: H - m.b + 18, 'text-anchor': 'middle', class: 'axis' }, svg, pct(v, 0));
-  }
-  for (let v = 0; v <= 90; v += 30) {
-    el('line', { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: 'gridline' }, svg);
-    el('text', { x: m.l - 6, y: y(v) + 4, 'text-anchor': 'end', class: 'axis' }, svg, '$' + v);
-  }
-  el('text', { x: (m.l + W - m.r) / 2, y: H - 4, 'text-anchor': 'middle', class: 'axis' }, svg, 'CVR →');
-  const order = [...DATA.cands].sort((a, b) => (a.v === 'P') - (b.v === 'P'));
-  for (const c of order) {
-    const cx = x(c.cvr), cy = y(Math.min(c.cac, maxY));
-    let mark;
-    if (c.comp) {
-      mark = el('g', { class: 'sc-comp' }, svg);
-      el('line', { x1: cx - 4.5, y1: cy - 4.5, x2: cx + 4.5, y2: cy + 4.5 }, mark);
-      el('line', { x1: cx - 4.5, y1: cy + 4.5, x2: cx + 4.5, y2: cy - 4.5 }, mark);
-    } else if (c.v === 'P') {
-      mark = el('circle', { cx, cy, r: 5.5, class: 'sc-prom' }, svg);
-    } else {
-      mark = el('circle', { cx, cy, r: 3.5, class: 'sc-rej' }, svg);
-    }
-    const hit = el('circle', { cx, cy, r: 10, fill: 'transparent' }, svg);
-    hit.addEventListener('mousemove', (ev) => showTT(
-      '<b>gen ' + c.g + ' · ' + c.t + '</b><br>CVR ' + pct(c.cvr) + ' · CAC ' + usd(c.cac) +
-      '<br>' + (c.v === 'P' ? '<b>PROMOTED</b>' : 'rejected: ' + c.why), ev));
-    hit.addEventListener('mouseleave', hideTT);
-  }
-})();
+/* ── ledger + proof ── */
+function renderLedger(g) {
+  const promos = [];
+  for (let i = 1; i <= g; i++) if (GENS[i].promoted) promos.push({ gen: i, ...GENS[i].promoted });
+  const n = promos.length;
+  $('ledger').innerHTML =
+    `<span class="pill ${n ? 'on' : ''}">${n} / 7 receipts signed</span>` +
+    `<span class="pill ${n >= 2 ? 'on' : ''}">milestone: ≥2 anchor-surviving ${n >= 2 ? '✓' : '…'}</span>` +
+    `<span class="pill ${g === LAST ? 'on' : ''}">${g === LAST ? 'run complete' : 'evolving…'}</span>`;
+  $('chain').innerHTML = 'lineage&nbsp; ' + (n === 0 ? '<b>gen0</b>(root)' :
+    promos.slice().reverse().map((p) => `<b>gen${p.gen}</b>(${p.target})`).join(' → ') + ' → <b>gen0</b>(root)');
+}
+$('checks').innerHTML = Object.entries(T.replayVerdict.checks)
+  .map(([k, v]) => `<span class="pill ${v ? 'on' : ''}">${v ? '✓' : '✗'} ${k.replace(/([A-Z])/g, ' $1').toLowerCase()}</span>`).join('');
+$('fp').textContent = T.gateFingerprint.slice(0, 20) + '…' + T.gateFingerprint.slice(-8);
+
+/* ── player ── */
+let cur = 0, timer = null;
+function render(g, fresh = false) {
+  cur = g;
+  $('gennum').textContent = g;
+  $('scrub').value = g;
+  const p = GENS[g].promoted;
+  $('event').innerHTML = g === 0 ? '<span class="none">gen-0 root scored — CVR 1.48%, CAC $57.99</span>'
+    : p ? `<span class="promo">✓ promoted</span> ${p.target}: ${p.from} → <b>${p.to}</b>`
+    : '<span class="none">8 candidates tried — none cleared the frozen gate</span>';
+  renderKpis(g); renderGenome(g); renderLog(g, fresh); renderLift(g); renderFunnel(g); renderLedger(g);
+  $('stepb').disabled = g === 0; $('stepf').disabled = g === LAST;
+  if (!timer) $('play').textContent = g === LAST ? '↺ Replay' : '▶ Watch it learn';
+}
+function stop() {
+  if (timer) { clearInterval(timer); timer = null; }
+  document.body.classList.remove('playing');
+  $('play').textContent = cur === LAST ? '↺ Replay' : '▶ Watch it learn';
+}
+function playToggle() {
+  if (timer) return stop();
+  if (cur === LAST) render(0);
+  document.body.classList.add('playing');
+  $('play').textContent = '❚❚ Pause';
+  timer = setInterval(() => {
+    if (cur >= LAST) return stop();
+    render(cur + 1, true);
+    if (cur === LAST) stop();
+  }, reduced ? 2200 : 1500);
+}
+$('play').addEventListener('click', playToggle);
+$('stepf').addEventListener('click', () => { stop(); render(Math.min(LAST, cur + 1), true); });
+$('stepb').addEventListener('click', () => { stop(); render(Math.max(0, cur - 1)); });
+$('scrub').addEventListener('input', (e) => { stop(); render(+e.target.value); });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight') { stop(); render(Math.min(LAST, cur + 1), true); }
+  if (e.key === 'ArrowLeft') { stop(); render(Math.max(0, cur - 1)); }
+  if (e.key === ' ' && e.target === document.body) { e.preventDefault(); playToggle(); }
+});
+render(0);
 </script>
