@@ -1,0 +1,2401 @@
+{
+  "generatedAt": "2026-07-28T15:23:35.646Z",
+  "dataSource": "SYNTHETIC",
+  "stack": {
+    "metaharness": "harness factory (CLI/Studio) — dev tooling",
+    "@metaharness/darwin": "mutation strategy + Pareto selection (paretoFront)",
+    "@metaharness/flywheel": "promotion loop, Ed25519 receipts, lineage, replay"
+  },
+  "gateFingerprint": "5b1bab00ee41fe1cd320776ad7ed7fab2cc1a9acba56e9f993ae485a83c292f0",
+  "generationsRun": 12,
+  "milestoneReached": true,
+  "rootPolicy": {
+    "headline": "generic_welcome",
+    "cta": "generic_submit",
+    "form": "full_profile",
+    "page_weight": "heavy_rich",
+    "social_proof": "none",
+    "offer_framing": "feature_list",
+    "checkout": "multi_step",
+    "urgency": "none"
+  },
+  "finalPolicy": {
+    "headline": "benefit_direct",
+    "cta": "risk_reversal",
+    "form": "email_only",
+    "page_weight": "lean_fast",
+    "social_proof": "testimonials",
+    "offer_framing": "anchored_discount",
+    "checkout": "express_wallet",
+    "urgency": "none"
+  },
+  "liftCurve": [
+    {
+      "generation": 0,
+      "primary": 0.014777777777777779,
+      "delta": 0,
+      "anchor": 0.012714285714285714
+    },
+    {
+      "generation": 1,
+      "primary": 0.022444444444444444,
+      "delta": 0.007666666666666665,
+      "anchor": 0.018714285714285715
+    },
+    {
+      "generation": 2,
+      "primary": 0.03111111111111111,
+      "delta": 0.008666666666666666,
+      "anchor": 0.024428571428571428
+    },
+    {
+      "generation": 3,
+      "primary": 0.042888888888888886,
+      "delta": 0.011777777777777776,
+      "anchor": 0.037142857142857144
+    },
+    {
+      "generation": 4,
+      "primary": 0.04922222222222222,
+      "delta": 0.006333333333333337,
+      "anchor": 0.049428571428571426
+    },
+    {
+      "generation": 5,
+      "primary": 0.057777777777777775,
+      "delta": 0.008555555555555552,
+      "anchor": 0.053714285714285714
+    },
+    {
+      "generation": 6,
+      "primary": 0.07622222222222222,
+      "delta": 0.018444444444444444,
+      "anchor": 0.07357142857142857
+    },
+    {
+      "generation": 7,
+      "primary": 0.08655555555555555,
+      "delta": 0.010333333333333333,
+      "anchor": 0.08671428571428572
+    }
+  ],
+  "holdout": {
+    "root": {
+      "visitors": 9000,
+      "engaged": 3773,
+      "optins": 695,
+      "purchases": 139,
+      "upsells": 26,
+      "refunds": 6,
+      "netPurchases": 133,
+      "cvr": 0.014777777777777779,
+      "bounceRate": 0.5807777777777778,
+      "cac": 57.99248120300752,
+      "revenue": 8731,
+      "revenuePerVisitor": 0.9701111111111111,
+      "roas": 1.1319849604563723,
+      "refundRate": 0.04316546762589928
+    },
+    "final": {
+      "visitors": 9000,
+      "engaged": 5393,
+      "optins": 2235,
+      "purchases": 816,
+      "upsells": 144,
+      "refunds": 37,
+      "netPurchases": 779,
+      "cvr": 0.08655555555555555,
+      "bounceRate": 0.4007777777777778,
+      "cac": 9.901155327342748,
+      "revenue": 50857,
+      "revenuePerVisitor": 5.650777777777778,
+      "roas": 6.593673019577337,
+      "refundRate": 0.04534313725490196
+    }
+  },
+  "anchor": {
+    "root": {
+      "visitors": 7000,
+      "engaged": 2686,
+      "optins": 463,
+      "purchases": 89,
+      "upsells": 13,
+      "refunds": 0,
+      "netPurchases": 89,
+      "cvr": 0.012714285714285714,
+      "bounceRate": 0.6162857142857143,
+      "cac": 60.837078651685395,
+      "revenue": 5693,
+      "revenuePerVisitor": 0.8132857142857143,
+      "roas": 1.0514359589989841,
+      "refundRate": 0
+    },
+    "final": {
+      "visitors": 7000,
+      "engaged": 4122,
+      "optins": 1747,
+      "purchases": 639,
+      "upsells": 118,
+      "refunds": 32,
+      "netPurchases": 607,
+      "cvr": 0.08671428571428572,
+      "bounceRate": 0.41114285714285714,
+      "cac": 8.920098846787479,
+      "revenue": 39825,
+      "revenuePerVisitor": 5.689285714285714,
+      "roas": 7.3552497922245825,
+      "refundRate": 0.050078247261345854
+    }
+  },
+  "promotions": [
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7",
+      "generation": 7,
+      "verdict": "PROMOTED",
+      "mutation": {
+        "target": "headline",
+        "summary": "adapt headline"
+      },
+      "primaryDelta": 0.010333333333333333,
+      "anchorScore": 0.08671428571428572
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6",
+      "generation": 6,
+      "verdict": "PROMOTED",
+      "mutation": {
+        "target": "checkout",
+        "summary": "adapt checkout"
+      },
+      "primaryDelta": 0.018444444444444444,
+      "anchorScore": 0.07357142857142857
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5",
+      "generation": 5,
+      "verdict": "PROMOTED",
+      "mutation": {
+        "target": "cta",
+        "summary": "adapt cta"
+      },
+      "primaryDelta": 0.008555555555555552,
+      "anchorScore": 0.053714285714285714
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4",
+      "generation": 4,
+      "verdict": "PROMOTED",
+      "mutation": {
+        "target": "social_proof",
+        "summary": "adapt social_proof"
+      },
+      "primaryDelta": 0.006333333333333337,
+      "anchorScore": 0.049428571428571426
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3",
+      "generation": 3,
+      "verdict": "PROMOTED",
+      "mutation": {
+        "target": "page_weight",
+        "summary": "adapt page_weight"
+      },
+      "primaryDelta": 0.011777777777777776,
+      "anchorScore": 0.037142857142857144
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2",
+      "generation": 2,
+      "verdict": "PROMOTED",
+      "mutation": {
+        "target": "offer_framing",
+        "summary": "adapt offer_framing"
+      },
+      "primaryDelta": 0.008666666666666666,
+      "anchorScore": 0.024428571428571428
+    },
+    {
+      "id": "root__form_gen1",
+      "generation": 1,
+      "verdict": "PROMOTED",
+      "mutation": {
+        "target": "form",
+        "summary": "adapt form"
+      },
+      "primaryDelta": 0.007666666666666665,
+      "anchorScore": 0.018714285714285715
+    }
+  ],
+  "allCandidates": [
+    {
+      "id": "root__headline_gen1",
+      "generation": 1,
+      "target": "headline",
+      "verdict": "REJECTED",
+      "failureReasons": [],
+      "primaryDelta": 0.001666666666666667,
+      "candidateScore": {
+        "primary": 0.016444444444444446,
+        "noopRate": 0.5472222222222223,
+        "costPerWin": 52.11486486486486,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.014777777777777779,
+        "noopRate": 0.5807777777777778,
+        "costPerWin": 57.99248120300752,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__cta_gen1",
+      "generation": 1,
+      "target": "cta",
+      "verdict": "REJECTED",
+      "failureReasons": [],
+      "primaryDelta": 0.002999999999999999,
+      "candidateScore": {
+        "primary": 0.017777777777777778,
+        "noopRate": 0.5746666666666667,
+        "costPerWin": 48.20625,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.014777777777777779,
+        "noopRate": 0.5807777777777778,
+        "costPerWin": 57.99248120300752,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1",
+      "generation": 1,
+      "target": "form",
+      "verdict": "PROMOTED",
+      "failureReasons": [],
+      "primaryDelta": 0.007666666666666665,
+      "candidateScore": {
+        "primary": 0.022444444444444444,
+        "noopRate": 0.5806666666666667,
+        "costPerWin": 38.18316831683168,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.014777777777777779,
+        "noopRate": 0.5807777777777778,
+        "costPerWin": 57.99248120300752,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__page_weight_gen1",
+      "generation": 1,
+      "target": "page_weight",
+      "verdict": "REJECTED",
+      "failureReasons": [],
+      "primaryDelta": 0.0006666666666666661,
+      "candidateScore": {
+        "primary": 0.015444444444444445,
+        "noopRate": 0.5015555555555555,
+        "costPerWin": 55.489208633093526,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.014777777777777779,
+        "noopRate": 0.5807777777777778,
+        "costPerWin": 57.99248120300752,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__social_proof_gen1",
+      "generation": 1,
+      "target": "social_proof",
+      "verdict": "REJECTED",
+      "failureReasons": [],
+      "primaryDelta": 0.004444444444444445,
+      "candidateScore": {
+        "primary": 0.019222222222222224,
+        "noopRate": 0.5683333333333334,
+        "costPerWin": 44.58381502890173,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.014777777777777779,
+        "noopRate": 0.5807777777777778,
+        "costPerWin": 57.99248120300752,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__offer_framing_gen1",
+      "generation": 1,
+      "target": "offer_framing",
+      "verdict": "REJECTED",
+      "failureReasons": [],
+      "primaryDelta": 0.0028888888888888888,
+      "candidateScore": {
+        "primary": 0.017666666666666667,
+        "noopRate": 0.567,
+        "costPerWin": 48.509433962264154,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.014777777777777779,
+        "noopRate": 0.5807777777777778,
+        "costPerWin": 57.99248120300752,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__checkout_gen1",
+      "generation": 1,
+      "target": "checkout",
+      "verdict": "REJECTED",
+      "failureReasons": [],
+      "primaryDelta": 0.0036666666666666653,
+      "candidateScore": {
+        "primary": 0.018444444444444444,
+        "noopRate": 0.5781111111111111,
+        "costPerWin": 46.463855421686745,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.014777777777777779,
+        "noopRate": 0.5807777777777778,
+        "costPerWin": 57.99248120300752,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__urgency_gen1",
+      "generation": 1,
+      "target": "urgency",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "compliance_regressed"
+      ],
+      "primaryDelta": 0.004444444444444445,
+      "candidateScore": {
+        "primary": 0.019222222222222224,
+        "noopRate": 0.5701111111111111,
+        "costPerWin": 44.58381502890173,
+        "regressed": true
+      },
+      "baselineScore": {
+        "primary": 0.014777777777777779,
+        "noopRate": 0.5807777777777778,
+        "costPerWin": 57.99248120300752,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__headline_gen2",
+      "generation": 2,
+      "target": "headline",
+      "verdict": "REJECTED",
+      "failureReasons": [],
+      "primaryDelta": 0.0020000000000000018,
+      "candidateScore": {
+        "primary": 0.024444444444444446,
+        "noopRate": 0.5466666666666666,
+        "costPerWin": 35.05909090909091,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.022444444444444444,
+        "noopRate": 0.5806666666666667,
+        "costPerWin": 38.18316831683168,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__cta_gen2",
+      "generation": 2,
+      "target": "cta",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "bounce_worsened"
+      ],
+      "primaryDelta": 0.004,
+      "candidateScore": {
+        "primary": 0.026444444444444444,
+        "noopRate": 0.5891111111111111,
+        "costPerWin": 32.40756302521008,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.022444444444444444,
+        "noopRate": 0.5806666666666667,
+        "costPerWin": 38.18316831683168,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__form_gen2",
+      "generation": 2,
+      "target": "form",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.004888888888888887,
+      "candidateScore": {
+        "primary": 0.017555555555555557,
+        "noopRate": 0.5757777777777777,
+        "costPerWin": 48.81645569620253,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.022444444444444444,
+        "noopRate": 0.5806666666666667,
+        "costPerWin": 38.18316831683168,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__page_weight_gen2",
+      "generation": 2,
+      "target": "page_weight",
+      "verdict": "REJECTED",
+      "failureReasons": [],
+      "primaryDelta": 0.005333333333333332,
+      "candidateScore": {
+        "primary": 0.027777777777777776,
+        "noopRate": 0.4662222222222222,
+        "costPerWin": 30.852,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.022444444444444444,
+        "noopRate": 0.5806666666666667,
+        "costPerWin": 38.18316831683168,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__social_proof_gen2",
+      "generation": 2,
+      "target": "social_proof",
+      "verdict": "REJECTED",
+      "failureReasons": [],
+      "primaryDelta": 0.0074444444444444445,
+      "candidateScore": {
+        "primary": 0.02988888888888889,
+        "noopRate": 0.5621111111111111,
+        "costPerWin": 28.6728624535316,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.022444444444444444,
+        "noopRate": 0.5806666666666667,
+        "costPerWin": 38.18316831683168,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2",
+      "generation": 2,
+      "target": "offer_framing",
+      "verdict": "PROMOTED",
+      "failureReasons": [],
+      "primaryDelta": 0.008666666666666666,
+      "candidateScore": {
+        "primary": 0.03111111111111111,
+        "noopRate": 0.5776666666666667,
+        "costPerWin": 27.54642857142857,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.022444444444444444,
+        "noopRate": 0.5806666666666667,
+        "costPerWin": 38.18316831683168,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__checkout_gen2",
+      "generation": 2,
+      "target": "checkout",
+      "verdict": "REJECTED",
+      "failureReasons": [],
+      "primaryDelta": 0.008666666666666666,
+      "candidateScore": {
+        "primary": 0.03111111111111111,
+        "noopRate": 0.5683333333333334,
+        "costPerWin": 27.54642857142857,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.022444444444444444,
+        "noopRate": 0.5806666666666667,
+        "costPerWin": 38.18316831683168,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__urgency_gen2",
+      "generation": 2,
+      "target": "urgency",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "compliance_regressed"
+      ],
+      "primaryDelta": 0.006888888888888889,
+      "candidateScore": {
+        "primary": 0.029333333333333333,
+        "noopRate": 0.5816666666666667,
+        "costPerWin": 29.21590909090909,
+        "regressed": true
+      },
+      "baselineScore": {
+        "primary": 0.022444444444444444,
+        "noopRate": 0.5806666666666667,
+        "costPerWin": 38.18316831683168,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__headline_gen3",
+      "generation": 3,
+      "target": "headline",
+      "verdict": "REJECTED",
+      "failureReasons": [],
+      "primaryDelta": 0.004777777777777777,
+      "candidateScore": {
+        "primary": 0.03588888888888889,
+        "noopRate": 0.5182222222222221,
+        "costPerWin": 23.879256965944272,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.03111111111111111,
+        "noopRate": 0.5776666666666667,
+        "costPerWin": 27.54642857142857,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__cta_gen3",
+      "generation": 3,
+      "target": "cta",
+      "verdict": "REJECTED",
+      "failureReasons": [],
+      "primaryDelta": 0.005333333333333336,
+      "candidateScore": {
+        "primary": 0.036444444444444446,
+        "noopRate": 0.5801111111111111,
+        "costPerWin": 23.515243902439025,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.03111111111111111,
+        "noopRate": 0.5776666666666667,
+        "costPerWin": 27.54642857142857,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__form_gen3",
+      "generation": 3,
+      "target": "form",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.004444444444444442,
+      "candidateScore": {
+        "primary": 0.02666666666666667,
+        "noopRate": 0.5737777777777777,
+        "costPerWin": 32.1375,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.03111111111111111,
+        "noopRate": 0.5776666666666667,
+        "costPerWin": 27.54642857142857,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3",
+      "generation": 3,
+      "target": "page_weight",
+      "verdict": "PROMOTED",
+      "failureReasons": [],
+      "primaryDelta": 0.011777777777777776,
+      "candidateScore": {
+        "primary": 0.042888888888888886,
+        "noopRate": 0.45844444444444443,
+        "costPerWin": 19.981865284974095,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.03111111111111111,
+        "noopRate": 0.5776666666666667,
+        "costPerWin": 27.54642857142857,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__social_proof_gen3",
+      "generation": 3,
+      "target": "social_proof",
+      "verdict": "REJECTED",
+      "failureReasons": [],
+      "primaryDelta": 0.002111111111111112,
+      "candidateScore": {
+        "primary": 0.03322222222222222,
+        "noopRate": 0.5825555555555555,
+        "costPerWin": 25.795986622073578,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.03111111111111111,
+        "noopRate": 0.5776666666666667,
+        "costPerWin": 27.54642857142857,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__offer_framing_gen3",
+      "generation": 3,
+      "target": "offer_framing",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.0024444444444444435,
+      "candidateScore": {
+        "primary": 0.028666666666666667,
+        "noopRate": 0.5782222222222222,
+        "costPerWin": 29.8953488372093,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.03111111111111111,
+        "noopRate": 0.5776666666666667,
+        "costPerWin": 27.54642857142857,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__checkout_gen3",
+      "generation": 3,
+      "target": "checkout",
+      "verdict": "REJECTED",
+      "failureReasons": [],
+      "primaryDelta": 0.005444444444444446,
+      "candidateScore": {
+        "primary": 0.036555555555555556,
+        "noopRate": 0.5701111111111111,
+        "costPerWin": 23.443768996960486,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.03111111111111111,
+        "noopRate": 0.5776666666666667,
+        "costPerWin": 27.54642857142857,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__urgency_gen3",
+      "generation": 3,
+      "target": "urgency",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "compliance_regressed"
+      ],
+      "primaryDelta": 0.0030000000000000027,
+      "candidateScore": {
+        "primary": 0.03411111111111111,
+        "noopRate": 0.5724444444444444,
+        "costPerWin": 25.123778501628664,
+        "regressed": true
+      },
+      "baselineScore": {
+        "primary": 0.03111111111111111,
+        "noopRate": 0.5776666666666667,
+        "costPerWin": 27.54642857142857,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__headline_gen4",
+      "generation": 4,
+      "target": "headline",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.0003333333333333313,
+      "candidateScore": {
+        "primary": 0.042555555555555555,
+        "noopRate": 0.3981111111111111,
+        "costPerWin": 20.138381201044385,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.042888888888888886,
+        "noopRate": 0.45844444444444443,
+        "costPerWin": 19.981865284974095,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__cta_gen4",
+      "generation": 4,
+      "target": "cta",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "bounce_worsened"
+      ],
+      "primaryDelta": 0.006111111111111116,
+      "candidateScore": {
+        "primary": 0.049,
+        "noopRate": 0.46599999999999997,
+        "costPerWin": 17.489795918367346,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.042888888888888886,
+        "noopRate": 0.45844444444444443,
+        "costPerWin": 19.981865284974095,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__form_gen4",
+      "generation": 4,
+      "target": "form",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.007333333333333331,
+      "candidateScore": {
+        "primary": 0.035555555555555556,
+        "noopRate": 0.45944444444444443,
+        "costPerWin": 24.103125,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.042888888888888886,
+        "noopRate": 0.45844444444444443,
+        "costPerWin": 19.981865284974095,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__page_weight_gen4",
+      "generation": 4,
+      "target": "page_weight",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "bounce_worsened",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.007666666666666662,
+      "candidateScore": {
+        "primary": 0.035222222222222224,
+        "noopRate": 0.499,
+        "costPerWin": 24.331230283911673,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.042888888888888886,
+        "noopRate": 0.45844444444444443,
+        "costPerWin": 19.981865284974095,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4",
+      "generation": 4,
+      "target": "social_proof",
+      "verdict": "PROMOTED",
+      "failureReasons": [],
+      "primaryDelta": 0.006333333333333337,
+      "candidateScore": {
+        "primary": 0.04922222222222222,
+        "noopRate": 0.4602222222222222,
+        "costPerWin": 17.41083521444695,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.042888888888888886,
+        "noopRate": 0.45844444444444443,
+        "costPerWin": 19.981865284974095,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__offer_framing_gen4",
+      "generation": 4,
+      "target": "offer_framing",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "bounce_worsened",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.006888888888888889,
+      "candidateScore": {
+        "primary": 0.036,
+        "noopRate": 0.4673333333333334,
+        "costPerWin": 23.805555555555557,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.042888888888888886,
+        "noopRate": 0.45844444444444443,
+        "costPerWin": 19.981865284974095,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__checkout_gen4",
+      "generation": 4,
+      "target": "checkout",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "bounce_worsened"
+      ],
+      "primaryDelta": 0.006222222222222226,
+      "candidateScore": {
+        "primary": 0.04911111111111111,
+        "noopRate": 0.4696666666666667,
+        "costPerWin": 17.45022624434389,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.042888888888888886,
+        "noopRate": 0.45844444444444443,
+        "costPerWin": 19.981865284974095,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__urgency_gen4",
+      "generation": 4,
+      "target": "urgency",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "compliance_regressed"
+      ],
+      "primaryDelta": 0.010888888888888892,
+      "candidateScore": {
+        "primary": 0.05377777777777778,
+        "noopRate": 0.45499999999999996,
+        "costPerWin": 15.935950413223141,
+        "regressed": true
+      },
+      "baselineScore": {
+        "primary": 0.042888888888888886,
+        "noopRate": 0.45844444444444443,
+        "costPerWin": 19.981865284974095,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__headline_gen5",
+      "generation": 5,
+      "target": "headline",
+      "verdict": "REJECTED",
+      "failureReasons": [],
+      "primaryDelta": 0.00711111111111111,
+      "candidateScore": {
+        "primary": 0.05633333333333333,
+        "noopRate": 0.4023333333333333,
+        "costPerWin": 15.21301775147929,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.04922222222222222,
+        "noopRate": 0.4602222222222222,
+        "costPerWin": 17.41083521444695,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5",
+      "generation": 5,
+      "target": "cta",
+      "verdict": "PROMOTED",
+      "failureReasons": [],
+      "primaryDelta": 0.008555555555555552,
+      "candidateScore": {
+        "primary": 0.057777777777777775,
+        "noopRate": 0.4638888888888889,
+        "costPerWin": 14.832692307692307,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.04922222222222222,
+        "noopRate": 0.4602222222222222,
+        "costPerWin": 17.41083521444695,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__form_gen5",
+      "generation": 5,
+      "target": "form",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.0036666666666666653,
+      "candidateScore": {
+        "primary": 0.04555555555555556,
+        "noopRate": 0.46499999999999997,
+        "costPerWin": 18.81219512195122,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.04922222222222222,
+        "noopRate": 0.4602222222222222,
+        "costPerWin": 17.41083521444695,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__page_weight_gen5",
+      "generation": 5,
+      "target": "page_weight",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "bounce_worsened",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.0005555555555555591,
+      "candidateScore": {
+        "primary": 0.048666666666666664,
+        "noopRate": 0.49611111111111106,
+        "costPerWin": 17.60958904109589,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.04922222222222222,
+        "noopRate": 0.4602222222222222,
+        "costPerWin": 17.41083521444695,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__social_proof_gen5",
+      "generation": 5,
+      "target": "social_proof",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.008,
+      "candidateScore": {
+        "primary": 0.04122222222222222,
+        "noopRate": 0.4598888888888889,
+        "costPerWin": 20.78975741239892,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.04922222222222222,
+        "noopRate": 0.4602222222222222,
+        "costPerWin": 17.41083521444695,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__offer_framing_gen5",
+      "generation": 5,
+      "target": "offer_framing",
+      "verdict": "REJECTED",
+      "failureReasons": [],
+      "primaryDelta": 0.001777777777777774,
+      "candidateScore": {
+        "primary": 0.051,
+        "noopRate": 0.46277777777777773,
+        "costPerWin": 16.80392156862745,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.04922222222222222,
+        "noopRate": 0.4602222222222222,
+        "costPerWin": 17.41083521444695,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__checkout_gen5",
+      "generation": 5,
+      "target": "checkout",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "bounce_worsened"
+      ],
+      "primaryDelta": 0.011111111111111113,
+      "candidateScore": {
+        "primary": 0.060333333333333336,
+        "noopRate": 0.4662222222222222,
+        "costPerWin": 14.204419889502763,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.04922222222222222,
+        "noopRate": 0.4602222222222222,
+        "costPerWin": 17.41083521444695,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__urgency_gen5",
+      "generation": 5,
+      "target": "urgency",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "bounce_worsened",
+        "compliance_regressed"
+      ],
+      "primaryDelta": 0.008222222222222221,
+      "candidateScore": {
+        "primary": 0.057444444444444444,
+        "noopRate": 0.46644444444444444,
+        "costPerWin": 14.918762088974855,
+        "regressed": true
+      },
+      "baselineScore": {
+        "primary": 0.04922222222222222,
+        "noopRate": 0.4602222222222222,
+        "costPerWin": 17.41083521444695,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__headline_gen6",
+      "generation": 6,
+      "target": "headline",
+      "verdict": "REJECTED",
+      "failureReasons": [],
+      "primaryDelta": 0.011111111111111113,
+      "candidateScore": {
+        "primary": 0.06888888888888889,
+        "noopRate": 0.40722222222222226,
+        "costPerWin": 12.44032258064516,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.057777777777777775,
+        "noopRate": 0.4638888888888889,
+        "costPerWin": 14.832692307692307,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__cta_gen6",
+      "generation": 6,
+      "target": "cta",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "bounce_worsened",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.003111111111111106,
+      "candidateScore": {
+        "primary": 0.05466666666666667,
+        "noopRate": 0.4693333333333334,
+        "costPerWin": 15.676829268292684,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.057777777777777775,
+        "noopRate": 0.4638888888888889,
+        "costPerWin": 14.832692307692307,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__form_gen6",
+      "generation": 6,
+      "target": "form",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.0057777777777777775,
+      "candidateScore": {
+        "primary": 0.052,
+        "noopRate": 0.45877777777777773,
+        "costPerWin": 16.48076923076923,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.057777777777777775,
+        "noopRate": 0.4638888888888889,
+        "costPerWin": 14.832692307692307,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__page_weight_gen6",
+      "generation": 6,
+      "target": "page_weight",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "bounce_worsened"
+      ],
+      "primaryDelta": 0.00033333333333333826,
+      "candidateScore": {
+        "primary": 0.05811111111111111,
+        "noopRate": 0.5095555555555555,
+        "costPerWin": 14.747609942638624,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.057777777777777775,
+        "noopRate": 0.4638888888888889,
+        "costPerWin": 14.832692307692307,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__social_proof_gen6",
+      "generation": 6,
+      "target": "social_proof",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.00555555555555555,
+      "candidateScore": {
+        "primary": 0.052222222222222225,
+        "noopRate": 0.46144444444444443,
+        "costPerWin": 16.41063829787234,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.057777777777777775,
+        "noopRate": 0.4638888888888889,
+        "costPerWin": 14.832692307692307,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__offer_framing_gen6",
+      "generation": 6,
+      "target": "offer_framing",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.002555555555555554,
+      "candidateScore": {
+        "primary": 0.05522222222222222,
+        "noopRate": 0.45811111111111114,
+        "costPerWin": 15.519114688128772,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.057777777777777775,
+        "noopRate": 0.4638888888888889,
+        "costPerWin": 14.832692307692307,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6",
+      "generation": 6,
+      "target": "checkout",
+      "verdict": "PROMOTED",
+      "failureReasons": [],
+      "primaryDelta": 0.018444444444444444,
+      "candidateScore": {
+        "primary": 0.07622222222222222,
+        "noopRate": 0.4568888888888889,
+        "costPerWin": 11.243440233236152,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.057777777777777775,
+        "noopRate": 0.4638888888888889,
+        "costPerWin": 14.832692307692307,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__urgency_gen6",
+      "generation": 6,
+      "target": "urgency",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "compliance_regressed"
+      ],
+      "primaryDelta": 0.012222222222222232,
+      "candidateScore": {
+        "primary": 0.07,
+        "noopRate": 0.4625555555555556,
+        "costPerWin": 12.242857142857142,
+        "regressed": true
+      },
+      "baselineScore": {
+        "primary": 0.057777777777777775,
+        "noopRate": 0.4638888888888889,
+        "costPerWin": 14.832692307692307,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7",
+      "generation": 7,
+      "target": "headline",
+      "verdict": "PROMOTED",
+      "failureReasons": [],
+      "primaryDelta": 0.010333333333333333,
+      "candidateScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.07622222222222222,
+        "noopRate": 0.4568888888888889,
+        "costPerWin": 11.243440233236152,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__cta_gen7",
+      "generation": 7,
+      "target": "cta",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.005777777777777771,
+      "candidateScore": {
+        "primary": 0.07044444444444445,
+        "noopRate": 0.46144444444444443,
+        "costPerWin": 12.165615141955836,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.07622222222222222,
+        "noopRate": 0.4568888888888889,
+        "costPerWin": 11.243440233236152,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__form_gen7",
+      "generation": 7,
+      "target": "form",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.010555555555555554,
+      "candidateScore": {
+        "primary": 0.06566666666666666,
+        "noopRate": 0.4575555555555556,
+        "costPerWin": 13.050761421319796,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.07622222222222222,
+        "noopRate": 0.4568888888888889,
+        "costPerWin": 11.243440233236152,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__page_weight_gen7",
+      "generation": 7,
+      "target": "page_weight",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "bounce_worsened",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.009222222222222215,
+      "candidateScore": {
+        "primary": 0.067,
+        "noopRate": 0.5041111111111112,
+        "costPerWin": 12.791044776119403,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.07622222222222222,
+        "noopRate": 0.4568888888888889,
+        "costPerWin": 11.243440233236152,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__social_proof_gen7",
+      "generation": 7,
+      "target": "social_proof",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.007222222222222213,
+      "candidateScore": {
+        "primary": 0.069,
+        "noopRate": 0.45777777777777773,
+        "costPerWin": 12.420289855072463,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.07622222222222222,
+        "noopRate": 0.4568888888888889,
+        "costPerWin": 11.243440233236152,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__offer_framing_gen7",
+      "generation": 7,
+      "target": "offer_framing",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.003333333333333327,
+      "candidateScore": {
+        "primary": 0.07288888888888889,
+        "noopRate": 0.4548888888888889,
+        "costPerWin": 11.757621951219512,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.07622222222222222,
+        "noopRate": 0.4568888888888889,
+        "costPerWin": 11.243440233236152,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__checkout_gen7",
+      "generation": 7,
+      "target": "checkout",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.0059999999999999915,
+      "candidateScore": {
+        "primary": 0.07022222222222223,
+        "noopRate": 0.46044444444444443,
+        "costPerWin": 12.204113924050633,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.07622222222222222,
+        "noopRate": 0.4568888888888889,
+        "costPerWin": 11.243440233236152,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__urgency_gen7",
+      "generation": 7,
+      "target": "urgency",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "bounce_worsened",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.0010000000000000009,
+      "candidateScore": {
+        "primary": 0.07522222222222222,
+        "noopRate": 0.46277777777777773,
+        "costPerWin": 11.392909896602658,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.07622222222222222,
+        "noopRate": 0.4568888888888889,
+        "costPerWin": 11.243440233236152,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__headline_gen8",
+      "generation": 8,
+      "target": "headline",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "bounce_worsened",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.010222222222222216,
+      "candidateScore": {
+        "primary": 0.07633333333333334,
+        "noopRate": 0.42088888888888887,
+        "costPerWin": 11.22707423580786,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__cta_gen8",
+      "generation": 8,
+      "target": "cta",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.0014444444444444426,
+      "candidateScore": {
+        "primary": 0.08511111111111111,
+        "noopRate": 0.40088888888888885,
+        "costPerWin": 10.069190600522193,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__form_gen8",
+      "generation": 8,
+      "target": "form",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.01266666666666666,
+      "candidateScore": {
+        "primary": 0.07388888888888889,
+        "noopRate": 0.39455555555555555,
+        "costPerWin": 11.598496240601504,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__page_weight_gen8",
+      "generation": 8,
+      "target": "page_weight",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "bounce_worsened",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.009444444444444436,
+      "candidateScore": {
+        "primary": 0.07711111111111112,
+        "noopRate": 0.4504444444444444,
+        "costPerWin": 11.113832853025936,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__social_proof_gen8",
+      "generation": 8,
+      "target": "social_proof",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.009222222222222215,
+      "candidateScore": {
+        "primary": 0.07733333333333334,
+        "noopRate": 0.40188888888888885,
+        "costPerWin": 11.081896551724139,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__offer_framing_gen8",
+      "generation": 8,
+      "target": "offer_framing",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.006222222222222212,
+      "candidateScore": {
+        "primary": 0.08033333333333334,
+        "noopRate": 0.3964444444444445,
+        "costPerWin": 10.66804979253112,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__checkout_gen8",
+      "generation": 8,
+      "target": "checkout",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.011444444444444438,
+      "candidateScore": {
+        "primary": 0.07511111111111111,
+        "noopRate": 0.4011111111111111,
+        "costPerWin": 11.409763313609467,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__urgency_gen8",
+      "generation": 8,
+      "target": "urgency",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "bounce_worsened",
+        "compliance_regressed"
+      ],
+      "primaryDelta": 0.011555555555555555,
+      "candidateScore": {
+        "primary": 0.09811111111111111,
+        "noopRate": 0.40755555555555556,
+        "costPerWin": 8.734994337485844,
+        "regressed": true
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__headline_gen9",
+      "generation": 9,
+      "target": "headline",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "bounce_worsened",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.0036666666666666653,
+      "candidateScore": {
+        "primary": 0.08288888888888889,
+        "noopRate": 0.42622222222222217,
+        "costPerWin": 10.339142091152816,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__cta_gen9",
+      "generation": 9,
+      "target": "cta",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.0014444444444444426,
+      "candidateScore": {
+        "primary": 0.08511111111111111,
+        "noopRate": 0.40088888888888885,
+        "costPerWin": 10.069190600522193,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__form_gen9",
+      "generation": 9,
+      "target": "form",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.01266666666666666,
+      "candidateScore": {
+        "primary": 0.07388888888888889,
+        "noopRate": 0.39455555555555555,
+        "costPerWin": 11.598496240601504,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__page_weight_gen9",
+      "generation": 9,
+      "target": "page_weight",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "bounce_worsened",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.009444444444444436,
+      "candidateScore": {
+        "primary": 0.07711111111111112,
+        "noopRate": 0.4504444444444444,
+        "costPerWin": 11.113832853025936,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__social_proof_gen9",
+      "generation": 9,
+      "target": "social_proof",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.009999999999999995,
+      "candidateScore": {
+        "primary": 0.07655555555555556,
+        "noopRate": 0.4024444444444445,
+        "costPerWin": 11.194484760522496,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__offer_framing_gen9",
+      "generation": 9,
+      "target": "offer_framing",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.006222222222222212,
+      "candidateScore": {
+        "primary": 0.08033333333333334,
+        "noopRate": 0.3964444444444445,
+        "costPerWin": 10.66804979253112,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__checkout_gen9",
+      "generation": 9,
+      "target": "checkout",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.011444444444444438,
+      "candidateScore": {
+        "primary": 0.07511111111111111,
+        "noopRate": 0.4011111111111111,
+        "costPerWin": 11.409763313609467,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__urgency_gen9",
+      "generation": 9,
+      "target": "urgency",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "bounce_worsened",
+        "compliance_regressed"
+      ],
+      "primaryDelta": 0.011555555555555555,
+      "candidateScore": {
+        "primary": 0.09811111111111111,
+        "noopRate": 0.40755555555555556,
+        "costPerWin": 8.734994337485844,
+        "regressed": true
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__headline_gen10",
+      "generation": 10,
+      "target": "headline",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "bounce_worsened",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.006222222222222212,
+      "candidateScore": {
+        "primary": 0.08033333333333334,
+        "noopRate": 0.4361111111111111,
+        "costPerWin": 10.66804979253112,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__cta_gen10",
+      "generation": 10,
+      "target": "cta",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.0014444444444444426,
+      "candidateScore": {
+        "primary": 0.08511111111111111,
+        "noopRate": 0.40088888888888885,
+        "costPerWin": 10.069190600522193,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__form_gen10",
+      "generation": 10,
+      "target": "form",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.01266666666666666,
+      "candidateScore": {
+        "primary": 0.07388888888888889,
+        "noopRate": 0.39455555555555555,
+        "costPerWin": 11.598496240601504,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__page_weight_gen10",
+      "generation": 10,
+      "target": "page_weight",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "bounce_worsened",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.009444444444444436,
+      "candidateScore": {
+        "primary": 0.07711111111111112,
+        "noopRate": 0.4504444444444444,
+        "costPerWin": 11.113832853025936,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__social_proof_gen10",
+      "generation": 10,
+      "target": "social_proof",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.009222222222222215,
+      "candidateScore": {
+        "primary": 0.07733333333333334,
+        "noopRate": 0.40188888888888885,
+        "costPerWin": 11.081896551724139,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__offer_framing_gen10",
+      "generation": 10,
+      "target": "offer_framing",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "bounce_worsened",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.011111111111111113,
+      "candidateScore": {
+        "primary": 0.07544444444444444,
+        "noopRate": 0.40822222222222226,
+        "costPerWin": 11.359351988217968,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__checkout_gen10",
+      "generation": 10,
+      "target": "checkout",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.011444444444444438,
+      "candidateScore": {
+        "primary": 0.07511111111111111,
+        "noopRate": 0.4011111111111111,
+        "costPerWin": 11.409763313609467,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__urgency_gen10",
+      "generation": 10,
+      "target": "urgency",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "bounce_worsened",
+        "compliance_regressed"
+      ],
+      "primaryDelta": 0.011555555555555555,
+      "candidateScore": {
+        "primary": 0.09811111111111111,
+        "noopRate": 0.40755555555555556,
+        "costPerWin": 8.734994337485844,
+        "regressed": true
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__headline_gen11",
+      "generation": 11,
+      "target": "headline",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "bounce_worsened",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.0036666666666666653,
+      "candidateScore": {
+        "primary": 0.08288888888888889,
+        "noopRate": 0.42622222222222217,
+        "costPerWin": 10.339142091152816,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__cta_gen11",
+      "generation": 11,
+      "target": "cta",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.0014444444444444426,
+      "candidateScore": {
+        "primary": 0.08511111111111111,
+        "noopRate": 0.40088888888888885,
+        "costPerWin": 10.069190600522193,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__form_gen11",
+      "generation": 11,
+      "target": "form",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.01266666666666666,
+      "candidateScore": {
+        "primary": 0.07388888888888889,
+        "noopRate": 0.39455555555555555,
+        "costPerWin": 11.598496240601504,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__page_weight_gen11",
+      "generation": 11,
+      "target": "page_weight",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "bounce_worsened",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.009444444444444436,
+      "candidateScore": {
+        "primary": 0.07711111111111112,
+        "noopRate": 0.4504444444444444,
+        "costPerWin": 11.113832853025936,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__social_proof_gen11",
+      "generation": 11,
+      "target": "social_proof",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.009222222222222215,
+      "candidateScore": {
+        "primary": 0.07733333333333334,
+        "noopRate": 0.40188888888888885,
+        "costPerWin": 11.081896551724139,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__offer_framing_gen11",
+      "generation": 11,
+      "target": "offer_framing",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.019555555555555548,
+      "candidateScore": {
+        "primary": 0.067,
+        "noopRate": 0.4024444444444445,
+        "costPerWin": 12.791044776119403,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__checkout_gen11",
+      "generation": 11,
+      "target": "checkout",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.011444444444444438,
+      "candidateScore": {
+        "primary": 0.07511111111111111,
+        "noopRate": 0.4011111111111111,
+        "costPerWin": 11.409763313609467,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__urgency_gen11",
+      "generation": 11,
+      "target": "urgency",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "bounce_worsened",
+        "compliance_regressed"
+      ],
+      "primaryDelta": 0.011555555555555555,
+      "candidateScore": {
+        "primary": 0.09811111111111111,
+        "noopRate": 0.40755555555555556,
+        "costPerWin": 8.734994337485844,
+        "regressed": true
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__headline_gen12",
+      "generation": 12,
+      "target": "headline",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "bounce_worsened",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.010222222222222216,
+      "candidateScore": {
+        "primary": 0.07633333333333334,
+        "noopRate": 0.42088888888888887,
+        "costPerWin": 11.22707423580786,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__cta_gen12",
+      "generation": 12,
+      "target": "cta",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.0014444444444444426,
+      "candidateScore": {
+        "primary": 0.08511111111111111,
+        "noopRate": 0.40088888888888885,
+        "costPerWin": 10.069190600522193,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__form_gen12",
+      "generation": 12,
+      "target": "form",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.01266666666666666,
+      "candidateScore": {
+        "primary": 0.07388888888888889,
+        "noopRate": 0.39455555555555555,
+        "costPerWin": 11.598496240601504,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__page_weight_gen12",
+      "generation": 12,
+      "target": "page_weight",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "bounce_worsened",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.009444444444444436,
+      "candidateScore": {
+        "primary": 0.07711111111111112,
+        "noopRate": 0.4504444444444444,
+        "costPerWin": 11.113832853025936,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__social_proof_gen12",
+      "generation": 12,
+      "target": "social_proof",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.009222222222222215,
+      "candidateScore": {
+        "primary": 0.07733333333333334,
+        "noopRate": 0.40188888888888885,
+        "costPerWin": 11.081896551724139,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__offer_framing_gen12",
+      "generation": 12,
+      "target": "offer_framing",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "bounce_worsened",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.011111111111111113,
+      "candidateScore": {
+        "primary": 0.07544444444444444,
+        "noopRate": 0.40822222222222226,
+        "costPerWin": 11.359351988217968,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__checkout_gen12",
+      "generation": 12,
+      "target": "checkout",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "cvr_lift_below_2pct",
+        "cac_worsened"
+      ],
+      "primaryDelta": -0.011444444444444438,
+      "candidateScore": {
+        "primary": 0.07511111111111111,
+        "noopRate": 0.4011111111111111,
+        "costPerWin": 11.409763313609467,
+        "regressed": false
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7__urgency_gen12",
+      "generation": 12,
+      "target": "urgency",
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "bounce_worsened",
+        "compliance_regressed"
+      ],
+      "primaryDelta": 0.011555555555555555,
+      "candidateScore": {
+        "primary": 0.09811111111111111,
+        "noopRate": 0.40755555555555556,
+        "costPerWin": 8.734994337485844,
+        "regressed": true
+      },
+      "baselineScore": {
+        "primary": 0.08655555555555555,
+        "noopRate": 0.4007777777777778,
+        "costPerWin": 9.901155327342748,
+        "regressed": false
+      }
+    }
+  ],
+  "replayVerdict": {
+    "pass": true,
+    "checks": {
+      "receipts": true,
+      "reachesRoot": true,
+      "contiguousParents": true,
+      "allPromoted": true,
+      "gateUnchanged": true,
+      "gateReExecutes": true
+    },
+    "failures": [],
+    "chainSummary": "gen7(headline) → gen6(checkout) → gen5(cta) → gen4(social_proof) → gen3(page_weight) → gen2(offer_framing) → gen1(form) → gen0(root)"
+  },
+  "sampleReceipt": {
+    "payload": {
+      "kind": "candidate",
+      "id": "root__form_gen1__offer_framing_gen2__page_weight_gen3__social_proof_gen4__cta_gen5__checkout_gen6__headline_gen7",
+      "target": "headline",
+      "verdict": "PROMOTED",
+      "primaryDelta": 0.010333333333333333
+    },
+    "signature": "+DtRReojv59Zx86dN2q5ib7A4S2sULJ+JQ7iyl0D71TIbRAt17LarQZXxl1Xvbq8DATdbZ5QUBPC0N2m46S6Bw==",
+    "publicKey": "MCowBQYDK2VwAyEAl7PL3QuHbZ325o6vy0vq2S9sOfLxkWQ3C3rK1uD9y8U=",
+    "alg": "ed25519"
+  }
+}

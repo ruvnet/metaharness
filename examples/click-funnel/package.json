@@ -1,0 +1,21 @@
+{
+  "name": "@metaharness-examples/click-funnel",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "FunnelWheel — a verifiably self-improving click funnel: @metaharness/darwin proposes variants, @metaharness/flywheel promotes only signed, gate-clearing, anchor-surviving lift.",
+  "scripts": {
+    "evolve": "node src/run.mjs",
+    "score": "metaharness score ."
+  },
+  "dependencies": {
+    "@metaharness/darwin": "^0.8.0",
+    "@metaharness/flywheel": "^0.1.7"
+  },
+  "devDependencies": {
+    "metaharness": "^0.4.1"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
