@@ -175,45 +175,17 @@ jobs:
         run: |
           echo "TODO: publish per-platform native packages from dist-native/ (lands in a follow-up iteration)"
 
-      - name: Publish @metaharness/kernel (umbrella)
+      - name: Publish workspace packages (idempotent — skips already-published versions)
+        # One script instead of five sequential `npm publish` steps. The old
+        # sequence had no skip-if-published logic, so a tag re-run 403'd on
+        # the first package whose version was already live (usually
+        # @metaharness/kernel) and never reached the later packages — the
+        # reason all 7 tag/dispatch runs failed and releases went manual.
+        # publish-workspace.mjs checks the registry per package and only
+        # publishes versions that aren't there yet.
         env:
           NODE_AUTH_TOKEN: ${{ steps.secrets.outputs.npm_token }}
-        working-directory: packages/kernel-js
-        run: npm publish --provenance --access public
-
-      - name: Publish @metaharness/sdk
-        env:
-          NODE_AUTH_TOKEN: ${{ steps.secrets.outputs.npm_token }}
-        working-directory: packages/sdk
-        run: npm publish --provenance --access public
-
-      - name: Publish host adapters (6 packages)
-        env:
-          NODE_AUTH_TOKEN: ${{ steps.secrets.outputs.npm_token }}
-        run: |
-          set -euo pipefail
-          for host in host-claude-code host-codex host-pi-dev host-hermes host-openclaw host-rvm; do
-            echo "::group::publish @metaharness/$host"
-            (cd packages/$host && npm publish --provenance --access public)
-            echo "::endgroup::"
-          done
-
-      - name: Publish vertical packs (2 packages)
-        env:
-          NODE_AUTH_TOKEN: ${{ steps.secrets.outputs.npm_token }}
-        run: |
-          set -euo pipefail
-          for v in vertical-base vertical-trading; do
-            echo "::group::publish @metaharness/$v"
-            (cd packages/$v && npm publish --provenance --access public)
-            echo "::endgroup::"
-          done
-
-      - name: Publish create-agent-harness
-        env:
-          NODE_AUTH_TOKEN: ${{ steps.secrets.outputs.npm_token }}
-        working-directory: packages/create-agent-harness
-        run: npm publish --provenance --access public
+        run: node scripts/publish-workspace.mjs
 
       # ─────────────────────────────────────────────────────────────────
       # MARKETPLACE: pin the claude-marketplace registry entry to IPFS
