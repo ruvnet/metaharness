@@ -84,7 +84,7 @@ of normal harness scaffolding. Install it only when you want a locally bound,
 Claude-compatible routing endpoint with Meta-Proxy's own Cognitum OAuth flow:
 
 ```bash
-npx metaharness proxy install --yes   # signed v0.4.1 download; checksum + Ed25519 verified
+npx metaharness proxy install --yes   # signed v0.7.1 download; checksum + Ed25519 verified
 npx metaharness proxy run -- claude   # starts the sidecar and routes this Claude session through it
 npx metaharness proxy run --policy critical -- claude -p "review this migration"
 ```
