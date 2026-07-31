@@ -1,7 +1,7 @@
 {
   "name": "@metaharness/agntcy",
   "version": "0.1.0",
-  "description": "AGNTCY (Cisco Outshift / Linux Foundation Internet of Cognition) build-time integration for generated MetaHarness agents: AGNTCY identity (W3C DID + verifiable-credential badges signed into the ADR-011 witness manifest), OASF capability-record export and AGNTCY Directory publishing, AGNTCY semantic observability (OpenTelemetry semantic-convention attributes for agent/coordination/authorization/model-route/memory-provenance/evaluation spans), and the CASA intent-to-authority-envelope compiler (deterministic free-text-objective -> bounded allow/deny/budget/expiry schema, enforcement owned by the runtime, never by this package). Optional peer package per ADR-002 kernel-boundary discipline and ADR-240 SS5 -- never a hard kernel dependency. No public AGNTCY npm packages exist yet under any guessed name (verified); Directory-publish and identity-provider calls are config-gated stubs pending upstream availability. Dependency-free (Node built-ins).",
+  "description": "AGNTCY (Cisco Outshift / Linux Foundation Internet of Cognition) build-time integration for generated MetaHarness agents: AGNTCY identity (W3C DID + verifiable-credential badges signed into the ADR-011 witness manifest), OASF capability-record export and real AGNTCY Directory publishing via the official `agntcy-dir` SDK (push/publish/lookup, live-tested against a real Directory server), AGNTCY semantic observability (OpenTelemetry semantic-convention attributes for agent/coordination/authorization/model-route/memory-provenance/evaluation spans), and the CASA intent-to-authority-envelope compiler (deterministic free-text-objective -> bounded allow/deny/budget/expiry schema, enforcement owned by the runtime, never by this package). Optional peer package per ADR-002 kernel-boundary discipline and ADR-240 SS5 -- never a hard kernel dependency. Identity-provider calls remain a config-gated stub pending a real AGNTCY Identity JS/TS SDK (Go-only today, verified) -- see README.md \"Status\".",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -49,6 +49,9 @@
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "agntcy-dir": "^1.5.0"
   },
   "devDependencies": {
     "typescript": "^5.4.0",

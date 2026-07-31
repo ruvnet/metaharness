@@ -42,7 +42,7 @@ export * as identityWitness from './identity/sign.js';
 
 export * as oasf from './oasf/record.js';
 export * as oasfProject from './oasf/project.js';
-export * as oasfPublish from './oasf/publish-stub.js';
+export * as oasfPublish from './oasf/publish.js';
 
 export * as observability from './observability/otel-attributes.js';
 export * as observabilityMap from './observability/map-existing-telemetry.js';
