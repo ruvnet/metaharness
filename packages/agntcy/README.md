@@ -130,6 +130,22 @@ npm run build -w @metaharness/agntcy
 npm test  -w @metaharness/agntcy
 ```
 
+## Try it end-to-end
+
+`examples/showcase-publish.mjs` runs the full real pipeline against any
+directory: MetaHarness's own scorer/genome/mcp-scan, projected into a real
+OASF record, published to a real running AGNTCY Directory server:
+
+```bash
+npm run build -w create-agent-harness -w @metaharness/agntcy
+node packages/agntcy/examples/showcase-publish.mjs [target-dir] [server-address]
+# defaults: target-dir = this repo's own root, server = localhost:8888
+```
+
+Needs a running Directory server — bring one up from
+[agntcy/dir](https://github.com/agntcy/dir)'s own
+`install/docker/docker-compose.yml`.
+
 ## Dependencies
 
 One real runtime dependency: `agntcy-dir` (the official AGNTCY Directory SDK),
