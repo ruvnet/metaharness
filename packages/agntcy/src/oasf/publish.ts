@@ -162,6 +162,17 @@ export async function publishToDirectory(record: OasfRecord, target: PublishTarg
   };
 
   try {
+    // SECURITY: `new Config(serverAddress)` with no further options uses the
+    // SDK's insecure default (plaintext gRPC, no client authentication) —
+    // correct for the local dev server this file's test suite runs against
+    // (AUTHN_ENABLED=false), but NOT safe to point at a production or
+    // publicly reachable Directory server as-is. Before using this against
+    // anything other than a local/trusted-network instance, construct
+    // `Config` with the SDK's x509 or JWT auth mode (see `agntcy-dir`'s own
+    // README "Configuration" section) — this function accepts a
+    // pre-configured `Config`-compatible `serverAddress` only, not yet a
+    // full `Config` object, so that hardening is a caller-side change, not
+    // a bypass of this function.
     const config = new Config(serverAddress);
     const transport = await Client.createGRPCTransport(config);
     const client = new Client(config, transport);

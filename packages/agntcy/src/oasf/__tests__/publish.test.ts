@@ -13,8 +13,40 @@
 
 import { describe, it, expect, afterEach } from 'vitest';
 import { Client, Config } from 'agntcy-dir';
+import { connect } from 'node:net';
 import { publishToDirectory } from '../publish.js';
 import type { OasfRecord } from '../record.js';
+
+/**
+ * Raw TCP reachability check — "is anything listening at host:port" — kept
+ * deliberately separate from any AGNTCY protocol-level call. An earlier
+ * version of this probe used `client.lookup()` on a bogus CID as its
+ * reachability signal, which was wrong in both directions: swallowing the
+ * call's rejection internally made it report "reachable" even against
+ * nothing (failed in real CI, no server running); removing that swallow
+ * then made a genuine "record not found" response from a REAL, reachable
+ * server look identical to "unreachable", since `lookup()` rejects for
+ * both. TCP-level reachability has no such ambiguity.
+ */
+function isPortReachable(hostPort: string, timeoutMs = 1000): Promise<boolean> {
+  const [host, portStr] = hostPort.split(':');
+  const port = Number(portStr);
+  if (!host || !Number.isFinite(port)) return Promise.resolve(false);
+  return new Promise((resolve) => {
+    const socket = connect({ host, port, timeout: timeoutMs });
+    socket.once('connect', () => {
+      socket.destroy();
+      resolve(true);
+    });
+    socket.once('timeout', () => {
+      socket.destroy();
+      resolve(false);
+    });
+    socket.once('error', () => {
+      resolve(false);
+    });
+  });
+}
 
 const VALID_RECORD: OasfRecord = {
   schema: 1,
@@ -35,19 +67,7 @@ const TEST_SERVER_ADDRESS = process.env.AGNTCY_DIRECTORY_ENDPOINT ?? process.env
 // before running any suite, so this resolves before describe.runIf/it.skipIf
 // below ever read it — unlike a beforeAll hook, which runs AFTER suite
 // collection and so can never gate a describe.runIf() condition correctly.
-let serverReachable = false;
-try {
-  const config = new Config(TEST_SERVER_ADDRESS);
-  const transport = await Client.createGRPCTransport(config);
-  const client = new Client(config, transport);
-  // A cheap real call: lookup on a bogus ref should return quickly (empty
-  // result or a handled error), not hang — proves the server is actually
-  // reachable and speaking the expected protocol.
-  await client.lookup([{ cid: 'connectivity-probe' } as never]).catch(() => undefined);
-  serverReachable = true;
-} catch {
-  serverReachable = false;
-}
+const serverReachable = await isPortReachable(TEST_SERVER_ADDRESS);
 
 describe('publishToDirectory — fail-closed behavior (no live server needed)', () => {
   afterEach(() => {
