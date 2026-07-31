@@ -153,12 +153,14 @@ Identity itself has no such binding to call either — see "Status").
 
 ## Upstream reports
 
-- **[Filed] AGNTCY Directory server rejects every real skill class name** —
-  the live server's schema validator rejects any `skills[].name` value
+- **[agntcy/dir#1943](https://github.com/agntcy/dir/issues/1943)** — the live
+  Directory server's schema validator rejects any `skills[].name` value
   (including the taxonomy's own real dotted paths from
   [agntcy/oasf](https://github.com/agntcy/oasf)) and only accepts a bare
-  numeric `id`. Reported with a minimal, reproducible example against
-  [agntcy/dir](https://github.com/agntcy/dir) — link added once filed.
+  numeric `id`. Filed with a minimal, reproducible example. Investigated
+  `agntcy/oasf-sdk` first hoping to fix it directly — that package turned out
+  to be an HTTP client against a remote, hosted validation service, not
+  something with local source to patch, so this is a report rather than a PR.
 
 ## License
 
