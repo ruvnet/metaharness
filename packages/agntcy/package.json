@@ -1,0 +1,60 @@
+{
+  "name": "@metaharness/agntcy",
+  "version": "0.1.0",
+  "description": "AGNTCY (Cisco Outshift / Linux Foundation Internet of Cognition) build-time integration for generated MetaHarness agents: AGNTCY identity (W3C DID + verifiable-credential badges signed into the ADR-011 witness manifest), OASF capability-record export and AGNTCY Directory publishing, AGNTCY semantic observability (OpenTelemetry semantic-convention attributes for agent/coordination/authorization/model-route/memory-provenance/evaluation spans), and the CASA intent-to-authority-envelope compiler (deterministic free-text-objective -> bounded allow/deny/budget/expiry schema, enforcement owned by the runtime, never by this package). Optional peer package per ADR-002 kernel-boundary discipline and ADR-237 SS5 -- never a hard kernel dependency. No public AGNTCY npm packages exist yet under any guessed name (verified); Directory-publish and identity-provider calls are config-gated stubs pending upstream availability. Dependency-free (Node built-ins).",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "agntcy",
+    "outshift",
+    "internet-of-cognition",
+    "oasf",
+    "casa",
+    "slim",
+    "identity",
+    "did",
+    "verifiable-credentials",
+    "opentelemetry",
+    "observability",
+    "agent-directory",
+    "agent-harness",
+    "metaharness",
+    "authorization",
+    "provenance"
+  ],
+  "author": "rUv <ruv@ruv.net>",
+  "license": "MIT",
+  "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/packages/agntcy#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/agent-harness-generator",
+    "directory": "packages/agntcy"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
