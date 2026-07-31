@@ -6,7 +6,7 @@
 **Deciders**: ruv
 **Tags**: agntcy, outshift, oasf, identity, observability, federation, internet-of-cognition
 **Extends**: ADR-002 (Kernel boundary), ADR-011 (Witness manifest + provenance), ADR-159 (HarnessSpec declarative policy), ADR-005 (Marketplace three-layer provenance)
-**Companion**: ruflo ADR-324 (AGNTCY/Outshift runtime integration — SLIM transport, CASA enforcement, IOC Layer 9 coordination events). This ADR covers what MetaHarness produces at build/manifest time; ADR-324 covers what RuFlo does with it at runtime. Neither is complete without the other; they are numbered and shipped as a pair.
+**Companion**: ruflo ADR-380 (AGNTCY/Outshift runtime integration — SLIM transport, CASA enforcement, IOC Layer 9 coordination events). This ADR covers what MetaHarness produces at build/manifest time; ADR-380 covers what RuFlo does with it at runtime. Neither is complete without the other; they are numbered and shipped as a pair.
 **Prompted by**: a strategic brief evaluating Cisco Outshift's AGNTCY / Internet of Cognition ecosystem (Mycelium is one coordination implementation inside that broader IoC program) as complementary, not competitive, infrastructure:
 
 > AGNTCY and Outshift define the agent network. MetaHarness builds and evolves the agents. RuFlo executes and coordinates them. Meta LLM governs inference, cost, tenancy, and safety. RuVector supplies local memory and semantic state.
@@ -65,13 +65,13 @@ Estimated effort: 7–10 days.
 Map every harness execution's spans onto AGNTCY's OpenTelemetry semantic-convention extensions: `agent.identity`, `agent.capability`, `agent.intent`, `agent.parent`, `coordination.episode`, `authorization.decision`, `model.route`, `memory.provenance`, `evaluation.score`, `receipt.hash`.
 
 - `model.route`, `memory.provenance`, and `evaluation.score` already have real, measured producers in this repo: model routing (the escalation-router ADR line, e.g. ADR-040/043/148), memory provenance (ADR-074 ruVector memory fabric, ADR-161 memory tiers), and evaluation score (the frozen `meetsPromotionRule` scorer, ADR-072). This work is an OTel **exporter** over existing internal telemetry, not new instrumentation logic.
-- `coordination.episode` and `authorization.decision` are populated at runtime by RuFlo's SLIM/CASA integration (companion ADR-324). This ADR commits only to emitting them in the correct shape when the harness *is* running under RuFlo coordination — a harness running standalone (no RuFlo) omits those two attributes rather than fabricating placeholder values.
+- `coordination.episode` and `authorization.decision` are populated at runtime by RuFlo's SLIM/CASA integration (companion ADR-380). This ADR commits only to emitting them in the correct shape when the harness *is* running under RuFlo coordination — a harness running standalone (no RuFlo) omits those two attributes rather than fabricating placeholder values.
 
 Net effect: MetaHarness executions become observable through standard enterprise telemetry (whatever already consumes OTel) instead of requiring a proprietary dashboard — matching the brief exactly.
 
 Estimated effort: 5–8 days.
 
-## 3. What this ADR does not cover (see companion ADR-324)
+## 3. What this ADR does not cover (see companion ADR-380)
 
 SLIM transport, CASA intent-scoped-authorization *enforcement*, and IOC Layer 9 cognition envelopes are runtime coordination concerns owned by RuFlo, not build-time manifest concerns owned by MetaHarness. This ADR's only touchpoint with CASA is that MetaHarness is the natural place to *compile* a stated objective into the bounded authority envelope CASA enforces (§4) — MetaHarness never enforces it.
 
@@ -89,23 +89,23 @@ CASA answers "is this invocation necessary and permitted for the user's current 
 }
 ```
 
-**This is the single most important design constraint in the whole integration, so it is stated plainly rather than implied**: the translation step (free text → structured envelope) may use an LLM. Enforcement must not. The compiled envelope is a bounded schema — explicit resource strings, an explicit deny list, a numeric budget, an expiry timestamp — checked by deterministic code, never by asking a model at invocation time whether an action "seems fine." Deny-by-default: anything not in `allow` is denied. This is HarnessSpec's own philosophy (ADR-159: "Darwin Mode mutates structured policies, not prompts") applied one level up — from the harness's own tool policy to the per-session authority a user's stated intent grants it. Meta LLM enforces `budget_usd` and provider policy; CASA enforces network/tool authority against `allow`/`deny`; RuFlo (ADR-324) logs every decision into signed receipts. MetaHarness's responsibility stops at producing the envelope — never at deciding whether an in-flight call is safe.
+**This is the single most important design constraint in the whole integration, so it is stated plainly rather than implied**: the translation step (free text → structured envelope) may use an LLM. Enforcement must not. The compiled envelope is a bounded schema — explicit resource strings, an explicit deny list, a numeric budget, an expiry timestamp — checked by deterministic code, never by asking a model at invocation time whether an action "seems fine." Deny-by-default: anything not in `allow` is denied. This is HarnessSpec's own philosophy (ADR-159: "Darwin Mode mutates structured policies, not prompts") applied one level up — from the harness's own tool policy to the per-session authority a user's stated intent grants it. Meta LLM enforces `budget_usd` and provider policy; CASA enforces network/tool authority against `allow`/`deny`; RuFlo (ADR-380) logs every decision into signed receipts. MetaHarness's responsibility stops at producing the envelope — never at deciding whether an in-flight call is safe.
 
-Estimated effort: 15–25 days (shared with the runtime enforcement half in ADR-324: compiler + schema + translation-quality tests here; wiring + enforcement + bypass-attempt tests + receipts there).
+Estimated effort: 15–25 days (shared with the runtime enforcement half in ADR-380: compiler + schema + translation-quality tests here; wiring + enforcement + bypass-attempt tests + receipts there).
 
 ## 5. Package and roadmap
 
 Ship a new `@metaharness/agntcy` package — mirrors the existing `@metaharness/darwin`, `@metaharness/redblue`, `@metaharness/flywheel` sibling-package pattern: optional peer, never a hard kernel dependency, consistent with ADR-002's kernel-boundary discipline and ruflo's own ADR-150 "removable augmentation" precedent for this project's own packages.
 
-Phased delivery (shared across this ADR and ruflo ADR-324; roughly two engineers):
+Phased delivery (shared across this ADR and ruflo ADR-380; roughly two engineers):
 
 - **Phase 1 (~4 weeks)** — OASF records, Directory publishing, identity verification, OpenTelemetry spans: this ADR's §2.1/2.2/2.3, in full.
-- **Phase 2 (~6 weeks)** — SLIM transport + CASA enforcement: owned by ADR-324. This ADR's only Phase-2 deliverable is the intent→envelope compiler (§4), which unblocks CASA enforcement but does not implement it.
-- **Phase 3 (~4 weeks)** — native IOC Layer 9 negotiation, submitted upstream (schemas are Apache-2.0 with existing Python/Go bindings; a native Rust implementation, owned by ADR-324's `ruflo agntcy` crate, would be a meaningful ecosystem contribution). This ADR's only Phase-3 involvement is exporting IOC-shaped OASF capability fields if the negotiated protocol requires them.
+- **Phase 2 (~6 weeks)** — SLIM transport + CASA enforcement: owned by ADR-380. This ADR's only Phase-2 deliverable is the intent→envelope compiler (§4), which unblocks CASA enforcement but does not implement it.
+- **Phase 3 (~4 weeks)** — native IOC Layer 9 negotiation, submitted upstream (schemas are Apache-2.0 with existing Python/Go bindings; a native Rust implementation, owned by ADR-380's `ruflo agntcy` crate, would be a meaningful ecosystem contribution). This ADR's only Phase-3 involvement is exporting IOC-shaped OASF capability fields if the negotiated protocol requires them.
 
 ## 6. Acceptance test
 
-Shared with ADR-324, split by ownership: generate a MetaHarness agent, publish its signed OASF record (this ADR), discover it from a second network (this ADR, via Directory), verify its AGNTCY identity (this ADR §2.1), invoke it through SLIM (ADR-324), reject one out-of-scope tool call through CASA (ADR-324, using this ADR's compiled envelope), and reconstruct the complete run from OpenTelemetry spans and Flywheel receipts (this ADR's §2.3 spans + ADR-324's receipts).
+Shared with ADR-380, split by ownership: generate a MetaHarness agent, publish its signed OASF record (this ADR), discover it from a second network (this ADR, via Directory), verify its AGNTCY identity (this ADR §2.1), invoke it through SLIM (ADR-380), reject one out-of-scope tool call through CASA (ADR-380, using this ADR's compiled envelope), and reconstruct the complete run from OpenTelemetry spans and Flywheel receipts (this ADR's §2.3 spans + ADR-380's receipts).
 
 ## 7. Alternatives considered
 
@@ -119,6 +119,41 @@ Shared with ADR-324, split by ownership: generate a MetaHarness agent, publish i
 - OASF's "evaluation history" and "pricing and metering class" fields need a stable internal source before export; §2.2 is explicitly scoped to *already-computed* facts rather than inventing new evaluation machinery under schema-completeness pressure.
 - The CASA compiler (§4) is the highest-risk, highest-value piece here and is **not** claimed as solved by this ADR — it is scoped as a Phase-1/2-boundary deliverable requiring its own test contract: translation-quality tests, and — more importantly — enforcement-bypass tests proving no code path lets a translated envelope skip deterministic checking.
 
+## Update (2026-07-31) — corrected: real AGNTCY Directory package, live-integrated
+
+This ADR's original text stated no AGNTCY npm package existed under any
+plausible name. **That was wrong for the Directory piece** — corrected
+here rather than silently rewritten, per this repo's own norms.
+
+The real Directory SDK is **`agntcy-dir`** (npm, v1.5.0, unscoped — the
+original check only tried scoped guesses like `@agntcy/dir`).
+`oasf/publish.ts` now uses it for real: push, publish, and an independent
+lookup, all verified against a real, locally-run Directory server (Go
+apiserver + zot OCI registry + postgres, built and run from
+[agntcy/dir](https://github.com/agntcy/dir)'s own
+`install/docker/docker-compose.yml`).
+
+Getting there surfaced a real, reproducible bug in the live server's
+schema validator: `skills[].name` is rejected in every format tried
+(the taxonomy's own real dotted paths from
+[agntcy/oasf](https://github.com/agntcy/oasf), dot-separated, bare leaf,
+human caption) — only a bare numeric `id` succeeds. Investigated
+`agntcy/oasf-sdk` first, hoping to find (and possibly fix) the actual
+lookup logic; that package turned out to be an HTTP client against a
+remote, hosted validation service (`schema.oasf.outshift.com`), with no
+local source to patch — so this shipped as an issue, not a PR:
+[agntcy/dir#1943](https://github.com/agntcy/dir/issues/1943).
+
+**AGNTCY Identity** (github.com/agntcy/identity) really is Go-only with
+no JS/TS SDK — checked directly. That specific stub
+(`identity/sign.ts`'s witness-signing TODO) was correct as originally
+written and remains unchanged.
+
+**SLIM** (companion ruflo ADR-380) also turned out to have a real,
+published package (`@agntcy/slim-bindings`) rather than none — see that
+ADR's own update section for the (different, upstream-packaging) reason
+it's still not live-connectable today.
+
 ## References
 
 - Cisco AGNTCY overview — https://outshift.cisco.com/the-internet-of-agents/agntcy
@@ -128,4 +163,4 @@ Shared with ADR-324, split by ownership: generate a MetaHarness agent, publish i
 - SLIM architecture — https://github.com/agntcy/slim
 - Cisco CASA overview — https://outshift.cisco.com/blog/ai-ml/continuous-agentic-semantic-authorization-for-mas
 - IOC protocol repository — https://github.com/outshift-open/ioc-protocols-models
-- Companion: ruflo ADR-324 (runtime half of this integration)
+- Companion: ruflo ADR-380 (runtime half of this integration)
