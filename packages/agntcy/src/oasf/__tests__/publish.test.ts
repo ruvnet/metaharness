@@ -14,7 +14,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { Client, Config } from 'agntcy-dir';
 import { connect } from 'node:net';
-import { publishToDirectory } from '../publish.js';
+import { publishToDirectory, __allMappedIdsExistInTaxonomy, KNOWN_AGENT_SKILLS, TAXONOMY } from '../publish.js';
 import type { OasfRecord } from '../record.js';
 
 /**
@@ -68,6 +68,85 @@ const TEST_SERVER_ADDRESS = process.env.AGNTCY_DIRECTORY_ENDPOINT ?? process.env
 // below ever read it — unlike a beforeAll hook, which runs AFTER suite
 // collection and so can never gate a describe.runIf() condition correctly.
 const serverReachable = await isPortReachable(TEST_SERVER_ADDRESS);
+
+describe('taxonomy mapping — real data, not guesses', () => {
+  it('ships the full real OASF taxonomy (regenerate via scripts/generate-oasf-taxonomy.mjs if this drifts)', () => {
+    expect(TAXONOMY.length).toBeGreaterThan(300);
+    const ids = new Set(TAXONOMY.map((l) => l.id));
+    expect(ids.size).toBe(TAXONOMY.length); // no duplicate composite ids
+    for (const leaf of TAXONOMY) {
+      expect(leaf.id).toBeGreaterThan(0);
+      expect(leaf.path.split('/')).toHaveLength(3); // category/subcategory/leaf
+    }
+  });
+
+  it('every KNOWN_AGENT_SKILLS id genuinely exists in the generated taxonomy', () => {
+    expect(__allMappedIdsExistInTaxonomy()).toBe(true);
+  });
+
+  it('covers the real internal capability vocabulary this repo emits (harness-genome agent_topology + agents + skills pools)', () => {
+    // These are the exact ids packages/create-agent-harness/src/genome-scorers.ts's
+    // resolveAgentTopology() and analyze-repo.ts's ARCHETYPES actually produce —
+    // see project.ts#projectToOasf, which feeds them into capabilities[].id
+    // verbatim. Regression-guards against silently losing coverage on a
+    // future edit to this table.
+    const realVocabulary = [
+      'maintainer', 'tester', 'security', 'release', // agent_topology
+      'orchestrator', 'planner', 'reviewer', 'architect', 'evaluator', // agents (subset)
+      'run-swarm', 'memory-inspect', 'plan-change', 'eval-report', // skills
+    ];
+    for (const name of realVocabulary) {
+      expect(KNOWN_AGENT_SKILLS[name], `expected a mapping for real internal name "${name}"`).toBeDefined();
+    }
+    expect(Object.keys(KNOWN_AGENT_SKILLS).length).toBeGreaterThanOrEqual(28);
+  });
+});
+
+describe('publishToDirectory — real TLS/auth wiring (not the insecure default)', () => {
+  it('engages the SDK\'s real TLS transport when authMode is configured — fails closed with a TLS-specific reason, proving it is not silently using plaintext', async () => {
+    // authMode: 'tls' with no cert files configured hits a real, deterministic
+    // validation error INSIDE agntcy-dir's own createTLSTransport() — this
+    // exact message can only come from that code path, so seeing it proves
+    // publishToDirectory really passed authMode through instead of the old
+    // behavior (new Config(serverAddress) alone), which always left
+    // authMode: '' and could never reach this branch.
+    const tlsConfig = new Config('localhost:8888', undefined, undefined, 'tls');
+    const result = await publishToDirectory(VALID_RECORD, {
+      name: 'tls-wiring-test',
+      version: '0.0.1',
+      serverAddress: 'localhost:8888',
+      config: tlsConfig,
+    });
+    expect(result.published).toBe(false);
+    expect(result.reason).toMatch(/TLS CA file is required for TLS authentication/);
+  });
+
+  it('normalizes a bare host:port into a full URL via the real Config constructor, not a raw property assignment', async () => {
+    // Regression test for a real bug this file's own development hit: Config's
+    // constructor prefixes a bare "host:port" with http(s):// based on
+    // authMode; assigning `.serverAddress` directly on an existing instance
+    // skips that normalization and the transport layer throws "Invalid URL".
+    const result = await publishToDirectory(VALID_RECORD, {
+      name: 'server-address-normalization-test',
+      version: '0.0.1',
+      serverAddress: 'localhost:1', // nothing listens here — proves it got far enough to dial, not "Invalid URL"
+    });
+    expect(result.published).toBe(false);
+    expect(result.reason).not.toMatch(/Invalid URL/);
+  });
+
+  it('rejects authMode "oidc" with a clear, actionable reason instead of hanging on an interactive login', async () => {
+    const oidcConfig = new Config('localhost:8888', undefined, undefined, 'oidc');
+    const result = await publishToDirectory(VALID_RECORD, {
+      name: 'oidc-test',
+      version: '0.0.1',
+      serverAddress: 'localhost:8888',
+      config: oidcConfig,
+    });
+    expect(result.published).toBe(false);
+    expect(result.reason).toMatch(/oidc.*interactive PKCE login/);
+  });
+});
 
 describe('publishToDirectory — fail-closed behavior (no live server needed)', () => {
   afterEach(() => {

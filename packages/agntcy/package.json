@@ -17,7 +17,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node -e \"require('fs').copyFileSync('src/oasf/taxonomy.generated.json','dist/oasf/taxonomy.generated.json')\"",
     "test": "vitest run",
     "lint": "tsc --noEmit"
   },

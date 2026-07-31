@@ -1,0 +1,2186 @@
+[
+  {
+    "id": 10101,
+    "path": "language_processing/language_understanding/contextual_comprehension",
+    "caption": "Contextual Comprehension",
+    "description": "Understand text in its broader context."
+  },
+  {
+    "id": 10102,
+    "path": "language_processing/language_understanding/semantic_understanding",
+    "caption": "Semantic Understanding",
+    "description": "Interpret meaning and relationships in text."
+  },
+  {
+    "id": 10103,
+    "path": "language_processing/language_understanding/entity_recognition",
+    "caption": "Entity Recognition",
+    "description": "Identify entities referenced in text."
+  },
+  {
+    "id": 10104,
+    "path": "language_processing/language_understanding/named_entity_recognition",
+    "caption": "Named Entity Recognition",
+    "description": "Detect and label named entities in text."
+  },
+  {
+    "id": 10105,
+    "path": "language_processing/language_understanding/pos_tagging",
+    "caption": "Part-of-Speech Tagging",
+    "description": "Label tokens with grammatical parts of speech."
+  },
+  {
+    "id": 10106,
+    "path": "language_processing/language_understanding/text_feature_extraction",
+    "caption": "Text Feature Extraction",
+    "description": "Extract features/representations from text."
+  },
+  {
+    "id": 10201,
+    "path": "language_processing/text_classification/sentiment_analysis",
+    "caption": "Sentiment Analysis",
+    "description": "Classify sentiment or emotion in text."
+  },
+  {
+    "id": 10202,
+    "path": "language_processing/text_classification/topic_labeling",
+    "caption": "Topic Labelling and Tagging",
+    "description": "Assign topics or tags to text."
+  },
+  {
+    "id": 10203,
+    "path": "language_processing/text_classification/natural_language_inference",
+    "caption": "Natural Language Inference",
+    "description": "Determine entailment between text fragments."
+  },
+  {
+    "id": 10204,
+    "path": "language_processing/text_classification/intent_classification",
+    "caption": "Intent Classification",
+    "description": "Classify the intent behind an utterance."
+  },
+  {
+    "id": 10301,
+    "path": "language_processing/language_generation/text_completion",
+    "caption": "Text Completion",
+    "description": "Continue or complete given text."
+  },
+  {
+    "id": 10302,
+    "path": "language_processing/language_generation/summarization",
+    "caption": "Text Summarization",
+    "description": "Condense text into shorter form."
+  },
+  {
+    "id": 10303,
+    "path": "language_processing/language_generation/paraphrasing",
+    "caption": "Text Paraphrasing",
+    "description": "Restate text while preserving meaning."
+  },
+  {
+    "id": 10304,
+    "path": "language_processing/language_generation/dialogue_generation",
+    "caption": "Dialogue Generation",
+    "description": "Generate conversational responses."
+  },
+  {
+    "id": 10305,
+    "path": "language_processing/language_generation/question_generation",
+    "caption": "Question Generation",
+    "description": "Generate questions from content."
+  },
+  {
+    "id": 10306,
+    "path": "language_processing/language_generation/story_generation",
+    "caption": "Story Generation",
+    "description": "Generate narrative or story text."
+  },
+  {
+    "id": 10307,
+    "path": "language_processing/language_generation/text_style_transfer",
+    "caption": "Text Style Transfer",
+    "description": "Rewrite text in a different style."
+  },
+  {
+    "id": 10308,
+    "path": "language_processing/language_generation/creative_writing_generation",
+    "caption": "Creative Writing Generation",
+    "description": "Generate poetry and creative prose."
+  },
+  {
+    "id": 10401,
+    "path": "language_processing/language_translation/translation",
+    "caption": "Translation",
+    "description": "Translate text between languages."
+  },
+  {
+    "id": 10402,
+    "path": "language_processing/language_translation/multilingual_understanding",
+    "caption": "Multilingual Understanding",
+    "description": "Understand text across multiple languages."
+  },
+  {
+    "id": 10501,
+    "path": "language_processing/text_personalization/style_adjustment",
+    "caption": "Tone and Style Adjustment",
+    "description": "Adjust tone and style of text."
+  },
+  {
+    "id": 10502,
+    "path": "language_processing/text_personalization/user_adaptation",
+    "caption": "User Adaptation",
+    "description": "Adapt responses to a specific user."
+  },
+  {
+    "id": 20101,
+    "path": "computer_vision/image_analysis/image_classification",
+    "caption": "Image Classification",
+    "description": "Assign categories to images."
+  },
+  {
+    "id": 20102,
+    "path": "computer_vision/image_analysis/object_detection",
+    "caption": "Object Detection",
+    "description": "Locate and classify objects in images."
+  },
+  {
+    "id": 20103,
+    "path": "computer_vision/image_analysis/image_segmentation",
+    "caption": "Image Segmentation",
+    "description": "Partition images into regions/objects."
+  },
+  {
+    "id": 20104,
+    "path": "computer_vision/image_analysis/mask_generation",
+    "caption": "Mask Generation",
+    "description": "Generate segmentation masks."
+  },
+  {
+    "id": 20105,
+    "path": "computer_vision/image_analysis/keypoint_detection",
+    "caption": "Keypoint Detection",
+    "description": "Detect keypoints/landmarks in images."
+  },
+  {
+    "id": 20106,
+    "path": "computer_vision/image_analysis/depth_estimation",
+    "caption": "Depth Estimation",
+    "description": "Estimate depth from images."
+  },
+  {
+    "id": 20107,
+    "path": "computer_vision/image_analysis/image_feature_extraction",
+    "caption": "Image Feature Extraction",
+    "description": "Extract feature representations from images."
+  },
+  {
+    "id": 20108,
+    "path": "computer_vision/image_analysis/optical_character_recognition",
+    "caption": "Optical Character Recognition",
+    "description": "Extract text from images and scans."
+  },
+  {
+    "id": 20201,
+    "path": "computer_vision/image_generation/text_to_image",
+    "caption": "Text to Image",
+    "description": "Generate images from text prompts."
+  },
+  {
+    "id": 20202,
+    "path": "computer_vision/image_generation/image_to_image",
+    "caption": "Image to Image",
+    "description": "Generate an image conditioned on an input image."
+  },
+  {
+    "id": 20203,
+    "path": "computer_vision/image_generation/controllable_image_generation",
+    "caption": "Controllable Image Generation",
+    "description": "Pose/edge/depth-conditioned image generation."
+  },
+  {
+    "id": 20301,
+    "path": "computer_vision/image_editing/instructed_image_editing",
+    "caption": "Instructed Image Editing",
+    "description": "Edit images from natural-language instructions."
+  },
+  {
+    "id": 20302,
+    "path": "computer_vision/image_editing/image_inpainting",
+    "caption": "Image Inpainting",
+    "description": "Fill or replace masked regions of an image."
+  },
+  {
+    "id": 20303,
+    "path": "computer_vision/image_editing/image_outpainting",
+    "caption": "Image Outpainting",
+    "description": "Extend an image beyond its borders."
+  },
+  {
+    "id": 20304,
+    "path": "computer_vision/image_editing/background_removal",
+    "caption": "Background Removal",
+    "description": "Remove or isolate image backgrounds."
+  },
+  {
+    "id": 20305,
+    "path": "computer_vision/image_editing/image_upscaling",
+    "caption": "Image Upscaling",
+    "description": "Increase image resolution / super-resolution."
+  },
+  {
+    "id": 20306,
+    "path": "computer_vision/image_editing/face_swapping",
+    "caption": "Face Swapping",
+    "description": "Swap or replace faces in images or video."
+  },
+  {
+    "id": 20401,
+    "path": "computer_vision/video_understanding_generation/video_classification",
+    "caption": "Video Classification",
+    "description": "Classify or tag video content."
+  },
+  {
+    "id": 20402,
+    "path": "computer_vision/video_understanding_generation/video_object_tracking",
+    "caption": "Video Object Tracking",
+    "description": "Track objects across video frames."
+  },
+  {
+    "id": 20403,
+    "path": "computer_vision/video_understanding_generation/text_to_video",
+    "caption": "Text to Video",
+    "description": "Generate video from text prompts."
+  },
+  {
+    "id": 20404,
+    "path": "computer_vision/video_understanding_generation/image_to_video",
+    "caption": "Image to Video",
+    "description": "Animate a still image into video."
+  },
+  {
+    "id": 20405,
+    "path": "computer_vision/video_understanding_generation/video_editing",
+    "caption": "Video Editing",
+    "description": "Edit, restyle, or extend existing video."
+  },
+  {
+    "id": 20406,
+    "path": "computer_vision/video_understanding_generation/talking_avatar_generation",
+    "caption": "Talking Avatar Generation",
+    "description": "Generate talking-head/avatar video with lip sync."
+  },
+  {
+    "id": 30101,
+    "path": "audio_speech_processing/audio_analysis/audio_classification",
+    "caption": "Audio Classification",
+    "description": "Classify or tag audio content."
+  },
+  {
+    "id": 30201,
+    "path": "audio_speech_processing/speech_processing/speech_recognition",
+    "caption": "Automatic Speech Recognition",
+    "description": "Transcribe speech to text."
+  },
+  {
+    "id": 30202,
+    "path": "audio_speech_processing/speech_processing/text_to_speech",
+    "caption": "Text to Speech",
+    "description": "Synthesize spoken audio from text."
+  },
+  {
+    "id": 30203,
+    "path": "audio_speech_processing/speech_processing/voice_cloning",
+    "caption": "Voice Cloning",
+    "description": "Synthesize speech in a cloned voice."
+  },
+  {
+    "id": 30301,
+    "path": "audio_speech_processing/audio_generation/text_to_audio",
+    "caption": "Text to Audio",
+    "description": "Generate music or sound from text descriptions."
+  },
+  {
+    "id": 30302,
+    "path": "audio_speech_processing/audio_generation/audio_to_audio",
+    "caption": "Audio to Audio",
+    "description": "Transform audio into audio (conversion, stems)."
+  },
+  {
+    "id": 60101,
+    "path": "software_engineering/code_generation/text_to_code",
+    "caption": "Text to Code",
+    "description": "Generate code from natural-language specs."
+  },
+  {
+    "id": 60102,
+    "path": "software_engineering/code_generation/code_completion",
+    "caption": "Code Completion",
+    "description": "Inline and contextual code completion."
+  },
+  {
+    "id": 60103,
+    "path": "software_engineering/code_generation/code_templates",
+    "caption": "Code Template Filling",
+    "description": "Fill scaffolds and generate code from schemas."
+  },
+  {
+    "id": 60104,
+    "path": "software_engineering/code_generation/project_scaffolding",
+    "caption": "Project Scaffolding",
+    "description": "Bootstrap projects, components, and modules."
+  },
+  {
+    "id": 60201,
+    "path": "software_engineering/web_development/frontend_development",
+    "caption": "Frontend Development",
+    "description": "Build client-side web UIs and SPAs."
+  },
+  {
+    "id": 60202,
+    "path": "software_engineering/web_development/web_styling",
+    "caption": "Styling and Responsive Layout",
+    "description": "Implement CSS, theming, and responsive layouts."
+  },
+  {
+    "id": 60203,
+    "path": "software_engineering/web_development/web_animation",
+    "caption": "Web Animation",
+    "description": "Build web animations, transitions, and motion effects."
+  },
+  {
+    "id": 60204,
+    "path": "software_engineering/web_development/backend_development",
+    "caption": "Backend Development",
+    "description": "Build server-side application logic and services."
+  },
+  {
+    "id": 60205,
+    "path": "software_engineering/web_development/fullstack_development",
+    "caption": "Full-Stack Development",
+    "description": "Build end-to-end web applications."
+  },
+  {
+    "id": 60206,
+    "path": "software_engineering/web_development/web_accessibility",
+    "caption": "Web Accessibility",
+    "description": "Implement and audit WCAG/ARIA accessibility."
+  },
+  {
+    "id": 60301,
+    "path": "software_engineering/mobile_development/native_mobile_development",
+    "caption": "Native Mobile Development",
+    "description": "Build native iOS and Android apps."
+  },
+  {
+    "id": 60302,
+    "path": "software_engineering/mobile_development/cross_platform_mobile_development",
+    "caption": "Cross-Platform Mobile Development",
+    "description": "Build apps with Flutter, React Native, or Capacitor."
+  },
+  {
+    "id": 60303,
+    "path": "software_engineering/mobile_development/app_store_release",
+    "caption": "App Store Release",
+    "description": "Sign, submit, and release apps to stores."
+  },
+  {
+    "id": 60401,
+    "path": "software_engineering/api_development/api_design",
+    "caption": "API Design",
+    "description": "Design REST/GraphQL/gRPC interfaces and contracts."
+  },
+  {
+    "id": 60402,
+    "path": "software_engineering/api_development/api_implementation",
+    "caption": "API Implementation",
+    "description": "Implement API endpoints and services."
+  },
+  {
+    "id": 60403,
+    "path": "software_engineering/api_development/api_specification",
+    "caption": "API Specification",
+    "description": "Author OpenAPI/protobuf specs and generate code."
+  },
+  {
+    "id": 60404,
+    "path": "software_engineering/api_development/third_party_integration",
+    "caption": "Third-Party Integration",
+    "description": "Integrate external SDKs, APIs, and services."
+  },
+  {
+    "id": 60501,
+    "path": "software_engineering/software_testing/unit_integration_testing",
+    "caption": "Unit and Integration Testing",
+    "description": "Write unit and integration tests."
+  },
+  {
+    "id": 60502,
+    "path": "software_engineering/software_testing/end_to_end_testing",
+    "caption": "End-to-End and UI Testing",
+    "description": "Write browser and end-to-end UI tests."
+  },
+  {
+    "id": 60503,
+    "path": "software_engineering/software_testing/test_strategy",
+    "caption": "Test Strategy and TDD",
+    "description": "Design test strategies and test-driven workflows."
+  },
+  {
+    "id": 60504,
+    "path": "software_engineering/software_testing/test_case_generation",
+    "caption": "Test Case Generation",
+    "description": "Generate test cases, data, and fixtures."
+  },
+  {
+    "id": 60505,
+    "path": "software_engineering/software_testing/specialized_testing",
+    "caption": "Specialized Testing",
+    "description": "Mutation, property-based, contract, and fuzz testing."
+  },
+  {
+    "id": 60601,
+    "path": "software_engineering/code_debugging/root_cause_debugging",
+    "caption": "Root-Cause Debugging",
+    "description": "Reproduce, isolate, and diagnose bugs."
+  },
+  {
+    "id": 60602,
+    "path": "software_engineering/code_debugging/error_handling",
+    "caption": "Error Handling Implementation",
+    "description": "Implement resilient error handling and recovery."
+  },
+  {
+    "id": 60701,
+    "path": "software_engineering/code_quality/code_review",
+    "caption": "Code Review",
+    "description": "Review code for bugs, security, and best practices."
+  },
+  {
+    "id": 60702,
+    "path": "software_engineering/code_quality/code_refactoring",
+    "caption": "Code Refactoring and Optimization",
+    "description": "Restructure and optimize existing code."
+  },
+  {
+    "id": 60703,
+    "path": "software_engineering/code_quality/static_analysis",
+    "caption": "Static Analysis and Linting",
+    "description": "Detect issues via static analysis and linting."
+  },
+  {
+    "id": 60704,
+    "path": "software_engineering/code_quality/code_migration",
+    "caption": "Code Migration and Modernization",
+    "description": "Port and upgrade code across languages/frameworks/versions."
+  },
+  {
+    "id": 60705,
+    "path": "software_engineering/code_quality/code_comprehension",
+    "caption": "Code Comprehension",
+    "description": "Analyze and explain existing codebases."
+  },
+  {
+    "id": 60801,
+    "path": "software_engineering/code_documentation/inline_code_documentation",
+    "caption": "Inline and API Documentation",
+    "description": "Write docstrings, comments, and API reference docs."
+  },
+  {
+    "id": 60802,
+    "path": "software_engineering/code_documentation/project_documentation",
+    "caption": "Project Documentation",
+    "description": "Write READMEs, ADRs, and design docs."
+  },
+  {
+    "id": 60901,
+    "path": "software_engineering/software_architecture/system_design",
+    "caption": "System Design",
+    "description": "Design systems, services, and data flows."
+  },
+  {
+    "id": 60902,
+    "path": "software_engineering/software_architecture/architecture_patterns",
+    "caption": "Architecture Patterns",
+    "description": "Apply architectural and design patterns."
+  },
+  {
+    "id": 60903,
+    "path": "software_engineering/software_architecture/architecture_review",
+    "caption": "Architecture Review",
+    "description": "Audit structure, boundaries, and technical debt."
+  },
+  {
+    "id": 61001,
+    "path": "software_engineering/version_control/git_workflow",
+    "caption": "Git Workflow",
+    "description": "Branching, rebasing, and conflict resolution."
+  },
+  {
+    "id": 61002,
+    "path": "software_engineering/version_control/commit_authoring",
+    "caption": "Commit Authoring",
+    "description": "Author conventional commits and stage changes."
+  },
+  {
+    "id": 61003,
+    "path": "software_engineering/version_control/pull_request_management",
+    "caption": "Pull Request Management",
+    "description": "Create, review, and iterate on pull requests."
+  },
+  {
+    "id": 61101,
+    "path": "software_engineering/build_packaging/build_bundling",
+    "caption": "Build and Bundling",
+    "description": "Configure build tools and bundlers."
+  },
+  {
+    "id": 61102,
+    "path": "software_engineering/build_packaging/dependency_management",
+    "caption": "Dependency Management",
+    "description": "Manage packages and dependency upgrades."
+  },
+  {
+    "id": 61103,
+    "path": "software_engineering/build_packaging/dev_environment_setup",
+    "caption": "Dev Environment Setup",
+    "description": "Configure reproducible development environments."
+  },
+  {
+    "id": 61201,
+    "path": "software_engineering/specialized_app_development/game_development",
+    "caption": "Game Development",
+    "description": "Build games and game engines."
+  },
+  {
+    "id": 61202,
+    "path": "software_engineering/specialized_app_development/cli_development",
+    "caption": "CLI and Terminal App Development",
+    "description": "Build command-line tools and TUIs."
+  },
+  {
+    "id": 61203,
+    "path": "software_engineering/specialized_app_development/bot_development",
+    "caption": "Bot and Chat App Development",
+    "description": "Build chat and messaging bots."
+  },
+  {
+    "id": 70101,
+    "path": "ai_ml_engineering/classical_ml/supervised_model_training",
+    "caption": "Supervised Model Training",
+    "description": "Train classifiers and regressors."
+  },
+  {
+    "id": 70102,
+    "path": "ai_ml_engineering/classical_ml/reinforcement_learning",
+    "caption": "Reinforcement Learning",
+    "description": "Train RL agents and policies."
+  },
+  {
+    "id": 70103,
+    "path": "ai_ml_engineering/classical_ml/tabular_prediction",
+    "caption": "Tabular Prediction",
+    "description": "Classification and regression over tabular data."
+  },
+  {
+    "id": 70104,
+    "path": "ai_ml_engineering/classical_ml/recommendation_systems",
+    "caption": "Recommendation Systems",
+    "description": "Build recommender and ranking models."
+  },
+  {
+    "id": 70105,
+    "path": "ai_ml_engineering/classical_ml/time_series_forecasting",
+    "caption": "Time Series Forecasting",
+    "description": "Forecast values from temporal data."
+  },
+  {
+    "id": 70201,
+    "path": "ai_ml_engineering/model_training/deep_learning_training",
+    "caption": "Deep Learning Training",
+    "description": "Train deep neural networks and transformers."
+  },
+  {
+    "id": 70202,
+    "path": "ai_ml_engineering/model_training/distributed_training",
+    "caption": "Distributed Training",
+    "description": "Scale training across GPUs/nodes."
+  },
+  {
+    "id": 70203,
+    "path": "ai_ml_engineering/model_training/model_fine_tuning",
+    "caption": "Model Fine-Tuning",
+    "description": "Fine-tune pretrained models to tasks/domains."
+  },
+  {
+    "id": 70204,
+    "path": "ai_ml_engineering/model_training/preference_alignment",
+    "caption": "Preference Alignment Training",
+    "description": "Align models via RLHF/DPO and reward modeling."
+  },
+  {
+    "id": 70301,
+    "path": "ai_ml_engineering/model_optimization/model_quantization",
+    "caption": "Model Quantization",
+    "description": "Reduce model precision for efficiency."
+  },
+  {
+    "id": 70302,
+    "path": "ai_ml_engineering/model_optimization/model_pruning_distillation",
+    "caption": "Pruning and Distillation",
+    "description": "Prune or distill models for size/speed."
+  },
+  {
+    "id": 70401,
+    "path": "ai_ml_engineering/inference_serving/model_serving",
+    "caption": "Model Serving",
+    "description": "Serve models for inference at scale."
+  },
+  {
+    "id": 70402,
+    "path": "ai_ml_engineering/inference_serving/inference_optimization",
+    "caption": "Inference Optimization",
+    "description": "Optimize latency, throughput, and decoding."
+  },
+  {
+    "id": 70403,
+    "path": "ai_ml_engineering/inference_serving/edge_inference",
+    "caption": "Edge and On-Device Inference",
+    "description": "Run models on CPU/edge/consumer hardware."
+  },
+  {
+    "id": 70501,
+    "path": "ai_ml_engineering/prompt_engineering/prompt_design",
+    "caption": "Prompt Design",
+    "description": "Design system prompts, few-shot, and CoT prompts."
+  },
+  {
+    "id": 70502,
+    "path": "ai_ml_engineering/prompt_engineering/prompt_optimization",
+    "caption": "Prompt Optimization",
+    "description": "Improve prompts from data and traces."
+  },
+  {
+    "id": 70503,
+    "path": "ai_ml_engineering/prompt_engineering/structured_output_generation",
+    "caption": "Structured Output Generation",
+    "description": "Constrain outputs to schemas/grammars."
+  },
+  {
+    "id": 70504,
+    "path": "ai_ml_engineering/prompt_engineering/context_management",
+    "caption": "Context Window Management",
+    "description": "Manage, trim, and route context."
+  },
+  {
+    "id": 70601,
+    "path": "ai_ml_engineering/retrieval_augmented_generation/rag_pipeline_construction",
+    "caption": "RAG Pipeline Construction",
+    "description": "Build end-to-end retrieval-augmented pipelines."
+  },
+  {
+    "id": 70602,
+    "path": "ai_ml_engineering/retrieval_augmented_generation/document_chunking",
+    "caption": "Document Chunking and Ingestion",
+    "description": "Parse and chunk documents for retrieval."
+  },
+  {
+    "id": 70603,
+    "path": "ai_ml_engineering/retrieval_augmented_generation/reranking",
+    "caption": "Reranking",
+    "description": "Rerank retrieved candidates for relevance."
+  },
+  {
+    "id": 70604,
+    "path": "ai_ml_engineering/retrieval_augmented_generation/document_or_database_question_answering",
+    "caption": "Document or Database Question Answering",
+    "description": "Answer questions over documents or databases."
+  },
+  {
+    "id": 70701,
+    "path": "ai_ml_engineering/embeddings_vector_search/embedding_generation",
+    "caption": "Embedding Generation",
+    "description": "Produce embeddings from text or other data."
+  },
+  {
+    "id": 70702,
+    "path": "ai_ml_engineering/embeddings_vector_search/vector_search",
+    "caption": "Vector Search",
+    "description": "Store and query embeddings by similarity."
+  },
+  {
+    "id": 70703,
+    "path": "ai_ml_engineering/embeddings_vector_search/semantic_similarity",
+    "caption": "Semantic Similarity",
+    "description": "Measure similarity between texts or items."
+  },
+  {
+    "id": 70704,
+    "path": "ai_ml_engineering/embeddings_vector_search/hybrid_search",
+    "caption": "Hybrid Search",
+    "description": "Combine vector and keyword retrieval."
+  },
+  {
+    "id": 70801,
+    "path": "ai_ml_engineering/agent_development/agent_application_building",
+    "caption": "Agent Application Building",
+    "description": "Build agents and agentic applications."
+  },
+  {
+    "id": 70802,
+    "path": "ai_ml_engineering/agent_development/agent_tool_building",
+    "caption": "Agent Tool Building",
+    "description": "Design and build tools and tool servers that expose capabilities to agents."
+  },
+  {
+    "id": 70804,
+    "path": "ai_ml_engineering/agent_development/agent_memory",
+    "caption": "Agent Memory",
+    "description": "Design persistent and searchable agent memory."
+  },
+  {
+    "id": 70805,
+    "path": "ai_ml_engineering/agent_development/computer_use_automation",
+    "caption": "Computer-Use Automation",
+    "description": "Build agents that control browsers/computers."
+  },
+  {
+    "id": 70901,
+    "path": "ai_ml_engineering/agent_orchestration/multi_agent_coordination",
+    "caption": "Multi-Agent Coordination",
+    "description": "Coordinate teams of agents and handoffs."
+  },
+  {
+    "id": 70902,
+    "path": "ai_ml_engineering/agent_orchestration/task_decomposition",
+    "caption": "Task Decomposition",
+    "description": "Break goals into sub-tasks for agents."
+  },
+  {
+    "id": 70903,
+    "path": "ai_ml_engineering/agent_orchestration/role_assignment",
+    "caption": "Role Assignment",
+    "description": "Assign roles and responsibilities to agents."
+  },
+  {
+    "id": 70904,
+    "path": "ai_ml_engineering/agent_orchestration/multi_agent_planning",
+    "caption": "Multi-Agent Planning",
+    "description": "Plan coordinated multi-agent actions."
+  },
+  {
+    "id": 70905,
+    "path": "ai_ml_engineering/agent_orchestration/negotiation_resolution",
+    "caption": "Negotiation and Resolution",
+    "description": "Resolve conflicts between agents."
+  },
+  {
+    "id": 70906,
+    "path": "ai_ml_engineering/agent_orchestration/agentic_workflow_orchestration",
+    "caption": "Agentic Workflow Orchestration",
+    "description": "Orchestrate multi-step agentic workflows."
+  },
+  {
+    "id": 71001,
+    "path": "ai_ml_engineering/model_evaluation/llm_evaluation",
+    "caption": "LLM Evaluation",
+    "description": "Evaluate LLM quality with benchmarks and metrics."
+  },
+  {
+    "id": 71002,
+    "path": "ai_ml_engineering/model_evaluation/agent_evaluation",
+    "caption": "Agent Evaluation",
+    "description": "Test agent behavior, capability, and reliability."
+  },
+  {
+    "id": 71003,
+    "path": "ai_ml_engineering/model_evaluation/llm_judge_evaluation",
+    "caption": "LLM-as-Judge Evaluation",
+    "description": "Score outputs with rubric/judge models."
+  },
+  {
+    "id": 71004,
+    "path": "ai_ml_engineering/model_evaluation/benchmark_execution",
+    "caption": "Benchmark Execution",
+    "description": "Run standardized benchmark suites."
+  },
+  {
+    "id": 71005,
+    "path": "ai_ml_engineering/model_evaluation/quality_evaluation",
+    "caption": "Quality Evaluation",
+    "description": "Assess output quality against criteria."
+  },
+  {
+    "id": 71101,
+    "path": "ai_ml_engineering/llm_observability/llm_tracing",
+    "caption": "LLM Tracing and Instrumentation",
+    "description": "Instrument LLM apps with traces and spans."
+  },
+  {
+    "id": 71102,
+    "path": "ai_ml_engineering/llm_observability/trace_analysis",
+    "caption": "Trace Analysis and Debugging",
+    "description": "Analyze traces to debug agent failures."
+  },
+  {
+    "id": 71103,
+    "path": "ai_ml_engineering/llm_observability/production_llm_monitoring",
+    "caption": "Production LLM Monitoring",
+    "description": "Monitor cost, usage, and quality in production."
+  },
+  {
+    "id": 71201,
+    "path": "ai_ml_engineering/ai_safety/runtime_guardrails",
+    "caption": "Runtime Guardrails",
+    "description": "Validate and constrain model inputs/outputs."
+  },
+  {
+    "id": 71202,
+    "path": "ai_ml_engineering/ai_safety/prompt_injection_defense",
+    "caption": "Prompt Injection Defense",
+    "description": "Detect and neutralize prompt injection."
+  },
+  {
+    "id": 71203,
+    "path": "ai_ml_engineering/ai_safety/llm_red_teaming",
+    "caption": "LLM Red-Teaming",
+    "description": "Probe models for safety vulnerabilities."
+  },
+  {
+    "id": 71301,
+    "path": "ai_ml_engineering/training_data_engineering/data_curation",
+    "caption": "Training Data Curation",
+    "description": "Filter, dedupe, and clean training corpora."
+  },
+  {
+    "id": 71302,
+    "path": "ai_ml_engineering/training_data_engineering/synthetic_data_generation",
+    "caption": "Synthetic Data Generation",
+    "description": "Generate synthetic datasets."
+  },
+  {
+    "id": 71303,
+    "path": "ai_ml_engineering/training_data_engineering/data_annotation",
+    "caption": "Data Annotation and Labeling",
+    "description": "Label and annotate datasets."
+  },
+  {
+    "id": 71304,
+    "path": "ai_ml_engineering/training_data_engineering/feature_engineering",
+    "caption": "Feature Engineering",
+    "description": "Engineer features for ML models."
+  },
+  {
+    "id": 71401,
+    "path": "ai_ml_engineering/ml_lifecycle/experiment_tracking",
+    "caption": "Experiment Tracking",
+    "description": "Track runs, metrics, and hyperparameters."
+  },
+  {
+    "id": 71402,
+    "path": "ai_ml_engineering/ml_lifecycle/model_versioning",
+    "caption": "Model Versioning",
+    "description": "Version and register models."
+  },
+  {
+    "id": 71403,
+    "path": "ai_ml_engineering/ml_lifecycle/ml_pipeline_automation",
+    "caption": "ML Pipeline Automation",
+    "description": "Automate train/validate/deploy pipelines."
+  },
+  {
+    "id": 71501,
+    "path": "ai_ml_engineering/model_interpretability/mechanistic_interpretability",
+    "caption": "Mechanistic Interpretability",
+    "description": "Inspect model internals and activations."
+  },
+  {
+    "id": 71502,
+    "path": "ai_ml_engineering/model_interpretability/prediction_explainability",
+    "caption": "Prediction Explainability",
+    "description": "Explain predictions via attribution."
+  },
+  {
+    "id": 71601,
+    "path": "ai_ml_engineering/llm_capabilities/function_calling",
+    "caption": "Function Calling",
+    "description": "The model can invoke external functions or tools through structured calls."
+  },
+  {
+    "id": 71602,
+    "path": "ai_ml_engineering/llm_capabilities/response_streaming",
+    "caption": "Response Streaming",
+    "description": "The model can stream generated output incrementally as it is produced."
+  },
+  {
+    "id": 71603,
+    "path": "ai_ml_engineering/llm_capabilities/system_prompt_support",
+    "caption": "System Prompt Support",
+    "description": "The model accepts system-level instructions that steer its behaviour."
+  },
+  {
+    "id": 80101,
+    "path": "data_engineering_analytics/databases/relational_database_operations",
+    "caption": "Relational Database Operations",
+    "description": "Operate and query relational databases."
+  },
+  {
+    "id": 80102,
+    "path": "data_engineering_analytics/databases/orm_data_access",
+    "caption": "ORM and Data Access",
+    "description": "Access data through ORMs and query builders."
+  },
+  {
+    "id": 80103,
+    "path": "data_engineering_analytics/databases/nosql_database_operations",
+    "caption": "NoSQL Database Operations",
+    "description": "Model and query document/key-value/wide-column stores."
+  },
+  {
+    "id": 80104,
+    "path": "data_engineering_analytics/databases/graph_database_operations",
+    "caption": "Graph Database Operations",
+    "description": "Model and query graph databases."
+  },
+  {
+    "id": 80105,
+    "path": "data_engineering_analytics/databases/vector_database_operations",
+    "caption": "Vector Database Operations",
+    "description": "Operate vector stores for embeddings."
+  },
+  {
+    "id": 80201,
+    "path": "data_engineering_analytics/data_modeling_design/schema_design",
+    "caption": "Schema Design",
+    "description": "Design schemas, normalization, and indexes."
+  },
+  {
+    "id": 80202,
+    "path": "data_engineering_analytics/data_modeling_design/data_modeling",
+    "caption": "Data Modeling",
+    "description": "Design conceptual and logical data models."
+  },
+  {
+    "id": 80203,
+    "path": "data_engineering_analytics/data_modeling_design/schema_inference",
+    "caption": "Schema Inference",
+    "description": "Infer schema and types from data."
+  },
+  {
+    "id": 80204,
+    "path": "data_engineering_analytics/data_modeling_design/database_migration",
+    "caption": "Database Migration",
+    "description": "Evolve schemas with versioned migrations."
+  },
+  {
+    "id": 80301,
+    "path": "data_engineering_analytics/query_engineering/query_generation",
+    "caption": "Query Generation",
+    "description": "Generate SQL/queries from intent or language."
+  },
+  {
+    "id": 80302,
+    "path": "data_engineering_analytics/query_engineering/query_optimization",
+    "caption": "Query Optimization",
+    "description": "Optimize slow queries and indexing."
+  },
+  {
+    "id": 80401,
+    "path": "data_engineering_analytics/data_pipelines/pipeline_orchestration",
+    "caption": "Pipeline Orchestration",
+    "description": "Author and schedule data workflows/DAGs."
+  },
+  {
+    "id": 80402,
+    "path": "data_engineering_analytics/data_pipelines/data_transformation_pipeline",
+    "caption": "Data Transformation Pipeline",
+    "description": "Transform and aggregate data in pipelines."
+  },
+  {
+    "id": 80403,
+    "path": "data_engineering_analytics/data_pipelines/data_ingestion",
+    "caption": "Data Ingestion",
+    "description": "Ingest and load data from sources."
+  },
+  {
+    "id": 80404,
+    "path": "data_engineering_analytics/data_pipelines/stream_processing",
+    "caption": "Stream Processing",
+    "description": "Process real-time event streams and CDC."
+  },
+  {
+    "id": 80405,
+    "path": "data_engineering_analytics/data_pipelines/data_lineage",
+    "caption": "Data Lineage",
+    "description": "Track lineage and downstream impact."
+  },
+  {
+    "id": 80501,
+    "path": "data_engineering_analytics/data_warehousing/warehouse_modeling",
+    "caption": "Warehouse Modeling",
+    "description": "Build warehouse layers and marts."
+  },
+  {
+    "id": 80502,
+    "path": "data_engineering_analytics/data_warehousing/data_lake_querying",
+    "caption": "Data Lake Querying",
+    "description": "Query data lakes and federated catalogs."
+  },
+  {
+    "id": 80601,
+    "path": "data_engineering_analytics/data_quality/data_cleaning",
+    "caption": "Data Cleaning",
+    "description": "Clean, standardize, and deduplicate data."
+  },
+  {
+    "id": 80602,
+    "path": "data_engineering_analytics/data_quality/data_quality_assessment",
+    "caption": "Data Quality Assessment",
+    "description": "Validate data against rules and contracts."
+  },
+  {
+    "id": 80603,
+    "path": "data_engineering_analytics/data_quality/data_profiling",
+    "caption": "Data Profiling",
+    "description": "Profile shape, nulls, and distributions."
+  },
+  {
+    "id": 80701,
+    "path": "data_engineering_analytics/data_analytics/exploratory_data_analysis",
+    "caption": "Exploratory Data Analysis",
+    "description": "Explore datasets to find patterns."
+  },
+  {
+    "id": 80702,
+    "path": "data_engineering_analytics/data_analytics/statistical_analysis",
+    "caption": "Statistical Analysis",
+    "description": "Apply descriptive and inferential statistics."
+  },
+  {
+    "id": 80703,
+    "path": "data_engineering_analytics/data_analytics/product_analytics",
+    "caption": "Product Analytics",
+    "description": "Analyze product/behavioral metrics."
+  },
+  {
+    "id": 80801,
+    "path": "data_engineering_analytics/business_intelligence/dashboard_building",
+    "caption": "Dashboard Building",
+    "description": "Build operational and KPI dashboards."
+  },
+  {
+    "id": 80802,
+    "path": "data_engineering_analytics/business_intelligence/metrics_design",
+    "caption": "KPI and Metrics Design",
+    "description": "Define metrics and metric layers."
+  },
+  {
+    "id": 80901,
+    "path": "data_engineering_analytics/data_visualization/chart_generation",
+    "caption": "Chart Generation",
+    "description": "Generate charts from data."
+  },
+  {
+    "id": 80902,
+    "path": "data_engineering_analytics/data_visualization/interactive_visualization",
+    "caption": "Interactive Visualization",
+    "description": "Build interactive data visualizations."
+  },
+  {
+    "id": 81001,
+    "path": "data_engineering_analytics/web_data_acquisition/web_scraping",
+    "caption": "Web Scraping",
+    "description": "Extract structured data from web pages."
+  },
+  {
+    "id": 81002,
+    "path": "data_engineering_analytics/web_data_acquisition/web_crawling",
+    "caption": "Web Crawling",
+    "description": "Crawl sites at scale."
+  },
+  {
+    "id": 90101,
+    "path": "devops_cloud_infra/containerization/container_image_building",
+    "caption": "Container Image Building",
+    "description": "Author container image definitions and build optimized images."
+  },
+  {
+    "id": 90102,
+    "path": "devops_cloud_infra/containerization/container_debugging",
+    "caption": "Container Debugging",
+    "description": "Diagnose container build/runtime failures."
+  },
+  {
+    "id": 90201,
+    "path": "devops_cloud_infra/container_orchestration/container_workload_management",
+    "caption": "Container Workload Management",
+    "description": "Schedule, deploy, and manage containerized workloads on an orchestrator."
+  },
+  {
+    "id": 90202,
+    "path": "devops_cloud_infra/container_orchestration/container_app_packaging",
+    "caption": "Container Application Packaging",
+    "description": "Package, template, and version applications for container orchestration."
+  },
+  {
+    "id": 90203,
+    "path": "devops_cloud_infra/container_orchestration/service_mesh_management",
+    "caption": "Service Mesh Management",
+    "description": "Manage service mesh traffic and policy."
+  },
+  {
+    "id": 90301,
+    "path": "devops_cloud_infra/infrastructure_as_code/iac_authoring",
+    "caption": "IaC Authoring",
+    "description": "Write declarative infrastructure definitions and reusable modules."
+  },
+  {
+    "id": 90302,
+    "path": "devops_cloud_infra/infrastructure_as_code/configuration_management",
+    "caption": "Configuration Management",
+    "description": "Automate host and agent configuration."
+  },
+  {
+    "id": 90303,
+    "path": "devops_cloud_infra/infrastructure_as_code/infrastructure_provisioning",
+    "caption": "Infrastructure Provisioning",
+    "description": "Provision and manage live cloud resources."
+  },
+  {
+    "id": 90401,
+    "path": "devops_cloud_infra/ci_cd/ci_cd_configuration",
+    "caption": "CI/CD Configuration",
+    "description": "Author CI/CD workflows and pipelines."
+  },
+  {
+    "id": 90402,
+    "path": "devops_cloud_infra/ci_cd/deployment_pipeline_design",
+    "caption": "Deployment Pipeline Design",
+    "description": "Design multi-stage pipelines with gates."
+  },
+  {
+    "id": 90501,
+    "path": "devops_cloud_infra/deployment_release/deployment_orchestration",
+    "caption": "Deployment Orchestration",
+    "description": "Coordinate deploys and rollback strategies."
+  },
+  {
+    "id": 90502,
+    "path": "devops_cloud_infra/deployment_release/release_management",
+    "caption": "Release Management",
+    "description": "Version, changelog, and release software."
+  },
+  {
+    "id": 90601,
+    "path": "devops_cloud_infra/cloud_platform_operations/cloud_architecture_design",
+    "caption": "Cloud Architecture Design",
+    "description": "Design cloud and multi-cloud topologies."
+  },
+  {
+    "id": 90602,
+    "path": "devops_cloud_infra/cloud_platform_operations/cloud_resource_management",
+    "caption": "Cloud Resource Management",
+    "description": "Provision and operate cloud resources."
+  },
+  {
+    "id": 90603,
+    "path": "devops_cloud_infra/cloud_platform_operations/cloud_cost_optimization",
+    "caption": "Cloud Cost Optimization",
+    "description": "Optimize and govern cloud spend (FinOps)."
+  },
+  {
+    "id": 90701,
+    "path": "devops_cloud_infra/serverless_edge/serverless_functions",
+    "caption": "Serverless Function Development",
+    "description": "Build and deploy serverless functions."
+  },
+  {
+    "id": 90702,
+    "path": "devops_cloud_infra/serverless_edge/edge_computing",
+    "caption": "Edge Computing",
+    "description": "Deploy compute and content at the edge."
+  },
+  {
+    "id": 90801,
+    "path": "devops_cloud_infra/observability/monitoring_alerting",
+    "caption": "Monitoring and Alerting",
+    "description": "Collect metrics, dashboards, and alerts."
+  },
+  {
+    "id": 90802,
+    "path": "devops_cloud_infra/observability/distributed_tracing",
+    "caption": "Distributed Tracing",
+    "description": "Trace requests across services."
+  },
+  {
+    "id": 90803,
+    "path": "devops_cloud_infra/observability/log_management",
+    "caption": "Logging and Log Analysis",
+    "description": "Aggregate and analyze logs."
+  },
+  {
+    "id": 90804,
+    "path": "devops_cloud_infra/observability/observability_instrumentation",
+    "caption": "Observability Instrumentation",
+    "description": "Instrument apps with telemetry SDKs."
+  },
+  {
+    "id": 90805,
+    "path": "devops_cloud_infra/observability/performance_monitoring",
+    "caption": "Performance Monitoring",
+    "description": "Monitor runtime performance and resource use."
+  },
+  {
+    "id": 90806,
+    "path": "devops_cloud_infra/observability/anomaly_detection",
+    "caption": "Anomaly Detection",
+    "description": "Detect anomalies in telemetry and data."
+  },
+  {
+    "id": 90901,
+    "path": "devops_cloud_infra/site_reliability_engineering/incident_response",
+    "caption": "Incident Response",
+    "description": "Triage, diagnose, and resolve production incidents."
+  },
+  {
+    "id": 90902,
+    "path": "devops_cloud_infra/site_reliability_engineering/postmortem_authoring",
+    "caption": "Postmortem Authoring",
+    "description": "Write blameless postmortems and RCAs."
+  },
+  {
+    "id": 91001,
+    "path": "devops_cloud_infra/cloud_networking/network_configuration",
+    "caption": "Network Configuration",
+    "description": "Configure VPCs, networks, and connectivity."
+  },
+  {
+    "id": 91002,
+    "path": "devops_cloud_infra/cloud_networking/dns_management",
+    "caption": "DNS Management",
+    "description": "Manage DNS records and resolution."
+  },
+  {
+    "id": 91101,
+    "path": "devops_cloud_infra/gitops/gitops_workflow",
+    "caption": "GitOps Workflow",
+    "description": "Continuously reconcile state from Git."
+  },
+  {
+    "id": 91102,
+    "path": "devops_cloud_infra/gitops/gitops_repo_audit",
+    "caption": "GitOps Repository Audit",
+    "description": "Validate GitOps repositories."
+  },
+  {
+    "id": 100101,
+    "path": "cybersecurity/application_security/secure_coding",
+    "caption": "Secure Coding",
+    "description": "Apply secure-by-default coding patterns."
+  },
+  {
+    "id": 100102,
+    "path": "cybersecurity/application_security/sast_scanning",
+    "caption": "Static Application Security Testing",
+    "description": "Find code vulnerabilities via static analysis."
+  },
+  {
+    "id": 100103,
+    "path": "cybersecurity/application_security/web_app_security_testing",
+    "caption": "Web Application Security Testing",
+    "description": "Test running apps for OWASP-class flaws."
+  },
+  {
+    "id": 100104,
+    "path": "cybersecurity/application_security/api_security_testing",
+    "caption": "API Security Testing",
+    "description": "Test APIs for authz gaps and injection."
+  },
+  {
+    "id": 100201,
+    "path": "cybersecurity/offensive_security/penetration_testing",
+    "caption": "Penetration Testing",
+    "description": "Plan and execute penetration tests."
+  },
+  {
+    "id": 100202,
+    "path": "cybersecurity/offensive_security/exploit_development",
+    "caption": "Exploit Development",
+    "description": "Develop and use exploits and payloads."
+  },
+  {
+    "id": 100203,
+    "path": "cybersecurity/offensive_security/network_pentesting",
+    "caption": "Network Penetration Testing",
+    "description": "Assess networks and services for weaknesses."
+  },
+  {
+    "id": 100204,
+    "path": "cybersecurity/offensive_security/cloud_pentesting",
+    "caption": "Cloud Penetration Testing",
+    "description": "Assess cloud environments for misconfiguration."
+  },
+  {
+    "id": 100205,
+    "path": "cybersecurity/offensive_security/red_team_operations",
+    "caption": "Red Team Operations",
+    "description": "Run adversary emulation and evasion."
+  },
+  {
+    "id": 100206,
+    "path": "cybersecurity/offensive_security/reconnaissance_osint",
+    "caption": "Reconnaissance and OSINT",
+    "description": "Conduct recon and open-source intelligence."
+  },
+  {
+    "id": 100301,
+    "path": "cybersecurity/vulnerability_management/vulnerability_scanning",
+    "caption": "Vulnerability Scanning",
+    "description": "Run automated vulnerability/CVE scans."
+  },
+  {
+    "id": 100302,
+    "path": "cybersecurity/vulnerability_management/vulnerability_analysis",
+    "caption": "Vulnerability Analysis",
+    "description": "Analyze and prioritize vulnerabilities."
+  },
+  {
+    "id": 100303,
+    "path": "cybersecurity/vulnerability_management/fuzzing",
+    "caption": "Fuzz Testing",
+    "description": "Discover bugs via fuzzing."
+  },
+  {
+    "id": 100304,
+    "path": "cybersecurity/vulnerability_management/dependency_security",
+    "caption": "Dependency and Supply-Chain Security",
+    "description": "Audit dependencies and supply chain."
+  },
+  {
+    "id": 100401,
+    "path": "cybersecurity/threat_modeling/threat_modeling_analysis",
+    "caption": "Threat Modeling Analysis",
+    "description": "Apply STRIDE/DREAD to identify threats."
+  },
+  {
+    "id": 100402,
+    "path": "cybersecurity/threat_modeling/attack_surface_mapping",
+    "caption": "Attack Surface Mapping",
+    "description": "Map attack surface and threat paths."
+  },
+  {
+    "id": 100501,
+    "path": "cybersecurity/identity_access_management/authentication_implementation",
+    "caption": "Authentication Implementation",
+    "description": "Implement OAuth/OIDC/JWT/session auth."
+  },
+  {
+    "id": 100502,
+    "path": "cybersecurity/identity_access_management/authorization_access_control",
+    "caption": "Authorization and Access Control",
+    "description": "Implement RBAC/ABAC and policies."
+  },
+  {
+    "id": 100503,
+    "path": "cybersecurity/identity_access_management/identity_administration",
+    "caption": "Identity Administration",
+    "description": "Manage identities, roles, and cloud IAM."
+  },
+  {
+    "id": 100601,
+    "path": "cybersecurity/cryptography_secrets/cryptography_implementation",
+    "caption": "Cryptography Implementation",
+    "description": "Implement encryption and key management."
+  },
+  {
+    "id": 100602,
+    "path": "cybersecurity/cryptography_secrets/secret_leak_detection",
+    "caption": "Secret Leak Detection",
+    "description": "Detect leaked secrets and credentials."
+  },
+  {
+    "id": 100603,
+    "path": "cybersecurity/cryptography_secrets/secrets_management",
+    "caption": "Secrets Management",
+    "description": "Manage and rotate secrets and credentials."
+  },
+  {
+    "id": 100701,
+    "path": "cybersecurity/security_operations/threat_detection",
+    "caption": "Threat Detection",
+    "description": "Detect malicious activity and intrusions."
+  },
+  {
+    "id": 100702,
+    "path": "cybersecurity/security_operations/threat_intelligence",
+    "caption": "Threat Intelligence",
+    "description": "Analyze IOCs and threat-actor TTPs."
+  },
+  {
+    "id": 100703,
+    "path": "cybersecurity/security_operations/security_incident_response",
+    "caption": "Security Incident Response",
+    "description": "Contain and recover from security breaches."
+  },
+  {
+    "id": 100704,
+    "path": "cybersecurity/security_operations/security_hardening",
+    "caption": "Security Hardening",
+    "description": "Audit and harden hosts and configurations."
+  },
+  {
+    "id": 100801,
+    "path": "cybersecurity/malware_reverse_engineering/malware_analysis",
+    "caption": "Malware Analysis",
+    "description": "Analyze malicious binaries and payloads."
+  },
+  {
+    "id": 100802,
+    "path": "cybersecurity/malware_reverse_engineering/reverse_engineering",
+    "caption": "Reverse Engineering",
+    "description": "Reverse-engineer binaries and protocols."
+  },
+  {
+    "id": 100803,
+    "path": "cybersecurity/malware_reverse_engineering/digital_forensics",
+    "caption": "Digital Forensics",
+    "description": "Acquire and analyze forensic artifacts."
+  },
+  {
+    "id": 110101,
+    "path": "content_writing_marketing/content_writing/article_writing",
+    "caption": "Article and Blog Writing",
+    "description": "Write articles, blog posts, and guides."
+  },
+  {
+    "id": 110102,
+    "path": "content_writing_marketing/content_writing/creative_writing",
+    "caption": "Creative and Narrative Writing",
+    "description": "Write fiction, scripts, and narratives."
+  },
+  {
+    "id": 110103,
+    "path": "content_writing_marketing/content_writing/business_writing",
+    "caption": "Business and Professional Writing",
+    "description": "Write proposals, reports, and resumes."
+  },
+  {
+    "id": 110104,
+    "path": "content_writing_marketing/content_writing/technical_writing",
+    "caption": "Technical Writing",
+    "description": "Write user-facing technical documentation and guides."
+  },
+  {
+    "id": 110105,
+    "path": "content_writing_marketing/content_writing/ux_writing",
+    "caption": "UX Writing and Microcopy",
+    "description": "Write interface copy and microcopy."
+  },
+  {
+    "id": 110201,
+    "path": "content_writing_marketing/content_editing/copy_editing",
+    "caption": "Copy Editing",
+    "description": "Edit and polish prose for clarity and quality."
+  },
+  {
+    "id": 110202,
+    "path": "content_writing_marketing/content_editing/proofreading",
+    "caption": "Proofreading",
+    "description": "Correct grammar, spelling, and mechanics."
+  },
+  {
+    "id": 110203,
+    "path": "content_writing_marketing/content_editing/text_humanization",
+    "caption": "Text Humanization",
+    "description": "Make AI-generated text read naturally."
+  },
+  {
+    "id": 110204,
+    "path": "content_writing_marketing/content_editing/tone_voice_adjustment",
+    "caption": "Tone and Voice Adjustment",
+    "description": "Adjust tone, register, and brand voice."
+  },
+  {
+    "id": 110301,
+    "path": "content_writing_marketing/copywriting/marketing_copywriting",
+    "caption": "Marketing Copywriting",
+    "description": "Write brand and marketing copy."
+  },
+  {
+    "id": 110302,
+    "path": "content_writing_marketing/copywriting/sales_copywriting",
+    "caption": "Landing Page and Sales Copy",
+    "description": "Write high-converting landing and sales copy."
+  },
+  {
+    "id": 110303,
+    "path": "content_writing_marketing/copywriting/ad_copywriting",
+    "caption": "Ad Copywriting",
+    "description": "Write ad headlines and creative."
+  },
+  {
+    "id": 110304,
+    "path": "content_writing_marketing/copywriting/conversion_optimization",
+    "caption": "Conversion Optimization",
+    "description": "Optimize copy and pages for conversion."
+  },
+  {
+    "id": 110401,
+    "path": "content_writing_marketing/seo/seo_auditing",
+    "caption": "SEO Auditing",
+    "description": "Audit technical and on-page SEO."
+  },
+  {
+    "id": 110402,
+    "path": "content_writing_marketing/seo/keyword_research",
+    "caption": "Keyword Research",
+    "description": "Research keywords and search intent."
+  },
+  {
+    "id": 110403,
+    "path": "content_writing_marketing/seo/seo_content_optimization",
+    "caption": "SEO Content Optimization",
+    "description": "Optimize content for search ranking."
+  },
+  {
+    "id": 110404,
+    "path": "content_writing_marketing/seo/structured_data_markup",
+    "caption": "Structured Data Markup",
+    "description": "Generate schema.org and metadata markup."
+  },
+  {
+    "id": 110405,
+    "path": "content_writing_marketing/seo/answer_engine_optimization",
+    "caption": "Answer Engine Optimization",
+    "description": "Optimize content for AI search and citations."
+  },
+  {
+    "id": 110501,
+    "path": "content_writing_marketing/marketing_strategy/content_strategy",
+    "caption": "Content Strategy",
+    "description": "Plan editorial topics and calendars."
+  },
+  {
+    "id": 110502,
+    "path": "content_writing_marketing/marketing_strategy/campaign_planning",
+    "caption": "Campaign Planning",
+    "description": "Plan end-to-end marketing campaigns."
+  },
+  {
+    "id": 110503,
+    "path": "content_writing_marketing/marketing_strategy/product_marketing",
+    "caption": "Product Marketing and GTM",
+    "description": "Plan positioning, ICP, and go-to-market."
+  },
+  {
+    "id": 110504,
+    "path": "content_writing_marketing/marketing_strategy/growth_strategy",
+    "caption": "Growth Strategy",
+    "description": "Design growth loops and acquisition motions."
+  },
+  {
+    "id": 110601,
+    "path": "content_writing_marketing/advertising/paid_ads_management",
+    "caption": "Paid Ads Management",
+    "description": "Set up and optimize paid ad campaigns."
+  },
+  {
+    "id": 110602,
+    "path": "content_writing_marketing/advertising/ad_creative_production",
+    "caption": "Ad Creative Production",
+    "description": "Produce and iterate ad creative."
+  },
+  {
+    "id": 110701,
+    "path": "content_writing_marketing/social_media_marketing/social_content_creation",
+    "caption": "Social Content Creation",
+    "description": "Draft platform-native social posts."
+  },
+  {
+    "id": 110702,
+    "path": "content_writing_marketing/social_media_marketing/social_media_management",
+    "caption": "Social Media Management",
+    "description": "Schedule, publish, and optimize social presence."
+  },
+  {
+    "id": 110703,
+    "path": "content_writing_marketing/social_media_marketing/social_media_analytics",
+    "caption": "Social Media Analytics",
+    "description": "Analyze social engagement and trends."
+  },
+  {
+    "id": 110801,
+    "path": "content_writing_marketing/email_marketing/email_campaign_creation",
+    "caption": "Email Campaign Creation",
+    "description": "Create campaigns and nurture sequences."
+  },
+  {
+    "id": 110802,
+    "path": "content_writing_marketing/email_marketing/email_deliverability",
+    "caption": "Email Deliverability",
+    "description": "Improve deliverability and compliance."
+  },
+  {
+    "id": 110901,
+    "path": "content_writing_marketing/branding/brand_strategy",
+    "caption": "Brand Strategy",
+    "description": "Define positioning and messaging frameworks."
+  },
+  {
+    "id": 110902,
+    "path": "content_writing_marketing/branding/brand_voice_guidelines",
+    "caption": "Brand Voice Guidelines",
+    "description": "Build and apply brand-voice guidelines."
+  },
+  {
+    "id": 110903,
+    "path": "content_writing_marketing/branding/brand_monitoring",
+    "caption": "Brand Monitoring",
+    "description": "Monitor brand mentions and sentiment."
+  },
+  {
+    "id": 120101,
+    "path": "business_professional/sales/lead_generation",
+    "caption": "Lead Generation",
+    "description": "Identify, research, and enrich leads."
+  },
+  {
+    "id": 120102,
+    "path": "business_professional/sales/crm_management",
+    "caption": "CRM Management",
+    "description": "Manage CRM records and pipelines."
+  },
+  {
+    "id": 120103,
+    "path": "business_professional/sales/sales_outreach",
+    "caption": "Sales Outreach",
+    "description": "Write outreach and prospecting sequences."
+  },
+  {
+    "id": 120104,
+    "path": "business_professional/sales/deal_management",
+    "caption": "Deal Management",
+    "description": "Manage opportunities and deal cycles."
+  },
+  {
+    "id": 120105,
+    "path": "business_professional/sales/sales_enablement",
+    "caption": "Sales Enablement",
+    "description": "Build battlecards and sales collateral."
+  },
+  {
+    "id": 120201,
+    "path": "business_professional/finance_accounting/bookkeeping_invoicing",
+    "caption": "Bookkeeping and Invoicing",
+    "description": "Manage invoices, receipts, and expenses."
+  },
+  {
+    "id": 120202,
+    "path": "business_professional/finance_accounting/billing_operations",
+    "caption": "Billing Operations",
+    "description": "Operate subscription and recurring billing."
+  },
+  {
+    "id": 120203,
+    "path": "business_professional/finance_accounting/financial_reporting",
+    "caption": "Financial Reporting and Close",
+    "description": "Run month-end close and reconciliation."
+  },
+  {
+    "id": 120204,
+    "path": "business_professional/finance_accounting/financial_modeling",
+    "caption": "Financial Modeling and Valuation",
+    "description": "Build DCF, LBO, and 3-statement models."
+  },
+  {
+    "id": 120205,
+    "path": "business_professional/finance_accounting/financial_analysis",
+    "caption": "Financial Analysis",
+    "description": "Analyze statements, ratios, and unit economics."
+  },
+  {
+    "id": 120206,
+    "path": "business_professional/finance_accounting/financial_planning",
+    "caption": "Financial Planning",
+    "description": "Build personal and corporate financial plans."
+  },
+  {
+    "id": 120301,
+    "path": "business_professional/investment_trading/equity_research",
+    "caption": "Equity Research",
+    "description": "Produce research and earnings analysis."
+  },
+  {
+    "id": 120302,
+    "path": "business_professional/investment_trading/trading_strategy",
+    "caption": "Trading Strategy",
+    "description": "Develop and backtest trading strategies."
+  },
+  {
+    "id": 120303,
+    "path": "business_professional/investment_trading/portfolio_management",
+    "caption": "Portfolio Management",
+    "description": "Monitor, rebalance, and optimize portfolios."
+  },
+  {
+    "id": 120304,
+    "path": "business_professional/investment_trading/payments_integration",
+    "caption": "Payments Integration",
+    "description": "Integrate payment gateways and billing."
+  },
+  {
+    "id": 120305,
+    "path": "business_professional/investment_trading/regulated_finance_operations",
+    "caption": "Regulated Finance Operations",
+    "description": "Run KYC/AML and compliance operations."
+  },
+  {
+    "id": 120401,
+    "path": "business_professional/human_resources/recruiting",
+    "caption": "Recruiting and Hiring",
+    "description": "Build job posts, interviews, and offers."
+  },
+  {
+    "id": 120402,
+    "path": "business_professional/human_resources/employee_lifecycle",
+    "caption": "Employee Lifecycle",
+    "description": "Automate onboarding and HR processes."
+  },
+  {
+    "id": 120403,
+    "path": "business_professional/human_resources/candidate_materials",
+    "caption": "Candidate Materials",
+    "description": "Tailor resumes and interview prep."
+  },
+  {
+    "id": 120501,
+    "path": "business_professional/legal/contract_drafting",
+    "caption": "Contract Drafting",
+    "description": "Draft contracts and legal documents."
+  },
+  {
+    "id": 120502,
+    "path": "business_professional/legal/contract_review",
+    "caption": "Contract Review",
+    "description": "Review contracts for risk and completeness."
+  },
+  {
+    "id": 120503,
+    "path": "business_professional/legal/legal_research",
+    "caption": "Legal Research",
+    "description": "Research law, precedent, and regulation."
+  },
+  {
+    "id": 120504,
+    "path": "business_professional/legal/legal_compliance",
+    "caption": "Legal Compliance",
+    "description": "Assess regulatory and privacy compliance."
+  },
+  {
+    "id": 120601,
+    "path": "business_professional/customer_support/support_operations",
+    "caption": "Support Operations",
+    "description": "Operate support and ticket workflows."
+  },
+  {
+    "id": 120602,
+    "path": "business_professional/customer_support/retention_management",
+    "caption": "Retention Management",
+    "description": "Reduce churn and manage retention."
+  },
+  {
+    "id": 120701,
+    "path": "business_professional/product_management/requirements_authoring",
+    "caption": "Requirements and PRD Authoring",
+    "description": "Write PRDs, specs, and user stories."
+  },
+  {
+    "id": 120702,
+    "path": "business_professional/product_management/roadmapping",
+    "caption": "Roadmapping and Prioritization",
+    "description": "Prioritize and sequence roadmaps."
+  },
+  {
+    "id": 120703,
+    "path": "business_professional/product_management/product_strategy",
+    "caption": "Product Strategy",
+    "description": "Define vision, OKRs, and discovery."
+  },
+  {
+    "id": 120704,
+    "path": "business_professional/product_management/project_planning",
+    "caption": "Project Planning",
+    "description": "Plan tasks, milestones, and delivery."
+  },
+  {
+    "id": 120801,
+    "path": "business_professional/business_strategy/strategic_advisory",
+    "caption": "Strategic Advisory",
+    "description": "Provide strategy and executive decision support."
+  },
+  {
+    "id": 120802,
+    "path": "business_professional/business_strategy/competitive_analysis",
+    "caption": "Competitive Analysis",
+    "description": "Analyze competitors and market positioning."
+  },
+  {
+    "id": 120803,
+    "path": "business_professional/business_strategy/fundraising_materials",
+    "caption": "Fundraising and Investor Materials",
+    "description": "Build pitch decks and investor materials."
+  },
+  {
+    "id": 120804,
+    "path": "business_professional/business_strategy/business_risk_assessment",
+    "caption": "Business Risk Assessment",
+    "description": "Identify and mitigate operational risks."
+  },
+  {
+    "id": 120901,
+    "path": "business_professional/business_operations/process_operations",
+    "caption": "Process Operations",
+    "description": "Document SOPs, runbooks, and processes."
+  },
+  {
+    "id": 120902,
+    "path": "business_professional/business_operations/supply_chain_management",
+    "caption": "Supply Chain Management",
+    "description": "Plan inventory, demand, and logistics."
+  },
+  {
+    "id": 120903,
+    "path": "business_professional/business_operations/procurement",
+    "caption": "Procurement",
+    "description": "Manage sourcing and procurement."
+  },
+  {
+    "id": 130101,
+    "path": "research_knowledge_productivity/research/literature_search",
+    "caption": "Literature Search",
+    "description": "Search scholarly literature and databases."
+  },
+  {
+    "id": 130102,
+    "path": "research_knowledge_productivity/research/literature_review",
+    "caption": "Literature Review",
+    "description": "Review and synthesize literature."
+  },
+  {
+    "id": 130103,
+    "path": "research_knowledge_productivity/research/paper_analysis",
+    "caption": "Paper Analysis",
+    "description": "Analyze and summarize research papers."
+  },
+  {
+    "id": 130104,
+    "path": "research_knowledge_productivity/research/citation_management",
+    "caption": "Citation Management",
+    "description": "Manage references and citations."
+  },
+  {
+    "id": 130105,
+    "path": "research_knowledge_productivity/research/academic_writing",
+    "caption": "Academic Writing",
+    "description": "Write papers, manuscripts, and grants."
+  },
+  {
+    "id": 130106,
+    "path": "research_knowledge_productivity/research/research_ideation",
+    "caption": "Research Ideation",
+    "description": "Generate and evaluate research ideas and hypotheses."
+  },
+  {
+    "id": 130107,
+    "path": "research_knowledge_productivity/research/deep_research",
+    "caption": "Deep Research",
+    "description": "Multi-source, citation-tracked research synthesis."
+  },
+  {
+    "id": 130201,
+    "path": "research_knowledge_productivity/web_search/web_search_research",
+    "caption": "Web Search Research",
+    "description": "Search the web for current information."
+  },
+  {
+    "id": 130202,
+    "path": "research_knowledge_productivity/web_search/information_synthesis",
+    "caption": "Information Synthesis",
+    "description": "Synthesize information from many sources."
+  },
+  {
+    "id": 130203,
+    "path": "research_knowledge_productivity/web_search/fact_verification",
+    "caption": "Fact Verification",
+    "description": "Verify claims against sources."
+  },
+  {
+    "id": 130301,
+    "path": "research_knowledge_productivity/market_intelligence/market_research",
+    "caption": "Market Research",
+    "description": "Research markets, industries, and consumers."
+  },
+  {
+    "id": 130302,
+    "path": "research_knowledge_productivity/market_intelligence/competitive_intelligence",
+    "caption": "Competitive Intelligence",
+    "description": "Build competitor teardowns and battlecards."
+  },
+  {
+    "id": 130303,
+    "path": "research_knowledge_productivity/market_intelligence/company_research",
+    "caption": "Company and Lead Research",
+    "description": "Profile companies and prospects."
+  },
+  {
+    "id": 130401,
+    "path": "research_knowledge_productivity/knowledge_management/note_taking",
+    "caption": "Note-Taking",
+    "description": "Create and organize personal notes."
+  },
+  {
+    "id": 130402,
+    "path": "research_knowledge_productivity/knowledge_management/knowledge_base_management",
+    "caption": "Knowledge Base Management",
+    "description": "Maintain and query knowledge bases."
+  },
+  {
+    "id": 130403,
+    "path": "research_knowledge_productivity/knowledge_management/knowledge_graph_construction",
+    "caption": "Knowledge Graph Construction",
+    "description": "Build and query knowledge graphs."
+  },
+  {
+    "id": 130501,
+    "path": "research_knowledge_productivity/document_processing/document_parsing",
+    "caption": "Document Parsing",
+    "description": "Parse text, tables, and layout from documents."
+  },
+  {
+    "id": 130502,
+    "path": "research_knowledge_productivity/document_processing/document_conversion",
+    "caption": "Document Conversion",
+    "description": "Convert documents between formats."
+  },
+  {
+    "id": 130503,
+    "path": "research_knowledge_productivity/document_processing/pdf_manipulation",
+    "caption": "PDF Manipulation",
+    "description": "Merge, split, fill, and generate PDFs."
+  },
+  {
+    "id": 130601,
+    "path": "research_knowledge_productivity/office_productivity/spreadsheet_authoring",
+    "caption": "Spreadsheet Authoring",
+    "description": "Create and edit spreadsheets."
+  },
+  {
+    "id": 130602,
+    "path": "research_knowledge_productivity/office_productivity/presentation_authoring",
+    "caption": "Presentation Authoring",
+    "description": "Create and edit slide decks."
+  },
+  {
+    "id": 130603,
+    "path": "research_knowledge_productivity/office_productivity/document_authoring",
+    "caption": "Document Authoring",
+    "description": "Create and edit word-processing documents."
+  },
+  {
+    "id": 130604,
+    "path": "research_knowledge_productivity/office_productivity/email_management",
+    "caption": "Email Management",
+    "description": "Read, draft, and operate email."
+  },
+  {
+    "id": 130605,
+    "path": "research_knowledge_productivity/office_productivity/calendar_scheduling",
+    "caption": "Calendar and Scheduling",
+    "description": "Manage calendars and schedule meetings."
+  },
+  {
+    "id": 130701,
+    "path": "research_knowledge_productivity/collaboration/team_messaging",
+    "caption": "Team Messaging",
+    "description": "Send and operate team chat messages/bots."
+  },
+  {
+    "id": 130702,
+    "path": "research_knowledge_productivity/collaboration/meeting_intelligence",
+    "caption": "Meeting Intelligence",
+    "description": "Transcribe and summarize meetings."
+  },
+  {
+    "id": 130703,
+    "path": "research_knowledge_productivity/collaboration/document_collaboration",
+    "caption": "Document Collaboration",
+    "description": "Operate shared workspaces and wikis."
+  },
+  {
+    "id": 130801,
+    "path": "research_knowledge_productivity/project_task_management/issue_tracking",
+    "caption": "Issue Tracking",
+    "description": "Create and manage issues and tickets."
+  },
+  {
+    "id": 130802,
+    "path": "research_knowledge_productivity/project_task_management/task_management",
+    "caption": "Task Management",
+    "description": "Track to-dos and task lists."
+  },
+  {
+    "id": 130803,
+    "path": "research_knowledge_productivity/project_task_management/agile_facilitation",
+    "caption": "Agile Facilitation",
+    "description": "Facilitate sprints and ceremonies."
+  },
+  {
+    "id": 140101,
+    "path": "science_specialized/life_sciences/sequence_analysis",
+    "caption": "Sequence Analysis",
+    "description": "Analyze biological sequences and alignments."
+  },
+  {
+    "id": 140102,
+    "path": "science_specialized/life_sciences/genomics_analysis",
+    "caption": "Genomics Analysis",
+    "description": "Single-cell, expression, and variant analysis."
+  },
+  {
+    "id": 140103,
+    "path": "science_specialized/life_sciences/bioinformatics_databases",
+    "caption": "Bioinformatics Database Query",
+    "description": "Query gene, protein, and variant databases."
+  },
+  {
+    "id": 140104,
+    "path": "science_specialized/life_sciences/cheminformatics",
+    "caption": "Cheminformatics",
+    "description": "Analyze molecular structures and descriptors."
+  },
+  {
+    "id": 140105,
+    "path": "science_specialized/life_sciences/drug_discovery",
+    "caption": "Drug Discovery",
+    "description": "Docking, screening, and property prediction."
+  },
+  {
+    "id": 140201,
+    "path": "science_specialized/healthcare_clinical/clinical_documentation",
+    "caption": "Clinical Documentation",
+    "description": "Generate clinical reports and notes."
+  },
+  {
+    "id": 140202,
+    "path": "science_specialized/healthcare_clinical/clinical_decision_support",
+    "caption": "Clinical Decision Support",
+    "description": "Provide clinical decision logic and checks."
+  },
+  {
+    "id": 140203,
+    "path": "science_specialized/healthcare_clinical/medical_imaging_analysis",
+    "caption": "Medical Imaging Analysis",
+    "description": "Process DICOM and medical images."
+  },
+  {
+    "id": 140204,
+    "path": "science_specialized/healthcare_clinical/biomedical_literature_search",
+    "caption": "Biomedical Literature Search",
+    "description": "Search biomedical literature and trials."
+  },
+  {
+    "id": 140205,
+    "path": "science_specialized/healthcare_clinical/health_data_compliance",
+    "caption": "Health Data Compliance",
+    "description": "Handle PHI and health-data compliance."
+  },
+  {
+    "id": 140301,
+    "path": "science_specialized/medical_regulatory/regulatory_submissions",
+    "caption": "Regulatory Submissions",
+    "description": "Prepare FDA/EU MDR submissions."
+  },
+  {
+    "id": 140302,
+    "path": "science_specialized/medical_regulatory/quality_management",
+    "caption": "Quality Management Systems",
+    "description": "Design ISO 13485 QMS and audits."
+  },
+  {
+    "id": 140401,
+    "path": "science_specialized/scientific_computing/quantum_computing",
+    "caption": "Quantum Computing",
+    "description": "Build and run quantum circuits and simulations."
+  },
+  {
+    "id": 140402,
+    "path": "science_specialized/scientific_computing/symbolic_computation",
+    "caption": "Symbolic Computation",
+    "description": "Exact symbolic algebra and equation solving."
+  },
+  {
+    "id": 140403,
+    "path": "science_specialized/scientific_computing/scientific_simulation",
+    "caption": "Scientific Simulation",
+    "description": "Simulate physical and scientific systems."
+  },
+  {
+    "id": 140501,
+    "path": "science_specialized/blockchain_web3/smart_contract_development",
+    "caption": "Smart Contract Development",
+    "description": "Build and test on-chain contracts."
+  },
+  {
+    "id": 140502,
+    "path": "science_specialized/blockchain_web3/smart_contract_security",
+    "caption": "Smart Contract Security",
+    "description": "Audit contracts for vulnerabilities."
+  },
+  {
+    "id": 140503,
+    "path": "science_specialized/blockchain_web3/crypto_wallet_operations",
+    "caption": "Crypto Wallet Operations",
+    "description": "Operate wallets, balances, and transfers."
+  },
+  {
+    "id": 140504,
+    "path": "science_specialized/blockchain_web3/defi_trading",
+    "caption": "DeFi and Crypto Trading",
+    "description": "Build DEX/trading and bridging strategies."
+  },
+  {
+    "id": 140505,
+    "path": "science_specialized/blockchain_web3/onchain_data_analysis",
+    "caption": "On-Chain Data Analysis",
+    "description": "Analyze on-chain and crypto market data."
+  },
+  {
+    "id": 140601,
+    "path": "science_specialized/geospatial/geospatial_analysis",
+    "caption": "Geospatial Analysis",
+    "description": "Analyze geospatial vector and raster data."
+  },
+  {
+    "id": 140701,
+    "path": "science_specialized/energy_sustainability/energy_procurement",
+    "caption": "Energy Procurement",
+    "description": "Procure energy and optimize tariffs/PPAs."
+  },
+  {
+    "id": 150101,
+    "path": "reasoning_planning/logical_reasoning/inference_deduction",
+    "caption": "Inference and Deduction",
+    "description": "Derive conclusions from premises."
+  },
+  {
+    "id": 150102,
+    "path": "reasoning_planning/logical_reasoning/problem_solving",
+    "caption": "Problem Solving",
+    "description": "Solve novel and complex problems."
+  },
+  {
+    "id": 150103,
+    "path": "reasoning_planning/logical_reasoning/analytical_reasoning",
+    "caption": "Analytical and Logical Reasoning",
+    "description": "Reason analytically over structured problems."
+  }
+]

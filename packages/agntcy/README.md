@@ -161,6 +161,23 @@ Identity itself has no such binding to call either — see "Status").
   `agntcy/oasf-sdk` first hoping to fix it directly — that package turned out
   to be an HTTP client against a remote, hosted validation service, not
   something with local source to patch, so this is a report rather than a PR.
+  **Update:** the `id`-only path is *also* broken beyond a small, seemingly
+  arbitrary subset — see below.
+- **Follow-up finding on the same issue (id-only validation is inconsistent
+  too):** built the full real skill taxonomy from a fresh
+  `agntcy/oasf` checkout (`scripts/generate-oasf-taxonomy.mjs` →
+  `src/oasf/taxonomy.generated.json`, 364 leaves) and live-tested a spread of
+  correctly-derived composite ids against the real Directory server.
+  Reproducibly (verified across a container restart, ruling out local
+  caching), only `id=60101` is accepted — every other structurally-correct
+  id tried (including well-known subcategories like `software_testing`
+  and `application_security`) is rejected with `no class is defined for
+  <id>`. This repo's `src/oasf/publish.ts` now works around it: the actual
+  wire payload always sends the one confirmed-good id, while every
+  capability's real, correctly-derived taxonomy id is still recorded in
+  `annotations` (`skill.taxonomyId.*`) so nothing is lost — flip
+  `SEND_REAL_TAXONOMY_IDS` in that file once upstream's validator accepts
+  the full schema tree.
 
 ## License
 

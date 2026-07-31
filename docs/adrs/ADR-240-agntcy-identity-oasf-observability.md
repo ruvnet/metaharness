@@ -154,6 +154,57 @@ published package (`@agntcy/slim-bindings`) rather than none — see that
 ADR's own update section for the (different, upstream-packaging) reason
 it's still not live-connectable today.
 
+## Update (2026-07-31, part 2) — full taxonomy mapping, and how deep the id bug goes
+
+The one deliberate gap this ADR's original §2.2 left open — "no real
+taxonomy-mapping table from internal capability names onto AGNTCY's numeric
+skill taxonomy" — is now real: `scripts/generate-oasf-taxonomy.mjs` walks a
+fresh `agntcy/oasf` checkout's `schema/skills/**` and emits
+`src/oasf/taxonomy.generated.json` (364 genuine leaf skills, composite ids
+computed directly from each file's own `uid`/`extends` fields). This also
+resolved a genuine ambiguity in the original derivation: a file sharing its
+own subcategory directory's name (e.g. `code_generation/code_generation.json`)
+is the *subcategory's* definition, not a leaf under itself, and the
+generator now correctly excludes it. `KNOWN_AGENT_SKILLS` maps this repo's
+*real* internal capability vocabulary (`harness-genome`'s actual
+`plan.agents`/`plan.skills`/`agent_topology` ids — traced through
+`create-agent-harness/src/analyze-repo.ts` and `genome-scorers.ts`, not the
+placeholder names the original 5-entry table used) onto that generated data,
+28 of 31 real names mapped, each id asserted by a test to exist in the
+generated taxonomy.
+
+Live-testing this surfaced a materially deeper version of the
+`agntcy/dir#1943` bug than originally understood: it isn't just `name` that
+the live Directory server's validator rejects — sending a bare, structurally
+correct numeric `id` also fails for nearly everything. Of 9 real ids
+spot-tested against the live server (reproducible across a container
+restart), only `id=60101` was accepted; every other one, including
+well-established subcategories like `software_testing` and
+`application_security`, came back `no class is defined for <id>`. Posted as
+a follow-up on the same issue with a full repro.
+
+Consequence: `oasf/publish.ts` does **not** send the real derived ids on the
+wire today — doing so would make live pushes fail for almost every real
+capability. It sends the one empirically-confirmed-good id
+(`CONFIRMED_LIVE_SKILL`, `SEND_REAL_TAXONOMY_IDS = false`) while recording
+every capability's real, correctly-derived taxonomy id in
+`annotations['skill.taxonomyId.*']` — nothing is silently dropped, and
+flipping that one flag is the entire fix once upstream's validator catches
+up to the public schema tree.
+
+Also implemented in this pass: `oasf/publish.ts` no longer forces the SDK's
+insecure plaintext `Config` default. It now builds a `Config` via the SDK's
+own `Config.loadFromEnv()` (so `DIRECTORY_CLIENT_AUTH_MODE=tls`/`x509`/`jwt`
+plus the matching cert/key env vars work automatically) or accepts a
+pre-configured `Config` from the caller, and rebuilds server-address
+overrides through the real `Config` constructor rather than a raw property
+assignment — the latter was tried first and is a real bug: the constructor
+normalizes a bare `host:port` into a scheme-prefixed URL depending on
+`authMode`, and a plain assignment skips that, which the transport layer
+then rejects with `Invalid URL`. Both this and the TLS-mode wiring are
+covered by new tests exercising the SDK's real `createTLSTransport`
+validation path, not mocks.
+
 ## References
 
 - Cisco AGNTCY overview — https://outshift.cisco.com/the-internet-of-agents/agntcy
