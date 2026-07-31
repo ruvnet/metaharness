@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 //
 // Deterministic, rule-based CASA intent-to-authority-envelope compiler
-// (ADR-237 §4 / companion ruflo ADR-324 §3).
+// (ADR-240 §4 / companion ruflo ADR-380 §3).
 //
 // ============================================================================
 // LOAD-BEARING INVARIANT — read this before touching this file:
@@ -18,13 +18,13 @@
 //   implemented in this package at all: this repo (MetaHarness /
 //   `@metaharness/agntcy`) only ever COMPILES envelopes. Enforcement lives
 //   in the companion `ruflo` repo (`plugins/ruflo-agntcy/src/casa/enforce.ts`,
-//   per ADR-237 §3/§4). Any code path in this package that could let a
+//   per ADR-240 §3/§4). Any code path in this package that could let a
 //   model's runtime judgment influence whether an action is permitted would
 //   be a bug, not a feature — this module produces data, nothing else.
 // ============================================================================
 //
 // The compiler is intentionally a small, static keyword/pattern table —
-// deny-leaning by default: the three dangerous scopes from the ADR-237 §4
+// deny-leaning by default: the three dangerous scopes from the ADR-240 §4
 // worked example (`git.push`, `secret.export`, `deployment.create`) are
 // ONLY ever placed in `.allow` when the objective text explicitly names
 // that kind of action. Everything else stays denied.
@@ -45,7 +45,7 @@ export const DEFAULT_BUDGET_USD = 5;
 
 /**
  * Scopes that are ALWAYS denied unless the objective explicitly names the
- * activity that scope corresponds to. These mirror the ADR-237 §4 / ADR-324
+ * activity that scope corresponds to. These mirror the ADR-240 §4 / ADR-380
  * §3 example envelope's deny list verbatim.
  */
 export const DANGEROUS_SCOPES = ['git.push', 'secret.export', 'deployment.create'] as const;
@@ -76,7 +76,7 @@ const RULE_TABLE: readonly CompileRule[] = [
   // Test execution.
   { pattern: /\btest(?:s|ing)?\b/i, allow: ['tests.execute'] },
   // "Security" review language implies both reading the repo and running
-  // its test/verification suite (mirrors the ADR-237 §4 worked example:
+  // its test/verification suite (mirrors the ADR-240 §4 worked example:
   // "review repository security" -> ["repository.read", "tests.execute"]).
   { pattern: /\bsecurity\b/i, allow: ['repository.read', 'tests.execute'] },
   // Explicit git push language — otherwise git.push stays denied by default.

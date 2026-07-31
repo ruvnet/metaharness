@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// Tests for the deterministic CASA intent compiler (ADR-237 §4).
+// Tests for the deterministic CASA intent compiler (ADR-240 §4).
 //
 // Coverage focus per the ADR's load-bearing invariant: dangerous scopes
 // (git.push, secret.export, deployment.create) must never leak into
@@ -30,7 +30,7 @@ describe('compileObjectiveToEnvelope', () => {
     }
   });
 
-  it('matches the ADR-237 §4 worked example exactly', () => {
+  it('matches the ADR-240 §4 worked example exactly', () => {
     const envelope = compileObjectiveToEnvelope('review repository security', {
       now: () => FIXED_NOW,
       defaultBudgetUsd: 8,
@@ -219,7 +219,7 @@ describe('schema.ts — validateCasaEnvelope / parseCasaEnvelope / isCasaEnvelop
     expires_at: '2026-07-30T22:00:00Z',
   };
 
-  it('accepts the ADR-237 §4 worked example verbatim', () => {
+  it('accepts the ADR-240 §4 worked example verbatim', () => {
     expect(validateCasaEnvelope(VALID)).toEqual([]);
     expect(isCasaEnvelope(VALID)).toBe(true);
   });

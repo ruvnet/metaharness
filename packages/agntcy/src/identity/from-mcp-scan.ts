@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// ADR-237 S2.1 operationalized: "badges are task-specific verifiable
+// ADR-240 S2.1 operationalized: "badges are task-specific verifiable
 // credentials. The natural source is the harness's own tool-policy
 // allowlist, already computed by mcp-scan/threat-model -- every allowed
 // tool scope becomes a candidate badge, not an arbitrary string a
@@ -44,7 +44,7 @@
 //     ('wildcard-tool-perm', 'risky-bash-allow', 'no-secret-guard', etc.
 //     are deliberately NOT mapped to a badge -- they are risk findings
 //     about ungoverned/dangerous grants, not "an allowed tool scope" in
-//     the ADR-237 S2.1 sense.)
+//     the ADR-240 S2.1 sense.)
 //
 // This module reads exactly those real, already-computed signals -- no
 // invented strings, no re-parsing of raw policy files this package
@@ -56,7 +56,7 @@
 
 /**
  * Canonical badge scope strings this module emits. Stable across calls --
- * that stability is the whole point of ADR-237 S2.1's "candidate badge,"
+ * that stability is the whole point of ADR-240 S2.1's "candidate badge,"
  * not an arbitrary string a generator invents.
  */
 export const MCP_SCAN_BADGE = {
@@ -100,7 +100,7 @@ function looksLikeScanReport(value: Record<string, unknown>): boolean {
 }
 
 /**
- * Derive candidate AGNTCY badges (ADR-237 S2.1) from a real mcp-scan
+ * Derive candidate AGNTCY badges (ADR-240 S2.1) from a real mcp-scan
  * (`scanMcp()`) or threat-model (`buildThreatModel()`) result.
  *
  * Every badge returned corresponds to a real granted-capability signal

@@ -31,7 +31,7 @@ describe('publishToDirectory', () => {
     const result = await publishToDirectory(VALID_RECORD);
     expect(result.published).toBe(false);
     expect(result.reason).toMatch(/AGNTCY Directory not yet configured/);
-    expect(result.reason).toMatch(/ADR-237/);
+    expect(result.reason).toMatch(/ADR-240/);
   });
 
   it('still reports published: false even when a directoryUrl is explicitly supplied', async () => {

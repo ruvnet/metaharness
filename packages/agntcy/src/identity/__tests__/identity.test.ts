@@ -28,14 +28,14 @@ const VALID_IDENTITY: AgntcyIdentity = {
 // schema.ts
 // ---------------------------------------------------------------------------
 
-describe('schema.ts -- AgntcyIdentity (ADR-237 S2.1)', () => {
-  it('accepts the exact ADR-237 S2.1 worked example', () => {
+describe('schema.ts -- AgntcyIdentity (ADR-240 S2.1)', () => {
+  it('accepts the exact ADR-240 S2.1 worked example', () => {
     const result = validateAgntcyIdentity(VALID_IDENTITY);
     expect(result).toEqual({ valid: true });
     expect(isAgntcyIdentity(VALID_IDENTITY)).toBe(true);
   });
 
-  it('AGNTCY_DID_PREFIX matches the ADR-237 subject format', () => {
+  it('AGNTCY_DID_PREFIX matches the ADR-240 subject format', () => {
     expect(AGNTCY_DID_PREFIX).toBe('did:agntcy:');
     expect(VALID_IDENTITY.subject.startsWith(AGNTCY_DID_PREFIX)).toBe(true);
   });
@@ -95,7 +95,7 @@ describe('schema.ts -- AgntcyIdentity (ADR-237 S2.1)', () => {
 // from-mcp-scan.ts
 // ---------------------------------------------------------------------------
 
-describe('from-mcp-scan.ts -- deriveBadgesFromMcpScan (ADR-237 S2.1)', () => {
+describe('from-mcp-scan.ts -- deriveBadgesFromMcpScan (ADR-240 S2.1)', () => {
   it('returns [] for non-object / unrecognized input', () => {
     expect(deriveBadgesFromMcpScan(null)).toEqual([]);
     expect(deriveBadgesFromMcpScan(undefined)).toEqual([]);
@@ -319,7 +319,7 @@ describe('sign.ts -- signIdentityBlock composes into the existing witness signin
     expect(manifest.harness).toBe('@acme/acme-support');
     expect(manifest.version).toBe('1.2.0');
     // The existing entries are preserved, and the identity is appended --
-    // one signature covers both (ADR-237 S2.1: "not a third independent
+    // one signature covers both (ADR-240 S2.1: "not a third independent
     // signature scheme").
     expect(manifest.entries).toHaveLength(2);
     expect(manifest.entries[0]).toEqual(priorEntries[0]);

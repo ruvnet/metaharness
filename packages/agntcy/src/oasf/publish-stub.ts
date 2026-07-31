@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// @metaharness/agntcy — oasf/publish-stub.ts (ADR-237 §2.2)
+// @metaharness/agntcy — oasf/publish-stub.ts (ADR-240 §2.2)
 //
 // A repo-wide check found ZERO AGNTCY Directory client libraries or public
 // endpoints on npm/crates.io under any plausible name (verified 404 on every
@@ -25,7 +25,7 @@ export interface PublishResult {
 }
 
 const NOT_CONFIGURED_REASON =
-  'AGNTCY Directory not yet configured — no public endpoint/SDK available, see ADR-237 §2.2 / ADR-324. ' +
+  'AGNTCY Directory not yet configured — no public endpoint/SDK available, see ADR-240 §2.2 / ADR-380. ' +
   'Set AGNTCY_DIRECTORY_ENDPOINT once a real client library exists to enable this call; no record was published.';
 
 /**

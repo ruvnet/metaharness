@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MIT
 //
-// @metaharness/agntcy — observability/otel-attributes.ts (ADR-237 §2.3)
+// @metaharness/agntcy — observability/otel-attributes.ts (ADR-240 §2.3)
 //
 // AGNTCY's OpenTelemetry semantic-convention extension defines ten span
 // attributes for agent execution: agent.identity, agent.capability,
 // agent.intent, agent.parent, coordination.episode, authorization.decision,
 // model.route, memory.provenance, evaluation.score, receipt.hash.
 //
-// This package (MetaHarness build-time, ADR-237) owns and exports constants
+// This package (MetaHarness build-time, ADR-240) owns and exports constants
 // for EIGHT of them. The remaining two — `coordination.episode` and
 // `authorization.decision` — are populated at RUNTIME by RuFlo's SLIM/CASA
-// integration (companion ruflo ADR-324) and are deliberately NOT exported as
+// integration (companion ruflo ADR-380) and are deliberately NOT exported as
 // constants here: a harness running standalone (no RuFlo) has no real value
-// for either attribute, and ADR-237 §2.3 is explicit that they must be
+// for either attribute, and ADR-240 §2.3 is explicit that they must be
 // omitted rather than fabricated. Their key strings are documented below only
 // so a caller wiring both halves together can see the full ten-attribute
 // convention in one place; this package's constants list stops at eight.
@@ -31,11 +31,11 @@ export type OtelAttributes = Record<string, OtelAttributeValue>;
 
 // --- the 8 attributes this package (MetaHarness / build-time) owns ----------
 
-/** W3C DID or equivalent identity subject for the executing agent (ADR-237 §2.1). */
+/** W3C DID or equivalent identity subject for the executing agent (ADR-240 §2.1). */
 export const AGNTCY_ATTR_AGENT_IDENTITY = 'agent.identity';
-/** One capability/badge the agent is exercising (tool-policy-derived, ADR-237 §2.1). */
+/** One capability/badge the agent is exercising (tool-policy-derived, ADR-240 §2.1). */
 export const AGNTCY_ATTR_AGENT_CAPABILITY = 'agent.capability';
-/** The stated objective/intent this span is executing under (ADR-237 §4). */
+/** The stated objective/intent this span is executing under (ADR-240 §4). */
 export const AGNTCY_ATTR_AGENT_INTENT = 'agent.intent';
 /** The parent agent/session identity, for multi-agent call trees. */
 export const AGNTCY_ATTR_AGENT_PARENT = 'agent.parent';
@@ -62,13 +62,13 @@ export const AGNTCY_OWNED_OTEL_ATTRIBUTES = [
 
 export type AgntcyOwnedOtelAttribute = (typeof AGNTCY_OWNED_OTEL_ATTRIBUTES)[number];
 
-// --- the 2 attributes owned by the companion ruflo ADR-324 side ------------
+// --- the 2 attributes owned by the companion ruflo ADR-380 side ------------
 //
 // Documented, NOT exported for population by this package. Emitting either of
 // these from a standalone-harness (no RuFlo) context would be fabricating a
 // coordination/authorization fact this package cannot observe.
 
-/** Owned by ruflo ADR-324 (RuFlo SLIM/CASA runtime). Not emitted by this package. */
+/** Owned by ruflo ADR-380 (RuFlo SLIM/CASA runtime). Not emitted by this package. */
 export const RUFLO_ADR324_ATTR_COORDINATION_EPISODE = 'coordination.episode';
-/** Owned by ruflo ADR-324 (RuFlo SLIM/CASA runtime). Not emitted by this package. */
+/** Owned by ruflo ADR-380 (RuFlo SLIM/CASA runtime). Not emitted by this package. */
 export const RUFLO_ADR324_ATTR_AUTHORIZATION_DECISION = 'authorization.decision';

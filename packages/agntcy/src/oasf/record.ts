@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// @metaharness/agntcy — oasf/record.ts (ADR-237 §2.2)
+// @metaharness/agntcy — oasf/record.ts (ADR-240 §2.2)
 //
 // The Open Agentic Schema Framework (OASF) capability-record shape this package
 // exports: capabilities, supportedProtocols, modelRequirements, resourceEnvelope,
@@ -16,7 +16,7 @@
 // classifies a harness's BILLING MODEL (per-invocation / per-token /
 // subscription / unmetered). `estCostPerRunUsd` (harness score) is an absolute
 // USD *estimate*, not a metering *class* — projecting one onto the other would
-// be inventing a categorical fact this repo has no basis for. Per ADR-237
+// be inventing a categorical fact this repo has no basis for. Per ADR-240
 // §2.2's explicit fail-closed instruction ("if a field OASF expects has no
 // existing internal source, the exporter must fail closed on that field rather
 // than fabricate a plausible-looking value"), `project.ts#projectToOasf` never
@@ -89,7 +89,7 @@ export interface OasfDeploymentOption {
   archetype: string;
 }
 
-/** The full OASF capability record for one generated harness (ADR-237 §2.2). */
+/** The full OASF capability record for one generated harness (ADR-240 §2.2). */
 export interface OasfRecord {
   schema: 1;
   /** ISO-8601. Carried from `harness genome`'s `generatedAt` (the projection's

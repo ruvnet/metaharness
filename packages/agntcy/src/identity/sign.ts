@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// ADR-237 S2.1: "The identity block is signed as part of the existing
+// ADR-240 S2.1: "The identity block is signed as part of the existing
 // witness manifest (ADR-011 S'two manifests per release'), not a third
 // independent signature scheme."
 //
@@ -55,7 +55,7 @@
 // non-stubbed part of this task: it deterministically folds the identity
 // block into the witness manifest's `entries` array as one more attested
 // WitnessEntry, so whatever signing function the caller injects signs
-// identity + everything else together, in one signature -- per ADR-237
+// identity + everything else together, in one signature -- per ADR-240
 // S2.1's explicit "not a third independent signature scheme" requirement.
 // What it deliberately does NOT do is generate its own Ed25519 keypair or
 // perform any cryptographic signing itself -- that stays the kernel's job,
@@ -134,7 +134,7 @@ export function canonicalizeIdentity(identity: AgntcyIdentity): string {
 
 /**
  * Project an AgntcyIdentity into the WitnessEntry that represents it inside
- * the witness manifest's `entries` array -- the mechanism ADR-237 S2.1
+ * the witness manifest's `entries` array -- the mechanism ADR-240 S2.1
  * specifies for signing identity as part of the existing manifest instead
  * of standing up a parallel signature.
  */
@@ -150,7 +150,7 @@ export function identityToWitnessEntry(identity: AgntcyIdentity): WitnessEntry {
 
 /**
  * Compose an AgntcyIdentity into a witness-manifest signing call, per
- * ADR-237 S2.1: identity is signed AS PART OF the existing witness
+ * ADR-240 S2.1: identity is signed AS PART OF the existing witness
  * manifest, never by a second, independent signature scheme.
  *
  * This function does not sign anything itself. It shape-gates `identity`

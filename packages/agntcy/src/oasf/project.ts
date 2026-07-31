@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// @metaharness/agntcy — oasf/project.ts (ADR-237 §2.2)
+// @metaharness/agntcy — oasf/project.ts (ADR-240 §2.2)
 //
 // Projects the REAL, already-computed output of:
 //   - `metaharness score`    → packages/create-agent-harness/src/repo-scorecard.ts  (RepoScorecard)
@@ -13,10 +13,10 @@
 // subprocess (the ruflo-metaharness skill pattern, ADR-150 "removable
 // augmentation") and `JSON.parse()`s the result — this package deliberately
 // does NOT take a hard dependency on `@metaharness/create-agent-harness` (kernel-
-// boundary discipline, ADR-002 / ADR-237 §5), so the shapes are re-validated
+// boundary discipline, ADR-002 / ADR-240 §5), so the shapes are re-validated
 // structurally at this boundary rather than imported and trusted.
 //
-// Fail-closed (ADR-237 §2.2): every OASF field is derived ONLY from data that is
+// Fail-closed (ADR-240 §2.2): every OASF field is derived ONLY from data that is
 // actually present and well-shaped. Any field that cannot be derived — including
 // `pricingMeteringClass`, which nothing in this repo computes today (see
 // record.ts's file header) — is reported via `missingFields` instead of being
@@ -163,7 +163,7 @@ function asScanReport(v: unknown): ScanReportShape | undefined {
 // --- pricingMeteringClass: the deliberately-unimplemented field --------------
 
 /**
- * ADR-237 §2.2 fail-closed field. No component in this repo (harness-score /
+ * ADR-240 §2.2 fail-closed field. No component in this repo (harness-score /
  * harness-genome / harness-mcp-scan) computes a billing/metering CLASS today
  * — see record.ts's file header for why `estCostPerRunUsd` (an absolute USD
  * estimate) is not evidence of a metering class. Kept as a real function

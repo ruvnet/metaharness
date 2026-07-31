@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// ADR-237 S2.1 -- the AGNTCY identity block added to `.harness/manifest.json`
+// ADR-240 S2.1 -- the AGNTCY identity block added to `.harness/manifest.json`
 // (and its HarnessSpec / ADR-159 serialization), alongside -- never
 // replacing -- the existing ADR-011 witness manifest. Worked example from
 // the ADR:
@@ -24,14 +24,14 @@
 // "Dependency-free (Node built-ins)".
 
 /**
- * DID method this ADR mints/expects. ADR-237 S2.1: "subject is a W3C DID
+ * DID method this ADR mints/expects. ADR-240 S2.1: "subject is a W3C DID
  * minted per-harness (or per-tenant-deployment) through AGNTCY's
  * identity-provider integration."
  */
 export const AGNTCY_DID_PREFIX = 'did:agntcy:';
 
 /**
- * The AGNTCY identity block, exactly as specified in ADR-237 S2.1.
+ * The AGNTCY identity block, exactly as specified in ADR-240 S2.1.
  */
 export interface AgntcyIdentity {
   /** W3C DID, e.g. "did:agntcy:cognitum:researcher". */
@@ -41,12 +41,12 @@ export interface AgntcyIdentity {
   /**
    * Task-specific verifiable-credential badges. See from-mcp-scan.ts for
    * the real (non-invented) derivation from the harness's own tool-policy
-   * allowlist, per ADR-237 S2.1: "every allowed tool scope becomes a
+   * allowlist, per ADR-240 S2.1: "every allowed tool scope becomes a
    * candidate badge, not an arbitrary string a generator invents."
    */
   badges: string[];
   /**
-   * Existing Cognitum tenant id. ADR-237 S2.1: "tenant maps onto existing
+   * Existing Cognitum tenant id. ADR-240 S2.1: "tenant maps onto existing
    * Cognitum tenancy rather than introducing a second tenant model."
    */
   tenant: string;

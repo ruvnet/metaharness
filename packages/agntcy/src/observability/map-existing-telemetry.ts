@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 //
-// @metaharness/agntcy — observability/map-existing-telemetry.ts (ADR-237 §2.3)
+// @metaharness/agntcy — observability/map-existing-telemetry.ts (ADR-240 §2.3)
 //
 // "This work is an OTel EXPORTER over existing internal telemetry, not new
-// instrumentation logic" (ADR-237 §2.3). This file maps this repo's REAL
+// instrumentation logic" (ADR-240 §2.3). This file maps this repo's REAL
 // existing model-routing / memory-provenance / evaluation-score producers onto
 // the AGNTCY `model.route` / `memory.provenance` / `evaluation.score` span
 // attributes (see ./otel-attributes.ts) — it computes nothing new.
@@ -115,7 +115,7 @@ export interface MapExistingTelemetryInput {
  * flat OTel span-attribute bag. Each source is independent — omit any of
  * `modelRoute` / `memoryProvenance` / `evaluationScore` when that telemetry
  * wasn't produced for this span (e.g. a span with no memory lookup omits
- * `memory.provenance` entirely, matching ADR-237 §2.3's "omit rather than
+ * `memory.provenance` entirely, matching ADR-240 §2.3's "omit rather than
  * fabricate" rule already applied to `coordination.episode` /
  * `authorization.decision`).
  */

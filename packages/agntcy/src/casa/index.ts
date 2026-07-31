@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 //
 // @metaharness/agntcy — CASA intent-to-authority-envelope compiler
-// (ADR-237 §4). Compile-time only: this package never enforces an
+// (ADR-240 §4). Compile-time only: this package never enforces an
 // envelope against a live invocation. See schema.ts and compile.ts for the
 // full load-bearing invariant (translation may eventually use an LLM,
 // enforcement — in the companion `ruflo` repo — never does).

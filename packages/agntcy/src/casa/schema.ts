@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// CASA authority envelope schema (ADR-237 §4 / companion ruflo ADR-324 §3).
+// CASA authority envelope schema (ADR-240 §4 / companion ruflo ADR-380 §3).
 //
 // The envelope is the bounded, serializable authorization contract CASA
 // (Continuous Agentic Semantic Authorization) enforces at runtime. Its shape
@@ -18,7 +18,7 @@
 //   }
 //
 // ============================================================================
-// LOAD-BEARING INVARIANT (ADR-237 §4 / ADR-324 §3) — restated here because
+// LOAD-BEARING INVARIANT (ADR-240 §4 / ADR-380 §3) — restated here because
 // every module in this package touches it:
 //
 //   Translating free-text intent INTO this envelope MAY, in a future
@@ -33,7 +33,7 @@
 //   This package (`@metaharness/agntcy`, `packages/agntcy/src/casa/`) is
 //   COMPILE-TIME ONLY. It never enforces an envelope against a live
 //   invocation — it only ever produces or validates envelope *data*.
-//   Enforcement lives in the companion `ruflo` repo, per ADR-237 §3/§4
+//   Enforcement lives in the companion `ruflo` repo, per ADR-240 §3/§4
 //   (`plugins/ruflo-agntcy/src/casa/enforce.ts` on that side).
 // ============================================================================
 //
@@ -52,7 +52,7 @@
 export type CasaScope = string;
 
 /**
- * The CASA authority envelope. Field names and types are fixed by ADR-237
+ * The CASA authority envelope. Field names and types are fixed by ADR-240
  * §4 and mirrored exactly (no divergence) in ruflo's
  * `plugins/ruflo-agntcy/src/casa/schema.ts` so envelopes compiled here can
  * be consumed there without translation.
