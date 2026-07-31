@@ -1,4 +1,4 @@
-# ADR-237: AGNTCY identity, OASF export, and semantic observability for generated harnesses
+# ADR-240: AGNTCY identity, OASF export, and semantic observability for generated harnesses
 
 **Status**: Proposed
 **Date**: 2026-07-30
