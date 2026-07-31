@@ -205,6 +205,39 @@ then rejects with `Invalid URL`. Both this and the TLS-mode wiring are
 covered by new tests exercising the SDK's real `createTLSTransport`
 validation path, not mocks.
 
+## Update (2026-07-31, part 3) — resolved: it was our bug, not upstream's
+
+The "materially deeper" `agntcy/dir#1943` finding above (only `id=60101`
+accepted, everything else rejected) had a root cause, and it wasn't the
+live server's validator — it was this file. Upstream maintainer
+**@akijakya** identified it directly: the pushed record declared
+`schema_version: '0.8.0'` while every id/name being tested came from OASF
+**1.1.0**'s taxonomy. The Directory server validates a skill against the
+taxonomy for the record's *own declared* `schema_version` — so every
+1.1.0-derived id was checked against the 0.8.0 taxonomy and correctly
+rejected. `id=60101` only ever "worked" by coincidence: 0.8.0 happens to
+have an unrelated skill ("indexing") at that same numeric slot.
+
+Fixed: `schema_version` is now `'1.1.0'`, matching the taxonomy this file
+actually generates from. Re-tested live — **all 9 previously-"broken" ids
+now push successfully**, and sending `id` together with the taxonomy's own
+dotted `name` (the self-documenting form, not id-only) works too. Removed
+the `SEND_REAL_TAXONOMY_IDS` workaround flag entirely — `KNOWN_AGENT_SKILLS`
+now sends real `{id, name}` pairs on the wire unconditionally, verified
+end-to-end with real internal capabilities (`orchestrator`, `maintainer`)
+that previously required the confirmed-good fallback.
+
+Closed [agntcy/dir#1943](https://github.com/agntcy/dir/issues/1943) with
+the resolution and a thank-you to @akijakya for the fast, precise diagnosis.
+
+**agntcy/slim#1916 also resolved**, on the SLIM maintainers' side: they've
+moved off `uniffi-bindgen-react-native` onto `@ubjs/core`/`@ubjs/node`
+(compiled output) in the `alpha` dist-tag. Verified live in the companion
+ruflo ADR-380 package — a real server bring-up + client connect + graceful
+shutdown against `@agntcy/slim-bindings@2.0.0-alpha.5` succeeds under plain
+Node with zero errors. See that ADR's own update section for the pinned
+version and test changes.
+
 ## References
 
 - Cisco AGNTCY overview — https://outshift.cisco.com/the-internet-of-agents/agntcy

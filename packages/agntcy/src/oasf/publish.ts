@@ -38,16 +38,20 @@
 // leaf defaults to 1" theory before this was traced through the real
 // `agntcy/oasf` tree.
 //
-// IMPORTANT (found empirically against a live server, see this file's test
-// suite): send `{ id }` ONLY — no `name` field. The server resolves the
-// class name from the numeric id internally; supplying ANY `name` value
-// (even the taxonomy's own dotted path, e.g.
-// "software_engineering/code_generation/code_generation") makes it run a
-// separate, stricter lookup that currently rejects every value tried,
-// including the taxonomy's own real names — this looks like a real,
-// reportable bug/version-skew in the live server's validator, not a mapping
-// error on this repo's side. Filed upstream: see README.md "Upstream
-// reports" (agntcy/dir#1943).
+// RESOLVED (agntcy/dir#1943 — root cause found by upstream maintainer
+// @akijakya, 2026-07-31): every earlier "name is broken" / "id is broken"
+// finding in this file's history was actually the SAME self-inflicted bug —
+// the pushed record's `schema_version` field was hardcoded to `'0.8.0'`
+// while `taxonomy.generated.json`'s ids/names come from OASF **1.1.0**'s
+// `schema/skills/**` tree. The live server validates a skill's `id`/`name`
+// against the taxonomy for the record's OWN declared `schema_version`, so
+// every 1.1.0-derived id/name was being checked against the 0.8.0 taxonomy
+// and correctly rejected — id=60101 only "worked" by coincidence (0.8.0
+// happens to have an unrelated skill, "indexing", at that same numeric
+// slot). Fixed below by declaring `schema_version: '1.1.0'` to match the
+// taxonomy this file actually uses. Verified live: all 9 previously-"broken"
+// ids now push successfully, and sending BOTH `id` and the taxonomy's own
+// dotted `name` together (self-documenting, not id-only) also now works.
 
 import { Client, Config } from 'agntcy-dir';
 import { create } from '@bufbuild/protobuf';
@@ -123,6 +127,13 @@ function leafId(path: string): number {
   return leaf.id;
 }
 
+/** `{ id, name }` pair for a taxonomy path — sending both together is the
+ * self-documenting form confirmed to work live (see the RESOLVED note
+ * above); `name` is exactly the leaf's own dotted path, nothing derived. */
+function skillOf(path: string): { id: number; name: string } {
+  return { id: leafId(path), name: path };
+}
+
 // This repo's REAL internal capability vocabulary — not a guess. These are
 // exactly the ids `harness-genome`'s `buildGenomeReport()` emits into
 // `plan.agents` (23 possible values, archetype-dependent), `plan.skills` (4
@@ -135,78 +146,57 @@ function leafId(path: string): number {
 // so this table must be kept in sync by hand against that real vocabulary,
 // not derived automatically). Three internal names have no confidently
 // fitting real leaf and are intentionally left unmapped — `worker`, `scout`,
-// `escalator` — for these, `projectAnnotations` simply has no
-// `skill.taxonomyId.*` entry to record (still lists the capability itself
-// under `capability.*`, per this file's "never silently drop" rule).
-export const KNOWN_AGENT_SKILLS: Record<string, { id: number }> = {
+// `escalator` — they fall through to FALLBACK_SKILL in projectSkills below
+// (still listed under `capability.*` in annotations, per this file's "never
+// silently drop" rule).
+export const KNOWN_AGENT_SKILLS: Record<string, { id: number; name: string }> = {
   // agent_topology (4/4 mapped)
-  maintainer: { id: leafId('software_engineering/code_quality/code_migration') },
-  tester: { id: leafId('software_engineering/software_testing/unit_integration_testing') },
-  security: { id: leafId('cybersecurity/application_security/secure_coding') },
-  release: { id: leafId('devops_cloud_infra/deployment_release/release_management') },
+  maintainer: skillOf('software_engineering/code_quality/code_migration'),
+  tester: skillOf('software_engineering/software_testing/unit_integration_testing'),
+  security: skillOf('cybersecurity/application_security/secure_coding'),
+  release: skillOf('devops_cloud_infra/deployment_release/release_management'),
   // agents (20/23 mapped — worker, scout, escalator deliberately absent)
-  orchestrator: { id: leafId('ai_ml_engineering/agent_orchestration/agentic_workflow_orchestration') },
-  planner: { id: leafId('ai_ml_engineering/agent_orchestration/multi_agent_planning') },
-  critic: { id: leafId('ai_ml_engineering/model_evaluation/llm_judge_evaluation') },
-  reviewer: { id: leafId('software_engineering/code_quality/code_review') },
-  'test-writer': { id: leafId('software_engineering/software_testing/test_case_generation') },
-  architect: { id: leafId('software_engineering/software_architecture/system_design') },
-  implementer: { id: leafId('software_engineering/api_development/api_implementation') },
-  'data-curator': { id: leafId('ai_ml_engineering/training_data_engineering/data_curation') },
-  trainer: { id: leafId('ai_ml_engineering/model_training/deep_learning_training') },
-  evaluator: { id: leafId('ai_ml_engineering/model_evaluation/quality_evaluation') },
-  deployer: { id: leafId('devops_cloud_infra/deployment_release/deployment_orchestration') },
-  synthesizer: { id: leafId('research_knowledge_productivity/web_search/information_synthesis') },
-  'fact-checker': { id: leafId('research_knowledge_productivity/web_search/fact_verification') },
-  citer: { id: leafId('research_knowledge_productivity/research/citation_management') },
-  responder: { id: leafId('devops_cloud_infra/site_reliability_engineering/incident_response') },
-  'runbook-runner': { id: leafId('devops_cloud_infra/site_reliability_engineering/incident_response') },
-  postmortem: { id: leafId('devops_cloud_infra/site_reliability_engineering/postmortem_authoring') },
-  analyst: { id: leafId('data_engineering_analytics/data_analytics/exploratory_data_analysis') },
-  strategist: { id: leafId('business_professional/business_strategy/strategic_advisory') },
-  'ops-coordinator': { id: leafId('devops_cloud_infra/deployment_release/deployment_orchestration') },
+  orchestrator: skillOf('ai_ml_engineering/agent_orchestration/agentic_workflow_orchestration'),
+  planner: skillOf('ai_ml_engineering/agent_orchestration/multi_agent_planning'),
+  critic: skillOf('ai_ml_engineering/model_evaluation/llm_judge_evaluation'),
+  reviewer: skillOf('software_engineering/code_quality/code_review'),
+  'test-writer': skillOf('software_engineering/software_testing/test_case_generation'),
+  architect: skillOf('software_engineering/software_architecture/system_design'),
+  implementer: skillOf('software_engineering/api_development/api_implementation'),
+  'data-curator': skillOf('ai_ml_engineering/training_data_engineering/data_curation'),
+  trainer: skillOf('ai_ml_engineering/model_training/deep_learning_training'),
+  evaluator: skillOf('ai_ml_engineering/model_evaluation/quality_evaluation'),
+  deployer: skillOf('devops_cloud_infra/deployment_release/deployment_orchestration'),
+  synthesizer: skillOf('research_knowledge_productivity/web_search/information_synthesis'),
+  'fact-checker': skillOf('research_knowledge_productivity/web_search/fact_verification'),
+  citer: skillOf('research_knowledge_productivity/research/citation_management'),
+  responder: skillOf('devops_cloud_infra/site_reliability_engineering/incident_response'),
+  'runbook-runner': skillOf('devops_cloud_infra/site_reliability_engineering/incident_response'),
+  postmortem: skillOf('devops_cloud_infra/site_reliability_engineering/postmortem_authoring'),
+  analyst: skillOf('data_engineering_analytics/data_analytics/exploratory_data_analysis'),
+  strategist: skillOf('business_professional/business_strategy/strategic_advisory'),
+  'ops-coordinator': skillOf('devops_cloud_infra/deployment_release/deployment_orchestration'),
   // skills (4/4 mapped)
-  'run-swarm': { id: leafId('ai_ml_engineering/agent_orchestration/multi_agent_coordination') },
-  'memory-inspect': { id: leafId('ai_ml_engineering/agent_development/agent_memory') },
-  'plan-change': { id: leafId('ai_ml_engineering/agent_orchestration/multi_agent_planning') },
-  'eval-report': { id: leafId('ai_ml_engineering/model_evaluation/benchmark_execution') },
+  'run-swarm': skillOf('ai_ml_engineering/agent_orchestration/multi_agent_coordination'),
+  'memory-inspect': skillOf('ai_ml_engineering/agent_development/agent_memory'),
+  'plan-change': skillOf('ai_ml_engineering/agent_orchestration/multi_agent_planning'),
+  'eval-report': skillOf('ai_ml_engineering/model_evaluation/benchmark_execution'),
 };
-// EMPIRICALLY CONFIRMED against the real live Directory server, reproducibly
-// (verified across a container restart, ruling out local caching): the
-// remote schema.oasf.outshift.com validator the server delegates to
-// currently recognizes id=60101 and rejects EVERY OTHER numerically-correct
-// composite id tried from the CURRENT public agntcy/oasf schema tree —
-// including ids for well-known subcategories (software_testing=60501,
-// application_security=100101) that an earlier version of this file believed
-// confirmed. This is a deeper instance of the same upstream inconsistency
-// already reported in agntcy/dir#1943 (originally filed for the `name`
-// field failing on every value tried) — this shows the numeric `id`-only
-// path is ALSO broken beyond a small, seemingly-arbitrary subset. Filed as
-// an update to that issue with a minimal repro.
-//
-// Consequence for this function: sending KNOWN_AGENT_SKILLS' real ids
-// directly on the wire would make live pushes FAIL for every record whose
-// capabilities don't happen to map to the one confirmed-good id — a real
-// regression versus the old 5-entry table, which accidentally always fell
-// back to 60101 for almost everything. So `projectSkills` sends ONLY
-// `CONFIRMED_LIVE_SKILL` in the actual wire payload (matches today's proven
-// behavior exactly) while `projectAnnotations` still records each
-// capability's REAL, correctly-derived taxonomy id — nothing is silently
-// dropped, and flipping `SEND_REAL_TAXONOMY_IDS` to `true` is the entire
-// fix once upstream's validator accepts the full schema tree (tracked by
-// the linked issue).
-const SEND_REAL_TAXONOMY_IDS = false;
-const CONFIRMED_LIVE_SKILL = { id: leafId('software_engineering/code_generation/text_to_code') }; // = 60101, the one id currently accepted live
+const FALLBACK_SKILL = skillOf('software_engineering/code_generation/text_to_code');
 
-function projectSkills(record: OasfRecord): Array<{ id: number }> {
+function projectSkills(record: OasfRecord): Array<{ id: number; name: string }> {
   // The real Directory server requires a non-empty skills array (validated
-  // live — see this file's test suite).
-  if (!SEND_REAL_TAXONOMY_IDS) return [CONFIRMED_LIVE_SKILL];
-  if (record.capabilities.length === 0) return [CONFIRMED_LIVE_SKILL];
+  // live — see this file's test suite). Map every capability with a known
+  // real taxonomy entry, sending both `id` and the taxonomy's own dotted
+  // `name` together (self-documenting; confirmed live to work once
+  // schema_version matches — see the RESOLVED note above). Anything
+  // unrecognized gets the closest honest category-level fallback rather
+  // than being silently dropped, since the array cannot be empty.
+  if (record.capabilities.length === 0) return [FALLBACK_SKILL];
   const seen = new Set<number>();
-  const skills: Array<{ id: number }> = [];
+  const skills: Array<{ id: number; name: string }> = [];
   for (const cap of record.capabilities) {
-    const mapped = KNOWN_AGENT_SKILLS[cap.id] ?? CONFIRMED_LIVE_SKILL;
+    const mapped = KNOWN_AGENT_SKILLS[cap.id] ?? FALLBACK_SKILL;
     if (!seen.has(mapped.id)) {
       seen.add(mapped.id);
       skills.push(mapped);
@@ -217,14 +207,7 @@ function projectSkills(record: OasfRecord): Array<{ id: number }> {
 
 function projectAnnotations(record: OasfRecord): Record<string, string> {
   const annotations: Record<string, string> = {};
-  for (const cap of record.capabilities) {
-    annotations[`capability.${cap.kind}.${cap.id}`] = 'true';
-    // Real, correctly-derived taxonomy id for this capability, recorded even
-    // though (per the note above) it may not be what actually went into
-    // `skills[]` above — never silently dropped.
-    const realTaxonomyId = KNOWN_AGENT_SKILLS[cap.id]?.id;
-    if (realTaxonomyId !== undefined) annotations[`skill.taxonomyId.${cap.id}`] = String(realTaxonomyId);
-  }
+  for (const cap of record.capabilities) annotations[`capability.${cap.kind}.${cap.id}`] = 'true';
   for (const proto of record.supportedProtocols) annotations[`host.${proto.host}`] = 'true';
   annotations['model.recommendedMode'] = record.modelRequirements.recommendedMode;
   annotations['model.estCostPerRunUsd'] = String(record.modelRequirements.estCostPerRunUsd);
@@ -320,7 +303,13 @@ export async function publishToDirectory(record: OasfRecord, target: PublishTarg
     data: {
       name: target.name,
       version: target.version,
-      schema_version: '0.8.0',
+      // Must match the OASF version taxonomy.generated.json was derived
+      // from (1.1.0) — see the RESOLVED note at the top of this file. A
+      // stale schema_version here is what caused every earlier "id/name is
+      // broken" finding: the server validates skills against the taxonomy
+      // for the record's OWN declared version, not whatever version the
+      // caller had in mind.
+      schema_version: '1.1.0',
       description: 'MetaHarness-generated harness (ADR-240 §2.2 projection)',
       authors: ['metaharness'],
       created_at: record.generatedAt,
@@ -361,5 +350,5 @@ export async function publishToDirectory(record: OasfRecord, target: PublishTarg
  * throws at import time on a miss; this re-check exists so a test failure
  * names the exact file, not a module-load crash). */
 export function __allMappedIdsExistInTaxonomy(): boolean {
-  return Object.values(KNOWN_AGENT_SKILLS).every((v) => TAXONOMY_IDS.has(v.id)) && TAXONOMY_IDS.has(CONFIRMED_LIVE_SKILL.id);
+  return Object.values(KNOWN_AGENT_SKILLS).every((v) => TAXONOMY_IDS.has(v.id)) && TAXONOMY_IDS.has(FALLBACK_SKILL.id);
 }

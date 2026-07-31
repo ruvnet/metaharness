@@ -92,18 +92,18 @@ above), the implementation stays a **clearly-logged, clearly-erroring stub
 gated behind a feature flag or config check** — never a call that silently
 succeeds or returns fabricated data.
 
-### Known upstream gap, filed
+### Resolved — it was a stale `schema_version`, not an upstream bug
 
-`oasf/publish.ts` sends a skill's numeric taxonomy `id` **without** a `name`
-field, on purpose — this was discovered empirically against a live server.
-Supplying `name` (in *any* format tried: the taxonomy's own dotted path,
-dot-separated, bare leaf name, human caption) makes the server run a second,
-stricter class-name lookup that rejects every value, including the taxonomy's
-own real names pulled directly from
-[agntcy/oasf](https://github.com/agntcy/oasf)'s schema files. `id`-only push
-requests succeed. This looks like a real bug or version-skew in the live
-server's validator, not a mapping error on this repo's side — see "Upstream
-reports" below.
+**A previous version of this section reported a live-server validator bug.**
+That was wrong: upstream maintainer @akijakya (agntcy/dir) identified the
+real cause in minutes. `oasf/publish.ts` declared `schema_version: '0.8.0'`
+on every pushed record while `taxonomy.generated.json`'s ids/names come from
+OASF **1.1.0**'s taxonomy — the server validates a skill against the
+taxonomy for the record's own declared version, so every 1.1.0-derived
+id/name was checked against the 0.8.0 taxonomy and correctly rejected. Fixed
+by declaring `schema_version: '1.1.0'`. `oasf/publish.ts` now sends real
+`{id, name}` pairs together (self-documenting, confirmed live), not an
+id-only workaround. See "Upstream reports" below for the full history.
 
 Upstream references (schemas are Apache-2.0 with existing Python/Go bindings):
 
@@ -151,33 +151,24 @@ exercise that path). `identity/sign.ts`'s witness-signing hook remains a
 documented TODO pending a JS/wasm binding for the real Rust signer (AGNTCY
 Identity itself has no such binding to call either — see "Status").
 
-## Upstream reports
+## Upstream reports — filed, and resolved
 
-- **[agntcy/dir#1943](https://github.com/agntcy/dir/issues/1943)** — the live
-  Directory server's schema validator rejects any `skills[].name` value
-  (including the taxonomy's own real dotted paths from
-  [agntcy/oasf](https://github.com/agntcy/oasf)) and only accepts a bare
-  numeric `id`. Filed with a minimal, reproducible example. Investigated
-  `agntcy/oasf-sdk` first hoping to fix it directly — that package turned out
-  to be an HTTP client against a remote, hosted validation service, not
-  something with local source to patch, so this is a report rather than a PR.
-  **Update:** the `id`-only path is *also* broken beyond a small, seemingly
-  arbitrary subset — see below.
-- **Follow-up finding on the same issue (id-only validation is inconsistent
-  too):** built the full real skill taxonomy from a fresh
-  `agntcy/oasf` checkout (`scripts/generate-oasf-taxonomy.mjs` →
-  `src/oasf/taxonomy.generated.json`, 364 leaves) and live-tested a spread of
-  correctly-derived composite ids against the real Directory server.
-  Reproducibly (verified across a container restart, ruling out local
-  caching), only `id=60101` is accepted — every other structurally-correct
-  id tried (including well-known subcategories like `software_testing`
-  and `application_security`) is rejected with `no class is defined for
-  <id>`. This repo's `src/oasf/publish.ts` now works around it: the actual
-  wire payload always sends the one confirmed-good id, while every
-  capability's real, correctly-derived taxonomy id is still recorded in
-  `annotations` (`skill.taxonomyId.*`) so nothing is lost — flip
-  `SEND_REAL_TAXONOMY_IDS` in that file once upstream's validator accepts
-  the full schema tree.
+- **[agntcy/dir#1943](https://github.com/agntcy/dir/issues/1943)** (closed) —
+  originally filed believing the live Directory server's validator rejected
+  `skills[].name`/numeric `id` values inconsistently. Maintainer @akijakya
+  found the real cause fast: our pushed records declared
+  `schema_version: '0.8.0'` while the ids/names we tested came from OASF
+  1.1.0's taxonomy — the server validates against the taxonomy for a
+  record's own declared version, so every mismatch was a genuine, correct
+  rejection, not a validator bug. Fixed (`schema_version: '1.1.0'`),
+  re-verified live (all 9 previously-failing ids now push, `id`+`name`
+  together also works), and closed with thanks.
+- **[agntcy/slim#1916](https://github.com/agntcy/slim/issues/1916)** (open,
+  fix confirmed) — companion ruflo ADR-380's SLIM transport issue. The SLIM
+  maintainers moved off `uniffi-bindgen-react-native` onto `@ubjs/core`/
+  `@ubjs/node` in the `alpha` dist-tag; verified live that
+  `@agntcy/slim-bindings@2.0.0-alpha.5` loads and connects cleanly under
+  plain Node. Left open until the fix is promoted to `latest`.
 
 ## License
 
