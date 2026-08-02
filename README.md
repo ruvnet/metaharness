@@ -291,7 +291,7 @@ You (harness author)
 
 You operate the factory. The factory produces your harness. Your users never see the factory — only the brand and CLI you ship. The kernel ships as `@metaharness/kernel` (Rust → wasm-pack + NAPI-RS); your content stays yours.
 
-📖 Deeper: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/adrs/INDEX.md](docs/adrs/INDEX.md) (219 ADRs)
+📖 Deeper: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/adrs/INDEX.md](docs/adrs/INDEX.md) (220 ADRs)
 
 ---
 
