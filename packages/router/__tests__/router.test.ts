@@ -60,4 +60,26 @@ describe('Router', () => {
   it('throws with no candidates', () => {
     expect(() => new Router({ candidates: [] })).toThrow(/at least one/);
   });
+
+  it('predict() ranks a mismatched-length example by cosine()-over-shared-prefix, not by full-length norms', () => {
+    // cosine()'s own na/nb accumulation only sums over the shared min-length
+    // prefix — a 2-dim query against a 3-dim example with a huge trailing
+    // component ignores that trailing component entirely, giving cosine([3,4],
+    // [3,4,100]) = 1 (perfect match on the shared prefix). A norm computed
+    // over each vector's own FULL length instead (the cached fast-path's
+    // precondition) would let the trailing 100 dominate the example's norm
+    // and crater its score to ~0.05 — flipping the k=1 winner to a worse,
+    // same-length example. Assert the correct (flip-free) winner.
+    const candidate: RouterCandidate = {
+      id: 'x',
+      costPerMTok: 1,
+      examples: [
+        { embedding: [3, 4, 100], quality: 1 }, // 3-dim: cosine-over-prefix = 1 (see above)
+        { embedding: [0, 1], quality: 0 }, // 2-dim: cosine([3,4],[0,1]) = 0.8
+      ],
+    };
+    const r = new Router({ candidates: [candidate], k: 1 });
+    expect(cosine([3, 4], [3, 4, 100])).toBeCloseTo(1, 10);
+    expect(r.predict(candidate, [3, 4])).toBe(1);
+  });
 });

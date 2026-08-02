@@ -148,7 +148,18 @@ export class Router {
     const norms = exampleNorms(candidate);
     const scored: Array<readonly [number, number]> = new Array(examples.length);
     for (let i = 0; i < examples.length; i++) {
-      scored[i] = [examples[i].quality, cosineWithNorms(queryEmbedding, queryNorm, examples[i].embedding, norms[i])];
+      const e = examples[i].embedding;
+      // l2norm() is computed over each vector's FULL length, but cosine()'s
+      // original na/nb accumulation only summed over the shared min-length
+      // prefix — so the cached norms only agree with cosine() when the query
+      // and example are the same length. Fall back to the exact original path
+      // for the (unenforced, so reachable) mismatched-length case rather than
+      // silently drifting from it.
+      const score =
+        e.length === queryEmbedding.length
+          ? cosineWithNorms(queryEmbedding, queryNorm, e, norms[i])
+          : cosine(queryEmbedding, e);
+      scored[i] = [examples[i].quality, score];
     }
     scored.sort((a, b) => b[1] - a[1]);
     const nn = scored.slice(0, Math.min(this.k, scored.length));
