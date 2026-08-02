@@ -79,6 +79,11 @@ const CHECKS = {
       // published library on its own semver (published 0.1.1 with the umbrella-CLI
       // wiring, like weight-eft/redblue).
       '@metaharness/flywheel',
+      // @metaharness/harness (the hash-chained receipt audit log, ADR-047/011) is a
+      // standalone published library on its own semver, like workspace-lens/router —
+      // its ReceiptLog export/import/merge surface (0.2.0) ships independently of the
+      // umbrella-CLI's lockstep version.
+      '@metaharness/harness',
       // @metaharness/evals-hle (HLE benchmark adapter for the flywheel, ADR-233) is a
       // standalone published adapter on its own semver — not core, not umbrella-bundled.
       '@metaharness/evals-hle',
