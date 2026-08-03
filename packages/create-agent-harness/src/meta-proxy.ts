@@ -469,12 +469,13 @@ export async function metaProxyCmd(args: string[]): Promise<ProxyCommandResult> 
     return {
       code: 0,
       lines: [
-        'Usage: metaharness proxy <install|status|start|stop|path|login|logout|run> [options]',
+        'Usage: metaharness proxy <install|status|start|stop|enable|disable|path|login|logout|run> [options]',
         '',
         'Optional signed Meta-Proxy sidecar for local Claude-compatible routing.',
         `  install [--version ${META_PROXY_VERSION}] --yes  download, verify, and install`,
         '  status                                      show installed version and managed process state',
         '  start | stop | path                         manage the optional local sidecar',
+        '  enable | disable                            start the sidecar at login (opt-in), or stop doing so',
         '  login | logout                              run Meta-Proxy Cognitum OAuth login/logout',
         '  run [--policy <critical|standard|economy>] [--] <client> [args...]',
         '                                               launch Claude-compatible client through Meta-Proxy',
@@ -493,6 +494,15 @@ export async function metaProxyCmd(args: string[]): Promise<ProxyCommandResult> 
   }
   if (subcommand === 'status') {
     const status = metaProxyStatus();
+    // #82 — installed / running / start-at-login are three different states, and
+    // conflating them is why "it worked yesterday" reports were unanswerable.
+    const { metaProxyServiceState } = await import('./meta-proxy-service.js');
+    const service = metaProxyServiceState();
+    const startAtLogin = !service.supported
+      ? 'not supported on this platform'
+      : service.installed
+        ? `enabled (${service.unitPath})`
+        : 'disabled — enable with `metaharness proxy enable`';
     return {
       code: status.installed ? 0 : 1,
       lines: [
@@ -501,6 +511,7 @@ export async function metaProxyCmd(args: string[]): Promise<ProxyCommandResult> 
         `  binary: ${status.binaryPath}`,
         `  version: ${status.version ?? 'unknown'}`,
         `  managed process: ${status.running ? `running (pid ${status.pid})` : 'not running'}`,
+        `  start at login: ${startAtLogin}`,
       ],
     };
   }
@@ -516,6 +527,16 @@ export async function metaProxyCmd(args: string[]): Promise<ProxyCommandResult> 
     const result = stopMetaProxy();
     return { code: result.ok ? 0 : 1, lines: [result.message] };
   }
+  if (subcommand === 'enable') {
+    const { enableMetaProxyService } = await import('./meta-proxy-service.js');
+    const result = enableMetaProxyService();
+    return { code: result.ok ? 0 : 1, lines: result.message.split('\n') };
+  }
+  if (subcommand === 'disable') {
+    const { disableMetaProxyService } = await import('./meta-proxy-service.js');
+    const result = disableMetaProxyService();
+    return { code: result.ok ? 0 : 1, lines: result.message.split('\n') };
+  }
   if (subcommand === 'run') {
     return runThroughMetaProxy(args.slice(1));
   }
@@ -526,5 +547,5 @@ export async function metaProxyCmd(args: string[]): Promise<ProxyCommandResult> 
     if (result.error) return { code: 1, lines: [`Could not run Meta-Proxy ${subcommand}: ${result.error.message}`] };
     return { code: result.status ?? 1, lines: [] };
   }
-  return { code: 2, lines: [`Unknown proxy subcommand "${subcommand}". Try: install | status | start | stop | path | login | logout | run`] };
+  return { code: 2, lines: [`Unknown proxy subcommand "${subcommand}". Try: install | status | start | stop | enable | disable | path | login | logout | run`] };
 }
