@@ -12,11 +12,13 @@ import {
   extractSurfaceParams,
   simulateAgentLoop,
   runVariantTasksMock,
+  runBenchmarkTaskMock,
   DEFAULT_MOCK_TASKS,
   type SurfaceParams,
 } from '../src/mock-sandbox.js';
 import { behavioralNiche } from '../src/phenotype.js';
 import type { HarnessVariant } from '../src/types.js';
+import type { BenchmarkTask } from '../src/bench/types.js';
 
 let dir: string;
 beforeEach(async () => {
@@ -92,5 +94,24 @@ describe('runVariantTasksMock → live manifold', () => {
     const traces = await runVariantTasksMock(v);
     expect(traces).toHaveLength(DEFAULT_MOCK_TASKS.length);
     expect(traces[0].exitCode).toBe(0); // easy task solved
+  });
+});
+
+describe('runBenchmarkTaskMock', () => {
+  it('scores a hash-pinned bench task without executing its shell commands', async () => {
+    const variant = await writeVariant(join(dir, 'bench'), 4, 60);
+    const impossible = 'node -e "throw new Error(\'MUST NOT EXECUTE\')"';
+    const task: BenchmarkTask = {
+      id: 'mock-bench-1', repo: 'fixture', commit: 'a'.repeat(40), title: 'mock task', prompt: 'simulate',
+      publicTestCommand: impossible, hiddenTestCommand: impossible, regressionTestCommand: impossible,
+      timeoutMs: 30_000, maxCostUsd: 1, allowedMutationFiles: [], blockedFiles: [],
+      successCriteria: ['mock solve'], difficulty: 3, tags: ['mock'],
+    };
+    const result = await runBenchmarkTaskMock(variant, task);
+    expect(result.taskId).toBe(task.id);
+    expect(result.repoCommit).toBe(task.commit);
+    expect(result.solved).toBe(true);
+    expect(result.publicTestPassed).toBe(true);
+    expect(result.costUsd).toBe(0);
   });
 });

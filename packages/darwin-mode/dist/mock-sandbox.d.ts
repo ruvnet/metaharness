@@ -1,4 +1,5 @@
 import type { HarnessVariant, RunTrace } from './types.js';
+import type { BenchmarkResult, BenchmarkTask } from './bench/types.js';
 /** Behaviour-shaping parameters read from a variant's surface files. */
 export interface SurfaceParams {
     /** retryPolicy: attempt budget. */
@@ -55,4 +56,11 @@ export declare function simulateAgentLoop(params: SurfaceParams, task: MockTask)
 export declare function runVariantTaskMock(variant: HarnessVariant, task: MockTask, params?: SurfaceParams): Promise<RunTrace>;
 /** Run a variant against a graded mock suite (defaults to DEFAULT_MOCK_TASKS). */
 export declare function runVariantTasksMock(variant: HarnessVariant, tasks?: readonly MockTask[]): Promise<RunTrace[]>;
+/**
+ * Evaluate a hash-pinned benchmark task through the deterministic mock manifold.
+ * Mock mode must never execute the task's public/hidden/regression shell commands
+ * (ADR-102). Difficulty maps to progressively larger retry/context requirements;
+ * the immutable suite still supplies task identity, commit, weights, and gates.
+ */
+export declare function runBenchmarkTaskMock(variant: HarnessVariant, task: BenchmarkTask): Promise<BenchmarkResult>;
 //# sourceMappingURL=mock-sandbox.d.ts.map

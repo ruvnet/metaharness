@@ -2,6 +2,7 @@
 
 **Status**: Accepted (implemented + measured)
 **Date**: 2026-06-18
+**Updated**: 2026-08-04 — bench-suite evaluation now preserves mock mode instead of executing real public/hidden/regression commands.
 **Project**: `ruvnet/agent-harness-generator`
 **Related**: ADR-101 (the keystone requirement — this is its Tier 1), ADR-091/092/094/097/099/100 (the now-activated stack). Recommended Priority-1 by the hourly horizon scan #2.
 

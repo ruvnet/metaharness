@@ -15,13 +15,13 @@ import { generateBaselineHarness } from './generator.js';
 import { createChildVariant, createCrossoverVariant, DeterministicMutator, summarizeFailedTraces, } from './mutator.js';
 import { profileRepo } from './repo_profiler.js';
 import { runVariantTasks } from './sandbox.js';
-import { runVariantTasksMock } from './mock-sandbox.js';
+import { runBenchmarkTaskMock, runVariantTasksMock } from './mock-sandbox.js';
 import { runVariantTasksAgent } from './tier2-sandbox.js';
 import { scoreVariant } from './scorer.js';
 import { behavioralNiche, embedTraces, nearestToTarget, underExploredTarget, } from './phenotype.js';
 import { buildLinkage, linkedCrossoverBlock } from './epistasis.js';
 import { cladeThompsonSelect } from './clade.js';
-import { evaluateChildAgainstParent } from './bench/runner.js';
+import { evaluateChildAgainstParent, evaluateWithRunner } from './bench/runner.js';
 import { benjaminiHochberg } from './bench/stats.js';
 import { curriculumSuite, maxDifficulty, nextCurriculumLevel } from './curriculum.js';
 import { paretoFront } from './pareto.js';
@@ -250,15 +250,30 @@ export async function evolve(config) {
             benchByChild = new Map();
             // Concurrent bench evaluation (no shared state).
             const evaluated = await mapLimit(children, concurrency, async ({ child, parent }) => {
-                const r = await evaluateChildAgainstParent({
-                    parent,
-                    child,
-                    profile,
-                    suite,
-                    seed,
-                    samples: config.benchSamples,
-                    minDelta: config.benchMinDelta,
-                });
+                const r = config.sandboxMode === 'mock'
+                    ? await evaluateWithRunner({
+                        parentId: parent.id,
+                        childId: child.id,
+                        tasks: suite.tasks,
+                        runVariant: (variantId, task) => {
+                            const variant = variantId === parent.id ? parent : variantId === child.id ? child : null;
+                            if (!variant)
+                                throw new Error(`unknown mock benchmark variant ${variantId}`);
+                            return runBenchmarkTaskMock(variant, task);
+                        },
+                        seed,
+                        samples: config.benchSamples,
+                        minDelta: config.benchMinDelta,
+                    })
+                    : await evaluateChildAgainstParent({
+                        parent,
+                        child,
+                        profile,
+                        suite,
+                        seed,
+                        samples: config.benchSamples,
+                        minDelta: config.benchMinDelta,
+                    });
                 return { id: child.id, ...r };
             });
             // Apply the SGM gate SEQUENTIALLY so the shared risk budget charges safely
