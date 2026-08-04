@@ -15,6 +15,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { FILE_BY_SURFACE } from './safety.js';
+import { scoreBenchmark } from './bench/score.js';
 /**
  * A graduated scripted ladder (drives the curriculum, ADR-097). Each rung needs
  * slightly more retry budget and/or context than the last, so an incremental
@@ -115,5 +116,55 @@ export async function runVariantTasksMock(variant, tasks = DEFAULT_MOCK_TASKS) {
     for (const task of tasks)
         traces.push(await runVariantTaskMock(variant, task, params));
     return traces;
+}
+/**
+ * Evaluate a hash-pinned benchmark task through the deterministic mock manifold.
+ * Mock mode must never execute the task's public/hidden/regression shell commands
+ * (ADR-102). Difficulty maps to progressively larger retry/context requirements;
+ * the immutable suite still supplies task identity, commit, weights, and gates.
+ */
+export async function runBenchmarkTaskMock(variant, task) {
+    const difficulty = Math.max(1, Math.min(5, task.difficulty));
+    const trace = await runVariantTaskMock(variant, {
+        id: task.id,
+        failAttempts: Math.max(0, difficulty - 2),
+        requiredContext: 10 + (difficulty - 1) * 15,
+        backoffMs: 10 * difficulty,
+        difficulty,
+    });
+    const passed = trace.exitCode === 0;
+    const score = scoreBenchmark({
+        publicTestPassed: passed,
+        hiddenTestPassed: passed,
+        regressionPassed: passed,
+        safetyViolations: trace.blockedActions,
+        blockedFileTouches: [],
+        hallucinatedFileRefs: false,
+        costUsd: 0,
+        maxCostUsd: task.maxCostUsd,
+        durationMs: trace.durationMs,
+        timeoutMs: task.timeoutMs,
+    });
+    return {
+        taskId: task.id,
+        variantId: variant.id,
+        parentId: variant.parentId,
+        repoCommit: task.commit,
+        solved: score.verifiedSolve,
+        publicTestPassed: passed,
+        hiddenTestPassed: passed,
+        regressionPassed: passed,
+        durationMs: trace.durationMs,
+        costUsd: 0,
+        changedFiles: [],
+        blockedFileTouches: [],
+        safetyViolations: trace.blockedActions,
+        hallucinatedFileRefs: false,
+        traceQuality: passed ? 1 : 0.5,
+        patchPath: '',
+        tracePath: '',
+        baseScore: score.baseScore,
+        finalScore: score.finalScore,
+    };
 }
 //# sourceMappingURL=mock-sandbox.js.map

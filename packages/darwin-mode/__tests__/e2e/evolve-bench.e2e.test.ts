@@ -134,3 +134,26 @@ describe('evolve — SGM cumulative risk budget (ADR-079)', () => {
     }
   });
 });
+
+describe('evolve — mock sandbox remains shell-free with a bench suite (ADR-102)', () => {
+  let fx: Fixture;
+  beforeEach(async () => { fx = await makeFixture('darwin-evolve-mock-bench'); });
+  afterEach(async () => { await fx.cleanup(); });
+
+  it('completes and writes bench decisions without executing benchmark commands', async () => {
+    const marker = join(fx.repoRoot, 'mock-bench-command-executed');
+    const forbidden = `node -e "require('node:fs').writeFileSync(${JSON.stringify(marker)}, 'executed')"`;
+    const task = { ...passingTask('mock-b1'), publicTestCommand: forbidden, hiddenTestCommand: forbidden, regressionTestCommand: forbidden, difficulty: 3 as const };
+    const result = await evolve({
+      repoRoot: fx.repoRoot, workRoot: fx.workRoot, generations: 1,
+      childrenPerGeneration: 2, concurrency: 1, seed: 7, promotionDelta: 0.05,
+      tasks: ['t1'], benchSuite: makeSuite('mock-suite', '1.0.0', [task]), sandboxMode: 'mock',
+    });
+    const children = result.records.filter((record) => record.variant.parentId !== null);
+    expect(children).toHaveLength(2);
+    for (const child of children) {
+      expect(await isFile(join(fx.workRoot, 'runs', `${child.variant.id}.bench.json`))).toBe(true);
+    }
+    expect(await isFile(marker)).toBe(false);
+  });
+});
