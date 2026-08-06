@@ -50,7 +50,10 @@ function unfence(text: string): string {
 export function parseEvidenceIds(failedTraces: string[]): string[] {
   const ids: string[] = [];
   failedTraces.forEach((line, i) => {
-    if (!line || line.trim().length === 0) return;
+    // Blank means no visible content: strip whitespace AND zero-width/invisible
+    // characters (U+200B–U+200D, U+FEFF, U+2060) so invisible-only "evidence"
+    // cannot defeat the evidence-or-no-op guard.
+    if (!line || line.replace(/[\u200B-\u200D\uFEFF\u2060]/g, '').trim().length === 0) return;
     const head = line.split(':', 1)[0]!.trim();
     ids.push(/^[\w.-]+$/.test(head) ? head : `trace-${i}`);
   });
@@ -143,9 +146,9 @@ export class RefineMutator implements CodeGenerator {
       'Return the minimally-edited full file.';
 
     let res: Response;
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), this.timeoutMs);
     try {
-      const controller = new AbortController();
-      const tid = setTimeout(() => controller.abort(), this.timeoutMs);
       res = await fetch(`${this.endpoint}/v1/chat/completions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -156,9 +159,13 @@ export class RefineMutator implements CodeGenerator {
         }),
         signal: controller.signal,
       });
-      clearTimeout(tid);
     } catch (e) {
       return { noop: `refine: ${this.endpoint} unreachable (${(e as Error).message}) — no-op` };
+    } finally {
+      clearTimeout(tid);
+    }
+    if (!res.ok) {
+      return { noop: `refine: ${this.endpoint} unreachable (HTTP ${res.status}) — no-op` };
     }
 
     let content: string | undefined;

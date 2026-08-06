@@ -90,12 +90,17 @@ export interface HarnessSpec {
   autonomous?: AutonomousSpec;
 }
 
-/** Deep-copy an autonomous block (all levels are plain data). */
+/**
+ * Deep-copy an autonomous block (all levels are plain data). Only keys that
+ * are actually present are assigned — no `undefined` keys are injected, so
+ * `{}` round-trips to an object with zero own keys (toStrictEqual-clean).
+ */
 function copyAutonomous(a: AutonomousSpec): AutonomousSpec {
   return {
-    ...a,
-    goal: a.goal && { ...a.goal },
-    heartbeat: a.heartbeat && { ...a.heartbeat },
+    ...(a.goal !== undefined ? { goal: a.goal && { ...a.goal } } : {}),
+    ...(a.heartbeat !== undefined ? { heartbeat: a.heartbeat && { ...a.heartbeat } } : {}),
+    ...(a.gateCommand !== undefined ? { gateCommand: a.gateCommand } : {}),
+    ...(a.maxTurns !== undefined ? { maxTurns: a.maxTurns } : {}),
   };
 }
 
@@ -223,28 +228,45 @@ export function validateSpec(s: HarnessSpec): { ok: boolean; errors: string[] } 
   for (const e of validatePolicy(s.policy)) errors.push(`policy: ${e}`);
 
   // ADR-241 §2.2 autonomous block. Only sub-fields of present objects are
-  // validated; whitespace-only strings count as empty. Error strings are in
+  // validated; JSON `null` for any field is treated as absent (valid, never a
+  // throw); whitespace-only strings count as empty. maxTurns/tokenBudget must
+  // be integers — Number.isSafeInteger mirrors Rust's `as_i64()`, which is
+  // None for non-integers (1.5) and i64 overflow (1e20). Error strings are in
   // byte-for-byte lockstep with the Rust validator — do not reword.
   const a = s.autonomous;
-  if (a !== undefined) {
-    if (a.goal !== undefined) {
-      if (a.goal.text.trim().length === 0) errors.push('autonomous.goal.text must be non-empty');
-      if (a.goal.tokenBudget !== undefined && !(a.goal.tokenBudget > 0)) {
+  if (a != null) {
+    if (a.goal != null) {
+      // Rust's Goal.text is a required String: serde REJECTS a goal whose
+      // text is missing, null, or a non-string. Mirror that accept/reject
+      // decision here (missing/null/non-string counts as empty) so a block
+      // Rust cannot deserialize never validates clean on the TS side.
+      if (typeof a.goal.text !== 'string' || a.goal.text.trim().length === 0) {
+        errors.push('autonomous.goal.text must be non-empty');
+      }
+      if (
+        a.goal.tokenBudget != null &&
+        !(Number.isSafeInteger(a.goal.tokenBudget) && a.goal.tokenBudget > 0)
+      ) {
         errors.push('autonomous.goal.tokenBudget must be > 0');
       }
     }
-    if (a.heartbeat !== undefined) {
-      if (a.heartbeat.cadence.trim().length === 0) {
+    if (a.heartbeat != null) {
+      // Rust's Heartbeat.cadence/instruction are required Strings — same
+      // missing/null/non-string handling as goal.text above.
+      if (typeof a.heartbeat.cadence !== 'string' || a.heartbeat.cadence.trim().length === 0) {
         errors.push('autonomous.heartbeat.cadence must be non-empty');
       }
-      if (a.heartbeat.instruction.trim().length === 0) {
+      if (
+        typeof a.heartbeat.instruction !== 'string' ||
+        a.heartbeat.instruction.trim().length === 0
+      ) {
         errors.push('autonomous.heartbeat.instruction must be non-empty');
       }
     }
-    if (a.gateCommand !== undefined && a.gateCommand.trim().length === 0) {
+    if (a.gateCommand != null && (typeof a.gateCommand !== 'string' || a.gateCommand.trim().length === 0)) {
       errors.push('autonomous.gateCommand must be non-empty');
     }
-    if (a.maxTurns !== undefined && !(a.maxTurns >= 1)) {
+    if (a.maxTurns != null && !(Number.isSafeInteger(a.maxTurns) && a.maxTurns >= 1)) {
       errors.push('autonomous.maxTurns must be >= 1');
     }
   }
@@ -310,11 +332,11 @@ export function replaySpec(
   let cost = 0;
 
   for (const step of s.steps) {
-    if (maxTurns !== undefined && trace.length >= maxTurns) {
+    if (maxTurns != null && trace.length >= maxTurns) {
       halt = { reason: 'maxTurns' };
       break;
     }
-    if (tokenBudget !== undefined && cost + 1 > tokenBudget) {
+    if (tokenBudget != null && cost + 1 > tokenBudget) {
       halt = { reason: 'tokenBudget' };
       break;
     }

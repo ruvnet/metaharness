@@ -12,6 +12,7 @@
 //! Autonomous-mode spec (goal / heartbeat / gate / max-turns) + validator.
 
 use serde::{Deserialize, Serialize};
+use serde_json::Number;
 
 /// Persistent objective for an autonomous run.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -20,7 +21,10 @@ pub struct Goal {
     /// The goal text the harness re-reads each turn.
     pub text: String,
     /// Optional token budget for pursuing the goal (JSON key: `tokenBudget`).
-    pub token_budget: Option<i64>,
+    /// Held as a raw JSON number so non-integer inputs (1.5, 1e20) reach the
+    /// validator instead of failing to parse; validated via `as_i64()`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub token_budget: Option<Number>,
 }
 
 /// Periodic re-entry instruction.
@@ -42,14 +46,19 @@ pub struct Heartbeat {
 #[serde(rename_all = "camelCase")]
 pub struct AutonomousSpec {
     /// Persistent objective (+ budget).
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub goal: Option<Goal>,
     /// Periodic re-entry.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub heartbeat: Option<Heartbeat>,
     /// Quality gate a turn must pass, e.g. "npm run check"
     /// (JSON key: `gateCommand`).
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub gate_command: Option<String>,
-    /// Hard turn ceiling (JSON key: `maxTurns`).
-    pub max_turns: Option<i64>,
+    /// Hard turn ceiling (JSON key: `maxTurns`). Raw JSON number so
+    /// non-integer inputs reach the validator; validated via `as_i64()`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_turns: Option<Number>,
 }
 
 /// Validate an autonomous block. Returns the full list of violations;
@@ -62,8 +71,10 @@ pub fn validate_autonomous(spec: &AutonomousSpec) -> Vec<String> {
         if goal.text.trim().is_empty() {
             errors.push("autonomous.goal.text must be non-empty".to_string());
         }
-        if let Some(budget) = goal.token_budget {
-            if budget <= 0 {
+        if let Some(budget) = &goal.token_budget {
+            // `as_i64()` is None for non-integers (1.5) and i64 overflow (1e20);
+            // both count as out-of-range, same as the TS side.
+            if !matches!(budget.as_i64(), Some(b) if b > 0) {
                 errors.push("autonomous.goal.tokenBudget must be > 0".to_string());
             }
         }
@@ -81,8 +92,9 @@ pub fn validate_autonomous(spec: &AutonomousSpec) -> Vec<String> {
             errors.push("autonomous.gateCommand must be non-empty".to_string());
         }
     }
-    if let Some(turns) = spec.max_turns {
-        if turns < 1 {
+    if let Some(turns) = &spec.max_turns {
+        // Non-integer or overflow → out-of-range, same string as the TS side.
+        if !matches!(turns.as_i64(), Some(t) if t >= 1) {
             errors.push("autonomous.maxTurns must be >= 1".to_string());
         }
     }
@@ -199,6 +211,35 @@ mod tests {
         assert!(validate_autonomous(&s).is_empty());
     }
 
+    /// JSON `null` for any optional field is treated as absent — it must
+    /// deserialize cleanly (to None) and validate with no errors.
+    #[test]
+    fn null_fields_deserialize_to_none_and_are_valid() {
+        let s = spec_from(
+            r#"{ "goal": null, "heartbeat": null, "gateCommand": null, "maxTurns": null }"#,
+        );
+        assert!(s.goal.is_none());
+        assert!(s.heartbeat.is_none());
+        assert!(s.gate_command.is_none());
+        assert!(s.max_turns.is_none());
+        assert!(validate_autonomous(&s).is_empty());
+
+        let g = spec_from(r#"{ "goal": { "text": "g", "tokenBudget": null } }"#);
+        assert!(g.goal.as_ref().unwrap().token_budget.is_none());
+        assert!(validate_autonomous(&g).is_empty());
+    }
+
+    /// Absent optional fields must be skipped on serialization so a valid
+    /// partial block round-trips to TS without `null` noise.
+    #[test]
+    fn goal_only_spec_serializes_without_null_noise() {
+        let s = spec_from(r#"{ "goal": { "text": "x" } }"#);
+        assert_eq!(
+            serde_json::to_string(&s).unwrap(),
+            r#"{"goal":{"text":"x"}}"#
+        );
+    }
+
     /// CROSS-LANGUAGE LOCKSTEP (ADR-029 style, like template-catalog):
     /// consume the SAME fixture the TS validator tests use
     /// (`packages/projects/__tests__/harness-spec.test.ts`) and assert
@@ -218,7 +259,7 @@ mod tests {
     fn ts_lockstep_fixture_every_case_matches_byte_for_byte() {
         let cases: Vec<LockstepCase> =
             serde_json::from_str(LOCKSTEP_FIXTURE).expect("fixture parses");
-        assert_eq!(cases.len(), 13, "fixture case count drifted");
+        assert_eq!(cases.len(), 20, "fixture case count drifted");
         for case in &cases {
             assert_eq!(
                 validate_autonomous(&case.spec),

@@ -56,6 +56,15 @@ describe('RefineMutator (ADR-241 §2.1)', () => {
     expect(out.summary).toBe('refine: no-op (no citable evidence)');
   });
 
+  it('EVIDENCE OR NO-OP: zero-width/invisible-only failedTraces → parent unchanged', async () => {
+    const out = await new RefineMutator().generateMutation(
+      input({ failedTraces: ['​‌‍', ' ﻿⁠ '] }),
+    );
+    expect(out.code).toBe(PARENT);
+    expect(out.summary).toBe('refine: no-op (no citable evidence)');
+    expect(parseEvidenceIds(['​', ' ﻿ '])).toEqual([]);
+  });
+
   it('with evidence, the summary cites the evidence IDs (refine[<surface>]: … (evidence: …))', async () => {
     const out = await new RefineMutator().generateMutation(input());
     expect(out.code).not.toBe(PARENT);

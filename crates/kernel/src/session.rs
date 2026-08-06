@@ -128,10 +128,15 @@ pub fn serialize_event(event: &SessionEvent) -> String {
 /// Rules:
 ///   - per-branch indexes are 0-based and monotonic +1 in log order;
 ///   - duplicate (branch, index) pairs are rejected;
-///   - the first event of the log defines the root branch; every other
-///     branch's first event must carry a `parent` referencing a
-///     (branch, index) that already exists at or before its creation
-///     point in the log.
+///   - the first event of the log defines the root branch, which must not
+///     carry a `parent` ref; every other branch's first event must carry a
+///     `parent` referencing a (branch, index) that already exists at or
+///     before its creation point in the log.
+///
+/// NOTE: the ADR-241 lockstep contract with the TS mirror is the state
+/// hash plus the accept/reject decision; validation MESSAGES are
+/// per-language diagnostics (TS cites 1-based line numbers, Rust does not)
+/// and are not required to match byte-for-byte.
 pub fn validate_log(events: &[SessionEvent]) -> Vec<String> {
     let mut errors = Vec::new();
     let mut seen: BTreeSet<(String, u64)> = BTreeSet::new();
@@ -154,7 +159,14 @@ pub fn validate_log(events: &[SessionEvent]) -> Vec<String> {
                         e.branch, e.index
                     ));
                 }
-                if root.as_deref() != Some(e.branch.as_str()) {
+                if root.as_deref() == Some(e.branch.as_str()) {
+                    if e.parent.is_some() {
+                        errors.push(format!(
+                            "session: root branch '{}' must not carry a parent",
+                            e.branch
+                        ));
+                    }
+                } else {
                     match &e.parent {
                         None => errors.push(format!(
                             "session: branch '{}' first event must carry a parent ref",
@@ -208,6 +220,22 @@ pub fn to_canonical_json(value: &serde_json::Value) -> String {
         serde_json::Value::Array(items) => {
             let parts: Vec<String> = items.iter().map(to_canonical_json).collect();
             format!("[{}]", parts.join(","))
+        }
+        serde_json::Value::Number(n) => {
+            // Normalize integral floats to match JS `JSON.stringify`: an f64
+            // that is finite, has no fractional part, and fits in the JS
+            // safe-integer range (|v| <= 2^53) renders as an integer, so
+            // 1.0 → "1", 2e1 → "20", and -0.0 → "0" (the i64 cast of -0.0
+            // is 0, matching JS, where JSON.stringify(-0) is "0"). Wire
+            // lines may still differ per producer — the state HASH is the
+            // lockstep contract, not the wire bytes.
+            if n.is_f64() {
+                let f = n.as_f64().expect("is_f64 checked");
+                if f.is_finite() && f.fract() == 0.0 && f.abs() <= 9_007_199_254_740_992.0 {
+                    return (f as i64).to_string();
+                }
+            }
+            serde_json::to_string(n).expect("number serializes")
         }
         scalar => serde_json::to_string(scalar).expect("scalar serializes"),
     }
@@ -421,6 +449,31 @@ mod tests {
     }
 
     #[test]
+    fn single_index_gap_reports_exactly_one_error() {
+        // 0,1,3,4 — validation resyncs after the gap (expected next becomes
+        // 4 after reporting index 3), so ONE error, not a cascade. The TS
+        // mirror behaves identically.
+        let mut events = root_log(2);
+        events.push(ev("root", 3, None));
+        events.push(ev("root", 4, None));
+        let errors = validate_log(&events);
+        assert_eq!(
+            errors,
+            vec!["session: branch 'root' index 3 is not monotonic (expected 2)"]
+        );
+    }
+
+    #[test]
+    fn root_branch_must_not_carry_a_parent() {
+        let events = vec![ev("root", 0, Some(("ghost", 0)))];
+        let errors = validate_log(&events);
+        assert_eq!(
+            errors,
+            vec!["session: root branch 'root' must not carry a parent"]
+        );
+    }
+
+    #[test]
     fn duplicate_branch_index_is_rejected() {
         let mut events = root_log(2);
         events.push(ev("root", 1, None));
@@ -476,6 +529,34 @@ mod tests {
         let a: serde_json::Value =
             serde_json::from_str(r#"{"b":1,"a":{"z":[1,2],"y":true}}"#).unwrap();
         assert_eq!(to_canonical_json(&a), r#"{"a":{"y":true,"z":[1,2]},"b":1}"#);
+    }
+
+    #[test]
+    fn canonical_json_sorts_keys_by_utf8_byte_order() {
+        // U+FF61 (EF BD A1 in UTF-8) sorts BEFORE U+10348 (F0 90 8D 88) in
+        // byte order, even though JS UTF-16 code-unit order would put the
+        // astral key (lead surrogate 0xD800) first. The TS mirror must
+        // produce this exact string.
+        let v = serde_json::json!({ "\u{10348}gothic": 2, "\u{FF61}half": 1 });
+        assert_eq!(
+            to_canonical_json(&v),
+            "{\"\u{FF61}half\":1,\"\u{10348}gothic\":2}"
+        );
+    }
+
+    #[test]
+    fn canonical_json_normalizes_integral_floats_like_js() {
+        for (input, want) in [("1.0", "1"), ("2e1", "20"), ("-0", "0"), ("1.25", "1.25")] {
+            let v: serde_json::Value = serde_json::from_str(input).unwrap();
+            assert_eq!(to_canonical_json(&v), want, "input {input}");
+        }
+        // Beyond 2^53 the normalization does not apply: serde_json's own
+        // rendering is kept unchanged.
+        let big: serde_json::Value = serde_json::from_str("1.2345678901234568e29").unwrap();
+        assert_eq!(to_canonical_json(&big), "1.2345678901234568e+29");
+        // Plain integers are untouched too.
+        let int: serde_json::Value = serde_json::from_str("42").unwrap();
+        assert_eq!(to_canonical_json(&int), "42");
     }
 
     #[test]

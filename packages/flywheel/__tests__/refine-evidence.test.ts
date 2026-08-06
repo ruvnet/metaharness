@@ -8,9 +8,9 @@ import { createHash } from 'node:crypto';
 import { describe, it, expect } from 'vitest';
 import {
   runFlywheelGenerations, meetsPromotionRule, gateFingerprint, makeSigner,
-  type Policy, type Proposer, type Evaluator, type Score, type Suite,
+  type Policy, type Proposer, type ProposerResult, type Evaluator, type Score, type Suite,
 } from '../src/index.js';
-import type { CandidateMutation, ProposerResult } from '../src/types.js';
+import type { CandidateMutation } from '../src/types.js';
 
 // Fingerprint captured at module load, BEFORE the ADR-241 types below are exercised.
 const PIN_BEFORE = gateFingerprint(meetsPromotionRule);

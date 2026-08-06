@@ -45,30 +45,30 @@ Branch `claude/metaharness-improvements-research-eq6q2w`, PR **#169**. Implement
 - [x] Verify auto-covered paths (wizard, HarnessBuilder, `{{host}}` templates, root multi-host integration tests)
 
 ### ★ P3 — `autonomous` HarnessSpec block, Rust + TS (ADR-241 §2.2) — swarm: 2 implementers (TS/Rust) → test-writer → verifier
-- [ ] TS: `kernel-js/src/types.ts` + `projects/src/harness-spec.ts` (`HarnessSpec` AND `HarnessGenomeLite`, verbatim copy both directions — the `policy` pattern); `validateSpec` flat-string checks (must not fire on `defaultSpec()`); `replaySpec` additive `halt?: {reason}` on budget exhaustion
-- [ ] Rust: `crates/kernel/src/autonomous.rs` serde types + `validate_autonomous()` same error strings; `crates/kernel-wasm` binding `autonomousValidate` (mcp_validate pattern)
-- [ ] Lockstep test: shared JSON fixtures → identical error lists TS ↔ Rust
-- [ ] Projections: host-claude-code guidance; host-prime-agent install.md snippet (P1); remaining adapters explicit no-op note + no-silent-drop contract test
-- [ ] Tests: round-trip ×2 stable; validation rejects (tokenBudget≤0, empty gateCommand, maxTurns<1); replay halt determinism
+- [x] TS: `kernel-js/src/types.ts` + `projects/src/harness-spec.ts` (`HarnessSpec` AND `HarnessGenomeLite`, verbatim copy both directions — the `policy` pattern); `validateSpec` flat-string checks (must not fire on `defaultSpec()`); `replaySpec` additive `halt?: {reason}` on budget exhaustion
+- [x] Rust: `crates/kernel/src/autonomous.rs` serde types + `validate_autonomous()` same error strings; `crates/kernel-wasm` binding `autonomousValidate` (mcp_validate pattern)
+- [x] Lockstep test: shared JSON fixtures → identical error lists TS ↔ Rust
+- [x] Projections: host-claude-code guidance; host-prime-agent install.md snippet (P1); remaining adapters explicit no-op note + no-silent-drop contract test
+- [x] Tests: round-trip ×2 stable; validation rejects (tokenBudget≤0, empty gateCommand, maxTurns<1); replay halt determinism
 
 ### ★ P4 — Recoverable session log, Rust core + wasm + TS mirror (ADR-241 §2.3) — swarm: 2 implementers → test-writer → 2 verifiers
-- [ ] Rust `crates/kernel/src/session.rs`: `SessionEvent{index,branch,parent?,kind,payload}`, JSONL codec, monotonic+branch validation, sha256 `state_hash` over canonical fold, `replay()`, `fork(at_index)`
-- [ ] wasm bindings `sessionReplay`/`sessionStateHash`/`sessionValidate` (skip if WASM-SKIP)
-- [ ] TS mirror `kernel-js/src/session.ts` (`TrajectoryStore` prior art): append/replay/stateHash/fork/resume, pure-TS implementation
-- [ ] Cross-language invariant: committed fixture → identical state hash Rust ↔ TS
-- [ ] Scaffold toggle `--sessions/--no-sessions` (Darwin recipe: CliArgs ~167 / ScaffoldOptions ~230 / post-render block ~429); CLI-only + ADR-027 asymmetric-features note
-- [ ] Tests: write-N/kill/resume hash-identical; fork-at-k diverges; corrupted tail detected
+- [x] Rust `crates/kernel/src/session.rs`: `SessionEvent{index,branch,parent?,kind,payload}`, JSONL codec, monotonic+branch validation, sha256 `state_hash` over canonical fold, `replay()`, `fork(at_index)`
+- [x] wasm bindings `sessionReplay`/`sessionStateHash`/`sessionValidate` — built + smoke-tested (fixture hash reproduced through wasm; wasm-opt needed --enable-nontrapping-float-to-int --enable-sign-ext for the f64→i64 canonicalization cast; binaryen fetched via proxy, session-local)
+- [x] TS mirror `kernel-js/src/session.ts` (`TrajectoryStore` prior art): append/replay/stateHash/fork/resume, pure-TS implementation
+- [x] Cross-language invariant: committed fixture → identical state hash Rust ↔ TS
+- [x] Scaffold toggle `--sessions/--no-sessions` (Darwin recipe: CliArgs ~167 / ScaffoldOptions ~230 / post-render block ~429); CLI-only + ADR-027 asymmetric-features note
+- [x] Tests: write-N/kill/resume hash-identical; fork-at-k diverges; corrupted tail detected
 
 ### ★ P5 — RefineMutator + flywheel evidence channel (ADR-241 §2.1) — swarm: 2 implementers → test-writer → adversarial verifier
-- [ ] `darwin-mode/src/refine-mutator.ts` implementing `CodeGenerator`: one bounded CRUD edit/one surface; summary cites trace IDs; **no evidence → no-op** (parent unchanged); nonce-distinct siblings; local-HTTP LLM client (unreachable → no-op); output passes `validateGeneratedCode`; barrel export
-- [ ] flywheel additive: `CandidateMutation.inverse?:{path,parentBytes,hash}`; proposer-summary channel to lineage commit (`run.ts:149` — old signature still works)
-- [ ] Tests (mirror mutator/ruvllm-mutator tests): one-surface; evidence IDs; no-op paths; validate-pass; apply→rollback byte-identical; refine child failing frozen scorer NOT promoted; `gateFingerprint` unchanged
+- [x] `darwin-mode/src/refine-mutator.ts` implementing `CodeGenerator`: one bounded CRUD edit/one surface; summary cites trace IDs; **no evidence → no-op** (parent unchanged); nonce-distinct siblings; local-HTTP LLM client (unreachable → no-op); output passes `validateGeneratedCode`; barrel export
+- [x] flywheel additive: `CandidateMutation.inverse?:{path,parentBytes,hash}`; proposer-summary channel to lineage commit (`run.ts:149` — old signature still works)
+- [x] Tests (mirror mutator/ruvllm-mutator tests): one-surface; evidence IDs; no-op paths; validate-pass; apply→rollback byte-identical; refine child failing frozen scorer NOT promoted; `gateFingerprint` unchanged
 
 ### ★ P6 — PTC experiment manifest (ADR-241 §2.4) — solo
-- [ ] `packages/evals-toolcall/experiments/ptc-ab.json` (arms, metrics, seeds, criterion ≥20% token cut @ non-inferior success α=0.05, SYNTHETIC discipline)
-- [ ] `packages/evals-toolcall/__tests__/ptc-ab.test.ts` (exists/parses/pre-registers)
+- [x] `packages/evals-toolcall/experiments/ptc-ab.json` (arms, metrics, seeds, criterion ≥20% token cut @ non-inferior success α=0.05, SYNTHETIC discipline)
+- [x] `packages/evals-toolcall/__tests__/ptc-ab.test.ts` (exists/parses/pre-registers)
 
-### Fix round (2026-08-06, in flight): P3-P6 adversarial-verify findings
+### Fix round (2026-08-06) — DONE: P3-P6 adversarial-verify findings
 Swarm implemented P3-P6 green on own tests (Rust 110 pass + clippy -D warnings clean; TS sweeps green; PTC 6 tests). Adversarial verifiers then CONFIRMED cross-language divergences now being fixed by a 3-fixer swarm + re-verifier:
 - session: TS UTF-16 vs Rust byte-wise key sort; integral-float/-0 canonicalization (1.0 vs 1); TS-writable lone surrogates unreadable by Rust; root-with-parent accepted by Rust only; whitespace-line skip vs error; cascade resync mismatch; fork API asymmetry (synthetic event vs pendingParent); literal NUL bytes in session.ts source.
 - autonomous: TS accepted non-integer maxTurns/tokenBudget (Rust parse-rejects); null-field crashes in TS validateSpec; Rust null-serialization crashing TS; copyAutonomous undefined-key injection.

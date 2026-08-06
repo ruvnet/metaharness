@@ -80,5 +80,40 @@
       "autonomous.gateCommand must be non-empty",
       "autonomous.maxTurns must be >= 1"
     ]
+  },
+  {
+    "name": "edge-fractional-max-turns",
+    "spec": { "maxTurns": 1.5 },
+    "errors": ["autonomous.maxTurns must be >= 1"]
+  },
+  {
+    "name": "edge-fractional-token-budget",
+    "spec": { "goal": { "text": "ok", "tokenBudget": 1.5 } },
+    "errors": ["autonomous.goal.tokenBudget must be > 0"]
+  },
+  {
+    "name": "edge-overflow-token-budget",
+    "spec": { "goal": { "text": "ok", "tokenBudget": 100000000000000000000 } },
+    "errors": ["autonomous.goal.tokenBudget must be > 0"]
+  },
+  {
+    "name": "edge-null-max-turns",
+    "spec": { "maxTurns": null },
+    "errors": []
+  },
+  {
+    "name": "edge-null-goal",
+    "spec": { "goal": null },
+    "errors": []
+  },
+  {
+    "name": "edge-null-gate-command",
+    "spec": { "gateCommand": null },
+    "errors": []
+  },
+  {
+    "name": "edge-null-heartbeat",
+    "spec": { "heartbeat": null },
+    "errors": []
   }
 ]

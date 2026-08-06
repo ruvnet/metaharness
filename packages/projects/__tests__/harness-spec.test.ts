@@ -196,6 +196,16 @@ describe('harness-spec autonomous round-trip (ADR-241 §2.2)', () => {
     expect('autonomous' in spec).toBe(false);
     expect('autonomous' in specToGenome(spec)).toBe(false);
   });
+
+  it('round-tripping an empty autonomous block injects no undefined keys', () => {
+    const g: HarnessGenomeLite = { ...genomes[0], autonomous: {} };
+    const spec = genomeToSpec(g);
+    expect(spec.autonomous).toStrictEqual({});
+    expect(Object.keys(spec.autonomous!)).toEqual([]);
+    const round = specToGenome(spec);
+    expect(round.autonomous).toStrictEqual({});
+    expect(Object.keys(round.autonomous!)).toEqual([]);
+  });
 });
 
 describe('harness-spec autonomous validation (lockstep fixture)', () => {
@@ -212,6 +222,37 @@ describe('harness-spec autonomous validation (lockstep fixture)', () => {
 
   it('defaultSpec (no autonomous) still validates strictly clean', () => {
     expect(validateSpec(defaultSpec())).toEqual({ ok: true, errors: [] });
+  });
+
+  // Rust's Goal.text / Heartbeat.cadence / Heartbeat.instruction are
+  // required Strings — serde REJECTS a block where they are missing, null,
+  // or non-strings, before validate_autonomous ever runs. These cases
+  // cannot live in the shared fixture (the Rust side could not even
+  // deserialize them), so the TS accept/reject parity is pinned here: the
+  // TS validator must reject them too, reusing the lockstep strings.
+  it('goal present but text missing/null is rejected (serde parse-reject parity)', () => {
+    for (const goal of [{}, { text: null }, { text: 42 }]) {
+      const s: HarnessSpec = {
+        ...defaultSpec(),
+        autonomous: { goal: goal as never },
+      };
+      const r = validateSpec(s);
+      expect(r.ok).toBe(false);
+      expect(r.errors).toContain('autonomous.goal.text must be non-empty');
+    }
+  });
+
+  it('heartbeat present but cadence/instruction missing/null is rejected (serde parse-reject parity)', () => {
+    const s: HarnessSpec = {
+      ...defaultSpec(),
+      autonomous: { heartbeat: { cadence: null, instruction: undefined } as never },
+    };
+    const r = validateSpec(s);
+    expect(r.ok).toBe(false);
+    expect(r.errors).toEqual([
+      'autonomous.heartbeat.cadence must be non-empty',
+      'autonomous.heartbeat.instruction must be non-empty',
+    ]);
   });
 });
 
