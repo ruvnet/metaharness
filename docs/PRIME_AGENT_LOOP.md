@@ -75,13 +75,13 @@ Swarm implemented P3-P6 green on own tests (Rust 110 pass + clippy -D warnings c
 - refine: ProposerResult missing from barrel; res.ok unchecked; timer leak; zero-width-char evidence bypass; gitignored dist/refine-mutator.js vs tracked dist barrel (checkout crash).
 Resolutions chosen: TS sorts keys byte-wise; Rust normalizes integral floats to JS form (hash contract is canonical-JSON, not wire bytes); TS rejects unpaired surrogates at append; Rust rejects root-with-parent; TS skips whitespace lines + resyncs after gap; TS fork emits synthetic fork event (Rust parity); null = absent both sides; integer enforcement both sides w/ existing lockstep strings; session validation MESSAGES documented as per-language diagnostics (hash + accept/reject is the contract).
 
-### ★ P7 — Optimize + README/docs + finish — swarm: triage/lint/simplify dimensions → fixers → README writer+reviewer
-- [ ] Full `npx vitest run` + `cargo test --workspace` + `cargo clippy` — fix OUR regressions only (baseline diff)
-- [ ] Simplify pass over new code only
-- [ ] README: `### New` item (Weight-EFT ADR-link pattern) · `## Hosts` nine→ten + row · stale counts :39/:265/:379/:400 · `docs/USERGUIDE.md`/`USAGE.md`/`ARCHITECTURE.md`/`RELEASE.md` · `create-agent-harness/README.md` · CHANGELOG entry
-- [ ] Flip ADR-241/242 Status → Implemented (2026-08-06) with honest per-section notes (PTC stays deferred by design); INDEX.md summaries match
-- [ ] Scaffold smoke: `npx metaharness tmp-bot --host prime-agent`; deny-list spec → SANDBOX-REQUIRED.md
-- [ ] Push, update PR #169 description checklist, one summary comment, STOP loop
+### ★ P7 — Optimize + README/docs + finish — DONE (2026-08-06)
+- [x] Full `npx vitest run` + `cargo test --workspace` + `cargo clippy` — fix OUR regressions only (baseline diff)
+- [x] Simplify pass over new code only
+- [x] README: `### New` item (Weight-EFT ADR-link pattern) · `## Hosts` nine→ten + row · stale counts :39/:265/:379/:400 · `docs/USERGUIDE.md`/`USAGE.md`/`ARCHITECTURE.md`/`RELEASE.md` · `create-agent-harness/README.md` · CHANGELOG entry
+- [x] Flip ADR-241/242 Status → Implemented (2026-08-06) with honest per-section notes (PTC stays deferred by design); INDEX.md summaries match
+- [x] Scaffold smoke: `npx metaharness tmp-bot --host prime-agent`; deny-list spec → SANDBOX-REQUIRED.md
+- [x] Push, update PR #169 description checklist, one summary comment, STOP loop
 
 ## Each tick
 1. **HEALTH** — `git status -sb` (right branch, clean or known WIP); read this doc's boxes.
@@ -89,6 +89,10 @@ Resolutions chosen: TS sorts keys byte-wise; Rust normalizes integral floats to 
 3. **VERIFY** — targeted `npx vitest run <paths>` + `cargo test` for touched crates; adversarial verify agents on new contracts.
 4. **UPKEEP** — commit (scoped message), push with retry/backoff, tick boxes here, refresh PR checklist.
 5. **RE-ARM** — ScheduleWakeup: ~60–120s if next phase ready; 1200s+ fallback while a swarm is in flight (task notifications are the primary signal).
+
+## LOOP COMPLETE (2026-08-06)
+
+All phases done. Final gate: full `npx vitest run` failing set **byte-identical to the P0 baseline** (21 pre-existing failures / 12 files — none ours; 243 files passing incl. all 6 new suites, 257 total vs 251 at baseline); `cargo test --workspace` all green (116 kernel tests + all crates); `cargo clippy --workspace -D warnings` clean; wasm build + fixture-hash smoke green. ADR-241/242 flipped to Implemented. PR #169 carries the full integration.
 
 ## Stop / complete condition
 Stop when ALL phases are checked AND full vitest is no worse than the P0 baseline AND `cargo test --workspace` is green AND README/docs updated AND everything is pushed to PR #169. Then post ONE summary comment on the PR and stop the loop. If blocked >2 ticks on the same item, record the blocker here honestly and surface it on the PR instead of spinning.
