@@ -15,9 +15,10 @@ import { fileURLToPath } from 'node:url';
 import {
   HOST_NAME,
   adapter,
+  mcpIntegrationPy,
   normalizeSkillName,
+  settingsJson,
   skillMd,
-  skillShimPy,
 } from '../src/index.js';
 import { defaultSpec, stableStringify } from './fixtures.js';
 
@@ -73,29 +74,24 @@ describe('@metaharness/host-prime-agent (ADR-242)', () => {
     expect(normalizeSkillName('My_Weird Tool!')).toBe('my-weird-tool');
     expect(normalizeSkillName('---My---Tool---')).toBe('my-tool');
     expect(normalizeSkillName('-'.repeat(100_000))).toBe('tool');
+    expect(normalizeSkillName('a'.repeat(100))).toBe('a'.repeat(64));
     expect(out['.prime/agent/skills/my-weird-tool/SKILL.md']).toBeDefined();
     // >1024-char description is truncated to exactly 1024.
     const fm = frontmatter(out['.prime/agent/skills/my-weird-tool/SKILL.md']!);
     expect(fm.description).toBe('x'.repeat(1024));
   });
 
-  // ADR-242 test contract 2 — completeness: exactly one skill trio per tool.
-  it('emits exactly one SKILL.md + pyproject.toml + src/<pkg>/__init__.py trio per tool', () => {
+  // ADR-242 test contract 2 — ToolSpec has no executable binding, so every
+  // declared tool becomes exactly one honest instruction-only skill.
+  it('emits exactly one instruction-only SKILL.md per declarative tool', () => {
     const out = adapter.generateConfig(defaultSpec);
     const tools = defaultSpec.tools!;
     for (const t of tools) {
       const name = normalizeSkillName(t.name);
-      const pkg = name.replace(/-/g, '_');
       expect(out[`.prime/agent/skills/${name}/SKILL.md`]).toBeDefined();
-      expect(out[`.prime/agent/skills/${name}/pyproject.toml`]).toBeDefined();
-      expect(out[`.prime/agent/skills/${name}/src/${pkg}/__init__.py`]).toBeDefined();
+      expect(out[`.prime/agent/skills/${name}/SKILL.md`]).toContain('declarative contract');
+      expect(out[`.prime/agent/skills/${name}/pyproject.toml`]).toBeUndefined();
     }
-    // Exactly one trio per tool — no extra skill-directory files besides the
-    // supplemental prompt.
-    const skillFiles = Object.keys(out).filter(
-      (k) => k.startsWith('.prime/agent/skills/') && k !== '.prime/agent/skills/harness-prompt.md',
-    );
-    expect(skillFiles).toHaveLength(tools.length * 3);
   });
 
   // ADR-242 test contract 3 — golden file, byte-for-byte.
@@ -138,9 +134,9 @@ describe('@metaharness/host-prime-agent (ADR-242)', () => {
     }
   });
 
-  // ADR-242 test contract 5 — no silent drops: every MCP server is explicitly
-  // listed in the runbook as unavailable as MCP on this host.
-  it('every mcpServers entry is listed in the runbook as not emitted as MCP', () => {
+  // ADR-242 test contract 5 — HTTP MCP is executable; stdio is explicitly
+  // unsupported by current Prime Agent and never silently dropped.
+  it('emits remote HTTP MCP integrations and lists stdio MCP as unsupported', () => {
     const spec = {
       ...defaultSpec,
       mcpServers: [
@@ -150,10 +146,17 @@ describe('@metaharness/host-prime-agent (ADR-242)', () => {
     };
     const out = adapter.generateConfig(spec as any);
     const md = out[RUNBOOK]!;
-    expect(md).toContain('no MCP support');
-    expect(md).toContain('- `codeindex` — not emitted as MCP');
-    expect(md).toContain('- `remote-search` — not emitted as MCP');
-    expect(md).toContain('remote server, unavailable on this host');
+    expect(md).toContain('remote HTTP MCP');
+    expect(md).toContain('- `codeindex` — local command `node ./dist/mcp-server.js`');
+    expect(md).toContain('- `remote-search` — https://example.com/mcp');
+    expect(JSON.parse(out['.prime/agent/settings.json']!)).toEqual({
+      mcpServers: {
+        'remote-search': { type: 'http', url: 'https://example.com/mcp', enabled: true },
+      },
+    });
+    expect(out['.prime/agent/skills/mcp-remote-search/pyproject.toml']).toContain('prime-agent-runtime');
+    expect(out['.prime/agent/skills/mcp-remote-search/src/mcp_remote_search/__init__.py'])
+      .toContain('class HarnessMcpIntegration(McpIntegration)');
   });
 
   // ADR-242 test contract 6 (+ task case 7) — autonomous projection.
@@ -165,12 +168,12 @@ describe('@metaharness/host-prime-agent (ADR-242)', () => {
       maxTurns: 20,
     };
     const md = adapter.generateConfig(spec)[RUNBOOK]!;
-    expect(md).toContain('--autonomous-gate "npm run check"');
+    expect(md).toContain("--autonomous-gate 'npm run check'");
     expect(md).toContain('--autonomous-max-turns 20');
     expect(md).toContain(
-      'prime-agent --autonomous --autonomous-gate "npm run check" --autonomous-max-turns 20 "ship it"',
+      "prime-agent --autonomous --autonomous-gate 'npm run check' --autonomous-max-turns 20 --goal 'ship it' --goal-token-budget 200000",
     );
-    expect(md).toContain('/goal --budget 200000');
+    expect(md).not.toContain('/goal --budget');
   });
 
   it('without the autonomous block, no "--autonomous" string appears anywhere', () => {
@@ -191,32 +194,43 @@ describe('@metaharness/host-prime-agent (ADR-242)', () => {
     }
   });
 
-  // Task case 8 — Python shim structural validity.
-  it('the shim defines run(**kwargs) and imports no network modules', () => {
-    for (const tool of defaultSpec.tools!) {
-      const py = skillShimPy(tool);
-      expect(py).toContain('def run(');
-      expect(py).not.toContain('import requests');
-      expect(py).not.toContain('import urllib');
-      expect(py).not.toContain('import socket');
-      expect(py).not.toContain('import http');
-      expect(py).toContain(`TOOL_NAME = ${JSON.stringify(tool.name)}`);
-    }
+  it('never emits the nonexistent kernel invoke-tool CLI', () => {
+    const out = adapter.generateConfig(defaultSpec);
+    expect(Object.values(out).join('\n')).not.toContain('invoke-tool');
+    expect(Object.values(out).join('\n')).not.toContain('npx --yes @metaharness/kernel');
   });
 
-  it.skipIf(!hasPython3)('the shim py_compiles cleanly under python3', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'prime-agent-shim-'));
+  it.skipIf(!hasPython3)('the real MCP integration compiles and imports against the upstream API shape', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'prime-agent-mcp-'));
     try {
-      for (const tool of defaultSpec.tools!) {
-        const file = join(dir, `${normalizeSkillName(tool.name).replace(/-/g, '_')}.py`);
-        writeFileSync(file, skillShimPy(tool));
-        expect(() =>
-          execFileSync('python3', ['-m', 'py_compile', file], { stdio: 'pipe' }),
-        ).not.toThrow();
-      }
+      writeFileSync(join(dir, 'rlm.py'), [
+        'class McpIntegration:',
+        '    async def list_tools(self): return [{"name": "ping"}]',
+        '    async def call_tool(self, name, args): return {"name": name, "args": args}',
+        '',
+      ].join('\n'));
+      writeFileSync(join(dir, 'generated.py'), mcpIntegrationPy('remote-search', 'https://example.com/mcp'));
+      expect(() => execFileSync('python3', ['-m', 'py_compile', join(dir, 'generated.py')], { stdio: 'pipe' })).not.toThrow();
+      expect(() => execFileSync('python3', ['-c', [
+        'import asyncio, generated',
+        'assert generated.integration.server == "remote-search"',
+        'assert generated.integration.url == "https://example.com/mcp"',
+        'assert asyncio.run(generated.list_tools())[0]["name"] == "ping"',
+      ].join('; ')], { cwd: dir, stdio: 'pipe' })).not.toThrow();
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+
+  it('system prompt and agent roles use current Prime Agent discovery surfaces', () => {
+    const out = adapter.generateConfig(defaultSpec);
+    expect(out['.prime/agent/APPEND_SYSTEM.md']).toContain(defaultSpec.systemPrompt);
+    expect(out['.prime/agent/skills/agent-reviewer/SKILL.md']).toContain('await rlm(');
+    expect(Object.keys(out).some((key) => key.startsWith('.prime/agent/agents/'))).toBe(false);
+  });
+
+  it('settingsJson omits unsupported stdio servers', () => {
+    expect(JSON.parse(settingsJson(defaultSpec))).toEqual({ mcpServers: {} });
   });
 
   // Supporting check — allow entries are projected into SKILL.md (ADR-242
@@ -241,8 +255,8 @@ describe('adversarial-verify regressions', () => {
       agents: [{ name: 'Helper!' }, { name: 'helper' }],
     };
     const out = adapter.generateConfig(spec);
-    const skillDirs = Object.keys(out).filter((k) => k.endsWith('/SKILL.md'));
-    expect(skillDirs).toEqual([
+    const toolSkills = Object.keys(out).filter((k) => /^\.prime\/agent\/skills\/run-tests(?:-\d+)?\/SKILL\.md$/.test(k));
+    expect(toolSkills).toEqual([
       '.prime/agent/skills/run-tests/SKILL.md',
       '.prime/agent/skills/run-tests-2/SKILL.md',
       '.prime/agent/skills/run-tests-3/SKILL.md',
@@ -250,11 +264,10 @@ describe('adversarial-verify regressions', () => {
     expect(out['.prime/agent/skills/run-tests/SKILL.md']).toContain('FIRST');
     expect(out['.prime/agent/skills/run-tests-2/SKILL.md']).toContain('SECOND');
     expect(out['.prime/agent/skills/run-tests-3/SKILL.md']).toContain('THIRD');
-    // The -2 shim imports a matching disambiguated Python package.
-    expect(out['.prime/agent/skills/run-tests-2/src/run_tests_2/__init__.py']).toBeDefined();
-    expect(Object.keys(out).filter((k) => k.startsWith('.prime/agent/agents/'))).toEqual([
-      '.prime/agent/agents/helper.md',
-      '.prime/agent/agents/helper-2.md',
+    expect(out['.prime/agent/skills/run-tests-2/pyproject.toml']).toBeUndefined();
+    expect(Object.keys(out).filter((k) => /\/agent-helper(?:-\d+)?\/SKILL\.md$/.test(k))).toEqual([
+      '.prime/agent/skills/agent-helper/SKILL.md',
+      '.prime/agent/skills/agent-helper-2/SKILL.md',
     ]);
     // Determinism holds across calls.
     expect(adapter.generateConfig(spec)).toEqual(out);
@@ -283,7 +296,7 @@ describe('adversarial-verify regressions', () => {
       autonomous: { goal: { text: 'ship' } },
     };
     const runbook = adapter.generateConfig(spec)[RUNBOOK]!;
-    expect(runbook).toContain('prime-agent --autonomous "ship"');
+    expect(runbook).toContain("prime-agent --autonomous --goal 'ship'");
     expect(runbook).not.toContain('--autonomous-gate ""');
     expect(runbook).not.toContain('--autonomous-max-turns 0');
     expect(runbook).not.toContain('/goal --budget 0');
@@ -298,6 +311,7 @@ describe('adversarial-verify regressions', () => {
     const runbook = adapter.generateConfig(spec)[RUNBOOK]!;
     expect(runbook).toContain('every 30m');
     expect(runbook).toContain('check CI status');
+    expect(runbook).not.toContain('/heartbeat');
   });
 
   it('1024-char truncation never splits a surrogate pair', () => {

@@ -6,15 +6,16 @@ host adapter — the 11th harness host, per
 
 ## What it emits
 
-Prime Agent ships no MCP; integration lands as **project-scoped, Python-backed
-skills** under `.prime/agent/skills/`:
+Integration lands as project-scoped skills under `.prime/agent/skills/`:
 
-- One skill directory per `spec.tools` entry: `SKILL.md` (YAML frontmatter,
-  name normalized to `a-z0-9-`), `pyproject.toml`, and a
-  `src/<pkg>/__init__.py` shim that dispatches to the harness kernel — the
-  Python mirror of host-pi-dev's `pi.registerTool` extension pattern.
-- `spec.systemPrompt` → `.prime/agent/skills/harness-prompt.md`
-- `spec.agents[]` → `.prime/agent/agents/<name>.md`
+- `spec.tools[]` → instruction-only `SKILL.md` contracts. `ToolSpec` does not
+  contain an executable handler, so the adapter never fabricates one.
+- Remote HTTP `spec.mcpServers[]` → `.prime/agent/settings.json` plus real
+  Python-backed `rlm.McpIntegration` skill packages. Local stdio MCP remains
+  explicitly unsupported by Prime Agent's current kernel integration.
+- `spec.systemPrompt` → `.prime/agent/APPEND_SYSTEM.md`
+- `spec.agents[]` → skills that delegate through Prime Agent's native `rlm`
+  recursive-agent callable
 - Always: `install-prime-agent.md` (install runbook, skill precedence notes,
   MCP availability, and the ADR-241 autonomous invocation snippet when present)
 

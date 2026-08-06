@@ -1,6 +1,8 @@
 # Prime Agent (Prime Intellect) — Mechanics, Gap Map, and Integration Verdicts
 
 **Date:** 2026-08-06
+**Updated:** 2026-08-06 — corrected goal, heartbeat, prompt, subagent, and MCP
+surfaces against Prime Agent 0.7.0 after the initial integration review.
 **Purpose:** Ground-truth analysis of Prime Intellect's Prime Agent harness — what it actually does,
 verified against its repository docs — and a concept-by-concept gap map against what MetaHarness
 already ships, so the integration ADRs ([ADR-241](../../adrs/ADR-241-prime-agent-continual-harness-refine.md),
@@ -100,18 +102,16 @@ Verified from `architecture.md` / `long-running-agents.md`:
 - Edits are **evidence-backed** (justified from specific trajectory observations) and
   **rollback-capable**: refinement history is recorded so changes can be reverted.
 
-## 6. Autonomous mode and the three scheduling surfaces
+## 6. Autonomous mode, goals, and scheduling
 
-- `prime-agent --autonomous --autonomous-gate "npm run check" --autonomous-max-turns 20 "<task>"`
+- `prime-agent --autonomous --autonomous-gate "npm run check" --autonomous-max-turns 20 --goal "<objective>" --goal-token-budget 200000`
   — unattended execution bounded by **turn, token, and time budgets**, with a user-defined
   **quality gate** command that must pass. Reaching a limit does not imply success.
-- `/goal --budget 200000 ...` maintains persistent objectives and progress across turns.
-- Three distinct scheduling surfaces:
+- Persistent goals use `--goal` plus the optional `--goal-token-budget`; goals are separate from autonomous continuation policy.
+- Current scheduling surfaces include:
 
   | Surface | Owner | Purpose |
   |---|---|---|
-  | `/heartbeat` | user | periodic re-entry the user configures |
-  | `rlm_heartbeat` | agent | re-entry the agent schedules for itself |
   | `prime-agent schedule` | CLI | cron/one-shot timed execution |
 
 ## 7. A2A messaging and persistent sub-agents

@@ -100,8 +100,8 @@ export function verifyFileMap(files: GenFile[]): VerifyReport {
   // Surface which HarnessSpec capabilities the emitted tree actually represents,
   // so the Studio's Verify tab reflects the coverage the host adapters now cover.
   const hasSystemPrompt = files.some((f) =>
-    ['CLAUDE.md', 'AGENTS.md', '.github/copilot-instructions.md', 'SYSTEM.md'].includes(f.path) && f.content.trim().length > 0);
-  const hasAgents = files.some((f) => /(^|\/)\.?(claude|opencode)\/agents\//.test(f.path) || f.path.startsWith('src/agents/') || f.path.startsWith('.prime/agent/agents/'));
+    ['CLAUDE.md', 'AGENTS.md', '.github/copilot-instructions.md', 'SYSTEM.md', '.prime/agent/APPEND_SYSTEM.md'].includes(f.path) && f.content.trim().length > 0);
+  const hasAgents = files.some((f) => /(^|\/)\.?(claude|opencode)\/agents\//.test(f.path) || f.path.startsWith('src/agents/') || /^\.prime\/agent\/skills\/agent-[^/]+\/SKILL\.md$/.test(f.path));
   const hasMcp = mcpServerPresent(files);
   const hasPerms = permissionsPresent(files);
   const covered = [hasSystemPrompt && 'system-prompt', hasAgents && 'agents', hasMcp && 'mcp', hasPerms && 'permissions'].filter(Boolean);

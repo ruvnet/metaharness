@@ -350,18 +350,18 @@ function hostFiles(host: HostId, cfg: HarnessConfig): GenFile[] {
       ];
     }
     case 'prime-agent': {
-      // ADR-242 — Prime Agent (PrimeIntellect-ai): skills-only host, no MCP.
+      // ADR-242 — Prime Agent: project skills plus remote HTTP MCP support.
       // ADR-027 parity contract: byte-identical with
       // packages/create-agent-harness/src/host-config.ts.
       const mcp = cfg.primitives.mcp;
       const runbook = [
         `# Install ${cfg.name} into Prime Agent`,
         '',
-        'Prime Agent has no MCP; tools are delivered as project skills under .prime/agent/skills/.',
+        'Prime Agent loads tools from project skills and supports remote HTTP MCP integrations; local stdio MCP is not currently wired.',
         '',
         mcp === 'off'
           ? 'MCP: off — nothing further.'
-          : `MCP (${mcp}): NOT available on this host; capabilities must be wrapped as skills.`,
+          : `MCP (${mcp}): remote HTTP servers are emitted as Python-backed integrations; local stdio servers are listed as unsupported.`,
         '',
         'Sandbox: Prime Agent is not sandboxed. Denied capabilities require an external sandbox (ADR-242).',
       ].join('\n') + '\n';

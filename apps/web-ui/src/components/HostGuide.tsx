@@ -176,12 +176,12 @@ export const GUIDES: HostGuide[] = [
   {
     id: 'prime-agent',
     name: 'Prime Agent',
-    blurb: 'PrimeIntellect-ai\'s pi-based harness — no MCP by design. Harness emits project skills under `.prime/agent/skills/` plus an `install-prime-agent.md` runbook (ADR-242).',
+    blurb: 'Prime Intellect\'s IPython-based harness. MetaHarness emits project skills, native `rlm` delegation, and remote HTTP MCP integrations (ADR-242).',
     steps: [
       {
         title: '1. Install Prime Agent',
         body: 'Install via the upstream curl installer, then confirm the CLI is on your PATH.',
-        code: 'curl -fsSL https://raw.githubusercontent.com/PrimeIntellect-ai/prime-agent/main/install.sh | bash\nprime-agent --version',
+        code: 'curl -fsSL https://app.primeintellect.ai/prime-agent/install.sh | sh\nprime-agent --version',
       },
       {
         title: '2. Run from the harness repo root',
