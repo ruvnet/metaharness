@@ -18,17 +18,17 @@ Branch `claude/metaharness-improvements-research-eq6q2w`, PR **#169**. Implement
 - [x] `npm install` at root; `npm --prefix apps/web-ui install`
 - [x] `npm run build` (build-ordered) — DONE in 31.5s, no failures
 - [x] `npx vitest run` baseline → recorded below
-- [ ] `cargo test --workspace` baseline → in flight (record on completion)
+- [x] `cargo test --workspace` baseline → GREEN (all crates pass, 0 failures)
 - [x] wasm-pack 0.13.1 installed (prebuilt musl binary → ~/.cargo/bin) + `wasm32-unknown-unknown` target added
 - [x] Commit this directive + baseline numbers
 
 **Baseline (2026-08-06, commit 411f65f):** `npx vitest run` → **21 failed | 2293 passed | 20 skipped (2334 tests; 12 failed files)**. Pre-existing failing files (NOT ours; do not fix unless we regress them further, do not count against us): `adr-index` (canonical-sections check — numbered headings in older ADRs; ADR-241/242 pass it), `agent-harness-generator-lib`, `audit-deps` (×2, network-dependent), `claude-marketplace-plugin` (×2, skill-count drift), `e2e-lifecycle`, `e2e-scaffold-validate`, `examples-quickstart`, `harness-diag` (×7), `harness-score`, `workflows` (publish.yml host regex). Full capture: scratchpad `baseline-failures.txt`. catalogCount drift ("expects 16 but catalog has 17"/"18 vs 19") appears inside doctor/e2e output — pre-existing.
 
-### ★ P1 — `packages/host-prime-agent` (ADR-242) — swarm: implementer → test-writer → 2 verifiers
-- [ ] 6-file package mirroring `host-opencode` (`package.json` `@metaharness/host-prime-agent` 0.1.0, tsconfig, LICENSE, README)
-- [ ] `src/index.ts`: `HOST_NAME='prime-agent'`; renderers `skillMd` / `pyprojectToml` / `skillShimPy` / `subAgentSpec` / `supplementalPrompt` / `installMd` / `sandboxRequiredMd`; default-export `adapter`
-- [ ] `__tests__/index.test.ts` per ADR-242 Test Contract: frontmatter `^[a-z0-9-]+$` + ≤1024 desc; one skill dir per tool; committed golden snapshot; fail-closed `SANDBOX-REQUIRED.md` on non-empty deny (absent on empty); byte-determinism; autonomous projection; no-silent-drop
-- [ ] Verifiers: ADR-242 §2.1/§2.2 conformance; determinism + Python shim structural validity
+### ★ P1 — `packages/host-prime-agent` (ADR-242) — swarm: implementer → test-writer → 2 verifiers — DONE (19 tests green; 6 verifier defects found+fixed: name-collision suffixing, hooks/statusLine unsupported-section, heartbeat projection, no fabricated CLI values, ADR-242 runbook filename amended to install-prime-agent.md, surrogate-safe truncation)
+- [x] 6-file package mirroring `host-opencode` (`package.json` `@metaharness/host-prime-agent` 0.1.0, tsconfig, LICENSE, README)
+- [x] `src/index.ts`: `HOST_NAME='prime-agent'`; renderers `skillMd` / `pyprojectToml` / `skillShimPy` / `subAgentSpec` / `supplementalPrompt` / `installMd` / `sandboxRequiredMd`; default-export `adapter`
+- [x] `__tests__/index.test.ts` per ADR-242 Test Contract: frontmatter `^[a-z0-9-]+$` + ≤1024 desc; one skill dir per tool; committed golden snapshot; fail-closed `SANDBOX-REQUIRED.md` on non-empty deny (absent on empty); byte-determinism; autonomous projection; no-silent-drop
+- [x] Verifiers: ADR-242 §2.1/§2.2 conformance; determinism + Python shim structural validity
 
 ### ★ P2 — Propagation (13-point checklist) — swarm: 3 parallel implementers (CLI+scripts / web-ui / bench+meta) → verifier
 - [ ] `create-agent-harness/src/index.ts:63` HOSTS + comment

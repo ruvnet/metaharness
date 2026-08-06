@@ -34,17 +34,17 @@ Ship `@metaharness/host-prime-agent` (`packages/host-prime-agent/`), the **11th 
 | `spec.tools[]` | One **project-scoped, Python-backed skill per tool** at `.prime/agent/skills/<tool-name>/`: `SKILL.md` (frontmatter from the tool name/description, name normalized to `a-z0-9-`), `pyproject.toml`, and `src/<pkg>/__init__.py` — a shim that dispatches to the kernel (`kernel.invokeTool(name, args)`), the Python mirror of host-pi-dev's `extensionSource` TypeScript pattern. |
 | `spec.systemPrompt` | A supplemental prompt file in the project skill/prompt surface (continual-harness durable state), not an attempt to replace Prime Agent's base prompt. |
 | `spec.agents[]` | Reusable sub-agent spec files alongside the skills, one per agent. |
-| `spec.mcpServers[]` | **Not emitted as MCP** (host has none). Each MCP-backed tool is wrapped behind the same skill shim; servers that can't be wrapped are listed in `install.md` as unavailable on this host. |
-| ADR-241 §2.2 `autonomous` block | A documented invocation snippet in `install.md`: `prime-agent --autonomous --autonomous-gate "<gateCommand>" --autonomous-max-turns <maxTurns> "<goal.text>"`, plus `/goal --budget <tokenBudget>` and `/heartbeat` guidance. No autonomous fields are silently dropped. |
+| `spec.mcpServers[]` | **Not emitted as MCP** (host has none). Each MCP-backed tool is wrapped behind the same skill shim; servers that can't be wrapped are listed in `install-prime-agent.md` as unavailable on this host. |
+| ADR-241 §2.2 `autonomous` block | A documented invocation snippet in `install-prime-agent.md`: `prime-agent --autonomous --autonomous-gate "<gateCommand>" --autonomous-max-turns <maxTurns> "<goal.text>"`, plus `/goal --budget <tokenBudget>` and `/heartbeat` guidance. No autonomous fields are silently dropped. |
 | `spec.permissions` | See §2.2 — the load-bearing rule. |
 
-Also emitted: `install.md` (how to install Prime Agent, where the skills land, precedence notes, the sandbox warning below).
+Also emitted: `install-prime-agent.md` (how to install Prime Agent, where the skills land, precedence notes, the sandbox warning below). The runbook name is host-qualified — host-opencode already owns `install.md`, and a multi-host scaffold merges every adapter's file map into one directory, so an unqualified name would collide (implementation note, 2026-08-06).
 
 ### 2.2 Fail-closed permissions posture
 
 Prime Agent executes model-written Python at user permission level with no native allow/deny enforcement. Therefore:
 
-- If `spec.permissions.deny` is **non-empty**, `generateConfig` MUST emit an explicit, prominent `SANDBOX-REQUIRED.md` (and the same warning at the top of `install.md`) stating that this harness's deny-list **cannot be enforced by Prime Agent itself** and enumerating the denied capabilities that require an external sandbox (container, RVM per ADR-018, or equivalent).
+- If `spec.permissions.deny` is **non-empty**, `generateConfig` MUST emit an explicit, prominent `SANDBOX-REQUIRED.md` (and the same warning at the top of `install-prime-agent.md`) stating that this harness's deny-list **cannot be enforced by Prime Agent itself** and enumerating the denied capabilities that require an external sandbox (container, RVM per ADR-018, or equivalent).
 - The adapter MUST NOT silently drop the deny-list (the ADR-046 bug class). Emitting the harness *without* the warning artifacts is a contract-test failure.
 - `spec.permissions.allow` entries are projected into each generated `SKILL.md` description so the model-facing surface documents intended scope, even though enforcement is external.
 
@@ -73,9 +73,9 @@ Contract tests, per the host-adapter convention (ADR-032/036/044):
 1. **Frontmatter validity**: every generated `SKILL.md` has `name` matching `^[a-z0-9-]+$` and `description` ≤ 1024 chars; tool names that violate the charset are normalized deterministically.
 2. **Completeness**: exactly one skill directory per `spec.tools` entry, each with parseable `pyproject.toml` and an importable shim module path.
 3. **Golden file**: `generateConfig(defaultSpec)` snapshot-matches a committed golden output byte-for-byte (determinism gate for the Python codegen path).
-4. **Fail-closed**: with non-empty `permissions.deny`, the output map contains `SANDBOX-REQUIRED.md` naming every denied capability, and `install.md` opens with the warning; with an empty deny-list, neither warning artifact appears.
-5. **No silent drops**: every `HarnessSpec` field consumed by the emission map in §2.1 either appears in the output or is explicitly listed in `install.md` as unsupported on this host (ADR-044 capability-coverage discipline).
-6. **Autonomous projection**: given an ADR-241 `autonomous` block, `install.md` contains the exact `--autonomous-gate`/`--autonomous-max-turns` invocation; absent the block, no autonomous section is emitted.
+4. **Fail-closed**: with non-empty `permissions.deny`, the output map contains `SANDBOX-REQUIRED.md` naming every denied capability, and `install-prime-agent.md` opens with the warning; with an empty deny-list, neither warning artifact appears.
+5. **No silent drops**: every `HarnessSpec` field consumed by the emission map in §2.1 either appears in the output or is explicitly listed in `install-prime-agent.md` as unsupported on this host (ADR-044 capability-coverage discipline).
+6. **Autonomous projection**: given an ADR-241 `autonomous` block, `install-prime-agent.md` contains the exact `--autonomous-gate`/`--autonomous-max-turns` invocation; absent the block, no autonomous section is emitted.
 
 ## References
 

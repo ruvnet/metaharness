@@ -123,13 +123,22 @@ export async function runFlywheelGenerations(cfg: FlywheelConfig): Promise<Flywh
 
     // propose + evaluate one candidate per mutation target, gate each on the HOLDOUT.
     const base: PolicyGenome = { id: parentId, generation: gen, parents: [parentId], policy };
-    const cands: Array<{ target: string; policy: Policy; score: Score; reasons: string[]; promote: boolean }> = [];
+    const cands: Array<{
+      target: string; policy: Policy; score: Score; reasons: string[]; promote: boolean;
+      summary?: string; inverse?: CandidateMutation['inverse'];
+    }> = [];
     for (const target of targets) {
       const proposed = await cfg.proposer(base, target);
-      const candPolicy: Policy = { ...policy, [target]: proposed };
+      // ADR-241 §2.1 (additive): normalize the proposer result — legacy bare string, or the object form
+      // carrying an evidence-citing summary + rollback inverse for the minted lineage commit.
+      const norm = typeof proposed === 'string' ? { value: proposed } : proposed;
+      const candPolicy: Policy = { ...policy, [target]: norm.value };
       const candScore = await cfg.evaluator(candPolicy, cfg.holdout);
       const decision = rule({ baseline: score, candidate: candScore });
-      cands.push({ target, policy: candPolicy, score: candScore, reasons: decision.reasons, promote: decision.promote });
+      cands.push({
+        target, policy: candPolicy, score: candScore, reasons: decision.reasons, promote: decision.promote,
+        summary: norm.summary, inverse: norm.inverse,
+      });
     }
 
     // winner = highest primary among the promotable; then verify it survives the FROZEN anchor.

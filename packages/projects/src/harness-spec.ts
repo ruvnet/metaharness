@@ -329,8 +329,9 @@ export function replaySpec(
       output = { v: round6(draw), h: stepHash, role: step.role };
     }
     trace.push({ stepId: step.id, output });
+    cost += 1;
   }
 
   const hash = hashJson({ trace, policy: s.policy });
-  return { hash, trace };
+  return { hash, trace, ...(halt ? { halt } : {}) };
 }

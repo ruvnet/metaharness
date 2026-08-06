@@ -1,0 +1,201 @@
+// SPDX-License-Identifier: MIT
+//
+// Autonomous subsystem: the optional `autonomous` block on HarnessSpec
+// per ADR-241 §2.2 — persistent goal (+ token budget), heartbeat re-entry,
+// quality gate command, and a hard turn ceiling.
+//
+// CROSS-LANGUAGE LOCKSTEP (ADR-029 style): the validator error strings
+// below are a byte-for-byte contract with the TS validator in
+// `packages/kernel-js`. Do NOT reword them without changing both sides
+// and their lockstep fixtures.
+
+//! Autonomous-mode spec (goal / heartbeat / gate / max-turns) + validator.
+
+use serde::{Deserialize, Serialize};
+
+/// Persistent objective for an autonomous run.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct Goal {
+    /// The goal text the harness re-reads each turn.
+    pub text: String,
+    /// Optional token budget for pursuing the goal (JSON key: `tokenBudget`).
+    pub token_budget: Option<i64>,
+}
+
+/// Periodic re-entry instruction.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct Heartbeat {
+    /// Cadence expression (host-interpreted, e.g. "30m" or a cron line).
+    pub cadence: String,
+    /// Instruction delivered on each heartbeat firing.
+    pub instruction: String,
+}
+
+/// The optional `autonomous` block on HarnessSpec (ADR-241 §2.2).
+///
+/// Semantics follow the ADR-159 `budgets`/`guards` discipline: hitting a
+/// budget or failing the gate halts deterministically; reaching a limit is
+/// not success.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct AutonomousSpec {
+    /// Persistent objective (+ budget).
+    pub goal: Option<Goal>,
+    /// Periodic re-entry.
+    pub heartbeat: Option<Heartbeat>,
+    /// Quality gate a turn must pass, e.g. "npm run check"
+    /// (JSON key: `gateCommand`).
+    pub gate_command: Option<String>,
+    /// Hard turn ceiling (JSON key: `maxTurns`).
+    pub max_turns: Option<i64>,
+}
+
+/// Validate an autonomous block. Returns the full list of violations;
+/// an empty vec means the spec is valid. Absent optional fields are valid.
+///
+/// LOCKSTEP CONTRACT: each string must match the TS validator byte-for-byte.
+pub fn validate_autonomous(spec: &AutonomousSpec) -> Vec<String> {
+    let mut errors = Vec::new();
+    if let Some(goal) = &spec.goal {
+        if goal.text.trim().is_empty() {
+            errors.push("autonomous.goal.text must be non-empty".to_string());
+        }
+        if let Some(budget) = goal.token_budget {
+            if budget <= 0 {
+                errors.push("autonomous.goal.tokenBudget must be > 0".to_string());
+            }
+        }
+    }
+    if let Some(hb) = &spec.heartbeat {
+        if hb.cadence.trim().is_empty() {
+            errors.push("autonomous.heartbeat.cadence must be non-empty".to_string());
+        }
+        if hb.instruction.trim().is_empty() {
+            errors.push("autonomous.heartbeat.instruction must be non-empty".to_string());
+        }
+    }
+    if let Some(gate) = &spec.gate_command {
+        if gate.trim().is_empty() {
+            errors.push("autonomous.gateCommand must be non-empty".to_string());
+        }
+    }
+    if let Some(turns) = spec.max_turns {
+        if turns < 1 {
+            errors.push("autonomous.maxTurns must be >= 1".to_string());
+        }
+    }
+    errors
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn spec_from(json: &str) -> AutonomousSpec {
+        serde_json::from_str(json).unwrap()
+    }
+
+    #[test]
+    fn empty_spec_is_valid() {
+        assert!(validate_autonomous(&AutonomousSpec::default()).is_empty());
+    }
+
+    #[test]
+    fn fully_populated_valid_spec_passes() {
+        let s = spec_from(
+            r#"{
+                "goal": { "text": "ship it", "tokenBudget": 100000 },
+                "heartbeat": { "cadence": "30m", "instruction": "re-read goal" },
+                "gateCommand": "npm run check",
+                "maxTurns": 50
+            }"#,
+        );
+        assert!(validate_autonomous(&s).is_empty());
+    }
+
+    #[test]
+    fn camel_case_keys_round_trip() {
+        let s = spec_from(r#"{ "goal": { "text": "g", "tokenBudget": 1 }, "gateCommand": "c", "maxTurns": 2 }"#);
+        let json = serde_json::to_string(&s).unwrap();
+        assert!(json.contains("\"tokenBudget\""));
+        assert!(json.contains("\"gateCommand\""));
+        assert!(json.contains("\"maxTurns\""));
+        let back: AutonomousSpec = serde_json::from_str(&json).unwrap();
+        assert_eq!(s, back);
+    }
+
+    /// Table-driven: every lockstep error string, byte-for-byte.
+    #[test]
+    fn validator_emits_each_lockstep_error_string() {
+        let cases: &[(&str, &str)] = &[
+            (
+                r#"{ "goal": { "text": "   " } }"#,
+                "autonomous.goal.text must be non-empty",
+            ),
+            (
+                r#"{ "goal": { "text": "g", "tokenBudget": 0 } }"#,
+                "autonomous.goal.tokenBudget must be > 0",
+            ),
+            (
+                r#"{ "goal": { "text": "g", "tokenBudget": -5 } }"#,
+                "autonomous.goal.tokenBudget must be > 0",
+            ),
+            (
+                r#"{ "heartbeat": { "cadence": "", "instruction": "i" } }"#,
+                "autonomous.heartbeat.cadence must be non-empty",
+            ),
+            (
+                r#"{ "heartbeat": { "cadence": "30m", "instruction": " " } }"#,
+                "autonomous.heartbeat.instruction must be non-empty",
+            ),
+            (
+                r#"{ "gateCommand": "  " }"#,
+                "autonomous.gateCommand must be non-empty",
+            ),
+            (
+                r#"{ "maxTurns": 0 }"#,
+                "autonomous.maxTurns must be >= 1",
+            ),
+            (
+                r#"{ "maxTurns": -1 }"#,
+                "autonomous.maxTurns must be >= 1",
+            ),
+        ];
+        for (json, want) in cases {
+            let errors = validate_autonomous(&spec_from(json));
+            assert_eq!(errors, vec![want.to_string()], "spec: {json}");
+        }
+    }
+
+    #[test]
+    fn validator_accumulates_all_errors() {
+        let s = spec_from(
+            r#"{
+                "goal": { "text": "", "tokenBudget": -1 },
+                "heartbeat": { "cadence": "", "instruction": "" },
+                "gateCommand": "",
+                "maxTurns": 0
+            }"#,
+        );
+        let errors = validate_autonomous(&s);
+        assert_eq!(
+            errors,
+            vec![
+                "autonomous.goal.text must be non-empty",
+                "autonomous.goal.tokenBudget must be > 0",
+                "autonomous.heartbeat.cadence must be non-empty",
+                "autonomous.heartbeat.instruction must be non-empty",
+                "autonomous.gateCommand must be non-empty",
+                "autonomous.maxTurns must be >= 1",
+            ]
+        );
+    }
+
+    #[test]
+    fn absent_optional_fields_are_valid() {
+        let s = spec_from(r#"{ "goal": { "text": "g" } }"#);
+        assert!(validate_autonomous(&s).is_empty());
+    }
+}

@@ -225,3 +225,86 @@ describe('@metaharness/host-prime-agent (ADR-242)', () => {
     expect(md).toContain('- `Bash(npm run:*)`');
   });
 });
+
+// Regressions from the P1 adversarial verify round (loop directive P1).
+describe('adversarial-verify regressions', () => {
+  it('colliding normalized names get deterministic -2 suffixes, nothing overwritten', () => {
+    const spec = {
+      name: 'collide',
+      tools: [
+        { name: 'Run Tests', description: 'FIRST' },
+        { name: 'run_tests', description: 'SECOND' },
+        { name: 'run-tests', description: 'THIRD' },
+      ],
+      agents: [{ name: 'Helper!' }, { name: 'helper' }],
+    };
+    const out = adapter.generateConfig(spec);
+    const skillDirs = Object.keys(out).filter((k) => k.endsWith('/SKILL.md'));
+    expect(skillDirs).toEqual([
+      '.prime/agent/skills/run-tests/SKILL.md',
+      '.prime/agent/skills/run-tests-2/SKILL.md',
+      '.prime/agent/skills/run-tests-3/SKILL.md',
+    ]);
+    expect(out['.prime/agent/skills/run-tests/SKILL.md']).toContain('FIRST');
+    expect(out['.prime/agent/skills/run-tests-2/SKILL.md']).toContain('SECOND');
+    expect(out['.prime/agent/skills/run-tests-3/SKILL.md']).toContain('THIRD');
+    // The -2 shim imports a matching disambiguated Python package.
+    expect(out['.prime/agent/skills/run-tests-2/src/run_tests_2/__init__.py']).toBeDefined();
+    expect(Object.keys(out).filter((k) => k.startsWith('.prime/agent/agents/'))).toEqual([
+      '.prime/agent/agents/helper.md',
+      '.prime/agent/agents/helper-2.md',
+    ]);
+    // Determinism holds across calls.
+    expect(adapter.generateConfig(spec)).toEqual(out);
+  });
+
+  it('hooks and statusLine are named as unsupported, never silently ignored', () => {
+    const spec = {
+      name: 'hooked',
+      tools: [],
+      hooks: [{ event: 'PostToolUse', command: 'npm run lint' }],
+      statusLine: 'harness: {model}',
+    };
+    const runbook = adapter.generateConfig(spec)[RUNBOOK]!;
+    expect(runbook).toContain('## Unsupported on this host');
+    expect(runbook).toContain('`hooks`');
+    expect(runbook).toContain('`statusLine`');
+    // Absent both → no unsupported section at all.
+    const clean = adapter.generateConfig({ name: 'clean', tools: [] })[RUNBOOK]!;
+    expect(clean).not.toContain('## Unsupported on this host');
+  });
+
+  it('autonomous projection never fabricates values for absent optionals', () => {
+    const spec = {
+      name: 'auto-partial',
+      tools: [],
+      autonomous: { goal: { text: 'ship' } },
+    };
+    const runbook = adapter.generateConfig(spec)[RUNBOOK]!;
+    expect(runbook).toContain('prime-agent --autonomous "ship"');
+    expect(runbook).not.toContain('--autonomous-gate ""');
+    expect(runbook).not.toContain('--autonomous-max-turns 0');
+    expect(runbook).not.toContain('/goal --budget 0');
+  });
+
+  it('autonomous.heartbeat cadence + instruction are projected', () => {
+    const spec = {
+      name: 'auto-hb',
+      tools: [],
+      autonomous: { heartbeat: { cadence: 'every 30m', instruction: 'check CI status' } },
+    };
+    const runbook = adapter.generateConfig(spec)[RUNBOOK]!;
+    expect(runbook).toContain('every 30m');
+    expect(runbook).toContain('check CI status');
+  });
+
+  it('1024-char truncation never splits a surrogate pair', () => {
+    const description = 'x'.repeat(1023) + '\u{1F600}' + 'tail';
+    const spec = { name: 's', tools: [{ name: 'emoji', description }] };
+    const md = adapter.generateConfig(spec)['.prime/agent/skills/emoji/SKILL.md']!;
+    const fm = frontmatter(md);
+    expect(fm.description.length).toBeLessThanOrEqual(1024);
+    // No lone surrogate anywhere in the emitted file.
+    expect(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u.test(md)).toBe(false);
+  });
+});

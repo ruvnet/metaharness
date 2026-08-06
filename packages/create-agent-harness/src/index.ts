@@ -145,6 +145,8 @@ export interface CliArgs {
   withWasm?: string;
   /** ADR-147: include Darwin Mode self-improvement (default on; --no-darwin to skip). */
   darwin?: boolean;
+  /** ADR-241 §2.3: include the recoverable-session log scaffold (default OFF; --sessions to enable). */
+  sessions?: boolean;
 }
 
 export function parseArgs(argv: string[]): CliArgs {
@@ -168,6 +170,10 @@ export function parseArgs(argv: string[]): CliArgs {
       out.darwin = true;
     } else if (a === '--no-darwin') {
       out.darwin = false;
+    } else if (a === '--sessions') {
+      out.sessions = true;
+    } else if (a === '--no-sessions') {
+      out.sessions = false;
     } else if (a === '--description' || a === '-d') {
       out.description = argv[++i];
     } else if (a === '--target') {
@@ -228,6 +234,12 @@ export interface ScaffoldOptions {
    * the darwin CLI, and the dependency. Default ON; opt out with `--no-darwin`.
    */
   darwin?: boolean;
+  /**
+   * ADR-241 §2.3: emit a crash-recoverable, forkable session log scaffold
+   * (`src/sessions/log.ts`, dependency-free copy-in). Default OFF — sessions
+   * are an *optional* primitive per the ADR; opt in with `--sessions`.
+   */
+  sessions?: boolean;
 }
 
 /** ADR-147: the darwin version a scaffolded harness depends on. */
@@ -288,6 +300,168 @@ Defaults worth carrying into how you evolve and run this harness (full evidence 
 5. **Only trust batch evaluation of the final artifact** — in-loop counters drift 1.5–5×.
 6. **The harness multiplies the model; it can't rescue one below the task's reasoning floor.** Pick
    the smallest model *above* the floor, then let evolution do the rest.
+`;
+}
+
+/**
+ * ADR-241 §2.3: the copy-in recoverable-session log emitted with --sessions.
+ * Deliberately self-contained: node builtins only, NO @metaharness/kernel
+ * import, so the generated harness owns the file outright. The wire format
+ * and hash fold match packages/kernel-js/src/session.ts byte-for-byte.
+ * Emitted code avoids template literals so this template string stays simple.
+ */
+function sessionsLogTemplate(): string {
+  return `// SPDX-License-Identifier: MIT
+//
+// Recoverable session log — copy-in scaffold from ADR-241 §2.3
+// (metaharness docs/adrs/ADR-241-prime-agent-continual-harness-refine.md).
+// Self-contained: node builtins only, no @metaharness/kernel dependency.
+//
+// Append-only JSONL: one event per line, per-branch 0-based monotonic
+// indexes; a forked branch's first event carries parent {branch, index}.
+// Wire key order is EXACTLY index, branch, parent, kind, payload (parent
+// omitted when absent).
+//
+// State-hash fold (mirrors @metaharness/kernel SessionLog exactly):
+//   hexPrev = ''; for each lineage event (root -> tip):
+//     hexPrev = lowercaseHex(sha256(utf8(hexPrev + canonicalJson(event))))
+// where canonicalJson is recursively key-sorted, whitespace-free JSON.
+//
+// Session state lives wherever you point the constructor (suggested:
+// .harness/sessions/<id>.jsonl). Prune old logs by deleting files.
+
+import { appendFile, readFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+
+export interface SessionEvent {
+  index: number;
+  branch: string;
+  parent?: { branch: string; index: number };
+  kind: string;
+  payload: unknown;
+}
+
+function canonicalJson(v: unknown): string {
+  if (v === null || typeof v !== 'object') return JSON.stringify(v) ?? 'null';
+  if (Array.isArray(v)) return '[' + v.map(canonicalJson).join(',') + ']';
+  const rec = v as Record<string, unknown>;
+  const keys = Object.keys(rec).filter(k => rec[k] !== undefined).sort();
+  return '{' + keys.map(k => JSON.stringify(k) + ':' + canonicalJson(rec[k])).join(',') + '}';
+}
+
+function serialize(e: SessionEvent): string {
+  return JSON.stringify(e.parent === undefined
+    ? { index: e.index, branch: e.branch, kind: e.kind, payload: e.payload }
+    : { index: e.index, branch: e.branch,
+        parent: { branch: e.parent.branch, index: e.parent.index },
+        kind: e.kind, payload: e.payload });
+}
+
+export class SessionLog {
+  private events: SessionEvent[] = [];
+  private nextIndex = new Map<string, number>();
+  private branchParent = new Map<string, { branch: string; index: number }>();
+  private pendingParent?: { branch: string; index: number };
+
+  constructor(readonly path: string, readonly branch: string = 'main') {}
+
+  /** Resume: read + validate the JSONL log; throws on the first error. */
+  static async open(path: string, branch = 'main'): Promise<SessionLog> {
+    const log = new SessionLog(path, branch);
+    if (!existsSync(path)) return log;
+    const raw = await readFile(path, 'utf-8');
+    const errors = log.load(raw);
+    if (errors.length > 0) throw new Error(errors[0]);
+    return log;
+  }
+
+  private load(raw: string): string[] {
+    const errors: string[] = [];
+    const seen = new Set<string>();
+    const lines = raw.split('\\n');
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i] === '') continue;
+      const n = i + 1;
+      let e: SessionEvent;
+      try { e = JSON.parse(lines[i]!); } catch {
+        errors.push('session: line ' + n + ': corrupted line (invalid JSON)'); continue;
+      }
+      if (typeof e?.index !== 'number' || typeof e?.branch !== 'string' || typeof e?.kind !== 'string') {
+        errors.push('session: line ' + n + ': corrupted line (not a valid session event)'); continue;
+      }
+      const key = e.branch + ' ' + e.index;
+      if (seen.has(key)) { errors.push('session: line ' + n + ': duplicate event (' + e.branch + ', ' + e.index + ')'); continue; }
+      const expected = this.nextIndex.get(e.branch) ?? 0;
+      if (e.index !== expected) {
+        errors.push('session: line ' + n + ': branch "' + e.branch + '" index ' + e.index + ' is not monotonic (expected ' + expected + ')'); continue;
+      }
+      if (expected === 0 && this.events.length > 0) {
+        if (!e.parent) { errors.push('session: line ' + n + ': first event of branch "' + e.branch + '" must carry a parent reference'); continue; }
+        if (!seen.has(e.parent.branch + ' ' + e.parent.index)) {
+          errors.push('session: line ' + n + ': parent (' + e.parent.branch + ', ' + e.parent.index + ') does not exist'); continue;
+        }
+        this.branchParent.set(e.branch, e.parent);
+      }
+      seen.add(key);
+      this.events.push(e);
+      this.nextIndex.set(e.branch, expected + 1);
+    }
+    return errors;
+  }
+
+  /** Append an event on the active branch (next monotonic index). */
+  async append(kind: string, payload: unknown): Promise<SessionEvent> {
+    const index = this.nextIndex.get(this.branch) ?? 0;
+    const parent = index === 0 ? this.pendingParent : undefined;
+    const event: SessionEvent = parent === undefined
+      ? { index, branch: this.branch, kind, payload }
+      : { index, branch: this.branch, parent, kind, payload };
+    await appendFile(this.path, serialize(event) + '\\n', 'utf-8');
+    if (parent) this.branchParent.set(this.branch, parent);
+    this.events.push(event);
+    this.nextIndex.set(this.branch, index + 1);
+    this.pendingParent = undefined;
+    return event;
+  }
+
+  /** Fork at atIndex on the active branch: a sibling log over the same file. */
+  fork(atIndex: number, newBranch: string): SessionLog {
+    const count = this.nextIndex.get(this.branch) ?? 0;
+    if (atIndex < 0 || atIndex >= count) throw new Error('session: cannot fork at index ' + atIndex);
+    const log = new SessionLog(this.path, newBranch);
+    log.events = this.events; log.nextIndex = this.nextIndex; log.branchParent = this.branchParent;
+    log.pendingParent = { branch: this.branch, index: atIndex };
+    return log;
+  }
+
+  private lineage(branch: string): SessionEvent[] {
+    const own = this.events.filter(e => e.branch === branch).sort((a, b) => a.index - b.index);
+    const p = this.branchParent.get(branch);
+    if (!p) return own;
+    return [...this.lineage(p.branch).filter(e => e.branch !== p.branch || e.index <= p.index), ...own];
+  }
+
+  /** Lowercase-hex state hash of the branch lineage ('' when empty). */
+  stateHash(branch: string = this.branch): string {
+    let hexPrev = '';
+    for (const e of this.lineage(branch)) {
+      hexPrev = createHash('sha256').update(hexPrev + canonicalJson(e), 'utf-8').digest('hex');
+    }
+    return hexPrev;
+  }
+
+  /** Deterministic replay: lineage event count + integrity hash. */
+  replay(branch: string = this.branch): { eventCount: number; stateHash: string } {
+    return { eventCount: this.lineage(branch).length, stateHash: this.stateHash(branch) };
+  }
+
+  /** Re-read the file and report all validation errors (empty = valid). */
+  async validate(): Promise<string[]> {
+    if (!existsSync(this.path)) return [];
+    return new SessionLog(this.path, this.branch).load(await readFile(this.path, 'utf-8'));
+  }
+}
 `;
 }
 
@@ -444,6 +618,36 @@ export async function scaffold(opts: ScaffoldOptions): Promise<ScaffoldResult> {
     const skillIdx = rendered.findIndex(r => r.path === skillPath);
     const skill = { path: skillPath, content: darwinEvolveSkill(opts.name), rendered: false, unresolved: [] };
     if (skillIdx !== -1) rendered[skillIdx] = skill; else rendered.push(skill);
+  }
+
+  // ADR-241 §2.3: recoverable-session scaffold. Default OFF (opt in with
+  // --sessions) — the ADR ships sessions as an *optional* primitive, unlike
+  // darwin's default-on. The emitted src/sessions/log.ts is a dependency-free
+  // copy-in (no @metaharness/kernel import); session state is host-agnostic
+  // scaffold code, NOT host config, so host-config.ts is deliberately
+  // untouched.
+  //
+  // ADR-027 asymmetric-feature note: --sessions is CLI-only this pass; the
+  // web-ui surface intentionally does NOT mirror this toggle yet. If/when it
+  // does, the manifest `surface` field distinguishes the emitters.
+  if (opts.sessions === true) {
+    const logPath = 'src/sessions/log.ts';
+    if (!rendered.some(r => r.path === logPath)) {
+      rendered.push({ path: logPath, content: sessionsLogTemplate(), rendered: false, unresolved: [] });
+    }
+    // Append a sessions note to the generated README (best-effort, darwin-style
+    // error swallowing: a README that isn't there or isn't text just skips).
+    const readmeIdx = rendered.findIndex(r => r.path === 'README.md');
+    if (readmeIdx !== -1) {
+      try {
+        rendered[readmeIdx]!.content = rendered[readmeIdx]!.content.replace(/\n*$/, '\n') +
+          `\n## Recoverable sessions (ADR-241 §2.3)\n\n` +
+          `This harness includes \`src/sessions/log.ts\` — a crash-recoverable, forkable\n` +
+          `JSONL session log (append-only events, deterministic replay, integrity state\n` +
+          `hash). Session state lives where you point the log (suggested:\n` +
+          `\`.harness/sessions/<id>.jsonl\`); prune by deleting old files.\n`;
+      } catch { /* leave README untouched if the note can't be appended */ }
+    }
   }
 
   const fileMap = asFileMap(rendered);
@@ -713,6 +917,7 @@ export async function main(argv: string[]): Promise<number> {
     console.log('Usage: npx metaharness <name> [--template <id>] [--host claude-code|codex|pi-dev|hermes] [--description "..."] [--target <path>] [--force]');
     console.log('       --target <path>   write the harness to <path> instead of ./<name>');
     console.log('       --no-darwin       skip Darwin Mode self-improvement (default: integrated; adds `npm run evolve`)');
+    console.log('       --sessions        add a crash-recoverable session log (src/sessions/log.ts — ADR-241 §2.3; default: off)');
     console.log('       --with-wasm <crate-path>   build a wasm-pack crate into the harness as commands (GH #25)');
     console.log('       npx metaharness score <repo> [--json]   (scorecard: fit/cost/safety for a repo — ADR-041)');
     console.log('       npx metaharness analyze <repo>           (recommend a harness plan, no-exec)');

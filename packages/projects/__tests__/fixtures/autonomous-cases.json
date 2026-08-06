@@ -1,0 +1,84 @@
+[
+  {
+    "name": "valid-full-block",
+    "spec": {
+      "goal": { "text": "keep the suite green", "tokenBudget": 1000 },
+      "heartbeat": { "cadence": "5m", "instruction": "re-check the goal and continue" },
+      "gateCommand": "npm run check",
+      "maxTurns": 10
+    },
+    "errors": []
+  },
+  {
+    "name": "valid-empty-block",
+    "spec": {},
+    "errors": []
+  },
+  {
+    "name": "valid-partial-goal-only-no-budget",
+    "spec": { "goal": { "text": "ship it" } },
+    "errors": []
+  },
+  {
+    "name": "valid-max-turns-one",
+    "spec": { "maxTurns": 1 },
+    "errors": []
+  },
+  {
+    "name": "empty-goal-text",
+    "spec": { "goal": { "text": "" } },
+    "errors": ["autonomous.goal.text must be non-empty"]
+  },
+  {
+    "name": "whitespace-goal-text",
+    "spec": { "goal": { "text": "   " } },
+    "errors": ["autonomous.goal.text must be non-empty"]
+  },
+  {
+    "name": "zero-token-budget",
+    "spec": { "goal": { "text": "ok", "tokenBudget": 0 } },
+    "errors": ["autonomous.goal.tokenBudget must be > 0"]
+  },
+  {
+    "name": "negative-token-budget",
+    "spec": { "goal": { "text": "ok", "tokenBudget": -5 } },
+    "errors": ["autonomous.goal.tokenBudget must be > 0"]
+  },
+  {
+    "name": "empty-heartbeat-cadence",
+    "spec": { "heartbeat": { "cadence": "", "instruction": "continue" } },
+    "errors": ["autonomous.heartbeat.cadence must be non-empty"]
+  },
+  {
+    "name": "whitespace-heartbeat-instruction",
+    "spec": { "heartbeat": { "cadence": "5m", "instruction": "  " } },
+    "errors": ["autonomous.heartbeat.instruction must be non-empty"]
+  },
+  {
+    "name": "whitespace-gate-command",
+    "spec": { "gateCommand": "   " },
+    "errors": ["autonomous.gateCommand must be non-empty"]
+  },
+  {
+    "name": "zero-max-turns",
+    "spec": { "maxTurns": 0 },
+    "errors": ["autonomous.maxTurns must be >= 1"]
+  },
+  {
+    "name": "everything-invalid",
+    "spec": {
+      "goal": { "text": " ", "tokenBudget": 0 },
+      "heartbeat": { "cadence": "", "instruction": " " },
+      "gateCommand": "",
+      "maxTurns": 0
+    },
+    "errors": [
+      "autonomous.goal.text must be non-empty",
+      "autonomous.goal.tokenBudget must be > 0",
+      "autonomous.heartbeat.cadence must be non-empty",
+      "autonomous.heartbeat.instruction must be non-empty",
+      "autonomous.gateCommand must be non-empty",
+      "autonomous.maxTurns must be >= 1"
+    ]
+  }
+]

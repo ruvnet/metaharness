@@ -13,6 +13,10 @@ import { createRequire } from 'node:module';
 
 export type { McpServerSpec, ToolSpec, AgentSpec, HookSpec, HarnessSpec, HostAdapter } from './types.js';
 
+// ADR-241 §2.3: recoverable, forkable session log primitive.
+export { SessionLog } from './session.js';
+export type { SessionEvent } from './session.js';
+
 export interface KernelInfo {
   version: string;
   git_sha: string;

@@ -1,0 +1,5 @@
+{"index":0,"branch":"main","kind":"turn","payload":{"role":"user","text":"hello"}}
+{"index":1,"branch":"main","kind":"tool","payload":{"args":{"cmd":"ls","cwd":"/"},"name":"bash"}}
+{"index":2,"branch":"main","kind":"turn","payload":{"role":"assistant","text":"done"}}
+{"index":0,"branch":"side","parent":{"branch":"main","index":1},"kind":"note","payload":{"forked":true}}
+{"index":3,"branch":"main","kind":"turn","payload":{"n":42,"nested":{"a":[1,2,3],"b":null}}}
