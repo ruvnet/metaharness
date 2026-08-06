@@ -1,0 +1,89 @@
+# Prime Agent integration — autonomous loop worker directive
+
+Versioned source of truth for the `/loop` worker driving ADR-241 + ADR-242 to Implemented. **Cadence: self-paced, until DONE or blocked.**
+
+## ▶ CURRENT DIRECTIVE (2026-08-06): implement ADR-241 + ADR-242 fully — swarm-per-phase, $0 external spend
+
+Branch `claude/metaharness-improvements-research-eq6q2w`, PR **#169**. Implement in **Rust + TypeScript (wasm)** per the kernel pattern (ADR-002/002a). Each phase runs as one **Workflow swarm** (implementers → test-writers → adversarial verifiers); the loop worker is the integrator (commit/push/tick/re-arm).
+
+**Hard guards (never violate):**
+- `meetsPromotionRule` (ADR-072) and `validateGeneratedCode` (ADR-071) are FROZEN — additive changes only around them, never edits to them.
+- $0 external LLM spend: RefineMutator tests use local `node:http` mocks (the `ruvllm-mutator.test.ts` pattern). No OpenRouter/API calls.
+- Baseline-diff discipline: pre-existing failures recorded at P0 are not ours to hide; only fix regressions **we** introduce. ONLY real measured numbers — never fabricate test counts.
+- Host count strings use the REAL count: prime-agent is the **10th implemented** adapter (host-eve ADR-083 is Proposed-only; ADR-242's "11th host" counts it — note this when flipping status).
+
+## Phases (tick the boxes; execute in order; one phase per wake unless trivially small)
+
+### ★ P0 — Bootstrap + baseline (solo)
+- [ ] `npm install` at root; `npm --prefix apps/web-ui install`
+- [ ] `npm run build` (build-ordered) — record failures if any
+- [ ] `npx vitest run` baseline → record pass/fail counts below (HONEST)
+- [ ] `cargo test --workspace` baseline → record
+- [ ] wasm-pack present? (`cargo install wasm-pack` if absent; if install impossible, mark WASM-SKIP below and ship Rust core + TS mirror without the wasm binding build)
+- [ ] Commit this directive + baseline numbers
+
+**Baseline (P0 records here):** _pending_
+
+### ★ P1 — `packages/host-prime-agent` (ADR-242) — swarm: implementer → test-writer → 2 verifiers
+- [ ] 6-file package mirroring `host-opencode` (`package.json` `@metaharness/host-prime-agent` 0.1.0, tsconfig, LICENSE, README)
+- [ ] `src/index.ts`: `HOST_NAME='prime-agent'`; renderers `skillMd` / `pyprojectToml` / `skillShimPy` / `subAgentSpec` / `supplementalPrompt` / `installMd` / `sandboxRequiredMd`; default-export `adapter`
+- [ ] `__tests__/index.test.ts` per ADR-242 Test Contract: frontmatter `^[a-z0-9-]+$` + ≤1024 desc; one skill dir per tool; committed golden snapshot; fail-closed `SANDBOX-REQUIRED.md` on non-empty deny (absent on empty); byte-determinism; autonomous projection; no-silent-drop
+- [ ] Verifiers: ADR-242 §2.1/§2.2 conformance; determinism + Python shim structural validity
+
+### ★ P2 — Propagation (13-point checklist) — swarm: 3 parallel implementers (CLI+scripts / web-ui / bench+meta) → verifier
+- [ ] `create-agent-harness/src/index.ts:63` HOSTS + comment
+- [ ] `create-agent-harness/src/host-config.ts` `case 'prime-agent'` (+ "OTHER eight hosts" comment) — byte-identical with web-ui
+- [ ] `apps/web-ui/src/generator/scaffold.ts` `hostFiles()` same emission (ADR-027 parity)
+- [ ] `apps/web-ui`: `types.ts` HostId; `catalog.ts` HOSTS; `HostGuide.tsx` union+GUIDES (≥2 steps); `verify.ts` hostArtifacts
+- [ ] `packages/bench`: host-bench.ts import+push; package.json dep; host-baseline.json row; `__tests__/host-bench.test.ts` set → 10
+- [ ] `apps/web-ui/.../host-guide.test.ts` exhaustive array → 10
+- [ ] `scripts/verify-all-hosts.mjs` HOSTS + checks + realChecks (skip-gated); `scripts/verify-harness-live.mjs` HOSTS + extractCapabilities branch
+- [ ] `scripts/build-ordered.mjs` phase-3 list; `scripts/healthcheck.mjs` INDEPENDENT set
+- [ ] `.github/workflows/published-smoke.yml:201` host loop
+- [ ] `scripts/publish-workspace.mjs` RELEASE_ORDER **together with** `__tests__/publish-workspace.test.ts`
+- [ ] `.claude-plugin/plugin.json` ↔ `claude-marketplace-plugin.test.ts`; `.codex/skills/create-harness/skill.toml` ↔ `codex-skills.test.ts`
+- [ ] Verify auto-covered paths (wizard, HarnessBuilder, `{{host}}` templates, root multi-host integration tests)
+
+### ★ P3 — `autonomous` HarnessSpec block, Rust + TS (ADR-241 §2.2) — swarm: 2 implementers (TS/Rust) → test-writer → verifier
+- [ ] TS: `kernel-js/src/types.ts` + `projects/src/harness-spec.ts` (`HarnessSpec` AND `HarnessGenomeLite`, verbatim copy both directions — the `policy` pattern); `validateSpec` flat-string checks (must not fire on `defaultSpec()`); `replaySpec` additive `halt?: {reason}` on budget exhaustion
+- [ ] Rust: `crates/kernel/src/autonomous.rs` serde types + `validate_autonomous()` same error strings; `crates/kernel-wasm` binding `autonomousValidate` (mcp_validate pattern)
+- [ ] Lockstep test: shared JSON fixtures → identical error lists TS ↔ Rust
+- [ ] Projections: host-claude-code guidance; host-prime-agent install.md snippet (P1); remaining adapters explicit no-op note + no-silent-drop contract test
+- [ ] Tests: round-trip ×2 stable; validation rejects (tokenBudget≤0, empty gateCommand, maxTurns<1); replay halt determinism
+
+### ★ P4 — Recoverable session log, Rust core + wasm + TS mirror (ADR-241 §2.3) — swarm: 2 implementers → test-writer → 2 verifiers
+- [ ] Rust `crates/kernel/src/session.rs`: `SessionEvent{index,branch,parent?,kind,payload}`, JSONL codec, monotonic+branch validation, sha256 `state_hash` over canonical fold, `replay()`, `fork(at_index)`
+- [ ] wasm bindings `sessionReplay`/`sessionStateHash`/`sessionValidate` (skip if WASM-SKIP)
+- [ ] TS mirror `kernel-js/src/session.ts` (`TrajectoryStore` prior art): append/replay/stateHash/fork/resume, pure-TS implementation
+- [ ] Cross-language invariant: committed fixture → identical state hash Rust ↔ TS
+- [ ] Scaffold toggle `--sessions/--no-sessions` (Darwin recipe: CliArgs ~167 / ScaffoldOptions ~230 / post-render block ~429); CLI-only + ADR-027 asymmetric-features note
+- [ ] Tests: write-N/kill/resume hash-identical; fork-at-k diverges; corrupted tail detected
+
+### ★ P5 — RefineMutator + flywheel evidence channel (ADR-241 §2.1) — swarm: 2 implementers → test-writer → adversarial verifier
+- [ ] `darwin-mode/src/refine-mutator.ts` implementing `CodeGenerator`: one bounded CRUD edit/one surface; summary cites trace IDs; **no evidence → no-op** (parent unchanged); nonce-distinct siblings; local-HTTP LLM client (unreachable → no-op); output passes `validateGeneratedCode`; barrel export
+- [ ] flywheel additive: `CandidateMutation.inverse?:{path,parentBytes,hash}`; proposer-summary channel to lineage commit (`run.ts:149` — old signature still works)
+- [ ] Tests (mirror mutator/ruvllm-mutator tests): one-surface; evidence IDs; no-op paths; validate-pass; apply→rollback byte-identical; refine child failing frozen scorer NOT promoted; `gateFingerprint` unchanged
+
+### ★ P6 — PTC experiment manifest (ADR-241 §2.4) — solo
+- [ ] `packages/evals-toolcall/experiments/ptc-ab.json` (arms, metrics, seeds, criterion ≥20% token cut @ non-inferior success α=0.05, SYNTHETIC discipline)
+- [ ] `packages/evals-toolcall/__tests__/ptc-ab.test.ts` (exists/parses/pre-registers)
+
+### ★ P7 — Optimize + README/docs + finish — swarm: triage/lint/simplify dimensions → fixers → README writer+reviewer
+- [ ] Full `npx vitest run` + `cargo test --workspace` + `cargo clippy` — fix OUR regressions only (baseline diff)
+- [ ] Simplify pass over new code only
+- [ ] README: `### New` item (Weight-EFT ADR-link pattern) · `## Hosts` nine→ten + row · stale counts :39/:265/:379/:400 · `docs/USERGUIDE.md`/`USAGE.md`/`ARCHITECTURE.md`/`RELEASE.md` · `create-agent-harness/README.md` · CHANGELOG entry
+- [ ] Flip ADR-241/242 Status → Implemented (2026-08-06) with honest per-section notes (PTC stays deferred by design); INDEX.md summaries match
+- [ ] Scaffold smoke: `npx metaharness tmp-bot --host prime-agent`; deny-list spec → SANDBOX-REQUIRED.md
+- [ ] Push, update PR #169 description checklist, one summary comment, STOP loop
+
+## Each tick
+1. **HEALTH** — `git status -sb` (right branch, clean or known WIP); read this doc's boxes.
+2. **RUN** — execute the next unchecked phase via its Workflow swarm (worktree isolation only where parallel agents would touch the same files).
+3. **VERIFY** — targeted `npx vitest run <paths>` + `cargo test` for touched crates; adversarial verify agents on new contracts.
+4. **UPKEEP** — commit (scoped message), push with retry/backoff, tick boxes here, refresh PR checklist.
+5. **RE-ARM** — ScheduleWakeup: ~60–120s if next phase ready; 1200s+ fallback while a swarm is in flight (task notifications are the primary signal).
+
+## Stop / complete condition
+Stop when ALL phases are checked AND full vitest is no worse than the P0 baseline AND `cargo test --workspace` is green AND README/docs updated AND everything is pushed to PR #169. Then post ONE summary comment on the PR and stop the loop. If blocked >2 ticks on the same item, record the blocker here honestly and surface it on the PR instead of spinning.
+
+See `docs/adrs/ADR-241-prime-agent-continual-harness-refine.md` · `docs/adrs/ADR-242-host-prime-agent.md` · `docs/research/scaffolding/PRIME-AGENT-ANALYSIS.md` · `docs/LOOP_WORKER.md` (format precedent).
