@@ -34,6 +34,19 @@ export type PlannerKind =
 /** Context-assembly policy; expands to a guard + memory configuration. */
 export type ContextPolicyKind = 'minimal' | 'semantic' | 'callgraph' | 'hybrid';
 
+/**
+ * Autonomous-mode block (ADR-241 §2.2). Optional on both genome and spec;
+ * round-trips verbatim. Hosts must project it or explicitly no-op — never
+ * silently drop. Hitting a budget or turn ceiling halts deterministically;
+ * reaching a limit is NOT success.
+ */
+export interface AutonomousSpec {
+  goal?: { text: string; tokenBudget?: number };
+  heartbeat?: { cadence: string; instruction: string };
+  gateCommand?: string;
+  maxTurns?: number;
+}
+
 /** The compact, mutatable harness genome (the thing Darwin Mode evolves). */
 export interface HarnessGenomeLite {
   planner: PlannerKind;
@@ -42,6 +55,8 @@ export interface HarnessGenomeLite {
   retryBudget: number;
   tools: string[];
   policy: PolicyObject;
+  /** ADR-241 §2.2 autonomous fields; copied verbatim through genome ⇄ spec. */
+  autonomous?: AutonomousSpec;
 }
 
 /** One node in the harness graph. `next` lists successor step ids. */
@@ -70,6 +85,17 @@ export interface HarnessSpec {
     reviewerCount: number;
     retryBudget: number;
     tools: string[];
+  };
+  /** ADR-241 §2.2 autonomous fields; copied verbatim through genome ⇄ spec. */
+  autonomous?: AutonomousSpec;
+}
+
+/** Deep-copy an autonomous block (all levels are plain data). */
+function copyAutonomous(a: AutonomousSpec): AutonomousSpec {
+  return {
+    ...a,
+    goal: a.goal && { ...a.goal },
+    heartbeat: a.heartbeat && { ...a.heartbeat },
   };
 }
 
@@ -149,6 +175,8 @@ export function genomeToSpec(g: HarnessGenomeLite): HarnessSpec {
       retryBudget: g.retryBudget,
       tools: g.tools.slice(),
     },
+    // ADR-241 §2.2: copied verbatim; key omitted entirely when absent.
+    ...(g.autonomous ? { autonomous: copyAutonomous(g.autonomous) } : {}),
   };
 }
 
@@ -165,6 +193,8 @@ export function specToGenome(s: HarnessSpec): HarnessGenomeLite {
     retryBudget: s.meta.retryBudget,
     tools: s.meta.tools.slice(),
     policy: { ...s.policy },
+    // ADR-241 §2.2: mirrored back verbatim; key omitted entirely when absent.
+    ...(s.autonomous ? { autonomous: copyAutonomous(s.autonomous) } : {}),
   };
 }
 
@@ -191,6 +221,33 @@ export function validateSpec(s: HarnessSpec): { ok: boolean; errors: string[] } 
   if (!(s.budgets.timeUnits > 0)) errors.push('budgets.timeUnits must be > 0');
 
   for (const e of validatePolicy(s.policy)) errors.push(`policy: ${e}`);
+
+  // ADR-241 §2.2 autonomous block. Only sub-fields of present objects are
+  // validated; whitespace-only strings count as empty. Error strings are in
+  // byte-for-byte lockstep with the Rust validator — do not reword.
+  const a = s.autonomous;
+  if (a !== undefined) {
+    if (a.goal !== undefined) {
+      if (a.goal.text.trim().length === 0) errors.push('autonomous.goal.text must be non-empty');
+      if (a.goal.tokenBudget !== undefined && !(a.goal.tokenBudget > 0)) {
+        errors.push('autonomous.goal.tokenBudget must be > 0');
+      }
+    }
+    if (a.heartbeat !== undefined) {
+      if (a.heartbeat.cadence.trim().length === 0) {
+        errors.push('autonomous.heartbeat.cadence must be non-empty');
+      }
+      if (a.heartbeat.instruction.trim().length === 0) {
+        errors.push('autonomous.heartbeat.instruction must be non-empty');
+      }
+    }
+    if (a.gateCommand !== undefined && a.gateCommand.trim().length === 0) {
+      errors.push('autonomous.gateCommand must be non-empty');
+    }
+    if (a.maxTurns !== undefined && !(a.maxTurns >= 1)) {
+      errors.push('autonomous.maxTurns must be >= 1');
+    }
+  }
 
   return { ok: errors.length === 0, errors };
 }
@@ -238,12 +295,29 @@ function stepHashOf(step: StepSpec): string {
 export function replaySpec(
   s: HarnessSpec,
   opts: { seed: number; fixedOutputs?: Record<string, unknown> },
-): { hash: string; trace: { stepId: string; output: unknown }[] } {
+): { hash: string; trace: { stepId: string; output: unknown }[]; halt?: { reason: 'maxTurns' | 'tokenBudget' } } {
   const rng = makeRng(opts.seed);
   const fixed = opts.fixedOutputs ?? {};
   const trace: { stepId: string; output: unknown }[] = [];
 
+  // ADR-241 §2.2: deterministic halt. maxTurns is a hard ceiling on replayed
+  // steps; tokenBudget is charged a deterministic pseudo-cost of 1 unit per
+  // step. Hitting either stops the replay (a limit is NOT success). Absent an
+  // autonomous block, behavior is byte-identical and no `halt` key is emitted.
+  const maxTurns = s.autonomous?.maxTurns;
+  const tokenBudget = s.autonomous?.goal?.tokenBudget;
+  let halt: { reason: 'maxTurns' | 'tokenBudget' } | undefined;
+  let cost = 0;
+
   for (const step of s.steps) {
+    if (maxTurns !== undefined && trace.length >= maxTurns) {
+      halt = { reason: 'maxTurns' };
+      break;
+    }
+    if (tokenBudget !== undefined && cost + 1 > tokenBudget) {
+      halt = { reason: 'tokenBudget' };
+      break;
+    }
     let output: unknown;
     if (Object.prototype.hasOwnProperty.call(fixed, step.id)) {
       output = fixed[step.id];
