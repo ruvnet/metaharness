@@ -25,12 +25,12 @@
 // Offline/no-key: exits 0 with status SKIPPED (so CI without the secret is green).
 
 import { execSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 
 const MODEL = process.env.METAHARNESS_VERIFY_MODEL || 'anthropic/claude-haiku-4.5';
 const BASE_URL = process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1';
 
-const HOSTS = ['claude-code', 'codex', 'copilot', 'github-actions', 'hermes', 'openclaw', 'opencode', 'pi-dev', 'rvm'];
+const HOSTS = ['claude-code', 'codex', 'copilot', 'github-actions', 'hermes', 'openclaw', 'opencode', 'pi-dev', 'prime-agent', 'rvm'];
 
 function resolveKey() {
   if (process.env.OPENROUTER_API_KEY) return process.env.OPENROUTER_API_KEY.trim();
@@ -49,13 +49,14 @@ function extractCapabilities(dir) {
   const read = (p) => (existsSync(`${dir}/${p}`) ? readFileSync(`${dir}/${p}`, 'utf-8') : null);
   const tryJson = (s) => { try { return JSON.parse(s); } catch { return null; } };
 
-  // System prompt lives in different files per host.
-  for (const p of ['CLAUDE.md', 'AGENTS.md', 'SYSTEM.md', 'cli-config.yaml', '.github/copilot-instructions.md']) {
+  // System prompt lives in different files per host. Prime Agent appends its
+  // project instructions from .prime/agent/APPEND_SYSTEM.md.
+  for (const p of ['CLAUDE.md', 'AGENTS.md', 'SYSTEM.md', 'cli-config.yaml', '.github/copilot-instructions.md', '.prime/agent/APPEND_SYSTEM.md']) {
     const s = read(p);
     if (s && s.trim()) { cap.systemPrompt = s.trim().slice(0, 2000); break; }
   }
   // MCP servers across the JSON hosts.
-  for (const p of ['.claude/settings.json', '.vscode/mcp.json', '.opencode/opencode.json', 'openclaw.json']) {
+  for (const p of ['.claude/settings.json', '.vscode/mcp.json', '.opencode/opencode.json', 'openclaw.json', '.prime/agent/settings.json']) {
     const j = read(p) && tryJson(read(p));
     if (!j) continue;
     const srv = j.servers || j.mcpServers || j.mcp_servers || j.mcp?.servers;
@@ -64,6 +65,15 @@ function extractCapabilities(dir) {
   // Agents — Claude Code / opencode markdown dirs, openclaw SKILL.md headings.
   const skill = read('SKILL.md');
   if (skill) for (const m of skill.matchAll(/^- \*\*(.+?)\*\*/gm)) cap.agents.push(m[1]);
+  // Prime Agent agent roles are discoverable skills that delegate through rlm.
+  const primeSkills = `${dir}/.prime/agent/skills`;
+  if (existsSync(primeSkills)) {
+    for (const entry of readdirSync(primeSkills, { withFileTypes: true })) {
+      if (!entry.isDirectory() || !entry.name.startsWith('agent-')) continue;
+      const md = readFileSync(`${primeSkills}/${entry.name}/SKILL.md`, 'utf-8');
+      if (md.includes('native recursive agent runtime')) cap.agents.push(entry.name.slice(6));
+    }
+  }
 
   return cap;
 }

@@ -29,6 +29,7 @@ export type {
   HoldoutSuite,
   AnchorSuite,
   Proposer,
+  ProposerResult,
   Evaluator,
   PromotionReceipt,
   Signer,

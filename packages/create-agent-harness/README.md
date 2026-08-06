@@ -50,6 +50,7 @@ npx metaharness my-legal-bot \
 | `hermes` | `cli-config.yaml` + `optional-mcps/*.yaml` |
 | `openclaw` | `~/.openclaw/openclaw.json` + workspace SKILL.md + install runbook |
 | `rvm` | RVM partition manifest + capability table + wasm-guest + install runbook (hardware-isolated) |
+| `prime-agent` | `.prime/agent/skills/` Python-backed skill per tool (no MCP by design) + `install-prime-agent.md` runbook; deny-lists emit `SANDBOX-REQUIRED.md` (ADR-242) |
 
 Multi-host: pass `--host` multiple times.
 

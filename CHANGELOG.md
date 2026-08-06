@@ -4,6 +4,45 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Added — Prime Agent integration, ADR-241/242 (2026-08-06)
+
+- **`@metaharness/host-prime-agent`** (`packages/host-prime-agent/`) — the
+  **10th host adapter** (ADR-242): one project-scoped, Python-backed Prime
+  Agent skill per tool under `.prime/agent/skills/` (`SKILL.md` +
+  `pyproject.toml` + kernel-dispatch shim — Prime Agent ships no MCP),
+  sub-agent specs, and a host-qualified `install-prime-agent.md` runbook.
+  **Fail-closed sandbox posture**: Prime Agent has no native allow/deny
+  enforcement, so a non-empty `permissions.deny` emits a prominent
+  `SANDBOX-REQUIRED.md` (and opens the runbook with the same warning)
+  rather than silently dropping the deny-list (the ADR-046 bug class).
+  `--host prime-agent` wired through `create-agent-harness`; propagated
+  across catalogs, web-ui, bench, scripts, and CI.
+- **`RefineMutator`** (`packages/darwin-mode/src/refine-mutator.ts`,
+  ADR-241 §2.1) — the ADR-071-anticipated evidence-backed `CodeGenerator`:
+  one minimal CRUD edit to one surface per child, summary MUST cite the
+  motivating trace IDs (evidence or safe no-op), output still gated by
+  `validateGeneratedCode`; the frozen promotion gate (ADR-072) is unchanged.
+- **Kernel session + autonomous modules, Rust + TS + wasm** (ADR-241
+  §2.2/§2.3) — `crates/kernel/src/session.rs` + `autonomous.rs` mirrored by
+  `packages/kernel-js/src/session.ts` and the wasm bindings: append-only
+  JSONL session log with deterministic replay, fork-at-event branching, and
+  a chained state hash that is **byte-for-byte identical across the Rust
+  and TS implementations** (cross-language lockstep verified). HarnessSpec
+  gains the optional `autonomous` block (goal/heartbeat/gateCommand/
+  maxTurns), projected per host or explicitly no-op'd.
+- **`--sessions` scaffold toggle** (`create-agent-harness`) — opt-in
+  recoverable-session primitive: emits a dependency-free
+  `src/sessions/log.ts` copy-in plus a README note on where session state
+  lives and how to prune it. Default OFF; `--no-sessions` to force off.
+- **PTC honestly deferred** (ADR-241 §2.4) — Prime Agent's
+  kernel-as-only-tool claim is *not* adopted; a pre-registered A/B lives at
+  `packages/evals-toolcall/experiments/ptc-ab.json` (arms, metrics, seeds,
+  promotion criterion: ≥20% token reduction at non-inferior success).
+- Sweep on touched packages: vitest 139 files / 1,347 tests green, cargo
+  116/116, wasm fixture-hash smoke green. Full-suite gate: failing set is
+  byte-identical to the pre-integration baseline (21 pre-existing failures,
+  12 files — none ours), 243 files passing incl. all 6 new suites.
+
 ### Added — Iter 104 (2026-06-14)
 
 - **ADR-031 — The Bundle JSON Pattern**. ADR-030 alternative D

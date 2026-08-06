@@ -17,9 +17,11 @@ export default defineConfig({
       output: {
         // Split stable vendor code from app code so a content change doesn't
         // bust the (larger, slower-changing) React/JSZip chunks in the CDN.
-        manualChunks: {
-          react: ['react', 'react-dom'],
-          zip: ['jszip'],
+        manualChunks(id) {
+          // Vite 8/Rolldown accepts the Rollup function form, not the legacy
+          // object shorthand. Match both POSIX and Windows module paths.
+          if (/[\\/]node_modules[\\/](react|react-dom)[\\/]/.test(id)) return 'react';
+          if (/[\\/]node_modules[\\/]jszip[\\/]/.test(id)) return 'zip';
         },
       },
     },

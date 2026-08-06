@@ -8,7 +8,7 @@ interface HostStep {
 }
 
 interface HostGuide {
-  id: 'claude-code' | 'codex' | 'pi-dev' | 'hermes' | 'openclaw' | 'rvm' | 'copilot' | 'opencode' | 'github-actions';
+  id: 'claude-code' | 'codex' | 'pi-dev' | 'hermes' | 'openclaw' | 'rvm' | 'copilot' | 'opencode' | 'github-actions' | 'prime-agent';
   name: string;
   blurb: string;
   steps: HostStep[];
@@ -170,6 +170,27 @@ export const GUIDES: HostGuide[] = [
         title: '2. Add your provider key + trigger',
         body: 'Add ANTHROPIC_API_KEY as a repo secret (Settings → Secrets → Actions), then run it from the Actions tab or by commenting on an issue. Default permissions are contents:read (ADR-022 default-deny).',
         code: 'gh workflow run my-harness',
+      },
+    ],
+  },
+  {
+    id: 'prime-agent',
+    name: 'Prime Agent',
+    blurb: 'Prime Intellect\'s IPython-based harness. MetaHarness emits project skills, native `rlm` delegation, and remote HTTP MCP integrations (ADR-242).',
+    steps: [
+      {
+        title: '1. Install Prime Agent',
+        body: 'Install via the upstream curl installer, then confirm the CLI is on your PATH.',
+        code: 'curl -fsSL https://app.primeintellect.ai/prime-agent/install.sh | sh\nprime-agent --version',
+      },
+      {
+        title: '2. Run from the harness repo root',
+        body: 'Prime Agent discovers project-scoped skills from `.prime/agent/skills/` — launch it from the repo root so the project scope is picked up.',
+        code: 'cd my-harness\nprime-agent',
+      },
+      {
+        title: '3. Heed the sandbox warning',
+        body: 'Prime Agent is not sandboxed and cannot enforce a deny-list natively. If your scaffold contains SANDBOX-REQUIRED.md, run only inside an external sandbox (container / RVM) — details in install-prime-agent.md.',
       },
     ],
   },

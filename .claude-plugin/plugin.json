@@ -37,6 +37,7 @@
     "hermes-agent",
     "openclaw",
     "rvm",
+    "prime-agent",
     "rust",
     "wasm",
     "napi-rs",

@@ -21,4 +21,16 @@ serde-wasm-bindgen.workspace = true
 js-sys.workspace = true
 
 [package.metadata.wasm-pack.profile.release]
-wasm-opt = ["-Oz", "--enable-bulk-memory", "--enable-mutable-globals"]
+# --enable-nontrapping-float-to-int + --enable-sign-ext: rustc's wasm32
+# target emits these by default (e.g. `f as i64` compiles to
+# i64.trunc_sat_f64_s, used by the canonical-JSON integral-float rendering
+# in ruflo-kernel::session); wasm-opt validates input against its enabled
+# feature set, so they must be switched on explicitly. Both are
+# long-standardized and supported by every Node version this package targets.
+wasm-opt = [
+  "-Oz",
+  "--enable-bulk-memory",
+  "--enable-mutable-globals",
+  "--enable-nontrapping-float-to-int",
+  "--enable-sign-ext",
+]

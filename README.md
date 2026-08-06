@@ -36,12 +36,24 @@ In under 60 seconds, in your browser, with nothing leaving your machine:
 - Recommended agents, skills, slash commands, MCP tools
 - A scoped memory namespace + governance policy
 - Witness-signed provenance + release gates
-- Drops into Claude Code, OpenAI Codex, pi.dev, Hermes, OpenClaw, or RVM — pick one or all
+- Drops into Claude Code, OpenAI Codex, pi.dev, Hermes, OpenClaw, RVM, or Prime Agent — pick one or all
 
 Output is an npm-publishable `.zip` with **your name on it, your branding, your `npx <your-name>` CLI**.
 
 ### New
 
+- **Run your harness on Prime Agent — and borrow its best ideas.** The 10th host
+  ([`@metaharness/host-prime-agent`](packages/host-prime-agent/), `--host prime-agent`) emits your
+  tools as project-scoped, Python-backed Prime Agent skills (`.prime/agent/skills/` — the host has
+  no MCP) plus an install runbook. **Fail-closed**: Prime Agent can't enforce a deny-list itself,
+  so a non-empty deny-list ships a prominent `SANDBOX-REQUIRED.md` instead of silently dropping
+  your posture. From its design we also shipped **RefineMutator** — an evidence-backed proposer in
+  [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) that must cite the
+  failing traces behind each edit or propose nothing — and an opt-in `--sessions` crash-recoverable
+  JSONL session log whose Rust and TS (wasm) replays produce identical state hashes. Its PTC
+  ("kernel as the only tool") claim is honestly *deferred* behind a pre-registered A/B in
+  `evals-toolcall`. See [ADR-241](docs/adrs/ADR-241-prime-agent-continual-harness-refine.md) /
+  [ADR-242](docs/adrs/ADR-242-host-prime-agent.md). ($0)
 - **Score any repo before you build it.** `npx metaharness score <repo>` reads
   the repo (never runs it) and prints a one-screen report card — how well a
   harness fits, how likely it is to build, how safe the tools are, and the
@@ -130,7 +142,7 @@ No repository code is executed. Inferred build/test commands are emitted as `tru
 
 ## Hosts
 
-The same harness output runs on **nine** agent hosts — eight interactive, plus GitHub Actions (CI/CD):
+The same harness output runs on **ten** agent hosts — nine interactive, plus GitHub Actions (CI/CD):
 
 | Host | What ships | Notes |
 |---|---|---|
@@ -142,6 +154,7 @@ The same harness output runs on **nine** agent hosts — eight interactive, plus
 | [**RVM**](https://github.com/ruvnet/rvm) | Bare-metal microhypervisor + capability tokens | Hardware isolation for untrusted peers |
 | [**GitHub Copilot**](https://code.visualstudio.com/docs/copilot/mcp) | MCP via `.vscode/mcp.json` | VSCode 1.99+ (ADR-032) |
 | [**OpenCode**](https://opencode.ai/) | MCP via `.opencode/opencode.json` | sst/opencode TUI (ADR-036) |
+| [**Prime Agent**](packages/host-prime-agent/) | `.prime/agent/` skills (Python-backed, no MCP) + `install-prime-agent.md` | Fail-closed sandbox posture (ADR-242) |
 | [**GitHub Actions**](https://docs.github.com/actions) | `.github/workflows/` + composite `action.yml` | **Non-interactive** CI/CD; default-deny via `permissions:` (ADR-033) |
 
 See [ADR-004 — Host integration model](docs/adrs/ADR-004-host-integration-model.md) and [ADR-033 — GitHub Actions host](docs/adrs/ADR-033-host-github-actions.md).
@@ -262,7 +275,7 @@ across Rust × 3 OS + WASM × 3 OS + Node 20+22 × 3 OS + Bench + pack+install �
 | Layer | Status |
 |---|---|
 | Rust kernel (WASM + NAPI-RS) | Shipped — 7 subsystems |
-| 9 host adapters | claude-code · codex · pi-dev · hermes · openclaw · rvm · copilot · opencode · github-actions |
+| 10 host adapters | claude-code · codex · pi-dev · hermes · openclaw · rvm · copilot · opencode · github-actions · prime-agent |
 | 17 `harness` subcommands | Shipped |
 | 7 Codex skills | Shipped |
 | Claude marketplace plugin | Shipped + schema-validated |
@@ -375,8 +388,9 @@ MIT — see [LICENSE](LICENSE).
 MetaHarness is a CLI and browser Studio that turns any GitHub repo (or a
 blank slate) into a custom AI agent harness. The output is a branded,
 npm-publishable package with its own `npx <name>` CLI, MCP server, memory,
-governance policy, and Ed25519 witness-signed releases. Runs on Claude
-Code, OpenAI Codex, pi.dev, Hermes, OpenClaw, and RVM.
+governance policy, and Ed25519 witness-signed releases. Runs on ten hosts:
+Claude Code, Codex, pi.dev, Hermes, OpenClaw, RVM, Copilot, OpenCode,
+GitHub Actions, and Prime Agent.
 
 ### How is MetaHarness different from an agent framework?
 
@@ -397,9 +411,8 @@ static-analysis only. Inferred build/test commands are marked
 
 ### Which agent runtimes does it support?
 
-Six today: Claude Code, OpenAI Codex, pi.dev, Hermes (Nous Research),
-OpenClaw, and RVM. GitHub Copilot and GitHub Actions are proposed in
-ADR-032 and ADR-033.
+Ten today: Claude Code, Codex, pi.dev, Hermes, OpenClaw, RVM, Copilot,
+OpenCode, GitHub Actions, Prime Agent.
 
 ### What languages does it understand?
 

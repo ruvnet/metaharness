@@ -40,6 +40,7 @@ describe('RELEASE_ORDER', () => {
       'host-hermes',
       'host-openclaw',
       'host-rvm',
+      'host-prime-agent',
       'vertical-base',
       'vertical-trading',
       'create-agent-harness',

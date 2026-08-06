@@ -19,6 +19,7 @@
 
 //! Cross-platform kernel for the agent-harness-generator project.
 
+pub mod autonomous;
 pub mod claims;
 pub mod cost;
 pub mod dispatch;
@@ -28,6 +29,7 @@ pub mod intel;
 pub mod mcp;
 pub mod memory;
 pub mod routing;
+pub mod session;
 pub mod witness;
 
 /// Kernel-wide error type.

@@ -198,7 +198,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p /tmp/all-hosts && cd /tmp/all-hosts
-          for host in claude-code codex pi-dev hermes openclaw rvm copilot opencode github-actions; do
+          for host in claude-code codex pi-dev hermes openclaw rvm copilot opencode github-actions prime-agent; do
             echo ""
             echo "=== HOST: $host ==="
             rm -rf "bot-$host"

@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "name": "ptc-ab",
+  "status": "pre-registered",
+  "dataSource": "SYNTHETIC",
+  "arms": [
+    {
+      "id": "json-schema-tools",
+      "description": "Current JSON-schema tool dispatch: kernel tools exposed as JSON tool schemas, one dispatch per call (baseline arm)."
+    },
+    {
+      "id": "repl-ptc",
+      "description": "PTC/RLM arm: the same kernel tools exposed as callable functions inside a persistent interpreter (REPL), per Prime Agent's programmatic tool calling."
+    }
+  ],
+  "metrics": ["tokensPerTask", "successRate"],
+  "seeds": [11, 23, 42, 101, 202],
+  "taskSet": {
+    "generator": "deterministic-synthetic",
+    "size": 400,
+    "note": "hashFrac fixture pattern per adapter.test.ts"
+  },
+  "promotionCriterion": {
+    "adopt": "repl-ptc shows >=20% reduction in tokensPerTask AND non-inferior successRate (one-sided alpha=0.05)",
+    "otherwise": "record the null honestly (ADR-235)"
+  },
+  "references": ["docs/adrs/ADR-241-prime-agent-continual-harness-refine.md"]
+}

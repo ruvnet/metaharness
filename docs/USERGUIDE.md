@@ -65,7 +65,7 @@ pick:
 
 - A name (e.g. `acme-support-bot`)
 - A vertical template (19 options — coding, support, trading, education, …)
-- Which agent hosts you want it to run on (Claude Code, Codex, pi.dev, …)
+- Which agent hosts you want it to run on (Claude Code, Codex, pi.dev, Prime Agent, …)
 - Which skills to include
 - Whether to expose an MCP server (default-deny if so)
 
@@ -109,6 +109,7 @@ Then for each host:
 | Hermes | `hermes` from inside the folder |
 | OpenClaw | `openclaw run --harness .` |
 | RVM | `rvm launch --partition ./rvm-partition.toml` |
+| Prime Agent | `prime-agent` from inside the folder (skills auto-discovered from `.prime/agent/skills/`) |
 
 The Studio shows these commands inline after you pick your hosts.
 
@@ -169,12 +170,17 @@ Run **Verify** on it first (tab 4 of the Studio). It scans for:
 If those pass, the harness is at least no riskier than any other npm
 package you'd `npm install`.
 
-### Q: Why are there 6 hosts?
+### Q: Why are there 10 hosts?
 
 Different teams use different agent runtimes. Claude Code is most common.
 Codex is OpenAI's. pi.dev is Mariozechner / Badlogic's monorepo agent.
 Hermes is Nous Research's open-weights runtime. OpenClaw is a personal-AI
 fork. RVM is a hardware-isolated microhypervisor for untrusted scenarios.
+Copilot rides VSCode's MCP support, OpenCode is a terminal UI, and GitHub
+Actions runs the harness non-interactively in CI. Prime Agent is Prime
+Intellect's open-source harness — it has no MCP, so your tools ship as
+Python-backed skills, and it has no sandbox, so a deny-list comes with a
+`SANDBOX-REQUIRED.md` warning instead of being silently dropped.
 The harness output works the same on all of them — the only differences
 are config-file shape and how you launch.
 

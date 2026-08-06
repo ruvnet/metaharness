@@ -3,6 +3,7 @@
 // Tests for harness-spec.ts (ADR-159 HarnessSpec): genome⇄spec round-trip
 // identity, deterministic replay, validation, and the default spec.
 
+import { readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
 import {
   genomeToSpec,
@@ -155,5 +156,143 @@ describe('harness-spec validation', () => {
     expect(r.ok).toBe(false);
     expect(r.errors).toContain('roles must be non-empty');
     expect(r.errors).toContain('steps must be non-empty');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ADR-241 §2.2 autonomous block: round-trip, validation (lockstep fixture
+// shared with the Rust validator), and deterministic replay halts.
+// ─────────────────────────────────────────────────────────────────────────────
+
+import type { AutonomousSpec } from '../src/harness-spec.js';
+
+const autonomousFull: AutonomousSpec = {
+  goal: { text: 'keep the suite green', tokenBudget: 1000 },
+  heartbeat: { cadence: '5m', instruction: 're-check the goal and continue' },
+  gateCommand: 'npm run check',
+  maxTurns: 10,
+};
+
+describe('harness-spec autonomous round-trip (ADR-241 §2.2)', () => {
+  it('genome with autonomous block round-trips losslessly and is stable under double application', () => {
+    for (const base of genomes) {
+      const g: HarnessGenomeLite = { ...base, autonomous: autonomousFull };
+      const once = specToGenome(genomeToSpec(g));
+      expect(once).toEqual(g);
+      const twice = specToGenome(genomeToSpec(once));
+      expect(twice).toEqual(g);
+    }
+  });
+
+  it('copies the block (mutating the spec does not mutate the genome)', () => {
+    const g: HarnessGenomeLite = { ...genomes[0], autonomous: autonomousFull };
+    const spec = genomeToSpec(g);
+    spec.autonomous!.goal!.text = 'mutated';
+    expect(g.autonomous!.goal!.text).toBe('keep the suite green');
+  });
+
+  it('omits the autonomous key entirely when absent', () => {
+    const spec = genomeToSpec(genomes[0]);
+    expect('autonomous' in spec).toBe(false);
+    expect('autonomous' in specToGenome(spec)).toBe(false);
+  });
+
+  it('round-tripping an empty autonomous block injects no undefined keys', () => {
+    const g: HarnessGenomeLite = { ...genomes[0], autonomous: {} };
+    const spec = genomeToSpec(g);
+    expect(spec.autonomous).toStrictEqual({});
+    expect(Object.keys(spec.autonomous!)).toEqual([]);
+    const round = specToGenome(spec);
+    expect(round.autonomous).toStrictEqual({});
+    expect(Object.keys(round.autonomous!)).toEqual([]);
+  });
+});
+
+describe('harness-spec autonomous validation (lockstep fixture)', () => {
+  const cases = JSON.parse(
+    readFileSync(new URL('./fixtures/autonomous-cases.json', import.meta.url), 'utf8'),
+  ) as { name: string; spec: AutonomousSpec; errors: string[] }[];
+
+  it.each(cases)('$name', ({ spec, errors }) => {
+    const s: HarnessSpec = { ...defaultSpec(), autonomous: spec };
+    const r = validateSpec(s);
+    expect(r.errors).toEqual(errors);
+    expect(r.ok).toBe(errors.length === 0);
+  });
+
+  it('defaultSpec (no autonomous) still validates strictly clean', () => {
+    expect(validateSpec(defaultSpec())).toEqual({ ok: true, errors: [] });
+  });
+
+  // Rust's Goal.text / Heartbeat.cadence / Heartbeat.instruction are
+  // required Strings — serde REJECTS a block where they are missing, null,
+  // or non-strings, before validate_autonomous ever runs. These cases
+  // cannot live in the shared fixture (the Rust side could not even
+  // deserialize them), so the TS accept/reject parity is pinned here: the
+  // TS validator must reject them too, reusing the lockstep strings.
+  it('goal present but text missing/null is rejected (serde parse-reject parity)', () => {
+    for (const goal of [{}, { text: null }, { text: 42 }]) {
+      const s: HarnessSpec = {
+        ...defaultSpec(),
+        autonomous: { goal: goal as never },
+      };
+      const r = validateSpec(s);
+      expect(r.ok).toBe(false);
+      expect(r.errors).toContain('autonomous.goal.text must be non-empty');
+    }
+  });
+
+  it('heartbeat present but cadence/instruction missing/null is rejected (serde parse-reject parity)', () => {
+    const s: HarnessSpec = {
+      ...defaultSpec(),
+      autonomous: { heartbeat: { cadence: null, instruction: undefined } as never },
+    };
+    const r = validateSpec(s);
+    expect(r.ok).toBe(false);
+    expect(r.errors).toEqual([
+      'autonomous.heartbeat.cadence must be non-empty',
+      'autonomous.heartbeat.instruction must be non-empty',
+    ]);
+  });
+});
+
+describe('harness-spec autonomous replay halts (ADR-241 §2.2)', () => {
+  it('maxTurns=2 on a multi-step (>2) spec halts deterministically with reason maxTurns', () => {
+    const spec = genomeToSpec({ ...genomes[2], autonomous: { maxTurns: 2 } });
+    expect(spec.steps.length).toBeGreaterThan(2); // plan + code + review-1..3 + evaluate = 6
+    const a = replaySpec(spec, { seed: 42 });
+    const b = replaySpec(spec, { seed: 42 });
+    expect(a.halt).toEqual({ reason: 'maxTurns' });
+    expect(a.trace.length).toBe(2);
+    expect(a.hash).toBe(b.hash);
+    expect(a.trace).toEqual(b.trace);
+    expect(b.halt).toEqual({ reason: 'maxTurns' });
+  });
+
+  it('tokenBudget below step count halts with reason tokenBudget', () => {
+    const spec = genomeToSpec({
+      ...genomes[2],
+      autonomous: { goal: { text: 'go', tokenBudget: 3 } },
+    });
+    const r = replaySpec(spec, { seed: 7 });
+    expect(r.halt).toEqual({ reason: 'tokenBudget' });
+    expect(r.trace.length).toBe(3);
+  });
+
+  it('generous limits produce no halt and a full trace', () => {
+    const spec = genomeToSpec({
+      ...genomes[2],
+      autonomous: { goal: { text: 'go', tokenBudget: 100 }, maxTurns: 100 },
+    });
+    const r = replaySpec(spec, { seed: 42 });
+    expect('halt' in r).toBe(false);
+    expect(r.trace.length).toBe(spec.steps.length);
+  });
+
+  it('spec without autonomous block emits no halt key and is unchanged', () => {
+    const spec = genomeToSpec(genomes[2]);
+    const r = replaySpec(spec, { seed: 42 });
+    expect('halt' in r).toBe(false);
+    expect(r.trace.length).toBe(spec.steps.length);
   });
 });

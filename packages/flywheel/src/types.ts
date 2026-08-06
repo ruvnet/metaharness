@@ -23,6 +23,10 @@ export interface PolicyGenome {
 export interface CandidateMutation {
   target: string;
   summary: string;
+  /** ADR-241 §2.1 rollback-by-construction: the inverse of the applied edit — the parent bytes for the
+   *  touched surface (plus its path and a content hash), so any refine step reverts byte-identically.
+   *  OPTIONAL and additive (precedent: ADR-235 additive fields) — legacy commits simply omit it. */
+  inverse?: { path: string; parentBytes: string; hash: string };
 }
 
 /** The abstract quality of a policy on a suite. All host/benchmark meaning is projected onto these four
@@ -65,8 +69,16 @@ export interface Suite {
 export type HoldoutSuite = Suite;
 export type AnchorSuite = Suite;
 
-/** Proposes an improved value for ONE policy lever. The ONLY seam where a model/host enters propose. */
-export type Proposer = (base: PolicyGenome, target: string) => Promise<string>;
+/** A proposer's return: either the bare improved lever value (the legacy shape, unchanged), or — ADR-241
+ *  §2.1, additive — an object carrying the value plus an optional evidence-citing `summary` and an
+ *  optional rollback `inverse` to be recorded on the minted lineage commit. */
+export type ProposerResult =
+  | string
+  | { value: string; summary?: string; inverse?: CandidateMutation['inverse'] };
+
+/** Proposes an improved value for ONE policy lever. The ONLY seam where a model/host enters propose.
+ *  May return the legacy bare string OR the richer {@link ProposerResult} object form. */
+export type Proposer = (base: PolicyGenome, target: string) => Promise<ProposerResult>;
 
 /** Scores a policy on a suite. The ONLY seam where a host/benchmark enters evaluate. Everything
  *  Claude-Code-, SWE-bench-, or trading-specific lives HERE, in the caller — never in the flywheel. */
