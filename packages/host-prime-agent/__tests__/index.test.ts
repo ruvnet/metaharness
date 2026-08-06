@@ -71,6 +71,8 @@ describe('@metaharness/host-prime-agent (ADR-242)', () => {
     }
     // Deterministic normalization of the charset-violating name.
     expect(normalizeSkillName('My_Weird Tool!')).toBe('my-weird-tool');
+    expect(normalizeSkillName('---My---Tool---')).toBe('my-tool');
+    expect(normalizeSkillName('-'.repeat(100_000))).toBe('tool');
     expect(out['.prime/agent/skills/my-weird-tool/SKILL.md']).toBeDefined();
     // >1024-char description is truncated to exactly 1024.
     const fm = frontmatter(out['.prime/agent/skills/my-weird-tool/SKILL.md']!);

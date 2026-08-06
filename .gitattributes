@@ -1,3 +1,6 @@
 # DRACO corpus is checksum-pinned (packages/bench/__tests__/draco-corpus.test.ts).
 # Force LF so the bytes — and the SHA — are identical on every platform.
 packages/bench/draco/corpus.json text eol=lf
+
+# Golden output is a byte-for-byte contract and must not be rewritten to CRLF.
+packages/host-prime-agent/__tests__/golden/default-spec.json text eol=lf

@@ -45,7 +45,13 @@ describe('sessions scaffold (ADR-241 §2.3)', () => {
     const target = join(root, 'bot');
     await scaffold({ name: 'bot', template: 'minimal', host: 'claude-code', targetDir: target, sessions: true, generatorVersion: 'test' });
     // Import the scaffolded copy itself (vitest transforms the .ts on import).
-    const mod = await import(pathToFileURL(join(target, 'src/sessions/log.ts')).href);
+    // pathToFileURL encodes the tilde in Windows' 8.3 temp path (RUNNER~1)
+    // even though it is safe in a URL. Vite 5 does not decode that segment
+    // before resolving the module, so keep the path URL-compatible here.
+    const moduleUrl = pathToFileURL(join(target, 'src/sessions/log.ts')).href
+      .replaceAll('%7E', '~')
+      .replaceAll('%7e', '~');
+    const mod = await import(moduleUrl);
     const SessionLog = mod.SessionLog;
 
     // append → reopen is hash-stable

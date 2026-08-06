@@ -561,8 +561,10 @@ mod tests {
 
     #[test]
     fn hash_is_invariant_to_payload_key_order() {
-        let line1 = r#"{"index":0,"branch":"root","parent":null,"kind":"turn","payload":{"b":1,"a":2}}"#;
-        let line2 = r#"{"index":0,"branch":"root","parent":null,"kind":"turn","payload":{"a":2,"b":1}}"#;
+        let line1 =
+            r#"{"index":0,"branch":"root","parent":null,"kind":"turn","payload":{"b":1,"a":2}}"#;
+        let line2 =
+            r#"{"index":0,"branch":"root","parent":null,"kind":"turn","payload":{"a":2,"b":1}}"#;
         let e1 = parse_log(line1).unwrap();
         let e2 = parse_log(line2).unwrap();
         assert_eq!(state_hash(&e1, "root"), state_hash(&e2, "root"));
@@ -575,7 +577,9 @@ mod tests {
         let h2 = state_hash(&events, "root");
         assert_eq!(h1, h2);
         assert_eq!(h1.len(), 64);
-        assert!(h1.chars().all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase()));
+        assert!(h1
+            .chars()
+            .all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase()));
     }
 
     #[test]
@@ -627,7 +631,10 @@ mod tests {
         ));
         let mut bad = root_log(2);
         bad.push(ev("root", 5, None));
-        assert!(matches!(replay(&bad, "root"), Err(SessionError::Invalid(_))));
+        assert!(matches!(
+            replay(&bad, "root"),
+            Err(SessionError::Invalid(_))
+        ));
     }
 
     #[test]
@@ -642,12 +649,10 @@ mod tests {
     /// consume the SAME fixture the TS suite pins
     /// (`packages/kernel-js/__tests__/session.test.ts`) and reproduce the
     /// committed state hash byte-for-byte.
-    const TS_FIXTURE_JSONL: &str = include_str!(
-        "../../../packages/kernel-js/__tests__/fixtures/session-fixture.jsonl"
-    );
-    const TS_FIXTURE_HASH: &str = include_str!(
-        "../../../packages/kernel-js/__tests__/fixtures/session-fixture.hash"
-    );
+    const TS_FIXTURE_JSONL: &str =
+        include_str!("../../../packages/kernel-js/__tests__/fixtures/session-fixture.jsonl");
+    const TS_FIXTURE_HASH: &str =
+        include_str!("../../../packages/kernel-js/__tests__/fixtures/session-fixture.hash");
 
     #[test]
     fn ts_session_fixture_lockstep_state_hash() {
@@ -656,10 +661,7 @@ mod tests {
         assert!(validate_log(&events).is_empty());
         assert_eq!(state_hash(&events, "main"), TS_FIXTURE_HASH.trim());
         // Round-trip: re-serializing yields the exact committed bytes.
-        let reserialized: String = events
-            .iter()
-            .map(|e| serialize_event(e) + "\n")
-            .collect();
+        let reserialized: String = events.iter().map(|e| serialize_event(e) + "\n").collect();
         assert_eq!(reserialized, TS_FIXTURE_JSONL);
     }
 

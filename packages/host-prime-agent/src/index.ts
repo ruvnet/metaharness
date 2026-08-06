@@ -52,12 +52,25 @@ const INSTALL_MD = 'install-prime-agent.md';
  * Deterministic; an input that normalizes to nothing yields 'tool'.
  */
 export function normalizeSkillName(raw: string): string {
-  const name = raw
-    .toLowerCase()
-    .replace(/[^a-z0-9-]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-+|-+$/g, '');
-  return name === '' ? 'tool' : name;
+  let name = '';
+  let separatorPending = false;
+
+  for (const char of raw.toLowerCase()) {
+    const code = char.charCodeAt(0);
+    const allowed =
+      (code >= 0x61 && code <= 0x7a) ||
+      (code >= 0x30 && code <= 0x39);
+
+    if (allowed) {
+      if (separatorPending && name !== '') name += '-';
+      name += char;
+      separatorPending = false;
+    } else if (name !== '') {
+      separatorPending = true;
+    }
+  }
+
+  return name || 'tool';
 }
 
 /**

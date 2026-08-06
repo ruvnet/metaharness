@@ -129,7 +129,9 @@ mod tests {
 
     #[test]
     fn camel_case_keys_round_trip() {
-        let s = spec_from(r#"{ "goal": { "text": "g", "tokenBudget": 1 }, "gateCommand": "c", "maxTurns": 2 }"#);
+        let s = spec_from(
+            r#"{ "goal": { "text": "g", "tokenBudget": 1 }, "gateCommand": "c", "maxTurns": 2 }"#,
+        );
         let json = serde_json::to_string(&s).unwrap();
         assert!(json.contains("\"tokenBudget\""));
         assert!(json.contains("\"gateCommand\""));
@@ -166,14 +168,8 @@ mod tests {
                 r#"{ "gateCommand": "  " }"#,
                 "autonomous.gateCommand must be non-empty",
             ),
-            (
-                r#"{ "maxTurns": 0 }"#,
-                "autonomous.maxTurns must be >= 1",
-            ),
-            (
-                r#"{ "maxTurns": -1 }"#,
-                "autonomous.maxTurns must be >= 1",
-            ),
+            (r#"{ "maxTurns": 0 }"#, "autonomous.maxTurns must be >= 1"),
+            (r#"{ "maxTurns": -1 }"#, "autonomous.maxTurns must be >= 1"),
         ];
         for (json, want) in cases {
             let errors = validate_autonomous(&spec_from(json));
@@ -244,9 +240,8 @@ mod tests {
     /// consume the SAME fixture the TS validator tests use
     /// (`packages/projects/__tests__/harness-spec.test.ts`) and assert
     /// every case's errors byte-for-byte, in the same order.
-    const LOCKSTEP_FIXTURE: &str = include_str!(
-        "../../../packages/projects/__tests__/fixtures/autonomous-cases.json"
-    );
+    const LOCKSTEP_FIXTURE: &str =
+        include_str!("../../../packages/projects/__tests__/fixtures/autonomous-cases.json");
 
     #[derive(Deserialize)]
     struct LockstepCase {

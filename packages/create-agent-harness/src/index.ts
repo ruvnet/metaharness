@@ -702,7 +702,9 @@ export async function scaffold(opts: ScaffoldOptions): Promise<ScaffoldResult> {
     const readmeIdx = rendered.findIndex(r => r.path === 'README.md');
     if (readmeIdx !== -1) {
       try {
-        rendered[readmeIdx]!.content = rendered[readmeIdx]!.content.replace(/\n*$/, '\n') +
+        let readme = rendered[readmeIdx]!.content;
+        while (readme.endsWith('\n')) readme = readme.slice(0, -1);
+        rendered[readmeIdx]!.content = readme + '\n' +
           `\n## Recoverable sessions (ADR-241 §2.3)\n\n` +
           `This harness includes \`src/sessions/log.ts\` — a crash-recoverable, forkable\n` +
           `JSONL session log (append-only events, deterministic replay, integrity state\n` +
