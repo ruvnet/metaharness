@@ -349,6 +349,27 @@ function hostFiles(host: HostId, cfg: HarnessConfig): GenFile[] {
         { path: 'install.md', content: `# Installing ${cfg.name} as a GitHub Actions harness\n\n1. Commit \`.github/workflows/${slug}.yml\` + \`.github/actions/${slug}/action.yml\`.\n2. Add your model-provider key as a repo secret — one of \`ANTHROPIC_API_KEY\`, \`OPENROUTER_API_KEY\`, or \`OPENAI_API_KEY\` (the workflow passes all three through; set whichever your harness uses).\n3. Trigger: Actions → ${slug} → Run workflow, or comment on an issue.\n` },
       ];
     }
+    case 'prime-agent': {
+      // ADR-242 — Prime Agent (PrimeIntellect-ai): skills-only host, no MCP.
+      // ADR-027 parity contract: byte-identical with
+      // packages/create-agent-harness/src/host-config.ts.
+      const mcp = cfg.primitives.mcp;
+      const runbook = [
+        `# Install ${cfg.name} into Prime Agent`,
+        '',
+        'Prime Agent has no MCP; tools are delivered as project skills under .prime/agent/skills/.',
+        '',
+        mcp === 'off'
+          ? 'MCP: off — nothing further.'
+          : `MCP (${mcp}): NOT available on this host; capabilities must be wrapped as skills.`,
+        '',
+        'Sandbox: Prime Agent is not sandboxed. Denied capabilities require an external sandbox (ADR-242).',
+      ].join('\n') + '\n';
+      return [
+        { path: 'install-prime-agent.md', content: runbook },
+        { path: '.prime/agent/skills/README.md', content: `# ${cfg.name} skills\n\nGenerated skill directories land here (one per tool).\n` },
+      ];
+    }
   }
 }
 

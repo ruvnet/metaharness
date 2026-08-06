@@ -30,19 +30,19 @@ Branch `claude/metaharness-improvements-research-eq6q2w`, PR **#169**. Implement
 - [x] `__tests__/index.test.ts` per ADR-242 Test Contract: frontmatter `^[a-z0-9-]+$` + ≤1024 desc; one skill dir per tool; committed golden snapshot; fail-closed `SANDBOX-REQUIRED.md` on non-empty deny (absent on empty); byte-determinism; autonomous projection; no-silent-drop
 - [x] Verifiers: ADR-242 §2.1/§2.2 conformance; determinism + Python shim structural validity
 
-### ★ P2 — Propagation (13-point checklist) — swarm: 3 parallel implementers (CLI+scripts / web-ui / bench+meta) → verifier
-- [ ] `create-agent-harness/src/index.ts:63` HOSTS + comment
-- [ ] `create-agent-harness/src/host-config.ts` `case 'prime-agent'` (+ "OTHER eight hosts" comment) — byte-identical with web-ui
-- [ ] `apps/web-ui/src/generator/scaffold.ts` `hostFiles()` same emission (ADR-027 parity)
-- [ ] `apps/web-ui`: `types.ts` HostId; `catalog.ts` HOSTS; `HostGuide.tsx` union+GUIDES (≥2 steps); `verify.ts` hostArtifacts
-- [ ] `packages/bench`: host-bench.ts import+push; package.json dep; host-baseline.json row; `__tests__/host-bench.test.ts` set → 10
-- [ ] `apps/web-ui/.../host-guide.test.ts` exhaustive array → 10
-- [ ] `scripts/verify-all-hosts.mjs` HOSTS + checks + realChecks (skip-gated); `scripts/verify-harness-live.mjs` HOSTS + extractCapabilities branch
-- [ ] `scripts/build-ordered.mjs` phase-3 list; `scripts/healthcheck.mjs` INDEPENDENT set
-- [ ] `.github/workflows/published-smoke.yml:201` host loop
-- [ ] `scripts/publish-workspace.mjs` RELEASE_ORDER **together with** `__tests__/publish-workspace.test.ts`
-- [ ] `.claude-plugin/plugin.json` ↔ `claude-marketplace-plugin.test.ts`; `.codex/skills/create-harness/skill.toml` ↔ `codex-skills.test.ts`
-- [ ] Verify auto-covered paths (wizard, HarnessBuilder, `{{host}}` templates, root multi-host integration tests)
+### ★ P2 — Propagation — DONE (swarm 3 tracks + verifier; parity CLI↔web-ui byte-IDENTICAL; sweep 588/588, web-ui 67/67, integration 57/57, verify-all-hosts prime-agent PASS, healthcheck HEALTHY 8/8, real-measured bench baseline row; scaffold smoke emits install-prime-agent.md)
+- [x] `create-agent-harness/src/index.ts:63` HOSTS + comment
+- [x] `create-agent-harness/src/host-config.ts` `case 'prime-agent'` (+ "OTHER eight hosts" comment) — byte-identical with web-ui
+- [x] `apps/web-ui/src/generator/scaffold.ts` `hostFiles()` same emission (ADR-027 parity)
+- [x] `apps/web-ui`: `types.ts` HostId; `catalog.ts` HOSTS; `HostGuide.tsx` union+GUIDES (≥2 steps); `verify.ts` hostArtifacts
+- [x] `packages/bench`: host-bench.ts import+push; package.json dep; host-baseline.json row; `__tests__/host-bench.test.ts` set → 10
+- [x] `apps/web-ui/.../host-guide.test.ts` exhaustive array → 10
+- [x] `scripts/verify-all-hosts.mjs` HOSTS + checks + realChecks (skip-gated); `scripts/verify-harness-live.mjs` HOSTS + extractCapabilities branch
+- [x] `scripts/build-ordered.mjs` phase-3 list; `scripts/healthcheck.mjs` INDEPENDENT set
+- [x] `.github/workflows/published-smoke.yml:201` host loop
+- [x] `scripts/publish-workspace.mjs` RELEASE_ORDER **together with** `__tests__/publish-workspace.test.ts`
+- [x] `.claude-plugin/plugin.json` ↔ `claude-marketplace-plugin.test.ts`; `.codex/skills/create-harness/skill.toml` ↔ `codex-skills.test.ts`
+- [x] Verify auto-covered paths (wizard, HarnessBuilder, `{{host}}` templates, root multi-host integration tests)
 
 ### ★ P3 — `autonomous` HarnessSpec block, Rust + TS (ADR-241 §2.2) — swarm: 2 implementers (TS/Rust) → test-writer → verifier
 - [ ] TS: `kernel-js/src/types.ts` + `projects/src/harness-spec.ts` (`HarnessSpec` AND `HarnessGenomeLite`, verbatim copy both directions — the `policy` pattern); `validateSpec` flat-string checks (must not fire on `defaultSpec()`); `replaySpec` additive `halt?: {reason}` on budget exhaustion

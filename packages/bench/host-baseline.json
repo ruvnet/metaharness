@@ -91,6 +91,16 @@
       "p99Ms": 0.048500000000004206,
       "filesPerCall": 3,
       "bytesPerCall": 3281
+    },
+    {
+      "host": "prime-agent",
+      "iterations": 1000,
+      "meanMs": 0.002037733999999901,
+      "p50Ms": 0.001439000000004853,
+      "p95Ms": 0.002942000000004441,
+      "p99Ms": 0.007466000000007966,
+      "filesPerCall": 1,
+      "bytesPerCall": 935
     }
   ],
   "timestamp": "2026-06-14T21:05:08.549Z"

@@ -25,12 +25,12 @@
 // Offline/no-key: exits 0 with status SKIPPED (so CI without the secret is green).
 
 import { execSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 
 const MODEL = process.env.METAHARNESS_VERIFY_MODEL || 'anthropic/claude-haiku-4.5';
 const BASE_URL = process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1';
 
-const HOSTS = ['claude-code', 'codex', 'copilot', 'github-actions', 'hermes', 'openclaw', 'opencode', 'pi-dev', 'rvm'];
+const HOSTS = ['claude-code', 'codex', 'copilot', 'github-actions', 'hermes', 'openclaw', 'opencode', 'pi-dev', 'prime-agent', 'rvm'];
 
 function resolveKey() {
   if (process.env.OPENROUTER_API_KEY) return process.env.OPENROUTER_API_KEY.trim();
@@ -49,8 +49,9 @@ function extractCapabilities(dir) {
   const read = (p) => (existsSync(`${dir}/${p}`) ? readFileSync(`${dir}/${p}`, 'utf-8') : null);
   const tryJson = (s) => { try { return JSON.parse(s); } catch { return null; } };
 
-  // System prompt lives in different files per host.
-  for (const p of ['CLAUDE.md', 'AGENTS.md', 'SYSTEM.md', 'cli-config.yaml', '.github/copilot-instructions.md']) {
+  // System prompt lives in different files per host. prime-agent (ADR-242)
+  // lands its supplemental prompt at .prime/agent/skills/harness-prompt.md.
+  for (const p of ['CLAUDE.md', 'AGENTS.md', 'SYSTEM.md', 'cli-config.yaml', '.github/copilot-instructions.md', '.prime/agent/skills/harness-prompt.md']) {
     const s = read(p);
     if (s && s.trim()) { cap.systemPrompt = s.trim().slice(0, 2000); break; }
   }
@@ -64,6 +65,13 @@ function extractCapabilities(dir) {
   // Agents — Claude Code / opencode markdown dirs, openclaw SKILL.md headings.
   const skill = read('SKILL.md');
   if (skill) for (const m of skill.matchAll(/^- \*\*(.+?)\*\*/gm)) cap.agents.push(m[1]);
+  // prime-agent (ADR-242): one sub-agent spec per .prime/agent/agents/<name>.md;
+  // no MCP surface on this host, so mcpServers stays at 0.
+  if (existsSync(`${dir}/.prime/agent/agents`)) {
+    for (const f of readdirSync(`${dir}/.prime/agent/agents`)) {
+      if (f.endsWith('.md')) cap.agents.push(f.replace(/\.md$/, ''));
+    }
+  }
 
   return cap;
 }

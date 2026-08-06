@@ -24,6 +24,7 @@
     "@metaharness/host-copilot": "0.1.0",
     "@metaharness/host-opencode": "0.1.0",
     "@metaharness/host-github-actions": "0.1.0",
+    "@metaharness/host-prime-agent": "0.1.0",
     "@metaharness/router": "^0.2.0"
   },
   "devDependencies": {

@@ -88,6 +88,7 @@ export function verifyFileMap(files: GenFile[]): VerifyReport {
     '.claude/settings.json', '.codex/config.toml', 'AGENTS.md', 'cli-config.yaml',
     '.openclaw/openclaw.json', 'rvm.manifest.toml', '.opencode/opencode.json',
     '.vscode/mcp.json', '.github/copilot-instructions.md', 'capability-table.json',
+    'install-prime-agent.md',
   ];
   if (hostArtifacts.some((p) => find(files, p)) || files.some((f) => f.path.startsWith('.github/workflows/'))) {
     pass('host', 'at least one host adapter wired');
@@ -100,7 +101,7 @@ export function verifyFileMap(files: GenFile[]): VerifyReport {
   // so the Studio's Verify tab reflects the coverage the host adapters now cover.
   const hasSystemPrompt = files.some((f) =>
     ['CLAUDE.md', 'AGENTS.md', '.github/copilot-instructions.md', 'SYSTEM.md'].includes(f.path) && f.content.trim().length > 0);
-  const hasAgents = files.some((f) => /(^|\/)\.?(claude|opencode)\/agents\//.test(f.path) || f.path.startsWith('src/agents/'));
+  const hasAgents = files.some((f) => /(^|\/)\.?(claude|opencode)\/agents\//.test(f.path) || f.path.startsWith('src/agents/') || f.path.startsWith('.prime/agent/agents/'));
   const hasMcp = mcpServerPresent(files);
   const hasPerms = permissionsPresent(files);
   const covered = [hasSystemPrompt && 'system-prompt', hasAgents && 'agents', hasMcp && 'mcp', hasPerms && 'permissions'].filter(Boolean);

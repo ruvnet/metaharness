@@ -59,9 +59,10 @@ function resolveKernelVersion(): string | undefined {
 const KERNEL_VERSION = resolveKernelVersion();
 
 // iter 127 added copilot (ADR-032); iter 128 added opencode (ADR-036);
-// iter 147 added github-actions (ADR-033, the first non-interactive host).
-// HOSTS is the canonical 9-host catalog as of iter 147.
-export const HOSTS = ['claude-code', 'codex', 'pi-dev', 'hermes', 'openclaw', 'rvm', 'copilot', 'opencode', 'github-actions'] as const;
+// iter 147 added github-actions (ADR-033, the first non-interactive host);
+// prime-agent added per ADR-242 (skills-based, no MCP).
+// HOSTS is the canonical 10-host catalog.
+export const HOSTS = ['claude-code', 'codex', 'pi-dev', 'hermes', 'openclaw', 'rvm', 'copilot', 'opencode', 'github-actions', 'prime-agent'] as const;
 export type Host = (typeof HOSTS)[number];
 
 export const TEMPLATES = [
@@ -965,6 +966,7 @@ export async function main(argv: string[]): Promise<number> {
       targetDir,
       force: args.force,
       darwin: args.darwin !== false, // ADR-147: deep darwin integration, default on
+      sessions: args.sessions === true, // ADR-241 §2.3: sessions scaffold, default off
       generatorVersion: '0.1.0',
     });
     console.log(`Scaffolded ${args.name} into ${targetDir}`);

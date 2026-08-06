@@ -40,7 +40,7 @@ default = "My AI agent harness"
 name = "host"
 prompt = "Host adapter"
 default = "claude-code"
-choices = ["claude-code", "codex", "pi-dev", "hermes", "openclaw", "rvm"]
+choices = ["claude-code", "codex", "pi-dev", "hermes", "openclaw", "rvm", "prime-agent"]
 
 [[args]]
 name = "template"

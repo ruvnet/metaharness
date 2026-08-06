@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const HOSTS = ['claude-code', 'codex', 'pi-dev', 'hermes', 'openclaw', 'rvm', 'copilot', 'opencode', 'github-actions'];
+const HOSTS = ['claude-code', 'codex', 'pi-dev', 'hermes', 'openclaw', 'rvm', 'copilot', 'opencode', 'github-actions', 'prime-agent'];
 const results = [];
 
 // ADR-045: scaffold each host through the REAL `metaharness --host <X>` path so
@@ -102,6 +102,9 @@ for (const host of HOSTS) {
         // real scaffold existed.) Harness name is `bot-github-actions`, slug =
         // same after slugify.
         'github-actions':{ path: '.github/workflows/bot-github-actions.yml', test: (s) => /name:/.test(s) && /OPENROUTER_API_KEY|ANTHROPIC_API_KEY/.test(s), tool: 'GHA workflow YAML (provider-agnostic env)' },
+        // ADR-242 — Prime Agent has no MCP; the CLI emits the install runbook
+        // (skills land under .prime/agent/skills/ at runtime).
+        'prime-agent':{ path: 'install-prime-agent.md', test: (s) => s.includes('Prime Agent'), tool: 'prime-agent' },
       };
       const c = checks[host];
       const fp = `${dir}/${c.path}`;
@@ -244,6 +247,13 @@ if (REAL) {
       if (!onPath('act')) return { skip: true, proof: 'act not installed' };
       const out = run(`cd ${JSON.stringify(dir)} && act workflow_dispatch -l`).toString();
       return { ok: /gha-|harness|Job ID/i.test(out) || /\bgha\b/i.test(out) || out.includes(`bot-github-actions`), proof: 'act parsed + listed the workflow job' };
+    },
+    'prime-agent': (dir) => {
+      if (!onPath('prime-agent')) return { skip: true, proof: 'prime-agent not installed' };
+      // ADR-242 — Prime Agent discovers project skills from .prime/agent/skills/
+      // in CWD; prove the binary boots against the scaffold.
+      const out = run(`cd ${JSON.stringify(dir)} && prime-agent --version`).toString();
+      return { ok: out.trim().length > 0, proof: `prime-agent --version → ${out.trim().slice(0, 30)}` };
     },
   };
 
