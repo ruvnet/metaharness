@@ -15,14 +15,14 @@ Branch `claude/metaharness-improvements-research-eq6q2w`, PR **#169**. Implement
 ## Phases (tick the boxes; execute in order; one phase per wake unless trivially small)
 
 ### ★ P0 — Bootstrap + baseline (solo)
-- [ ] `npm install` at root; `npm --prefix apps/web-ui install`
-- [ ] `npm run build` (build-ordered) — record failures if any
-- [ ] `npx vitest run` baseline → record pass/fail counts below (HONEST)
-- [ ] `cargo test --workspace` baseline → record
-- [ ] wasm-pack present? (`cargo install wasm-pack` if absent; if install impossible, mark WASM-SKIP below and ship Rust core + TS mirror without the wasm binding build)
-- [ ] Commit this directive + baseline numbers
+- [x] `npm install` at root; `npm --prefix apps/web-ui install`
+- [x] `npm run build` (build-ordered) — DONE in 31.5s, no failures
+- [x] `npx vitest run` baseline → recorded below
+- [ ] `cargo test --workspace` baseline → in flight (record on completion)
+- [x] wasm-pack 0.13.1 installed (prebuilt musl binary → ~/.cargo/bin) + `wasm32-unknown-unknown` target added
+- [x] Commit this directive + baseline numbers
 
-**Baseline (P0 records here):** _pending_
+**Baseline (2026-08-06, commit 411f65f):** `npx vitest run` → **21 failed | 2293 passed | 20 skipped (2334 tests; 12 failed files)**. Pre-existing failing files (NOT ours; do not fix unless we regress them further, do not count against us): `adr-index` (canonical-sections check — numbered headings in older ADRs; ADR-241/242 pass it), `agent-harness-generator-lib`, `audit-deps` (×2, network-dependent), `claude-marketplace-plugin` (×2, skill-count drift), `e2e-lifecycle`, `e2e-scaffold-validate`, `examples-quickstart`, `harness-diag` (×7), `harness-score`, `workflows` (publish.yml host regex). Full capture: scratchpad `baseline-failures.txt`. catalogCount drift ("expects 16 but catalog has 17"/"18 vs 19") appears inside doctor/e2e output — pre-existing.
 
 ### ★ P1 — `packages/host-prime-agent` (ADR-242) — swarm: implementer → test-writer → 2 verifiers
 - [ ] 6-file package mirroring `host-opencode` (`package.json` `@metaharness/host-prime-agent` 0.1.0, tsconfig, LICENSE, README)
