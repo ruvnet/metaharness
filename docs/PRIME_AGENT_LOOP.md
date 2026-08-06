@@ -68,6 +68,13 @@ Branch `claude/metaharness-improvements-research-eq6q2w`, PR **#169**. Implement
 - [ ] `packages/evals-toolcall/experiments/ptc-ab.json` (arms, metrics, seeds, criterion ≥20% token cut @ non-inferior success α=0.05, SYNTHETIC discipline)
 - [ ] `packages/evals-toolcall/__tests__/ptc-ab.test.ts` (exists/parses/pre-registers)
 
+### Fix round (2026-08-06, in flight): P3-P6 adversarial-verify findings
+Swarm implemented P3-P6 green on own tests (Rust 110 pass + clippy -D warnings clean; TS sweeps green; PTC 6 tests). Adversarial verifiers then CONFIRMED cross-language divergences now being fixed by a 3-fixer swarm + re-verifier:
+- session: TS UTF-16 vs Rust byte-wise key sort; integral-float/-0 canonicalization (1.0 vs 1); TS-writable lone surrogates unreadable by Rust; root-with-parent accepted by Rust only; whitespace-line skip vs error; cascade resync mismatch; fork API asymmetry (synthetic event vs pendingParent); literal NUL bytes in session.ts source.
+- autonomous: TS accepted non-integer maxTurns/tokenBudget (Rust parse-rejects); null-field crashes in TS validateSpec; Rust null-serialization crashing TS; copyAutonomous undefined-key injection.
+- refine: ProposerResult missing from barrel; res.ok unchecked; timer leak; zero-width-char evidence bypass; gitignored dist/refine-mutator.js vs tracked dist barrel (checkout crash).
+Resolutions chosen: TS sorts keys byte-wise; Rust normalizes integral floats to JS form (hash contract is canonical-JSON, not wire bytes); TS rejects unpaired surrogates at append; Rust rejects root-with-parent; TS skips whitespace lines + resyncs after gap; TS fork emits synthetic fork event (Rust parity); null = absent both sides; integer enforcement both sides w/ existing lockstep strings; session validation MESSAGES documented as per-language diagnostics (hash + accept/reject is the contract).
+
 ### ★ P7 — Optimize + README/docs + finish — swarm: triage/lint/simplify dimensions → fixers → README writer+reviewer
 - [ ] Full `npx vitest run` + `cargo test --workspace` + `cargo clippy` — fix OUR regressions only (baseline diff)
 - [ ] Simplify pass over new code only
