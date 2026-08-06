@@ -17,12 +17,14 @@ A bird's-eye view of how `agent-harness-generator` is wired. The detail lives in
 ┌──────────────────────────────────────────────────────────────────┐
 │ Layer 2 — Adapter + Application layer                            │
 │                                                                  │
-│   @metaharness/host-claude-code   @metaharness/host-codex                    │
-│   @metaharness/host-pi-dev        @metaharness/host-hermes                   │
-│   @metaharness/host-openclaw      @metaharness/host-rvm                      │
+│   @metaharness/host-claude-code   @metaharness/host-codex        │
+│   @metaharness/host-pi-dev        @metaharness/host-hermes       │
+│   @metaharness/host-openclaw      @metaharness/host-rvm          │
+│   @metaharness/host-copilot       @metaharness/host-opencode     │
+│   @metaharness/host-github-actions  @metaharness/host-prime-agent│
 │                                                                  │
-│   @metaharness/sdk                @metaharness/vertical-base                 │
-│                             @metaharness/vertical-trading              │
+│   @metaharness/sdk                @metaharness/vertical-base     │
+│                                   @metaharness/vertical-trading  │
 └──────────────────────────────────────────────────────────────────┘
                               │
                               ▼

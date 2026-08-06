@@ -1,6 +1,6 @@
 # ADR-242: host-prime-agent — Prime Agent (Prime Intellect) as the 11th harness host
 
-**Status**: Proposed
+**Status**: Implemented (2026-08-06)
 **Date**: 2026-08-06
 **Project**: `ruvnet/agent-harness-generator`
 **Deciders**: ruv
@@ -76,6 +76,12 @@ Contract tests, per the host-adapter convention (ADR-032/036/044):
 4. **Fail-closed**: with non-empty `permissions.deny`, the output map contains `SANDBOX-REQUIRED.md` naming every denied capability, and `install-prime-agent.md` opens with the warning; with an empty deny-list, neither warning artifact appears.
 5. **No silent drops**: every `HarnessSpec` field consumed by the emission map in §2.1 either appears in the output or is explicitly listed in `install-prime-agent.md` as unsupported on this host (ADR-044 capability-coverage discipline).
 6. **Autonomous projection**: given an ADR-241 `autonomous` block, `install-prime-agent.md` contains the exact `--autonomous-gate`/`--autonomous-max-turns` invocation; absent the block, no autonomous section is emitted.
+
+## Implementation notes (2026-08-06)
+
+- **Tests**: 19 contract tests, including adversarial regressions for skill-name collision suffixing, an explicit unsupported-section for `hooks`/`statusLine`, heartbeat projection, no fabricated CLI values in the install runbook, and surrogate-safe description truncation.
+- **Propagation complete** (ADR-033 checklist): CLI `HOSTS`/host-config entries, web-ui parity byte-identical per ADR-027, a real-measured bench baseline row, `verify-all-hosts` PASS, healthcheck HEALTHY.
+- **Count nuance, stated honestly**: this is the **10th IMPLEMENTED adapter**. The title's "11th host" counted host-eve (ADR-083), which remains unimplemented.
 
 ## References
 

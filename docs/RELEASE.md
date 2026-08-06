@@ -16,12 +16,13 @@ Every release publishes these packages **at the same version**:
 | `@metaharness/host-hermes` | Hermes adapter |
 | `@metaharness/host-openclaw` | OpenClaw adapter |
 | `@metaharness/host-rvm` | RVM adapter (hardware-isolated) |
+| `@metaharness/host-prime-agent` | Prime Agent adapter (Python-backed skills, fail-closed sandbox posture) |
 | `create-agent-harness` | The scaffolder CLI (also ships `harness` binary) |
 
 | `@metaharness/vertical-base` | Shared contract for vertical packs |
 | `@metaharness/vertical-trading` | Trading-vertical pack (loadable standalone) |
 
-Version drift across the 11 packages is detected by `scripts/preflight.mjs`.
+Version drift across the publishable workspace packages is detected by `scripts/preflight.mjs`.
 
 ## Process
 
@@ -34,7 +35,7 @@ node scripts/preflight.mjs
 Gates:
 
 - Git clean, on main
-- Version consistent across all 9 packages
+- Version consistent across all publishable packages
 - Every published package has a README
 - `publishConfig.access = "public"` on each
 - `cargo fmt --check` + `cargo clippy -D warnings` + `cargo test`
@@ -79,11 +80,11 @@ The push of `v*.*.*` triggers `.github/workflows/publish.yml`. The workflow:
    on every workspace package, exits non-zero if any package would fail
    the real publish (broken `files`, missing `bin`, unresolvable
    workspace ref, etc.)
-8. Publishes all 11 packages with `npm publish --provenance`:
+8. Publishes all 12 packages with `npm publish --provenance`:
    - `@metaharness/kernel` (umbrella)
    - `@metaharness/sdk`
-   - 6 host adapters (`host-claude-code`, `host-codex`, `host-pi-dev`,
-     `host-hermes`, `host-openclaw`, `host-rvm`)
+   - 7 host adapters (`host-claude-code`, `host-codex`, `host-pi-dev`,
+     `host-hermes`, `host-openclaw`, `host-rvm`, `host-prime-agent`)
    - 2 vertical packs (`vertical-base`, `vertical-trading`)
    - `create-agent-harness`
 
@@ -98,15 +99,16 @@ If your GCP variables aren't set, see [`setup/gcp-secrets.md`](setup/gcp-secrets
 ### 5. Post-publish verification
 
 ```bash
-# Each of the 9 packages should report the new version on @latest
+# Each of the 10 packages should report the new version on @latest
 for pkg in @metaharness/kernel @metaharness/sdk @metaharness/host-claude-code \
            @metaharness/host-codex @metaharness/host-pi-dev @metaharness/host-hermes \
-           @metaharness/host-openclaw @metaharness/host-rvm create-agent-harness; do
+           @metaharness/host-openclaw @metaharness/host-rvm \
+           @metaharness/host-prime-agent create-agent-harness; do
   npm view "$pkg@latest" version
 done
 ```
 
-All 9 should report the version you just published.
+All 10 should report the version you just published.
 
 ### 6. Create the GitHub release
 

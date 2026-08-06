@@ -157,3 +157,5 @@ Proceed per the two ADRs this analysis feeds:
   deferred behind a pre-registered experiment; A2A declined.
 - **[ADR-242](../../adrs/ADR-242-host-prime-agent.md)** — `@metaharness/host-prime-agent`, the
   11th host adapter, fail-closed on permissions.
+
+Both ADRs shipped 2026-08-06 on this branch (ADR-241 §2.4 PTC remains deferred by design).

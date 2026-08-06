@@ -1,6 +1,6 @@
 # ADR-241: Prime Agent-inspired continual-harness primitives — refine operator, autonomous spec, recoverable sessions
 
-**Status**: Proposed
+**Status**: Implemented (2026-08-06) — §2.1/§2.2/§2.3/§2.5 shipped; §2.4 PTC remains deferred by design (pre-registered experiment committed, unrun)
 **Date**: 2026-08-06
 **Project**: `ruvnet/agent-harness-generator`
 **Deciders**: ruv
@@ -117,6 +117,15 @@ Per the house taxonomy (London-school unit for kernel/darwin units; integration 
 4. **Spec contract**: the `autonomous` block round-trips genome ⇄ spec losslessly; `validateSpec` rejects malformed budgets/gates (negative tokenBudget, empty gateCommand, maxTurns < 1); replay halts deterministically at budget exhaustion and reports halt-reason ≠ success.
 5. **Session integration**: write N events, kill mid-run, resume → reconstructed state hash equals the pre-kill hash; forking at event k yields a divergent branch ID whose independent replay differs from the parent's after k.
 6. **PTC deferral contract**: `packages/evals-toolcall/experiments/ptc-ab.json` exists, parses, and pre-registers arms, metrics, seeds, and the promotion criterion above.
+
+## Implementation notes (2026-08-06)
+
+- **§2.1 RefineMutator** (`packages/darwin-mode/src/refine-mutator.ts`): evidence-or-no-op contract verified adversarially, including a fix for a zero-width-character evidence-citation bypass; applied edits recorded to flywheel lineage as `ProposerResult` with the inverse (parent bytes) on an additive channel; the promotion-gate fingerprint is byte-identical before/after a refine generation.
+- **§2.2 Autonomous block**: shipped in both specs (`packages/kernel-js/src/types.ts` generator-facing; `packages/projects/src/harness-spec.ts` evolvable) plus `crates/kernel/src/autonomous.rs`; validated against a 20-case shared TS/Rust lockstep fixture; reconciliation covered integer handling and null tolerance across the two languages.
+- **§2.3 Sessions**: `crates/kernel/src/session.rs` + kernel-js `SessionLog` + wasm bindings. Cross-language state-hash parity holds, including UTF-8 key sort order, integral-float normalization, surrogate rejection, and fork-event parity — the committed fixture hash `53851e97…` was reproduced via the wasm build.
+- **Scaffold toggle**: sessions are behind a `--sessions` scaffold flag, default off.
+- **Honest caveat**: session validation *messages* are per-language diagnostics and may differ between TS and Rust; the cross-language contract is the state hash plus accept/reject outcome, not message text.
+- **§2.4 PTC**: not implemented, by design — the pre-registered experiment manifest (`packages/evals-toolcall/experiments/ptc-ab.json`) is committed but the A/B has not been run.
 
 ## References
 
