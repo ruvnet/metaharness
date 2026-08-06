@@ -6,7 +6,7 @@
 import { InMemoryLineageStore, computeLiftCurve } from './lineage.js';
 import { meetsPromotionRule, gateFingerprint } from './gate.js';
 import type {
-  Policy, PolicyGenome, Proposer, Evaluator, PromotionRule, Signer,
+  Policy, PolicyGenome, Proposer, Evaluator, PromotionRule, Signer, CandidateMutation,
   HoldoutSuite, AnchorSuite, LineageStore, LineageCommit, LiftCurve, ReplayBundle, Score,
   GenerationCheckpoint, ResumeState,
 } from './types.js';
@@ -155,7 +155,9 @@ export async function runFlywheelGenerations(cfg: FlywheelConfig): Promise<Flywh
       const primaryDelta = c.score.primary - score.primary;
       const commit: LineageCommit = {
         id, generation: gen, parents: [parentId],
-        mutation: { target: c.target, summary: `adapt ${c.target}` },
+        // ADR-241 §2.1: an object-form proposer's summary (and rollback inverse) reaches the lineage
+        // commit; a legacy string-form proposer keeps the exact `adapt <target>` summary, unchanged.
+        mutation: { target: c.target, summary: c.summary ?? `adapt ${c.target}`, ...(c.inverse ? { inverse: c.inverse } : {}) },
         primaryDelta,
         anchorScore: isWinner ? winnerAnchor : c === winner ? winnerAnchor : null,
         verdict: isWinner ? 'PROMOTED' : 'REJECTED',

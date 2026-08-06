@@ -198,4 +198,34 @@ mod tests {
         let s = spec_from(r#"{ "goal": { "text": "g" } }"#);
         assert!(validate_autonomous(&s).is_empty());
     }
+
+    /// CROSS-LANGUAGE LOCKSTEP (ADR-029 style, like template-catalog):
+    /// consume the SAME fixture the TS validator tests use
+    /// (`packages/projects/__tests__/harness-spec.test.ts`) and assert
+    /// every case's errors byte-for-byte, in the same order.
+    const LOCKSTEP_FIXTURE: &str = include_str!(
+        "../../../packages/projects/__tests__/fixtures/autonomous-cases.json"
+    );
+
+    #[derive(Deserialize)]
+    struct LockstepCase {
+        name: String,
+        spec: AutonomousSpec,
+        errors: Vec<String>,
+    }
+
+    #[test]
+    fn ts_lockstep_fixture_every_case_matches_byte_for_byte() {
+        let cases: Vec<LockstepCase> =
+            serde_json::from_str(LOCKSTEP_FIXTURE).expect("fixture parses");
+        assert_eq!(cases.len(), 13, "fixture case count drifted");
+        for case in &cases {
+            assert_eq!(
+                validate_autonomous(&case.spec),
+                case.errors,
+                "fixture case: {}",
+                case.name
+            );
+        }
+    }
 }

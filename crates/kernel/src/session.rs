@@ -9,17 +9,23 @@
 // Deliberately out of scope (per the ADR): daemon, socket attach/detach,
 // kernel snapshots. Flywheel stays the loop-level audit layer.
 //
-// CROSS-LANGUAGE LOCKSTEP: the JSONL codec and state hash must be
-// reproducible from TS:
+// CROSS-LANGUAGE LOCKSTEP (ADR-029 style; TS in
+// `packages/kernel-js/src/session.ts` is the reference — the pinned
+// fixture under `packages/kernel-js/__tests__/fixtures/` is
+// include_str!'d by the tests below):
 //   - `serialize_event` uses serde_json struct-order keys:
-//     index, branch, parent, kind, payload (parent keys: branch, index).
-//     TS must construct objects in the same key order before
-//     JSON.stringify to emit identical lines.
-//   - `state_hash` folds one sha256 over the CANONICAL JSON of each
-//     lineage event (see `to_canonical_json`): objects with keys sorted
-//     recursively (byte-wise ascending), compact separators, then the
-//     UTF-8 bytes of each event's canonical string are fed to a single
-//     sha256 in lineage order (root→tip); digest is lowercase hex.
+//     index, branch, parent, kind, payload (parent keys: branch, index),
+//     with `parent` OMITTED entirely when absent — byte-identical to the
+//     TS wire lines.
+//   - `state_hash` is the TS chained fold, byte-for-byte:
+//         hex_prev := ""                     // empty string seed, NOT a digest
+//         for each event e in lineage order (root → tip):
+//             hex_prev := lowercase_hex(sha256(utf8(hex_prev + canonical_json(e))))
+//         state_hash := hex_prev
+//     where `canonical_json` (see `to_canonical_json`) sorts object keys
+//     recursively (byte-wise ascending), keeps arrays in order, uses
+//     compact separators, and drops an absent `parent`. An empty lineage
+//     hashes to the empty string "".
 
 //! Recoverable session log: JSONL codec, validation, replay, fork, hash.
 
@@ -49,6 +55,9 @@ pub struct SessionEvent {
     /// Branch this event belongs to.
     pub branch: String,
     /// Fork point; required on the first event of every non-root branch.
+    /// Omitted from the wire (and from canonical JSON) when absent, to
+    /// match the TS side, which drops `undefined` keys.
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub parent: Option<ParentRef>,
     /// Event kind (e.g. "turn", "tool", "fork").
     pub kind: String,
@@ -107,8 +116,8 @@ pub fn parse_log(jsonl: &str) -> Result<Vec<SessionEvent>, SessionError> {
 /// Serialize one event to a JSONL line (no trailing newline).
 ///
 /// Key order is struct order — `index, branch, parent, kind, payload` —
-/// which serde_json preserves. The TS side must construct objects in the
-/// same key order before `JSON.stringify` to emit byte-identical lines.
+/// which serde_json preserves; `parent` is omitted entirely when absent.
+/// Byte-identical to the TS `serializeEvent` wire lines.
 pub fn serialize_event(event: &SessionEvent) -> String {
     serde_json::to_string(event).expect("SessionEvent always serializes")
 }
@@ -235,19 +244,30 @@ fn lineage_up_to<'a>(
 }
 
 /// Deterministic state hash of a branch: walk the lineage root→tip and
-/// fold a single sha256 over the UTF-8 bytes of each event's canonical
-/// JSON (`to_canonical_json` of the serialized event), in lineage order.
-/// Returns lowercase hex. An unknown branch hashes an empty lineage
-/// (the sha256 of zero bytes).
+/// fold sha256 in a chain, byte-for-byte identical to the TS reference
+/// (`packages/kernel-js/src/session.ts`):
+///
+/// ```text
+/// hex_prev := ""   // empty string seed, NOT a digest
+/// for each event e in lineage order (root → tip):
+///     hex_prev := lowercase_hex(sha256(utf8(hex_prev + canonical_json(e))))
+/// state_hash := hex_prev
+/// ```
+///
+/// Returns lowercase hex. An unknown branch has an empty lineage and
+/// hashes to the empty string.
 pub fn state_hash(events: &[SessionEvent], branch: &str) -> String {
     let mut visited = Vec::new();
     let lineage = lineage_up_to(events, branch, None, &mut visited);
-    let mut hasher = Sha256::new();
+    let mut hex_prev = String::new();
     for e in lineage {
         let value = serde_json::to_value(e).expect("SessionEvent serializes");
+        let mut hasher = Sha256::new();
+        hasher.update(hex_prev.as_bytes());
         hasher.update(to_canonical_json(&value).as_bytes());
+        hex_prev = hex::encode(hasher.finalize());
     }
-    hex::encode(hasher.finalize())
+    hex_prev
 }
 
 /// Replay a branch: validates the whole log, resolves the branch lineage
@@ -325,7 +345,7 @@ mod tests {
 
     #[test]
     fn serialize_event_uses_struct_key_order() {
-        let line = serialize_event(&ev("root", 0, None));
+        let line = serialize_event(&ev("b", 0, Some(("root", 1))));
         let idx_index = line.find("\"index\"").unwrap();
         let idx_branch = line.find("\"branch\"").unwrap();
         let idx_parent = line.find("\"parent\"").unwrap();
@@ -335,6 +355,17 @@ mod tests {
         assert!(idx_branch < idx_parent);
         assert!(idx_parent < idx_kind);
         assert!(idx_kind < idx_payload);
+    }
+
+    #[test]
+    fn serialize_event_omits_absent_parent_like_ts() {
+        let line = serialize_event(&ev("root", 0, None));
+        assert!(!line.contains("\"parent\""), "line: {line}");
+        // Byte-identical to the TS wire form for the same logical event.
+        assert_eq!(
+            line,
+            r#"{"index":0,"branch":"root","kind":"turn","payload":{"n":0}}"#
+        );
     }
 
     #[test]
@@ -475,15 +506,18 @@ mod tests {
         events.push(ev("b", 1, None));
         assert!(validate_log(&events).is_empty());
 
-        // Manual fold: root[0], root[1], b[0], b[1] — proving the branch
-        // hash consumes the shared root→k prefix, not the whole root.
-        let mut hasher = Sha256::new();
+        // Manual chained fold: root[0], root[1], b[0], b[1] — proving the
+        // branch hash consumes the shared root→k prefix, not the whole
+        // root, and uses the TS hex-chained fold.
+        let mut hex_prev = String::new();
         for e in [&events[0], &events[1], &fork_event, &events[5]] {
             let v = serde_json::to_value(e).unwrap();
+            let mut hasher = Sha256::new();
+            hasher.update(hex_prev.as_bytes());
             hasher.update(to_canonical_json(&v).as_bytes());
+            hex_prev = hex::encode(hasher.finalize());
         }
-        let manual = hex::encode(hasher.finalize());
-        assert_eq!(state_hash(&events, "b"), manual);
+        assert_eq!(state_hash(&events, "b"), hex_prev);
 
         // Divergence: b's hash differs from root's tip hash.
         assert_ne!(state_hash(&events, "b"), state_hash(&events, "root"));
@@ -513,6 +547,48 @@ mod tests {
         let mut bad = root_log(2);
         bad.push(ev("root", 5, None));
         assert!(matches!(replay(&bad, "root"), Err(SessionError::Invalid(_))));
+    }
+
+    #[test]
+    fn empty_lineage_hashes_to_empty_string_like_ts() {
+        // TS `stateHash` returns '' for an empty lineage (empty seed,
+        // zero fold steps) — not the digest of zero bytes.
+        assert_eq!(state_hash(&[], "main"), "");
+        assert_eq!(state_hash(&root_log(2), "unknown"), "");
+    }
+
+    /// CROSS-LANGUAGE LOCKSTEP (ADR-029 style, like template-catalog):
+    /// consume the SAME fixture the TS suite pins
+    /// (`packages/kernel-js/__tests__/session.test.ts`) and reproduce the
+    /// committed state hash byte-for-byte.
+    const TS_FIXTURE_JSONL: &str = include_str!(
+        "../../../packages/kernel-js/__tests__/fixtures/session-fixture.jsonl"
+    );
+    const TS_FIXTURE_HASH: &str = include_str!(
+        "../../../packages/kernel-js/__tests__/fixtures/session-fixture.hash"
+    );
+
+    #[test]
+    fn ts_session_fixture_lockstep_state_hash() {
+        let events = parse_log(TS_FIXTURE_JSONL).expect("fixture parses");
+        assert_eq!(events.len(), 5, "fixture is 5 events (main + fork side)");
+        assert!(validate_log(&events).is_empty());
+        assert_eq!(state_hash(&events, "main"), TS_FIXTURE_HASH.trim());
+        // Round-trip: re-serializing yields the exact committed bytes.
+        let reserialized: String = events
+            .iter()
+            .map(|e| serialize_event(e) + "\n")
+            .collect();
+        assert_eq!(reserialized, TS_FIXTURE_JSONL);
+    }
+
+    #[test]
+    fn ts_session_fixture_fork_branch_replays_independently() {
+        let events = parse_log(TS_FIXTURE_JSONL).unwrap();
+        let side = replay(&events, "side").unwrap();
+        // main[0..=1] + side[0]
+        assert_eq!(side.event_count, 3);
+        assert_ne!(side.state_hash, state_hash(&events, "main"));
     }
 
     #[test]
