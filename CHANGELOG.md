@@ -39,7 +39,9 @@ All notable changes to this project are documented here. Format follows [Keep a 
   `packages/evals-toolcall/experiments/ptc-ab.json` (arms, metrics, seeds,
   promotion criterion: ≥20% token reduction at non-inferior success).
 - Sweep on touched packages: vitest 139 files / 1,347 tests green, cargo
-  116/116, wasm fixture-hash smoke green.
+  116/116, wasm fixture-hash smoke green. Full-suite gate: failing set is
+  byte-identical to the pre-integration baseline (21 pre-existing failures,
+  12 files — none ours), 243 files passing incl. all 6 new suites.
 
 ### Added — Iter 104 (2026-06-14)
 
