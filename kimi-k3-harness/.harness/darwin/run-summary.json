@@ -1,0 +1,182 @@
+{
+  "schema": "k3-darwin-run-v1",
+  "command": "metaharness-darwin evolve . --sandbox real --generations 3 --children 4 --seed 42 --tie faster --bench .harness/darwin-suite.json",
+  "sandbox": "real",
+  "generations": 3,
+  "childrenPerGen": 4,
+  "seed": 42,
+  "population": 21,
+  "leaderboard": [
+    {
+      "id": "baseline",
+      "surface": "planner",
+      "summary": "baseline generated from repo profile",
+      "taskSuccess": 1,
+      "testPassRate": 1,
+      "safetyScore": 1
+    },
+    {
+      "id": "g1_v0",
+      "surface": "scorePolicy",
+      "summary": "appended scorePolicy tracking note (no structural edit available)",
+      "taskSuccess": 1,
+      "testPassRate": 1,
+      "safetyScore": 1
+    },
+    {
+      "id": "g1_v1",
+      "surface": "retryPolicy",
+      "summary": "adjusted retry/attempt budget (variant 2)",
+      "taskSuccess": 1,
+      "testPassRate": 1,
+      "safetyScore": 1
+    },
+    {
+      "id": "g1_v2",
+      "surface": "contextBuilder",
+      "summary": "adjusted context slice window (variant 1)",
+      "taskSuccess": 1,
+      "testPassRate": 1,
+      "safetyScore": 1
+    },
+    {
+      "id": "g1_v3",
+      "surface": "retryPolicy",
+      "summary": "adjusted retry/attempt budget (variant 0)",
+      "taskSuccess": 1,
+      "testPassRate": 1,
+      "safetyScore": 1
+    },
+    {
+      "id": "g2_v0",
+      "surface": "toolPolicy",
+      "summary": "appended toolPolicy tracking note (no structural edit available)",
+      "taskSuccess": 1,
+      "testPassRate": 1,
+      "safetyScore": 1
+    },
+    {
+      "id": "g2_v1",
+      "surface": "retryPolicy",
+      "summary": "adjusted retry/attempt budget (variant 2)",
+      "taskSuccess": 1,
+      "testPassRate": 1,
+      "safetyScore": 1
+    },
+    {
+      "id": "g2_v2",
+      "surface": "memoryPolicy",
+      "summary": "appended memoryPolicy tracking note (no structural edit available)",
+      "taskSuccess": 1,
+      "testPassRate": 1,
+      "safetyScore": 1
+    },
+    {
+      "id": "g2_v3",
+      "surface": "memoryPolicy",
+      "summary": "appended memoryPolicy tracking note (no structural edit available)",
+      "taskSuccess": 1,
+      "testPassRate": 1,
+      "safetyScore": 1
+    },
+    {
+      "id": "g2_v4",
+      "surface": "reviewer",
+      "summary": "refined planner/reviewer phrasing (variant 0)",
+      "taskSuccess": 1,
+      "testPassRate": 1,
+      "safetyScore": 1
+    },
+    {
+      "id": "g2_v5",
+      "surface": "contextBuilder",
+      "summary": "adjusted context slice window (variant 4)",
+      "taskSuccess": 1,
+      "testPassRate": 1,
+      "safetyScore": 1
+    },
+    {
+      "id": "g2_v6",
+      "surface": "memoryPolicy",
+      "summary": "appended memoryPolicy tracking note (no structural edit available)",
+      "taskSuccess": 1,
+      "testPassRate": 1,
+      "safetyScore": 1
+    },
+    {
+      "id": "g2_v7",
+      "surface": "contextBuilder",
+      "summary": "adjusted context slice window (variant 0)",
+      "taskSuccess": 1,
+      "testPassRate": 1,
+      "safetyScore": 1
+    },
+    {
+      "id": "g3_v0",
+      "surface": "memoryPolicy",
+      "summary": "appended memoryPolicy tracking note (no structural edit available)",
+      "taskSuccess": 1,
+      "testPassRate": 1,
+      "safetyScore": 1
+    },
+    {
+      "id": "g3_v1",
+      "surface": "reviewer",
+      "summary": "refined planner/reviewer phrasing (variant 3)",
+      "taskSuccess": 1,
+      "testPassRate": 1,
+      "safetyScore": 1
+    },
+    {
+      "id": "g3_v2",
+      "surface": "contextBuilder",
+      "summary": "adjusted context slice window (variant 1)",
+      "taskSuccess": 1,
+      "testPassRate": 1,
+      "safetyScore": 1
+    },
+    {
+      "id": "g3_v3",
+      "surface": "retryPolicy",
+      "summary": "adjusted retry/attempt budget (variant 0)",
+      "taskSuccess": 1,
+      "testPassRate": 1,
+      "safetyScore": 1
+    },
+    {
+      "id": "g3_v4",
+      "surface": "toolPolicy",
+      "summary": "appended toolPolicy tracking note (no structural edit available)",
+      "taskSuccess": 1,
+      "testPassRate": 1,
+      "safetyScore": 1
+    },
+    {
+      "id": "g3_v5",
+      "surface": "memoryPolicy",
+      "summary": "appended memoryPolicy tracking note (no structural edit available)",
+      "taskSuccess": 1,
+      "testPassRate": 1,
+      "safetyScore": 1
+    },
+    {
+      "id": "g3_v6",
+      "surface": "scorePolicy",
+      "summary": "appended scorePolicy tracking note (no structural edit available)",
+      "taskSuccess": 1,
+      "testPassRate": 1,
+      "safetyScore": 1
+    },
+    {
+      "id": "g3_v7",
+      "surface": "contextBuilder",
+      "summary": "adjusted context slice window (variant 0)",
+      "taskSuccess": 1,
+      "testPassRate": 1,
+      "safetyScore": 1
+    }
+  ],
+  "winner": "baseline",
+  "deltaOverBaseline": 0,
+  "note": "All 8 mutated genomes kept the suite green in the real sandbox but none measurably improved on the repo-native smoke bench; the safety gate retained the baseline. A discriminating bench (e.g. wiring bench:kernel timings into the suite) is the lever for future lift."
+}

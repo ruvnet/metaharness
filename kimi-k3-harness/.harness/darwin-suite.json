@@ -1,0 +1,38 @@
+{
+  "id": "repo-native",
+  "version": "0.1.0",
+  "createdAt": "2026-08-07T20:14:27.958Z",
+  "taskHash": "fd4b4879ec2d2b5b840f17f3cdf2e0f0d9e9e0e92e4de3a21e5be1809286f0fb",
+  "tasks": [
+    {
+      "id": "task-0001",
+      "repo": "/home/user/metaharness/kimi-k3-harness",
+      "commit": "WORKDIR",
+      "title": "Repo native smoke task",
+      "prompt": "Keep the repository test suite green.",
+      "publicTestCommand": "npm test",
+      "hiddenTestCommand": "npm test",
+      "regressionTestCommand": "npm test",
+      "timeoutMs": 300000,
+      "maxCostUsd": 2,
+      "allowedMutationFiles": [],
+      "blockedFiles": [
+        ".env",
+        "package-lock.json",
+        "pnpm-lock.yaml",
+        "yarn.lock",
+        ".github/workflows"
+      ],
+      "successCriteria": [
+        "public test passes",
+        "hidden test passes",
+        "regression suite passes"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "smoke",
+        "repo-native"
+      ]
+    }
+  ]
+}

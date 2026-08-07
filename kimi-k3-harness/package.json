@@ -23,11 +23,15 @@
     "init": "node ./bin/cli.js init",
     "doctor": "node ./bin/cli.js doctor",
     "evolve": "metaharness-darwin evolve . --sandbox real --generations 3 --children 4",
-    "evolve:dry": "metaharness-darwin evolve . --sandbox mock --generations 2 --children 3"
+    "evolve:dry": "metaharness-darwin evolve . --sandbox mock --generations 2 --children 3",
+    "build:wasm": "node scripts/build-wasm.mjs",
+    "flywheel": "node scripts/flywheel-evolve.mjs",
+    "bench:kernel": "node scripts/bench-kernel.mjs"
   },
   "dependencies": {
     "@metaharness/kernel": "^0.1.0",
-    "@metaharness/host-claude-code": "^0.1.0"
+    "@metaharness/host-claude-code": "^0.1.0",
+    "@metaharness/flywheel": "^0.1.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

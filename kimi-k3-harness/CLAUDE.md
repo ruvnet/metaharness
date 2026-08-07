@@ -72,3 +72,28 @@ portable C99. One CPU, 8 GB of RAM. No BLAS, no framework, no GPU.
 - **Every performance figure must be measured, not asserted.** All numbers in
   docs come from the measurement output in `docs/data/` — update the data, then
   the docs, never the docs alone.
+
+### Optimization loop (Darwin + Flywheel + Rust/WASM)
+
+`crates/k3-kernel-bench` is a Rust replica of the trunk inner loop
+(block-quantized int8 matvec, q8 blocks of 32, per-block f32 scales) compiled
+to `wasm32-unknown-unknown` with simd128. Its levers — `kernel`
+(scalar/simd), `unroll` (1/2/4), `accs` (1/2/4) — are evolved by
+`npm run flywheel` (`@metaharness/flywheel`): each candidate is measured for
+real, must clear a frozen conjunctive gate (≥2% lift, no cost regression,
+correctness vs an f64 golden reference, no regression on a never-optimized
+anchor shape), and every promotion is Ed25519-signed into a replayable
+lineage under `.harness/flywheel/`. `npm run evolve` runs
+`@metaharness/darwin` real-sandbox evolution over the harness itself
+(record: `.harness/darwin/`).
+
+Rules for this loop:
+
+- The gate is frozen. Never loosen `k3KernelPromotionRule` to get a
+  promotion through; a change to the gate invalidates the lineage.
+- `.harness/flywheel/replay-bundle.json` is evidence, not decoration —
+  regenerate it by re-running the loop; never edit it by hand
+  (`verifyReplayBundle` will catch it).
+- The wasm artifact is built, not committed: `npm run build:wasm` first.
+- Current promoted policy: `simd/u1/a4` — 5.07× over the naive scalar root
+  on the holdout shape, 2.12× on the anchor (see `bench:kernel`).

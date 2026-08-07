@@ -1,0 +1,36 @@
+{
+  "schema": "k3-kernel-tuning-v1",
+  "root": {
+    "kernel": "scalar",
+    "unroll": "1",
+    "accs": "1"
+  },
+  "tuned": {
+    "kernel": "simd",
+    "unroll": "1",
+    "accs": "4"
+  },
+  "liftCurve": [
+    {
+      "generation": 0,
+      "primary": 2.108232871975101,
+      "delta": 0,
+      "anchor": 5.179057823064152
+    },
+    {
+      "generation": 1,
+      "primary": 7.923214241861537,
+      "delta": 5.814981369886436,
+      "anchor": 8.296204870156199
+    },
+    {
+      "generation": 2,
+      "primary": 9.517745769346412,
+      "delta": 1.5945315274848753,
+      "anchor": 10.033607997598233
+    }
+  ],
+  "milestoneReached": true,
+  "replayVerified": true,
+  "startedAt": "2026-08-07T20:13:43.391Z"
+}
