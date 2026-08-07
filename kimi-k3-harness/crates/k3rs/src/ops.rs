@@ -55,21 +55,68 @@ pub(crate) fn dot16(row: impl Fn(usize) -> f64, x: &[f32], inn: usize) -> f32 {
     acc as f32
 }
 
+/// Row-parallel driver: rows are partitioned across threads (never reduced
+/// across them), so thread count cannot change a single output bit — the same
+/// contract as the C engine's OpenMP loops. Below the threshold everything
+/// stays serial: a scoped-spawn costs tens of microseconds, which would swamp
+/// the tiny-model row counts while being noise at real K3 dimensions.
+const PAR_ROWS: usize = 1024;
+
+fn par_rows(y: &mut [f32], body: impl Fn(usize, &mut [f32]) + Sync) {
+    let out = y.len();
+    let nt = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1);
+    if out < PAR_ROWS || nt < 2 {
+        body(0, y);
+        return;
+    }
+    let chunk = out.div_ceil(nt);
+    std::thread::scope(|s| {
+        for (ti, ys) in y.chunks_mut(chunk).enumerate() {
+            let body = &body;
+            s.spawn(move || body(ti * chunk, ys));
+        }
+    });
+}
+
 /// y[out] = W[out][inn] . x[inn]. Row-major, no bias anywhere in this model.
+/// Dispatches to the AVX2 path when the CPU has avx2+fma; that path reproduces
+/// the portable dot16 tree exactly (see avx2.rs), so the choice is invisible in
+/// the output bits. x is precast to f64 ONCE per call (exact) and shared by
+/// every row — the same trick the patched C kernel uses.
 pub fn matmul(y: &mut [f32], x: &[f32], w: &Mat, inn: usize, out: usize) {
+    debug_assert_eq!(y.len(), out);
+    #[cfg(target_arch = "x86_64")]
+    if crate::avx2::usable() {
+        let xd = crate::avx2::precast(&x[..inn]);
+        match w {
+            Mat::F32(wv) => par_rows(y, |lo, ys| {
+                for (r, yo) in ys.iter_mut().enumerate() {
+                    let row = &wv[(lo + r) * inn..(lo + r + 1) * inn];
+                    *yo = unsafe { crate::avx2::dot_f32_pre(row, &xd, x, inn) };
+                }
+            }),
+            Mat::Bf16(wv) => par_rows(y, |lo, ys| {
+                for (r, yo) in ys.iter_mut().enumerate() {
+                    let row = &wv[(lo + r) * inn..(lo + r + 1) * inn];
+                    *yo = unsafe { crate::avx2::dot_bf16_pre(row, &xd, x, inn) };
+                }
+            }),
+        }
+        return;
+    }
     match w {
-        Mat::F32(wv) => {
-            for o in 0..out {
-                let row = &wv[o * inn..(o + 1) * inn];
-                y[o] = dot16(|i| row[i] as f64, x, inn);
+        Mat::F32(wv) => par_rows(y, |lo, ys| {
+            for (r, yo) in ys.iter_mut().enumerate() {
+                let row = &wv[(lo + r) * inn..(lo + r + 1) * inn];
+                *yo = dot16(|i| row[i] as f64, x, inn);
             }
-        }
-        Mat::Bf16(wv) => {
-            for o in 0..out {
-                let row = &wv[o * inn..(o + 1) * inn];
-                y[o] = dot16(|i| bf16f(row[i]) as f64, x, inn);
+        }),
+        Mat::Bf16(wv) => par_rows(y, |lo, ys| {
+            for (r, yo) in ys.iter_mut().enumerate() {
+                let row = &wv[(lo + r) * inn..(lo + r + 1) * inn];
+                *yo = dot16(|i| bf16f(row[i]) as f64, x, inn);
             }
-        }
+        }),
     }
 }
 
@@ -343,15 +390,19 @@ pub const E2M1: [f32; 16] = [
     0.0, 0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 6.0, -0.0, -0.5, -1.0, -1.5, -2.0, -3.0, -4.0, -6.0,
 ];
 
-/// E8M0 byte -> power of two; 255 is NaN by spec and maps to zero.
-#[inline]
+/// E8M0 byte -> power of two; 255 is NaN by spec and maps to zero. Precomputed
+/// once (the C engine's K3_E8M0 table): a powi in the group loop costs more
+/// than the group's arithmetic.
 pub fn e8m0(b: u8) -> f32 {
-    if b == 255 {
-        0.0
-    } else {
-        // 2^(b-127), exact including the denormal 2^-127 (b == 0).
-        (2.0f64).powi(b as i32 - 127) as f32
-    }
+    static T: std::sync::OnceLock<[f32; 256]> = std::sync::OnceLock::new();
+    T.get_or_init(|| {
+        let mut t = [0.0f32; 256];
+        for (b, v) in t.iter_mut().enumerate() {
+            // 2^(b-127), exact including the denormal 2^-127 (b == 0).
+            *v = if b == 255 { 0.0 } else { (2.0f64).powi(b as i32 - 127) as f32 };
+        }
+        t
+    })[b as usize]
 }
 
 /// y[rows] = W[rows][inn] . x[inn], W read straight out of packed MXFP4.
@@ -370,6 +421,19 @@ pub fn matmul_mxfp4(
     let pcols = inn / 2;
     let ngrp = (inn + group - 1) / group;
     let gbyte = group / 2;
+    #[cfg(target_arch = "x86_64")]
+    if crate::avx2::usable() {
+        let xd = crate::avx2::precast(&x[..inn]);
+        par_rows(y, |lo, ys| {
+            for (ri, yo) in ys.iter_mut().enumerate() {
+                let r = lo + ri;
+                let pr = &packed[r * pcols..(r + 1) * pcols];
+                let sr = &scales[r * ngrp..(r + 1) * ngrp];
+                *yo = unsafe { crate::avx2::mxfp4_row(pr, sr, &xd, x, inn, group) };
+            }
+        });
+        return;
+    }
     for r in 0..rows {
         let pr = &packed[r * pcols..(r + 1) * pcols];
         let sr = &scales[r * ngrp..(r + 1) * ngrp];

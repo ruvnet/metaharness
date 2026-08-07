@@ -4,6 +4,7 @@
 //!
 //!   k3rs <model_dir> --ids 3,7,11,5,9 --gen 4 [--dump-logits PATH]
 
+mod avx2;
 mod bench;
 mod json;
 mod model;

@@ -171,3 +171,65 @@ fn situ_glu_uncapped_sigmoid() {
     let wrong = b1 * (g / b1).tanh() * (1.0 / (1.0 + (-b1).exp())) * (b2 * (u / b2).tanh());
     assert!((y[0] - wrong).abs() > 1e-3);
 }
+
+/// The AVX2 dispatch must be invisible in output bits: compare the intrinsic
+/// paths against the portable dot16/group kernels on random data.
+#[cfg(target_arch = "x86_64")]
+#[test]
+fn avx2_paths_match_portable_bitwise() {
+    if !crate::avx2::usable() {
+        return;
+    }
+    let mut rng = Lcg(23);
+    for &inn in &[16usize, 64, 100, 7168] {
+        let rowf: Vec<f32> = (0..inn).map(|_| rng.f()).collect();
+        let rowb: Vec<u16> = rowf.iter().map(|v| (v.to_bits() >> 16) as u16).collect();
+        let x: Vec<f32> = (0..inn).map(|_| rng.f()).collect();
+        let xd = crate::avx2::precast(&x);
+        let scalar_f = dot16(|i| rowf[i] as f64, &x, inn);
+        let scalar_b = dot16(|i| bf16f(rowb[i]) as f64, &x, inn);
+        let avx_f = unsafe { crate::avx2::dot_f32_pre(&rowf, &xd, &x, inn) };
+        let avx_b = unsafe { crate::avx2::dot_bf16_pre(&rowb, &xd, &x, inn) };
+        assert_eq!(scalar_f.to_bits(), avx_f.to_bits(), "f32 dot diverged at inn={inn}");
+        assert_eq!(scalar_b.to_bits(), avx_b.to_bits(), "bf16 dot diverged at inn={inn}");
+    }
+    // whole-matrix mxfp4: the dispatching kernel vs a forced-portable rebuild
+    let (rows, inn, group) = (64usize, 128usize, 32usize);
+    let packed: Vec<u8> = (0..rows * inn / 2).map(|_| (rng.next() & 0xFF) as u8).collect();
+    let scales: Vec<u8> = (0..rows * inn / group).map(|_| (118 + rng.next() % 20) as u8).collect();
+    let x: Vec<f32> = (0..inn).map(|_| rng.f()).collect();
+    let mut via_dispatch = vec![0.0f32; rows];
+    matmul_mxfp4(&mut via_dispatch, &x, &packed, &scales, inn, rows, group);
+    // portable reference: group expansion + 8-lane tree, exactly ops.rs's fallback
+    for r in 0..rows {
+        let mut acc = 0.0f64;
+        for g in 0..inn / group {
+            let sb = scales[r * (inn / group) + g];
+            if sb == 255 {
+                continue;
+            }
+            let pb = &packed[r * inn / 2 + g * group / 2..];
+            let xg = &x[g * group..];
+            let mut wf = [0.0f64; 64];
+            for j in 0..group / 2 {
+                wf[2 * j] = E2M1[(pb[j] & 0x0F) as usize] as f64;
+                wf[2 * j + 1] = E2M1[(pb[j] >> 4) as usize] as f64;
+            }
+            let mut s = [0.0f64; 8];
+            let mut i = 0;
+            while i + 7 < group {
+                for l in 0..8 {
+                    s[l] = wf[i + l].mul_add(xg[i + l] as f64, s[l]);
+                }
+                i += 8;
+            }
+            let sub = ((s[0] + s[4]) + (s[1] + s[5])) + ((s[2] + s[6]) + (s[3] + s[7]));
+            acc += sub * e8m0(sb) as f64;
+        }
+        assert_eq!(
+            via_dispatch[r].to_bits(),
+            (acc as f32).to_bits(),
+            "mxfp4 row {r} diverged"
+        );
+    }
+}
