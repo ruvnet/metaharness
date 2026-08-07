@@ -44,7 +44,16 @@
     "upstream/patches/bind-widen-simd-omp.patch": "5232a699dbded012e1eb99933c504cefc9e668ae8bc5b19fd3adb77c2031eca0",
     "upstream/patches/trunk-bind-memoize.patch": "fedcbe84d3416b73a9d7f583dcca0903c4ae958077f42a52c984bdf975f8ac32",
     "upstream/patches/bench-hash-gate.patch": "64c66058b9ac72f885ed1661213866c38626bc461ab11ac645842a3314a35d3a",
-    ".harness/repo-analysis-score.json": "026d0b15e850f042b94d3e568a13bb8f555f55a96a7e438bf7cc5e78ed64127a"
+    ".harness/repo-analysis-score.json": "026d0b15e850f042b94d3e568a13bb8f555f55a96a7e438bf7cc5e78ed64127a",
+    "crates/k3rs/Cargo.toml": "4a5f696101534b66d27ce920114ad3132b14c11af714e0e510a3f6522616c6c0",
+    "crates/k3rs/README.md": "7d3ab35803627c604f02e0688536a67b22cabf20cf31ca72f80efefd810aef8b",
+    "crates/k3rs/src/main.rs": "a890c1f285439500a6b91b51f004a51da09ea1781fd8954dbdb4260e23aca347",
+    "crates/k3rs/src/model.rs": "64d92b4eaed146205392f9b90a338cc0cf42e70587363cf684c991da84518553",
+    "crates/k3rs/src/ops.rs": "04dd5efb1ac6f6354802c0a417b594ae49e416ed972da314b57597937fc66c90",
+    "crates/k3rs/src/st.rs": "6f7e7b5fce577201c8a2db6a25dfefce0e2faeab106831af50fa6cc70586a4f6",
+    "crates/k3rs/src/json.rs": "593528de2b7fc4ce39f933f6d19661309729b789e7c5263ff7f58ecad9a8ec61",
+    "crates/k3rs/src/bench.rs": "f70f16f800930bef8a3a827408c98495af311d3517279953b2a217023399959a",
+    "crates/k3rs/src/tests.rs": "38b65ecf4280915874e0d82db271de4ee68b5d8a1114b713d5fd12c201b4a5a5"
   },
   "generated_at": "2026-08-07T20:01:12.311Z",
   "meta": {
