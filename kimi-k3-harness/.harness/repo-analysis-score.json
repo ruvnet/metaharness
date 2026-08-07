@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "repo": "kimi-k3-in-c",
+  "harnessFit": 53,
+  "compileConfidence": 22,
+  "taskCoverage": 65,
+  "toolSafety": 100,
+  "memoryUsefulness": 33,
+  "estCostPerRunUsd": 0.048,
+  "recommendedMode": "CLI + MCP",
+  "archetype": "devops-harness",
+  "template": "vertical:devops",
+  "scaffoldReady": false,
+  "hardConstraints": "5/6",
+  "generatedAt": "2026-08-07T20:25:34.389Z"
+}
