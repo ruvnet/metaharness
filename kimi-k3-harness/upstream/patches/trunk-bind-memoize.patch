@@ -1,0 +1,161 @@
+diff --git a/src/io/k3_trunk.c b/src/io/k3_trunk.c
+index 81e4613..8d1a6d0 100644
+--- a/src/io/k3_trunk.c
++++ b/src/io/k3_trunk.c
+@@ -5,6 +5,7 @@
+ 
+ #include "k3_portable_io.h"   /* first: sets _DARWIN_C_SOURCE before any libc header */
+ 
++#include <assert.h>
+ #include <fcntl.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+@@ -271,6 +272,16 @@ int k3_trunk_open(K3Trunk *tr, const char *dir, const K3Cfg *c, int64_t budget_b
+     for (int i = 0; i < RING; i++) tr->layer_of[i] = -1;
+     tr->widen_bytes = (int64_t)widen;
+ 
++    /* Bind memos: one per pinned layer, one per ring slot. A few hundred bytes each,
++     * so allocation failure here is treated like any other. */
++    tr->pin_bind = (K3LayerBind *)calloc((size_t)(npin ? npin : 1), sizeof(K3LayerBind));
++    tr->pin_bind_ok = (int *)calloc((size_t)(npin ? npin : 1), sizeof(int));
++    tr->slot_bind = (K3LayerBind *)calloc((size_t)RING, sizeof(K3LayerBind));
++    tr->slot_bind_layer = (int *)malloc((size_t)RING * sizeof(int));
++    if (!tr->pin_bind || !tr->pin_bind_ok || !tr->slot_bind || !tr->slot_bind_layer)
++        return -1;
++    for (int i = 0; i < RING; i++) tr->slot_bind_layer[i] = -1;
++
+     /* The reader is started ONLY when there are at least two slots, and this is a
+      * correctness requirement rather than an optimisation.
+      *
+@@ -345,6 +356,8 @@ void k3_trunk_close(K3Trunk *tr)
+     if (tr->fd >= 0) close(tr->fd);
+     if (tr->pin) { for (int i = 0; i < tr->npin; i++) free(tr->pin[i]); free(tr->pin); }
+     free(tr->arena); free(tr->layer_of); free(tr->slot_of);
++    free(tr->pin_bind); free(tr->pin_bind_ok);
++    free(tr->slot_bind); free(tr->slot_bind_layer);
+     if (tr->lay) { for (int i = 0; i < tr->n_layers; i++) free(tr->lay[i].t); free(tr->lay); }
+     free(tr->json_arena);   /* every K3TrunkTensor.name points into this */
+     memset(tr, 0, sizeof *tr);
+@@ -450,21 +463,43 @@ static int trunk_io_wait(K3Trunk *tr, int L)
+     return 0;
+ }
+ 
++/* Hand out a memoised bind. Everything in the cached struct points at slot memory
++ * EXCEPT lay.kda/mla/moe, which point into the K3LayerBind struct itself (that is how
++ * k3_bind_layer_mem builds it), so after the value copy they are re-aimed at the
++ * caller's copy. NULL stays NULL: exactly one of kda/mla is set, matching the source. */
++static void bind_from_memo(K3LayerBind *b, const K3LayerBind *memo)
++{
++    *b = *memo;
++    b->lay.kda = b->lay.kda ? &b->kda : NULL;
++    b->lay.mla = b->lay.mla ? &b->mla : NULL;
++    b->lay.moe = b->lay.moe ? &b->moe : NULL;
++}
++
+ int k3_trunk_bind(K3Trunk *tr, const K3Cfg *c, int L, K3LayerBind *b)
+ {
+     if (L < 0 || L >= tr->n_layers) return -1;
+     const double t_bind0 = now_s();
+     k3_trunk_binds++;
+     unsigned char *base;
++    K3LayerBind *memo;          /* where this residency's finished bind is cached  */
++    int *memo_tag;              /* validity marker to set once the bind succeeds   */
++    int memo_tag_val;           /* value that marks it valid (1 for pins, L for ring) */
++    int have_memo;              /* the cached bind matches the bytes in the slot   */
+ 
+     if (L < tr->npin) {
+         base = tr->pin[L];
++        memo = &tr->pin_bind[L];
++        memo_tag = &tr->pin_bind_ok[L];
++        memo_tag_val = 1;
+         if (tr->slot_of[L] < 0) {            /* first touch: load once, keep forever */
++            tr->pin_bind_ok[L] = 0;          /* bytes are about to change            */
+             if (load_run(tr, L, base) != 0) return -1;
+             tr->slot_of[L] = L;
+             tr->misses++;
++            have_memo = 0;
+         } else {
+             tr->hits++;
++            have_memo = tr->pin_bind_ok[L];
+         }
+     } else {
+         int slot = -1;
+@@ -481,14 +516,30 @@ int k3_trunk_bind(K3Trunk *tr, const K3Cfg *c, int L, K3LayerBind *b)
+                 slot = tr->ring;
+                 tr->ring = (tr->ring + 1) % tr->nslot;
+                 if (tr->layer_of[slot] >= 0) tr->slot_of[tr->layer_of[slot]] = -1;
+-                /* Mark the slot EMPTY before reading into it, not after. */
++                /* Mark the slot EMPTY before reading into it, not after. The memo is
++                 * cleared at the same moment and for the same reason: any doubt about
++                 * what the slot holds must read as "recompute". */
+                 tr->layer_of[slot] = -1;
++                tr->slot_bind_layer[slot] = -1;
+                 if (load_run(tr, L, tr->arena + (size_t)slot * tr->slot_bytes) != 0) return -1;
+                 tr->layer_of[slot] = L;
+                 tr->misses++;
+             }
+         }
+         base = tr->arena + (size_t)slot * tr->slot_bytes;
++        memo = &tr->slot_bind[slot];
++        memo_tag = &tr->slot_bind_layer[slot];
++        memo_tag_val = L;
++        have_memo = (tr->slot_bind_layer[slot] == L);
++    }
++
++    if (have_memo) {
++        /* A stale memo after a slot reload silently corrupts one layer, so the layer
++         * recorded at store time is checked on every hit. */
++        assert(memo->layer == L);
++        bind_from_memo(b, memo);
++        k3_trunk_bind_wall += now_s() - t_bind0;
++        return 0;
+     }
+ 
+     Finder f; f.L = &tr->lay[L];
+@@ -502,6 +553,10 @@ int k3_trunk_bind(K3Trunk *tr, const K3Cfg *c, int L, K3LayerBind *b)
+     const double tnow = now_s();
+     k3_trunk_widen_wall += tnow - tw;
+     k3_trunk_bind_wall  += tnow - t_bind0;
++    if (rc == 0) {              /* memoise ONLY a finished bind; failures stay invalid */
++        *memo = *b;
++        *memo_tag = memo_tag_val;
++    }
+     return rc;
+ }
+ 
+@@ -521,6 +576,9 @@ void k3_trunk_prefetch(K3Trunk *tr, int L)
+     tr->ring = (tr->ring + 1) % tr->nslot;
+     if (tr->layer_of[slot] >= 0) tr->slot_of[tr->layer_of[slot]] = -1;
+     tr->layer_of[slot] = -1;
++    /* The reader is about to overwrite this slot's bytes; its memo dies with them,
++     * BEFORE the read is issued, so no window exists where both look valid. */
++    tr->slot_bind_layer[slot] = -1;
+     io->layer = L;
+     io->slot = slot;
+     io->done = 0;
+diff --git a/src/io/k3_trunk.h b/src/io/k3_trunk.h
+index f8bdfc5..7870080 100644
+--- a/src/io/k3_trunk.h
++++ b/src/io/k3_trunk.h
+@@ -99,6 +99,21 @@ typedef struct {
+      * layer name before its read succeeds; bind waits for completion before consuming it. */
+     void         *io_state;
+ 
++    /* Memoised binds. Rebinding a RESIDENT layer re-runs tensor-name resolution plus
++     * the bf16->fp32 widen (~26 MB of convert+store for a MoE layer) only to reproduce
++     * a K3LayerBind identical to the previous one: every pointer in it targets the
++     * slot's own bytes, and those bytes have not moved. At a budget that pins most
++     * layers that is gigabytes of widen work per token recomputing known answers. So
++     * the finished bind is cached per pinned layer and per ring slot, and invalidated
++     * at every point where a slot's bytes are (re)loaded or a slot is claimed for a
++     * different layer. Identical bytes are served to compute either way, so output is
++     * bit-identical by construction; the only risk is stale invalidation, which is why
++     * claiming a slot clears its memo BEFORE any read is issued. */
++    K3LayerBind  *pin_bind;        /* [npin] finished bind per pinned layer            */
++    int          *pin_bind_ok;     /* [npin] 1 when pin_bind[i] matches the bytes      */
++    K3LayerBind  *slot_bind;       /* [nslot] finished bind per ring slot              */
++    int          *slot_bind_layer; /* [nslot] layer slot_bind[i] was built for, -1=none */
++
+     /* stats */
+     uint64_t     hits, misses;
+     uint64_t     bytes_read;

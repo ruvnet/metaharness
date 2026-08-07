@@ -37,7 +37,14 @@
     "scripts/build-wasm.mjs": "fbf55af23d43ba7bfc3f9c0458e5f22be1cf49e3fdf7f064f0a69d61bec8725d",
     "scripts/flywheel-evolve.mjs": "1669fb326d5c8a16279f5de6a147344655d0af7ef71e7b0dd79f168563d2704c",
     "scripts/bench-kernel.mjs": "6a7cc0c818334b65540fa09bd649e8bbd5f877005617c3efbe590df88ebccdc8",
-    "__tests__/kernel.test.ts": "7dd00e5968ef97bf6e335869abbcda484fcbaa7891bdc97b86c887bdc058f05c"
+    "__tests__/kernel.test.ts": "7dd00e5968ef97bf6e335869abbcda484fcbaa7891bdc97b86c887bdc058f05c",
+    "upstream/README.md": "7bf5ca0d19fe9cb5b045c8ad512d4acb2e40c832b10f398b5cc60d5efd64375a",
+    "upstream/swarm-outcomes.json": "71087c37b6e0c5868a2cf6b9805c301818e4b77ec507ca9601b27c3c830eca5a",
+    "upstream/patches/kernel-conv-bitexact.patch": "3905bf415780b8dfa154ed738e4fedc8ddac013107a5858d9f3003515bcd96bb",
+    "upstream/patches/bind-widen-simd-omp.patch": "5232a699dbded012e1eb99933c504cefc9e668ae8bc5b19fd3adb77c2031eca0",
+    "upstream/patches/trunk-bind-memoize.patch": "fedcbe84d3416b73a9d7f583dcca0903c4ae958077f42a52c984bdf975f8ac32",
+    "upstream/patches/bench-hash-gate.patch": "64c66058b9ac72f885ed1661213866c38626bc461ab11ac645842a3314a35d3a",
+    ".harness/repo-analysis-score.json": "026d0b15e850f042b94d3e568a13bb8f555f55a96a7e438bf7cc5e78ed64127a"
   },
   "generated_at": "2026-08-07T20:01:12.311Z",
   "meta": {
