@@ -1,0 +1,44 @@
+{
+  "name": "kimi-k3-harness",
+  "version": "0.1.0",
+  "description": "Repo-aware coding agent harness for kimi-k3-in-c — Kimi K3 (2.78T-param) inference in portable C99: one CPU, 8 GB RAM, no BLAS, no framework, no GPU",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "kimi-k3-harness": "bin/cli.js"
+  },
+  "files": [
+    "bin/**",
+    "dist/**",
+    "src/**",
+    "tsconfig.json",
+    ".claude/**",
+    "CLAUDE.md",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "init": "node ./bin/cli.js init",
+    "doctor": "node ./bin/cli.js doctor",
+    "evolve": "metaharness-darwin evolve . --sandbox real --generations 3 --children 4",
+    "evolve:dry": "metaharness-darwin evolve . --sandbox mock --generations 2 --children 3"
+  },
+  "dependencies": {
+    "@metaharness/kernel": "^0.1.0",
+    "@metaharness/host-claude-code": "^0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^3.0.0",
+    "@metaharness/darwin": "^0.8.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "generator": "0.1.0",
+  "template": "vertical:coding",
+  "template_version": "0.0.0",
+  "vars": {
+    "name": "kimi-k3-harness",
+    "description": "Repo-aware coding agent harness for kimi-k3-in-c — Kimi K3 (2.78T-param) inference in portable C99: one CPU, 8 GB RAM, no BLAS, no framework, no GPU",
+    "host": "claude-code"
+  },
+  "hosts": [
+    "claude-code"
+  ],
+  "files": {
+    ".claude/commands/doctor.md": "2f1475fa0ed34729cb2ed9d6cecf29e99781da0a56afef133361e3ff0a17bb52",
+    ".claude/commands/review-diff.md": "2ab52f01487bfe67335f4de5193d7a6fb0f72f646411114613d8fa5da071ef2b",
+    ".claude/settings.json": "b4b05318b04b19f84769bdb56a0b75399bf796668bba20e3bc68bbc3356c907c",
+    ".claude/skills/plan-change/SKILL.md": "84e1c44ca264b999ebf80cd8fa0e5ebf554275bbd8023b1530ad053a44482e30",
+    ".claude-plugin/plugin.json": "9403e65b3a4de8395bbecb370d1fd5d8e1ddfe165bfed5f569790d5778174ed2",
+    "CLAUDE.md": "1e0ea8ae3e9d09147e1242b17506e9f6ade812a8605bbd858018b35c036edd78",
+    "README.md": "ea9007f80f33ead9fc449bffd97d18303cc786729483ae82122ff94e04ffd02c",
+    "__tests__/smoke.test.ts": "4c683ff9aa91b0340a6930aba86a67f85fde8b807740feba5b19d2baac2683c3",
+    "bin/cli.js": "36d0ba939b49240108962ad7af0f3df0427d46d71cc9cfb1375e78a90b97ef35",
+    "package.json": "896b90840a0fb3cab23666ea41131ed7936ff89bbf2cc8cbd16a40f8c8cb880b",
+    "src/agents/architect.ts": "329681d647a5f7d1adec0cfea7d646bbe658717daefeb03325ee8d1b91094dba",
+    "src/agents/implementer.ts": "103caafc8e680f4d3e4a73b8edd5a8c4ce591a2c276abda20de643c3ba002610",
+    "src/agents/reviewer.ts": "54c710fad0af63b46fabddcf8fc70fd56dcaf42ed6166db2f854d3ca99c65edf",
+    "src/agents/test-writer.ts": "9e9012f981109fffcefa63b15b73976df66d310d19dcc60c417516d9bb81bfdd",
+    "src/init.ts": "ab1ba4c1e4bf5989156b7c3b73148909e41eedd7a816df79707c220f337c450e",
+    "tsconfig.json": "8b4e730a1aa39162ac574455d7a98e1881f5313ca80ffe503b9652dcf0c76b9d",
+    "vitest.config.ts": "e9e94875611ab1cd602c1f6923902c2dab7953a75ac022962973639d1937587a",
+    "LICENSE": "b25d61a1285f8a3976aaaf2f419a2bf8df463fc5441ca838aa96b19f6cbb3808",
+    ".claude/skills/evolve/SKILL.md": "14b28a2866b064837c8132d63a69141ec29f9c6614eca8a932fb2eb2dbbf5878"
+  },
+  "generated_at": "2026-08-07T20:01:12.311Z",
+  "meta": {
+    "surface": "cli",
+    "kernel_version": "0.1.2"
+  }
+}
