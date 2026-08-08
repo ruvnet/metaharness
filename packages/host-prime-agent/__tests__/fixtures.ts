@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 //
-// Shared fixtures for the ADR-242 host-prime-agent contract tests. Kept in a
+// Shared fixtures for the ADR-247 host-prime-agent contract tests. Kept in a
 // non-.test.ts module so the golden-file generator and the test suite consume
 // the byte-identical spec.
 
 import type { HarnessSpec } from '@metaharness/kernel';
 
-/** The golden-file fixture (ADR-242 test contract 3): 2 tools, 1 agent,
+/** The golden-file fixture (ADR-247 test contract 3): 2 tools, 1 agent,
  * systemPrompt, 1 MCP server, allow+deny permissions. */
 export const defaultSpec: HarnessSpec = {
   name: 'demo',

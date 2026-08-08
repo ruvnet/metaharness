@@ -1,4 +1,4 @@
-# ADR-242: host-prime-agent — Prime Agent (Prime Intellect) as the 11th harness host
+# ADR-247: host-prime-agent — Prime Agent (Prime Intellect) as the 11th harness host
 
 **Status**: Implemented (corrected 2026-08-06)
 **Date**: 2026-08-06
@@ -9,8 +9,8 @@ Prime Agent assumptions with instruction-only tool contracts, native prompt /
 **Deciders**: ruv
 **Tags**: prime-agent, host-adapter, skills, python, sandboxing
 **Extends**: ADR-004 (Host integration model)
-**Related**: ADR-022 (MCP default-deny posture), ADR-036 (host-opencode — per-host ADR precedent), ADR-044 (host capability coverage), ADR-046 (real-install verification), ADR-241 (companion — continual-harness primitives; shipped as a pair)
-**Prompted by**: the Prime Agent research pass in [`docs/research/scaffolding/PRIME-AGENT-ANALYSIS.md`](../research/scaffolding/PRIME-AGENT-ANALYSIS.md); this ADR covers Prime Agent as an **emission target**, ADR-241 covers what we borrow from its design.
+**Related**: ADR-022 (MCP default-deny posture), ADR-036 (host-opencode — per-host ADR precedent), ADR-044 (host capability coverage), ADR-046 (real-install verification), ADR-246 (companion — continual-harness primitives; shipped as a pair)
+**Prompted by**: the Prime Agent research pass in [`docs/research/scaffolding/PRIME-AGENT-ANALYSIS.md`](../research/scaffolding/PRIME-AGENT-ANALYSIS.md); this ADR covers Prime Agent as an **emission target**, ADR-246 covers what we borrow from its design.
 
 ---
 
@@ -40,7 +40,7 @@ Ship `@metaharness/host-prime-agent` (`packages/host-prime-agent/`), the **11th 
 | `spec.systemPrompt` | `.prime/agent/APPEND_SYSTEM.md`, the current project-scoped append surface. |
 | `spec.agents[]` | Reusable skills that delegate through Prime Agent's built-in `rlm` callable. |
 | `spec.mcpServers[]` | Remote HTTP servers are emitted into `.prime/agent/settings.json` plus a Python-backed `McpIntegration` skill. Local stdio commands are listed as unsupported because Prime Agent does not currently wire them into its kernel. |
-| ADR-241 §2.2 `autonomous` block | A documented invocation using `--autonomous-gate`, `--autonomous-max-turns`, `--goal`, and `--goal-token-budget`. Heartbeat metadata is preserved as workflow guidance because current Prime Agent has no `/heartbeat` surface. |
+| ADR-246 §2.2 `autonomous` block | A documented invocation using `--autonomous-gate`, `--autonomous-max-turns`, `--goal`, and `--goal-token-budget`. Heartbeat metadata is preserved as workflow guidance because current Prime Agent has no `/heartbeat` surface. |
 | `spec.permissions` | See §2.2 — the load-bearing rule. |
 
 Also emitted: `install-prime-agent.md` (how to install Prime Agent, where the skills land, precedence notes, the sandbox warning below). The runbook name is host-qualified — host-opencode already owns `install.md`, and a multi-host scaffold merges every adapter's file map into one directory, so an unqualified name would collide (implementation note, 2026-08-06).
@@ -81,7 +81,7 @@ Contract tests, per the host-adapter convention (ADR-032/036/044):
 3. **Golden file**: `generateConfig(defaultSpec)` snapshot-matches a committed golden output byte-for-byte (determinism gate for the Python codegen path).
 4. **Fail-closed**: with non-empty `permissions.deny`, the output map contains `SANDBOX-REQUIRED.md` naming every denied capability, and `install-prime-agent.md` opens with the warning; with an empty deny-list, neither warning artifact appears.
 5. **No silent drops**: remote HTTP MCP becomes an importable `McpIntegration`; stdio MCP and unsupported fields are explicitly listed in `install-prime-agent.md`.
-6. **Autonomous projection**: given an ADR-241 `autonomous` block, `install-prime-agent.md` contains the current `--autonomous-*` and `--goal*` flags; absent the block, no autonomous section is emitted.
+6. **Autonomous projection**: given an ADR-246 `autonomous` block, `install-prime-agent.md` contains the current `--autonomous-*` and `--goal*` flags; absent the block, no autonomous section is emitted.
 7. **Negative runtime contract**: generated output contains no `invoke-tool` command or unpinned `npx --yes @metaharness/kernel` fallback.
 
 ## Implementation notes (2026-08-06)
@@ -95,4 +95,4 @@ Contract tests, per the host-adapter convention (ADR-032/036/044):
 - `PrimeIntellect-ai/prime-agent` — <https://github.com/PrimeIntellect-ai/prime-agent>; skills surface: `packages/coding-agent/docs/skills.md`; security note on non-sandboxed execution (repo README)
 - [`docs/research/scaffolding/PRIME-AGENT-ANALYSIS.md`](../research/scaffolding/PRIME-AGENT-ANALYSIS.md) §3–§4 (verified config surface), §8 (sandbox caveat)
 - `packages/host-pi-dev/src/index.ts` — sibling adapter and design-note precedent for MCP-less hosts
-- ADR-004, ADR-018, ADR-022, ADR-032/033/036, ADR-044/046, ADR-241
+- ADR-004, ADR-018, ADR-022, ADR-032/033/036, ADR-044/046, ADR-246

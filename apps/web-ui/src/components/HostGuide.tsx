@@ -176,7 +176,7 @@ export const GUIDES: HostGuide[] = [
   {
     id: 'prime-agent',
     name: 'Prime Agent',
-    blurb: 'Prime Intellect\'s IPython-based harness. MetaHarness emits project skills, native `rlm` delegation, and remote HTTP MCP integrations (ADR-242).',
+    blurb: 'Prime Intellect\'s IPython-based harness. MetaHarness emits project skills, native `rlm` delegation, and remote HTTP MCP integrations (ADR-247).',
     steps: [
       {
         title: '1. Install Prime Agent',

@@ -186,7 +186,7 @@ export function hostConfigFiles(host: string, cfg: HostConfigInput): HostFile[] 
     }
 
     case 'prime-agent': {
-      // ADR-242 — Prime Agent uses project skills, supports remote HTTP MCP,
+      // ADR-247 — Prime Agent uses project skills, supports remote HTTP MCP,
       // and has no native sandbox. Runtime-specific files are emitted by
       // @metaharness/host-prime-agent; scaffold-time emits concise guidance.
       return [
@@ -197,7 +197,7 @@ export function hostConfigFiles(host: string, cfg: HostConfigInput): HostFile[] 
           '',
           cfg.mcp === 'off' ? 'MCP: off — nothing further.' : `MCP (${cfg.mcp}): remote HTTP servers are emitted as Python-backed integrations; local stdio servers are listed as unsupported.`,
           '',
-          'Sandbox: Prime Agent is not sandboxed. Denied capabilities require an external sandbox (ADR-242).',
+          'Sandbox: Prime Agent is not sandboxed. Denied capabilities require an external sandbox (ADR-247).',
         ].join('\n') + '\n' },
         { path: '.prime/agent/skills/README.md', content: `# ${cfg.name} skills\n\nGenerated skill directories land here (one per tool).\n` },
       ];

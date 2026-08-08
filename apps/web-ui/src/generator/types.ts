@@ -6,7 +6,7 @@
 
 // iter 127 added 'copilot' (ADR-032); iter 128 added 'opencode' (ADR-036);
 // iter 147 added 'github-actions' (ADR-033, first non-interactive host);
-// 'prime-agent' added per ADR-242 (skills-only host, no MCP).
+// 'prime-agent' added per ADR-247 (skills-only host, no MCP).
 export type HostId = 'claude-code' | 'codex' | 'pi-dev' | 'hermes' | 'openclaw' | 'rvm' | 'copilot' | 'opencode' | 'github-actions' | 'prime-agent';
 
 // Template ids come from the canonical catalog (e.g. "minimal",

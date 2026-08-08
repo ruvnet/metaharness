@@ -60,7 +60,7 @@ const KERNEL_VERSION = resolveKernelVersion();
 
 // iter 127 added copilot (ADR-032); iter 128 added opencode (ADR-036);
 // iter 147 added github-actions (ADR-033, the first non-interactive host);
-// prime-agent added per ADR-242 (skills-based, no MCP).
+// prime-agent added per ADR-247 (skills-based, no MCP).
 // HOSTS is the canonical 10-host catalog.
 export const HOSTS = ['claude-code', 'codex', 'pi-dev', 'hermes', 'openclaw', 'rvm', 'copilot', 'opencode', 'github-actions', 'prime-agent'] as const;
 export type Host = (typeof HOSTS)[number];
@@ -146,7 +146,7 @@ export interface CliArgs {
   withWasm?: string;
   /** ADR-147: include Darwin Mode self-improvement (default on; --no-darwin to skip). */
   darwin?: boolean;
-  /** ADR-241 §2.3: include the recoverable-session log scaffold (default OFF; --sessions to enable). */
+  /** ADR-246 §2.3: include the recoverable-session log scaffold (default OFF; --sessions to enable). */
   sessions?: boolean;
 }
 
@@ -236,7 +236,7 @@ export interface ScaffoldOptions {
    */
   darwin?: boolean;
   /**
-   * ADR-241 §2.3: emit a crash-recoverable, forkable session log scaffold
+   * ADR-246 §2.3: emit a crash-recoverable, forkable session log scaffold
    * (`src/sessions/log.ts`, dependency-free copy-in). Default OFF — sessions
    * are an *optional* primitive per the ADR; opt in with `--sessions`.
    */
@@ -305,7 +305,7 @@ Defaults worth carrying into how you evolve and run this harness (full evidence 
 }
 
 /**
- * ADR-241 §2.3: the copy-in recoverable-session log emitted with --sessions.
+ * ADR-246 §2.3: the copy-in recoverable-session log emitted with --sessions.
  * Deliberately self-contained: node builtins only, NO @metaharness/kernel
  * import, so the generated harness owns the file outright. The wire format
  * and hash fold match packages/kernel-js/src/session.ts byte-for-byte.
@@ -314,8 +314,8 @@ Defaults worth carrying into how you evolve and run this harness (full evidence 
 function sessionsLogTemplate(): string {
   return `// SPDX-License-Identifier: MIT
 //
-// Recoverable session log — copy-in scaffold from ADR-241 §2.3
-// (metaharness docs/adrs/ADR-241-prime-agent-continual-harness-refine.md).
+// Recoverable session log — copy-in scaffold from ADR-246 §2.3
+// (metaharness docs/adrs/ADR-246-prime-agent-continual-harness-refine.md).
 // Self-contained: node builtins only, no @metaharness/kernel dependency.
 //
 // Append-only JSONL: one event per line, per-branch 0-based monotonic
@@ -682,7 +682,7 @@ export async function scaffold(opts: ScaffoldOptions): Promise<ScaffoldResult> {
     if (skillIdx !== -1) rendered[skillIdx] = skill; else rendered.push(skill);
   }
 
-  // ADR-241 §2.3: recoverable-session scaffold. Default OFF (opt in with
+  // ADR-246 §2.3: recoverable-session scaffold. Default OFF (opt in with
   // --sessions) — the ADR ships sessions as an *optional* primitive, unlike
   // darwin's default-on. The emitted src/sessions/log.ts is a dependency-free
   // copy-in (no @metaharness/kernel import); session state is host-agnostic
@@ -705,7 +705,7 @@ export async function scaffold(opts: ScaffoldOptions): Promise<ScaffoldResult> {
         let readme = rendered[readmeIdx]!.content;
         while (readme.endsWith('\n')) readme = readme.slice(0, -1);
         rendered[readmeIdx]!.content = readme + '\n' +
-          `\n## Recoverable sessions (ADR-241 §2.3)\n\n` +
+          `\n## Recoverable sessions (ADR-246 §2.3)\n\n` +
           `This harness includes \`src/sessions/log.ts\` — a crash-recoverable, forkable\n` +
           `JSONL session log (append-only events, deterministic replay, integrity state\n` +
           `hash). Session state lives where you point the log (suggested:\n` +
@@ -981,7 +981,7 @@ export async function main(argv: string[]): Promise<number> {
     console.log('Usage: npx metaharness <name> [--template <id>] [--host claude-code|codex|pi-dev|hermes] [--description "..."] [--target <path>] [--force]');
     console.log('       --target <path>   write the harness to <path> instead of ./<name>');
     console.log('       --no-darwin       skip Darwin Mode self-improvement (default: integrated; adds `npm run evolve`)');
-    console.log('       --sessions        add a crash-recoverable session log (src/sessions/log.ts — ADR-241 §2.3; default: off)');
+    console.log('       --sessions        add a crash-recoverable session log (src/sessions/log.ts — ADR-246 §2.3; default: off)');
     console.log('       --with-wasm <crate-path>   build a wasm-pack crate into the harness as commands (GH #25)');
     console.log('       npx metaharness score <repo> [--json]   (scorecard: fit/cost/safety for a repo — ADR-041)');
     console.log('       npx metaharness analyze <repo>           (recommend a harness plan, no-exec)');
@@ -1029,7 +1029,7 @@ export async function main(argv: string[]): Promise<number> {
       targetDir,
       force: args.force,
       darwin: args.darwin !== false, // ADR-147: deep darwin integration, default on
-      sessions: args.sessions === true, // ADR-241 §2.3: sessions scaffold, default off
+      sessions: args.sessions === true, // ADR-246 §2.3: sessions scaffold, default off
       generatorVersion: '0.1.0',
     });
     console.log(`Scaffolded ${args.name} into ${targetDir}`);

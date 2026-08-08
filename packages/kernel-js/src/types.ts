@@ -39,7 +39,7 @@ export interface HarnessSpec {
   permissions?: { allow?: string[]; deny?: string[] };
   statusLine?: string;
   /**
-   * Autonomous-mode fields (ADR-241 §2.2). Host adapters must project this
+   * Autonomous-mode fields (ADR-246 §2.2). Host adapters must project this
    * block per host or emit an explicit documented no-op — never silently drop.
    */
   autonomous?: {

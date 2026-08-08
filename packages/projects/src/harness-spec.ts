@@ -35,7 +35,7 @@ export type PlannerKind =
 export type ContextPolicyKind = 'minimal' | 'semantic' | 'callgraph' | 'hybrid';
 
 /**
- * Autonomous-mode block (ADR-241 §2.2). Optional on both genome and spec;
+ * Autonomous-mode block (ADR-246 §2.2). Optional on both genome and spec;
  * round-trips verbatim. Hosts must project it or explicitly no-op — never
  * silently drop. Hitting a budget or turn ceiling halts deterministically;
  * reaching a limit is NOT success.
@@ -55,7 +55,7 @@ export interface HarnessGenomeLite {
   retryBudget: number;
   tools: string[];
   policy: PolicyObject;
-  /** ADR-241 §2.2 autonomous fields; copied verbatim through genome ⇄ spec. */
+  /** ADR-246 §2.2 autonomous fields; copied verbatim through genome ⇄ spec. */
   autonomous?: AutonomousSpec;
 }
 
@@ -86,7 +86,7 @@ export interface HarnessSpec {
     retryBudget: number;
     tools: string[];
   };
-  /** ADR-241 §2.2 autonomous fields; copied verbatim through genome ⇄ spec. */
+  /** ADR-246 §2.2 autonomous fields; copied verbatim through genome ⇄ spec. */
   autonomous?: AutonomousSpec;
 }
 
@@ -180,7 +180,7 @@ export function genomeToSpec(g: HarnessGenomeLite): HarnessSpec {
       retryBudget: g.retryBudget,
       tools: g.tools.slice(),
     },
-    // ADR-241 §2.2: copied verbatim; key omitted entirely when absent.
+    // ADR-246 §2.2: copied verbatim; key omitted entirely when absent.
     ...(g.autonomous ? { autonomous: copyAutonomous(g.autonomous) } : {}),
   };
 }
@@ -198,7 +198,7 @@ export function specToGenome(s: HarnessSpec): HarnessGenomeLite {
     retryBudget: s.meta.retryBudget,
     tools: s.meta.tools.slice(),
     policy: { ...s.policy },
-    // ADR-241 §2.2: mirrored back verbatim; key omitted entirely when absent.
+    // ADR-246 §2.2: mirrored back verbatim; key omitted entirely when absent.
     ...(s.autonomous ? { autonomous: copyAutonomous(s.autonomous) } : {}),
   };
 }
@@ -227,7 +227,7 @@ export function validateSpec(s: HarnessSpec): { ok: boolean; errors: string[] } 
 
   for (const e of validatePolicy(s.policy)) errors.push(`policy: ${e}`);
 
-  // ADR-241 §2.2 autonomous block. Only sub-fields of present objects are
+  // ADR-246 §2.2 autonomous block. Only sub-fields of present objects are
   // validated; JSON `null` for any field is treated as absent (valid, never a
   // throw); whitespace-only strings count as empty. maxTurns/tokenBudget must
   // be integers — Number.isSafeInteger mirrors Rust's `as_i64()`, which is
@@ -322,7 +322,7 @@ export function replaySpec(
   const fixed = opts.fixedOutputs ?? {};
   const trace: { stepId: string; output: unknown }[] = [];
 
-  // ADR-241 §2.2: deterministic halt. maxTurns is a hard ceiling on replayed
+  // ADR-246 §2.2: deterministic halt. maxTurns is a hard ceiling on replayed
   // steps; tokenBudget is charged a deterministic pseudo-cost of 1 unit per
   // step. Hitting either stops the replay (a limit is NOT success). Absent an
   // autonomous block, behavior is byte-identical and no `halt` key is emitted.

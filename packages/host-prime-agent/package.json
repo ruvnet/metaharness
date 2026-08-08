@@ -1,7 +1,7 @@
 {
   "name": "@metaharness/host-prime-agent",
   "version": "0.1.0",
-  "description": "Prime Agent (PrimeIntellect-ai/prime-agent) host adapter for agent-harness-generator. Emits project-scoped Python-backed skills (ADR-242).",
+  "description": "Prime Agent (PrimeIntellect-ai/prime-agent) host adapter for agent-harness-generator. Emits project-scoped Python-backed skills (ADR-247).",
   "homepage": "https://github.com/ruvnet/agent-harness-generator",
   "repository": {
     "type": "git",
@@ -36,7 +36,7 @@
     "python",
     "host-adapter",
     "ruflo",
-    "ADR-242"
+    "ADR-247"
   ],
   "publishConfig": {
     "access": "public"

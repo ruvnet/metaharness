@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 //
 // Autonomous subsystem: the optional `autonomous` block on HarnessSpec
-// per ADR-241 §2.2 — persistent goal (+ token budget), heartbeat re-entry,
+// per ADR-246 §2.2 — persistent goal (+ token budget), heartbeat re-entry,
 // quality gate command, and a hard turn ceiling.
 //
 // CROSS-LANGUAGE LOCKSTEP (ADR-029 style): the validator error strings
@@ -37,7 +37,7 @@ pub struct Heartbeat {
     pub instruction: String,
 }
 
-/// The optional `autonomous` block on HarnessSpec (ADR-241 §2.2).
+/// The optional `autonomous` block on HarnessSpec (ADR-246 §2.2).
 ///
 /// Semantics follow the ADR-159 `budgets`/`guards` discipline: hitting a
 /// budget or failing the gate halts deterministically; reaching a limit is

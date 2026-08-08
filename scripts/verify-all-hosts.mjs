@@ -102,7 +102,7 @@ for (const host of HOSTS) {
         // real scaffold existed.) Harness name is `bot-github-actions`, slug =
         // same after slugify.
         'github-actions':{ path: '.github/workflows/bot-github-actions.yml', test: (s) => /name:/.test(s) && /OPENROUTER_API_KEY|ANTHROPIC_API_KEY/.test(s), tool: 'GHA workflow YAML (provider-agnostic env)' },
-        // ADR-242 — Prime Agent uses project skills and supports remote HTTP
+        // ADR-247 — Prime Agent uses project skills and supports remote HTTP
         // MCP integrations; the CLI always emits the host runbook.
         'prime-agent':{ path: 'install-prime-agent.md', test: (s) => s.includes('Prime Agent'), tool: 'prime-agent' },
       };
@@ -250,7 +250,7 @@ if (REAL) {
     },
     'prime-agent': (dir) => {
       if (!onPath('prime-agent')) return { skip: true, proof: 'prime-agent not installed' };
-      // ADR-242 — Prime Agent discovers project skills from .prime/agent/skills/
+      // ADR-247 — Prime Agent discovers project skills from .prime/agent/skills/
       // in CWD; prove the binary boots against the scaffold.
       const out = run(`cd ${JSON.stringify(dir)} && prime-agent --version`).toString();
       return { ok: out.trim().length > 0, proof: `prime-agent --version → ${out.trim().slice(0, 30)}` };

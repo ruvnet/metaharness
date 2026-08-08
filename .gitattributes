@@ -4,3 +4,4 @@ packages/bench/draco/corpus.json text eol=lf
 
 # Golden output is a byte-for-byte contract and must not be rewritten to CRLF.
 packages/host-prime-agent/__tests__/golden/default-spec.json text eol=lf
+packages/kernel-js/__tests__/fixtures/*.jsonl text eol=lf

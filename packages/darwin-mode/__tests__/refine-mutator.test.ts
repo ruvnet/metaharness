@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// ADR-241 §2.1: RefineMutator — the evidence-backed CRUD proposer behind the same gate.
+// ADR-246 §2.1: RefineMutator — the evidence-backed CRUD proposer behind the same gate.
 // Test Contract item 1: evidence → cited summary; no evidence → safe no-op; output always passes
 // validateGeneratedCode; deterministic offline fallback; distinct edits per sibling nonce (ADR-104);
 // endpoint failures (unreachable / forbidden output) mirror RuvllmMutator's no-op contract.
@@ -37,7 +37,7 @@ const input = (over: Record<string, unknown> = {}) => ({
   failedTraces: EVIDENCE, ...over,
 });
 
-describe('RefineMutator (ADR-241 §2.1)', () => {
+describe('RefineMutator (ADR-246 §2.1)', () => {
   it('parses evidence IDs: leading token up to ":" when /^[\\w.-]+$/, else trace-<lineIndex>', () => {
     expect(parseEvidenceIds(EVIDENCE)).toEqual(['trace-a1', 'trace-1']);
     expect(parseEvidenceIds(['', '   ', '\t'])).toEqual([]);

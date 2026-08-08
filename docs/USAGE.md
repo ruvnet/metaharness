@@ -80,7 +80,7 @@ Generated harnesses run on ten hosts. You can target one or more:
 | `hermes` | `cli-config.yaml` + `optional-mcps/*.yaml` |
 | `openclaw` | `~/.openclaw/openclaw.json` snippet + workspace SKILL.md + install runbook |
 | `rvm` | RVM partition manifest (TOML) + capability table (JSON) + wasm-guest descriptor + install runbook |
-| `prime-agent` | `.prime/agent/skills/` Python-backed skill per tool (no MCP by design) + `install-prime-agent.md` runbook; deny-lists emit `SANDBOX-REQUIRED.md` (ADR-242) |
+| `prime-agent` | `.prime/agent/skills/` Python-backed skill per tool (no MCP by design) + `install-prime-agent.md` runbook; deny-lists emit `SANDBOX-REQUIRED.md` (ADR-247) |
 
 Also available: `copilot`, `opencode`, and `github-actions` — see the
 Hosts table in the [README](../README.md#hosts).

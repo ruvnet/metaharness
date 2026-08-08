@@ -23,7 +23,7 @@ export interface PolicyGenome {
 export interface CandidateMutation {
   target: string;
   summary: string;
-  /** ADR-241 §2.1 rollback-by-construction: the inverse of the applied edit — the parent bytes for the
+  /** ADR-246 §2.1 rollback-by-construction: the inverse of the applied edit — the parent bytes for the
    *  touched surface (plus its path and a content hash), so any refine step reverts byte-identically.
    *  OPTIONAL and additive (precedent: ADR-235 additive fields) — legacy commits simply omit it. */
   inverse?: { path: string; parentBytes: string; hash: string };
@@ -69,7 +69,7 @@ export interface Suite {
 export type HoldoutSuite = Suite;
 export type AnchorSuite = Suite;
 
-/** A proposer's return: either the bare improved lever value (the legacy shape, unchanged), or — ADR-241
+/** A proposer's return: either the bare improved lever value (the legacy shape, unchanged), or — ADR-246
  *  §2.1, additive — an object carrying the value plus an optional evidence-citing `summary` and an
  *  optional rollback `inverse` to be recorded on the minted lineage commit. */
 export type ProposerResult =

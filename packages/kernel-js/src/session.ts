@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// Recoverable session log — ADR-241 §2.3.
+// Recoverable session log — ADR-246 §2.3.
 //
 // Append-only JSONL event log per session: every event carries a per-branch
 // monotonic index and (for the first event of a forked branch) a parent
@@ -123,7 +123,7 @@ interface LogState {
 /** Parse + validate a JSONL log; returns either the reconstructed state or
  * the list of 'session: '-prefixed errors (with 1-based line numbers).
  *
- * NOTE: the ADR-241 lockstep contract with the Rust mirror is the state
+ * NOTE: the ADR-246 lockstep contract with the Rust mirror is the state
  * hash plus the accept/reject decision; validation MESSAGES are
  * per-language diagnostics (TS cites 1-based line numbers, Rust does not)
  * and are not required to match byte-for-byte. */
@@ -221,7 +221,7 @@ function parseLog(path: string, raw: string): { state: LogState; errors: string[
 }
 
 /**
- * Crash-recoverable, forkable session log (ADR-241 §2.3). One JSONL file may
+ * Crash-recoverable, forkable session log (ADR-246 §2.3). One JSONL file may
  * carry many branches; each SessionLog instance appends to ONE active branch.
  * `fork()` returns a sibling over the same file/state on a new branch.
  */

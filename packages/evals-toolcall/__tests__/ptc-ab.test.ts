@@ -1,4 +1,4 @@
-// ADR-241 §2.4 Test Contract item 6 — PTC deferral contract.
+// ADR-246 §2.4 Test Contract item 6 — PTC deferral contract.
 // The experiment manifest exists, parses, and pre-registers arms, metrics, seeds,
 // and the promotion criterion, so the deferral is executable, not vaporware.
 import { describe, it, expect } from 'vitest';
@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 const manifestPath = resolve(dirname(fileURLToPath(import.meta.url)), '../experiments/ptc-ab.json');
 
-describe('ADR-241 §2.4 — ptc-ab pre-registered experiment manifest', () => {
+describe('ADR-246 §2.4 — ptc-ab pre-registered experiment manifest', () => {
   it('exists and parses', () => {
     expect(existsSync(manifestPath)).toBe(true);
     const m = JSON.parse(readFileSync(manifestPath, 'utf8'));

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// ADR-241 §2.3: recoverable-session scaffold toggle. Sessions are an
+// ADR-246 §2.3: recoverable-session scaffold toggle. Sessions are an
 // OPTIONAL primitive — default OFF, enabled only with --sessions. The emitted
 // src/sessions/log.ts is a dependency-free copy-in (no @metaharness/kernel
 // import) pointing at the ADR.
@@ -15,7 +15,7 @@ import { scaffold, parseArgs } from '../src/index.js';
 
 const tmpRoot = (p: string) => mkdtemp(join(tmpdir(), p));
 
-describe('sessions scaffold (ADR-241 §2.3)', () => {
+describe('sessions scaffold (ADR-246 §2.3)', () => {
   it('omits the session log by default', async () => {
     const target = join(await tmpRoot('sessions-off-'), 'bot');
     await scaffold({ name: 'bot', template: 'minimal', host: 'claude-code', targetDir: target, generatorVersion: 'test' });
@@ -26,7 +26,7 @@ describe('sessions scaffold (ADR-241 §2.3)', () => {
     const target = join(await tmpRoot('sessions-on-'), 'bot');
     await scaffold({ name: 'bot', template: 'minimal', host: 'claude-code', targetDir: target, sessions: true, generatorVersion: 'test' });
     const log = await readFile(join(target, 'src/sessions/log.ts'), 'utf-8');
-    expect(log).toContain('ADR-241');
+    expect(log).toContain('ADR-246');
     expect(log).toContain('class SessionLog');
     expect(log).not.toMatch(/from '@metaharness/); // comments may mention it; imports must not
     // only node builtins imported
@@ -37,7 +37,7 @@ describe('sessions scaffold (ADR-241 §2.3)', () => {
     expect(log.includes('\u0000')).toBe(false);
     // README carries the sessions note (where + how to prune, per the ADR)
     const readme = await readFile(join(target, 'README.md'), 'utf-8');
-    expect(readme).toContain('Recoverable sessions (ADR-241');
+    expect(readme).toContain('Recoverable sessions (ADR-246');
   });
 
   it('emitted SessionLog matches canonical semantics (hash-stable reopen, fork event, surrogate rejection)', async () => {

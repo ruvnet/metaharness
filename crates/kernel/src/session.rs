@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 //
 // Session subsystem: crash-recoverable, forkable session log core per
-// ADR-241 §2.3. Append-only JSONL event log; every event carries a
+// ADR-246 §2.3. Append-only JSONL event log; every event carries a
 // monotonic per-branch index; a branch forks by referencing a parent
 // (branch, index); replaying a branch lineage root→tip reconstructs
 // state deterministically, verified by a sha256 state hash.
@@ -133,7 +133,7 @@ pub fn serialize_event(event: &SessionEvent) -> String {
 ///     `parent` referencing a (branch, index) that already exists at or
 ///     before its creation point in the log.
 ///
-/// NOTE: the ADR-241 lockstep contract with the TS mirror is the state
+/// NOTE: the ADR-246 lockstep contract with the TS mirror is the state
 /// hash plus the accept/reject decision; validation MESSAGES are
 /// per-language diagnostics (TS cites 1-based line numbers, Rust does not)
 /// and are not required to match byte-for-byte.

@@ -5,8 +5,8 @@
 surfaces against Prime Agent 0.7.0 after the initial integration review.
 **Purpose:** Ground-truth analysis of Prime Intellect's Prime Agent harness — what it actually does,
 verified against its repository docs — and a concept-by-concept gap map against what MetaHarness
-already ships, so the integration ADRs ([ADR-241](../../adrs/ADR-241-prime-agent-continual-harness-refine.md),
-[ADR-242](../../adrs/ADR-242-host-prime-agent.md)) adopt only what is genuinely new and cite only
+already ships, so the integration ADRs ([ADR-246](../../adrs/ADR-246-prime-agent-continual-harness-refine.md),
+[ADR-247](../../adrs/ADR-247-host-prime-agent.md)) adopt only what is genuinely new and cite only
 what is genuinely measured.
 **Sources:**
 - Announcement: <https://www.primeintellect.ai/blog/prime-agent>
@@ -131,7 +131,7 @@ Verified from `architecture.md` / `long-running-agents.md`:
 - **Reward hacking observed**: on Factorio the agent found scoring exploits — the harness gives
   capability, not alignment of the metric.
 - **No sandbox**: the repo's own security note says worker/kernel processes "aren't sandboxes";
-  untrusted code requires external sandboxing. This matters directly for ADR-242's fail-closed
+  untrusted code requires external sandboxing. This matters directly for ADR-247's fail-closed
   posture (MetaHarness's MCP layer is default-deny per ADR-022).
 - **Co-training headroom is speculative**: "currently no model has been trained around Prime
   Agent" — reported numbers are with off-the-shelf models; the projected further gains are a
@@ -141,21 +141,21 @@ Verified from `architecture.md` / `long-running-agents.md`:
 
 | Prime Agent concept | What MetaHarness already has | Verdict | Why |
 |---|---|---|---|
-| `/refine` — trajectory-driven, evidence-backed CRUD edits with rollback | Darwin population mutation (ADR-070…081) behind a frozen gate; pluggable `CodeGenerator` already fed `failedTraces`; GEPA reflective offline evolution (ADR-228); flywheel lineage/receipts | **Adopt — headline** (ADR-241 §2.1) | It is precisely the lever our own nulls point at: ADR-226 proved *standing policy*, not advice, transfers; ADR-234/237 showed blind perturbation compounding at ~zero. A refine-style proposer targets the parent's actual failures with a minimal, evidenced, reversible edit — a **proposer** upgrade that leaves the frozen promotion gate untouched. |
-| Autonomous mode: goals, heartbeats, gates, budgets | `docs/LOOP_WORKER.md` — the same practice done **by hand**; HarnessSpec already has `budgets` + `guards` (ADR-159) | **Adopt** (ADR-241 §2.2) | Codify the manual practice as first-class HarnessSpec fields (`goal`, `heartbeat`, `gateCommand`, `maxTurns`) that every host adapter can project. |
-| Recoverable JSONL sessions, branch/fork/resume | flywheel `replay.ts`/receipts (loop-level), HarnessSpec `rollback`, jujutsu dual-state (ADR-202) | **Adapt — narrow** (ADR-241 §2.3) | The new piece is a crash-recoverable, forkable **session log as a generated-harness scaffold primitive**; everything else exists at other layers. |
-| Prime Agent as a runtime for generated harnesses | 10 host adapters; `host-pi-dev` is the direct sibling (shared pi lineage, `pi.skills` compat) | **Adopt — own ADR** (ADR-242) | Cheapest, most concrete win; config surface verified in §3. Per-host ADR precedent: ADR-032/033/036. Must fail closed on `permissions.deny` (§8: no sandbox). |
-| RLM / PTC — kernel as the only tool | JSON-schema tool model across kernel + MCP gating (ADR-002/022) and the algorithmic control plane (ADR-047) | **Defer — experiment-gated** (ADR-241 §2.4) | An architectural inversion. The token-efficiency claim is credible but third-party; pre-register an A/B on `packages/evals-toolcall` and adopt only on a measured win. Reward-hacking + no-sandbox caveats reinforce caution. |
-| A2A messaging, persistent sub-agent IDs | ADR-240 (AGNTCY identity, DIDs, directory) + companion ruflo ADR-380 (runtime coordination) | **Decline — cross-reference** (ADR-241 §2.5) | Already an owned decision; Prime Agent's stable sub-agent IDs map onto ADR-240 identity subjects. Duplicating it would fork a live decision. |
+| `/refine` — trajectory-driven, evidence-backed CRUD edits with rollback | Darwin population mutation (ADR-070…081) behind a frozen gate; pluggable `CodeGenerator` already fed `failedTraces`; GEPA reflective offline evolution (ADR-228); flywheel lineage/receipts | **Adopt — headline** (ADR-246 §2.1) | It is precisely the lever our own nulls point at: ADR-226 proved *standing policy*, not advice, transfers; ADR-234/237 showed blind perturbation compounding at ~zero. A refine-style proposer targets the parent's actual failures with a minimal, evidenced, reversible edit — a **proposer** upgrade that leaves the frozen promotion gate untouched. |
+| Autonomous mode: goals, heartbeats, gates, budgets | `docs/LOOP_WORKER.md` — the same practice done **by hand**; HarnessSpec already has `budgets` + `guards` (ADR-159) | **Adopt** (ADR-246 §2.2) | Codify the manual practice as first-class HarnessSpec fields (`goal`, `heartbeat`, `gateCommand`, `maxTurns`) that every host adapter can project. |
+| Recoverable JSONL sessions, branch/fork/resume | flywheel `replay.ts`/receipts (loop-level), HarnessSpec `rollback`, jujutsu dual-state (ADR-202) | **Adapt — narrow** (ADR-246 §2.3) | The new piece is a crash-recoverable, forkable **session log as a generated-harness scaffold primitive**; everything else exists at other layers. |
+| Prime Agent as a runtime for generated harnesses | 10 host adapters; `host-pi-dev` is the direct sibling (shared pi lineage, `pi.skills` compat) | **Adopt — own ADR** (ADR-247) | Cheapest, most concrete win; config surface verified in §3. Per-host ADR precedent: ADR-032/033/036. Must fail closed on `permissions.deny` (§8: no sandbox). |
+| RLM / PTC — kernel as the only tool | JSON-schema tool model across kernel + MCP gating (ADR-002/022) and the algorithmic control plane (ADR-047) | **Defer — experiment-gated** (ADR-246 §2.4) | An architectural inversion. The token-efficiency claim is credible but third-party; pre-register an A/B on `packages/evals-toolcall` and adopt only on a measured win. Reward-hacking + no-sandbox caveats reinforce caution. |
+| A2A messaging, persistent sub-agent IDs | ADR-240 (AGNTCY identity, DIDs, directory) + companion ruflo ADR-380 (runtime coordination) | **Decline — cross-reference** (ADR-246 §2.5) | Already an owned decision; Prime Agent's stable sub-agent IDs map onto ADR-240 identity subjects. Duplicating it would fork a live decision. |
 
 ## 10. Recommendations
 
 Proceed per the two ADRs this analysis feeds:
 
-- **[ADR-241](../../adrs/ADR-241-prime-agent-continual-harness-refine.md)** — RefineMutator for
+- **[ADR-246](../../adrs/ADR-246-prime-agent-continual-harness-refine.md)** — RefineMutator for
   Darwin/flywheel; autonomous fields on HarnessSpec; recoverable-session scaffold primitive; PTC
   deferred behind a pre-registered experiment; A2A declined.
-- **[ADR-242](../../adrs/ADR-242-host-prime-agent.md)** — `@metaharness/host-prime-agent`, the
+- **[ADR-247](../../adrs/ADR-247-host-prime-agent.md)** — `@metaharness/host-prime-agent`, the
   11th host adapter, fail-closed on permissions.
 
-Both ADRs shipped 2026-08-06 on this branch (ADR-241 §2.4 PTC remains deferred by design).
+Both ADRs shipped 2026-08-06 on this branch (ADR-246 §2.4 PTC remains deferred by design).

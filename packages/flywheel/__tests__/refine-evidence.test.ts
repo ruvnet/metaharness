@@ -1,4 +1,4 @@
-// @metaharness/flywheel — ADR-241 §2.1: refine evidence + rollback-by-construction, ADDITIVE only.
+// @metaharness/flywheel — ADR-246 §2.1: refine evidence + rollback-by-construction, ADDITIVE only.
 // Test Contract items 2–3: the object-form proposer's evidence-citing summary + inverse reach the
 // minted lineage commit; the legacy string-form proposer is byte-for-byte unchanged ('adapt <target>');
 // apply-then-rollback restores the parent bytes IDENTICALLY; and the frozen gate did not move —
@@ -12,7 +12,7 @@ import {
 } from '../src/index.js';
 import type { CandidateMutation } from '../src/types.js';
 
-// Fingerprint captured at module load, BEFORE the ADR-241 types below are exercised.
+// Fingerprint captured at module load, BEFORE the ADR-246 types below are exercised.
 const PIN_BEFORE = gateFingerprint(meetsPromotionRule);
 
 // ── minimal harness (same pattern as acceptance.test.ts): quality = count of '#' across levers. ──
@@ -33,7 +33,7 @@ const run = (proposer: Proposer, maxGenerations = 1) =>
 
 const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
 
-describe('ADR-241 §2.1 — object-form proposer channel (additive)', () => {
+describe('ADR-246 §2.1 — object-form proposer channel (additive)', () => {
   it("object-form proposer's summary + inverse reach the minted lineage commit", async () => {
     const inverse: NonNullable<CandidateMutation['inverse']> = {
       path: 'lever', parentBytes: 'base-bytes', hash: sha256('base-bytes'),
@@ -78,7 +78,7 @@ describe('ADR-241 §2.1 — object-form proposer channel (additive)', () => {
   });
 });
 
-describe('ADR-241 §2.1 — the frozen gate did not move (ADR-072 pin)', () => {
+describe('ADR-246 §2.1 — the frozen gate did not move (ADR-072 pin)', () => {
   it('gateFingerprint(meetsPromotionRule) is identical before/after the new types are imported + used', async () => {
     // Force the new types + object-form path through the loop, then re-fingerprint.
     await run(async (base, target): Promise<ProposerResult> => ({ value: `${base.policy[target]}#`, summary: 's' }));

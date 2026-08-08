@@ -151,7 +151,7 @@ export async function runFlywheelGenerations(cfg: FlywheelConfig): Promise<Flywh
     }> = [];
     for (const target of targets) {
       const proposed = await cfg.proposer(base, target);
-      // ADR-241 §2.1 (additive): normalize the proposer result — legacy bare string, or the object form
+      // ADR-246 §2.1 (additive): normalize the proposer result — legacy bare string, or the object form
       // carrying an evidence-citing summary + rollback inverse for the minted lineage commit.
       const norm = typeof proposed === 'string' ? { value: proposed } : proposed;
       const candPolicy: Policy = { ...policy, [target]: norm.value };
@@ -177,7 +177,7 @@ export async function runFlywheelGenerations(cfg: FlywheelConfig): Promise<Flywh
       const primaryDelta = c.score.primary - score.primary;
       const commit: LineageCommit = {
         id, generation: gen, parents: [parentId],
-        // ADR-241 §2.1: an object-form proposer's summary (and rollback inverse) reaches the lineage
+        // ADR-246 §2.1: an object-form proposer's summary (and rollback inverse) reaches the lineage
         // commit; a legacy string-form proposer keeps the exact `adapt <target>` summary, unchanged.
         mutation: { target: c.target, summary: c.summary ?? `adapt ${c.target}`, ...(c.inverse ? { inverse: c.inverse } : {}) },
         primaryDelta,

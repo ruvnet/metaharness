@@ -160,7 +160,7 @@ describe('harness-spec validation', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ADR-241 §2.2 autonomous block: round-trip, validation (lockstep fixture
+// ADR-246 §2.2 autonomous block: round-trip, validation (lockstep fixture
 // shared with the Rust validator), and deterministic replay halts.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -173,7 +173,7 @@ const autonomousFull: AutonomousSpec = {
   maxTurns: 10,
 };
 
-describe('harness-spec autonomous round-trip (ADR-241 §2.2)', () => {
+describe('harness-spec autonomous round-trip (ADR-246 §2.2)', () => {
   it('genome with autonomous block round-trips losslessly and is stable under double application', () => {
     for (const base of genomes) {
       const g: HarnessGenomeLite = { ...base, autonomous: autonomousFull };
@@ -256,7 +256,7 @@ describe('harness-spec autonomous validation (lockstep fixture)', () => {
   });
 });
 
-describe('harness-spec autonomous replay halts (ADR-241 §2.2)', () => {
+describe('harness-spec autonomous replay halts (ADR-246 §2.2)', () => {
   it('maxTurns=2 on a multi-step (>2) spec halts deterministically with reason maxTurns', () => {
     const spec = genomeToSpec({ ...genomes[2], autonomous: { maxTurns: 2 } });
     expect(spec.steps.length).toBeGreaterThan(2); // plan + code + review-1..3 + evaluate = 6

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 //
-// @metaharness/host-prime-agent (ADR-242) contract tests, in the style of the
-// iter-128 host-opencode suite. Covers the ADR-242 §Test Contract: frontmatter
+// @metaharness/host-prime-agent (ADR-247) contract tests, in the style of the
+// iter-128 host-opencode suite. Covers the ADR-247 §Test Contract: frontmatter
 // validity, completeness, golden file, fail-closed sandbox posture, no silent
 // drops, autonomous projection — plus byte-determinism and Python shim
 // structural validity.
@@ -42,14 +42,14 @@ function frontmatter(md: string): { name: string; description: string } {
   return { name: m![1]!, description: m![2]! };
 }
 
-describe('@metaharness/host-prime-agent (ADR-242)', () => {
+describe('@metaharness/host-prime-agent (ADR-247)', () => {
   // Contract 1 (task) — identity.
   it('HOST_NAME is "prime-agent"', () => {
     expect(HOST_NAME).toBe('prime-agent');
     expect(adapter.name).toBe('prime-agent');
   });
 
-  // ADR-242 test contract 1 — frontmatter validity + deterministic
+  // ADR-247 test contract 1 — frontmatter validity + deterministic
   // normalization of charset-violating tool names.
   it('every SKILL.md frontmatter name matches ^[a-z0-9-]+$ and description ≤ 1024', () => {
     const longDescription = 'x'.repeat(1500);
@@ -81,7 +81,7 @@ describe('@metaharness/host-prime-agent (ADR-242)', () => {
     expect(fm.description).toBe('x'.repeat(1024));
   });
 
-  // ADR-242 test contract 2 — ToolSpec has no executable binding, so every
+  // ADR-247 test contract 2 — ToolSpec has no executable binding, so every
   // declared tool becomes exactly one honest instruction-only skill.
   it('emits exactly one instruction-only SKILL.md per declarative tool', () => {
     const out = adapter.generateConfig(defaultSpec);
@@ -94,7 +94,7 @@ describe('@metaharness/host-prime-agent (ADR-242)', () => {
     }
   });
 
-  // ADR-242 test contract 3 — golden file, byte-for-byte.
+  // ADR-247 test contract 3 — golden file, byte-for-byte.
   it('generateConfig(defaultSpec) matches the committed golden byte-for-byte', () => {
     const config = adapter.generateConfig(defaultSpec);
     const raw = readFileSync(GOLDEN, 'utf8');
@@ -102,7 +102,7 @@ describe('@metaharness/host-prime-agent (ADR-242)', () => {
     expect(raw).toBe(stableStringify(config) + '\n');
   });
 
-  // ADR-242 test contract 4 — fail-closed sandbox posture.
+  // ADR-247 test contract 4 — fail-closed sandbox posture.
   it('non-empty permissions.deny emits SANDBOX-REQUIRED.md naming every deny entry', () => {
     const out = adapter.generateConfig(defaultSpec);
     const sandbox = out['SANDBOX-REQUIRED.md'];
@@ -134,7 +134,7 @@ describe('@metaharness/host-prime-agent (ADR-242)', () => {
     }
   });
 
-  // ADR-242 test contract 5 — HTTP MCP is executable; stdio is explicitly
+  // ADR-247 test contract 5 — HTTP MCP is executable; stdio is explicitly
   // unsupported by current Prime Agent and never silently dropped.
   it('emits remote HTTP MCP integrations and lists stdio MCP as unsupported', () => {
     const spec = {
@@ -159,8 +159,8 @@ describe('@metaharness/host-prime-agent (ADR-242)', () => {
       .toContain('class HarnessMcpIntegration(McpIntegration)');
   });
 
-  // ADR-242 test contract 6 (+ task case 7) — autonomous projection.
-  it('projects the ADR-241 autonomous block into the exact invocation snippet', () => {
+  // ADR-247 test contract 6 (+ task case 7) — autonomous projection.
+  it('projects the ADR-246 autonomous block into the exact invocation snippet', () => {
     const spec = { ...defaultSpec } as any;
     spec.autonomous = {
       goal: { text: 'ship it', tokenBudget: 200000 },
@@ -233,7 +233,7 @@ describe('@metaharness/host-prime-agent (ADR-242)', () => {
     expect(JSON.parse(settingsJson(defaultSpec))).toEqual({ mcpServers: {} });
   });
 
-  // Supporting check — allow entries are projected into SKILL.md (ADR-242
+  // Supporting check — allow entries are projected into SKILL.md (ADR-247
   // §2.2: model-facing surface documents intended scope).
   it('permissions.allow entries are projected into each SKILL.md', () => {
     const md = skillMd(defaultSpec.tools![0]!, defaultSpec);

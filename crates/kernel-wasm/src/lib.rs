@@ -22,7 +22,7 @@ pub fn mcp_validate(spec_json: &str) -> Result<JsValue, JsValue> {
     }
 }
 
-/// Validate an autonomous spec block (ADR-241 §2.2).
+/// Validate an autonomous spec block (ADR-246 §2.2).
 /// Returns a JS array of lockstep error strings; empty array = valid.
 #[wasm_bindgen(js_name = autonomousValidate)]
 pub fn autonomous_validate(spec_json: &str) -> Result<JsValue, JsValue> {
@@ -32,7 +32,7 @@ pub fn autonomous_validate(spec_json: &str) -> Result<JsValue, JsValue> {
     to_value(&errors).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
-/// Validate a JSONL session log (ADR-241 §2.3).
+/// Validate a JSONL session log (ADR-246 §2.3).
 /// Returns a JS array of 'session: '-prefixed error strings; empty = valid.
 #[wasm_bindgen(js_name = sessionValidate)]
 pub fn session_validate(log_jsonl: &str) -> Result<JsValue, JsValue> {

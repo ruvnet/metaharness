@@ -350,7 +350,7 @@ function hostFiles(host: HostId, cfg: HarnessConfig): GenFile[] {
       ];
     }
     case 'prime-agent': {
-      // ADR-242 — Prime Agent: project skills plus remote HTTP MCP support.
+      // ADR-247 — Prime Agent: project skills plus remote HTTP MCP support.
       // ADR-027 parity contract: byte-identical with
       // packages/create-agent-harness/src/host-config.ts.
       const mcp = cfg.primitives.mcp;
@@ -363,7 +363,7 @@ function hostFiles(host: HostId, cfg: HarnessConfig): GenFile[] {
           ? 'MCP: off — nothing further.'
           : `MCP (${mcp}): remote HTTP servers are emitted as Python-backed integrations; local stdio servers are listed as unsupported.`,
         '',
-        'Sandbox: Prime Agent is not sandboxed. Denied capabilities require an external sandbox (ADR-242).',
+        'Sandbox: Prime Agent is not sandboxed. Denied capabilities require an external sandbox (ADR-247).',
       ].join('\n') + '\n';
       return [
         { path: 'install-prime-agent.md', content: runbook },

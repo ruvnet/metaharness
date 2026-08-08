@@ -39,7 +39,7 @@ const PHASES = [
     'host-copilot',         // iter 127 (ADR-032)
     'host-opencode',        // iter 128 (ADR-036)
     'host-github-actions',  // iter 146 (ADR-033)
-    'host-prime-agent',  // ADR-242
+    'host-prime-agent',  // ADR-247
     'sdk',
     'create-agent-harness',
   ],

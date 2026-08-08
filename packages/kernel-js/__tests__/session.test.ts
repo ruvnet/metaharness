@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// ADR-241 §2.3 — recoverable session log: resume determinism, crash
+// ADR-246 §2.3 — recoverable session log: resume determinism, crash
 // detection, fork/replay independence, canonical-hash stability, and the
 // committed cross-language hash fixture the Rust mirror will pin.
 
@@ -14,7 +14,7 @@ import { SessionLog, canonicalJson } from '../src/session.js';
 const tmp = () => mkdtemp(join(tmpdir(), 'session-'));
 const HERE = dirname(fileURLToPath(import.meta.url));
 
-describe('SessionLog (ADR-241 §2.3)', () => {
+describe('SessionLog (ADR-246 §2.3)', () => {
   it('append N → reopen (resume) → identical stateHash', async () => {
     const path = join(await tmp(), 'session.jsonl');
     const log = new SessionLog(path);

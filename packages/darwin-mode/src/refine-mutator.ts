@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// RefineMutator — the evidence-backed CRUD proposer (ADR-241 §2.1).
+// RefineMutator — the evidence-backed CRUD proposer (ADR-246 §2.1).
 //
 // Implements the `CodeGenerator` interface as the ADR-071-anticipated LLM-backed
 // generator, with the refine-specific contracts:
@@ -89,7 +89,7 @@ export class RefineMutator implements CodeGenerator {
     const { parentCode, surface } = input;
     const nonce = input.nonce ?? 0;
 
-    // ── Evidence or no-op (ADR-241 §2.1, anti-ADR-226 guard). ──
+    // ── Evidence or no-op (ADR-246 §2.1, anti-ADR-226 guard). ──
     const evidence = parseEvidenceIds(input.failedTraces);
     if (evidence.length === 0) {
       return { code: parentCode, summary: 'refine: no-op (no citable evidence)' };

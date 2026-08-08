@@ -13,7 +13,7 @@ import { createRequire } from 'node:module';
 
 export type { McpServerSpec, ToolSpec, AgentSpec, HookSpec, HarnessSpec, HostAdapter } from './types.js';
 
-// ADR-241 §2.3: recoverable, forkable session log primitive.
+// ADR-246 §2.3: recoverable, forkable session log primitive.
 export { SessionLog } from './session.js';
 export type { SessionEvent } from './session.js';
 

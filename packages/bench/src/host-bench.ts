@@ -39,7 +39,7 @@ export const HOST_ADAPTERS: HostAdapter[] = [
   adapterCopilot as HostAdapter,   // iter 127 (ADR-032)
   adapterOpencode as HostAdapter,  // iter 128 (ADR-036)
   adapterGithubActions as HostAdapter, // iter 147 (ADR-033, non-interactive)
-  adapterPrimeAgent as HostAdapter, // ADR-242
+  adapterPrimeAgent as HostAdapter, // ADR-247
 ];
 
 export interface HostBenchResult {

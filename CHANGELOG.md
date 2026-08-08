@@ -4,10 +4,10 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
-### Added — Prime Agent integration, ADR-241/242 (2026-08-06)
+### Added — Prime Agent integration, ADR-246/242 (2026-08-06)
 
 - **`@metaharness/host-prime-agent`** (`packages/host-prime-agent/`) — the
-  **10th host adapter** (ADR-242): one project-scoped, Python-backed Prime
+  **10th host adapter** (ADR-247): one project-scoped, Python-backed Prime
   Agent skill per tool under `.prime/agent/skills/` (`SKILL.md` +
   `pyproject.toml` + kernel-dispatch shim — Prime Agent ships no MCP),
   sub-agent specs, and a host-qualified `install-prime-agent.md` runbook.
@@ -18,11 +18,11 @@ All notable changes to this project are documented here. Format follows [Keep a 
   `--host prime-agent` wired through `create-agent-harness`; propagated
   across catalogs, web-ui, bench, scripts, and CI.
 - **`RefineMutator`** (`packages/darwin-mode/src/refine-mutator.ts`,
-  ADR-241 §2.1) — the ADR-071-anticipated evidence-backed `CodeGenerator`:
+  ADR-246 §2.1) — the ADR-071-anticipated evidence-backed `CodeGenerator`:
   one minimal CRUD edit to one surface per child, summary MUST cite the
   motivating trace IDs (evidence or safe no-op), output still gated by
   `validateGeneratedCode`; the frozen promotion gate (ADR-072) is unchanged.
-- **Kernel session + autonomous modules, Rust + TS + wasm** (ADR-241
+- **Kernel session + autonomous modules, Rust + TS + wasm** (ADR-246
   §2.2/§2.3) — `crates/kernel/src/session.rs` + `autonomous.rs` mirrored by
   `packages/kernel-js/src/session.ts` and the wasm bindings: append-only
   JSONL session log with deterministic replay, fork-at-event branching, and
@@ -34,7 +34,7 @@ All notable changes to this project are documented here. Format follows [Keep a 
   recoverable-session primitive: emits a dependency-free
   `src/sessions/log.ts` copy-in plus a README note on where session state
   lives and how to prune it. Default OFF; `--no-sessions` to force off.
-- **PTC honestly deferred** (ADR-241 §2.4) — Prime Agent's
+- **PTC honestly deferred** (ADR-246 §2.4) — Prime Agent's
   kernel-as-only-tool claim is *not* adopted; a pre-registered A/B lives at
   `packages/evals-toolcall/experiments/ptc-ab.json` (arms, metrics, seeds,
   promotion criterion: ≥20% token reduction at non-inferior success).

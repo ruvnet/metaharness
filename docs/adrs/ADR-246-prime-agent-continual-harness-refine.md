@@ -1,4 +1,4 @@
-# ADR-241: Prime Agent-inspired continual-harness primitives — refine operator, autonomous spec, recoverable sessions
+# ADR-246: Prime Agent-inspired continual-harness primitives — refine operator, autonomous spec, recoverable sessions
 
 **Status**: Implemented (2026-08-06) — §2.1/§2.2/§2.3/§2.5 shipped; §2.4 PTC remains deferred by design (pre-registered experiment committed, unrun)
 **Date**: 2026-08-06
@@ -6,7 +6,7 @@
 **Deciders**: ruv
 **Tags**: prime-agent, refine, continual-harness, darwin-mode, flywheel, autonomous, sessions, ptc
 **Extends**: ADR-014 (Self-evolution + federation), ADR-071/072 (Mutation surfaces + frozen promotion gate), ADR-159 (HarnessSpec declarative policy), ADR-226 (Advisor-loop null: standing policy transfers, advice doesn't), ADR-228 (GEPA distilled executor genome), ADR-234 (ruvllm microloop honest nulls)
-**Related**: ADR-004 (Host integration model), ADR-047 (Algorithmic agent harness), ADR-240 (AGNTCY identity/A2A), ADR-242 (host-prime-agent — companion, shipped as a pair)
+**Related**: ADR-004 (Host integration model), ADR-047 (Algorithmic agent harness), ADR-240 (AGNTCY identity/A2A), ADR-247 (host-prime-agent — companion, shipped as a pair)
 **Prompted by**: a research pass over Prime Intellect's Prime Agent harness (blog + MIT repo), written up with verified mechanics and a full gap map in
 [`docs/research/scaffolding/PRIME-AGENT-ANALYSIS.md`](../research/scaffolding/PRIME-AGENT-ANALYSIS.md) — read that first; this ADR only decides.
 
@@ -34,7 +34,7 @@ What already exists here and must not be duplicated:
 
 ## Decision
 
-Four numbered decisions, one deferral, one decline. The companion ADR-242 covers Prime Agent as an emission target (11th host adapter).
+Four numbered decisions, one deferral, one decline. The companion ADR-247 covers Prime Agent as an emission target (11th host adapter).
 
 ### 2.1 `RefineMutator` — an evidence-backed CRUD proposer for Darwin/flywheel
 
@@ -62,7 +62,7 @@ autonomous?: {
 ```
 
 - Semantics follow the existing `budgets`/`guards` discipline (ADR-159): hitting a budget or failing a gate halts deterministically; reaching a limit is **not** success.
-- Host adapters project the block per host: Claude Code → hooks/loop config; host-prime-agent (ADR-242) → a documented `--autonomous --autonomous-gate <cmd> --autonomous-max-turns <n>` invocation; hosts with no autonomous surface emit a documented no-op note rather than silently dropping fields.
+- Host adapters project the block per host: Claude Code → hooks/loop config; host-prime-agent (ADR-247) → a documented `--autonomous --autonomous-gate <cmd> --autonomous-max-turns <n>` invocation; hosts with no autonomous surface emit a documented no-op note rather than silently dropping fields.
 - This codifies `docs/LOOP_WORKER.md` practice (directive + cadence + budget caps) into generated harnesses instead of leaving it as maintainer folklore.
 
 Estimated effort: 3–5 days (schema in both specs, genome round-trip, adapter projections for 2 hosts first).
@@ -133,4 +133,4 @@ Per the house taxonomy (London-school unit for kernel/darwin units; integration 
 - `PrimeIntellect-ai/prime-agent` (MIT) — <https://github.com/PrimeIntellect-ai/prime-agent>, docs at `packages/coding-agent/docs/` (`skills.md`, `architecture.md`, `long-running-agents.md`, `rlm.md`)
 - `PrimeIntellect-ai/rlm-harness` — <https://github.com/PrimeIntellect-ai/rlm-harness>
 - [`docs/research/scaffolding/PRIME-AGENT-ANALYSIS.md`](../research/scaffolding/PRIME-AGENT-ANALYSIS.md) — verified mechanics + gap map (the evidence base for every verdict above)
-- ADR-226 (advisor null), ADR-234/237 (compounding nulls), ADR-235 (re-executing verifiers + honest null replay), ADR-071/072/073/104 (Darwin machinery), ADR-159 (HarnessSpec), ADR-202 (jujutsu dual-state), ADR-240 (AGNTCY), ADR-242 (companion host adapter)
+- ADR-226 (advisor null), ADR-234/237 (compounding nulls), ADR-235 (re-executing verifiers + honest null replay), ADR-071/072/073/104 (Darwin machinery), ADR-159 (HarnessSpec), ADR-202 (jujutsu dual-state), ADR-240 (AGNTCY), ADR-247 (companion host adapter)

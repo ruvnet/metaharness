@@ -24,7 +24,7 @@ export const HOSTS: HostInfo[] = [
   { id: 'opencode', name: 'OpenCode', shape: 'MCP via .opencode/opencode.json (sst/opencode)', color: '#f59e0b' },
   // iter 147 — ADR-033 (first non-interactive host)
   { id: 'github-actions', name: 'GitHub Actions', shape: 'CI/CD — .github/workflows + composite action.yml', color: '#2088ff' },
-  // ADR-242 — Prime Agent (PrimeIntellect-ai), IPython + skills + HTTP MCP
+  // ADR-247 — Prime Agent (PrimeIntellect-ai), IPython + skills + HTTP MCP
   { id: 'prime-agent', name: 'Prime Agent', shape: '.prime/agent skills + remote HTTP MCP', color: '#10b981' },
 ];
 

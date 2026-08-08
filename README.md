@@ -52,8 +52,8 @@ Output is an npm-publishable `.zip` with **your name on it, your branding, your 
   failing traces behind each edit or propose nothing — and an opt-in `--sessions` crash-recoverable
   JSONL session log whose Rust and TS (wasm) replays produce identical state hashes. Its PTC
   ("kernel as the only tool") claim is honestly *deferred* behind a pre-registered A/B in
-  `evals-toolcall`. See [ADR-241](docs/adrs/ADR-241-prime-agent-continual-harness-refine.md) /
-  [ADR-242](docs/adrs/ADR-242-host-prime-agent.md). ($0)
+  `evals-toolcall`. See [ADR-246](docs/adrs/ADR-246-prime-agent-continual-harness-refine.md) /
+  [ADR-247](docs/adrs/ADR-247-host-prime-agent.md). ($0)
 - **Score any repo before you build it.** `npx metaharness score <repo>` reads
   the repo (never runs it) and prints a one-screen report card — how well a
   harness fits, how likely it is to build, how safe the tools are, and the
@@ -154,7 +154,7 @@ The same harness output runs on **ten** agent hosts — nine interactive, plus G
 | [**RVM**](https://github.com/ruvnet/rvm) | Bare-metal microhypervisor + capability tokens | Hardware isolation for untrusted peers |
 | [**GitHub Copilot**](https://code.visualstudio.com/docs/copilot/mcp) | MCP via `.vscode/mcp.json` | VSCode 1.99+ (ADR-032) |
 | [**OpenCode**](https://opencode.ai/) | MCP via `.opencode/opencode.json` | sst/opencode TUI (ADR-036) |
-| [**Prime Agent**](packages/host-prime-agent/) | `.prime/agent/` skills (Python-backed, no MCP) + `install-prime-agent.md` | Fail-closed sandbox posture (ADR-242) |
+| [**Prime Agent**](packages/host-prime-agent/) | `.prime/agent/` skills (Python-backed, no MCP) + `install-prime-agent.md` | Fail-closed sandbox posture (ADR-247) |
 | [**GitHub Actions**](https://docs.github.com/actions) | `.github/workflows/` + composite `action.yml` | **Non-interactive** CI/CD; default-deny via `permissions:` (ADR-033) |
 
 See [ADR-004 — Host integration model](docs/adrs/ADR-004-host-integration-model.md) and [ADR-033 — GitHub Actions host](docs/adrs/ADR-033-host-github-actions.md).
