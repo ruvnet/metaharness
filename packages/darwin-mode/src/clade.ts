@@ -102,7 +102,39 @@ export function cladeOutcomes(archive: Archive, rootId: string): { passes: numbe
  * its parent already exists), so this should never trigger in practice.
  */
 function cladeOutcomesAll(archive: Archive): Map<string, { passes: number; failures: number }> {
+  const records = archive.all();
+
+  // Fast path: `addVariant` only wires a child edge once its parent exists, so
+  // insertion order is topological (parents before children). One REVERSE pass
+  // computes every subtree total with children always ready — no recursion, no
+  // visiting set, O(n). If the archive was loaded from a hand-edited file that
+  // violates that order (a child inserted before its parent), fall back to the
+  // cycle-guarded memoized walk below.
   const memo = new Map<string, { passes: number; failures: number }>();
+  let ordered = true;
+  outer: for (let i = records.length - 1; i >= 0; i--) {
+    const rec = records[i];
+    let passes = 0, failures = 0;
+    if (rec.score !== null) {
+      if (rec.score.promoted) passes += 1;
+      else failures += 1;
+    }
+    for (const child of rec.children) {
+      const c = memo.get(child);
+      if (c === undefined) {
+        if (archive.get(child) === undefined) continue; // dangling edge — ignore
+        ordered = false; // child inserted before parent — cannot trust the pass
+        break outer;
+      }
+      passes += c.passes;
+      failures += c.failures;
+    }
+    memo.set(rec.variant.id, { passes, failures });
+  }
+  if (ordered) return memo;
+
+  // Slow path (out-of-order archive): memoized recursion with a cycle guard.
+  memo.clear();
   const visiting = new Set<string>();
 
   function compute(id: string): { passes: number; failures: number } {
@@ -129,8 +161,22 @@ function cladeOutcomesAll(archive: Archive): Map<string, { passes: number; failu
     return result;
   }
 
-  for (const rec of archive.all()) compute(rec.variant.id);
+  for (const rec of records) compute(rec.variant.id);
   return memo;
+}
+
+/** Per-archive outcome-table cache, invalidated by {@link Archive.revision}.
+ *  Selection is often called several times against an unchanged archive (one
+ *  call per surface / per tau step within a generation); the table only
+ *  depends on the archive contents, so equal revisions ⇒ reuse. */
+const outcomesCache = new WeakMap<Archive, { revision: number; outcomes: Map<string, { passes: number; failures: number }> }>();
+
+function cladeOutcomesCached(archive: Archive): Map<string, { passes: number; failures: number }> {
+  const hit = outcomesCache.get(archive);
+  if (hit && hit.revision === archive.revision) return hit.outcomes;
+  const outcomes = cladeOutcomesAll(archive);
+  outcomesCache.set(archive, { revision: archive.revision, outcomes });
+  return outcomes;
 }
 
 /**
@@ -153,13 +199,23 @@ export function cladeThompsonSelect(
   const t = Math.max(0, tau);
   const scored = archive.all().filter((r) => r.score !== null);
   if (scored.length === 0) return [];
-  const outcomes = cladeOutcomesAll(archive);
-  const ranked = scored
-    .map((r) => {
-      const { passes, failures } = outcomes.get(r.variant.id) ?? { passes: 0, failures: 0 };
-      const u = sampleBeta(rng, t * passes + 1, t * failures + 1);
-      return { variant: r.variant, u };
-    })
-    .sort((a, b) => b.u - a.u);
-  return ranked.slice(0, limit).map((x) => x.variant);
+  const outcomes = cladeOutcomesCached(archive);
+
+  // Single pass keeping only the top-`limit` draws (limit is small — typically
+  // 2-8 parents — so insertion into a short sorted array beats the former full
+  // O(n log n) sort). Order matches the previous stable sort exactly: higher u
+  // first, ties toward the earlier insertion index — and the rng draw sequence
+  // is unchanged, so a fixed seed selects identical parents.
+  const top: Array<{ variant: HarnessVariant; u: number; index: number }> = [];
+  for (let index = 0; index < scored.length; index++) {
+    const r = scored[index];
+    const { passes, failures } = outcomes.get(r.variant.id) ?? { passes: 0, failures: 0 };
+    const u = sampleBeta(rng, t * passes + 1, t * failures + 1);
+    if (top.length === limit && u <= top[top.length - 1].u) continue; // ties keep the earlier entry
+    let at = top.length;
+    while (at > 0 && top[at - 1].u < u) at -= 1;
+    top.splice(at, 0, { variant: r.variant, u, index });
+    if (top.length > limit) top.pop();
+  }
+  return top.map((x) => x.variant);
 }

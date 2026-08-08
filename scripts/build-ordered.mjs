@@ -23,10 +23,11 @@ const PHASES = [
   // BEFORE create-agent-harness (phase 3), which depends on it. flywheel
   // (@metaharness/flywheel) is likewise dependency-free (node:crypto only) and
   // create-agent-harness imports its /cli — so it MUST build here in phase 1.
-  ['kernel-js', 'router', 'harness', 'darwin-mode', 'projects', 'redblue', 'weight-eft', 'jujutsu', 'flywheel', 'workspace-lens'],
+  // radio + horizon (ADR-241/245) are dependency-free and build in phase 1 too.
+  ['kernel-js', 'router', 'harness', 'darwin-mode', 'projects', 'redblue', 'weight-eft', 'jujutsu', 'flywheel', 'workspace-lens', 'radio', 'horizon'],
   // evals-* adapters depend on @metaharness/flywheel's dist → build AFTER phase 1 (avoid .d.ts race).
-  // evals-* adapters depend on @metaharness/flywheel's dist → build AFTER phase 1 (avoid .d.ts race).
-  ['vertical-base', 'evals-hle', 'evals-toolcall', 'evals-extract', 'evals-math', 'evals-sql', 'evals-servedmodel', 'workspace-probe'],
+  // oo-agents (ADR-242) depends on @metaharness/radio's dist → phase 2.
+  ['vertical-base', 'evals-hle', 'evals-toolcall', 'evals-extract', 'evals-math', 'evals-sql', 'evals-servedmodel', 'workspace-probe', 'oo-agents'],
   // Phase 3: hosts + sdk + cli — all depend on kernel-js
   [
     'host-claude-code',

@@ -1,0 +1,254 @@
+{
+  "nodes": [
+    {
+      "id": "baseline",
+      "parentId": null,
+      "generation": 0,
+      "mutationSurface": "planner",
+      "finalScore": 0.985,
+      "promoted": true
+    },
+    {
+      "id": "g1_v0",
+      "parentId": "baseline",
+      "generation": 1,
+      "mutationSurface": "scorePolicy",
+      "finalScore": 0.985,
+      "promoted": false
+    },
+    {
+      "id": "g1_v1",
+      "parentId": "baseline",
+      "generation": 1,
+      "mutationSurface": "retryPolicy",
+      "finalScore": 0.985,
+      "promoted": false
+    },
+    {
+      "id": "g1_v2",
+      "parentId": "baseline",
+      "generation": 1,
+      "mutationSurface": "contextBuilder",
+      "finalScore": 0.985,
+      "promoted": false
+    },
+    {
+      "id": "g1_v3",
+      "parentId": "baseline",
+      "generation": 1,
+      "mutationSurface": "retryPolicy",
+      "finalScore": 0.985,
+      "promoted": false
+    },
+    {
+      "id": "g2_v0",
+      "parentId": "baseline",
+      "generation": 2,
+      "mutationSurface": "toolPolicy",
+      "finalScore": 0.985,
+      "promoted": false
+    },
+    {
+      "id": "g2_v1",
+      "parentId": "baseline",
+      "generation": 2,
+      "mutationSurface": "retryPolicy",
+      "finalScore": 0.985,
+      "promoted": false
+    },
+    {
+      "id": "g2_v2",
+      "parentId": "baseline",
+      "generation": 2,
+      "mutationSurface": "memoryPolicy",
+      "finalScore": 0.985,
+      "promoted": false
+    },
+    {
+      "id": "g2_v3",
+      "parentId": "baseline",
+      "generation": 2,
+      "mutationSurface": "memoryPolicy",
+      "finalScore": 0.985,
+      "promoted": false
+    },
+    {
+      "id": "g2_v4",
+      "parentId": "g1_v0",
+      "generation": 2,
+      "mutationSurface": "reviewer",
+      "finalScore": 0.985,
+      "promoted": false
+    },
+    {
+      "id": "g2_v5",
+      "parentId": "g1_v0",
+      "generation": 2,
+      "mutationSurface": "contextBuilder",
+      "finalScore": 0.985,
+      "promoted": false
+    },
+    {
+      "id": "g2_v6",
+      "parentId": "g1_v0",
+      "generation": 2,
+      "mutationSurface": "memoryPolicy",
+      "finalScore": 0.985,
+      "promoted": false
+    },
+    {
+      "id": "g2_v7",
+      "parentId": "g1_v0",
+      "generation": 2,
+      "mutationSurface": "contextBuilder",
+      "finalScore": 0.985,
+      "promoted": false
+    },
+    {
+      "id": "g3_v0",
+      "parentId": "baseline",
+      "generation": 3,
+      "mutationSurface": "memoryPolicy",
+      "finalScore": 0.985,
+      "promoted": false
+    },
+    {
+      "id": "g3_v1",
+      "parentId": "baseline",
+      "generation": 3,
+      "mutationSurface": "reviewer",
+      "finalScore": 0.985,
+      "promoted": false
+    },
+    {
+      "id": "g3_v2",
+      "parentId": "baseline",
+      "generation": 3,
+      "mutationSurface": "contextBuilder",
+      "finalScore": 0.985,
+      "promoted": false
+    },
+    {
+      "id": "g3_v3",
+      "parentId": "baseline",
+      "generation": 3,
+      "mutationSurface": "retryPolicy",
+      "finalScore": 0.985,
+      "promoted": false
+    },
+    {
+      "id": "g3_v4",
+      "parentId": "g1_v0",
+      "generation": 3,
+      "mutationSurface": "toolPolicy",
+      "finalScore": 0.985,
+      "promoted": false
+    },
+    {
+      "id": "g3_v5",
+      "parentId": "g1_v0",
+      "generation": 3,
+      "mutationSurface": "memoryPolicy",
+      "finalScore": 0.985,
+      "promoted": false
+    },
+    {
+      "id": "g3_v6",
+      "parentId": "g1_v0",
+      "generation": 3,
+      "mutationSurface": "scorePolicy",
+      "finalScore": 0.985,
+      "promoted": false
+    },
+    {
+      "id": "g3_v7",
+      "parentId": "g1_v0",
+      "generation": 3,
+      "mutationSurface": "contextBuilder",
+      "finalScore": 0.985,
+      "promoted": false
+    }
+  ],
+  "edges": [
+    {
+      "from": "baseline",
+      "to": "g1_v0"
+    },
+    {
+      "from": "baseline",
+      "to": "g1_v1"
+    },
+    {
+      "from": "baseline",
+      "to": "g1_v2"
+    },
+    {
+      "from": "baseline",
+      "to": "g1_v3"
+    },
+    {
+      "from": "baseline",
+      "to": "g2_v0"
+    },
+    {
+      "from": "baseline",
+      "to": "g2_v1"
+    },
+    {
+      "from": "baseline",
+      "to": "g2_v2"
+    },
+    {
+      "from": "baseline",
+      "to": "g2_v3"
+    },
+    {
+      "from": "baseline",
+      "to": "g3_v0"
+    },
+    {
+      "from": "baseline",
+      "to": "g3_v1"
+    },
+    {
+      "from": "baseline",
+      "to": "g3_v2"
+    },
+    {
+      "from": "baseline",
+      "to": "g3_v3"
+    },
+    {
+      "from": "g1_v0",
+      "to": "g2_v4"
+    },
+    {
+      "from": "g1_v0",
+      "to": "g2_v5"
+    },
+    {
+      "from": "g1_v0",
+      "to": "g2_v6"
+    },
+    {
+      "from": "g1_v0",
+      "to": "g2_v7"
+    },
+    {
+      "from": "g1_v0",
+      "to": "g3_v4"
+    },
+    {
+      "from": "g1_v0",
+      "to": "g3_v5"
+    },
+    {
+      "from": "g1_v0",
+      "to": "g3_v6"
+    },
+    {
+      "from": "g1_v0",
+      "to": "g3_v7"
+    }
+  ]
+}

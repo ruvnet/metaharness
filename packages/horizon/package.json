@@ -1,0 +1,46 @@
+{
+  "name": "@metaharness/horizon",
+  "version": "0.1.0",
+  "description": "The portable core of Google ADK's long-horizon-harness, re-implemented as Rust/WASM + TypeScript: a halt controller (halt_reason), a whole-command anti-smuggling shell guard (command_classify), and a context-compaction policy that flushes durable facts before any lossy summary.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "wasm",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc",
+    "build:wasm": "node scripts/build-wasm.mjs",
+    "test": "vitest run",
+    "test:rust": "cargo test --manifest-path crate/Cargo.toml --release",
+    "demo": "node scripts/demo.mjs",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "long-horizon",
+    "adk",
+    "halt-controller",
+    "command-guard",
+    "context-compaction",
+    "wasm-sandbox",
+    "agent-harness",
+    "metaharness"
+  ],
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  }
+}

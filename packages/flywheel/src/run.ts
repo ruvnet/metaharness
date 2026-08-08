@@ -29,6 +29,13 @@ export interface FlywheelConfig {
   budget?: { total: number; spent: () => number };
   /** Caller-supplied ISO/label per generation (determinism; no clock in the engine). */
   now?: (generation: number) => string;
+  /** Reuse evaluator results for (policy, suite) pairs already scored this run. The proposer can
+   *  legitimately re-propose a policy a previous generation already tried (small lever domains,
+   *  cycling proposers); each evaluation is typically a full benchmark run, so replays are the
+   *  engine's dominant avoidable cost. OFF by default: only enable for evaluators that are
+   *  deterministic (or whose first measurement you are happy to reuse) — a stochastic evaluator's
+   *  cached score freezes one sample of the noise. */
+  cacheEvaluations?: boolean;
   /** Stamped on the replay bundle — 'SYNTHETIC' | 'LIVE' | …. NEVER a benchmark name. */
   dataSource?: string;
   /** Optional per-generation checkpoint hook — called at the END of each generation with a fully
@@ -63,8 +70,23 @@ export async function runFlywheelGenerations(cfg: FlywheelConfig): Promise<Flywh
   const store = cfg.lineageStore ?? new InMemoryLineageStore();
   const now = cfg.now ?? ((g: number) => `gen-${g}`);
   const rootId = cfg.rootId ?? 'root';
+
+  // Optional per-run evaluation memo (see FlywheelConfig.cacheEvaluations). Keyed by suite id +
+  // key-sorted policy, so key order in the Policy object never splits the cache. Returns a copy so
+  // a caller mutating a Score cannot poison later hits.
+  const evalCache = cfg.cacheEvaluations ? new Map<string, Score>() : null;
+  const evaluate: Evaluator = async (p, suite) => {
+    if (!evalCache) return cfg.evaluator(p, suite);
+    const key = `${suite.id}\u0000${JSON.stringify(Object.keys(p).sort().map((k) => [k, p[k]]))}`;
+    const hit = evalCache.get(key);
+    if (hit) return { ...hit };
+    const s = await cfg.evaluator(p, suite);
+    evalCache.set(key, s);
+    return { ...s };
+  };
+
   const anchorOf = async (p: Policy): Promise<number | null> =>
-    cfg.anchor ? (await cfg.evaluator(p, cfg.anchor)).primary : null;
+    cfg.anchor ? (await evaluate(p, cfg.anchor)).primary : null;
 
   let rootScore: Score;
   let rootAnchor: number | null;
@@ -85,7 +107,7 @@ export async function runFlywheelGenerations(cfg: FlywheelConfig): Promise<Flywh
     generationsRun = r.fromGeneration; startGen = r.fromGeneration + 1;
   } else {
     // ── gen-0: the immutable root. Evaluate it once (the baseline) + its anchor (the frozen bar). ──
-    rootScore = await cfg.evaluator(cfg.rootPolicy, cfg.holdout);
+    rootScore = await evaluate(cfg.rootPolicy, cfg.holdout);
     rootAnchor = await anchorOf(cfg.rootPolicy);
     await store.append({
       id: rootId, generation: 0, parents: [], mutation: null, primaryDelta: 0, anchorScore: rootAnchor,
@@ -133,7 +155,7 @@ export async function runFlywheelGenerations(cfg: FlywheelConfig): Promise<Flywh
       // carrying an evidence-citing summary + rollback inverse for the minted lineage commit.
       const norm = typeof proposed === 'string' ? { value: proposed } : proposed;
       const candPolicy: Policy = { ...policy, [target]: norm.value };
-      const candScore = await cfg.evaluator(candPolicy, cfg.holdout);
+      const candScore = await evaluate(candPolicy, cfg.holdout);
       const decision = rule({ baseline: score, candidate: candScore });
       cands.push({
         target, policy: candPolicy, score: candScore, reasons: decision.reasons, promote: decision.promote,

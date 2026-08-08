@@ -1,0 +1,183 @@
+diff --git a/Makefile b/Makefile
+index 0a61a13..12a813e 100644
+--- a/Makefile
++++ b/Makefile
+@@ -164,7 +164,7 @@ $(BIN)/bench_kernels: benchmarks/bench_kernels.c $(BUILD)/src/core/k3_ops.o | $(
+ 	$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@ $(LDFLAGS)
+ 
+ ## test: everything that needs no model weights
+-test: $(TEST_BINS)
++test: $(TEST_BINS) $(BIN)/bench_kernels
+ 	@echo "== op kernels ==";        ./$(BIN)/test_ops $(FIXTURES)/ops
+ 	@echo "== streaming cache ==";   ./$(BIN)/test_cache $(FIXTURES)/cache
+ 	@echo "== safetensors ==";       ./$(BIN)/test_st $(FIXTURES)/st $(BUILD)/st_index.json \
+@@ -184,6 +184,8 @@ test: $(TEST_BINS)
+ 	  fi
+ 	@echo "== real dimensions ==";   ./$(BIN)/scale_test
+ 	@echo "== full-model oracle =="; ./$(BIN)/k3_model $(FIXTURES)
++	@echo "== kernel hash gate =="  # exact bits of every kernel path, at 1 and N threads
++	@./$(BIN)/bench_kernels --check $(FIXTURES)/gates/kernel_hashes.txt
+ 	@echo
+ 	@if [ ! -f "$(TOK_FILES)/tiktoken.model" ]; then \
+ 	     echo "NOTE: tokenizer parity did NOT run; see above. Everything else did."; \
+diff --git a/benchmarks/bench_kernels.c b/benchmarks/bench_kernels.c
+index 5810538..b6b0a1d 100644
+--- a/benchmarks/bench_kernels.c
++++ b/benchmarks/bench_kernels.c
+@@ -22,6 +22,15 @@
+ #include <string.h>
+ #include <time.h>
+ 
++#ifdef _OPENMP
++#include <omp.h>
++#else
++/* Serial build: one thread is all there is, so the invariance check is trivially
++ * satisfied and these stubs keep the --check path compiling unchanged. */
++static int omp_get_max_threads(void) { return 1; }
++static void omp_set_num_threads(int n) { (void)n; }
++#endif
++
+ #include "k3.h"
+ 
+ static double now_s(void)
+@@ -37,14 +46,19 @@ static double now_s(void)
+  * would happily pass a kernel that quietly reassociated the reduction, which is exactly
+  * the mistake worth catching: this engine's claim is that its output equals the
+  * reference, and "equals" has to mean equals. */
+-static void fnv(const char *label, const float *v, int n)
++static unsigned long long fnv_bits(const float *v, int n)
+ {
+     unsigned long long h = 1469598103934665603ull;
+     for (int k = 0; k < n; k++) {
+         union { float f; unsigned u; } b; b.f = v[k];
+         for (int t = 0; t < 4; t++) { h ^= (b.u >> (8 * t)) & 0xFFu; h *= 1099511628211ull; }
+     }
+-    printf("             %s OUTPUT FNV1a = %016llx\n", label, h);
++    return h;
++}
++
++static void fnv(const char *label, const float *v, int n)
++{
++    printf("             %s OUTPUT FNV1a = %016llx\n", label, fnv_bits(v, n));
+ }
+ 
+ static void fillf(float *p, size_t n, unsigned s)
+@@ -62,8 +76,109 @@ static void fillb(unsigned char *p, size_t n, unsigned s)
+     }
+ }
+ 
+-int main(void)
++/* ------------------------------------------------------------------ --check ---- */
++/* `bench_kernels --check` turns the hashes above from something a human eyeballs into
++ * a gate `make test` enforces. Each kernel runs at its benchmark shape twice, once
++ * pinned to one thread and once at the full thread count; the two hashes must match
++ * each other (the "identical at any thread count" contract in k3_ops.c) AND the
++ * recorded value in tests/fixtures/gates/kernel_hashes.txt. Any reassociated
++ * reduction -- an FMA snuck in, a reordered accumulator tree, a parallel reduction --
++ * flips the hash and fails the build, which is exactly the point. */
++
++static int gate_lookup(const char *path, const char *name, unsigned long long *want)
++{
++    FILE *f = fopen(path, "r");
++    if (!f) { printf("check: cannot open %s\n", path); return 0; }
++    char nm[64]; unsigned long long h; int found = 0;
++    while (fscanf(f, "%63s %llx", nm, &h) == 2)
++        if (strcmp(nm, name) == 0) { *want = h; found = 1; break; }
++    fclose(f);
++    if (!found) printf("check: no entry '%s' in %s\n", name, path);
++    return found;
++}
++
++/* Returns 0 if `name` hashed to the recorded value at both thread counts. */
++static int gate_check(const char *path, const char *name,
++                      unsigned long long h1, unsigned long long hN, int nthreads)
++{
++    int bad = 0;
++    unsigned long long want = 0;
++    if (h1 != hN) {
++        printf("FAIL %-12s thread-count variance: %016llx at 1 thread, %016llx at %d\n",
++               name, h1, hN, nthreads);
++        bad = 1;
++    }
++    if (!gate_lookup(path, name, &want)) return 1;
++    if (hN != want) {
++        printf("FAIL %-12s got %016llx  want %016llx\n", name, hN, want);
++        bad = 1;
++    }
++    if (!bad)
++        printf("ok   %-12s %016llx  (identical at 1 and %d threads)\n", name, hN, nthreads);
++    return bad;
++}
++
++static int run_check(const char *path)
++{
++    const int nmax = omp_get_max_threads();
++    int bad = 0;
++
++    /* bf16 trunk matmul, same shape and seeds as the timing run below */
++    {
++        const int in = 7168, out = 12288;
++        uint16_t *W = (uint16_t *)malloc((size_t)in * out * sizeof(uint16_t));
++        float *x = (float *)malloc((size_t)in * sizeof(float));
++        float *y = (float *)malloc((size_t)out * sizeof(float));
++        if (!W || !x || !y) { printf("alloc failed\n"); return 1; }
++        fillb((unsigned char *)W, (size_t)in * out * 2, 12345u);
++        fillf(x, in, 999u);
++
++        omp_set_num_threads(1);
++        k3_matmul_bf16(y, x, W, in, out);
++        const unsigned long long h1 = fnv_bits(y, out);
++        omp_set_num_threads(nmax);
++        k3_matmul_bf16(y, x, W, in, out);
++        bad |= gate_check(path, "bf16_matmul", h1, fnv_bits(y, out), nmax);
++        free(W); free(x); free(y);
++    }
++
++    /* MXFP4 expert matmul, same shape and seeds as the timing run below */
++    {
++        const int in = 3584, rows = 3072, group = K3_MXFP4_GROUP;
++        const int pcols = in / 2, ngrp = in / group;
++        unsigned char *pk = (unsigned char *)malloc((size_t)rows * pcols);
++        unsigned char *sc = (unsigned char *)malloc((size_t)rows * ngrp);
++        float *x = (float *)malloc((size_t)in * sizeof(float));
++        float *y = (float *)malloc((size_t)rows * sizeof(float));
++        if (!pk || !sc || !x || !y) { printf("alloc failed\n"); return 1; }
++        fillb(pk, (size_t)rows * pcols, 777u);
++        memset(sc, 127, (size_t)rows * ngrp);
++        fillf(x, in, 4242u);
++
++        omp_set_num_threads(1);
++        k3_matmul_mxfp4(y, x, pk, sc, in, rows, group);
++        const unsigned long long h1 = fnv_bits(y, rows);
++        omp_set_num_threads(nmax);
++        k3_matmul_mxfp4(y, x, pk, sc, in, rows, group);
++        bad |= gate_check(path, "mxfp4_matmul", h1, fnv_bits(y, rows), nmax);
++        free(pk); free(sc); free(x); free(y);
++    }
++
++    if (bad) {
++        printf("KERNEL HASH GATE FAILED: a kernel's exact bits drifted from %s.\n"
++               "If the change was intentional and verified against the reference,\n"
++               "regenerate that file; otherwise a reduction was reassociated.\n", path);
++        return 1;
++    }
++    printf("kernel hash gate passed\n");
++    return 0;
++}
++
++int main(int argc, char **argv)
+ {
++    if (argc > 1 && strcmp(argv[1], "--check") == 0)
++        return run_check(argc > 2 ? argv[2] : "tests/fixtures/gates/kernel_hashes.txt");
++
+     printf("kernel benchmark at REAL Kimi K3 dimensions\n");
+ #ifdef __AVX2__
+     printf("built WITH AVX2\n\n");
+diff --git a/tests/fixtures/gates/kernel_hashes.txt b/tests/fixtures/gates/kernel_hashes.txt
+new file mode 100644
+index 0000000..de5fd66
+--- /dev/null
++++ b/tests/fixtures/gates/kernel_hashes.txt
+@@ -0,0 +1,2 @@
++bf16_matmul d65cab2d141bb3b8
++mxfp4_matmul a231061237b5579d

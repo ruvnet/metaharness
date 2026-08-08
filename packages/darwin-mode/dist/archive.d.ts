@@ -9,6 +9,11 @@ export declare class Archive {
     private readonly file;
     /** variantId → record. A Map preserves insertion order. */
     private readonly records;
+    /** Bumped on every mutation (addVariant / setScore / load), so derived views
+     *  (e.g. clade outcome tables) can cache against a stable snapshot id. */
+    private mutationCount;
+    /** Monotonic mutation counter — equal values ⇒ the archive is unchanged. */
+    get revision(): number;
     /**
      * @param file Absolute path to `archive.json`. The file need not exist yet;
      *   {@link load} tolerates a missing or corrupt file by starting empty.

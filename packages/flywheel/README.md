@@ -47,6 +47,12 @@ Most "self-improving agent" pitches are unfalsifiable. The flywheel makes improv
 - 🔒 **Gate fingerprint** — prove the promotion rule was unchanged between runs.
 - 🧩 **Zero host/benchmark coupling** — knows only candidates, scores, gates, receipts, lineage.
 - 🪶 **Thin + dependency-free** at runtime (Node `crypto` only). ESM, fully typed.
+- ♻️ **Opt-in evaluation memo** — `cacheEvaluations: true` reuses the score of a (policy, suite)
+  pair the run already measured, so a proposer that re-proposes a previously-tried policy (small
+  lever domains, cycling proposers) doesn't re-spend a full benchmark run. Off by default; enable
+  only when reusing the first measurement is acceptable (deterministic or noise-tolerant
+  evaluators). On an 8-generation, 3-lever kernel-tuning run this cut evaluator calls 28 → 13
+  (54%) with an identical final policy and lineage.
 
 ## Install
 

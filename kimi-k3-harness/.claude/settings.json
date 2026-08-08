@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx kimi-k3-harness*)",
+      "mcp__kimi-k3-harness__*",
+      "mcp__code_index__*",
+      "Bash(npm test*)",
+      "Bash(npm run*)",
+      "Bash(git diff*)",
+      "Bash(git status*)",
+      "Bash(git log*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Bash(git push*)",
+      "Bash(rm -rf*)"
+    ]
+  },
+  "mcpServers": {
+    "kimi-k3-harness": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "kimi-k3-harness@latest",
+        "mcp",
+        "start"
+      ]
+    },
+    "code_index": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "kimi-k3-harness@latest",
+        "mcp",
+        "index"
+      ]
+    }
+  }
+}

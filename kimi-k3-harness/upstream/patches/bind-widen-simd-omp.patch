@@ -1,0 +1,53 @@
+diff --git a/src/model/k3_bind.c b/src/model/k3_bind.c
+index 91391f6..c0a6cbf 100644
+--- a/src/model/k3_bind.c
++++ b/src/model/k3_bind.c
+@@ -8,6 +8,10 @@
+ 
+ #include "k3_bind.h"
+ 
++#if defined(__AVX2__)
++#include <immintrin.h>
++#endif
++
+ #define PRE "language_model.model."
+ #define MAXB 64
+ 
+@@ -67,6 +71,28 @@ static void reqn(Plan *p, const void **dest, int64_t want, const char *fmt, ...)
+ 
+ static size_t align8(size_t x) { return (x + 7u) & ~(size_t)7u; }
+ 
++/* Widen n bf16 elements to fp32. The widen is an exact 16-bit left shift (k3_bf16f)
++ * applied elementwise with no accumulation, so any vector width, chunking or thread
++ * count produces byte-identical output. The OpenMP `if` clause keeps the small
++ * norm/bias vectors serial; only the big matrices (router gate is 6.42M elements)
++ * fan out. */
++static void widen_bf16(float *dst, const uint16_t *sp, int64_t n)
++{
++#if defined(__AVX2__)
++    const int64_t nv = n & ~(int64_t)7;
++#pragma omp parallel for schedule(static) if (n > 65536)
++    for (int64_t k = 0; k < nv; k += 8) {
++        __m128i h = _mm_loadu_si128((const __m128i *)(sp + k));
++        __m256i f = _mm256_slli_epi32(_mm256_cvtepu16_epi32(h), 16);
++        _mm256_storeu_si256((__m256i *)(dst + k), f);
++    }
++    for (int64_t k = nv; k < n; k++) dst[k] = k3_bf16f(sp[k]);
++#else
++#pragma omp parallel for schedule(static) if (n > 65536)
++    for (int64_t k = 0; k < n; k++) dst[k] = k3_bf16f(sp[k]);
++#endif
++}
++
+ /* Resolve and validate everything, and lay out the blob, before reading a byte. */
+ static int64_t plan_resolve(Plan *p, const K3St *s)
+ {
+@@ -419,7 +445,7 @@ int k3_bind_layer_mem(const K3Cfg *c, int L, K3LayerBind *b,
+         }
+         float *dst = (float *)(widen + w);
+         const uint16_t *sp = (const uint16_t *)(run + off);
+-        for (int64_t k = 0; k < q->take; k++) dst[k] = k3_bf16f(sp[k]);
++        widen_bf16(dst, sp, q->take);
+         *q->dest = dst;
+         w += (size_t)q->take * 4;
+     }
