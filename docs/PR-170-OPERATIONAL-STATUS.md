@@ -21,7 +21,9 @@ the commands shown._
 | **@metaharness/darwin** clade selection | ✅ optimized | 1.5–2.7× faster, seeded selections unchanged; 591/591 tests |
 | **@metaharness/flywheel** evaluation memo | ✅ optimized | opt-in `cacheEvaluations`, −54% evaluator calls on the k3 shape, identical final policy; 42/42 tests |
 | **@metaharness/radio** (AgentRadio, ADR-241) | ✅ operational + paper-reproducing | 13/13 tests; ablation order **passive 20.3 < negotiate 32.7 < divide 38.2 < single 58.4** reproduces the paper's L3<L2<L1<single direction; flywheel climbs `divide/4/silent → passive/4/immediate` (+89%) under the **unchanged 2% frozen gate**, milestone reached, replay verified |
-| **@metaharness/oo-agents** (NOOA clone, ADR-242) | ✅ operational | Rust→wasm cellscript sandbox (fuel-bounded, no ambient authority); 5 native VM tests + 8 package tests incl. SupportAgent end-to-end through the sandbox with typed auto-retry |
+| **@metaharness/oo-agents** (NOOA clone, ADR-242) | ✅ operational | Rust→wasm cellscript sandbox (fuel-bounded, no ambient authority); 20 native VM tests (incl. a 25,000-iteration fuzz harness, 0 panics, always terminates within fuel) + 34 package tests incl. SupportAgent end-to-end, typed auto-retry, and a real `LlmDriver` seam driven by an injectable completion fn |
+| **radio × oo-agents pod** (the composition both ADRs point to) | ✅ operational | a pod of OO agents coordinates over the AgentRadio bus: passive awareness folds a teammate's mid-task discovery in for free — resolves in **11 steps vs 14 blocking vs fail with no sharing** (`runPodExample`) |
+| **radio digest/relevance lever** (the surface AgentRadio left open) | ✅ evolved, honestly gated | `full`/`mentions`/`relevant`; the flywheel **prices `relevant` and promotes it** (climb 21.28 → 49.50, +133%) under the **unchanged 2% frozen gate**, milestone reached, replay verified; `mentions` correctly fails (drops a cross-fact → unresolved seed → hard gate stop) |
 
 ## What "SOTA proven" means here (and what it does not)
 

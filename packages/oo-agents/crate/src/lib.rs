@@ -411,7 +411,21 @@ enum Stmt {
 struct Parser {
     toks: Vec<Tok>,
     p: usize,
+    /// Recursion-depth counter for the recursive-descent parser. Every nested
+    /// expression (parentheses, array/object literals, call args) and every
+    /// nested block increments it; exceeding MAX_PARSE_DEPTH returns a clean
+    /// syntax error instead of overflowing the (small, ~1 MB) wasm stack. This
+    /// is a HARD sandbox guarantee: adversarial input like `((((((…`, deeply
+    /// nested arrays, or long `else if` chains must degrade to Outcome::Error,
+    /// never to a Rust stack overflow / wasm trap.
+    depth: u32,
 }
+
+/// Max nesting the parser (and, transitively, the tree-walking evaluator) will
+/// descend before bailing. Kept well below the point where recursion would
+/// exhaust the wasm linear-memory stack; real model-written cells nest only a
+/// handful deep, so this never constrains legitimate code.
+const MAX_PARSE_DEPTH: u32 = 128;
 
 impl Parser {
     fn peek(&self) -> &Tok {
@@ -438,12 +452,20 @@ impl Parser {
     }
 
     fn block(&mut self) -> Result<Vec<Stmt>, String> {
+        self.depth += 1;
+        if self.depth > MAX_PARSE_DEPTH {
+            return Err("block nesting too deep".into());
+        }
         self.eat_op("{")?;
         let mut out = Vec::new();
         while !matches!(self.peek(), Tok::Op("}")) {
             out.push(self.stmt()?);
         }
         self.eat_op("}")?;
+        // Only decremented on the success path; any error aborts the whole
+        // parse (run_cell bails on the first Err), so the counter is never
+        // reused after an error.
+        self.depth -= 1;
         Ok(out)
     }
 
@@ -467,7 +489,16 @@ impl Parser {
                 let els = if matches!(self.peek(), Tok::Kw("else")) {
                     self.next();
                     if matches!(self.peek(), Tok::Kw("if")) {
-                        vec![self.stmt()?]
+                        // `else if` recurses through stmt() (not block()), so it
+                        // needs its own depth accounting or a long chain could
+                        // overflow the stack independent of block nesting.
+                        self.depth += 1;
+                        if self.depth > MAX_PARSE_DEPTH {
+                            return Err("statement nesting too deep".into());
+                        }
+                        let s = self.stmt()?;
+                        self.depth -= 1;
+                        vec![s]
                     } else {
                         self.block()?
                     }
@@ -535,6 +566,14 @@ impl Parser {
     }
 
     fn bin(&mut self, min: u8) -> Result<Expr, String> {
+        // Every expression flows through bin(), and nested expressions
+        // (parentheses, array/object/call arguments) re-enter it via
+        // primary()->expr()->bin(). Counting here bounds the AST depth, which
+        // in turn bounds the tree-walking evaluator's recursion at run time.
+        self.depth += 1;
+        if self.depth > MAX_PARSE_DEPTH {
+            return Err("expression nesting too deep".into());
+        }
         let mut lhs = self.unary()?;
         loop {
             let (op, prec) = match self.peek() {
@@ -563,6 +602,7 @@ impl Parser {
             let rhs = self.bin(prec + 1)?;
             lhs = Expr::Bin(op, Box::new(lhs), Box::new(rhs));
         }
+        self.depth -= 1;
         Ok(lhs)
     }
 
@@ -729,7 +769,7 @@ impl Vm {
             Ok(t) => t,
             Err(e) => return Outcome::Error(format!("syntax error: {e}")),
         };
-        let mut parser = Parser { toks, p: 0 };
+        let mut parser = Parser { toks, p: 0, depth: 0 };
         let mut stmts = Vec::new();
         while !matches!(parser.peek(), Tok::Eof) {
             match parser.stmt() {
@@ -1082,6 +1122,210 @@ impl Vm {
                 Some(Value::Bool(b)) => Ok(Value::Num(if *b { 1.0 } else { 0.0 })),
                 _ => Err("num() wants a number, string, or bool".into()),
             },
+
+            // -- string ops -------------------------------------------------
+            // All pure and first-order: no closures, no ambient authority, no
+            // clock/randomness. Unicode case-folding and substring/splitting
+            // are deterministic across platforms.
+            "upper" => match args.first() {
+                Some(Value::Str(s)) => Ok(Value::Str(s.to_uppercase())),
+                _ => Err("upper(string) wants a string".into()),
+            },
+            "lower" => match args.first() {
+                Some(Value::Str(s)) => Ok(Value::Str(s.to_lowercase())),
+                _ => Err("lower(string) wants a string".into()),
+            },
+            "split" => match (args.first(), args.get(1)) {
+                (Some(Value::Str(s)), Some(Value::Str(sep))) => {
+                    // Empty separator splits into characters (matches how a
+                    // model expects `split(word, "")` to enumerate letters).
+                    let parts: Vec<Value> = if sep.is_empty() {
+                        s.chars().map(|c| Value::Str(c.to_string())).collect()
+                    } else {
+                        s.split(sep.as_str())
+                            .map(|p| Value::Str(p.to_string()))
+                            .collect()
+                    };
+                    Ok(Value::Arr(parts))
+                }
+                _ => Err("split(string, separator) wants two strings".into()),
+            },
+            "join" => match (args.first(), args.get(1)) {
+                (Some(Value::Arr(a)), Some(Value::Str(sep))) => {
+                    let parts: Vec<String> = a.iter().map(display).collect();
+                    Ok(Value::Str(parts.join(sep)))
+                }
+                _ => Err("join(array, separator) wants an array and a string".into()),
+            },
+
+            // -- number ops -------------------------------------------------
+            "abs" => match args.first() {
+                Some(Value::Num(n)) => Ok(Value::Num(n.abs())),
+                _ => Err("abs(number) wants a number".into()),
+            },
+            "floor" => match args.first() {
+                Some(Value::Num(n)) => Ok(Value::Num(n.floor())),
+                _ => Err("floor(number) wants a number".into()),
+            },
+            // min/max accept either a single array argument or a variadic list
+            // of numbers, whichever the model reaches for. NaN never wins a
+            // comparison (`<`/`>` are false against NaN), so the fold is
+            // deterministic even for pathological inputs like inf-inf.
+            "min" | "max" => {
+                let want_max = name == "max";
+                let nums: Vec<f64> = match (args.len(), args.first()) {
+                    (1, Some(Value::Arr(a))) => {
+                        let mut v = Vec::with_capacity(a.len());
+                        for e in a {
+                            match e {
+                                Value::Num(n) => v.push(*n),
+                                o => {
+                                    return Err(format!(
+                                        "{name}() wants numbers, got {}",
+                                        o.type_name()
+                                    ))
+                                }
+                            }
+                        }
+                        v
+                    }
+                    _ => {
+                        let mut v = Vec::with_capacity(args.len());
+                        for a in &args {
+                            match a {
+                                Value::Num(n) => v.push(*n),
+                                o => {
+                                    return Err(format!(
+                                        "{name}() wants numbers, got {}",
+                                        o.type_name()
+                                    ))
+                                }
+                            }
+                        }
+                        v
+                    }
+                };
+                match nums.split_first() {
+                    None => Err(format!("{name}() of an empty set")),
+                    Some((&first, rest)) => {
+                        let mut acc = first;
+                        for &n in rest {
+                            if want_max {
+                                if n > acc {
+                                    acc = n;
+                                }
+                            } else if n < acc {
+                                acc = n;
+                            }
+                        }
+                        Ok(Value::Num(acc))
+                    }
+                }
+            }
+
+            // -- array / membership ops ------------------------------------
+            // Deterministic sort of a homogeneous array. Numbers use total
+            // ordering (total_cmp gives NaN a fixed, well-defined place so the
+            // output never depends on input order); strings use lexicographic
+            // Unicode-scalar ordering. Mixed arrays are a clean error rather
+            // than an arbitrary cross-type comparison.
+            "sort" => match args.first() {
+                Some(Value::Arr(a)) => {
+                    if a.is_empty() {
+                        return Ok(Value::Arr(Vec::new()));
+                    }
+                    // O(n log n); charge fuel proportional to length so a huge
+                    // array can't buy unbounded compute for a single step.
+                    self.burn(a.len() as u64)?;
+                    if a.iter().all(|v| matches!(v, Value::Num(_))) {
+                        let mut nums: Vec<f64> = a
+                            .iter()
+                            .map(|v| match v {
+                                Value::Num(n) => *n,
+                                _ => 0.0,
+                            })
+                            .collect();
+                        nums.sort_by(|x, y| x.total_cmp(y));
+                        Ok(Value::Arr(nums.into_iter().map(Value::Num).collect()))
+                    } else if a.iter().all(|v| matches!(v, Value::Str(_))) {
+                        let mut ss: Vec<String> = a
+                            .iter()
+                            .map(|v| match v {
+                                Value::Str(s) => s.clone(),
+                                _ => String::new(),
+                            })
+                            .collect();
+                        ss.sort();
+                        Ok(Value::Arr(ss.into_iter().map(Value::Str).collect()))
+                    } else {
+                        Err("sort() wants a homogeneous array of numbers or strings".into())
+                    }
+                }
+                _ => Err("sort(array) wants an array".into()),
+            },
+            // contains(seq, item): substring for strings, element membership
+            // for arrays, key presence for objects.
+            "contains" => match (args.first(), args.get(1)) {
+                (Some(Value::Str(h)), Some(Value::Str(n))) => {
+                    Ok(Value::Bool(h.contains(n.as_str())))
+                }
+                (Some(Value::Arr(a)), Some(item)) => Ok(Value::Bool(a.iter().any(|e| e == item))),
+                (Some(Value::Obj(o)), Some(Value::Str(k))) => Ok(Value::Bool(o.contains_key(k))),
+                _ => Err("contains(string|array|object, item) got wrong types".into()),
+            },
+            // slice(seq, start[, end]): Python-style, with negative indices
+            // counting from the end and out-of-range bounds clamped (never a
+            // panic). Works on strings (by character) and arrays.
+            "slice" => {
+                let seq = args.first().ok_or("slice(seq, start[, end]) needs a sequence")?;
+                let len = match seq {
+                    Value::Str(s) => s.chars().count(),
+                    Value::Arr(a) => a.len(),
+                    o => return Err(format!("slice() wants a string or array, got {}", o.type_name())),
+                };
+                let start = match args.get(1) {
+                    Some(Value::Num(n)) => clamp_index(*n, len),
+                    _ => return Err("slice(seq, start[, end]) start must be a number".into()),
+                };
+                let end = match args.get(2) {
+                    None | Some(Value::Null) => len,
+                    Some(Value::Num(n)) => clamp_index(*n, len),
+                    Some(o) => {
+                        return Err(format!("slice() end must be a number, got {}", o.type_name()))
+                    }
+                };
+                let end = end.max(start);
+                match seq {
+                    Value::Str(s) => {
+                        Ok(Value::Str(s.chars().skip(start).take(end - start).collect()))
+                    }
+                    Value::Arr(a) => Ok(Value::Arr(a[start..end].to_vec())),
+                    _ => unreachable!(),
+                }
+            }
+            // get(container, key[, default]): safe indexing that returns a
+            // default (null if omitted) instead of erroring on a miss —
+            // works on objects (string key) and arrays (numeric index).
+            "get" => {
+                if !(2..=3).contains(&args.len()) {
+                    return Err("get(container, key[, default])".into());
+                }
+                let default = args.get(2).cloned().unwrap_or(Value::Null);
+                match (args.first(), args.get(1)) {
+                    (Some(Value::Obj(o)), Some(Value::Str(k))) => {
+                        Ok(o.get(k).cloned().unwrap_or(default))
+                    }
+                    (Some(Value::Arr(a)), Some(Value::Num(n))) => {
+                        if *n < 0.0 || n.fract() != 0.0 {
+                            Ok(default)
+                        } else {
+                            Ok(a.get(*n as usize).cloned().unwrap_or(default))
+                        }
+                    }
+                    _ => Err("get() wants (object, string) or (array, number)".into()),
+                }
+            }
+
             _ => Err(format!("unknown function '{name}'")),
         }
     }
@@ -1091,6 +1335,19 @@ impl Vm {
 /// marker so it unwinds every enclosing block immediately — same effect as
 /// NOOA's ExecutionSignal exception.
 const SIGNAL_MARKER: &str = "\u{1}SIGNAL\u{1}";
+
+/// Resolve a (possibly negative or out-of-range) slice index into a clamped
+/// `[0, len]` bound. Negative counts from the end (Python semantics); NaN and
+/// wildly out-of-range floats saturate rather than panic — Rust's float→int
+/// cast already saturates, and we clamp again for the negative-wrap case.
+fn clamp_index(n: f64, len: usize) -> usize {
+    if n.is_nan() {
+        return 0;
+    }
+    let i = n.trunc() as i64;
+    let i = if i < 0 { i.saturating_add(len as i64) } else { i };
+    i.clamp(0, len as i64) as usize
+}
 
 fn display(v: &Value) -> String {
     match v {
@@ -1295,6 +1552,313 @@ mod tests {
             Outcome::Signal(Value::Num(n)) => assert_eq!(n, 3.0),
             o => panic!("{:?}", outcome_dbg(o)),
         }
+    }
+
+    // Expect a Result-outcome and hand back its Value; panics with context
+    // otherwise so a regression points at the offending case.
+    fn result_of(o: Outcome) -> Value {
+        match o {
+            Outcome::Result(v) => v,
+            other => panic!("expected Result, got {}", outcome_dbg(other)),
+        }
+    }
+
+    fn err_of(o: Outcome) -> String {
+        match o {
+            Outcome::Error(e) => e,
+            other => panic!("expected Error, got {}", outcome_dbg(other)),
+        }
+    }
+
+    // ---- new builtins: string ops --------------------------------------
+
+    #[test]
+    fn str_upper_lower() {
+        let mut vm = Vm::new(host);
+        assert_eq!(result_of(run(&mut vm, r#"upper("aBc")"#)), Value::Str("ABC".into()));
+        assert_eq!(result_of(run(&mut vm, r#"lower("aBc")"#)), Value::Str("abc".into()));
+        assert!(err_of(run(&mut vm, "upper(5)")).contains("wants a string"));
+    }
+
+    #[test]
+    fn str_split_and_join() {
+        let mut vm = Vm::new(host);
+        assert_eq!(
+            result_of(run(&mut vm, r#"split("a,b,c", ",")"#)),
+            Value::Arr(vec![
+                Value::Str("a".into()),
+                Value::Str("b".into()),
+                Value::Str("c".into())
+            ])
+        );
+        // empty separator -> characters
+        assert_eq!(
+            result_of(run(&mut vm, r#"split("hi", "")"#)),
+            Value::Arr(vec![Value::Str("h".into()), Value::Str("i".into())])
+        );
+        assert_eq!(
+            result_of(run(&mut vm, r#"join(["a", "b", "c"], "-")"#)),
+            Value::Str("a-b-c".into())
+        );
+        // join stringifies non-string elements deterministically
+        assert_eq!(
+            result_of(run(&mut vm, r#"join([1, 2, 3], ",")"#)),
+            Value::Str("1,2,3".into())
+        );
+    }
+
+    #[test]
+    fn str_contains() {
+        let mut vm = Vm::new(host);
+        assert_eq!(result_of(run(&mut vm, r#"contains("hello", "ell")"#)), Value::Bool(true));
+        assert_eq!(result_of(run(&mut vm, r#"contains("hello", "xyz")"#)), Value::Bool(false));
+    }
+
+    // ---- new builtins: number ops --------------------------------------
+
+    #[test]
+    fn num_min_max_abs_floor() {
+        let mut vm = Vm::new(host);
+        assert_eq!(result_of(run(&mut vm, "min(3, 1, 2)")), Value::Num(1.0));
+        assert_eq!(result_of(run(&mut vm, "max(3, 1, 2)")), Value::Num(3.0));
+        assert_eq!(result_of(run(&mut vm, "min([5, 2, 9])")), Value::Num(2.0));
+        assert_eq!(result_of(run(&mut vm, "max([5, 2, 9])")), Value::Num(9.0));
+        assert_eq!(result_of(run(&mut vm, "abs(-4)")), Value::Num(4.0));
+        assert_eq!(result_of(run(&mut vm, "floor(3.9)")), Value::Num(3.0));
+        assert_eq!(result_of(run(&mut vm, "floor(-0.1)")), Value::Num(-1.0));
+        assert!(err_of(run(&mut vm, "min()")).contains("empty set"));
+        assert!(err_of(run(&mut vm, r#"max(1, "x")"#)).contains("wants numbers"));
+    }
+
+    // ---- new builtins: array / object ops ------------------------------
+
+    #[test]
+    fn arr_sort_numbers_and_strings() {
+        let mut vm = Vm::new(host);
+        assert_eq!(
+            result_of(run(&mut vm, "sort([3, 1, 2, 1])")),
+            Value::Arr(vec![
+                Value::Num(1.0),
+                Value::Num(1.0),
+                Value::Num(2.0),
+                Value::Num(3.0)
+            ])
+        );
+        assert_eq!(
+            result_of(run(&mut vm, r#"sort(["banana", "apple", "cherry"])"#)),
+            Value::Arr(vec![
+                Value::Str("apple".into()),
+                Value::Str("banana".into()),
+                Value::Str("cherry".into())
+            ])
+        );
+        assert_eq!(result_of(run(&mut vm, "sort([])")), Value::Arr(vec![]));
+        // mixed arrays are a clean error, not an arbitrary ordering
+        assert!(err_of(run(&mut vm, r#"sort([1, "a"])"#)).contains("homogeneous"));
+    }
+
+    #[test]
+    fn arr_contains_membership() {
+        let mut vm = Vm::new(host);
+        assert_eq!(result_of(run(&mut vm, "contains([1, 2, 3], 2)")), Value::Bool(true));
+        assert_eq!(result_of(run(&mut vm, "contains([1, 2, 3], 9)")), Value::Bool(false));
+        assert_eq!(
+            result_of(run(&mut vm, r#"contains({a: 1, b: 2}, "a")"#)),
+            Value::Bool(true)
+        );
+    }
+
+    #[test]
+    fn seq_slice() {
+        let mut vm = Vm::new(host);
+        assert_eq!(
+            result_of(run(&mut vm, "slice([1, 2, 3, 4, 5], 1, 3)")),
+            Value::Arr(vec![Value::Num(2.0), Value::Num(3.0)])
+        );
+        assert_eq!(result_of(run(&mut vm, r#"slice("hello", 1, 4)"#)), Value::Str("ell".into()));
+        // omitted end -> to the tail
+        assert_eq!(result_of(run(&mut vm, r#"slice("hello", 2)"#)), Value::Str("llo".into()));
+        // negative index counts from the end
+        assert_eq!(result_of(run(&mut vm, r#"slice("hello", -2)"#)), Value::Str("lo".into()));
+        // out-of-range bounds clamp, never panic
+        assert_eq!(result_of(run(&mut vm, r#"slice("hi", 5, 99)"#)), Value::Str("".into()));
+    }
+
+    #[test]
+    fn obj_get_with_default() {
+        let mut vm = Vm::new(host);
+        assert_eq!(result_of(run(&mut vm, r#"get({a: 1}, "a", 0)"#)), Value::Num(1.0));
+        assert_eq!(result_of(run(&mut vm, r#"get({a: 1}, "b", 42)"#)), Value::Num(42.0));
+        // default omitted -> null
+        assert_eq!(result_of(run(&mut vm, r#"get({a: 1}, "z")"#)), Value::Null);
+        // array form with numeric index
+        assert_eq!(result_of(run(&mut vm, "get([10, 20], 1, -1)")), Value::Num(20.0));
+        assert_eq!(result_of(run(&mut vm, "get([10, 20], 9, -1)")), Value::Num(-1.0));
+    }
+
+    // ---- robustness: adversarial input is a clean Error, never a crash -
+
+    #[test]
+    fn deep_nesting_is_a_clean_error_not_a_stack_overflow() {
+        let mut vm = Vm::new(host);
+        // thousands of open parens would overflow a naive recursive-descent
+        // parser; the depth guard turns it into an Outcome::Error instead.
+        let src = "(".repeat(5000);
+        let e = err_of(run(&mut vm, &src));
+        assert!(e.contains("too deep") || e.contains("syntax"), "{e}");
+        // deeply nested arrays likewise
+        let arr = format!("{}{}", "[".repeat(4000), "]".repeat(4000));
+        match run(&mut vm, &arr) {
+            Outcome::Error(_) => {}
+            o => panic!("expected Error, got {}", outcome_dbg(o)),
+        }
+    }
+
+    #[test]
+    fn huge_literals_do_not_panic() {
+        let mut vm = Vm::new(host);
+        // a 400-digit integer literal overflows f64 to +inf; must round-trip
+        // (serialize as null) without UB. The lexer has no exponent syntax, so
+        // a long digit run is the way to reach non-finite territory.
+        let overflow = "9".repeat(400);
+        match run(&mut vm, &overflow) {
+            Outcome::Result(Value::Num(n)) => assert!(n.is_infinite()),
+            o => panic!("expected numeric Result, got {}", outcome_dbg(o)),
+        }
+        // a large-but-finite literal parses to the nearest f64, no panic
+        match run(&mut vm, "99999999999999999999999999999999999999") {
+            Outcome::Result(Value::Num(n)) => assert!(n.is_finite()),
+            o => panic!("expected numeric Result, got {}", outcome_dbg(o)),
+        }
+        // print path exercises to_json on a non-finite number (emits null)
+        let src = format!("print({overflow})\n1");
+        assert!(matches!(run(&mut vm, &src), Outcome::Result(_)));
+    }
+
+    #[test]
+    fn malformed_but_lexable_input_is_a_syntax_error() {
+        let mut vm = Vm::new(host);
+        for src in ["let = = ] )", "if while for", "1 + + + 2", "] [ } {", ", , ,", "+ * /"] {
+            match run(&mut vm, src) {
+                Outcome::Error(_) => {}
+                o => panic!("`{src}` expected Error, got {}", outcome_dbg(o)),
+            }
+        }
+    }
+
+    #[test]
+    fn arithmetic_edge_cases_are_errors_not_traps() {
+        let mut vm = Vm::new(host);
+        assert!(err_of(run(&mut vm, "1 / 0")).contains("division by zero"));
+        assert!(err_of(run(&mut vm, "5 % 0")).contains("modulo by zero"));
+    }
+
+    #[test]
+    fn out_of_bounds_index_is_an_error() {
+        let mut vm = Vm::new(host);
+        assert!(err_of(run(&mut vm, "let a = [1, 2]\na[5]")).contains("out of bounds"));
+        // huge / negative indices saturate to a miss, not a panic
+        assert!(err_of(run(&mut vm, "let a = [1]\na[999999999999]")).contains("out of bounds"));
+    }
+
+    #[test]
+    fn unknown_names_are_errors() {
+        let mut vm = Vm::new(host);
+        assert!(err_of(run(&mut vm, "nonexistent")).contains("unknown variable"));
+        assert!(err_of(run(&mut vm, "frobnicate(1)")).contains("unknown function"));
+        // unknown capability surfaces the host's error through the bridge
+        assert!(err_of(run(&mut vm, "self.nope()")).contains("host error"));
+    }
+
+    // ---- deterministic fuzz: never panic, always terminate within fuel -
+
+    /// Tiny deterministic LCG (Knuth MMIX constants). No Date/rand — the whole
+    /// point of the sandbox is reproducibility, and the fuzz corpus must be
+    /// identical on every machine and every run.
+    struct Lcg(u64);
+    impl Lcg {
+        fn next(&mut self) -> u64 {
+            self.0 = self
+                .0
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
+            // return the high bits, which mix better than the low bits
+            self.0 >> 17
+        }
+    }
+
+    /// Build a random-but-lexable token soup: a mix of identifiers, literals,
+    /// operators, keywords, and builtin names, joined by spaces, with periodic
+    /// bursts of opening brackets to probe the parser's depth guard.
+    fn random_source(rng: &mut Lcg) -> String {
+        const VOCAB: &[&str] = &[
+            "let", "x", "y", "z", "=", "+", "-", "*", "/", "%", "(", ")", "[", "]", "{", "}",
+            "if", "else", "while", "for", "in", "return", "true", "false", "null", "0", "1", "2",
+            "-1", "3.14", "1e400", "999999999999", "\"a\"", "\"hello world\"", "\"\"", ".", "self",
+            "orders", "add", "print", "len", "push", "keys", "range", "str", "num", "min", "max",
+            "abs", "floor", "sort", "contains", "split", "join", "upper", "lower", "slice", "get",
+            "==", "!=", "<", "<=", ">", ">=", "&&", "||", "!", ",", ";", ":", "return_result",
+        ];
+        let n = 3 + (rng.next() % 40) as usize;
+        let mut parts: Vec<String> = Vec::with_capacity(n);
+        for _ in 0..n {
+            if rng.next() % 100 < 8 {
+                // a burst of opening brackets, sometimes deep enough to trip
+                // the depth guard — which must yield an Error, not a crash
+                let d = 1 + (rng.next() % 30) as usize;
+                let br = match rng.next() % 3 {
+                    0 => "(",
+                    1 => "[",
+                    _ => "{",
+                };
+                for _ in 0..d {
+                    parts.push(br.to_string());
+                }
+            } else {
+                parts.push(VOCAB[(rng.next() as usize) % VOCAB.len()].to_string());
+            }
+        }
+        parts.join(" ")
+    }
+
+    #[test]
+    fn fuzz_never_panics_and_always_terminates() {
+        // Silence the default panic hook so a (hypothetical) panic doesn't spam
+        // stderr; we count them explicitly and assert zero.
+        let prev = std::panic::take_hook();
+        std::panic::set_hook(Box::new(|_| {}));
+
+        let mut rng = Lcg(0x9E37_79B9_7F4A_7C15);
+        let iters: u32 = 25_000;
+        let mut panics: u32 = 0;
+        let mut vm = Vm::new(host);
+        for i in 0..iters {
+            // periodically reset to also exercise the persisted-namespace path
+            if i % 8 == 0 {
+                vm = Vm::new(host);
+            }
+            let src = random_source(&mut rng);
+            let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                // A modest fuel budget proves termination: the call MUST return
+                // an Outcome (any variant) rather than diverge.
+                vm.run_cell_outcome(&src, 50_000)
+            }));
+            match outcome {
+                Ok(o) => {
+                    // every result is one of the three legal outcomes — trivially
+                    // true by the type, but we touch it to prove it returned
+                    let _ = outcome_dbg(o);
+                }
+                Err(_) => panics += 1,
+            }
+        }
+
+        std::panic::set_hook(prev);
+        assert_eq!(
+            panics, 0,
+            "fuzzer observed {panics} panic(s) across {iters} iterations"
+        );
+        println!("fuzz: {iters} iterations, {panics} panics, all terminated within fuel");
     }
 
     fn outcome_dbg(o: Outcome) -> String {

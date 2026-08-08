@@ -32,12 +32,19 @@ const outDir = join(here, '..', '.radio-flywheel');
 // Lever domains. mode=divide / foldEvery=4 / postPolicy=silent is the gen-0
 // root — naive division of labor, discoveries silent until Review, and slow
 // fold cadence: the paper's L1 arm with the passive layer effectively off.
+// digest is the ADR-241 relevance lever: 'full' ships the whole snapshot (the
+// AgentRadio default — correct but the reader pays a per-fold context surcharge),
+// 'mentions' reads only @-mentions (cheap but drops a cross-fact consolidated
+// under another owner's mention → an unresolved seed → a hard gate stop), and
+// 'relevant' is a deterministic topic filter (cheapest CORRECT digest). Root
+// starts at 'full' so the wheel must PRICE relevance and earn the cheaper rung.
 const DOMAINS = {
   mode: ['divide', 'negotiate', 'passive'],
   foldEvery: ['1', '2', '4'],
   postPolicy: ['immediate', 'batched', 'silent'],
+  digest: ['full', 'mentions', 'relevant'],
 };
-const ROOT_POLICY = { mode: 'divide', foldEvery: '4', postPolicy: 'silent' };
+const ROOT_POLICY = { mode: 'divide', foldEvery: '4', postPolicy: 'silent', digest: 'full' };
 
 // Holdout: the task seeds the wheel optimizes against. Anchor: DIFFERENT seeds
 // on a DIFFERENT topology (higher cross-partition fact fraction — the thing
@@ -88,6 +95,7 @@ async function evaluator(policy, suite) {
       mode: policy.mode,
       foldEvery: policy.foldEvery,
       postPolicy: policy.postPolicy,
+      digest: policy.digest,
     });
     const steps = r.stepsToResolve ?? r.steps;
     const resolved = r.resolved ?? r.solved ?? false;

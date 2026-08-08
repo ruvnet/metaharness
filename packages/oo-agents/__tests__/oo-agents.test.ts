@@ -78,6 +78,37 @@ suite.skipIf(!(await CellVm.load().then(() => true).catch(() => false)))(
       expect(b.value).toBe(6);
     });
 
+    it('expanded builtins run end-to-end through the wasm boundary', async () => {
+      const vm = await CellVm.load();
+      vm.reset({ getField: () => null, callMethod: () => null });
+      // string ops
+      expect(vm.runCell('upper("aB")').value).toBe('AB');
+      expect(vm.runCell('join(sort(split("c,a,b", ",")), "-")').value).toBe('a-b-c');
+      // number ops
+      expect(vm.runCell('min([4, 1, 3])').value).toBe(1);
+      expect(vm.runCell('max(2, 9, 5)').value).toBe(9);
+      expect(vm.runCell('abs(-7)').value).toBe(7);
+      expect(vm.runCell('floor(3.9)').value).toBe(3);
+      // array / object ops
+      expect(vm.runCell('contains([1, 2, 3], 2)').value).toBe(true);
+      expect(vm.runCell('slice([10, 20, 30, 40], 1, 3)').value).toEqual([20, 30]);
+      expect(vm.runCell('get({a: 5}, "b", 99)').value).toBe(99);
+    });
+
+    it('adversarial input degrades to a clean error, never a wasm trap', async () => {
+      const vm = await CellVm.load();
+      vm.reset({ getField: () => null, callMethod: () => null });
+      // deep nesting hits the parser depth guard, not a stack overflow
+      const deep = vm.runCell('('.repeat(5000));
+      expect(deep.kind).toBe('error');
+      expect(deep.message).toContain('too deep');
+      // division by zero and out-of-bounds index are typed errors the model sees
+      expect(vm.runCell('1 / 0').kind).toBe('error');
+      expect(vm.runCell('let a = [1]\na[9]').kind).toBe('error');
+      // the instance stays usable after each error (no poisoned VM)
+      expect(vm.runCell('1 + 1').value).toBe(2);
+    });
+
     it('fuel exhaustion traps deterministically', async () => {
       const vm = await CellVm.load();
       vm.reset({ getField: () => null, callMethod: () => null });

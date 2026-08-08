@@ -69,6 +69,16 @@
 //              what keeps the flywheel's landscape climbable one lever at a
 //              time: silent-passive strictly beats negotiate, and switching
 //              postPolicy on then unlocks the live-sharing lift.)
+//   digest     'full'|'mentions'|'relevant' — WHAT of a folded thread the reader
+//              digests, and what that digest costs (see the Digest type). 'full'
+//              is faithful to the paper (whole snapshot, a real per-fold context
+//              surcharge); 'mentions' is cheap but drops cross-facts bundled into
+//              another owner's mention; 'relevant' is a deterministic topic filter
+//              that is both cheap and correct — the surface ADR-241 said to evolve
+//              rather than hand-design, so the flywheel prices it under the frozen
+//              gate. Live cross-posts are CONSOLIDATED (one message per discovery,
+//              @-mentioning only the primary owner) so that 'mentions' vs
+//              'relevant' is a real distinction and not a no-op.
 //
 // Sanity ordering the flywheel relies on (defaults tuned for it, verified over
 // seeds 1..10): stepsToResolve orders passive < negotiate <= divide < single,
@@ -90,6 +100,7 @@
 // a mulberry32 LCG; no Date.now, no Math.random.
 
 import { RadioBus } from './bus.js';
+import type { RadioMessage } from './bus.js';
 import { Watcher } from './watcher.js';
 
 /** Comms-policy ladder position (paper: single < L1 divide < L2 negotiate < L3 passive). */
@@ -100,6 +111,36 @@ export type FoldEvery = '1' | '2' | '4';
 
 /** Execute-phase posting lever for 'passive' mode. */
 export type PostPolicy = 'immediate' | 'batched' | 'silent';
+
+/**
+ * Relevance/DIGEST lever — the surface AgentRadio left open (ADR-241): the paper
+ * ships FULL thread snapshots to every folding reader and lets the agent sort out
+ * relevance itself. That is a real cost the earlier sim never priced: re-reading
+ * the whole unread thread at each fold burns the reader's context. This lever
+ * makes that cost explicit and lets the flywheel evolve a cheaper delivery:
+ *
+ *   'full'     — today's AgentRadio behavior: the reader digests the WHOLE unread
+ *                thread snapshot at every fold. Correct (it sees every posted
+ *                cross-fact, even one bundled into a message that @-mentioned a
+ *                different owner) but the most expensive: a per-fold context
+ *                surcharge accrues in proportion to how many unread messages the
+ *                reader must wade through (one foreground step per `digestCap`
+ *                messages digested). Bigger snapshots cost the reader more.
+ *   'mentions' — the reader digests ONLY the messages that @-mention it. Cheapest
+ *                to read, but LOSSY: a cross-fact consolidated into a message that
+ *                mentioned another owner (see the live-post consolidation below)
+ *                is never surfaced to this reader — missed, or delayed to a round
+ *                that happens to mention it. Under the frozen gate an unresolved
+ *                holdout seed is a hard stop, so 'mentions' is blocked by exactly
+ *                the failure it models.
+ *   'relevant' — a deterministic topic filter: the reader digests only messages
+ *                carrying a fact whose owning sub-question is still OPEN for this
+ *                reader. It recovers every cross-fact 'mentions' would drop (the
+ *                topic matches even when the @-mention did not) while reading far
+ *                fewer messages than 'full' — the cheapest CORRECT digest, and the
+ *                intended sweet spot the wheel should discover.
+ */
+export type Digest = 'full' | 'mentions' | 'relevant';
 
 /** Knobs for makeTask — defaults reproduce the tuned sanity-target shape. */
 export interface SimTaskOptions {
@@ -152,6 +193,15 @@ export interface SimConfig {
   foldEvery?: FoldEvery;
   /** Execute-phase posting policy, 'passive' mode only (default 'immediate'). */
   postPolicy?: PostPolicy;
+  /** Relevance/digest policy for folds (default 'full' = legacy AgentRadio
+   *  behavior: ship the whole snapshot, and now PRICE it). See the Digest type. */
+  digest?: Digest;
+  /** The digest context surcharge is one foreground step per this-many FACTS
+   *  digested, cumulatively across a run (default 6). Priced by fact content, not
+   *  message envelopes, so 'batched' posting cannot coalesce the cost away.
+   *  'full' wades through every posted fact, 'relevant' only its open-topic
+   *  slice, 'mentions' only the facts in messages that @-mention it. */
+  digestCap?: number;
   /** Units an agent digests before each further exploration costs an extra
    *  step per contextCap explored — the single-agent context-saturation model
    *  (default 6 = a pod agent's whole negotiated partition fits). */
@@ -194,6 +244,10 @@ export interface SimResult {
   crossFactsDelivered: number;
   /** Foreground steps spent in the Review exchange (posts + receives). */
   exchangeSteps: number;
+  /** Foreground steps charged as the DIGEST context surcharge — the cost of
+   *  reading folded thread traffic under the active digest policy. 'relevant'
+   *  and 'mentions' drive this below 'full'; part of stepsToResolve. */
+  digestSteps: number;
   /** Foreground steps per agent (index = agent; single mode has one entry). */
   perAgentSteps: number[];
   /** stepsToResolve reading at the moment each sub-question resolved (-1 = never). */
@@ -315,6 +369,8 @@ export function runSim(cfg: SimConfig): SimResult {
   const mode = cfg.mode;
   const foldK = Math.max(1, Number(cfg.foldEvery ?? '1') || 1);
   const postPolicy = cfg.postPolicy ?? 'immediate';
+  const digest = cfg.digest ?? 'full';
+  const digestCap = Math.max(1, cfg.digestCap ?? 6);
   const contextCap = Math.max(1, cfg.contextCap ?? 6);
   const batchFlushEvery = Math.max(1, cfg.batchFlushEvery ?? 4);
   const chaffKeep = Math.min(1, Math.max(0, cfg.chaffKeep ?? 0.5));
@@ -374,6 +430,14 @@ export function runSim(cfg: SimConfig): SimResult {
   const explored = new Array<number>(agentCount).fill(0);
   const boundaries = new Array<number>(agentCount).fill(0);
   const perAgentSteps = new Array<number>(agentCount).fill(0);
+  /** Per-agent digest cursor over the EXEC thread: the seq up to which this agent
+   *  has already folded. 'full'/'relevant' scan the thread beyond it; the cost is
+   *  paid once per message, never re-charged. */
+  const digestCursor = new Array<number>(agentCount).fill(0);
+  /** Cumulative messages this agent has digested — the context surcharge is one
+   *  step per digestCap of these, so partial reads carry over instead of rounding
+   *  to free on a fine fold cadence. */
+  const digestedTotal = new Array<number>(agentCount).fill(0);
   /** Undelivered foreign facts, per agent, grouped by owner (batched/silent). */
   const outbox: Map<number, Set<number>>[] = Array.from(
     { length: agentCount },
@@ -387,6 +451,7 @@ export function runSim(cfg: SimConfig): SimResult {
   let blockingReceives = 0;
   let crossFactsDelivered = 0;
   let exchangeSteps = 0;
+  let digestSteps = 0;
   const subResolvedAtStep = new Array<number>(K).fill(-1);
 
   const resolvedAll = (): boolean => subResolvedAtStep.every((s) => s >= 0);
@@ -400,19 +465,106 @@ export function runSim(cfg: SimConfig): SimResult {
     }
   };
 
-  /** Apply a fold's fact payloads to agent a; returns newly-gained fact count. */
+  /** A message is RELEVANT to agent a iff it carries a fact whose owning
+   *  sub-question is still OPEN for a — the deterministic topic filter that makes
+   *  'relevant' both cheap (few messages) and correct (it matches even when the
+   *  @-mention pointed at another owner). */
+  const relevantToAgent = (a: number, msg: RadioMessage): boolean => {
+    for (const f of decodeFacts(msg.content)) {
+      if (f >= task.factUnit.length) continue;
+      const q = task.factOwner[f];
+      if (ownerAgent(q) === a && subResolvedAtStep[q] < 0) return true;
+    }
+    return false;
+  };
+
+  /** Fold at a step boundary under the active DIGEST policy. Advances the passive
+   *  watcher (keeping its cursor and the blocking-receive ledger coherent), then
+   *  selects which folded messages the reader actually digests:
+   *    'full'     — every unread message in the thread snapshot (paper-faithful,
+   *                 priciest). It alone always sees a fact bundled into a message
+   *                 that @-mentioned a different owner.
+   *    'mentions' — only the messages that @-mention this reader; a consolidated
+   *                 cross-post that named another owner is invisible here.
+   *    'relevant' — only messages whose fact-topic is one of the reader's open
+   *                 sub-questions.
+   *  Harvests the reader's OWN facts from the selected messages, charges the
+   *  context surcharge (one step per digestCap messages digested, cumulative),
+   *  and returns the newly-gained fact count. Idle folds select nothing and cost
+   *  nothing — waiting under passive awareness stays free. */
   const applyFold = (a: number, blocking: boolean): number => {
     const folded = blocking ? watchers[a].blockingReceive() : watchers[a].fold();
+    const horizon = bus.clock;
+    let selected: RadioMessage[];
+    if (digest === 'mentions') {
+      // Exactly what the passive watcher wakes on — nothing more.
+      selected = folded.map((f) => f.mention);
+    } else {
+      const fresh = bus
+        .snapshot(EXEC_THREAD, horizon)
+        .filter((m) => m.seq >= digestCursor[a]);
+      selected = digest === 'full' ? fresh : fresh.filter((m) => relevantToAgent(a, m));
+    }
+    digestCursor[a] = horizon;
+
+    // Context surcharge, priced by FACT CONTENT the reader must wade through —
+    // NOT message envelopes. That is deliberate: 'batched' posting coalesces the
+    // same facts into fewer messages, so an envelope-count surcharge would let a
+    // reader dodge the whole snapshot cost by batching. Content is what actually
+    // burns context, so the cost is the number of facts digested:
+    //   'full'     — every fact in the whole unread snapshot (it wades through
+    //                cross-facts bound for other owners too).
+    //   'mentions' — every fact in the messages that @-mention it.
+    //   'relevant' — only the facts on the reader's OPEN topics — the precise
+    //                slice the topic filter delivers, nothing wasted.
+    let read = 0;
     let gained = 0;
-    for (const { mention } of folded) {
-      for (const f of decodeFacts(mention.content)) {
-        if (f < task.factUnit.length && !known[a].has(f)) {
+    for (const m of selected) {
+      for (const f of decodeFacts(m.content)) {
+        if (f >= task.factUnit.length) continue;
+        const q = task.factOwner[f];
+        const mine = ownerAgent(q) === a;
+        // Relevant is charged only for the on-topic slice it actually delivers;
+        // full/mentions pay for the whole envelope they read.
+        if (digest !== 'relevant' || (mine && subResolvedAtStep[q] < 0)) read++;
+        if (mine && !known[a].has(f)) {
           known[a].add(f);
           gained++;
         }
       }
     }
+    // One foreground step per digestCap facts digested, accumulated so a fine
+    // fold cadence cannot round the cost away to zero.
+    const before = Math.floor(digestedTotal[a] / digestCap);
+    digestedTotal[a] += read;
+    const surcharge = Math.floor(digestedTotal[a] / digestCap) - before;
+    if (surcharge > 0) {
+      totalSteps += surcharge;
+      perAgentSteps[a] += surcharge;
+      digestSteps += surcharge;
+    }
     return gained;
+  };
+
+  /** Consolidate a discovery's cross-facts into ONE non-blocking post that
+   *  @-mentions only the PRIMARY owner (the one with the most facts here; ties go
+   *  to the lowest agent index). Every fact still rides in the content, so 'full'
+   *  and 'relevant' readers recover a secondary owner's fact from the snapshot —
+   *  but a 'mentions' reader who was not the primary never sees it. This single
+   *  imperfection is what turns digest into a real lever instead of a no-op. */
+  const postConsolidated = (from: number, byOwner: Map<number, number[]>): void => {
+    let primary = -1;
+    let best = -1;
+    const all: number[] = [];
+    for (const [owner, facts] of byOwner) {
+      all.push(...facts);
+      if (facts.length > best || (facts.length === best && owner < primary)) {
+        best = facts.length;
+        primary = owner;
+      }
+    }
+    if (primary < 0) return;
+    bus.send(EXEC_THREAD, names[from], encodeFacts(all), [names[primary]]);
   };
 
   const sendFactsTo = (from: number, owner: number, facts: number[]): void => {
@@ -420,9 +572,11 @@ export function runSim(cfg: SimConfig): SimResult {
   };
 
   const flushOutbox = (a: number): void => {
+    const byOwner = new Map<number, number[]>();
     for (const [owner, facts] of outbox[a]) {
-      if (facts.size > 0) sendFactsTo(a, owner, [...facts]);
+      if (facts.size > 0) byOwner.set(owner, [...facts]);
     }
+    if (byOwner.size > 0) postConsolidated(a, byOwner);
     outbox[a].clear();
   };
 
@@ -476,7 +630,7 @@ export function runSim(cfg: SimConfig): SimResult {
       // send() is non-blocking — no step is consumed.
       if (byOwner.size > 0 && agentCount > 1) {
         if (passiveLive && postPolicy === 'immediate') {
-          for (const [owner, facts] of byOwner) sendFactsTo(a, owner, facts);
+          postConsolidated(a, byOwner);
         } else {
           for (const [owner, facts] of byOwner) {
             let set = outbox[a].get(owner);
@@ -567,6 +721,7 @@ export function runSim(cfg: SimConfig): SimResult {
     redundantExplorations,
     crossFactsDelivered,
     exchangeSteps,
+    digestSteps,
     perAgentSteps,
     subResolvedAtStep,
   };
