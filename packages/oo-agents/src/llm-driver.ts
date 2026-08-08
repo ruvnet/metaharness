@@ -128,7 +128,7 @@ export function extractCode(completion: string): string | null {
   const fenceRe = /```[^\n`]*\n([\s\S]*?)```/;
   const fenced = fenceRe.exec(completion);
   if (fenced) {
-    const body = fenced[1].replace(/\s+$/, '');
+    const body = fenced[1].trimEnd();
     if (body.trim().length > 0) return body;
     // Empty fenced block — fall through to plain handling / null.
   }
@@ -153,8 +153,22 @@ function looksLikeCode(text: string): boolean {
     text.includes('self.') ||
     /\blet\s+\w+\s*=/.test(text) ||
     /\bprint\s*\(/.test(text) ||
-    /\w+\s*\([^)]*\)/.test(text)
+    hasCallSyntax(text)
   );
+}
+
+/** Linear-time replacement for /\w+\s*\([^)]*\)/ — that regex is polynomial
+ *  on adversarial model output (js/polynomial-redos). Finds `word ( ... )`
+ *  by scanning for a '(' whose nearest non-blank left neighbor is a word
+ *  char and that has a ')' somewhere after it. */
+function hasCallSyntax(text: string): boolean {
+  for (let i = 1; i < text.length; i++) {
+    if (text[i] !== '(') continue;
+    let j = i - 1;
+    while (j >= 0 && (text[j] === ' ' || text[j] === '\t')) j--;
+    if (j >= 0 && /\w/.test(text[j]) && text.indexOf(')', i + 1) !== -1) return true;
+  }
+  return false;
 }
 
 function truncate(s: string, n: number): string {
