@@ -1,0 +1,18 @@
+[package]
+name = "horizon-core"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Deterministic long-horizon control core for @metaharness/horizon — a halt controller and a shell-command guard classifier, compiled to wasm32-unknown-unknown. A Rust/WASM clone of the best portable features of Google ADK's long-horizon-harness (halt_reason + the command_classify anti-smuggling guard)."
+
+# Detached from any parent cargo workspace: ships inside an npm package.
+[workspace]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
