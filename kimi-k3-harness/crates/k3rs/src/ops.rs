@@ -239,6 +239,7 @@ pub fn kda_decay(
 
 /// One KDA recurrence step for one head. S is [dk][dv] row-major.
 /// Order is load bearing: decay, read, delta write, output from UPDATED state.
+#[allow(dead_code)] // kept as the simple form; the engine calls kda_step_scratch
 pub fn kda_step(
     s: &mut [f32],
     o: &mut [f32],
@@ -250,13 +251,33 @@ pub fn kda_step(
     dk: usize,
     dv: usize,
 ) {
+    let mut u = vec![0.0f32; dv];
+    kda_step_scratch(s, o, q, k, v, alpha, beta, dk, dv, &mut u);
+}
+
+/// kda_step with caller-owned scratch for u — the decode loop calls this once
+/// per (head, token) and an allocation there is measurable. Same arithmetic,
+/// same order, bit-identical.
+#[allow(clippy::too_many_arguments)]
+pub fn kda_step_scratch(
+    s: &mut [f32],
+    o: &mut [f32],
+    q: &[f32],
+    k: &[f32],
+    v: &[f32],
+    alpha: &[f32],
+    beta: f32,
+    dk: usize,
+    dv: usize,
+    u: &mut [f32],
+) {
     for i in 0..dk {
         let a = alpha[i];
         for j in 0..dv {
             s[i * dv + j] *= a;
         }
     }
-    let mut u = vec![0.0f32; dv];
+    u.iter_mut().for_each(|e| *e = 0.0);
     for i in 0..dk {
         let ki = k[i];
         if ki == 0.0 {

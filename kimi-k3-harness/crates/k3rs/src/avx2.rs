@@ -144,10 +144,65 @@ pub unsafe fn mxfp4_row(
     let gbyte = group / 2;
     let pp = pr.as_ptr();
     let xp = xd.as_ptr();
+
+    // Decode 8 elements (4 packed bytes) into one f32-bit-pattern vector.
+    #[inline(always)]
+    unsafe fn dec8(pb: *const u8, m0f: __m128i, lut2: __m256i, lut3: __m256i) -> __m256 {
+        let pk = (pb as *const u32).read_unaligned();
+        let by = _mm_cvtsi32_si128(pk as i32);
+        let lo_n = _mm_and_si128(by, m0f);
+        let hi_n = _mm_and_si128(_mm_srli_epi16::<4>(by), m0f);
+        let idx = _mm256_cvtepu8_epi32(_mm_unpacklo_epi8(lo_n, hi_n));
+        _mm256_castsi256_ps(_mm256_or_si256(
+            _mm256_slli_epi32::<24>(_mm256_shuffle_epi8(lut3, idx)),
+            _mm256_slli_epi32::<16>(_mm256_shuffle_epi8(lut2, idx)),
+        ))
+    }
+
     let mut acc = 0.0f64;
-    for g in 0..ngrp {
+    let mut g = 0usize;
+    // TWO groups in flight: their sub-sums are independent (each group reduces
+    // its own 8-lane tree; the row total adds sub*scale in ascending g order,
+    // preserved below), so interleaving gives four independent fma chains
+    // instead of two — pure ILP, zero bit movement.
+    while g + 1 < ngrp && inn - g * group >= 2 * group {
+        let (sa, sb) = (sr[g], sr[g + 1]);
+        if sa == 255 || sb == 255 {
+            break; // rare NaN scale: fall through to the single-group loop
+        }
+        let pa = pp.add(g * gbyte);
+        let pb2 = pp.add((g + 1) * gbyte);
+        let (ba, bb) = (g * group, (g + 1) * group);
+        let mut va0 = _mm256_setzero_pd();
+        let mut va1 = _mm256_setzero_pd();
+        let mut vb0 = _mm256_setzero_pd();
+        let mut vb1 = _mm256_setzero_pd();
+        let mut i = 0usize;
+        while i + 7 < group {
+            let wa = dec8(pa.add(i >> 1), m0f, lut2, lut3);
+            let wb = dec8(pb2.add(i >> 1), m0f, lut2, lut3);
+            va0 = _mm256_fmadd_pd(_mm256_cvtps_pd(_mm256_castps256_ps128(wa)), _mm256_loadu_pd(xp.add(ba + i)), va0);
+            va1 = _mm256_fmadd_pd(_mm256_cvtps_pd(_mm256_extractf128_ps(wa, 1)), _mm256_loadu_pd(xp.add(ba + i + 4)), va1);
+            vb0 = _mm256_fmadd_pd(_mm256_cvtps_pd(_mm256_castps256_ps128(wb)), _mm256_loadu_pd(xp.add(bb + i)), vb0);
+            vb1 = _mm256_fmadd_pd(_mm256_cvtps_pd(_mm256_extractf128_ps(wb, 1)), _mm256_loadu_pd(xp.add(bb + i + 4)), vb1);
+            i += 8;
+        }
+        let mut aa = [0.0f64; 4];
+        _mm256_storeu_pd(aa.as_mut_ptr(), _mm256_add_pd(va0, va1));
+        let sub_a = (aa[0] + aa[1]) + (aa[2] + aa[3]);
+        let mut ab = [0.0f64; 4];
+        _mm256_storeu_pd(ab.as_mut_ptr(), _mm256_add_pd(vb0, vb1));
+        let sub_b = (ab[0] + ab[1]) + (ab[2] + ab[3]);
+        // ascending g order, exactly as the single-group loop would add them
+        acc += sub_a * crate::ops::e8m0(sa) as f64;
+        acc += sub_b * crate::ops::e8m0(sb) as f64;
+        g += 2;
+    }
+    // Single-group loop: remaining groups (odd count, tail group, NaN scales).
+    while g < ngrp {
         let sb = sr[g];
         if sb == 255 {
+            g += 1;
             continue;
         }
         let base = g * group;
@@ -157,26 +212,9 @@ pub unsafe fn mxfp4_row(
         let mut v1 = _mm256_setzero_pd();
         let mut i = 0usize;
         while i + 7 < n {
-            let pk = (pb.add(i >> 1) as *const u32).read_unaligned();
-            let by = _mm_cvtsi32_si128(pk as i32);
-            let lo_n = _mm_and_si128(by, m0f);
-            let hi_n = _mm_and_si128(_mm_srli_epi16::<4>(by), m0f);
-            let idx = _mm256_cvtepu8_epi32(_mm_unpacklo_epi8(lo_n, hi_n));
-            let w32 = _mm256_or_si256(
-                _mm256_slli_epi32::<24>(_mm256_shuffle_epi8(lut3, idx)),
-                _mm256_slli_epi32::<16>(_mm256_shuffle_epi8(lut2, idx)),
-            );
-            let wps = _mm256_castsi256_ps(w32);
-            v0 = _mm256_fmadd_pd(
-                _mm256_cvtps_pd(_mm256_castps256_ps128(wps)),
-                _mm256_loadu_pd(xp.add(base + i)),
-                v0,
-            );
-            v1 = _mm256_fmadd_pd(
-                _mm256_cvtps_pd(_mm256_extractf128_ps(wps, 1)),
-                _mm256_loadu_pd(xp.add(base + i + 4)),
-                v1,
-            );
+            let wps = dec8(pb.add(i >> 1), m0f, lut2, lut3);
+            v0 = _mm256_fmadd_pd(_mm256_cvtps_pd(_mm256_castps256_ps128(wps)), _mm256_loadu_pd(xp.add(base + i)), v0);
+            v1 = _mm256_fmadd_pd(_mm256_cvtps_pd(_mm256_extractf128_ps(wps, 1)), _mm256_loadu_pd(xp.add(base + i + 4)), v1);
             i += 8;
         }
         let vt = _mm256_add_pd(v0, v1);
@@ -189,6 +227,7 @@ pub unsafe fn mxfp4_row(
             i += 1;
         }
         acc += sub * crate::ops::e8m0(sb) as f64;
+        g += 1;
     }
     acc as f32
 }

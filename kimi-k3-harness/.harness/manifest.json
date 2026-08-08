@@ -46,15 +46,15 @@
     "upstream/patches/bench-hash-gate.patch": "64c66058b9ac72f885ed1661213866c38626bc461ab11ac645842a3314a35d3a",
     ".harness/repo-analysis-score.json": "026d0b15e850f042b94d3e568a13bb8f555f55a96a7e438bf7cc5e78ed64127a",
     "crates/k3rs/Cargo.toml": "4a5f696101534b66d27ce920114ad3132b14c11af714e0e510a3f6522616c6c0",
-    "crates/k3rs/README.md": "f5ec2b4ff991490bffab1daf6487b2641ce875498410d78b7adc048e91e065d3",
+    "crates/k3rs/README.md": "ccb4affd244f2d67ab5e2a230ae83ef0c52d95414af940c4106109eb13701aab",
     "crates/k3rs/src/main.rs": "5495881e0d43c45a3c0d9dbdabdc44221b1a0fc1218936ffbbd77f2318675eae",
-    "crates/k3rs/src/model.rs": "64d92b4eaed146205392f9b90a338cc0cf42e70587363cf684c991da84518553",
-    "crates/k3rs/src/ops.rs": "8a077860969a71bcf3431c2ef67a3367b0ea8a69955d7eecd346dfa3937f74ac",
+    "crates/k3rs/src/model.rs": "0b2aef231e11e4f36c765ae79506b623676f8711eb6c5b0e5c9e35af6128eed8",
+    "crates/k3rs/src/ops.rs": "7e7b5c2c22103d254287eb8293e4c0325e02a06facefd11200a102466a7b06ba",
     "crates/k3rs/src/st.rs": "6f7e7b5fce577201c8a2db6a25dfefce0e2faeab106831af50fa6cc70586a4f6",
     "crates/k3rs/src/json.rs": "593528de2b7fc4ce39f933f6d19661309729b789e7c5263ff7f58ecad9a8ec61",
     "crates/k3rs/src/bench.rs": "01e6f74bc95a4a8cb5fa26710fcc09b19a5b8d5e2e12234cc4d96e1397868b27",
     "crates/k3rs/src/tests.rs": "e31a15eaa40e46cfebda424bb10846a704ef37a0ddf3bd4ea41bfc411e8560a5",
-    "crates/k3rs/src/avx2.rs": "d522e168c6a5441fac9083bd92c59312c8170d81a54da06d66bd90e8af942273"
+    "crates/k3rs/src/avx2.rs": "3a4b6c513fc499e687e042cb9426b7ea1f520284a7ce41004c3b9414a57f0db0"
   },
   "generated_at": "2026-08-07T20:01:12.311Z",
   "meta": {

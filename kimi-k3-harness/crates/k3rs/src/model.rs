@@ -492,27 +492,78 @@ fn kda_layer(out: &mut [f32], x: &[f32], w: &KdaW, c: &Cfg, t_len: usize) {
         );
     }
 
-    // 6. recurrence, per head, q pre-scaled by d_k^-0.5
+    // 6. recurrence, per head, q pre-scaled by d_k^-0.5. Heads are independent
+    // (each reads/writes only its own S block and D-wide slices; the recurrence
+    // is sequential in t WITHIN a head), so the head loop threads with
+    // bit-identical results — the same contract as the C engine's OpenMP loop.
+    // Threaded heads write compact private [T][D] buffers (o's per-head columns
+    // are strided) and scatter after the join; the scatter is a pure copy.
     let qscale = 1.0 / (d as f32).sqrt();
     let mut s_state = vec![0.0f32; hn * d * d];
-    let mut wh = vec![0.0f32; d];
-    for hh in 0..hn {
-        for t in 0..t_len {
-            let off = t * p + hh * d;
-            for i in 0..d {
-                wh[i] = q[off + i] * qscale;
+    let nt = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1);
+    if hn >= 8 && nt >= 2 {
+        let mut o_priv = vec![0.0f32; hn * t_len * d];
+        {
+            let (q, k, v, al, bt) = (&q, &k, &v, &al, &bt);
+            std::thread::scope(|sc| {
+                for (hh, (s_h, o_h)) in s_state
+                    .chunks_mut(d * d)
+                    .zip(o_priv.chunks_mut(t_len * d))
+                    .enumerate()
+                {
+                    sc.spawn(move || {
+                        let mut wh = vec![0.0f32; d];
+                        let mut u = vec![0.0f32; d];
+                        for t in 0..t_len {
+                            let off = t * p + hh * d;
+                            for i in 0..d {
+                                wh[i] = q[off + i] * qscale;
+                            }
+                            kda_step_scratch(
+                                s_h,
+                                &mut o_h[t * d..(t + 1) * d],
+                                &wh,
+                                &k[off..off + d],
+                                &v[off..off + d],
+                                &al[off..off + d],
+                                bt[t * hn + hh],
+                                d,
+                                d,
+                                &mut u,
+                            );
+                        }
+                    });
+                }
+            });
+        }
+        for hh in 0..hn {
+            for t in 0..t_len {
+                o[t * p + hh * d..t * p + (hh + 1) * d]
+                    .copy_from_slice(&o_priv[hh * t_len * d + t * d..hh * t_len * d + (t + 1) * d]);
             }
-            kda_step(
-                &mut s_state[hh * d * d..(hh + 1) * d * d],
-                &mut o[off..off + d],
-                &wh,
-                &k[off..off + d],
-                &v[off..off + d],
-                &al[off..off + d],
-                bt[t * hn + hh],
-                d,
-                d,
-            );
+        }
+    } else {
+        let mut wh = vec![0.0f32; d];
+        let mut u = vec![0.0f32; d];
+        for hh in 0..hn {
+            for t in 0..t_len {
+                let off = t * p + hh * d;
+                for i in 0..d {
+                    wh[i] = q[off + i] * qscale;
+                }
+                kda_step_scratch(
+                    &mut s_state[hh * d * d..(hh + 1) * d * d],
+                    &mut o[off..off + d],
+                    &wh,
+                    &k[off..off + d],
+                    &v[off..off + d],
+                    &al[off..off + d],
+                    bt[t * hn + hh],
+                    d,
+                    d,
+                    &mut u,
+                );
+            }
         }
     }
 
