@@ -1,0 +1,30 @@
+{
+  "schema": "radio-comms-tuning-v1",
+  "root": {
+    "mode": "divide",
+    "foldEvery": "4",
+    "postPolicy": "silent"
+  },
+  "tuned": {
+    "mode": "negotiate",
+    "foldEvery": "4",
+    "postPolicy": "silent"
+  },
+  "liftCurve": [
+    {
+      "generation": 0,
+      "primary": 26.178010471204185,
+      "delta": 0,
+      "anchor": 26.595744680851062
+    },
+    {
+      "generation": 1,
+      "primary": 31.645569620253163,
+      "delta": 5.467559149048977,
+      "anchor": 30.487804878048784
+    }
+  ],
+  "milestoneReached": false,
+  "replayVerified": true,
+  "startedAt": "2026-08-08T00:51:24.628Z"
+}
