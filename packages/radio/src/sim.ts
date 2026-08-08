@@ -79,6 +79,44 @@
 //              gate. Live cross-posts are CONSOLIDATED (one message per discovery,
 //              @-mentioning only the primary owner) so that 'mentions' vs
 //              'relevant' is a real distinction and not a no-op.
+//   topology   'message-passing'|'blackboard' — the COORDINATION SUBSTRATE
+//              (arXiv:2510.01285 / 2507.01701 — shared structured state beats both
+//              message-passing and master-slave, and is more token-efficient). See
+//              the Topology type. 'message-passing' is everything above, unchanged.
+//              'blackboard' replaces per-agent posts+folds with ONE validated
+//              shared board: discoverers write validated cross-facts to it (free,
+//              no per-pair broadcast), and each owner PULLS only the facts on its
+//              still-open sub-questions at every step boundary (fine-grained) for a
+//              BOUNDED per-read cost (one step per boardReadCap productive pulls —
+//              content-independent, an indexed lookup, unlike 'full's per-fact
+//              snapshot wade). It is CORRECT BY CONSTRUCTION: validated mutations
+//              are never dropped the way a 'mentions' digest drops a consolidated
+//              cross-fact, and every fact-bearing unit is covered by some agent's
+//              partition, so no seed is ever left unresolved for lack of delivery.
+//              Its relevant-pull SUBSUMES the message-passing delivery levers: under
+//              'blackboard' the digest, foldEvery and postPolicy levers have NO
+//              effect (the board is the digest — a correct topic filter; the pull is
+//              fine-grained every boundary; writes are always immediate validated
+//              mutations). Whether that correctness+efficiency actually clears the
+//              frozen 2% gate against the tuned message-passing rung is left to the
+//              flywheel — it is priced, not hand-declared a winner.
+//
+// Staleness (arXiv:2502.14321 — async coordination's signature FAILURE MODE):
+//   without fine-grained sync, an agent reasons over OUTDATED peer contributions,
+//   redoing work. Modeled as an INTRINSIC rework surcharge (not a lever), charged
+//   ONLY on LIVE async folds — mode 'passive' with live posting (postPolicy !=
+//   'silent') under 'message-passing'. Each cross-fact delivered to its owner is
+//   priced by its delivery LATENCY: (postRound - discoveryRound) + (foldEvery - 1)
+//   — the rounds the fact sat withheld before it was posted (0 for 'immediate',
+//   >0 for 'batched'), plus the fold-cadence lag (0 at foldEvery=1). One rework
+//   step accrues per `1/stalenessCost` accumulated fact-rounds. This is EXACTLY 0
+//   at the defaults (foldEvery=1 + 'immediate'), so the ablation ordering and every
+//   existing result are untouched; it turns fold1+immediate from merely-neutral
+//   into genuinely-cheapest and prices lazy folding / batched withholding. The
+//   blocking/sync arms carry no live shared state to go stale ('negotiate',
+//   'divide', 'single', and silent-'passive' — which shares nothing until Review),
+//   and 'blackboard's fine-grained pull is never stale: all incur no staleness,
+//   faithfully.
 //
 // Sanity ordering the flywheel relies on (defaults tuned for it, verified over
 // seeds 1..10): stepsToResolve orders passive < negotiate <= divide < single,
@@ -142,6 +180,26 @@ export type PostPolicy = 'immediate' | 'batched' | 'silent';
  */
 export type Digest = 'full' | 'mentions' | 'relevant';
 
+/**
+ * Coordination-substrate lever (arXiv:2510.01285 / 2507.01701 — BLACKBOARD /
+ * shared structured state beats message-passing AND master-slave, more
+ * token-efficient). See the doc block for the full mechanics.
+ *
+ *   'message-passing' — today's substrate: per-agent posts + boundary folds, the
+ *                       digest / foldEvery / postPolicy levers all live here, and
+ *                       delivery latency can go stale (see the staleness note).
+ *   'blackboard'      — one validated shared board. Discoverers write validated
+ *                       cross-facts to it for free (no per-pair broadcast); each
+ *                       owner pulls only its still-open sub-questions' facts every
+ *                       boundary (fine-grained, so never stale) for a BOUNDED
+ *                       per-read cost. CORRECT BY CONSTRUCTION — validated
+ *                       mutations are never dropped, so no seed goes unresolved
+ *                       for lack of delivery. Its relevant-pull SUBSUMES the
+ *                       message-passing levers: digest, foldEvery and postPolicy
+ *                       have NO effect under 'blackboard'.
+ */
+export type Topology = 'message-passing' | 'blackboard';
+
 /** Knobs for makeTask — defaults reproduce the tuned sanity-target shape. */
 export interface SimTaskOptions {
   /** K sub-questions, one owner-agent each (default 4). */
@@ -196,6 +254,23 @@ export interface SimConfig {
   /** Relevance/digest policy for folds (default 'full' = legacy AgentRadio
    *  behavior: ship the whole snapshot, and now PRICE it). See the Digest type. */
   digest?: Digest;
+  /** Coordination substrate (default 'message-passing' = every existing behavior,
+   *  byte-for-byte). 'blackboard' is the shared-structured-state arm: correct by
+   *  construction, fine-grained pull, bounded read cost; it SUBSUMES the digest /
+   *  foldEvery / postPolicy levers (they have no effect). See the Topology type. */
+  topology?: Topology;
+  /** Staleness rework coefficient (arXiv:2502.14321). One rework step accrues per
+   *  `1/stalenessCost` accumulated fact-rounds of delivery latency on LIVE async
+   *  folds (passive + postPolicy != 'silent', message-passing). Default 0.1. The
+   *  surcharge is ZERO at the defaults (foldEvery=1 + 'immediate' => 0 latency)
+   *  regardless of this value, so it never disturbs the ablation ordering; set to
+   *  0 to disable the effect entirely. Larger = staler folding costs more. */
+  stalenessCost?: number;
+  /** 'blackboard' board-read surcharge: one foreground step per this-many
+   *  PRODUCTIVE board pulls (a boundary where >=1 new relevant fact was pulled).
+   *  Bounded and content-independent — the structured board is an indexed lookup,
+   *  not a snapshot wade (default 6, the digestCap scale). */
+  boardReadCap?: number;
   /** The digest context surcharge is one foreground step per this-many FACTS
    *  digested, cumulatively across a run (default 6). Priced by fact content, not
    *  message envelopes, so 'batched' posting cannot coalesce the cost away.
@@ -248,6 +323,15 @@ export interface SimResult {
    *  reading folded thread traffic under the active digest policy. 'relevant'
    *  and 'mentions' drive this below 'full'; part of stepsToResolve. */
   digestSteps: number;
+  /** Foreground steps charged as the STALENESS rework surcharge (arXiv:2502.14321)
+   *  — the cost of a live async fold delivering a peer cross-fact LATE. Zero for
+   *  the blocking/sync arms, for silent-'passive', for 'blackboard', and for the
+   *  default foldEvery=1 + 'immediate' passive config; part of stepsToResolve. */
+  stalenessSteps: number;
+  /** Foreground steps charged as the 'blackboard' BOARD-READ surcharge — the
+   *  bounded, content-independent cost of pulling from the shared structured
+   *  board. Zero under 'message-passing'; part of stepsToResolve. */
+  boardReadSteps: number;
   /** Foreground steps per agent (index = agent; single mode has one entry). */
   perAgentSteps: number[];
   /** stepsToResolve reading at the moment each sub-question resolved (-1 = never). */
@@ -370,6 +454,9 @@ export function runSim(cfg: SimConfig): SimResult {
   const foldK = Math.max(1, Number(cfg.foldEvery ?? '1') || 1);
   const postPolicy = cfg.postPolicy ?? 'immediate';
   const digest = cfg.digest ?? 'full';
+  const topology = cfg.topology ?? 'message-passing';
+  const stalenessCost = Math.max(0, cfg.stalenessCost ?? 0.1);
+  const boardReadCap = Math.max(1, cfg.boardReadCap ?? 6);
   const digestCap = Math.max(1, cfg.digestCap ?? 6);
   const contextCap = Math.max(1, cfg.contextCap ?? 6);
   const batchFlushEvery = Math.max(1, cfg.batchFlushEvery ?? 4);
@@ -452,7 +539,30 @@ export function runSim(cfg: SimConfig): SimResult {
   let crossFactsDelivered = 0;
   let exchangeSteps = 0;
   let digestSteps = 0;
+  let stalenessSteps = 0;
+  let boardReadSteps = 0;
   const subResolvedAtStep = new Array<number>(K).fill(-1);
+
+  // ---- F6 blackboard substrate + F9 staleness state ------------------------
+  const blackboard = topology === 'blackboard' && agentCount > 1;
+  /** Staleness (F9) is charged ONLY on LIVE async folds: message-passing +
+   *  'passive' + live posting. Silent-'passive' shares nothing until Review (no
+   *  live state to go stale), the blocking/sync arms share nothing live, and
+   *  'blackboard' pulls fine-grained — all faithfully carry no staleness. */
+  const stalenessOn =
+    !blackboard && mode === 'passive' && postPolicy !== 'silent' && stalenessCost > 0;
+  const nFacts = task.factUnit.length;
+  /** Round a cross-fact was first discovered by a NON-owner (became a pending
+   *  cross-delivery), and the round it was actually posted to the bus. Their gap
+   *  is the withhold latency ('immediate' => 0, 'batched'/late flush => >0). */
+  const discoveryRound = new Array<number>(nFacts).fill(-1);
+  const postRound = new Array<number>(nFacts).fill(-1);
+  let staleAccum = 0; // accumulated fact-rounds of delivery latency
+  /** The shared validated board (blackboard topology): appended cross-facts, plus
+   *  a per-agent cursor over it and the accumulated productive-pull count. */
+  const board: number[] = [];
+  const boardCursor = new Array<number>(agentCount).fill(0);
+  let boardPullAccum = 0;
 
   const resolvedAll = (): boolean => subResolvedAtStep.every((s) => s >= 0);
   const updateResolution = (): void => {
@@ -530,6 +640,17 @@ export function runSim(cfg: SimConfig): SimResult {
         if (mine && !known[a].has(f)) {
           known[a].add(f);
           gained++;
+          // F9 staleness: this cross-fact reached its owner LATE. Its delivery
+          // latency is the rounds it sat withheld before posting plus the
+          // fold-cadence lag — zero at foldEvery=1 + 'immediate'.
+          if (stalenessOn) {
+            const dr = discoveryRound[f];
+            const pr = postRound[f];
+            if (dr >= 0) {
+              const withhold = pr >= 0 && pr > dr ? pr - dr : 0;
+              staleAccum += withhold + (foldK - 1);
+            }
+          }
         }
       }
     }
@@ -543,7 +664,55 @@ export function runSim(cfg: SimConfig): SimResult {
       perAgentSteps[a] += surcharge;
       digestSteps += surcharge;
     }
+    // Convert accumulated latency into rework steps: one per 1/stalenessCost
+    // fact-rounds, charged incrementally to the folding agent.
+    if (stalenessOn) {
+      const staleBefore = stalenessSteps;
+      const staleNow = Math.floor(staleAccum * stalenessCost);
+      const delta = staleNow - staleBefore;
+      if (delta > 0) {
+        totalSteps += delta;
+        perAgentSteps[a] += delta;
+        stalenessSteps = staleNow;
+      }
+    }
     return gained;
+  };
+
+  /** Blackboard pull (F6): the owner reads the shared board for facts on its
+   *  still-open sub-questions since its last pull — correct by construction (no
+   *  drops), fine-grained (never stale), at a BOUNDED per-read cost: one step per
+   *  boardReadCap PRODUCTIVE pulls, content-independent (an indexed lookup, not a
+   *  snapshot wade). Returns the newly-gained fact count. */
+  const pullBoard = (a: number): number => {
+    let gained = 0;
+    const end = board.length;
+    for (let i = boardCursor[a]; i < end; i++) {
+      const f = board[i];
+      const q = task.factOwner[f];
+      if (ownerAgent(q) === a && subResolvedAtStep[q] < 0 && !known[a].has(f)) {
+        known[a].add(f);
+        gained++;
+      }
+    }
+    boardCursor[a] = end;
+    if (gained > 0) {
+      const readBefore = Math.floor(boardPullAccum / boardReadCap);
+      boardPullAccum += 1;
+      const sur = Math.floor(boardPullAccum / boardReadCap) - readBefore;
+      if (sur > 0) {
+        totalSteps += sur;
+        perAgentSteps[a] += sur;
+        boardReadSteps += sur;
+      }
+    }
+    return gained;
+  };
+
+  /** Write a validated cross-fact to the shared board (blackboard topology).
+   *  Free, like a non-blocking send, and never dropped. */
+  const writeBoard = (f: number): void => {
+    board.push(f);
   };
 
   /** Consolidate a discovery's cross-facts into ONE non-blocking post that
@@ -564,10 +733,12 @@ export function runSim(cfg: SimConfig): SimResult {
       }
     }
     if (primary < 0) return;
+    for (const f of all) if (postRound[f] < 0) postRound[f] = rounds;
     bus.send(EXEC_THREAD, names[from], encodeFacts(all), [names[primary]]);
   };
 
   const sendFactsTo = (from: number, owner: number, facts: number[]): void => {
+    for (const f of facts) if (postRound[f] < 0) postRound[f] = rounds;
     bus.send(EXEC_THREAD, names[from], encodeFacts(facts), [names[owner]]);
   };
 
@@ -580,7 +751,7 @@ export function runSim(cfg: SimConfig): SimResult {
     outbox[a].clear();
   };
 
-  const passiveLive = mode === 'passive' && postPolicy !== 'silent';
+  const passiveLive = mode === 'passive' && postPolicy !== 'silent' && !blackboard;
 
   outer: while (!resolvedAll() && totalSteps < maxSteps) {
     if (!queues.some((q) => q.length > 0)) break; // Execute exhausted
@@ -589,7 +760,13 @@ export function runSim(cfg: SimConfig): SimResult {
       // Step boundary: passive fold-in, every foldK-th boundary, zero cost.
       // Idle agents still hit boundaries — waiting costs nothing under
       // passive awareness; that is the whole point.
-      if (passiveLive) {
+      if (blackboard) {
+        // F6 blackboard: fine-grained pull EVERY boundary (never stale). The
+        // bounded board-read cost is charged inside pullBoard.
+        crossFactsDelivered += pullBoard(a);
+        updateResolution();
+        if (resolvedAll()) break outer;
+      } else if (passiveLive) {
         if (boundaries[a] % foldK === 0) {
           crossFactsDelivered += applyFold(a, false);
           updateResolution();
@@ -618,6 +795,9 @@ export function runSim(cfg: SimConfig): SimResult {
         }
         const owner = ownerAgent(task.factOwner[f]);
         if (owner !== a) {
+          // Record when this cross-fact first became a pending delivery — the
+          // clock the F9 staleness latency measures from.
+          if (discoveryRound[f] < 0) discoveryRound[f] = rounds;
           const list = byOwner.get(owner);
           if (list) list.push(f);
           else byOwner.set(owner, [f]);
@@ -625,11 +805,13 @@ export function runSim(cfg: SimConfig): SimResult {
       }
       if (!newAny) redundantExplorations++;
 
-      // Passive awareness: a discovery that bears on a teammate's
-      // sub-question is posted IMMEDIATELY with an @-mention of the owner.
-      // send() is non-blocking — no step is consumed.
+      // Deliver a discovery that bears on a teammate's sub-question. Under
+      // 'blackboard' it is a free validated write to the shared board; under
+      // message-passing passive it is an immediate/queued @-mention post.
       if (byOwner.size > 0 && agentCount > 1) {
-        if (passiveLive && postPolicy === 'immediate') {
+        if (blackboard) {
+          for (const [, facts] of byOwner) for (const f of facts) writeBoard(f);
+        } else if (passiveLive && postPolicy === 'immediate') {
           postConsolidated(a, byOwner);
         } else {
           for (const [owner, facts] of byOwner) {
@@ -655,7 +837,13 @@ export function runSim(cfg: SimConfig): SimResult {
 
   // ---- Post-Execute delivery ----------------------------------------------
   if (!resolvedAll() && totalSteps < maxSteps) {
-    if (passiveLive) {
+    if (blackboard) {
+      // Final fine-grained board drain: deliver the last validated writes.
+      // Correct by construction — every cross-fact was written, so this closes
+      // out every open sub-question no in-loop pull had reached yet.
+      for (let a = 0; a < agentCount; a++) crossFactsDelivered += pullBoard(a);
+      updateResolution();
+    } else if (passiveLive) {
       // Drain in-flight mentions: remaining boundary folds are still free.
       for (let a = 0; a < agentCount; a++) flushOutbox(a); // batched leftovers
       for (let extra = 0; extra <= foldK && !resolvedAll(); extra++) {
@@ -722,6 +910,8 @@ export function runSim(cfg: SimConfig): SimResult {
     crossFactsDelivered,
     exchangeSteps,
     digestSteps,
+    stalenessSteps,
+    boardReadSteps,
     perAgentSteps,
     subResolvedAtStep,
   };

@@ -1,13 +1,28 @@
 // Flywheel evolution of the radio comms policy — run → measure → mutate → verify → promote.
 //
 // The policy being evolved is the pod's COMMUNICATION configuration over the
-// AgentRadio sim (arXiv:2607.28430): {mode, foldEvery, postPolicy}. The model
-// is frozen — there is no model; the sim's scripted agents never change. The
-// root is the WORST reasonable comms policy (divide / fold-every-4 / silent:
-// naive partition, sluggish boundary folds, discoveries held until Review), so
-// a climbing wheel reproduces the paper's ablation DIRECTION — toward
-// passive / immediate / fold-every-1 — as a measured, gate-checked, Ed25519-
-// signed, externally replayable lineage rather than an assertion.
+// AgentRadio sim (arXiv:2607.28430): {mode, foldEvery, postPolicy, digest,
+// topology}. The model is frozen — there is no model; the sim's scripted agents
+// never change. The root is the WORST reasonable comms policy (message-passing /
+// divide / fold-every-4 / silent / full: naive partition, sluggish boundary
+// folds, discoveries held until Review, whole-snapshot digests), so a climbing
+// wheel reproduces the paper's ablation DIRECTION — toward passive / immediate /
+// fold-every-1 / relevant — as a measured, gate-checked, Ed25519-signed,
+// externally replayable lineage rather than an assertion.
+//
+// Two SOTA coordination findings enter as EVOLVABLE levers, PRICED under the
+// same frozen gate (arXiv:2606.05304 PACT: no single comms strategy is
+// universally optimal, so evolve+price each rather than hand-pick):
+//   - topology (arXiv:2510.01285 / 2507.01701 BLACKBOARD): 'blackboard' is a
+//     shared-structured-state substrate — correct by construction, fine-grained
+//     pull, bounded read cost, subsuming the digest/foldEvery/postPolicy levers.
+//     It is a genuine contender, not a rigged winner: its best rung sits just
+//     under the tuned message-passing optimum, so whether it promotes is the
+//     gate's call, not the author's.
+//   - staleness (arXiv:2502.14321): an INTRINSIC rework cost (not a lever) that
+//     the levers must navigate — live async folding that lands late (foldEvery>1,
+//     batched) is charged for reasoning over stale peer state, turning
+//     fold-every-1 + immediate from merely-neutral into genuinely cheapest.
 //
 // Every promotion must clear a frozen conjunctive gate AND survive a
 // never-optimized-against anchor topology (different seeds, different
@@ -38,13 +53,27 @@ const outDir = join(here, '..', '.radio-flywheel');
 // under another owner's mention → an unresolved seed → a hard gate stop), and
 // 'relevant' is a deterministic topic filter (cheapest CORRECT digest). Root
 // starts at 'full' so the wheel must PRICE relevance and earn the cheaper rung.
+// topology is the F6 shared-state lever: 'message-passing' is every existing
+// behavior; 'blackboard' is correct-by-construction shared structured state whose
+// relevant-pull SUBSUMES digest/foldEvery/postPolicy (they go inert under it).
+// Root starts at 'message-passing' so the wheel must PRICE the blackboard against
+// the tuned message-passing rung — F6 says it wins the paper, but here only the
+// frozen gate decides, and it is modeled to sit just under the message-passing
+// optimum so nothing is hand-forced.
 const DOMAINS = {
   mode: ['divide', 'negotiate', 'passive'],
   foldEvery: ['1', '2', '4'],
   postPolicy: ['immediate', 'batched', 'silent'],
   digest: ['full', 'mentions', 'relevant'],
+  topology: ['message-passing', 'blackboard'],
 };
-const ROOT_POLICY = { mode: 'divide', foldEvery: '4', postPolicy: 'silent', digest: 'full' };
+const ROOT_POLICY = {
+  mode: 'divide',
+  foldEvery: '4',
+  postPolicy: 'silent',
+  digest: 'full',
+  topology: 'message-passing',
+};
 
 // Holdout: the task seeds the wheel optimizes against. Anchor: DIFFERENT seeds
 // on a DIFFERENT topology (higher cross-partition fact fraction — the thing
@@ -96,6 +125,9 @@ async function evaluator(policy, suite) {
       foldEvery: policy.foldEvery,
       postPolicy: policy.postPolicy,
       digest: policy.digest,
+      topology: policy.topology,
+      // staleness is an INTRINSIC sim cost (F9), not a policy lever: the levers
+      // above must navigate it. stalenessCost keeps its SimConfig default.
     });
     const steps = r.stepsToResolve ?? r.steps;
     const resolved = r.resolved ?? r.solved ?? false;

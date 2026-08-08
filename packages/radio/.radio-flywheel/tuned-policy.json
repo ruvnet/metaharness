@@ -4,13 +4,15 @@
     "mode": "divide",
     "foldEvery": "4",
     "postPolicy": "silent",
-    "digest": "full"
+    "digest": "full",
+    "topology": "message-passing"
   },
   "tuned": {
     "mode": "passive",
     "foldEvery": "4",
-    "postPolicy": "immediate",
-    "digest": "relevant"
+    "postPolicy": "silent",
+    "digest": "full",
+    "topology": "blackboard"
   },
   "liftCurve": [
     {
@@ -21,30 +23,18 @@
     },
     {
       "generation": 1,
-      "primary": 26.31578947368421,
-      "delta": 5.039193729003358,
-      "anchor": 23.148148148148145
+      "primary": 40.32258064516129,
+      "delta": 19.045984900480438,
+      "anchor": 39.37007874015748
     },
     {
       "generation": 2,
-      "primary": 31.645569620253163,
-      "delta": 5.329780146568954,
-      "anchor": 29.76190476190476
-    },
-    {
-      "generation": 4,
-      "primary": 36.231884057971016,
-      "delta": 4.586314437717853,
-      "anchor": 33.78378378378378
-    },
-    {
-      "generation": 5,
-      "primary": 49.504950495049506,
-      "delta": 13.27306643707849,
-      "anchor": 50
+      "primary": 47.61904761904762,
+      "delta": 7.296466973886332,
+      "anchor": 47.61904761904762
     }
   ],
   "milestoneReached": true,
   "replayVerified": true,
-  "startedAt": "2026-08-08T12:28:52.539Z"
+  "startedAt": "2026-08-08T17:12:07.830Z"
 }

@@ -6,4 +6,13 @@ export type { FoldedMention } from './watcher.js';
 export { runProtocol } from './protocol.js';
 export type { PodAgent, ProtocolConfig, ProtocolResult, PhaseName } from './protocol.js';
 export { runSim, makeTask } from './sim.js';
-export type { SimConfig, SimResult, SimMode, SimTask } from './sim.js';
+export type {
+  SimConfig,
+  SimResult,
+  SimMode,
+  SimTask,
+  Digest,
+  Topology,
+  FoldEvery,
+  PostPolicy,
+} from './sim.js';
