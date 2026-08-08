@@ -24,6 +24,15 @@ export class Archive {
   /** variantId → record. A Map preserves insertion order. */
   private readonly records: Map<string, ArchiveRecord> = new Map();
 
+  /** Bumped on every mutation (addVariant / setScore / load), so derived views
+   *  (e.g. clade outcome tables) can cache against a stable snapshot id. */
+  private mutationCount = 0;
+
+  /** Monotonic mutation counter — equal values ⇒ the archive is unchanged. */
+  get revision(): number {
+    return this.mutationCount;
+  }
+
   /**
    * @param file Absolute path to `archive.json`. The file need not exist yet;
    *   {@link load} tolerates a missing or corrupt file by starting empty.
@@ -57,6 +66,7 @@ export class Archive {
       if (!isArchiveRecord(entry)) continue; // skip malformed entries defensively
       this.records.set(entry.variant.id, entry);
     }
+    this.mutationCount++;
   }
 
   /**
@@ -69,6 +79,7 @@ export class Archive {
     if (this.records.has(variant.id)) return; // idempotent
 
     this.records.set(variant.id, { variant, score: null, children: [] });
+    this.mutationCount++;
 
     const parentId = variant.parentId;
     if (parentId !== null) {
@@ -91,6 +102,7 @@ export class Archive {
       );
     }
     record.score = score;
+    this.mutationCount++;
   }
 
   /** The record for `variantId`, or `undefined` if it is not in the archive. */

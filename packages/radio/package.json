@@ -1,0 +1,41 @@
+{
+  "name": "@metaharness/radio",
+  "version": "0.1.0",
+  "description": "Passive-awareness swarm bus for agent harness pods — threads, non-blocking mentions, and background watchers that fold teammate discoveries in at step boundaries (AgentRadio, arXiv:2607.28430). Freeze the model, evolve the comms policy.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "lint": "tsc --noEmit",
+    "flywheel": "node scripts/flywheel-radio.mjs"
+  },
+  "keywords": [
+    "multi-agent",
+    "swarm",
+    "agent-communication",
+    "passive-awareness",
+    "agent-harness",
+    "metaharness"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  }
+}

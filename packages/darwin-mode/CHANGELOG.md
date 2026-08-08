@@ -2,6 +2,22 @@
 
 All notable changes to this package. Dates UTC.
 
+## Unreleased
+
+- **Clade selection 1.5–2.7× faster** (`bench:clade`: 443 → 1178 calls/s at n=3000 branching,
+  3234 → 4896 at n=200 chain), with identical selections for a fixed seed — the rng draw
+  sequence, ordering, and tie-breaks are unchanged:
+  - `cladeOutcomesAll` now computes every subtree total in one reverse-insertion-order pass
+    (insertion order is topological by construction), replacing memoized recursion; the
+    cycle-guarded walk remains as a fallback for out-of-order archives loaded from
+    hand-edited files.
+  - The outcome table is cached per archive and invalidated by the new `Archive.revision`
+    counter (bumped on `addVariant` / `setScore` / `load`), so repeated selections against an
+    unchanged archive stop recomputing it.
+  - `cladeThompsonSelect` keeps a running top-`limit` instead of fully sorting all scored
+    records (limit is 2–8 in practice; ties still resolve toward earlier insertion).
+- **NEW `Archive.revision`** — monotonic mutation counter for derived-view caching.
+
 ## 0.8.0 — 2026-07-03
 
 - **NEW subpath export `@metaharness/darwin/gepa` — the GEPA prompt-policy learning engine

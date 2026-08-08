@@ -1,0 +1,1150 @@
+{
+  "data_source": "LIVE",
+  "root_id": "root",
+  "chain": [
+    {
+      "id": "root__kernel_gen1__accs_gen2",
+      "generation": 2,
+      "parents": [
+        "root__kernel_gen1"
+      ],
+      "mutation": {
+        "target": "accs",
+        "summary": "adapt accs"
+      },
+      "primaryDelta": 1.5945315274848753,
+      "anchorScore": 10.033607997598233,
+      "verdict": "PROMOTED",
+      "failureReasons": [],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__kernel_gen1__accs_gen2",
+          "target": "accs",
+          "verdict": "PROMOTED",
+          "primaryDelta": 1.5945315274848753
+        },
+        "signature": "PKzZDz3hAKov0KptCFLF6rjZWhfu0t0yblRZflzo/iRlj5INKv86WuULj1c8CFLsPj8yO4edbyRZ3ktoIjfTCg==",
+        "publicKey": "MCowBQYDK2VwAyEA5HRWL1DDGaGRbveD4Qdq0ZqvM4BSV6j+Vztm6g+bqz8=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-07T20:13:43.391Z#gen2",
+      "baselineScore": {
+        "primary": 7.923214241861537,
+        "noopRate": 0,
+        "costPerWin": 1.058738,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 9.517745769346412,
+        "noopRate": 0,
+        "costPerWin": 0.881365,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__kernel_gen1",
+      "generation": 1,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "kernel",
+        "summary": "adapt kernel"
+      },
+      "primaryDelta": 5.814981369886436,
+      "anchorScore": 8.296204870156199,
+      "verdict": "PROMOTED",
+      "failureReasons": [],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__kernel_gen1",
+          "target": "kernel",
+          "verdict": "PROMOTED",
+          "primaryDelta": 5.814981369886436
+        },
+        "signature": "bU5eKORnJaMhYbdEzSHzyr79kxbT9VKI70Okz/EpL9AcIfZRLu7FVJBjmg1SpCdh3HM/SKwVRx+vsWIij0BoCA==",
+        "publicKey": "MCowBQYDK2VwAyEA5HRWL1DDGaGRbveD4Qdq0ZqvM4BSV6j+Vztm6g+bqz8=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-07T20:13:43.391Z#gen1",
+      "baselineScore": {
+        "primary": 2.108232871975101,
+        "noopRate": 0,
+        "costPerWin": 3.978976,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 7.923214241861537,
+        "noopRate": 0,
+        "costPerWin": 1.058738,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root",
+      "generation": 0,
+      "parents": [],
+      "mutation": null,
+      "primaryDelta": 0,
+      "anchorScore": 5.179057823064152,
+      "verdict": "ROOT",
+      "failureReasons": [],
+      "receipt": {
+        "payload": {
+          "kind": "root",
+          "root": "root"
+        },
+        "signature": "xwRtlsCg7UUadW5RNYmZOkNCZl1xCA2r8Vbmh/lMTG9SsvW5OMzOJB+4fN2al4+WujpNkkdhi+ZTL16TfKnIDQ==",
+        "publicKey": "MCowBQYDK2VwAyEA5HRWL1DDGaGRbveD4Qdq0ZqvM4BSV6j+Vztm6g+bqz8=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-07T20:13:43.391Z#gen0"
+    }
+  ],
+  "all_commits": [
+    {
+      "id": "root__kernel_gen1",
+      "generation": 1,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "kernel",
+        "summary": "adapt kernel"
+      },
+      "primaryDelta": 5.814981369886436,
+      "anchorScore": 8.296204870156199,
+      "verdict": "PROMOTED",
+      "failureReasons": [],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__kernel_gen1",
+          "target": "kernel",
+          "verdict": "PROMOTED",
+          "primaryDelta": 5.814981369886436
+        },
+        "signature": "bU5eKORnJaMhYbdEzSHzyr79kxbT9VKI70Okz/EpL9AcIfZRLu7FVJBjmg1SpCdh3HM/SKwVRx+vsWIij0BoCA==",
+        "publicKey": "MCowBQYDK2VwAyEA5HRWL1DDGaGRbveD4Qdq0ZqvM4BSV6j+Vztm6g+bqz8=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-07T20:13:43.391Z#gen1",
+      "baselineScore": {
+        "primary": 2.108232871975101,
+        "noopRate": 0,
+        "costPerWin": 3.978976,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 7.923214241861537,
+        "noopRate": 0,
+        "costPerWin": 1.058738,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__unroll_gen1",
+      "generation": 1,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "unroll",
+        "summary": "adapt unroll"
+      },
+      "primaryDelta": 2.9142120216439586,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__unroll_gen1",
+          "target": "unroll",
+          "verdict": "REJECTED",
+          "primaryDelta": 2.9142120216439586
+        },
+        "signature": "96A6MfTU1aSRGWejMTIT/kPwklR10u4asCIHUK0Elk5r4YNk25DniEqDFFFsX7kq0QTGwSd+Wpca2y52OcbpDA==",
+        "publicKey": "MCowBQYDK2VwAyEA5HRWL1DDGaGRbveD4Qdq0ZqvM4BSV6j+Vztm6g+bqz8=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-07T20:13:43.391Z#gen1",
+      "baselineScore": {
+        "primary": 2.108232871975101,
+        "noopRate": 0,
+        "costPerWin": 3.978976,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 5.02244489361906,
+        "noopRate": 0,
+        "costPerWin": 1.670224,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__accs_gen1",
+      "generation": 1,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "accs",
+        "summary": "adapt accs"
+      },
+      "primaryDelta": 2.890699240915822,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__accs_gen1",
+          "target": "accs",
+          "verdict": "REJECTED",
+          "primaryDelta": 2.890699240915822
+        },
+        "signature": "oO+Cc7aT1PYkMsKuE+0qNnbiHvTu51KYVva0W/dRbOXll7KuezyMIWy08XmS4WZ/56FiXatyzBLX8Xisp2ssCw==",
+        "publicKey": "MCowBQYDK2VwAyEA5HRWL1DDGaGRbveD4Qdq0ZqvM4BSV6j+Vztm6g+bqz8=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-07T20:13:43.391Z#gen1",
+      "baselineScore": {
+        "primary": 2.108232871975101,
+        "noopRate": 0,
+        "costPerWin": 3.978976,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 4.998932112890923,
+        "noopRate": 0,
+        "costPerWin": 1.67808,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__kernel_gen1__kernel_gen2",
+      "generation": 2,
+      "parents": [
+        "root__kernel_gen1"
+      ],
+      "mutation": {
+        "target": "kernel",
+        "summary": "adapt kernel"
+      },
+      "primaryDelta": -2.8257335079455723,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% noise floor (7.92 -> 5.10 GOPS)",
+        "cost per pass worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__kernel_gen1__kernel_gen2",
+          "target": "kernel",
+          "verdict": "REJECTED",
+          "primaryDelta": -2.8257335079455723
+        },
+        "signature": "ZjhIONZ+gTHfukGHdjZ6AD6NG3QpZliDZSIn0TNfcw5f3U90oSG4BOO761RaFw3hOCIxgAIUxvqphFfvgtsyDg==",
+        "publicKey": "MCowBQYDK2VwAyEA5HRWL1DDGaGRbveD4Qdq0ZqvM4BSV6j+Vztm6g+bqz8=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-07T20:13:43.391Z#gen2",
+      "baselineScore": {
+        "primary": 7.923214241861537,
+        "noopRate": 0,
+        "costPerWin": 1.058738,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 5.0974807339159645,
+        "noopRate": 0,
+        "costPerWin": 1.645638,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__kernel_gen1__unroll_gen2",
+      "generation": 2,
+      "parents": [
+        "root__kernel_gen1"
+      ],
+      "mutation": {
+        "target": "unroll",
+        "summary": "adapt unroll"
+      },
+      "primaryDelta": 0.8175048875475799,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__kernel_gen1__unroll_gen2",
+          "target": "unroll",
+          "verdict": "REJECTED",
+          "primaryDelta": 0.8175048875475799
+        },
+        "signature": "UDViECEifLiB1VjfUaOEMD7u5/JHUO8Tl1K2SCyQ0mM0+sB/kMB92jqbf8lybNCidbs1FtJMjVz1ByJMCOZ4Bw==",
+        "publicKey": "MCowBQYDK2VwAyEA5HRWL1DDGaGRbveD4Qdq0ZqvM4BSV6j+Vztm6g+bqz8=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-07T20:13:43.391Z#gen2",
+      "baselineScore": {
+        "primary": 7.923214241861537,
+        "noopRate": 0,
+        "costPerWin": 1.058738,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 8.740719129409117,
+        "noopRate": 0,
+        "costPerWin": 0.959716,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__kernel_gen1__accs_gen2",
+      "generation": 2,
+      "parents": [
+        "root__kernel_gen1"
+      ],
+      "mutation": {
+        "target": "accs",
+        "summary": "adapt accs"
+      },
+      "primaryDelta": 1.5945315274848753,
+      "anchorScore": 10.033607997598233,
+      "verdict": "PROMOTED",
+      "failureReasons": [],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__kernel_gen1__accs_gen2",
+          "target": "accs",
+          "verdict": "PROMOTED",
+          "primaryDelta": 1.5945315274848753
+        },
+        "signature": "PKzZDz3hAKov0KptCFLF6rjZWhfu0t0yblRZflzo/iRlj5INKv86WuULj1c8CFLsPj8yO4edbyRZ3ktoIjfTCg==",
+        "publicKey": "MCowBQYDK2VwAyEA5HRWL1DDGaGRbveD4Qdq0ZqvM4BSV6j+Vztm6g+bqz8=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-07T20:13:43.391Z#gen2",
+      "baselineScore": {
+        "primary": 7.923214241861537,
+        "noopRate": 0,
+        "costPerWin": 1.058738,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 9.517745769346412,
+        "noopRate": 0,
+        "costPerWin": 0.881365,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__kernel_gen1__accs_gen2__kernel_gen3",
+      "generation": 3,
+      "parents": [
+        "root__kernel_gen1__accs_gen2"
+      ],
+      "mutation": {
+        "target": "kernel",
+        "summary": "adapt kernel"
+      },
+      "primaryDelta": -4.531738624918412,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% noise floor (9.52 -> 4.99 GOPS)",
+        "cost per pass worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__kernel_gen1__accs_gen2__kernel_gen3",
+          "target": "kernel",
+          "verdict": "REJECTED",
+          "primaryDelta": -4.531738624918412
+        },
+        "signature": "D4ZJADpcjjqpy3Bs+E+06N7n9zIGJt1JRnlZYSVGuvTDXrR8Ty+UbCUg30HumleNAfKHBVmsa1iFlqyk7YVXAg==",
+        "publicKey": "MCowBQYDK2VwAyEA5HRWL1DDGaGRbveD4Qdq0ZqvM4BSV6j+Vztm6g+bqz8=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-07T20:13:43.391Z#gen3",
+      "baselineScore": {
+        "primary": 9.517745769346412,
+        "noopRate": 0,
+        "costPerWin": 0.881365,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 4.986007144428,
+        "noopRate": 0,
+        "costPerWin": 1.68243,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__kernel_gen1__accs_gen2__unroll_gen3",
+      "generation": 3,
+      "parents": [
+        "root__kernel_gen1__accs_gen2"
+      ],
+      "mutation": {
+        "target": "unroll",
+        "summary": "adapt unroll"
+      },
+      "primaryDelta": -1.0733966206156396,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% noise floor (9.52 -> 8.44 GOPS)",
+        "cost per pass worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__kernel_gen1__accs_gen2__unroll_gen3",
+          "target": "unroll",
+          "verdict": "REJECTED",
+          "primaryDelta": -1.0733966206156396
+        },
+        "signature": "lgRbhs0Kwascup/0uFMp+lWg5XOFJz7zxQVflhRQ/Slhfj/cGyxTfKcdx73Ib0BOdQu+XLy9ombmw8EYbHK/Dg==",
+        "publicKey": "MCowBQYDK2VwAyEA5HRWL1DDGaGRbveD4Qdq0ZqvM4BSV6j+Vztm6g+bqz8=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-07T20:13:43.391Z#gen3",
+      "baselineScore": {
+        "primary": 9.517745769346412,
+        "noopRate": 0,
+        "costPerWin": 0.881365,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 8.444349148730772,
+        "noopRate": 0,
+        "costPerWin": 0.993399,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__kernel_gen1__accs_gen2__accs_gen3",
+      "generation": 3,
+      "parents": [
+        "root__kernel_gen1__accs_gen2"
+      ],
+      "mutation": {
+        "target": "accs",
+        "summary": "adapt accs"
+      },
+      "primaryDelta": -1.4803402412999311,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% noise floor (9.52 -> 8.04 GOPS)",
+        "cost per pass worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__kernel_gen1__accs_gen2__accs_gen3",
+          "target": "accs",
+          "verdict": "REJECTED",
+          "primaryDelta": -1.4803402412999311
+        },
+        "signature": "kG7VWU3kUQpyg35/KB1TSDPi3vRVz8s7xMZ0Je4fk7dJ8pliYBZzBhFqWTmdE7hDxqJsYqeJt/CpcqcjHMWDCA==",
+        "publicKey": "MCowBQYDK2VwAyEA5HRWL1DDGaGRbveD4Qdq0ZqvM4BSV6j+Vztm6g+bqz8=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-07T20:13:43.391Z#gen3",
+      "baselineScore": {
+        "primary": 9.517745769346412,
+        "noopRate": 0,
+        "costPerWin": 0.881365,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 8.037405528046481,
+        "noopRate": 0,
+        "costPerWin": 1.043696,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__kernel_gen1__accs_gen2__kernel_gen4",
+      "generation": 4,
+      "parents": [
+        "root__kernel_gen1__accs_gen2"
+      ],
+      "mutation": {
+        "target": "kernel",
+        "summary": "adapt kernel"
+      },
+      "primaryDelta": -4.451680931073701,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% noise floor (9.52 -> 5.07 GOPS)",
+        "cost per pass worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__kernel_gen1__accs_gen2__kernel_gen4",
+          "target": "kernel",
+          "verdict": "REJECTED",
+          "primaryDelta": -4.451680931073701
+        },
+        "signature": "8+kmQVhTzYSFZYjQ9PiwLCauXmQXFXiRCAWY+zTqf1UNl49nssjHukWHEMKInq4qIVrzG12qPXxwcq10uJD8BQ==",
+        "publicKey": "MCowBQYDK2VwAyEA5HRWL1DDGaGRbveD4Qdq0ZqvM4BSV6j+Vztm6g+bqz8=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-07T20:13:43.391Z#gen4",
+      "baselineScore": {
+        "primary": 9.517745769346412,
+        "noopRate": 0,
+        "costPerWin": 0.881365,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 5.066064838272711,
+        "noopRate": 0,
+        "costPerWin": 1.655843,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__kernel_gen1__accs_gen2__unroll_gen4",
+      "generation": 4,
+      "parents": [
+        "root__kernel_gen1__accs_gen2"
+      ],
+      "mutation": {
+        "target": "unroll",
+        "summary": "adapt unroll"
+      },
+      "primaryDelta": -1.1989326117387389,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% noise floor (9.52 -> 8.32 GOPS)",
+        "cost per pass worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__kernel_gen1__accs_gen2__unroll_gen4",
+          "target": "unroll",
+          "verdict": "REJECTED",
+          "primaryDelta": -1.1989326117387389
+        },
+        "signature": "cW/5NCLq1EAAxccbnsQ8K+0x2Kk4uOfqDzkaAIEQi2QVP/gh9jIJSDQeNnO1LW8Y1FLSc1BUoh+jqkvCp2giCQ==",
+        "publicKey": "MCowBQYDK2VwAyEA5HRWL1DDGaGRbveD4Qdq0ZqvM4BSV6j+Vztm6g+bqz8=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-07T20:13:43.391Z#gen4",
+      "baselineScore": {
+        "primary": 9.517745769346412,
+        "noopRate": 0,
+        "costPerWin": 0.881365,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 8.318813157607673,
+        "noopRate": 0,
+        "costPerWin": 1.00839,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__kernel_gen1__accs_gen2__accs_gen4",
+      "generation": 4,
+      "parents": [
+        "root__kernel_gen1__accs_gen2"
+      ],
+      "mutation": {
+        "target": "accs",
+        "summary": "adapt accs"
+      },
+      "primaryDelta": -0.2709724807518139,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% noise floor (9.52 -> 9.25 GOPS)",
+        "cost per pass worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__kernel_gen1__accs_gen2__accs_gen4",
+          "target": "accs",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.2709724807518139
+        },
+        "signature": "2G+AhZP9hhws06gKvr2F7sCxIU50hCXRYEEOQlrUkJfyIIS67Au4k+zFNtF/0sDmm2Ft0gZrTGSqLBal+tDkDA==",
+        "publicKey": "MCowBQYDK2VwAyEA5HRWL1DDGaGRbveD4Qdq0ZqvM4BSV6j+Vztm6g+bqz8=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-07T20:13:43.391Z#gen4",
+      "baselineScore": {
+        "primary": 9.517745769346412,
+        "noopRate": 0,
+        "costPerWin": 0.881365,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 9.246773288594598,
+        "noopRate": 0,
+        "costPerWin": 0.907193,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__kernel_gen1__accs_gen2__kernel_gen5",
+      "generation": 5,
+      "parents": [
+        "root__kernel_gen1__accs_gen2"
+      ],
+      "mutation": {
+        "target": "kernel",
+        "summary": "adapt kernel"
+      },
+      "primaryDelta": -4.459248012580528,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% noise floor (9.52 -> 5.06 GOPS)",
+        "cost per pass worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__kernel_gen1__accs_gen2__kernel_gen5",
+          "target": "kernel",
+          "verdict": "REJECTED",
+          "primaryDelta": -4.459248012580528
+        },
+        "signature": "6fcuCJf5cg2HQPMPjUb038DHzpooIc/eohhuXs3II0cj+WMqHGyGb0YDbPDGbBb3sr6//zonQUT+Co9qHIUTCg==",
+        "publicKey": "MCowBQYDK2VwAyEA5HRWL1DDGaGRbveD4Qdq0ZqvM4BSV6j+Vztm6g+bqz8=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-07T20:13:43.391Z#gen5",
+      "baselineScore": {
+        "primary": 9.517745769346412,
+        "noopRate": 0,
+        "costPerWin": 0.881365,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 5.058497756765884,
+        "noopRate": 0,
+        "costPerWin": 1.65832,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__kernel_gen1__accs_gen2__unroll_gen5",
+      "generation": 5,
+      "parents": [
+        "root__kernel_gen1__accs_gen2"
+      ],
+      "mutation": {
+        "target": "unroll",
+        "summary": "adapt unroll"
+      },
+      "primaryDelta": -1.2976577929505062,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% noise floor (9.52 -> 8.22 GOPS)",
+        "cost per pass worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__kernel_gen1__accs_gen2__unroll_gen5",
+          "target": "unroll",
+          "verdict": "REJECTED",
+          "primaryDelta": -1.2976577929505062
+        },
+        "signature": "pNRfx4DzZXSfKW9tOpswiIRJwZU28MHgrMgqBi+vC7EOT44tAO2X+2iyAz+QTM+JTcahuYw+d5MgaMHWLnwkDw==",
+        "publicKey": "MCowBQYDK2VwAyEA5HRWL1DDGaGRbveD4Qdq0ZqvM4BSV6j+Vztm6g+bqz8=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-07T20:13:43.391Z#gen5",
+      "baselineScore": {
+        "primary": 9.517745769346412,
+        "noopRate": 0,
+        "costPerWin": 0.881365,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 8.220087976395906,
+        "noopRate": 0,
+        "costPerWin": 1.020501,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__kernel_gen1__accs_gen2__accs_gen5",
+      "generation": 5,
+      "parents": [
+        "root__kernel_gen1__accs_gen2"
+      ],
+      "mutation": {
+        "target": "accs",
+        "summary": "adapt accs"
+      },
+      "primaryDelta": -1.2053870360073322,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% noise floor (9.52 -> 8.31 GOPS)",
+        "cost per pass worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__kernel_gen1__accs_gen2__accs_gen5",
+          "target": "accs",
+          "verdict": "REJECTED",
+          "primaryDelta": -1.2053870360073322
+        },
+        "signature": "GJI78zkJA3hRD6PIXyKEkBSV7/nVfRSUeAYL0xGfvXWhcXIBK/DwyJBNZopIh9sePzUK/x6OoGyAcF909dWgAQ==",
+        "publicKey": "MCowBQYDK2VwAyEA5HRWL1DDGaGRbveD4Qdq0ZqvM4BSV6j+Vztm6g+bqz8=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-07T20:13:43.391Z#gen5",
+      "baselineScore": {
+        "primary": 9.517745769346412,
+        "noopRate": 0,
+        "costPerWin": 0.881365,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 8.31235873333908,
+        "noopRate": 0,
+        "costPerWin": 1.009173,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__kernel_gen1__accs_gen2__kernel_gen6",
+      "generation": 6,
+      "parents": [
+        "root__kernel_gen1__accs_gen2"
+      ],
+      "mutation": {
+        "target": "kernel",
+        "summary": "adapt kernel"
+      },
+      "primaryDelta": -4.509902627409303,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% noise floor (9.52 -> 5.01 GOPS)",
+        "cost per pass worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__kernel_gen1__accs_gen2__kernel_gen6",
+          "target": "kernel",
+          "verdict": "REJECTED",
+          "primaryDelta": -4.509902627409303
+        },
+        "signature": "yBBQLYFkZqfCjyBnIIqM/SlSwl0NKQGnTnr1XaFHjAMlcp0P2+46yMq2sbl9EA/EDWIG3jtdhbvUQ6V2MvRwAQ==",
+        "publicKey": "MCowBQYDK2VwAyEA5HRWL1DDGaGRbveD4Qdq0ZqvM4BSV6j+Vztm6g+bqz8=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-07T20:13:43.391Z#gen6",
+      "baselineScore": {
+        "primary": 9.517745769346412,
+        "noopRate": 0,
+        "costPerWin": 0.881365,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 5.007843141937109,
+        "noopRate": 0,
+        "costPerWin": 1.675094,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__kernel_gen1__accs_gen2__unroll_gen6",
+      "generation": 6,
+      "parents": [
+        "root__kernel_gen1__accs_gen2"
+      ],
+      "mutation": {
+        "target": "unroll",
+        "summary": "adapt unroll"
+      },
+      "primaryDelta": -0.9607096269557367,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% noise floor (9.52 -> 8.56 GOPS)",
+        "cost per pass worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__kernel_gen1__accs_gen2__unroll_gen6",
+          "target": "unroll",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.9607096269557367
+        },
+        "signature": "OA5PX0OWwZeBJKnem0yiupxKjXdf0R6dMgKEdYVVL6cOAMDxPA/Pjx0iNx3/Xk8nejh6siD+Md+sK14vJebTDw==",
+        "publicKey": "MCowBQYDK2VwAyEA5HRWL1DDGaGRbveD4Qdq0ZqvM4BSV6j+Vztm6g+bqz8=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-07T20:13:43.391Z#gen6",
+      "baselineScore": {
+        "primary": 9.517745769346412,
+        "noopRate": 0,
+        "costPerWin": 0.881365,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 8.557036142390675,
+        "noopRate": 0,
+        "costPerWin": 0.980317,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__kernel_gen1__accs_gen2__accs_gen6",
+      "generation": 6,
+      "parents": [
+        "root__kernel_gen1__accs_gen2"
+      ],
+      "mutation": {
+        "target": "accs",
+        "summary": "adapt accs"
+      },
+      "primaryDelta": -0.09222702697993412,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% noise floor (9.52 -> 9.43 GOPS)",
+        "cost per pass worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__kernel_gen1__accs_gen2__accs_gen6",
+          "target": "accs",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.09222702697993412
+        },
+        "signature": "03FRzlD3mPpTR2K7Yl0vqkLqc46kwz/gma/y31VpQdN5oXOGFx1h/5iq/vDS5Wh++cyIEGlSxhQKs0bE/n+zDA==",
+        "publicKey": "MCowBQYDK2VwAyEA5HRWL1DDGaGRbveD4Qdq0ZqvM4BSV6j+Vztm6g+bqz8=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-07T20:13:43.391Z#gen6",
+      "baselineScore": {
+        "primary": 9.517745769346412,
+        "noopRate": 0,
+        "costPerWin": 0.881365,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 9.425518742366478,
+        "noopRate": 0,
+        "costPerWin": 0.889989,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__kernel_gen1__accs_gen2__kernel_gen7",
+      "generation": 7,
+      "parents": [
+        "root__kernel_gen1__accs_gen2"
+      ],
+      "mutation": {
+        "target": "kernel",
+        "summary": "adapt kernel"
+      },
+      "primaryDelta": -4.4781565009470565,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% noise floor (9.52 -> 5.04 GOPS)",
+        "cost per pass worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__kernel_gen1__accs_gen2__kernel_gen7",
+          "target": "kernel",
+          "verdict": "REJECTED",
+          "primaryDelta": -4.4781565009470565
+        },
+        "signature": "1P3g6p9AI0+4uNk3GRq4wCu8Gf/e1YXWEDKE/23B6jlOEyni6DaTk5bkqMrzWNOpN7ieY9gVKFGf94MH7vN9Bw==",
+        "publicKey": "MCowBQYDK2VwAyEA5HRWL1DDGaGRbveD4Qdq0ZqvM4BSV6j+Vztm6g+bqz8=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-07T20:13:43.391Z#gen7",
+      "baselineScore": {
+        "primary": 9.517745769346412,
+        "noopRate": 0,
+        "costPerWin": 0.881365,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 5.0395892683993555,
+        "noopRate": 0,
+        "costPerWin": 1.664542,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__kernel_gen1__accs_gen2__unroll_gen7",
+      "generation": 7,
+      "parents": [
+        "root__kernel_gen1__accs_gen2"
+      ],
+      "mutation": {
+        "target": "unroll",
+        "summary": "adapt unroll"
+      },
+      "primaryDelta": -1.2350976862731677,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% noise floor (9.52 -> 8.28 GOPS)",
+        "cost per pass worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__kernel_gen1__accs_gen2__unroll_gen7",
+          "target": "unroll",
+          "verdict": "REJECTED",
+          "primaryDelta": -1.2350976862731677
+        },
+        "signature": "XdoPYQO2hL0gD6A7XeMRUDe+B9nwtIlqI4sNQNIq0MVG7zWkm/LVVm0dmtFSiecNLKZeA1PkPuORWoUrAyBECg==",
+        "publicKey": "MCowBQYDK2VwAyEA5HRWL1DDGaGRbveD4Qdq0ZqvM4BSV6j+Vztm6g+bqz8=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-07T20:13:43.391Z#gen7",
+      "baselineScore": {
+        "primary": 9.517745769346412,
+        "noopRate": 0,
+        "costPerWin": 0.881365,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 8.282648083073244,
+        "noopRate": 0,
+        "costPerWin": 1.012793,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__kernel_gen1__accs_gen2__accs_gen7",
+      "generation": 7,
+      "parents": [
+        "root__kernel_gen1__accs_gen2"
+      ],
+      "mutation": {
+        "target": "accs",
+        "summary": "adapt accs"
+      },
+      "primaryDelta": -1.3846077671339092,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% noise floor (9.52 -> 8.13 GOPS)",
+        "cost per pass worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__kernel_gen1__accs_gen2__accs_gen7",
+          "target": "accs",
+          "verdict": "REJECTED",
+          "primaryDelta": -1.3846077671339092
+        },
+        "signature": "cXlPkB+S7g4MNqJtIAC+I3Wqm261W0YR+NH/Ecv0iZTXeqcz3cOV81suLAHxpk5UDWyCAvC3JDAYBqr+8+jeDg==",
+        "publicKey": "MCowBQYDK2VwAyEA5HRWL1DDGaGRbveD4Qdq0ZqvM4BSV6j+Vztm6g+bqz8=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-07T20:13:43.391Z#gen7",
+      "baselineScore": {
+        "primary": 9.517745769346412,
+        "noopRate": 0,
+        "costPerWin": 0.881365,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 8.133138002212503,
+        "noopRate": 0,
+        "costPerWin": 1.031411,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__kernel_gen1__accs_gen2__kernel_gen8",
+      "generation": 8,
+      "parents": [
+        "root__kernel_gen1__accs_gen2"
+      ],
+      "mutation": {
+        "target": "kernel",
+        "summary": "adapt kernel"
+      },
+      "primaryDelta": -4.550730682865153,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% noise floor (9.52 -> 4.97 GOPS)",
+        "cost per pass worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__kernel_gen1__accs_gen2__kernel_gen8",
+          "target": "kernel",
+          "verdict": "REJECTED",
+          "primaryDelta": -4.550730682865153
+        },
+        "signature": "JBw+jF2UXbac0ExIuQZF6ai2Q+frGOPzBlybOvs6pxMDwPxgfIwxhgOLbL7qssnKLsJjBo0wazz5kerXCVhWDQ==",
+        "publicKey": "MCowBQYDK2VwAyEA5HRWL1DDGaGRbveD4Qdq0ZqvM4BSV6j+Vztm6g+bqz8=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-07T20:13:43.391Z#gen8",
+      "baselineScore": {
+        "primary": 9.517745769346412,
+        "noopRate": 0,
+        "costPerWin": 0.881365,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 4.9670150864812594,
+        "noopRate": 0,
+        "costPerWin": 1.688863,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__kernel_gen1__accs_gen2__unroll_gen8",
+      "generation": 8,
+      "parents": [
+        "root__kernel_gen1__accs_gen2"
+      ],
+      "mutation": {
+        "target": "unroll",
+        "summary": "adapt unroll"
+      },
+      "primaryDelta": -0.864986329156288,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% noise floor (9.52 -> 8.65 GOPS)",
+        "cost per pass worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__kernel_gen1__accs_gen2__unroll_gen8",
+          "target": "unroll",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.864986329156288
+        },
+        "signature": "iH2uOnoqmIADCw3DQvr+F7lFVS2AyCfIQO3r7m+09ZrcWuZbPHjNUOj71QCOXB0ZYyrmIioPUnhoGhqPfTscDw==",
+        "publicKey": "MCowBQYDK2VwAyEA5HRWL1DDGaGRbveD4Qdq0ZqvM4BSV6j+Vztm6g+bqz8=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-07T20:13:43.391Z#gen8",
+      "baselineScore": {
+        "primary": 9.517745769346412,
+        "noopRate": 0,
+        "costPerWin": 0.881365,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 8.652759440190124,
+        "noopRate": 0,
+        "costPerWin": 0.969472,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__kernel_gen1__accs_gen2__accs_gen8",
+      "generation": 8,
+      "parents": [
+        "root__kernel_gen1__accs_gen2"
+      ],
+      "mutation": {
+        "target": "accs",
+        "summary": "adapt accs"
+      },
+      "primaryDelta": -0.18147864769770372,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% noise floor (9.52 -> 9.34 GOPS)",
+        "cost per pass worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__kernel_gen1__accs_gen2__accs_gen8",
+          "target": "accs",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.18147864769770372
+        },
+        "signature": "efxaaNjnNT7678B4WVkujna/2oqAprwvstXtlf/1RP+5cTon84wYrIvzhDNeFigyJY1Ry63JNSHZlJVaieLDCg==",
+        "publicKey": "MCowBQYDK2VwAyEA5HRWL1DDGaGRbveD4Qdq0ZqvM4BSV6j+Vztm6g+bqz8=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-07T20:13:43.391Z#gen8",
+      "baselineScore": {
+        "primary": 9.517745769346412,
+        "noopRate": 0,
+        "costPerWin": 0.881365,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 9.336267121648708,
+        "noopRate": 0,
+        "costPerWin": 0.898497,
+        "regressed": false
+      }
+    }
+  ],
+  "lift_curve": [
+    {
+      "generation": 0,
+      "primary": 2.108232871975101,
+      "delta": 0,
+      "anchor": 5.179057823064152
+    },
+    {
+      "generation": 1,
+      "primary": 7.923214241861537,
+      "delta": 5.814981369886436,
+      "anchor": 8.296204870156199
+    },
+    {
+      "generation": 2,
+      "primary": 9.517745769346412,
+      "delta": 1.5945315274848753,
+      "anchor": 10.033607997598233
+    }
+  ],
+  "gate_fingerprint": "1f23ba5ac1347c93fc330796c7b7cca9c908b69eaa33de95c2d7dc227ddd3a77",
+  "verified_improvements": 2,
+  "anchor_surviving_improvements": 2,
+  "milestone_reached": true,
+  "created_at": "2026-08-07T20:13:43.391Z#gen8"
+}

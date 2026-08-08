@@ -1,0 +1,19 @@
+[package]
+name = "k3-kernel-bench"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Block-quantized int8 matvec kernel bench — the kimi-k3-in-c trunk inner loop, tunable and measurable from Node via wasm32-unknown-unknown"
+
+# Detached from any parent cargo workspace on purpose: this crate ships inside a
+# scaffolded harness and must build standalone wherever the harness lands.
+[workspace]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"

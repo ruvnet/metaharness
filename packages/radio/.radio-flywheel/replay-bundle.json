@@ -1,0 +1,1815 @@
+{
+  "data_source": "LIVE",
+  "root_id": "root",
+  "chain": [
+    {
+      "id": "root__topology_gen1__mode_gen2",
+      "generation": 2,
+      "parents": [
+        "root__topology_gen1"
+      ],
+      "mutation": {
+        "target": "mode",
+        "summary": "adapt mode"
+      },
+      "primaryDelta": 7.296466973886332,
+      "anchorScore": 47.61904761904762,
+      "verdict": "PROMOTED",
+      "failureReasons": [],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2",
+          "target": "mode",
+          "verdict": "PROMOTED",
+          "primaryDelta": 7.296466973886332
+        },
+        "signature": "4nuUuxnjXCFR4p+bDF7If//y+5UX6IbQAO1/LAC2FmySjF7rU5whedVHGNBdfyseGkWvJ9scHeNDlNqh6qGrBA==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen2",
+      "baselineScore": {
+        "primary": 40.32258064516129,
+        "noopRate": 0,
+        "costPerWin": 24.8,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1",
+      "generation": 1,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "topology",
+        "summary": "adapt topology"
+      },
+      "primaryDelta": 19.045984900480438,
+      "anchorScore": 39.37007874015748,
+      "verdict": "PROMOTED",
+      "failureReasons": [],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1",
+          "target": "topology",
+          "verdict": "PROMOTED",
+          "primaryDelta": 19.045984900480438
+        },
+        "signature": "m44pQA/zGEH3+ifyzZz1hGBXHZxogC8rxn5CHSUShsRgS/6APwzaEJN21tfLYowi9jJ1vlBeE1JDJXhtDC58DQ==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen1",
+      "baselineScore": {
+        "primary": 21.27659574468085,
+        "noopRate": 0,
+        "costPerWin": 47,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 40.32258064516129,
+        "noopRate": 0,
+        "costPerWin": 24.8,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root",
+      "generation": 0,
+      "parents": [],
+      "mutation": null,
+      "primaryDelta": 0,
+      "anchorScore": 21.551724137931036,
+      "verdict": "ROOT",
+      "failureReasons": [],
+      "receipt": {
+        "payload": {
+          "kind": "root",
+          "root": "root"
+        },
+        "signature": "jA2qR24/ajmPLCifS/bcWRCK8WQ7MrANzRB3y+mldEqhNfNHiPPZN2Alsuvj0K+IKyhk+UK5vyotVI6SapxABg==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen0"
+    }
+  ],
+  "all_commits": [
+    {
+      "id": "root__mode_gen1",
+      "generation": 1,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "mode",
+        "summary": "adapt mode"
+      },
+      "primaryDelta": 5.039193729003358,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__mode_gen1",
+          "target": "mode",
+          "verdict": "REJECTED",
+          "primaryDelta": 5.039193729003358
+        },
+        "signature": "Rq6A8dkReP5xLBy5fkaXWayE7X+jdsgpnHIraiaIw2k/txbHEiCS++lKbNpYYRUGmJoGaouLlliNJloR8xfIDw==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen1",
+      "baselineScore": {
+        "primary": 21.27659574468085,
+        "noopRate": 0,
+        "costPerWin": 47,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 26.31578947368421,
+        "noopRate": 0,
+        "costPerWin": 38,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__foldEvery_gen1",
+      "generation": 1,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "foldEvery",
+        "summary": "adapt foldEvery"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (21.28 -> 21.28 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__foldEvery_gen1",
+          "target": "foldEvery",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "b8xo3HApfy9if1+QwRanOTxpnMJF2CAG+AfWv4P7TaLdVIJL9L2wkUoH8d6IvQ0q27JKsLS8LAJmcd3hcej+AQ==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen1",
+      "baselineScore": {
+        "primary": 21.27659574468085,
+        "noopRate": 0,
+        "costPerWin": 47,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 21.27659574468085,
+        "noopRate": 0,
+        "costPerWin": 47,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__postPolicy_gen1",
+      "generation": 1,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "postPolicy",
+        "summary": "adapt postPolicy"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (21.28 -> 21.28 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__postPolicy_gen1",
+          "target": "postPolicy",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "a+crlcG9caZCwINDmg+kskDvP8S22wD2umfxYYPbNDaYm2axgWRELzMW1cKooCfhwe+WdvzI7++Zz/9Cgn9HAA==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen1",
+      "baselineScore": {
+        "primary": 21.27659574468085,
+        "noopRate": 0,
+        "costPerWin": 47,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 21.27659574468085,
+        "noopRate": 0,
+        "costPerWin": 47,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__digest_gen1",
+      "generation": 1,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "digest",
+        "summary": "adapt digest"
+      },
+      "primaryDelta": 4.49660013160781,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__digest_gen1",
+          "target": "digest",
+          "verdict": "REJECTED",
+          "primaryDelta": 4.49660013160781
+        },
+        "signature": "/eJfqqc6UaFYFsfA+27rWT/p+MlfXMZg8o0jt9ZxHgNh+5R1BsRIE8AQEsZ2uEOpg1toNYAafoayHx2vKIz3AA==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen1",
+      "baselineScore": {
+        "primary": 21.27659574468085,
+        "noopRate": 0,
+        "costPerWin": 47,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 25.77319587628866,
+        "noopRate": 0,
+        "costPerWin": 38.8,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1",
+      "generation": 1,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "topology",
+        "summary": "adapt topology"
+      },
+      "primaryDelta": 19.045984900480438,
+      "anchorScore": 39.37007874015748,
+      "verdict": "PROMOTED",
+      "failureReasons": [],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1",
+          "target": "topology",
+          "verdict": "PROMOTED",
+          "primaryDelta": 19.045984900480438
+        },
+        "signature": "m44pQA/zGEH3+ifyzZz1hGBXHZxogC8rxn5CHSUShsRgS/6APwzaEJN21tfLYowi9jJ1vlBeE1JDJXhtDC58DQ==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen1",
+      "baselineScore": {
+        "primary": 21.27659574468085,
+        "noopRate": 0,
+        "costPerWin": 47,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 40.32258064516129,
+        "noopRate": 0,
+        "costPerWin": 24.8,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2",
+      "generation": 2,
+      "parents": [
+        "root__topology_gen1"
+      ],
+      "mutation": {
+        "target": "mode",
+        "summary": "adapt mode"
+      },
+      "primaryDelta": 7.296466973886332,
+      "anchorScore": 47.61904761904762,
+      "verdict": "PROMOTED",
+      "failureReasons": [],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2",
+          "target": "mode",
+          "verdict": "PROMOTED",
+          "primaryDelta": 7.296466973886332
+        },
+        "signature": "4nuUuxnjXCFR4p+bDF7If//y+5UX6IbQAO1/LAC2FmySjF7rU5whedVHGNBdfyseGkWvJ9scHeNDlNqh6qGrBA==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen2",
+      "baselineScore": {
+        "primary": 40.32258064516129,
+        "noopRate": 0,
+        "costPerWin": 24.8,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__foldEvery_gen2",
+      "generation": 2,
+      "parents": [
+        "root__topology_gen1"
+      ],
+      "mutation": {
+        "target": "foldEvery",
+        "summary": "adapt foldEvery"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (40.32 -> 40.32 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__foldEvery_gen2",
+          "target": "foldEvery",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "VTH1FQ4SIEKYKf+nHy2fmkzLlABBdIqldGhUA3GiRkaQXLbtufSj+Vblk40hU8BdHtk6hhWvFiGqsBtbquAnBA==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen2",
+      "baselineScore": {
+        "primary": 40.32258064516129,
+        "noopRate": 0,
+        "costPerWin": 24.8,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 40.32258064516129,
+        "noopRate": 0,
+        "costPerWin": 24.8,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__postPolicy_gen2",
+      "generation": 2,
+      "parents": [
+        "root__topology_gen1"
+      ],
+      "mutation": {
+        "target": "postPolicy",
+        "summary": "adapt postPolicy"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (40.32 -> 40.32 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__postPolicy_gen2",
+          "target": "postPolicy",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "/Q5TYtbHOc99ufqNTNdZ3vHs0NZWNgvml/HN6bKyRLwHEMQX2wemVkDkJtSH1w9PclryBqu+EPlNxX73RleWBA==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen2",
+      "baselineScore": {
+        "primary": 40.32258064516129,
+        "noopRate": 0,
+        "costPerWin": 24.8,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 40.32258064516129,
+        "noopRate": 0,
+        "costPerWin": 24.8,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__digest_gen2",
+      "generation": 2,
+      "parents": [
+        "root__topology_gen1"
+      ],
+      "mutation": {
+        "target": "digest",
+        "summary": "adapt digest"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (40.32 -> 40.32 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__digest_gen2",
+          "target": "digest",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "9nQ7OFMAhqx/nMtIJPr6lplnC+v4+6cOSK0bUIt4OCrqSYHGILhkij2RyyANqoAw/XcgFWbIkTfD8i5t3ZsECQ==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen2",
+      "baselineScore": {
+        "primary": 40.32258064516129,
+        "noopRate": 0,
+        "costPerWin": 24.8,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 40.32258064516129,
+        "noopRate": 0,
+        "costPerWin": 24.8,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__topology_gen2",
+      "generation": 2,
+      "parents": [
+        "root__topology_gen1"
+      ],
+      "mutation": {
+        "target": "topology",
+        "summary": "adapt topology"
+      },
+      "primaryDelta": -19.045984900480438,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (40.32 -> 21.28 pts)",
+        "mean steps-to-resolve worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__topology_gen2",
+          "target": "topology",
+          "verdict": "REJECTED",
+          "primaryDelta": -19.045984900480438
+        },
+        "signature": "10M0RYlJey100eJf+d0kweUOMTZq59XywTnvh4gm/c5++OiGHZ9OuaKQUVgunlBEOgvtdB3mHD5c0qh54KnPBg==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen2",
+      "baselineScore": {
+        "primary": 40.32258064516129,
+        "noopRate": 0,
+        "costPerWin": 24.8,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 21.27659574468085,
+        "noopRate": 0,
+        "costPerWin": 47,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__mode_gen3",
+      "generation": 3,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "mode",
+        "summary": "adapt mode"
+      },
+      "primaryDelta": -7.296466973886332,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 40.32 pts)",
+        "mean steps-to-resolve worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__mode_gen3",
+          "target": "mode",
+          "verdict": "REJECTED",
+          "primaryDelta": -7.296466973886332
+        },
+        "signature": "kzSq6ccUFFDvEsddpv7owxLKIUE3KnNkaWbQ66/dN7SEVhwKRuk7i6DgJ0V3SZKLYtH7S3T4eq/dMENdkSChBw==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen3",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 40.32258064516129,
+        "noopRate": 0,
+        "costPerWin": 24.8,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__foldEvery_gen3",
+      "generation": 3,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "foldEvery",
+        "summary": "adapt foldEvery"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 47.62 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__foldEvery_gen3",
+          "target": "foldEvery",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "+z5qIL/4W3nfkMOkLqZ9sf/syw7p5v3TwBua95wDnjxEg/od8Na+BhcDAY7lNngQqT1+vS6X7rlqYqZ2yuPDBQ==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen3",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__postPolicy_gen3",
+      "generation": 3,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "postPolicy",
+        "summary": "adapt postPolicy"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 47.62 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__postPolicy_gen3",
+          "target": "postPolicy",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "hwI4htKrSOGyNXlNJwEi8jc1KUep1FFlWRIcQUbF+fiIGQ1VOAZm4zClG0fR5ggCutVWvcwNB+C/krvAGv0DAQ==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen3",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__digest_gen3",
+      "generation": 3,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "digest",
+        "summary": "adapt digest"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 47.62 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__digest_gen3",
+          "target": "digest",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "D8h29pmckRvz3VMWZCWuAi7L9OaeiKjds0aKUrtxyEJtUtrs1VKxdryQ89xgeZhuK8HnY6GQJQdw8152uMvyDQ==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen3",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__topology_gen3",
+      "generation": 3,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "topology",
+        "summary": "adapt topology"
+      },
+      "primaryDelta": -18.20728291316527,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 29.41 pts)",
+        "mean steps-to-resolve worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__topology_gen3",
+          "target": "topology",
+          "verdict": "REJECTED",
+          "primaryDelta": -18.20728291316527
+        },
+        "signature": "8q0jxAQ90e9CLRtF3O9tOt2jMIZ7l4nRMxjsMYQXlLnUb0bZcwAvvu+Ht7AzGoI1Xn4Pfp+vhU3l0UITZKsYCA==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen3",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 29.41176470588235,
+        "noopRate": 0,
+        "costPerWin": 34,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__mode_gen4",
+      "generation": 4,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "mode",
+        "summary": "adapt mode"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 47.62 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__mode_gen4",
+          "target": "mode",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "J9jxcP2ZVumoxAP+Ogno3vKB5CWTeud7ORNTY9fq6hsHbK9m4sXZQbcIhd3iSOVmRmiGzrKtx3tBBPkpKVzjAA==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen4",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__foldEvery_gen4",
+      "generation": 4,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "foldEvery",
+        "summary": "adapt foldEvery"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 47.62 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__foldEvery_gen4",
+          "target": "foldEvery",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "sqcR8d7IA9bnceS74ON2dZkZcP31vkK8SOHI778IKNXPH527ZuNuypkVf1QRKubCm7XVIHUmOJWuhaNmbOqWCw==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen4",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__postPolicy_gen4",
+      "generation": 4,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "postPolicy",
+        "summary": "adapt postPolicy"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 47.62 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__postPolicy_gen4",
+          "target": "postPolicy",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "jpzues8lWwZNEPPizKG+6PlWGgYm6JOP7bdYMLsJHEgzf4LwVCUfSfvUA/vjqrCyDEyhVR8noTattJddBnc+Dg==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen4",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__digest_gen4",
+      "generation": 4,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "digest",
+        "summary": "adapt digest"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 47.62 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__digest_gen4",
+          "target": "digest",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "zgJoZZmWjRWgEh2TnwseYTtzLPDqwDCMLvzIDe+Vv7fwXJqib2Zu1+GBhESOuAAl0UZOQ3xDMerWWNy+NIhLDA==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen4",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__topology_gen4",
+      "generation": 4,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "topology",
+        "summary": "adapt topology"
+      },
+      "primaryDelta": -18.20728291316527,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 29.41 pts)",
+        "mean steps-to-resolve worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__topology_gen4",
+          "target": "topology",
+          "verdict": "REJECTED",
+          "primaryDelta": -18.20728291316527
+        },
+        "signature": "7KZwJTTzoeKf+jQKzRHaVZ2CmDvEetvU2dyE7SLE3laD1fkQZjaj1l9HAF8Y9/SoqOS10bbenKlNT3fHyhTYCw==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen4",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 29.41176470588235,
+        "noopRate": 0,
+        "costPerWin": 34,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__mode_gen5",
+      "generation": 5,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "mode",
+        "summary": "adapt mode"
+      },
+      "primaryDelta": -7.296466973886332,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 40.32 pts)",
+        "mean steps-to-resolve worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__mode_gen5",
+          "target": "mode",
+          "verdict": "REJECTED",
+          "primaryDelta": -7.296466973886332
+        },
+        "signature": "uwwDLxq46v+myk/+L67PpSxPbjgrQboOtXeWT/kTLY9E7uVnuwG3X/BC4F4P5DAG6OGAX093K9pLLfTaLpofCg==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen5",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 40.32258064516129,
+        "noopRate": 0,
+        "costPerWin": 24.8,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__foldEvery_gen5",
+      "generation": 5,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "foldEvery",
+        "summary": "adapt foldEvery"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 47.62 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__foldEvery_gen5",
+          "target": "foldEvery",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "TllgAuv7EWABH601alTnmd7eCYvG9nS4hEvhG7BhMGdCX6p7VyEZuAbholjevVAU0mL0HqIFqcJmmZg9aoY6AQ==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen5",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__postPolicy_gen5",
+      "generation": 5,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "postPolicy",
+        "summary": "adapt postPolicy"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 47.62 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__postPolicy_gen5",
+          "target": "postPolicy",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "Mvo3sbKhlJNQ8fp1uGkKeVdAQTA7QWBu7Gwf3jFPYFYK1eRgvOcFsxe5e/6EmmcuemEIMBrc0EGSC9PJ6s5hBQ==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen5",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__digest_gen5",
+      "generation": 5,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "digest",
+        "summary": "adapt digest"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 47.62 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__digest_gen5",
+          "target": "digest",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "xF6VnhdswC469D/sDtcxxnvRXhFxZfVNp+/1lkRB9tQjTGM5coi1pnjl28m1KldB94DwrDqY860BOMXC08HOAg==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen5",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__topology_gen5",
+      "generation": 5,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "topology",
+        "summary": "adapt topology"
+      },
+      "primaryDelta": -18.20728291316527,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 29.41 pts)",
+        "mean steps-to-resolve worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__topology_gen5",
+          "target": "topology",
+          "verdict": "REJECTED",
+          "primaryDelta": -18.20728291316527
+        },
+        "signature": "VSn/Edy5CYILRVKjdn+T/J36fNdY9M52PqrHpU8151jaxbyYqiA6jMqCp2osd75y2NDYh51xKXfgOKpnD6hfDA==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen5",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 29.41176470588235,
+        "noopRate": 0,
+        "costPerWin": 34,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__mode_gen6",
+      "generation": 6,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "mode",
+        "summary": "adapt mode"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 47.62 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__mode_gen6",
+          "target": "mode",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "ZFOl2aNEymEq1/Ds9XOpx6n/E/47h4+lxMEkWP3UmapwUtYxiprDtjSmVibOw2Q+aU7GhIugozWSGmxxFknBAA==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen6",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__foldEvery_gen6",
+      "generation": 6,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "foldEvery",
+        "summary": "adapt foldEvery"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 47.62 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__foldEvery_gen6",
+          "target": "foldEvery",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "sGV+GeGjdd0j5n7nK6RtFMgpw72MkO9X3dSnKepzGYdjgEJih+0JGlBFvrEuLU//Kk4OHkp//CWsNul/dwe1Ag==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen6",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__postPolicy_gen6",
+      "generation": 6,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "postPolicy",
+        "summary": "adapt postPolicy"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 47.62 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__postPolicy_gen6",
+          "target": "postPolicy",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "h++OfjcnHDvd7SL2hKGHi4vsXbjzTLeHYwKH1PDTHWHDxnqw4O8FfXIMHokqbUVXXjcU5xAVQiua/Df+CmV8Aw==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen6",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__digest_gen6",
+      "generation": 6,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "digest",
+        "summary": "adapt digest"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 47.62 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__digest_gen6",
+          "target": "digest",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "zuMVcIBzk0l909rh4Td36Rr+tLrxrdKNEtbnAv+m0Ve+Rdc+ecKQ+2uAkB+1Y2TLI5x6iG7bUnGEaOabnordCA==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen6",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__topology_gen6",
+      "generation": 6,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "topology",
+        "summary": "adapt topology"
+      },
+      "primaryDelta": -18.20728291316527,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 29.41 pts)",
+        "mean steps-to-resolve worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__topology_gen6",
+          "target": "topology",
+          "verdict": "REJECTED",
+          "primaryDelta": -18.20728291316527
+        },
+        "signature": "LK+JS9j9PHpcVxfHcKHxa0RQylRJ+g2J7ZFIb44AGHC6hiUWJ3qzlwQI0YOSoOv0+5hfBaWITnt41fUAoe74CA==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen6",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 29.41176470588235,
+        "noopRate": 0,
+        "costPerWin": 34,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__mode_gen7",
+      "generation": 7,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "mode",
+        "summary": "adapt mode"
+      },
+      "primaryDelta": -7.296466973886332,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 40.32 pts)",
+        "mean steps-to-resolve worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__mode_gen7",
+          "target": "mode",
+          "verdict": "REJECTED",
+          "primaryDelta": -7.296466973886332
+        },
+        "signature": "lSVJ3PVg4L58cCVGA4JQgpKPSSXNrbRDocArvtID39dSZj33NMIF048cOO6244CTjd5EdKAl2dmJ51kTqBmbCw==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen7",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 40.32258064516129,
+        "noopRate": 0,
+        "costPerWin": 24.8,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__foldEvery_gen7",
+      "generation": 7,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "foldEvery",
+        "summary": "adapt foldEvery"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 47.62 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__foldEvery_gen7",
+          "target": "foldEvery",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "laL1QfSlhDRnyeD48oNp5N6+p7tiyfN4CqztadulY2NTbwfNfQ63zeD0jdl9j/Vmdokcpz9seicgR1j9slf7Cw==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen7",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__postPolicy_gen7",
+      "generation": 7,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "postPolicy",
+        "summary": "adapt postPolicy"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 47.62 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__postPolicy_gen7",
+          "target": "postPolicy",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "4zNnvFdeQLem1Jm4ehc5HqWfjr7qcssp4oU5qyIkohH8aZGGJwUW/R5g/i98v3nB+B84zS5ILHP7/z9F4tN1Bw==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen7",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__digest_gen7",
+      "generation": 7,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "digest",
+        "summary": "adapt digest"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 47.62 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__digest_gen7",
+          "target": "digest",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "4jgRkYhY58Ziga3//+U4Xs0KR59/YzWDIbHY8yidZoRW89mazgFxd8ORZk7RfbOeBf7nTSPBjapLQhGIItgeCA==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen7",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__topology_gen7",
+      "generation": 7,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "topology",
+        "summary": "adapt topology"
+      },
+      "primaryDelta": -18.20728291316527,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 29.41 pts)",
+        "mean steps-to-resolve worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__topology_gen7",
+          "target": "topology",
+          "verdict": "REJECTED",
+          "primaryDelta": -18.20728291316527
+        },
+        "signature": "h+ff7TnNw+jbXaGTquKXLboTCKOysqyh6a1q5zKoFyO0JvXEMx2ej5YDmnOAQYZxrgeU2efxPUMGlY6oBdhwDA==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen7",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 29.41176470588235,
+        "noopRate": 0,
+        "costPerWin": 34,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__mode_gen8",
+      "generation": 8,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "mode",
+        "summary": "adapt mode"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 47.62 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__mode_gen8",
+          "target": "mode",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "HLWSMPUxR9WATSLxb5HF4W6RrZTzDDEnsCwhH3H/sJZqTomkfrkkb4zrX+JmOYDBjriQiXnHi/AaCMdrxRFGBA==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen8",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__foldEvery_gen8",
+      "generation": 8,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "foldEvery",
+        "summary": "adapt foldEvery"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 47.62 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__foldEvery_gen8",
+          "target": "foldEvery",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "AjYgTvrxTzKhD2/eR21+E3KC6ye2Mmb1UK2igWxX+afD/Fsjnp+AePJMxS4aEKevivI5fJ1LulIiuuprvQTQDg==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen8",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__postPolicy_gen8",
+      "generation": 8,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "postPolicy",
+        "summary": "adapt postPolicy"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 47.62 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__postPolicy_gen8",
+          "target": "postPolicy",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "2rRUGcXq1gQOWvq+nkVbQgjsHeV6EcC1bzZ3wUOeo+KgOuk82vmCdnaJ6v387h9tZUrKqGbe4G3/165xMZKXAw==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen8",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__digest_gen8",
+      "generation": 8,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "digest",
+        "summary": "adapt digest"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 47.62 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__digest_gen8",
+          "target": "digest",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "Q2/JbgGbzcyekOKEy0aqlkeepA22E1HpnuVyXn8XOXxKlpSAp73if3BtTNaawlwzNnr1LN7cy+mdmd+EUAT4DQ==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen8",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__topology_gen1__mode_gen2__topology_gen8",
+      "generation": 8,
+      "parents": [
+        "root__topology_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "topology",
+        "summary": "adapt topology"
+      },
+      "primaryDelta": -18.20728291316527,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (47.62 -> 29.41 pts)",
+        "mean steps-to-resolve worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__topology_gen1__mode_gen2__topology_gen8",
+          "target": "topology",
+          "verdict": "REJECTED",
+          "primaryDelta": -18.20728291316527
+        },
+        "signature": "f+1hIuWnurfgBwjwxa6iVhI3l9+avNODtWnPlaxxEM3f7b/bTElix8/iFuLOIyhqJE8letGfdox4TFbNHOYxDQ==",
+        "publicKey": "MCowBQYDK2VwAyEAORuzlTMepKXmq4wfW5QCo/GlduotDi6DQYEBSKiTj2Y=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T17:12:07.830Z#gen8",
+      "baselineScore": {
+        "primary": 47.61904761904762,
+        "noopRate": 0,
+        "costPerWin": 21,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 29.41176470588235,
+        "noopRate": 0,
+        "costPerWin": 34,
+        "regressed": false
+      }
+    }
+  ],
+  "lift_curve": [
+    {
+      "generation": 0,
+      "primary": 21.27659574468085,
+      "delta": 0,
+      "anchor": 21.551724137931036
+    },
+    {
+      "generation": 1,
+      "primary": 40.32258064516129,
+      "delta": 19.045984900480438,
+      "anchor": 39.37007874015748
+    },
+    {
+      "generation": 2,
+      "primary": 47.61904761904762,
+      "delta": 7.296466973886332,
+      "anchor": 47.61904761904762
+    }
+  ],
+  "gate_fingerprint": "a9141969c3e7ca35dad1598db676769ea7e70feebafa8a7a4e871d20005dcae4",
+  "verified_improvements": 2,
+  "anchor_surviving_improvements": 2,
+  "milestone_reached": true,
+  "created_at": "2026-08-08T17:12:07.830Z#gen8"
+}
