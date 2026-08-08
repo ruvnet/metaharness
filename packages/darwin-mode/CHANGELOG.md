@@ -2,7 +2,7 @@
 
 All notable changes to this package. Dates UTC.
 
-## Unreleased
+## 0.8.2 — 2026-08-08
 
 - **Clade selection 1.5–2.7× faster** (`bench:clade`: 443 → 1178 calls/s at n=3000 branching,
   3234 → 4896 at n=200 chain), with identical selections for a fixed seed — the rng draw
