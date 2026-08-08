@@ -1,0 +1,3 @@
+aware: 912 canon bytes, receipt=true
+flat: 857 canon bytes, receipt=true
+noisy-flat: 911 canon bytes, receipt=true
