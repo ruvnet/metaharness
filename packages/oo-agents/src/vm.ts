@@ -28,9 +28,29 @@ export interface HostBinding {
 const here = dirname(fileURLToPath(import.meta.url));
 const WASM_PATH = join(here, '..', 'wasm', 'ooa_cell_vm.wasm');
 
+// Codecs are stateless for encode/decode — one shared pair beats allocating a
+// fresh TextEncoder/TextDecoder on every host call (a hot path: one round-trip
+// per `self.method()` the model writes).
+const ENC = new TextEncoder();
+const DEC = new TextDecoder();
+
 export class CellVm {
   private instance!: WebAssembly.Instance;
   private binding: HostBinding | null = null;
+  // Cached view over wasm linear memory. `ooa_alloc`/`memory.grow` can detach
+  // the underlying ArrayBuffer, invalidating the view — `mem()` rebuilds it
+  // only when the buffer identity changes, so the steady state allocates none.
+  private memView: Uint8Array | null = null;
+  private memBuf: ArrayBuffer | null = null;
+
+  private mem(): Uint8Array {
+    const buf = this.exports.memory.buffer;
+    if (buf !== this.memBuf || this.memView === null) {
+      this.memBuf = buf;
+      this.memView = new Uint8Array(buf);
+    }
+    return this.memView;
+  }
 
   static async load(wasmPath: string = WASM_PATH): Promise<CellVm> {
     const vm = new CellVm();
@@ -54,16 +74,18 @@ export class CellVm {
   }
 
   private readPacked(ptr: number): string {
-    const mem = new Uint8Array(this.exports.memory.buffer);
+    const mem = this.mem();
     const len =
       mem[ptr] | (mem[ptr + 1] << 8) | (mem[ptr + 2] << 16) | (mem[ptr + 3] << 24);
-    return new TextDecoder().decode(mem.slice(ptr + 4, ptr + 4 + len));
+    // subarray is a view (no copy); decoded immediately, before any wasm call
+    // that could grow/detach the buffer.
+    return DEC.decode(mem.subarray(ptr + 4, ptr + 4 + len));
   }
 
   private writePacked(json: string): number {
-    const bytes = new TextEncoder().encode(json);
-    const ptr = this.exports.ooa_alloc(4 + bytes.length);
-    const mem = new Uint8Array(this.exports.memory.buffer);
+    const bytes = ENC.encode(json);
+    const ptr = this.exports.ooa_alloc(4 + bytes.length); // may detach the buffer
+    const mem = this.mem();
     mem[ptr] = bytes.length & 0xff;
     mem[ptr + 1] = (bytes.length >> 8) & 0xff;
     mem[ptr + 2] = (bytes.length >> 16) & 0xff;
@@ -73,8 +95,8 @@ export class CellVm {
   }
 
   private hostCall(ptr: number, len: number): number {
-    const mem = new Uint8Array(this.exports.memory.buffer);
-    const req = new TextDecoder().decode(mem.slice(ptr, ptr + len));
+    const mem = this.mem();
+    const req = DEC.decode(mem.subarray(ptr, ptr + len));
     let resp: string;
     try {
       const parsed = JSON.parse(req) as { field?: string; method?: string; args?: unknown[] };
@@ -102,9 +124,9 @@ export class CellVm {
 
   /** Run one cell; namespace persists until the next reset(). */
   runCell(source: string, fuel = 0n): CellOutcome {
-    const src = new TextEncoder().encode(source);
-    const inPtr = this.exports.ooa_alloc(src.length);
-    new Uint8Array(this.exports.memory.buffer).set(src, inPtr);
+    const src = ENC.encode(source);
+    const inPtr = this.exports.ooa_alloc(src.length); // may detach the buffer
+    this.mem().set(src, inPtr);
     const outPtr = this.exports.ooa_run_cell(inPtr, src.length, fuel);
     const parsed = JSON.parse(this.readPacked(outPtr)) as CellOutcome;
     return parsed;
