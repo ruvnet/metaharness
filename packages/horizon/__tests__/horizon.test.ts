@@ -10,12 +10,16 @@ import {
   type StepResult,
 } from '../src/index.js';
 
+// Skip the whole suite when the wasm artifact hasn't been built (the Node CI
+// job has no Rust toolchain — same pattern as oo-agents' CellVm skipIf).
+const wasmOk = await HorizonCore.load().then(() => true).catch(() => false);
+
 let core: HorizonCore;
 beforeAll(async () => {
-  core = await HorizonCore.load();
+  if (wasmOk) core = await HorizonCore.load();
 });
 
-describe('HaltController (ADK halt_reason)', () => {
+describe.skipIf(!wasmOk)('HaltController (ADK halt_reason)', () => {
   const cfg = { maxIterations: 3, noProgressLimit: 3, repeatedFailureLimit: 3 };
 
   it('arms on observe but only halts at the next before_model', () => {
@@ -72,7 +76,7 @@ describe('HaltController (ADK halt_reason)', () => {
   });
 });
 
-describe('CommandGuard (ADK command_classify — anti-smuggling)', () => {
+describe.skipIf(!wasmOk)('CommandGuard (ADK command_classify — anti-smuggling)', () => {
   let g: CommandGuard;
   beforeAll(() => {
     g = new CommandGuard(core);
@@ -127,7 +131,7 @@ function makeSeams(log: string[]): CompactionSeams<HorizonEvent> {
   };
 }
 
-describe('CompactionPolicy (flush-before-summarize invariant)', () => {
+describe.skipIf(!wasmOk)('CompactionPolicy (flush-before-summarize invariant)', () => {
   const mk = (n: number): HorizonEvent[] =>
     Array.from({ length: n }, (_, i) => ({ role: 'tool', text: `event-${i}-` + 'x'.repeat(50) }));
 
@@ -175,7 +179,7 @@ describe('CompactionPolicy (flush-before-summarize invariant)', () => {
   });
 });
 
-describe('LongHorizonDriver (the composed loop)', () => {
+describe.skipIf(!wasmOk)('LongHorizonDriver (the composed loop)', () => {
   const config = {
     halt: { maxIterations: 20, noProgressLimit: 3, repeatedFailureLimit: 3 },
     policy: {},
