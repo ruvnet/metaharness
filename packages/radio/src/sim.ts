@@ -61,7 +61,14 @@
 //   postPolicy 'immediate'|'batched'|'silent' — when discoverers post cross
 //              facts in 'passive' mode. 'batched' delays and coalesces posts
 //              (fewer messages, later delivery); 'silent' disables live sharing
-//              entirely, degenerating passive into the negotiate/blocking arm.
+//              entirely, NEARLY degenerating passive into the negotiate arm:
+//              cross facts still surface only at Review and every post still
+//              costs a step, but the passive watcher stays on, so the Review
+//              broadcast folds in at the next step boundary for free instead
+//              of costing one blockingReceive() per agent. (This small edge is
+//              what keeps the flywheel's landscape climbable one lever at a
+//              time: silent-passive strictly beats negotiate, and switching
+//              postPolicy on then unlocks the live-sharing lift.)
 //
 // Sanity ordering the flywheel relies on (defaults tuned for it, verified over
 // seeds 1..10): stepsToResolve orders passive < negotiate <= divide < single,
@@ -528,12 +535,19 @@ export function runSim(cfg: SimConfig): SimResult {
         }
       }
       for (let a = 0; a < agentCount; a++) {
-        // One blocking receive drains all pending mentions but costs a step.
-        totalSteps++;
-        perAgentSteps[a]++;
-        exchangeSteps++;
-        blockingReceives++;
-        crossFactsDelivered += applyFold(a, true);
+        if (mode === 'passive') {
+          // 'silent' passive: live posting was suppressed, but the watcher
+          // never turned off — the Review broadcast folds in at the next step
+          // boundary at zero cost. Listening stays free; only posting paid.
+          crossFactsDelivered += applyFold(a, false);
+        } else {
+          // One blocking receive drains all pending mentions but costs a step.
+          totalSteps++;
+          perAgentSteps[a]++;
+          exchangeSteps++;
+          blockingReceives++;
+          crossFactsDelivered += applyFold(a, true);
+        }
       }
       updateResolution();
     }

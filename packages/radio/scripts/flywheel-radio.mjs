@@ -106,9 +106,11 @@ async function evaluator(policy, suite) {
 // ---------------------------------------------------------------------------
 // The FROZEN gate. Conjunctive: ≥2% measured lift, cost (steps) must not
 // worsen, an unresolved seed is a hard stop, and the anchor topology must not
-// regress more than 2% (noise band — the sim is deterministic, but the band
-// keeps the gate shape identical to the k3 kernel wheel). Fingerprinted into
-// the replay bundle: loosening it invalidates the lineage.
+// regress more than 2% (noise band). Identical shape AND threshold to the k3
+// kernel wheel (k3KernelPromotionRule) — the gate is the product; it is
+// fingerprinted into the replay bundle and never lowered to admit a marginal
+// candidate. A sub-2% rung simply does not promote, and that is the honest
+// result, not a reason to move the gate.
 function radioCommsPromotionRule(e) {
   const reasons = [];
   if (e.candidate.regressed) reasons.push('a holdout seed went unresolved under the candidate policy');

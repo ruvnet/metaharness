@@ -3,6 +3,86 @@
   "root_id": "root",
   "chain": [
     {
+      "id": "root__mode_gen1__mode_gen2__postPolicy_gen3",
+      "generation": 3,
+      "parents": [
+        "root__mode_gen1__mode_gen2"
+      ],
+      "mutation": {
+        "target": "postPolicy",
+        "summary": "adapt postPolicy"
+      },
+      "primaryDelta": 13.27306643707849,
+      "anchorScore": 52.083333333333336,
+      "verdict": "PROMOTED",
+      "failureReasons": [],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__mode_gen1__mode_gen2__postPolicy_gen3",
+          "target": "postPolicy",
+          "verdict": "PROMOTED",
+          "primaryDelta": 13.27306643707849
+        },
+        "signature": "tMMakc45z/+OLKAGxo1h4HgSPo02yr6zFr142rkJctYSGFjx8sfU/B8wdaLJjrhr+0mFhUO2DCoKfWLhh6ATCw==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T00:56:50.809Z#gen3",
+      "baselineScore": {
+        "primary": 36.231884057971016,
+        "noopRate": 0,
+        "costPerWin": 27.6,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 49.504950495049506,
+        "noopRate": 0,
+        "costPerWin": 20.2,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__mode_gen1__mode_gen2",
+      "generation": 2,
+      "parents": [
+        "root__mode_gen1"
+      ],
+      "mutation": {
+        "target": "mode",
+        "summary": "adapt mode"
+      },
+      "primaryDelta": 4.586314437717853,
+      "anchorScore": 34.72222222222222,
+      "verdict": "PROMOTED",
+      "failureReasons": [],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__mode_gen1__mode_gen2",
+          "target": "mode",
+          "verdict": "PROMOTED",
+          "primaryDelta": 4.586314437717853
+        },
+        "signature": "ErcIVBM7WHRRCIxrfqZ5GE1fSz0t4NMr0rPTIfMKmzxYWfky71Fi7A6d9iIQ6+RlYucknbR7os/riJjIeuhzCQ==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T00:56:50.809Z#gen2",
+      "baselineScore": {
+        "primary": 31.645569620253163,
+        "noopRate": 0,
+        "costPerWin": 31.6,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 36.231884057971016,
+        "noopRate": 0,
+        "costPerWin": 27.6,
+        "regressed": false
+      }
+    },
+    {
       "id": "root__mode_gen1",
       "generation": 1,
       "parents": [
@@ -24,11 +104,11 @@
           "verdict": "PROMOTED",
           "primaryDelta": 5.467559149048977
         },
-        "signature": "Cbqzvjz677thmpfW8g+6waPZn+HgQz8uU5Kw1kPN5CVu/GtvwZdIBKUu3zcRQRIRIjaSIdU4KJbbrlk8BCUoDQ==",
-        "publicKey": "MCowBQYDK2VwAyEAjjyTZrf4849r1UdcM7+dgN5opOMKxZUuiuB9ZOC8NBI=",
+        "signature": "6KLTBu3j15PvBfbXD+uRVPwVUDl2ySUsg1ZAWDrcVo8F2saGqS/CDfeqL0AWk1TnzwXMkgZPEcYSe44a2dC2BA==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
         "alg": "ed25519"
       },
-      "createdAt": "2026-08-08T00:51:24.628Z#gen1",
+      "createdAt": "2026-08-08T00:56:50.809Z#gen1",
       "baselineScore": {
         "primary": 26.178010471204185,
         "noopRate": 0,
@@ -56,11 +136,11 @@
           "kind": "root",
           "root": "root"
         },
-        "signature": "gwR8Ib1919DzZzWWTLpxum3mAEUYVC4VL8W0emBVDEWTMZyIxy3mL4NdtHn50KdJAZ5H+fqcarsiRGknBl9mBA==",
-        "publicKey": "MCowBQYDK2VwAyEAjjyTZrf4849r1UdcM7+dgN5opOMKxZUuiuB9ZOC8NBI=",
+        "signature": "RilOGXdDf/RpaT50ldkPFRdx5948LRq+6pXJgt6H273Q7PAMRJNIsach0JTwfTyHYLtUIWPFwHL0CFd0SOTbCw==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
         "alg": "ed25519"
       },
-      "createdAt": "2026-08-08T00:51:24.628Z#gen0"
+      "createdAt": "2026-08-08T00:56:50.809Z#gen0"
     }
   ],
   "all_commits": [
@@ -86,11 +166,11 @@
           "verdict": "PROMOTED",
           "primaryDelta": 5.467559149048977
         },
-        "signature": "Cbqzvjz677thmpfW8g+6waPZn+HgQz8uU5Kw1kPN5CVu/GtvwZdIBKUu3zcRQRIRIjaSIdU4KJbbrlk8BCUoDQ==",
-        "publicKey": "MCowBQYDK2VwAyEAjjyTZrf4849r1UdcM7+dgN5opOMKxZUuiuB9ZOC8NBI=",
+        "signature": "6KLTBu3j15PvBfbXD+uRVPwVUDl2ySUsg1ZAWDrcVo8F2saGqS/CDfeqL0AWk1TnzwXMkgZPEcYSe44a2dC2BA==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
         "alg": "ed25519"
       },
-      "createdAt": "2026-08-08T00:51:24.628Z#gen1",
+      "createdAt": "2026-08-08T00:56:50.809Z#gen1",
       "baselineScore": {
         "primary": 26.178010471204185,
         "noopRate": 0,
@@ -128,11 +208,11 @@
           "verdict": "REJECTED",
           "primaryDelta": 0
         },
-        "signature": "g9M4kSNor1x7Sk+aPqRxPIMD6pY5Ol3+XxZmbCcxB1/YQABDQV0EVno5kiMmjLE09DTo0bfuYgK2Bvhnj2oCAw==",
-        "publicKey": "MCowBQYDK2VwAyEAjjyTZrf4849r1UdcM7+dgN5opOMKxZUuiuB9ZOC8NBI=",
+        "signature": "pxTzDSyTuDPn75PLk2HOEo7VZZ5wg8ksUGQeobMdY+jzBq2PSkck1fPpbO4GlzHX58Mal0qGLwMOAySmAb3RDg==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
         "alg": "ed25519"
       },
-      "createdAt": "2026-08-08T00:51:24.628Z#gen1",
+      "createdAt": "2026-08-08T00:56:50.809Z#gen1",
       "baselineScore": {
         "primary": 26.178010471204185,
         "noopRate": 0,
@@ -170,11 +250,11 @@
           "verdict": "REJECTED",
           "primaryDelta": 0
         },
-        "signature": "IPPZI8a6cAc0jEKzM16uHdBqgWfwLJolJ9zDJndpicvuBj2POi1jVYovICuyxoRDDAD4uMpk/NSfKLP43vcLBw==",
-        "publicKey": "MCowBQYDK2VwAyEAjjyTZrf4849r1UdcM7+dgN5opOMKxZUuiuB9ZOC8NBI=",
+        "signature": "8JD11zYHP3xf8QYE4+3G0TAWS3dEJ15lBIsYlMcCev218nPM8zp9+zgXUWZDPdzrgCtIbPFwYQNzzKm1dGw/Aw==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
         "alg": "ed25519"
       },
-      "createdAt": "2026-08-08T00:51:24.628Z#gen1",
+      "createdAt": "2026-08-08T00:56:50.809Z#gen1",
       "baselineScore": {
         "primary": 26.178010471204185,
         "noopRate": 0,
@@ -198,25 +278,23 @@
         "target": "mode",
         "summary": "adapt mode"
       },
-      "primaryDelta": 0,
-      "anchorScore": null,
-      "verdict": "REJECTED",
-      "failureReasons": [
-        "lift below 2% floor (31.65 -> 31.65 pts)"
-      ],
+      "primaryDelta": 4.586314437717853,
+      "anchorScore": 34.72222222222222,
+      "verdict": "PROMOTED",
+      "failureReasons": [],
       "receipt": {
         "payload": {
           "kind": "candidate",
           "id": "root__mode_gen1__mode_gen2",
           "target": "mode",
-          "verdict": "REJECTED",
-          "primaryDelta": 0
+          "verdict": "PROMOTED",
+          "primaryDelta": 4.586314437717853
         },
-        "signature": "2XVJVRO3UNkp4VsjwXMQiKiRxG19o48XR3L4xTrNiKbQrKiS/wf6gLTgOlkEcmsks7yDDUpbNaWVZcqJ/HCGCQ==",
-        "publicKey": "MCowBQYDK2VwAyEAjjyTZrf4849r1UdcM7+dgN5opOMKxZUuiuB9ZOC8NBI=",
+        "signature": "ErcIVBM7WHRRCIxrfqZ5GE1fSz0t4NMr0rPTIfMKmzxYWfky71Fi7A6d9iIQ6+RlYucknbR7os/riJjIeuhzCQ==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
         "alg": "ed25519"
       },
-      "createdAt": "2026-08-08T00:51:24.628Z#gen2",
+      "createdAt": "2026-08-08T00:56:50.809Z#gen2",
       "baselineScore": {
         "primary": 31.645569620253163,
         "noopRate": 0,
@@ -224,9 +302,9 @@
         "regressed": false
       },
       "candidateScore": {
-        "primary": 31.645569620253163,
+        "primary": 36.231884057971016,
         "noopRate": 0,
-        "costPerWin": 31.6,
+        "costPerWin": 27.6,
         "regressed": false
       }
     },
@@ -254,11 +332,11 @@
           "verdict": "REJECTED",
           "primaryDelta": 0
         },
-        "signature": "M5/f8z4yWfQua0pkV7sKF7U2dVIZCaGvPnuL6GRMui+mZUyeHeCVZkrMQ857Zt+34lvVoG+8OJwXPkDGl7JkDw==",
-        "publicKey": "MCowBQYDK2VwAyEAjjyTZrf4849r1UdcM7+dgN5opOMKxZUuiuB9ZOC8NBI=",
+        "signature": "3IdbRxjB2x2hKELT30UVNGnAMT5Qv03bOmHVY+dQRth2SXctHE4eJ7Gg7/GqAgRyA/OMUOtKqnWqh+/QF7wRBQ==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
         "alg": "ed25519"
       },
-      "createdAt": "2026-08-08T00:51:24.628Z#gen2",
+      "createdAt": "2026-08-08T00:56:50.809Z#gen2",
       "baselineScore": {
         "primary": 31.645569620253163,
         "noopRate": 0,
@@ -296,11 +374,11 @@
           "verdict": "REJECTED",
           "primaryDelta": 0
         },
-        "signature": "Rjkno28jLnOmxYIFcnp8BDWyC4sR3lLeJildft3PM3xhWZuo1/Un5l9ITpaaJZhuzAS3ikjxoD1m+zbmYLxaDg==",
-        "publicKey": "MCowBQYDK2VwAyEAjjyTZrf4849r1UdcM7+dgN5opOMKxZUuiuB9ZOC8NBI=",
+        "signature": "JyEIXDoq9L/9d+ZQyOayf7+2E047Br4+mY3i2ozNuNgn85TRHpwsSb/S3kXXKkwTf3/Hvalgi73S5nlOK/wNAA==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
         "alg": "ed25519"
       },
-      "createdAt": "2026-08-08T00:51:24.628Z#gen2",
+      "createdAt": "2026-08-08T00:56:50.809Z#gen2",
       "baselineScore": {
         "primary": 31.645569620253163,
         "noopRate": 0,
@@ -315,39 +393,39 @@
       }
     },
     {
-      "id": "root__mode_gen1__mode_gen3",
+      "id": "root__mode_gen1__mode_gen2__mode_gen3",
       "generation": 3,
       "parents": [
-        "root__mode_gen1"
+        "root__mode_gen1__mode_gen2"
       ],
       "mutation": {
         "target": "mode",
         "summary": "adapt mode"
       },
-      "primaryDelta": -5.467559149048977,
+      "primaryDelta": -10.05387358676683,
       "anchorScore": null,
       "verdict": "REJECTED",
       "failureReasons": [
-        "lift below 2% floor (31.65 -> 26.18 pts)",
+        "lift below 2% floor (36.23 -> 26.18 pts)",
         "mean steps-to-resolve worsened"
       ],
       "receipt": {
         "payload": {
           "kind": "candidate",
-          "id": "root__mode_gen1__mode_gen3",
+          "id": "root__mode_gen1__mode_gen2__mode_gen3",
           "target": "mode",
           "verdict": "REJECTED",
-          "primaryDelta": -5.467559149048977
+          "primaryDelta": -10.05387358676683
         },
-        "signature": "8udQaHV5Ha+f88q96XXHOAjDmXHEPYEp3Kn621PnGS1RmGeG8WVBYPSN7EZEJdf/byw0qu6WnK8r3pOqSmqMBg==",
-        "publicKey": "MCowBQYDK2VwAyEAjjyTZrf4849r1UdcM7+dgN5opOMKxZUuiuB9ZOC8NBI=",
+        "signature": "U5O83H5h71e6TnZjStBE8LfrfsSqY1QM2OaoZPi8IWb+9I3xD0TWPKLC8WOZbGEqcMV/TdPNWwpV4ErovS7vAQ==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
         "alg": "ed25519"
       },
-      "createdAt": "2026-08-08T00:51:24.628Z#gen3",
+      "createdAt": "2026-08-08T00:56:50.809Z#gen3",
       "baselineScore": {
-        "primary": 31.645569620253163,
+        "primary": 36.231884057971016,
         "noopRate": 0,
-        "costPerWin": 31.6,
+        "costPerWin": 27.6,
         "regressed": false
       },
       "candidateScore": {
@@ -358,10 +436,10 @@
       }
     },
     {
-      "id": "root__mode_gen1__foldEvery_gen3",
+      "id": "root__mode_gen1__mode_gen2__foldEvery_gen3",
       "generation": 3,
       "parents": [
-        "root__mode_gen1"
+        "root__mode_gen1__mode_gen2"
       ],
       "mutation": {
         "target": "foldEvery",
@@ -371,236 +449,235 @@
       "anchorScore": null,
       "verdict": "REJECTED",
       "failureReasons": [
-        "lift below 2% floor (31.65 -> 31.65 pts)"
+        "lift below 2% floor (36.23 -> 36.23 pts)"
       ],
       "receipt": {
         "payload": {
           "kind": "candidate",
-          "id": "root__mode_gen1__foldEvery_gen3",
+          "id": "root__mode_gen1__mode_gen2__foldEvery_gen3",
           "target": "foldEvery",
           "verdict": "REJECTED",
           "primaryDelta": 0
         },
-        "signature": "AaFTOkcM4DPKF05y43BE1zR77zEiLdDj9cISAqN7nQxDM20dO1DS4YEAwU3GfJUScXxisl6hSc3iC6PEd2xoAA==",
-        "publicKey": "MCowBQYDK2VwAyEAjjyTZrf4849r1UdcM7+dgN5opOMKxZUuiuB9ZOC8NBI=",
+        "signature": "jceWiGOXE86UYcDLIFCIfkdRUuwEi7ts4aH5+tMozwplUYw/rKfNisZGQd9ETFBo7e5X89eUgb3Ac4S9tIRkAQ==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
         "alg": "ed25519"
       },
-      "createdAt": "2026-08-08T00:51:24.628Z#gen3",
+      "createdAt": "2026-08-08T00:56:50.809Z#gen3",
       "baselineScore": {
-        "primary": 31.645569620253163,
+        "primary": 36.231884057971016,
         "noopRate": 0,
-        "costPerWin": 31.6,
+        "costPerWin": 27.6,
         "regressed": false
       },
       "candidateScore": {
-        "primary": 31.645569620253163,
+        "primary": 36.231884057971016,
         "noopRate": 0,
-        "costPerWin": 31.6,
+        "costPerWin": 27.6,
         "regressed": false
       }
     },
     {
-      "id": "root__mode_gen1__postPolicy_gen3",
+      "id": "root__mode_gen1__mode_gen2__postPolicy_gen3",
       "generation": 3,
       "parents": [
-        "root__mode_gen1"
+        "root__mode_gen1__mode_gen2"
       ],
       "mutation": {
         "target": "postPolicy",
         "summary": "adapt postPolicy"
       },
-      "primaryDelta": 0,
-      "anchorScore": null,
-      "verdict": "REJECTED",
-      "failureReasons": [
-        "lift below 2% floor (31.65 -> 31.65 pts)"
-      ],
+      "primaryDelta": 13.27306643707849,
+      "anchorScore": 52.083333333333336,
+      "verdict": "PROMOTED",
+      "failureReasons": [],
       "receipt": {
         "payload": {
           "kind": "candidate",
-          "id": "root__mode_gen1__postPolicy_gen3",
+          "id": "root__mode_gen1__mode_gen2__postPolicy_gen3",
           "target": "postPolicy",
-          "verdict": "REJECTED",
-          "primaryDelta": 0
+          "verdict": "PROMOTED",
+          "primaryDelta": 13.27306643707849
         },
-        "signature": "ytYUfgPXBnMcKRQqkTf8x23UfiQM647y2zb3XWTADtwxW/YzYVCJHshO3EiD68hXkMs9g7km4OT5LnKse9QXCA==",
-        "publicKey": "MCowBQYDK2VwAyEAjjyTZrf4849r1UdcM7+dgN5opOMKxZUuiuB9ZOC8NBI=",
+        "signature": "tMMakc45z/+OLKAGxo1h4HgSPo02yr6zFr142rkJctYSGFjx8sfU/B8wdaLJjrhr+0mFhUO2DCoKfWLhh6ATCw==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
         "alg": "ed25519"
       },
-      "createdAt": "2026-08-08T00:51:24.628Z#gen3",
+      "createdAt": "2026-08-08T00:56:50.809Z#gen3",
       "baselineScore": {
-        "primary": 31.645569620253163,
+        "primary": 36.231884057971016,
         "noopRate": 0,
-        "costPerWin": 31.6,
+        "costPerWin": 27.6,
         "regressed": false
       },
       "candidateScore": {
-        "primary": 31.645569620253163,
+        "primary": 49.504950495049506,
         "noopRate": 0,
-        "costPerWin": 31.6,
+        "costPerWin": 20.2,
         "regressed": false
       }
     },
     {
-      "id": "root__mode_gen1__mode_gen4",
+      "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__mode_gen4",
       "generation": 4,
       "parents": [
-        "root__mode_gen1"
+        "root__mode_gen1__mode_gen2__postPolicy_gen3"
       ],
       "mutation": {
         "target": "mode",
         "summary": "adapt mode"
       },
-      "primaryDelta": 0,
+      "primaryDelta": -17.859380874796344,
       "anchorScore": null,
       "verdict": "REJECTED",
       "failureReasons": [
-        "lift below 2% floor (31.65 -> 31.65 pts)"
-      ],
-      "receipt": {
-        "payload": {
-          "kind": "candidate",
-          "id": "root__mode_gen1__mode_gen4",
-          "target": "mode",
-          "verdict": "REJECTED",
-          "primaryDelta": 0
-        },
-        "signature": "7W0hirVsXxku773a1jPyodYFFtjOX66m9hw1JDrS/Amweh3+3AqXNE+wQqxanFHWWFYQ8tx1iNmuXuPdRuoWAA==",
-        "publicKey": "MCowBQYDK2VwAyEAjjyTZrf4849r1UdcM7+dgN5opOMKxZUuiuB9ZOC8NBI=",
-        "alg": "ed25519"
-      },
-      "createdAt": "2026-08-08T00:51:24.628Z#gen4",
-      "baselineScore": {
-        "primary": 31.645569620253163,
-        "noopRate": 0,
-        "costPerWin": 31.6,
-        "regressed": false
-      },
-      "candidateScore": {
-        "primary": 31.645569620253163,
-        "noopRate": 0,
-        "costPerWin": 31.6,
-        "regressed": false
-      }
-    },
-    {
-      "id": "root__mode_gen1__foldEvery_gen4",
-      "generation": 4,
-      "parents": [
-        "root__mode_gen1"
-      ],
-      "mutation": {
-        "target": "foldEvery",
-        "summary": "adapt foldEvery"
-      },
-      "primaryDelta": 0,
-      "anchorScore": null,
-      "verdict": "REJECTED",
-      "failureReasons": [
-        "lift below 2% floor (31.65 -> 31.65 pts)"
-      ],
-      "receipt": {
-        "payload": {
-          "kind": "candidate",
-          "id": "root__mode_gen1__foldEvery_gen4",
-          "target": "foldEvery",
-          "verdict": "REJECTED",
-          "primaryDelta": 0
-        },
-        "signature": "2JF8ple/XnzsPXyMm9onSKnsppsdBHu1iZqaRpnWJsUMoCeTYgSBdGzbV8qsKAVhrIzGwi6uFNhb4/b3BYLEDQ==",
-        "publicKey": "MCowBQYDK2VwAyEAjjyTZrf4849r1UdcM7+dgN5opOMKxZUuiuB9ZOC8NBI=",
-        "alg": "ed25519"
-      },
-      "createdAt": "2026-08-08T00:51:24.628Z#gen4",
-      "baselineScore": {
-        "primary": 31.645569620253163,
-        "noopRate": 0,
-        "costPerWin": 31.6,
-        "regressed": false
-      },
-      "candidateScore": {
-        "primary": 31.645569620253163,
-        "noopRate": 0,
-        "costPerWin": 31.6,
-        "regressed": false
-      }
-    },
-    {
-      "id": "root__mode_gen1__postPolicy_gen4",
-      "generation": 4,
-      "parents": [
-        "root__mode_gen1"
-      ],
-      "mutation": {
-        "target": "postPolicy",
-        "summary": "adapt postPolicy"
-      },
-      "primaryDelta": 0,
-      "anchorScore": null,
-      "verdict": "REJECTED",
-      "failureReasons": [
-        "lift below 2% floor (31.65 -> 31.65 pts)"
-      ],
-      "receipt": {
-        "payload": {
-          "kind": "candidate",
-          "id": "root__mode_gen1__postPolicy_gen4",
-          "target": "postPolicy",
-          "verdict": "REJECTED",
-          "primaryDelta": 0
-        },
-        "signature": "ZdwPxtB4dKm3687B+3tGaWST91HHLj6IWVzpTGdyLdMezPAjvIyDxHe6OBLbkswByXYczrxPgsleoeOeGY31CA==",
-        "publicKey": "MCowBQYDK2VwAyEAjjyTZrf4849r1UdcM7+dgN5opOMKxZUuiuB9ZOC8NBI=",
-        "alg": "ed25519"
-      },
-      "createdAt": "2026-08-08T00:51:24.628Z#gen4",
-      "baselineScore": {
-        "primary": 31.645569620253163,
-        "noopRate": 0,
-        "costPerWin": 31.6,
-        "regressed": false
-      },
-      "candidateScore": {
-        "primary": 31.645569620253163,
-        "noopRate": 0,
-        "costPerWin": 31.6,
-        "regressed": false
-      }
-    },
-    {
-      "id": "root__mode_gen1__mode_gen5",
-      "generation": 5,
-      "parents": [
-        "root__mode_gen1"
-      ],
-      "mutation": {
-        "target": "mode",
-        "summary": "adapt mode"
-      },
-      "primaryDelta": -5.467559149048977,
-      "anchorScore": null,
-      "verdict": "REJECTED",
-      "failureReasons": [
-        "lift below 2% floor (31.65 -> 26.18 pts)",
+        "lift below 2% floor (49.50 -> 31.65 pts)",
         "mean steps-to-resolve worsened"
       ],
       "receipt": {
         "payload": {
           "kind": "candidate",
-          "id": "root__mode_gen1__mode_gen5",
+          "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__mode_gen4",
           "target": "mode",
           "verdict": "REJECTED",
-          "primaryDelta": -5.467559149048977
+          "primaryDelta": -17.859380874796344
         },
-        "signature": "sOW/lwRvBkTWhMevdOSggYDTXevc6p0/zKoisASXyzOzHFvYYRs0pCX+o3j3Tm2wuT9svAkGeWjPhOJAixMTAA==",
-        "publicKey": "MCowBQYDK2VwAyEAjjyTZrf4849r1UdcM7+dgN5opOMKxZUuiuB9ZOC8NBI=",
+        "signature": "x88l5t2UNp6APnlRYeVaYLRUMzO/kbr5AYXHjs6W6BJsPF37Iqb/A1e41V5tEyIClvX3hB1lH9k6z84Zbtm5Bg==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
         "alg": "ed25519"
       },
-      "createdAt": "2026-08-08T00:51:24.628Z#gen5",
+      "createdAt": "2026-08-08T00:56:50.809Z#gen4",
       "baselineScore": {
+        "primary": 49.504950495049506,
+        "noopRate": 0,
+        "costPerWin": 20.2,
+        "regressed": false
+      },
+      "candidateScore": {
         "primary": 31.645569620253163,
         "noopRate": 0,
         "costPerWin": 31.6,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__foldEvery_gen4",
+      "generation": 4,
+      "parents": [
+        "root__mode_gen1__mode_gen2__postPolicy_gen3"
+      ],
+      "mutation": {
+        "target": "foldEvery",
+        "summary": "adapt foldEvery"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (49.50 -> 49.50 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__foldEvery_gen4",
+          "target": "foldEvery",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "kqML5wDnpTpllA/QHj360Ue3qqsHwH2FPIdgtLj2HNX8L4vjonC96MM4tnLTkHcBg8eFFYzi05F/V+DSu2gTAg==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T00:56:50.809Z#gen4",
+      "baselineScore": {
+        "primary": 49.504950495049506,
+        "noopRate": 0,
+        "costPerWin": 20.2,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 49.504950495049506,
+        "noopRate": 0,
+        "costPerWin": 20.2,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__postPolicy_gen4",
+      "generation": 4,
+      "parents": [
+        "root__mode_gen1__mode_gen2__postPolicy_gen3"
+      ],
+      "mutation": {
+        "target": "postPolicy",
+        "summary": "adapt postPolicy"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (49.50 -> 49.50 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__postPolicy_gen4",
+          "target": "postPolicy",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "VkY/WvnnFwOaX6Wnnqxnx+Ej0pOE+wOiug7xi+k3jIFCvCXIuKe/XaSbqTAlVE4krzAx2KVfpKiHwPnExphrAw==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T00:56:50.809Z#gen4",
+      "baselineScore": {
+        "primary": 49.504950495049506,
+        "noopRate": 0,
+        "costPerWin": 20.2,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 49.504950495049506,
+        "noopRate": 0,
+        "costPerWin": 20.2,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__mode_gen5",
+      "generation": 5,
+      "parents": [
+        "root__mode_gen1__mode_gen2__postPolicy_gen3"
+      ],
+      "mutation": {
+        "target": "mode",
+        "summary": "adapt mode"
+      },
+      "primaryDelta": -23.32694002384532,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (49.50 -> 26.18 pts)",
+        "mean steps-to-resolve worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__mode_gen5",
+          "target": "mode",
+          "verdict": "REJECTED",
+          "primaryDelta": -23.32694002384532
+        },
+        "signature": "4DOV2ioxgnApZ6ZC9lth4EgjYS7SAqnzxQ2ZhF38eYgyLoI3wMRrasec9+NUHJLbjekCEk18Cc52KSZrezEBCg==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T00:56:50.809Z#gen5",
+      "baselineScore": {
+        "primary": 49.504950495049506,
+        "noopRate": 0,
+        "costPerWin": 20.2,
         "regressed": false
       },
       "candidateScore": {
@@ -611,249 +688,251 @@
       }
     },
     {
-      "id": "root__mode_gen1__foldEvery_gen5",
+      "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__foldEvery_gen5",
       "generation": 5,
       "parents": [
-        "root__mode_gen1"
+        "root__mode_gen1__mode_gen2__postPolicy_gen3"
       ],
       "mutation": {
         "target": "foldEvery",
         "summary": "adapt foldEvery"
       },
-      "primaryDelta": 0,
+      "primaryDelta": 0.4950495049504937,
       "anchorScore": null,
       "verdict": "REJECTED",
       "failureReasons": [
-        "lift below 2% floor (31.65 -> 31.65 pts)"
+        "lift below 2% floor (49.50 -> 50.00 pts)"
       ],
       "receipt": {
         "payload": {
           "kind": "candidate",
-          "id": "root__mode_gen1__foldEvery_gen5",
+          "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__foldEvery_gen5",
           "target": "foldEvery",
           "verdict": "REJECTED",
-          "primaryDelta": 0
+          "primaryDelta": 0.4950495049504937
         },
-        "signature": "jo/mjcxR86P0oRK1d6RY1oYuFVyGzahHQQwOxbW391Qz7DttnyPwJmIHPKG5ajFakJVsEBfA8zuHwRCILLAnCQ==",
-        "publicKey": "MCowBQYDK2VwAyEAjjyTZrf4849r1UdcM7+dgN5opOMKxZUuiuB9ZOC8NBI=",
+        "signature": "UyzVHYrVzPMUKBXUuuqK3MeBymbf0teFW2ibSN9/r73rUmkgdVjCw5OVuUp1/OJUyDh1511qH+gkprUhuLWcCA==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
         "alg": "ed25519"
       },
-      "createdAt": "2026-08-08T00:51:24.628Z#gen5",
+      "createdAt": "2026-08-08T00:56:50.809Z#gen5",
       "baselineScore": {
-        "primary": 31.645569620253163,
+        "primary": 49.504950495049506,
         "noopRate": 0,
-        "costPerWin": 31.6,
+        "costPerWin": 20.2,
         "regressed": false
       },
       "candidateScore": {
-        "primary": 31.645569620253163,
+        "primary": 50,
         "noopRate": 0,
-        "costPerWin": 31.6,
+        "costPerWin": 20,
         "regressed": false
       }
     },
     {
-      "id": "root__mode_gen1__postPolicy_gen5",
+      "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__postPolicy_gen5",
       "generation": 5,
       "parents": [
-        "root__mode_gen1"
+        "root__mode_gen1__mode_gen2__postPolicy_gen3"
       ],
       "mutation": {
         "target": "postPolicy",
         "summary": "adapt postPolicy"
       },
-      "primaryDelta": 0,
+      "primaryDelta": -13.27306643707849,
       "anchorScore": null,
       "verdict": "REJECTED",
       "failureReasons": [
-        "lift below 2% floor (31.65 -> 31.65 pts)"
-      ],
-      "receipt": {
-        "payload": {
-          "kind": "candidate",
-          "id": "root__mode_gen1__postPolicy_gen5",
-          "target": "postPolicy",
-          "verdict": "REJECTED",
-          "primaryDelta": 0
-        },
-        "signature": "abRTsEqGMBcL98qwp1XADZM003+M96O5uJ5qQrcNKlPRg8y/BeIOEoocm0JVP/2VIcqnCLXXlM18HjpMlKWDDQ==",
-        "publicKey": "MCowBQYDK2VwAyEAjjyTZrf4849r1UdcM7+dgN5opOMKxZUuiuB9ZOC8NBI=",
-        "alg": "ed25519"
-      },
-      "createdAt": "2026-08-08T00:51:24.628Z#gen5",
-      "baselineScore": {
-        "primary": 31.645569620253163,
-        "noopRate": 0,
-        "costPerWin": 31.6,
-        "regressed": false
-      },
-      "candidateScore": {
-        "primary": 31.645569620253163,
-        "noopRate": 0,
-        "costPerWin": 31.6,
-        "regressed": false
-      }
-    },
-    {
-      "id": "root__mode_gen1__mode_gen6",
-      "generation": 6,
-      "parents": [
-        "root__mode_gen1"
-      ],
-      "mutation": {
-        "target": "mode",
-        "summary": "adapt mode"
-      },
-      "primaryDelta": 0,
-      "anchorScore": null,
-      "verdict": "REJECTED",
-      "failureReasons": [
-        "lift below 2% floor (31.65 -> 31.65 pts)"
-      ],
-      "receipt": {
-        "payload": {
-          "kind": "candidate",
-          "id": "root__mode_gen1__mode_gen6",
-          "target": "mode",
-          "verdict": "REJECTED",
-          "primaryDelta": 0
-        },
-        "signature": "HUgWZql3AumeqB08FzvrEzvDzNl/rZbGGwRV/caa3gxodalLmef9pHGMf+wqsqGt9A4ET/J1AAx4GrDdqRQdCA==",
-        "publicKey": "MCowBQYDK2VwAyEAjjyTZrf4849r1UdcM7+dgN5opOMKxZUuiuB9ZOC8NBI=",
-        "alg": "ed25519"
-      },
-      "createdAt": "2026-08-08T00:51:24.628Z#gen6",
-      "baselineScore": {
-        "primary": 31.645569620253163,
-        "noopRate": 0,
-        "costPerWin": 31.6,
-        "regressed": false
-      },
-      "candidateScore": {
-        "primary": 31.645569620253163,
-        "noopRate": 0,
-        "costPerWin": 31.6,
-        "regressed": false
-      }
-    },
-    {
-      "id": "root__mode_gen1__foldEvery_gen6",
-      "generation": 6,
-      "parents": [
-        "root__mode_gen1"
-      ],
-      "mutation": {
-        "target": "foldEvery",
-        "summary": "adapt foldEvery"
-      },
-      "primaryDelta": 0,
-      "anchorScore": null,
-      "verdict": "REJECTED",
-      "failureReasons": [
-        "lift below 2% floor (31.65 -> 31.65 pts)"
-      ],
-      "receipt": {
-        "payload": {
-          "kind": "candidate",
-          "id": "root__mode_gen1__foldEvery_gen6",
-          "target": "foldEvery",
-          "verdict": "REJECTED",
-          "primaryDelta": 0
-        },
-        "signature": "DqgB79QufRjJCwxWZ0tZMq4XpCc3MZHQF3sZbaqnKxGZtBRPJ8abArqL6EUIk4s9BHdKT5NlaSTxlguvDe5IDA==",
-        "publicKey": "MCowBQYDK2VwAyEAjjyTZrf4849r1UdcM7+dgN5opOMKxZUuiuB9ZOC8NBI=",
-        "alg": "ed25519"
-      },
-      "createdAt": "2026-08-08T00:51:24.628Z#gen6",
-      "baselineScore": {
-        "primary": 31.645569620253163,
-        "noopRate": 0,
-        "costPerWin": 31.6,
-        "regressed": false
-      },
-      "candidateScore": {
-        "primary": 31.645569620253163,
-        "noopRate": 0,
-        "costPerWin": 31.6,
-        "regressed": false
-      }
-    },
-    {
-      "id": "root__mode_gen1__postPolicy_gen6",
-      "generation": 6,
-      "parents": [
-        "root__mode_gen1"
-      ],
-      "mutation": {
-        "target": "postPolicy",
-        "summary": "adapt postPolicy"
-      },
-      "primaryDelta": 0,
-      "anchorScore": null,
-      "verdict": "REJECTED",
-      "failureReasons": [
-        "lift below 2% floor (31.65 -> 31.65 pts)"
-      ],
-      "receipt": {
-        "payload": {
-          "kind": "candidate",
-          "id": "root__mode_gen1__postPolicy_gen6",
-          "target": "postPolicy",
-          "verdict": "REJECTED",
-          "primaryDelta": 0
-        },
-        "signature": "FgUxERGqtvSVLZK86OcD2pQxi1Wv/TyZpzYQE3yxIqaZAes2W+PCIa6M2NgFWDdhpK2XBURTIZt2PJEy6tVBDg==",
-        "publicKey": "MCowBQYDK2VwAyEAjjyTZrf4849r1UdcM7+dgN5opOMKxZUuiuB9ZOC8NBI=",
-        "alg": "ed25519"
-      },
-      "createdAt": "2026-08-08T00:51:24.628Z#gen6",
-      "baselineScore": {
-        "primary": 31.645569620253163,
-        "noopRate": 0,
-        "costPerWin": 31.6,
-        "regressed": false
-      },
-      "candidateScore": {
-        "primary": 31.645569620253163,
-        "noopRate": 0,
-        "costPerWin": 31.6,
-        "regressed": false
-      }
-    },
-    {
-      "id": "root__mode_gen1__mode_gen7",
-      "generation": 7,
-      "parents": [
-        "root__mode_gen1"
-      ],
-      "mutation": {
-        "target": "mode",
-        "summary": "adapt mode"
-      },
-      "primaryDelta": -5.467559149048977,
-      "anchorScore": null,
-      "verdict": "REJECTED",
-      "failureReasons": [
-        "lift below 2% floor (31.65 -> 26.18 pts)",
+        "lift below 2% floor (49.50 -> 36.23 pts)",
         "mean steps-to-resolve worsened"
       ],
       "receipt": {
         "payload": {
           "kind": "candidate",
-          "id": "root__mode_gen1__mode_gen7",
-          "target": "mode",
+          "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__postPolicy_gen5",
+          "target": "postPolicy",
           "verdict": "REJECTED",
-          "primaryDelta": -5.467559149048977
+          "primaryDelta": -13.27306643707849
         },
-        "signature": "4JfdQ/J6C3Xf52pqxHgIOEqdScc/1+L9S/0+rq/DigNf7H3ADN8x//yj0CDBgXZhs127l44n26xyGaNZYWGeCg==",
-        "publicKey": "MCowBQYDK2VwAyEAjjyTZrf4849r1UdcM7+dgN5opOMKxZUuiuB9ZOC8NBI=",
+        "signature": "avDR1ZjO/qfbUebMpmJP1KYUeq8pJIfInGICHBz697+PahyLaSGY0fNkBe7C4EGm1eoy7jIHjK97xDtRZw6sBA==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
         "alg": "ed25519"
       },
-      "createdAt": "2026-08-08T00:51:24.628Z#gen7",
+      "createdAt": "2026-08-08T00:56:50.809Z#gen5",
       "baselineScore": {
+        "primary": 49.504950495049506,
+        "noopRate": 0,
+        "costPerWin": 20.2,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 36.231884057971016,
+        "noopRate": 0,
+        "costPerWin": 27.6,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__mode_gen6",
+      "generation": 6,
+      "parents": [
+        "root__mode_gen1__mode_gen2__postPolicy_gen3"
+      ],
+      "mutation": {
+        "target": "mode",
+        "summary": "adapt mode"
+      },
+      "primaryDelta": -17.859380874796344,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (49.50 -> 31.65 pts)",
+        "mean steps-to-resolve worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__mode_gen6",
+          "target": "mode",
+          "verdict": "REJECTED",
+          "primaryDelta": -17.859380874796344
+        },
+        "signature": "EaAj9kHC3e+UR82PjriOioMtcJDi0qw7eynAaCRts6MlhsbkwWiaboYDxYnOB6CEp8vJfGifHr9f3En7KIxQDA==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T00:56:50.809Z#gen6",
+      "baselineScore": {
+        "primary": 49.504950495049506,
+        "noopRate": 0,
+        "costPerWin": 20.2,
+        "regressed": false
+      },
+      "candidateScore": {
         "primary": 31.645569620253163,
         "noopRate": 0,
         "costPerWin": 31.6,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__foldEvery_gen6",
+      "generation": 6,
+      "parents": [
+        "root__mode_gen1__mode_gen2__postPolicy_gen3"
+      ],
+      "mutation": {
+        "target": "foldEvery",
+        "summary": "adapt foldEvery"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (49.50 -> 49.50 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__foldEvery_gen6",
+          "target": "foldEvery",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "nDGbtkPabEFekkA+DQrpVYIfAE/MACFP/4WGTzmLRONvZLSxNh8lD3OuiDt4tFcv7SeXQb5WoiY63DHYsDJ8Bg==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T00:56:50.809Z#gen6",
+      "baselineScore": {
+        "primary": 49.504950495049506,
+        "noopRate": 0,
+        "costPerWin": 20.2,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 49.504950495049506,
+        "noopRate": 0,
+        "costPerWin": 20.2,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__postPolicy_gen6",
+      "generation": 6,
+      "parents": [
+        "root__mode_gen1__mode_gen2__postPolicy_gen3"
+      ],
+      "mutation": {
+        "target": "postPolicy",
+        "summary": "adapt postPolicy"
+      },
+      "primaryDelta": 0,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (49.50 -> 49.50 pts)"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__postPolicy_gen6",
+          "target": "postPolicy",
+          "verdict": "REJECTED",
+          "primaryDelta": 0
+        },
+        "signature": "3M3XV5zfKF2s7iVXLg/HEtKAvDe4Zl44afUixVeDECW1gVsG05ffhKMRA7Schp4NAFPUiR7vwDpCZHxfwRGbAQ==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T00:56:50.809Z#gen6",
+      "baselineScore": {
+        "primary": 49.504950495049506,
+        "noopRate": 0,
+        "costPerWin": 20.2,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 49.504950495049506,
+        "noopRate": 0,
+        "costPerWin": 20.2,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__mode_gen7",
+      "generation": 7,
+      "parents": [
+        "root__mode_gen1__mode_gen2__postPolicy_gen3"
+      ],
+      "mutation": {
+        "target": "mode",
+        "summary": "adapt mode"
+      },
+      "primaryDelta": -23.32694002384532,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "lift below 2% floor (49.50 -> 26.18 pts)",
+        "mean steps-to-resolve worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__mode_gen7",
+          "target": "mode",
+          "verdict": "REJECTED",
+          "primaryDelta": -23.32694002384532
+        },
+        "signature": "K2rDcXo1JvGPPUuydmsirfShD7BzlxsdNrXXwnkKOUOHGGr6xh8pZWEQWpJRjmODCQTILNlL7BLwiGHmW7VVAw==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
+        "alg": "ed25519"
+      },
+      "createdAt": "2026-08-08T00:56:50.809Z#gen7",
+      "baselineScore": {
+        "primary": 49.504950495049506,
+        "noopRate": 0,
+        "costPerWin": 20.2,
         "regressed": false
       },
       "candidateScore": {
@@ -864,122 +943,124 @@
       }
     },
     {
-      "id": "root__mode_gen1__foldEvery_gen7",
+      "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__foldEvery_gen7",
       "generation": 7,
       "parents": [
-        "root__mode_gen1"
+        "root__mode_gen1__mode_gen2__postPolicy_gen3"
       ],
       "mutation": {
         "target": "foldEvery",
         "summary": "adapt foldEvery"
       },
-      "primaryDelta": 0,
+      "primaryDelta": 0.4950495049504937,
       "anchorScore": null,
       "verdict": "REJECTED",
       "failureReasons": [
-        "lift below 2% floor (31.65 -> 31.65 pts)"
+        "lift below 2% floor (49.50 -> 50.00 pts)"
       ],
       "receipt": {
         "payload": {
           "kind": "candidate",
-          "id": "root__mode_gen1__foldEvery_gen7",
+          "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__foldEvery_gen7",
           "target": "foldEvery",
           "verdict": "REJECTED",
-          "primaryDelta": 0
+          "primaryDelta": 0.4950495049504937
         },
-        "signature": "M2YucYs3gbS/91cPpLvKXyIh1CPg1Fhat4dGPNlIdOqwD8EkdvVnlMb5X5zRGmMyjr38hlM5wiK+1Wqz+T0hBg==",
-        "publicKey": "MCowBQYDK2VwAyEAjjyTZrf4849r1UdcM7+dgN5opOMKxZUuiuB9ZOC8NBI=",
+        "signature": "Sw85ChfJndAmPkMbGRnPdc4laFUR0uSbI8yR+QGB3O+83mHEqGFod6sT/ySdGfsRQd2aGwMMOZcdugY1MoUiBQ==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
         "alg": "ed25519"
       },
-      "createdAt": "2026-08-08T00:51:24.628Z#gen7",
+      "createdAt": "2026-08-08T00:56:50.809Z#gen7",
       "baselineScore": {
-        "primary": 31.645569620253163,
+        "primary": 49.504950495049506,
         "noopRate": 0,
-        "costPerWin": 31.6,
+        "costPerWin": 20.2,
         "regressed": false
       },
       "candidateScore": {
-        "primary": 31.645569620253163,
+        "primary": 50,
         "noopRate": 0,
-        "costPerWin": 31.6,
+        "costPerWin": 20,
         "regressed": false
       }
     },
     {
-      "id": "root__mode_gen1__postPolicy_gen7",
+      "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__postPolicy_gen7",
       "generation": 7,
       "parents": [
-        "root__mode_gen1"
+        "root__mode_gen1__mode_gen2__postPolicy_gen3"
       ],
       "mutation": {
         "target": "postPolicy",
         "summary": "adapt postPolicy"
       },
-      "primaryDelta": 0,
+      "primaryDelta": -13.27306643707849,
       "anchorScore": null,
       "verdict": "REJECTED",
       "failureReasons": [
-        "lift below 2% floor (31.65 -> 31.65 pts)"
+        "lift below 2% floor (49.50 -> 36.23 pts)",
+        "mean steps-to-resolve worsened"
       ],
       "receipt": {
         "payload": {
           "kind": "candidate",
-          "id": "root__mode_gen1__postPolicy_gen7",
+          "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__postPolicy_gen7",
           "target": "postPolicy",
           "verdict": "REJECTED",
-          "primaryDelta": 0
+          "primaryDelta": -13.27306643707849
         },
-        "signature": "C5pDhorD8jQTQAw6Y7h5VH3revoALuu0UNRyAxtiYwh9K8zcBSXiEVWGiAqBUoqew0rbK70RxB1CH9OD1PkfAg==",
-        "publicKey": "MCowBQYDK2VwAyEAjjyTZrf4849r1UdcM7+dgN5opOMKxZUuiuB9ZOC8NBI=",
+        "signature": "0m348i9CVq7RkpfX0D2A8VoatCZZwa5lpOzrmRP8tacUPrRq9l+f49lTJPTTM+yEZ4xn6aHsZ+u4hHFi7WcYAg==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
         "alg": "ed25519"
       },
-      "createdAt": "2026-08-08T00:51:24.628Z#gen7",
+      "createdAt": "2026-08-08T00:56:50.809Z#gen7",
       "baselineScore": {
-        "primary": 31.645569620253163,
+        "primary": 49.504950495049506,
         "noopRate": 0,
-        "costPerWin": 31.6,
+        "costPerWin": 20.2,
         "regressed": false
       },
       "candidateScore": {
-        "primary": 31.645569620253163,
+        "primary": 36.231884057971016,
         "noopRate": 0,
-        "costPerWin": 31.6,
+        "costPerWin": 27.6,
         "regressed": false
       }
     },
     {
-      "id": "root__mode_gen1__mode_gen8",
+      "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__mode_gen8",
       "generation": 8,
       "parents": [
-        "root__mode_gen1"
+        "root__mode_gen1__mode_gen2__postPolicy_gen3"
       ],
       "mutation": {
         "target": "mode",
         "summary": "adapt mode"
       },
-      "primaryDelta": 0,
+      "primaryDelta": -17.859380874796344,
       "anchorScore": null,
       "verdict": "REJECTED",
       "failureReasons": [
-        "lift below 2% floor (31.65 -> 31.65 pts)"
+        "lift below 2% floor (49.50 -> 31.65 pts)",
+        "mean steps-to-resolve worsened"
       ],
       "receipt": {
         "payload": {
           "kind": "candidate",
-          "id": "root__mode_gen1__mode_gen8",
+          "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__mode_gen8",
           "target": "mode",
           "verdict": "REJECTED",
-          "primaryDelta": 0
+          "primaryDelta": -17.859380874796344
         },
-        "signature": "W7F0bPrT+1p9+Wfk/3SzF78rCFdhkZT908Z6omOk2gytDgJXjeMQbeoqYdiM+Y23m/SBDc7AYGXi0jOp2DrcBw==",
-        "publicKey": "MCowBQYDK2VwAyEAjjyTZrf4849r1UdcM7+dgN5opOMKxZUuiuB9ZOC8NBI=",
+        "signature": "Rvr7Gr8TSFPdivPU+a28JARjyVcpyz4NcT7Dpx4dEYVAZsLscvp27ZnlUe67AgRaifH9tB9B2nb2tDJbKTvkDg==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
         "alg": "ed25519"
       },
-      "createdAt": "2026-08-08T00:51:24.628Z#gen8",
+      "createdAt": "2026-08-08T00:56:50.809Z#gen8",
       "baselineScore": {
-        "primary": 31.645569620253163,
+        "primary": 49.504950495049506,
         "noopRate": 0,
-        "costPerWin": 31.6,
+        "costPerWin": 20.2,
         "regressed": false
       },
       "candidateScore": {
@@ -990,10 +1071,10 @@
       }
     },
     {
-      "id": "root__mode_gen1__foldEvery_gen8",
+      "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__foldEvery_gen8",
       "generation": 8,
       "parents": [
-        "root__mode_gen1"
+        "root__mode_gen1__mode_gen2__postPolicy_gen3"
       ],
       "mutation": {
         "target": "foldEvery",
@@ -1003,39 +1084,39 @@
       "anchorScore": null,
       "verdict": "REJECTED",
       "failureReasons": [
-        "lift below 2% floor (31.65 -> 31.65 pts)"
+        "lift below 2% floor (49.50 -> 49.50 pts)"
       ],
       "receipt": {
         "payload": {
           "kind": "candidate",
-          "id": "root__mode_gen1__foldEvery_gen8",
+          "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__foldEvery_gen8",
           "target": "foldEvery",
           "verdict": "REJECTED",
           "primaryDelta": 0
         },
-        "signature": "BjNAxw1N4gLPPKEuidKxxLWUXnlbIBTM8q1e0JL1A/1zIFK14ULqJLboB5L/qb3nD6B/clncKA0vgZHdzQrWBw==",
-        "publicKey": "MCowBQYDK2VwAyEAjjyTZrf4849r1UdcM7+dgN5opOMKxZUuiuB9ZOC8NBI=",
+        "signature": "/LVeKUTN/gJ/C4LRKHvkMhNeoZT5Wa9gTcQm9iCIPIX0S4am9Kojmzr/siK7hm3YuCbzN2Rl1QwmgEnC6eqvDg==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
         "alg": "ed25519"
       },
-      "createdAt": "2026-08-08T00:51:24.628Z#gen8",
+      "createdAt": "2026-08-08T00:56:50.809Z#gen8",
       "baselineScore": {
-        "primary": 31.645569620253163,
+        "primary": 49.504950495049506,
         "noopRate": 0,
-        "costPerWin": 31.6,
+        "costPerWin": 20.2,
         "regressed": false
       },
       "candidateScore": {
-        "primary": 31.645569620253163,
+        "primary": 49.504950495049506,
         "noopRate": 0,
-        "costPerWin": 31.6,
+        "costPerWin": 20.2,
         "regressed": false
       }
     },
     {
-      "id": "root__mode_gen1__postPolicy_gen8",
+      "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__postPolicy_gen8",
       "generation": 8,
       "parents": [
-        "root__mode_gen1"
+        "root__mode_gen1__mode_gen2__postPolicy_gen3"
       ],
       "mutation": {
         "target": "postPolicy",
@@ -1045,31 +1126,31 @@
       "anchorScore": null,
       "verdict": "REJECTED",
       "failureReasons": [
-        "lift below 2% floor (31.65 -> 31.65 pts)"
+        "lift below 2% floor (49.50 -> 49.50 pts)"
       ],
       "receipt": {
         "payload": {
           "kind": "candidate",
-          "id": "root__mode_gen1__postPolicy_gen8",
+          "id": "root__mode_gen1__mode_gen2__postPolicy_gen3__postPolicy_gen8",
           "target": "postPolicy",
           "verdict": "REJECTED",
           "primaryDelta": 0
         },
-        "signature": "gNaZOaQFgwQYh8oGGrSbCLXOcZf02sceR2YlIrkEa1nj/2BNS2Ap7iFqbsIrerd9PoEZyT3U69C5wiLTA11QAA==",
-        "publicKey": "MCowBQYDK2VwAyEAjjyTZrf4849r1UdcM7+dgN5opOMKxZUuiuB9ZOC8NBI=",
+        "signature": "Df0Sz4Om8UeR5naW/IuSTNU0Uuj7DIGfQZ6gxTQh2YptUk22hV9CWIDEhRjz2RNJP6O9TAH701rSBIumh/e/Ag==",
+        "publicKey": "MCowBQYDK2VwAyEA2XtptalVdI3oj7zNbI8rKIvBC1h9neOc3SipmuVs1KU=",
         "alg": "ed25519"
       },
-      "createdAt": "2026-08-08T00:51:24.628Z#gen8",
+      "createdAt": "2026-08-08T00:56:50.809Z#gen8",
       "baselineScore": {
-        "primary": 31.645569620253163,
+        "primary": 49.504950495049506,
         "noopRate": 0,
-        "costPerWin": 31.6,
+        "costPerWin": 20.2,
         "regressed": false
       },
       "candidateScore": {
-        "primary": 31.645569620253163,
+        "primary": 49.504950495049506,
         "noopRate": 0,
-        "costPerWin": 31.6,
+        "costPerWin": 20.2,
         "regressed": false
       }
     }
@@ -1086,11 +1167,23 @@
       "primary": 31.645569620253163,
       "delta": 5.467559149048977,
       "anchor": 30.487804878048784
+    },
+    {
+      "generation": 2,
+      "primary": 36.231884057971016,
+      "delta": 4.586314437717853,
+      "anchor": 34.72222222222222
+    },
+    {
+      "generation": 3,
+      "primary": 49.504950495049506,
+      "delta": 13.27306643707849,
+      "anchor": 52.083333333333336
     }
   ],
   "gate_fingerprint": "a9141969c3e7ca35dad1598db676769ea7e70feebafa8a7a4e871d20005dcae4",
-  "verified_improvements": 1,
-  "anchor_surviving_improvements": 1,
-  "milestone_reached": false,
-  "created_at": "2026-08-08T00:51:24.628Z#gen8"
+  "verified_improvements": 3,
+  "anchor_surviving_improvements": 3,
+  "milestone_reached": true,
+  "created_at": "2026-08-08T00:56:50.809Z#gen8"
 }

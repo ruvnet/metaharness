@@ -6,9 +6,9 @@
     "postPolicy": "silent"
   },
   "tuned": {
-    "mode": "negotiate",
+    "mode": "passive",
     "foldEvery": "4",
-    "postPolicy": "silent"
+    "postPolicy": "immediate"
   },
   "liftCurve": [
     {
@@ -22,9 +22,21 @@
       "primary": 31.645569620253163,
       "delta": 5.467559149048977,
       "anchor": 30.487804878048784
+    },
+    {
+      "generation": 2,
+      "primary": 36.231884057971016,
+      "delta": 4.586314437717853,
+      "anchor": 34.72222222222222
+    },
+    {
+      "generation": 3,
+      "primary": 49.504950495049506,
+      "delta": 13.27306643707849,
+      "anchor": 52.083333333333336
     }
   ],
-  "milestoneReached": false,
+  "milestoneReached": true,
   "replayVerified": true,
-  "startedAt": "2026-08-08T00:51:24.628Z"
+  "startedAt": "2026-08-08T00:56:50.809Z"
 }
