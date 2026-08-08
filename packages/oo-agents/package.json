@@ -1,0 +1,42 @@
+{
+  "name": "@metaharness/oo-agents",
+  "version": "0.1.0",
+  "description": "Object-oriented agents with a Rust/WASM code-as-action sandbox \u2014 a TypeScript clone of NOOA (NVIDIA-NeMo/labs-OO-Agents): the agent is a class; fields are state, methods are capabilities, docs are prompts, schemas are contracts, and the model acts by writing code in a fuel-limited wasm cell VM.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "wasm",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc",
+    "build:wasm": "node scripts/build-wasm.mjs",
+    "test": "vitest run",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "oo-agents",
+    "nooa",
+    "code-as-action",
+    "wasm-sandbox",
+    "agent-harness",
+    "metaharness"
+  ],
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  }
+}

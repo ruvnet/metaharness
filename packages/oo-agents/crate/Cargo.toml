@@ -1,0 +1,18 @@
+[package]
+name = "ooa-cell-vm"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Fuel-limited deterministic cell VM for @metaharness/oo-agents code-as-action, compiled to wasm32-unknown-unknown — the sandbox layer of the NOOA (NVIDIA OO Agents) clone"
+
+# Detached from any parent cargo workspace: ships inside an npm package.
+[workspace]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
