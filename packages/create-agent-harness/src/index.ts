@@ -897,6 +897,18 @@ async function runMetaHarnessSubcommand(sub: string, rest: string[]): Promise<nu
       for (const line of r.lines) console.log(line);
       return r.code;
     }
+    case 'turn-credit': {
+      // `metaharness turn-credit <process|report>` — delegates to @metaharness/turn-credit
+      // (ADR-248): offline recursive turn-level credit for recorded trajectories
+      // (AgentOPSD, arXiv:2608.05987). Converts sparse terminal outcomes into bounded
+      // per-turn weights (belief revisions) — advisory signals for routing, retry
+      // policy, retrieval feedback, and Darwin mutation attribution. $0 and pure:
+      // the (single) teacher scoring pass that produces the input happens upstream.
+      const { dispatch } = await import('@metaharness/turn-credit/cli');
+      const r = await dispatch(rest[0], rest.slice(1));
+      for (const line of r.lines) console.log(line);
+      return r.code;
+    }
     case 'proxy': {
       // Optional Meta-Proxy integration. The signed Rust sidecar is downloaded
       // only through its explicit `install --yes` command, never while scaffolding.

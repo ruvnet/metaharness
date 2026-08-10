@@ -1,0 +1,58 @@
+{
+  "name": "@metaharness/turn-credit",
+  "version": "0.1.0",
+  "description": "Offline recursive turn-level credit assignment for agent trajectories (AgentOPSD, arXiv:2608.05987). Converts sparse terminal outcomes into bounded per-turn weights via recursive belief updates — advisory signals for routing, retry policy, retrieval feedback, and Darwin mutation promotion. Never reverses the verifier's decision; never updates model weights. Dependency-free (Node built-ins).",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./cli": {
+      "types": "./dist/cli.d.ts",
+      "import": "./dist/cli.js"
+    }
+  },
+  "files": [
+    "dist/**",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "agent",
+    "harness",
+    "credit-assignment",
+    "turn-level",
+    "belief-update",
+    "advantage-reshaping",
+    "agentopsd",
+    "long-horizon",
+    "trajectory",
+    "ruflo",
+    "metaharness"
+  ],
+  "author": "rUv <ruv@ruv.net>",
+  "license": "MIT",
+  "homepage": "https://github.com/ruvnet/metaharness/tree/main/packages/turn-credit#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/metaharness.git",
+    "directory": "packages/turn-credit"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
