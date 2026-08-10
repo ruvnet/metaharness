@@ -60,3 +60,6 @@ __pycache__/
 *.pyc
 .swarm/
 packages/darwin-mode/bench/ruvector/data/
+# transient live-run scratch: cloned runner dir + flywheel checkpoints (never committed)
+packages/evals-math/bench-paid/
+packages/evals-math/bench/*.partial.json
