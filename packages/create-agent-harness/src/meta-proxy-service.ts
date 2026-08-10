@@ -611,11 +611,13 @@ export function disableMetaProxyService(options: ServiceOptions = {}): ServiceRe
     if (!end) return { ok: false, message: 'Could not construct the Windows stop command.', unitPath };
     run(end);
     let stopped = metaProxyServiceState(platform, home, run, label);
-    for (let attempt = 0; attempt < 20 && stopped.managerState !== 'unknown' && stopped.running !== false; attempt++) {
+    let consecutiveStopped = stopped.running === false ? 1 : 0;
+    for (let attempt = 0; attempt < 20 && stopped.managerState !== 'unknown' && consecutiveStopped < 2; attempt++) {
       wait(100);
       stopped = metaProxyServiceState(platform, home, run, label);
+      consecutiveStopped = stopped.running === false ? consecutiveStopped + 1 : 0;
     }
-    if (stopped.managerState === 'unknown' || stopped.running !== false) {
+    if (stopped.managerState === 'unknown' || consecutiveStopped < 2) {
       return {
         ok: false,
         message: `Could not confirm the Meta-Proxy task stopped; preserved task and ${unitPath}.`,

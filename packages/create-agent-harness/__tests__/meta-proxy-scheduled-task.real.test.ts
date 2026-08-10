@@ -55,9 +55,22 @@ it.runIf(real)('proves an isolated Scheduled Task starts, reports, stops, and de
     expect(disabled.ok, disabled.message).toBe(true);
     expect(existsSync(serviceUnitPath('win32', home, label)!)).toBe(false);
     expect(metaProxyServiceState('win32', home, undefined, label).managerState).toBe('disabled');
+    const binaryReleased = await eventually(
+      () => {
+        try {
+          rmSync(binary);
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      (released) => released,
+      5_000,
+    );
+    expect(binaryReleased).toBe(true);
   } finally {
     schtasks('/end', '/tn', label);
     schtasks('/delete', '/tn', label, '/f');
-    rmSync(home, { recursive: true, force: true });
+    rmSync(home, { recursive: true, force: true, maxRetries: 50, retryDelay: 100 });
   }
 }, 60_000);

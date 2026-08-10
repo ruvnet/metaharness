@@ -409,7 +409,7 @@ describe('disable', () => {
     const result = disableMetaProxyService({ home, platform: 'win32', run, wait: () => {} });
 
     expect(result.ok).toBe(false);
-    expect(calls.map((call) => call.args[0])).toEqual(['/query', '/end', '/query', '/delete']);
+    expect(calls.map((call) => call.args[0])).toEqual(['/query', '/end', '/query', '/query', '/delete']);
     expect(existsSync(unitPath)).toBe(true);
   });
 
@@ -462,8 +462,8 @@ describe('disable', () => {
     });
 
     expect(result.ok).toBe(true);
-    expect(postEndQueries).toBe(3);
-    expect(waits).toEqual([100, 100]);
+    expect(postEndQueries).toBe(4);
+    expect(waits).toEqual([100, 100, 100]);
     expect(existsSync(unitPath)).toBe(false);
   });
 });
