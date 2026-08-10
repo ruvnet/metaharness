@@ -432,7 +432,7 @@ describe('enable', () => {
         creates += 1;
         if (creates === 1) { taskState = 'missing'; return { ok: false, output: 'simulated create removed task before lost response' }; }
         taskState = 3;
-        return { ok: true, output: '' };
+        return { ok: false, output: 'simulated lost compensating create response' };
       }
       if (invocation.args[0] === '/end') return { ok: true, output: '' };
       if (invocation.args[0] === '/change' && invocation.args.includes('/disable')) { taskState = 1; return { ok: true, output: '' }; }

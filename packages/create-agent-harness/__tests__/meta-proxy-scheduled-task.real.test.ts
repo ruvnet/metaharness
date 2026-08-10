@@ -87,14 +87,19 @@ it.runIf(real)('proves an isolated Scheduled Task starts, reports, stops, and de
     // `/create /f` can partially replace or remove an existing task before its
     // caller loses the response. Delete it after the real first create and
     // require the owned XML to recreate the exact prior disabled registration.
-    let firstCreate = true;
+    let createAttempts = 0;
     const ambiguousCreate = (invocation: ServiceCommand): CommandOutcome => {
       const result = spawnSync(invocation.command, invocation.args, { encoding: 'utf8', timeout: 15_000, windowsHide: true });
       const output = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
-      if (invocation.args[0] === '/create' && firstCreate) {
-        firstCreate = false;
-        schtasks('/delete', '/tn', label, '/f');
-        return { ok: false, output: 'simulated create removed task before lost response' };
+      if (invocation.args[0] === '/create') {
+        createAttempts += 1;
+        if (createAttempts === 1) {
+          schtasks('/delete', '/tn', label, '/f');
+          return { ok: false, output: 'simulated create removed task before lost response' };
+        }
+        if (createAttempts === 2 && result.status === 0) {
+          return { ok: false, output: 'simulated lost compensating create response' };
+        }
       }
       return result.error
         ? { ok: false, output: result.error.message, error: result.error.message }

@@ -515,10 +515,14 @@ export function enableMetaProxyService(options: ServiceOptions = {}): ServiceRes
           if (state.loaded === false) {
             const recreate = enableCommands('win32', unitPath, label)[0];
             const recreated = recreate ? run(recreate) : { ok: false, output: 'create command unavailable' };
-            if (!recreated.ok) {
+            // `/create /f` can apply and still lose its response. Its exit
+            // status is not authoritative; re-read before deciding whether
+            // the prior task is still absent or available for restoration.
+            const afterRecreate = metaProxyServiceState('win32', home, run, label);
+            if (afterRecreate.managerState === 'unknown' || afterRecreate.loaded !== true) {
               return {
                 ok: false,
-                message: `Could not enable start-at-login and recreating the prior disabled task failed: ${recreated.output || 'command failed'}. Definition preserved at ${unitPath}.`,
+                message: `Could not enable start-at-login and could not prove the prior disabled task was recreated: ${recreated.output || 'state mismatch'}. Definition preserved at ${unitPath}.`,
                 unitPath,
               };
             }
