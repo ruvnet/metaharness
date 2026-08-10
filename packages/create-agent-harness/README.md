@@ -111,7 +111,8 @@ locale-neutral ScheduledTasks API enum state and reports registration, task
 enablement, and running state separately. Disable and ambiguous-start cleanup
 require a stable stopped state. A failed enable restores a pre-existing absent
 or disabled task exactly; it deletes the task/XML only when both were created by
-that attempt. A registered task without its owned XML is never overwritten, and
+that attempt. A registered task without its owned XML is never overwritten or
+deleted by label alone, and
 an owned disabled task removed by an ambiguous create is recreated from that XML
 and returned to disabled after an authoritative re-read, even if the compensating
 create response is also lost. On Linux, ambiguous `disable --now` and later `daemon-reload`

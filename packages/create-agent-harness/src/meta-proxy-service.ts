@@ -424,7 +424,7 @@ export function enableMetaProxyService(options: ServiceOptions = {}): ServiceRes
   if (platform === 'win32' && before.loaded === true && !before.definitionPresent) {
     return {
       ok: false,
-      message: `A Meta-Proxy task is registered without the owned definition at ${unitPath}. Disable it explicitly before replacement.`,
+      message: `A Meta-Proxy task is registered without the owned definition at ${unitPath}. Inspect and remove it manually before replacement.`,
       unitPath,
     };
   }
@@ -692,6 +692,13 @@ export function disableMetaProxyService(options: ServiceOptions = {}): ServiceRe
   }
   if (state.managerState === 'disabled' && !state.definitionPresent) {
     return { ok: true, message: 'Meta-Proxy is not set to start at login.' };
+  }
+  if (platform === 'win32' && state.loaded === true && !state.definitionPresent) {
+    return {
+      ok: false,
+      message: `A Meta-Proxy task is registered without the owned definition at ${unitPath}; refusing to stop or delete it by label alone.`,
+      unitPath,
+    };
   }
 
   if (platform === 'win32' && state.managerState === 'enabled') {

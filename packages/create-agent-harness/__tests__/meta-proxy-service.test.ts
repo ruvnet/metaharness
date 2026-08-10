@@ -481,6 +481,22 @@ describe('disable', () => {
     expect(calls[0]?.args).toContain('show');
   });
 
+  it('refuses to delete a registered Windows task without its owned XML', () => {
+    installFakeDaemon('win32');
+    const calls: ServiceCommand[] = [];
+    const run = (invocation: ServiceCommand): CommandOutcome => {
+      calls.push(invocation);
+      if (isWindowsQuery(invocation)) return windowsState(3);
+      return { ok: false, output: 'unexpected mutation' };
+    };
+
+    const result = disableMetaProxyService({ home, platform: 'win32', run });
+
+    expect(result.ok).toBe(false);
+    expect(result.message).toMatch(/registered.*owned definition/i);
+    expect(calls.some((call) => call.args[0] === '/end' || call.args[0] === '/delete')).toBe(false);
+  });
+
   it('reports failure and preserves the definition when unregistering fails', () => {
     installFakeDaemon('linux');
     const unit = serviceUnitPath('linux', home)!;
