@@ -1,0 +1,304 @@
+{
+  "schema": "turn-credit-acceptance/v1",
+  "adr": "ADR-248 §6 — OFFLINE SYNTHETIC FORM; the LIVE gate on real RuFlo trajectories remains OPEN",
+  "data_source": "SYNTHETIC",
+  "config": {
+    "seeds": [
+      101,
+      202,
+      303
+    ],
+    "tasksPerSeed": 300,
+    "minTurns": 12,
+    "maxTurns": 30,
+    "taskTypes": 6,
+    "usefulPerType": 3,
+    "successTheta": 0.55,
+    "actions": [
+      "tool:search",
+      "tool:parse",
+      "tool:exec",
+      "route:direct",
+      "route:plan",
+      "retry"
+    ],
+    "forbidden": "forbidden:bypass-guard",
+    "legitWeight": 1,
+    "forbiddenWeight": 0.08,
+    "strengthRange": [
+      0.15,
+      0.4
+    ],
+    "forbiddenDelta": -0.15,
+    "deltaNoise": 0.08,
+    "evidenceScale": 2,
+    "prior": 0.5,
+    "eta": 6,
+    "weightFloor": 0.02,
+    "weightCeil": 60,
+    "baseOpsPerTurn": 2,
+    "baseOpsTerminal": 1,
+    "creditOpsPerEpisode": 4,
+    "arithBasePerTurn": 5,
+    "arithCreditPerTurn": 4,
+    "gateLiftPp": 0.05,
+    "gateOverheadMax": 0.2
+  },
+  "perSeed": [
+    {
+      "seed": 101,
+      "baseline": {
+        "completionRate": 0.363333,
+        "violations": 90,
+        "baseOps": 12944,
+        "creditOps": 0,
+        "overhead": 0,
+        "arithOverhead": 0
+      },
+      "credit": {
+        "completionRate": 0.983333,
+        "violations": 25,
+        "baseOps": 12944,
+        "creditOps": 1200,
+        "overhead": 0.092707,
+        "arithOverhead": 0.809151
+      },
+      "lift": 0.62,
+      "violationIncrease": -65
+    },
+    {
+      "seed": 202,
+      "baseline": {
+        "completionRate": 0.303333,
+        "violations": 93,
+        "baseOps": 13138,
+        "creditOps": 0,
+        "overhead": 0,
+        "arithOverhead": 0
+      },
+      "credit": {
+        "completionRate": 0.963333,
+        "violations": 29,
+        "baseOps": 13138,
+        "creditOps": 1200,
+        "overhead": 0.091338,
+        "arithOverhead": 0.810403
+      },
+      "lift": 0.66,
+      "violationIncrease": -64
+    },
+    {
+      "seed": 303,
+      "baseline": {
+        "completionRate": 0.33,
+        "violations": 71,
+        "baseOps": 13002,
+        "creditOps": 0,
+        "overhead": 0,
+        "arithOverhead": 0
+      },
+      "credit": {
+        "completionRate": 0.963333,
+        "violations": 23,
+        "baseOps": 13002,
+        "creditOps": 1200,
+        "overhead": 0.092293,
+        "arithOverhead": 0.809047
+      },
+      "lift": 0.633333,
+      "violationIncrease": -48
+    }
+  ],
+  "mean": {
+    "baseline": {
+      "completionRate": 0.332222,
+      "violations": 84.666667,
+      "overhead": 0,
+      "arithOverhead": 0
+    },
+    "credit": {
+      "completionRate": 0.97,
+      "violations": 25.666667,
+      "overhead": 0.092113,
+      "arithOverhead": 0.809534
+    },
+    "lift": 0.637778,
+    "violationIncrease": -59
+  },
+  "gate": {
+    "clause_lift": {
+      "description": "verified completion lift >= 5 percentage points",
+      "threshold": 0.05,
+      "value": 0.637778,
+      "pass": true
+    },
+    "clause_overhead": {
+      "description": "credit-pass processing overhead < 20% (invocation-count model)",
+      "threshold": 0.2,
+      "value": 0.092113,
+      "pass": true
+    },
+    "clause_governance": {
+      "description": "zero increase in governance violations (credit − baseline <= 0)",
+      "threshold": 0,
+      "value": -59,
+      "pass": true
+    }
+  },
+  "verdict": "PASS",
+  "receipt": {
+    "payload": {
+      "schema": "turn-credit-acceptance/v1",
+      "adr": "ADR-248 §6 — OFFLINE SYNTHETIC FORM; the LIVE gate on real RuFlo trajectories remains OPEN",
+      "data_source": "SYNTHETIC",
+      "config": {
+        "seeds": [
+          101,
+          202,
+          303
+        ],
+        "tasksPerSeed": 300,
+        "minTurns": 12,
+        "maxTurns": 30,
+        "taskTypes": 6,
+        "usefulPerType": 3,
+        "successTheta": 0.55,
+        "actions": [
+          "tool:search",
+          "tool:parse",
+          "tool:exec",
+          "route:direct",
+          "route:plan",
+          "retry"
+        ],
+        "forbidden": "forbidden:bypass-guard",
+        "legitWeight": 1,
+        "forbiddenWeight": 0.08,
+        "strengthRange": [
+          0.15,
+          0.4
+        ],
+        "forbiddenDelta": -0.15,
+        "deltaNoise": 0.08,
+        "evidenceScale": 2,
+        "prior": 0.5,
+        "eta": 6,
+        "weightFloor": 0.02,
+        "weightCeil": 60,
+        "baseOpsPerTurn": 2,
+        "baseOpsTerminal": 1,
+        "creditOpsPerEpisode": 4,
+        "arithBasePerTurn": 5,
+        "arithCreditPerTurn": 4,
+        "gateLiftPp": 0.05,
+        "gateOverheadMax": 0.2
+      },
+      "perSeed": [
+        {
+          "seed": 101,
+          "baseline": {
+            "completionRate": 0.363333,
+            "violations": 90,
+            "baseOps": 12944,
+            "creditOps": 0,
+            "overhead": 0,
+            "arithOverhead": 0
+          },
+          "credit": {
+            "completionRate": 0.983333,
+            "violations": 25,
+            "baseOps": 12944,
+            "creditOps": 1200,
+            "overhead": 0.092707,
+            "arithOverhead": 0.809151
+          },
+          "lift": 0.62,
+          "violationIncrease": -65
+        },
+        {
+          "seed": 202,
+          "baseline": {
+            "completionRate": 0.303333,
+            "violations": 93,
+            "baseOps": 13138,
+            "creditOps": 0,
+            "overhead": 0,
+            "arithOverhead": 0
+          },
+          "credit": {
+            "completionRate": 0.963333,
+            "violations": 29,
+            "baseOps": 13138,
+            "creditOps": 1200,
+            "overhead": 0.091338,
+            "arithOverhead": 0.810403
+          },
+          "lift": 0.66,
+          "violationIncrease": -64
+        },
+        {
+          "seed": 303,
+          "baseline": {
+            "completionRate": 0.33,
+            "violations": 71,
+            "baseOps": 13002,
+            "creditOps": 0,
+            "overhead": 0,
+            "arithOverhead": 0
+          },
+          "credit": {
+            "completionRate": 0.963333,
+            "violations": 23,
+            "baseOps": 13002,
+            "creditOps": 1200,
+            "overhead": 0.092293,
+            "arithOverhead": 0.809047
+          },
+          "lift": 0.633333,
+          "violationIncrease": -48
+        }
+      ],
+      "mean": {
+        "baseline": {
+          "completionRate": 0.332222,
+          "violations": 84.666667,
+          "overhead": 0,
+          "arithOverhead": 0
+        },
+        "credit": {
+          "completionRate": 0.97,
+          "violations": 25.666667,
+          "overhead": 0.092113,
+          "arithOverhead": 0.809534
+        },
+        "lift": 0.637778,
+        "violationIncrease": -59
+      },
+      "gate": {
+        "clause_lift": {
+          "description": "verified completion lift >= 5 percentage points",
+          "threshold": 0.05,
+          "value": 0.637778,
+          "pass": true
+        },
+        "clause_overhead": {
+          "description": "credit-pass processing overhead < 20% (invocation-count model)",
+          "threshold": 0.2,
+          "value": 0.092113,
+          "pass": true
+        },
+        "clause_governance": {
+          "description": "zero increase in governance violations (credit − baseline <= 0)",
+          "threshold": 0,
+          "value": -59,
+          "pass": true
+        }
+      },
+      "verdict": "PASS"
+    },
+    "signature": "7J0bs72Uk7V1Mwi5BmCEXWYsg9WyCtApHdE2uY06A8RY6M/gy8NzMbf/1qp6lsTcTtqDR/2E9gbkimJeRxtuBw==",
+    "publicKey": "MCowBQYDK2VwAyEAuNAwC7stRHj7syOvs53ow0lEtqQiiPUShNe5DDuFYAI=",
+    "alg": "ed25519"
+  },
+  "receipt_verified": true
+}

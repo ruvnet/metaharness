@@ -1,0 +1,1502 @@
+{
+  "data_source": "SYNTHETIC",
+  "root_id": "root",
+  "chain": [
+    {
+      "id": "root__toolOrder_gen1__contextDepth_gen2",
+      "generation": 2,
+      "parents": [
+        "root__toolOrder_gen1"
+      ],
+      "mutation": {
+        "target": "contextDepth",
+        "summary": "adapt contextDepth"
+      },
+      "primaryDelta": 0.566489,
+      "anchorScore": 0.627526,
+      "verdict": "PROMOTED",
+      "failureReasons": [],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__contextDepth_gen2",
+          "target": "contextDepth",
+          "verdict": "PROMOTED",
+          "primaryDelta": 0.566489
+        },
+        "signature": "74CH4bKRc5nMOrLypwijhYmdDYzuq3J1cQHRaetG7AU2AjQaAkeyzxWKvKfunHlMawoZWTjBDF3949sQHluFCw==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen2",
+      "baselineScore": {
+        "primary": 0.330967,
+        "noopRate": 0.416667,
+        "costPerWin": 999999,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.897456,
+        "noopRate": 0,
+        "costPerWin": 7.636364,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1",
+      "generation": 1,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "toolOrder",
+        "summary": "adapt toolOrder"
+      },
+      "primaryDelta": 0.000056000000000000494,
+      "anchorScore": 0.332837,
+      "verdict": "PROMOTED",
+      "failureReasons": [],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1",
+          "target": "toolOrder",
+          "verdict": "PROMOTED",
+          "primaryDelta": 0.000056000000000000494
+        },
+        "signature": "AKOlu2nhYmZJFqD47GvYsLVmR2OrAucrzkbI21/VRXNf3miBxBE4yPoqytODVfpIH5oKtoouwe2OUhFHr89WCA==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen1",
+      "baselineScore": {
+        "primary": 0.330911,
+        "noopRate": 1,
+        "costPerWin": 999999,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.330967,
+        "noopRate": 0.416667,
+        "costPerWin": 999999,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root",
+      "generation": 0,
+      "parents": [],
+      "mutation": null,
+      "primaryDelta": 0,
+      "anchorScore": 0.33058,
+      "verdict": "ROOT",
+      "failureReasons": [],
+      "receipt": {
+        "payload": {
+          "kind": "root",
+          "root": "root"
+        },
+        "signature": "JrJDAALbmGlqZr7z6B94QQtq9TPGxnIR/K0PZef8pXhzpMEbIKLvjam89Okw8f1y8YVZCSSm1BgEwwZV23sODQ==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen0"
+    }
+  ],
+  "all_commits": [
+    {
+      "id": "root__retryLimit_gen1",
+      "generation": 1,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "retryLimit",
+        "summary": "adapt retryLimit"
+      },
+      "primaryDelta": -0.004375999999999991,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "primary_regressed"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__retryLimit_gen1",
+          "target": "retryLimit",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.004375999999999991
+        },
+        "signature": "idRNJPNGY3C4h8fmld6fCUHGxpl9+d41N7/Fd1768SKJ0CVKg0WTJnmCR2yRxTCp2wNVeDKfrpCq440mP8msAw==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen1",
+      "baselineScore": {
+        "primary": 0.330911,
+        "noopRate": 1,
+        "costPerWin": 999999,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.326535,
+        "noopRate": 0.75,
+        "costPerWin": 999999,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1",
+      "generation": 1,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "toolOrder",
+        "summary": "adapt toolOrder"
+      },
+      "primaryDelta": 0.000056000000000000494,
+      "anchorScore": 0.332837,
+      "verdict": "PROMOTED",
+      "failureReasons": [],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1",
+          "target": "toolOrder",
+          "verdict": "PROMOTED",
+          "primaryDelta": 0.000056000000000000494
+        },
+        "signature": "AKOlu2nhYmZJFqD47GvYsLVmR2OrAucrzkbI21/VRXNf3miBxBE4yPoqytODVfpIH5oKtoouwe2OUhFHr89WCA==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen1",
+      "baselineScore": {
+        "primary": 0.330911,
+        "noopRate": 1,
+        "costPerWin": 999999,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.330967,
+        "noopRate": 0.416667,
+        "costPerWin": 999999,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__contextDepth_gen1",
+      "generation": 1,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "contextDepth",
+        "summary": "adapt contextDepth"
+      },
+      "primaryDelta": 0.0015239999999999698,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__contextDepth_gen1",
+          "target": "contextDepth",
+          "verdict": "REJECTED",
+          "primaryDelta": 0.0015239999999999698
+        },
+        "signature": "K2z8JH+D3Rpv+ibuwrItkTVq/SEKsF3sXJqg1cectyZxwMm7L0O3xTWUWe/o62L2Z1kO6uZVJHnJ/ufRAuruAQ==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen1",
+      "baselineScore": {
+        "primary": 0.330911,
+        "noopRate": 1,
+        "costPerWin": 999999,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.332435,
+        "noopRate": 1,
+        "costPerWin": 999999,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__batchMode_gen1",
+      "generation": 1,
+      "parents": [
+        "root"
+      ],
+      "mutation": {
+        "target": "batchMode",
+        "summary": "adapt batchMode"
+      },
+      "primaryDelta": 0.0003130000000000077,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__batchMode_gen1",
+          "target": "batchMode",
+          "verdict": "REJECTED",
+          "primaryDelta": 0.0003130000000000077
+        },
+        "signature": "SmcXjhNVgKDTb6sAq3FjuNFcwxhyVauHtaLj1LScSQXXhhttUpiGaR0cLSJ081wVpeehyTJi63PbR8baIYX/DA==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen1",
+      "baselineScore": {
+        "primary": 0.330911,
+        "noopRate": 1,
+        "costPerWin": 999999,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.331224,
+        "noopRate": 1,
+        "costPerWin": 999999,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__retryLimit_gen2",
+      "generation": 2,
+      "parents": [
+        "root__toolOrder_gen1"
+      ],
+      "mutation": {
+        "target": "retryLimit",
+        "summary": "adapt retryLimit"
+      },
+      "primaryDelta": 0.33641999999999994,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__retryLimit_gen2",
+          "target": "retryLimit",
+          "verdict": "REJECTED",
+          "primaryDelta": 0.33641999999999994
+        },
+        "signature": "SRWDf8kNh4yvHkCsE6MjxUSlBjWBr2xQv1veATaOTXuipyzoy2l8HHNonQwgu4lkhffX/z6JmyblpxwZtSF2CQ==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen2",
+      "baselineScore": {
+        "primary": 0.330967,
+        "noopRate": 0.416667,
+        "costPerWin": 999999,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.667387,
+        "noopRate": 0,
+        "costPerWin": 14.571429,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__toolOrder_gen2",
+      "generation": 2,
+      "parents": [
+        "root__toolOrder_gen1"
+      ],
+      "mutation": {
+        "target": "toolOrder",
+        "summary": "adapt toolOrder"
+      },
+      "primaryDelta": -0.000056000000000000494,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "primary_regressed",
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__toolOrder_gen2",
+          "target": "toolOrder",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.000056000000000000494
+        },
+        "signature": "zTMB69JSqTscwVOwiRPKHvXHqvZdJVuFZgkVO+3kNYlFc4hNZ9656C0GAUj3vfHOt7vaz3bGjG2kYc9JBc3zDA==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen2",
+      "baselineScore": {
+        "primary": 0.330967,
+        "noopRate": 0.416667,
+        "costPerWin": 999999,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.330911,
+        "noopRate": 1,
+        "costPerWin": 999999,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__contextDepth_gen2",
+      "generation": 2,
+      "parents": [
+        "root__toolOrder_gen1"
+      ],
+      "mutation": {
+        "target": "contextDepth",
+        "summary": "adapt contextDepth"
+      },
+      "primaryDelta": 0.566489,
+      "anchorScore": 0.627526,
+      "verdict": "PROMOTED",
+      "failureReasons": [],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__contextDepth_gen2",
+          "target": "contextDepth",
+          "verdict": "PROMOTED",
+          "primaryDelta": 0.566489
+        },
+        "signature": "74CH4bKRc5nMOrLypwijhYmdDYzuq3J1cQHRaetG7AU2AjQaAkeyzxWKvKfunHlMawoZWTjBDF3949sQHluFCw==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen2",
+      "baselineScore": {
+        "primary": 0.330967,
+        "noopRate": 0.416667,
+        "costPerWin": 999999,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.897456,
+        "noopRate": 0,
+        "costPerWin": 7.636364,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__batchMode_gen2",
+      "generation": 2,
+      "parents": [
+        "root__toolOrder_gen1"
+      ],
+      "mutation": {
+        "target": "batchMode",
+        "summary": "adapt batchMode"
+      },
+      "primaryDelta": 0.0015620000000000078,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__batchMode_gen2",
+          "target": "batchMode",
+          "verdict": "REJECTED",
+          "primaryDelta": 0.0015620000000000078
+        },
+        "signature": "ylQAFtWMlS0yWitz7LZPcKJlhgMsL/n9lpS2QmtB+yRyHm1TNTuJ364bEZr1M1B+jFveD/ncC37Q2CkFSOqYBw==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen2",
+      "baselineScore": {
+        "primary": 0.330967,
+        "noopRate": 0.416667,
+        "costPerWin": 999999,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.332529,
+        "noopRate": 0.5,
+        "costPerWin": 999999,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__contextDepth_gen2__retryLimit_gen3",
+      "generation": 3,
+      "parents": [
+        "root__toolOrder_gen1__contextDepth_gen2"
+      ],
+      "mutation": {
+        "target": "retryLimit",
+        "summary": "adapt retryLimit"
+      },
+      "primaryDelta": 0.04689999999999994,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__contextDepth_gen2__retryLimit_gen3",
+          "target": "retryLimit",
+          "verdict": "REJECTED",
+          "primaryDelta": 0.04689999999999994
+        },
+        "signature": "zo8pPefknKMdTLfD8zFHQ4ENFmj+tbqfyLsCXn2extipmGQ8/SocUsxwPdu+h+Ozdpqw87rFx/eBtr6qrMzNDw==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen3",
+      "baselineScore": {
+        "primary": 0.897456,
+        "noopRate": 0,
+        "costPerWin": 7.636364,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.944356,
+        "noopRate": 0,
+        "costPerWin": 7.583333,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__contextDepth_gen2__toolOrder_gen3",
+      "generation": 3,
+      "parents": [
+        "root__toolOrder_gen1__contextDepth_gen2"
+      ],
+      "mutation": {
+        "target": "toolOrder",
+        "summary": "adapt toolOrder"
+      },
+      "primaryDelta": -0.5849500000000001,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "primary_regressed",
+        "noop_rate_not_improved",
+        "cost_per_win_worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__contextDepth_gen2__toolOrder_gen3",
+          "target": "toolOrder",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.5849500000000001
+        },
+        "signature": "kd0/4iN/SkQb6TpQAG4kbmJobliLtKs6Smd7z/aTxKi623xKp5WDi7bJCagblvbajdVDdvC3FlpNe+OyuuCIDQ==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen3",
+      "baselineScore": {
+        "primary": 0.897456,
+        "noopRate": 0,
+        "costPerWin": 7.636364,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.312506,
+        "noopRate": 1,
+        "costPerWin": 999999,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__contextDepth_gen2__contextDepth_gen3",
+      "generation": 3,
+      "parents": [
+        "root__toolOrder_gen1__contextDepth_gen2"
+      ],
+      "mutation": {
+        "target": "contextDepth",
+        "summary": "adapt contextDepth"
+      },
+      "primaryDelta": -0.566489,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "primary_regressed",
+        "noop_rate_not_improved",
+        "cost_per_win_worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__contextDepth_gen2__contextDepth_gen3",
+          "target": "contextDepth",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.566489
+        },
+        "signature": "m+Ej2UNQmZ7HKnSxdcxM3bAfFJ9DxvzEuZtFj1BmKVQtH5zRWK1wfLlNtaJBUl0vF+ARyvUvrUdUrST90wVYDw==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen3",
+      "baselineScore": {
+        "primary": 0.897456,
+        "noopRate": 0,
+        "costPerWin": 7.636364,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.330967,
+        "noopRate": 0.416667,
+        "costPerWin": 999999,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__contextDepth_gen2__batchMode_gen3",
+      "generation": 3,
+      "parents": [
+        "root__toolOrder_gen1__contextDepth_gen2"
+      ],
+      "mutation": {
+        "target": "batchMode",
+        "summary": "adapt batchMode"
+      },
+      "primaryDelta": -0.03285500000000008,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "primary_regressed",
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__contextDepth_gen2__batchMode_gen3",
+          "target": "batchMode",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.03285500000000008
+        },
+        "signature": "QmuN05YXioSCX4y2mQgQTp7/RzOctjCNzRYRCDWcjupJTKsm7K22lCaI7RJLOZMxdanYqwwU8FxfbbM+HaCYAg==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen3",
+      "baselineScore": {
+        "primary": 0.897456,
+        "noopRate": 0,
+        "costPerWin": 7.636364,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.864601,
+        "noopRate": 0,
+        "costPerWin": 6.048,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__contextDepth_gen2__retryLimit_gen4",
+      "generation": 4,
+      "parents": [
+        "root__toolOrder_gen1__contextDepth_gen2"
+      ],
+      "mutation": {
+        "target": "retryLimit",
+        "summary": "adapt retryLimit"
+      },
+      "primaryDelta": 0.053238999999999925,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__contextDepth_gen2__retryLimit_gen4",
+          "target": "retryLimit",
+          "verdict": "REJECTED",
+          "primaryDelta": 0.053238999999999925
+        },
+        "signature": "AfOzW61gCboaLe7UQmmfVrePHCA6Q4uzbH4g0ZiEEOuuhfNZX3yMvoP9V7drOFQVMUELZ5DC3IT8mvDtipNuAw==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen4",
+      "baselineScore": {
+        "primary": 0.897456,
+        "noopRate": 0,
+        "costPerWin": 7.636364,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.950695,
+        "noopRate": 0,
+        "costPerWin": 7,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__contextDepth_gen2__toolOrder_gen4",
+      "generation": 4,
+      "parents": [
+        "root__toolOrder_gen1__contextDepth_gen2"
+      ],
+      "mutation": {
+        "target": "toolOrder",
+        "summary": "adapt toolOrder"
+      },
+      "primaryDelta": -0.5849500000000001,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "primary_regressed",
+        "noop_rate_not_improved",
+        "cost_per_win_worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__contextDepth_gen2__toolOrder_gen4",
+          "target": "toolOrder",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.5849500000000001
+        },
+        "signature": "8/Wk+MgkTe3U/vOL5BDWcXXpCshMo3Cff/AUbQojKyrPc2Hr5TCZR4jHtDdQW0JWyx4ggsfJ2hV67UtpzcB1BA==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen4",
+      "baselineScore": {
+        "primary": 0.897456,
+        "noopRate": 0,
+        "costPerWin": 7.636364,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.312506,
+        "noopRate": 1,
+        "costPerWin": 999999,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__contextDepth_gen2__contextDepth_gen4",
+      "generation": 4,
+      "parents": [
+        "root__toolOrder_gen1__contextDepth_gen2"
+      ],
+      "mutation": {
+        "target": "contextDepth",
+        "summary": "adapt contextDepth"
+      },
+      "primaryDelta": -0.24603300000000006,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "primary_regressed",
+        "noop_rate_not_improved",
+        "cost_per_win_worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__contextDepth_gen2__contextDepth_gen4",
+          "target": "contextDepth",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.24603300000000006
+        },
+        "signature": "MdUxs2gVviBMTebk2RLVR2xpahAh7N5OH8gCh4PEU+gUaWPYRinS5GhBcYq1QOoMNmgCMb9i3Si6jqX7v0RNCQ==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen4",
+      "baselineScore": {
+        "primary": 0.897456,
+        "noopRate": 0,
+        "costPerWin": 7.636364,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.651423,
+        "noopRate": 0,
+        "costPerWin": 10,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__contextDepth_gen2__batchMode_gen4",
+      "generation": 4,
+      "parents": [
+        "root__toolOrder_gen1__contextDepth_gen2"
+      ],
+      "mutation": {
+        "target": "batchMode",
+        "summary": "adapt batchMode"
+      },
+      "primaryDelta": -0.03285500000000008,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "primary_regressed",
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__contextDepth_gen2__batchMode_gen4",
+          "target": "batchMode",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.03285500000000008
+        },
+        "signature": "mktyMTYneafcONiHL2LYfevvU2soTApy3Z2C+nrs6KGhXfGFdk0Tv2YZipLZVWninkdQVxpNsfayOnqRGtokCA==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen4",
+      "baselineScore": {
+        "primary": 0.897456,
+        "noopRate": 0,
+        "costPerWin": 7.636364,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.864601,
+        "noopRate": 0,
+        "costPerWin": 6.048,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__contextDepth_gen2__retryLimit_gen5",
+      "generation": 5,
+      "parents": [
+        "root__toolOrder_gen1__contextDepth_gen2"
+      ],
+      "mutation": {
+        "target": "retryLimit",
+        "summary": "adapt retryLimit"
+      },
+      "primaryDelta": 0.04689999999999994,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__contextDepth_gen2__retryLimit_gen5",
+          "target": "retryLimit",
+          "verdict": "REJECTED",
+          "primaryDelta": 0.04689999999999994
+        },
+        "signature": "bqL9xAxTTdBts/0kvk69R7//tXYyXOKUM+AUQypEknoDz1ViNkOnUxdm2xIHh7SE8m76a114F47q/aQDw/cPBA==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen5",
+      "baselineScore": {
+        "primary": 0.897456,
+        "noopRate": 0,
+        "costPerWin": 7.636364,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.944356,
+        "noopRate": 0,
+        "costPerWin": 7.583333,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__contextDepth_gen2__toolOrder_gen5",
+      "generation": 5,
+      "parents": [
+        "root__toolOrder_gen1__contextDepth_gen2"
+      ],
+      "mutation": {
+        "target": "toolOrder",
+        "summary": "adapt toolOrder"
+      },
+      "primaryDelta": -0.5849500000000001,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "primary_regressed",
+        "noop_rate_not_improved",
+        "cost_per_win_worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__contextDepth_gen2__toolOrder_gen5",
+          "target": "toolOrder",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.5849500000000001
+        },
+        "signature": "hf9Lkjdf1aX+vzbR29XHRN4YFGvEJ6OuAs7PGr2TiXOLk1vcF7CGrO4TOQSKyUzSTTtyiqZKt6dluva1a/u5CA==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen5",
+      "baselineScore": {
+        "primary": 0.897456,
+        "noopRate": 0,
+        "costPerWin": 7.636364,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.312506,
+        "noopRate": 1,
+        "costPerWin": 999999,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__contextDepth_gen2__contextDepth_gen5",
+      "generation": 5,
+      "parents": [
+        "root__toolOrder_gen1__contextDepth_gen2"
+      ],
+      "mutation": {
+        "target": "contextDepth",
+        "summary": "adapt contextDepth"
+      },
+      "primaryDelta": -0.566489,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "primary_regressed",
+        "noop_rate_not_improved",
+        "cost_per_win_worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__contextDepth_gen2__contextDepth_gen5",
+          "target": "contextDepth",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.566489
+        },
+        "signature": "+Tw7DeH/vn/k4+gQkolSL70YWmGYp0rioT7FhiKa+ejJYlcOqOsrGKCbEHgCBDUYH13eyfC4Iej0pU33x8FUBQ==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen5",
+      "baselineScore": {
+        "primary": 0.897456,
+        "noopRate": 0,
+        "costPerWin": 7.636364,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.330967,
+        "noopRate": 0.416667,
+        "costPerWin": 999999,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__contextDepth_gen2__batchMode_gen5",
+      "generation": 5,
+      "parents": [
+        "root__toolOrder_gen1__contextDepth_gen2"
+      ],
+      "mutation": {
+        "target": "batchMode",
+        "summary": "adapt batchMode"
+      },
+      "primaryDelta": -0.03285500000000008,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "primary_regressed",
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__contextDepth_gen2__batchMode_gen5",
+          "target": "batchMode",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.03285500000000008
+        },
+        "signature": "Bl5u+qMfLC3M2Ts6ObVwh4SelCDQFrhpmpOLOogwXQ4faHjFeFRkBbqdSoSuBVvXq8ouZMrSO8FnImp3twKeAQ==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen5",
+      "baselineScore": {
+        "primary": 0.897456,
+        "noopRate": 0,
+        "costPerWin": 7.636364,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.864601,
+        "noopRate": 0,
+        "costPerWin": 6.048,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__contextDepth_gen2__retryLimit_gen6",
+      "generation": 6,
+      "parents": [
+        "root__toolOrder_gen1__contextDepth_gen2"
+      ],
+      "mutation": {
+        "target": "retryLimit",
+        "summary": "adapt retryLimit"
+      },
+      "primaryDelta": 0.053238999999999925,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__contextDepth_gen2__retryLimit_gen6",
+          "target": "retryLimit",
+          "verdict": "REJECTED",
+          "primaryDelta": 0.053238999999999925
+        },
+        "signature": "wv+rBXhCDYKy6qXojJJmZFilwgcf6yCTWIAHD/6hZOA8+29i8anHt55KZqkTgE/H+Qxu/csI9JlU6swBwEN4DQ==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen6",
+      "baselineScore": {
+        "primary": 0.897456,
+        "noopRate": 0,
+        "costPerWin": 7.636364,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.950695,
+        "noopRate": 0,
+        "costPerWin": 7,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__contextDepth_gen2__toolOrder_gen6",
+      "generation": 6,
+      "parents": [
+        "root__toolOrder_gen1__contextDepth_gen2"
+      ],
+      "mutation": {
+        "target": "toolOrder",
+        "summary": "adapt toolOrder"
+      },
+      "primaryDelta": -0.5849500000000001,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "primary_regressed",
+        "noop_rate_not_improved",
+        "cost_per_win_worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__contextDepth_gen2__toolOrder_gen6",
+          "target": "toolOrder",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.5849500000000001
+        },
+        "signature": "MKWm09un95FKP4/ymypn3tyIELicYyIaISiTBIWaKR8M+loi85E+671RmhNEWAbx2C0IY6KY7fZBzO7dh/QXDg==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen6",
+      "baselineScore": {
+        "primary": 0.897456,
+        "noopRate": 0,
+        "costPerWin": 7.636364,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.312506,
+        "noopRate": 1,
+        "costPerWin": 999999,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__contextDepth_gen2__contextDepth_gen6",
+      "generation": 6,
+      "parents": [
+        "root__toolOrder_gen1__contextDepth_gen2"
+      ],
+      "mutation": {
+        "target": "contextDepth",
+        "summary": "adapt contextDepth"
+      },
+      "primaryDelta": -0.24603300000000006,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "primary_regressed",
+        "noop_rate_not_improved",
+        "cost_per_win_worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__contextDepth_gen2__contextDepth_gen6",
+          "target": "contextDepth",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.24603300000000006
+        },
+        "signature": "fulwKbt7RViqLCyeMwm12rd420iaxSBOPp/gjvhbjstxmbubo+2YRikDXxGuyKTJFeoho/bx46KtQ82U7t2/BQ==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen6",
+      "baselineScore": {
+        "primary": 0.897456,
+        "noopRate": 0,
+        "costPerWin": 7.636364,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.651423,
+        "noopRate": 0,
+        "costPerWin": 10,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__contextDepth_gen2__batchMode_gen6",
+      "generation": 6,
+      "parents": [
+        "root__toolOrder_gen1__contextDepth_gen2"
+      ],
+      "mutation": {
+        "target": "batchMode",
+        "summary": "adapt batchMode"
+      },
+      "primaryDelta": -0.03285500000000008,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "primary_regressed",
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__contextDepth_gen2__batchMode_gen6",
+          "target": "batchMode",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.03285500000000008
+        },
+        "signature": "k6wqVO3OO4WdDXorqO3DlsdXSlQNb75B9N6dppQPi3whc4LzghKuPFHheMBaIypJ+SNWH3rKT+nE37s9Fso5Aw==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen6",
+      "baselineScore": {
+        "primary": 0.897456,
+        "noopRate": 0,
+        "costPerWin": 7.636364,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.864601,
+        "noopRate": 0,
+        "costPerWin": 6.048,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__contextDepth_gen2__retryLimit_gen7",
+      "generation": 7,
+      "parents": [
+        "root__toolOrder_gen1__contextDepth_gen2"
+      ],
+      "mutation": {
+        "target": "retryLimit",
+        "summary": "adapt retryLimit"
+      },
+      "primaryDelta": 0.04689999999999994,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__contextDepth_gen2__retryLimit_gen7",
+          "target": "retryLimit",
+          "verdict": "REJECTED",
+          "primaryDelta": 0.04689999999999994
+        },
+        "signature": "9BtAqnedufWeuc3OkZcnWMVOxwR5BlEcRc1M+B7noHir+c+q9PzX2R2cyXbdDiHhKtVWFQTERqI0F9Y+pIShCg==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen7",
+      "baselineScore": {
+        "primary": 0.897456,
+        "noopRate": 0,
+        "costPerWin": 7.636364,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.944356,
+        "noopRate": 0,
+        "costPerWin": 7.583333,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__contextDepth_gen2__toolOrder_gen7",
+      "generation": 7,
+      "parents": [
+        "root__toolOrder_gen1__contextDepth_gen2"
+      ],
+      "mutation": {
+        "target": "toolOrder",
+        "summary": "adapt toolOrder"
+      },
+      "primaryDelta": -0.5849500000000001,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "primary_regressed",
+        "noop_rate_not_improved",
+        "cost_per_win_worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__contextDepth_gen2__toolOrder_gen7",
+          "target": "toolOrder",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.5849500000000001
+        },
+        "signature": "EWv8BNkzWhkx6CmbOqiM7gJKQrOnwgfnjVuoyznu/Dd+bC1JITgybaBCzmGa0zF6ljfgYYe2P09ch3PciVQaDg==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen7",
+      "baselineScore": {
+        "primary": 0.897456,
+        "noopRate": 0,
+        "costPerWin": 7.636364,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.312506,
+        "noopRate": 1,
+        "costPerWin": 999999,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__contextDepth_gen2__contextDepth_gen7",
+      "generation": 7,
+      "parents": [
+        "root__toolOrder_gen1__contextDepth_gen2"
+      ],
+      "mutation": {
+        "target": "contextDepth",
+        "summary": "adapt contextDepth"
+      },
+      "primaryDelta": -0.566489,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "primary_regressed",
+        "noop_rate_not_improved",
+        "cost_per_win_worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__contextDepth_gen2__contextDepth_gen7",
+          "target": "contextDepth",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.566489
+        },
+        "signature": "UIlwVQm9d+poAXceQ0qYKwXOTczqX+wSim6PuP/ZWYbxOhV4PLktw55LDTkw/hjv+idGXdF7R4PrCjUs970HCQ==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen7",
+      "baselineScore": {
+        "primary": 0.897456,
+        "noopRate": 0,
+        "costPerWin": 7.636364,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.330967,
+        "noopRate": 0.416667,
+        "costPerWin": 999999,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__contextDepth_gen2__batchMode_gen7",
+      "generation": 7,
+      "parents": [
+        "root__toolOrder_gen1__contextDepth_gen2"
+      ],
+      "mutation": {
+        "target": "batchMode",
+        "summary": "adapt batchMode"
+      },
+      "primaryDelta": -0.03285500000000008,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "primary_regressed",
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__contextDepth_gen2__batchMode_gen7",
+          "target": "batchMode",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.03285500000000008
+        },
+        "signature": "uzv1javR38ZglBWy0EhcJSxD1hkO3lci4TE72rZ3kDBporWeJcjsN6QFLrGtLXHqysywnZMLk07ExL+7lChUCA==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen7",
+      "baselineScore": {
+        "primary": 0.897456,
+        "noopRate": 0,
+        "costPerWin": 7.636364,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.864601,
+        "noopRate": 0,
+        "costPerWin": 6.048,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__contextDepth_gen2__retryLimit_gen8",
+      "generation": 8,
+      "parents": [
+        "root__toolOrder_gen1__contextDepth_gen2"
+      ],
+      "mutation": {
+        "target": "retryLimit",
+        "summary": "adapt retryLimit"
+      },
+      "primaryDelta": 0.053238999999999925,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__contextDepth_gen2__retryLimit_gen8",
+          "target": "retryLimit",
+          "verdict": "REJECTED",
+          "primaryDelta": 0.053238999999999925
+        },
+        "signature": "bI+eUcmeW23rskudfh9Lmyft51M+QE03W/5kfFGJrL5LWo6czbxxt0J2ToX4XdfZnBOgKKmdkLxgQAWeN+9cDw==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen8",
+      "baselineScore": {
+        "primary": 0.897456,
+        "noopRate": 0,
+        "costPerWin": 7.636364,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.950695,
+        "noopRate": 0,
+        "costPerWin": 7,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__contextDepth_gen2__toolOrder_gen8",
+      "generation": 8,
+      "parents": [
+        "root__toolOrder_gen1__contextDepth_gen2"
+      ],
+      "mutation": {
+        "target": "toolOrder",
+        "summary": "adapt toolOrder"
+      },
+      "primaryDelta": -0.5849500000000001,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "primary_regressed",
+        "noop_rate_not_improved",
+        "cost_per_win_worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__contextDepth_gen2__toolOrder_gen8",
+          "target": "toolOrder",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.5849500000000001
+        },
+        "signature": "SS/h+lD+sKnrsYfkzVNrLQk0sd4oGeKqRVkG2n2hLbVrxl1nT6Pwqvw/XFzu3eUykhar/XFfCJVOiym9bpBqAA==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen8",
+      "baselineScore": {
+        "primary": 0.897456,
+        "noopRate": 0,
+        "costPerWin": 7.636364,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.312506,
+        "noopRate": 1,
+        "costPerWin": 999999,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__contextDepth_gen2__contextDepth_gen8",
+      "generation": 8,
+      "parents": [
+        "root__toolOrder_gen1__contextDepth_gen2"
+      ],
+      "mutation": {
+        "target": "contextDepth",
+        "summary": "adapt contextDepth"
+      },
+      "primaryDelta": -0.24603300000000006,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "primary_regressed",
+        "noop_rate_not_improved",
+        "cost_per_win_worsened"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__contextDepth_gen2__contextDepth_gen8",
+          "target": "contextDepth",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.24603300000000006
+        },
+        "signature": "hJSJ/LM6LdX3TERYNsbqtDqIr7nuCfL9DPaBMAzu9iJg6jUkAWkVZANgJbxNdFHI7+WpnGeinPDX8d67oGZDCw==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen8",
+      "baselineScore": {
+        "primary": 0.897456,
+        "noopRate": 0,
+        "costPerWin": 7.636364,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.651423,
+        "noopRate": 0,
+        "costPerWin": 10,
+        "regressed": false
+      }
+    },
+    {
+      "id": "root__toolOrder_gen1__contextDepth_gen2__batchMode_gen8",
+      "generation": 8,
+      "parents": [
+        "root__toolOrder_gen1__contextDepth_gen2"
+      ],
+      "mutation": {
+        "target": "batchMode",
+        "summary": "adapt batchMode"
+      },
+      "primaryDelta": -0.03285500000000008,
+      "anchorScore": null,
+      "verdict": "REJECTED",
+      "failureReasons": [
+        "primary_regressed",
+        "noop_rate_not_improved"
+      ],
+      "receipt": {
+        "payload": {
+          "kind": "candidate",
+          "id": "root__toolOrder_gen1__contextDepth_gen2__batchMode_gen8",
+          "target": "batchMode",
+          "verdict": "REJECTED",
+          "primaryDelta": -0.03285500000000008
+        },
+        "signature": "rHvGnu5VgaTCyd4cktN4SDPlcauYMb1rosUVKYAAC4I+cN5AJ7Jewl8RmUwVNcDpZq+XtUQfcACCWUrHMCcnCg==",
+        "publicKey": "MCowBQYDK2VwAyEAHqKF7XP49rJtW29Q7rp2258WJLE9AIS2CZeBmFUPQvw=",
+        "alg": "ed25519"
+      },
+      "createdAt": "SYNTHETIC#gen8",
+      "baselineScore": {
+        "primary": 0.897456,
+        "noopRate": 0,
+        "costPerWin": 7.636364,
+        "regressed": false
+      },
+      "candidateScore": {
+        "primary": 0.864601,
+        "noopRate": 0,
+        "costPerWin": 6.048,
+        "regressed": false
+      }
+    }
+  ],
+  "lift_curve": [
+    {
+      "generation": 0,
+      "primary": 0.330911,
+      "delta": 0,
+      "anchor": 0.33058
+    },
+    {
+      "generation": 1,
+      "primary": 0.330967,
+      "delta": 0.000056000000000000494,
+      "anchor": 0.332837
+    },
+    {
+      "generation": 2,
+      "primary": 0.897456,
+      "delta": 0.566489,
+      "anchor": 0.627526
+    }
+  ],
+  "gate_fingerprint": "b730019b67f5c0dd1aacb8674ce46933be9ff91c499eea87875fff3d0372e36d",
+  "verified_improvements": 2,
+  "anchor_surviving_improvements": 2,
+  "milestone_reached": true,
+  "created_at": "SYNTHETIC#gen8"
+}
