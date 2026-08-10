@@ -421,6 +421,13 @@ export function enableMetaProxyService(options: ServiceOptions = {}): ServiceRes
   if (before.managerState === 'unknown') {
     return { ok: false, message: `Could not determine service-manager state; preserved ${unitPath}.`, unitPath };
   }
+  if (platform === 'win32' && before.loaded === true && !before.definitionPresent) {
+    return {
+      ok: false,
+      message: `A Meta-Proxy task is registered without the owned definition at ${unitPath}. Disable it explicitly before replacement.`,
+      unitPath,
+    };
+  }
   const persistedEncoding = platform === 'win32' ? 'utf16le' : 'utf8';
   if (before.definitionPresent && readFileSync(unitPath, persistedEncoding) !== definition) {
     return {
@@ -498,6 +505,24 @@ export function enableMetaProxyService(options: ServiceOptions = {}): ServiceRes
           };
         }
         if (platform === 'win32' && before.loaded === true && !before.enabledAtLogin) {
+          if (state.managerState === 'unknown') {
+            return {
+              ok: false,
+              message: `Could not enable start-at-login and manager state is unknown. Prior definition preserved at ${unitPath}.`,
+              unitPath,
+            };
+          }
+          if (state.loaded === false) {
+            const recreate = enableCommands('win32', unitPath, label)[0];
+            const recreated = recreate ? run(recreate) : { ok: false, output: 'create command unavailable' };
+            if (!recreated.ok) {
+              return {
+                ok: false,
+                message: `Could not enable start-at-login and recreating the prior disabled task failed: ${recreated.output || 'command failed'}. Definition preserved at ${unitPath}.`,
+                unitPath,
+              };
+            }
+          }
           const stopped = confirmWindowsTaskStopped(home, unitPath, label, run, wait);
           if (!stopped.ok) {
             return {

@@ -399,6 +399,55 @@ describe('enable', () => {
     expect(calls.some((call) => call.args[0] === '/delete')).toBe(false);
   });
 
+  it('refuses to overwrite a registered disabled Windows task without an owned definition', () => {
+    installFakeDaemon('win32');
+    const calls: ServiceCommand[] = [];
+    const run = (invocation: ServiceCommand): CommandOutcome => {
+      calls.push(invocation);
+      if (isWindowsQuery(invocation)) return windowsState(1);
+      return { ok: false, output: 'unexpected mutation' };
+    };
+
+    const result = enableMetaProxyService({ home, platform: 'win32', run });
+
+    expect(result.ok).toBe(false);
+    expect(result.message).toMatch(/registered.*definition/i);
+    expect(calls.some((call) => call.args[0] === '/create')).toBe(false);
+    expect(existsSync(serviceUnitPath('win32', home)!)).toBe(false);
+  });
+
+  it('recreates an owned disabled Windows task when an ambiguous create leaves it absent', () => {
+    const binary = installFakeDaemon('win32');
+    const unitPath = serviceUnitPath('win32', home)!;
+    mkdirSync(dirname(unitPath), { recursive: true });
+    const definition = renderScheduledTask(binary);
+    writeFileSync(unitPath, definition, 'utf16le');
+    let taskState: 1 | 3 | 'missing' = 1;
+    let creates = 0;
+    const calls: ServiceCommand[] = [];
+    const run = (invocation: ServiceCommand): CommandOutcome => {
+      calls.push(invocation);
+      if (isWindowsQuery(invocation)) return taskState === 'missing' ? { ok: true, output: 'TaskState=Missing' } : windowsState(taskState);
+      if (invocation.args[0] === '/create') {
+        creates += 1;
+        if (creates === 1) { taskState = 'missing'; return { ok: false, output: 'simulated create removed task before lost response' }; }
+        taskState = 3;
+        return { ok: true, output: '' };
+      }
+      if (invocation.args[0] === '/end') return { ok: true, output: '' };
+      if (invocation.args[0] === '/change' && invocation.args.includes('/disable')) { taskState = 1; return { ok: true, output: '' }; }
+      return { ok: false, output: 'unexpected command' };
+    };
+
+    const result = enableMetaProxyService({ home, platform: 'win32', run, wait: () => {} });
+
+    expect(result.ok).toBe(false);
+    expect(result.message).toContain('simulated create removed task');
+    expect(creates).toBe(2);
+    expect(metaProxyServiceState('win32', home, run)).toMatchObject({ loaded: true, enabledAtLogin: false, running: false });
+    expect(readFileSync(unitPath, 'utf16le')).toBe(definition);
+  });
+
   it('says so rather than pretending on an unsupported platform', () => {
     const result = enableMetaProxyService({ home, platform: 'freebsd' as NodeJS.Platform });
     expect(result.ok).toBe(false);

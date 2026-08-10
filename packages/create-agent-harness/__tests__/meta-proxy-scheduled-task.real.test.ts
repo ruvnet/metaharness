@@ -83,6 +83,29 @@ it.runIf(real)('proves an isolated Scheduled Task starts, reports, stops, and de
     );
     expect(schtasks('/change', '/tn', label, '/disable').status).toBe(0);
     expect(metaProxyServiceState('win32', home, undefined, label)).toMatchObject({ loaded: true, enabledAtLogin: false, running: false });
+
+    // `/create /f` can partially replace or remove an existing task before its
+    // caller loses the response. Delete it after the real first create and
+    // require the owned XML to recreate the exact prior disabled registration.
+    let firstCreate = true;
+    const ambiguousCreate = (invocation: ServiceCommand): CommandOutcome => {
+      const result = spawnSync(invocation.command, invocation.args, { encoding: 'utf8', timeout: 15_000, windowsHide: true });
+      const output = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
+      if (invocation.args[0] === '/create' && firstCreate) {
+        firstCreate = false;
+        schtasks('/delete', '/tn', label, '/f');
+        return { ok: false, output: 'simulated create removed task before lost response' };
+      }
+      return result.error
+        ? { ok: false, output: result.error.message, error: result.error.message }
+        : { ok: result.status === 0, output };
+    };
+    const restoredAfterCreate = enableMetaProxyService({ home, platform: 'win32', label, run: ambiguousCreate });
+    expect(restoredAfterCreate.ok).toBe(false);
+    expect(restoredAfterCreate.message).toContain('simulated create removed task');
+    expect(metaProxyServiceState('win32', home, undefined, label)).toMatchObject({ loaded: true, enabledAtLogin: false, running: false });
+    expect(existsSync(serviceUnitPath('win32', home, label)!)).toBe(true);
+
     const restoredDisabled = enableMetaProxyService({ home, platform: 'win32', label, run: ambiguousRun });
     expect(restoredDisabled.ok).toBe(false);
     expect(restoredDisabled.message).toContain('simulated lost /run response');
