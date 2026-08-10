@@ -5,6 +5,8 @@
 **Project**: `ruvnet/agent-harness-generator`
 **Related**: ADR-070…146 (Darwin Mode), ADR-145 (router proposal), the `metaharness` scaffolder (`packages/create-agent-harness`)
 
+## Context
+
 > Previously `metaharness` (the `npx metaharness` scaffolder) and `@metaharness/darwin` (the evolutionary engine) were sibling packages with **no integration** — generated harnesses shipped only a stub `evolve` skill. This makes the integration real: every scaffolded harness gets working Darwin Mode self-improvement out of the box.
 
 ## Decision

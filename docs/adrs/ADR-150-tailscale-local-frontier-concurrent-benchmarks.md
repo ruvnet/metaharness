@@ -5,6 +5,8 @@
 **Project**: `ruvnet/agent-harness-generator`
 **Related**: ADR-148 (cheap→frontier escalation), ADR-259 (local ruvllm mutator), ADR-144/146/149 (SWE-bench), ADR-135 (model frontier)
 
+## Context
+
 > A 48 GB-unified-memory Mac (Studio/mini) on the tailnet is a private, $0-inference "frontier-tier" OpenAI-compatible endpoint. A `Qwen2.5-Coder-32B` GGUF (Q4/Q5, ~19–23 GB) fits alongside Docker (~12 GB) under 48 GB with metal acceleration. Over Tailscale it looks exactly like the OpenAI API to the Darwin harness — but free and air-gapped. This rewrites ADR-148's economics: the 35B model becomes the *baseline* solver, not a budgeted escalation, so the full repair loop can run on all 300 instances "over the weekend" for the cost of electricity.
 
 ## Decision

@@ -9,7 +9,9 @@
 
 ---
 
-## 1. What was run
+## Context
+
+### 1. What was run
 
 The D1 arc built a SWE-bench code-repair flywheel domain on `@metaharness/flywheel` (S1 evaluator adapter → S2 frozen holdout+anchor → S3 $0 dry-run → S4 budgeted LIVE run). S4 ran `runFlywheelGenerations` over a frozen SWE-bench-Lite holdout (25 instances) with a real cheap-model solver and the **official swebench Docker harness for gold-scoring** — the only thing that produces a real resolved count.
 
@@ -22,7 +24,9 @@ The D1 arc built a SWE-bench code-repair flywheel domain on `@metaharness/flywhe
 
 Both spent ~$0.01–0.014 (properly tracked after the ADR-`usage:{include:true}` fix) and produced a **root-only lineage** (0 verified improvements, `milestone_reached=false`). The replay bundle verifies (`verifyReplayBundle.pass=true`), including the ADR-235 **gate re-execution** (every — here, zero — promoted commit re-passes `meetsPromotionRule` on its sealed scores).
 
-## 2. The honest verdict
+## Decision
+
+### 2. The honest verdict
 
 **Proven (do claim):** the flywheel MECHANISM works end-to-end on REAL SWE-bench code-repair — adapter → real cheap solver → **official Docker gold-scoring** → frozen `meetsPromotionRule` gate → signed lineage → a replay bundle an external reviewer can verify (receipts + reachable root + gate fingerprint + gate re-execution). No step is synthetic; no number is fabricated.
 
@@ -30,7 +34,7 @@ Both spent ~$0.01–0.014 (properly tracked after the ADR-`usage:{include:true}`
 
 This is exactly the ADR-234 ceiling made concrete: **the flywheel recovers preventable loss; it cannot create capability the base solver lacks.** When the base resolves ~4% with near-zero variance, there is no preventable-loss signal for a policy mutation to capture — so the gate (correctly, UNCHANGED) promotes nothing, and the honest outcome is a flat root-only lineage.
 
-## 3. Consequences
+## Consequences (§3)
 
 - **D1 is closed as an honest null, not a proof.** The "reasoning-proxy" caveat is *narrowed* (the harness demonstrably runs on real SWE-bench with real gold-scoring) but **not removed** (no code-repair compounding shown). Reported plainly, per the frozen-gate discipline.
 - **Two real bugs were surfaced + fixed by running this honestly** (documented in ADR-235 + the cost-tracking fix): `verifyReplayBundle` failing on a valid 0-promotion run, and the budget guard reading $0 because `usage.cost` needs `usage:{include:true}`. Honest negatives improve the harness.

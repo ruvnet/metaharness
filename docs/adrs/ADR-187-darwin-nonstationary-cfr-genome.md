@@ -1,6 +1,6 @@
 # ADR-187 — Non-stationary Darwin: time-variant schedules, predictive momentum, regret pruning
 
-**Status:** Implemented (`crates/poker-darwin`, kind-4 genome + dynamic solver)
+**Status**: Implemented (`crates/poker-darwin`, kind-4 genome + dynamic solver)
 **Date:** 2026-06-24
 **Related:** ADR-186 (poker-darwin), ADR-188 (Chebyshev schedules)
 

@@ -5,6 +5,8 @@
 **Project**: `ruvnet/agent-harness-generator`
 **Related**: ADR-101 (the keystone requirement — this is its Tier 1), ADR-091/092/094/097/099/100 (the now-activated stack). Recommended Priority-1 by the hourly horizon scan #2.
 
+## Context
+
 > ADR-101 named the keystone: traces must depend on the harness surfaces. This ADR ships the cheapest version of it — a deterministic, LLM-free, surface-driven agent-loop simulator — and **measures the manifold going live**.
 
 ## Decision

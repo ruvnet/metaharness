@@ -5,6 +5,10 @@
 **Project**: `ruvnet/agent-harness-generator`
 **Related**: ADR-151 (v4-pro Barbarian), ADR-148 (V3+Scholar hybrid), ADR-149 (repair)
 
+## Context
+
+ADR-151's v4-pro Barbarian lifted the cheap floor to 29.3%; this ADR escalates only its 212-instance residual tail to the sonnet-4 Scholar (the ADR-148 pattern) and measures the blended ceiling (see **Related**).
+
 ## Result (official `swebench` Docker harness, full 300, batch-verified, 0 errors)
 
 | stage | resolved | Wilson 95% CI | ~$/inst blended |
@@ -19,7 +23,11 @@
 Barbarian + 33 from the sonnet-4 Scholar on the 212-instance tail v4-pro couldn't crack (33/212 =
 15.6% tail recovery). 245/300 non-empty patches, 0 eval errors.
 
-## Why it beats the V3+Scholar hybrid (33.3% → 40.3%, +7pp)
+## Decision
+
+Adopt the v4-pro + Scholar hybrid as the reference configuration — the new 40.3% ceiling; the analysis below explains the lift.
+
+### Why it beats the V3+Scholar hybrid (33.3% → 40.3%, +7pp)
 
 A *stronger cheap base* (v4-pro, ADR-151) banks far more before escalation (88 vs 46), so the Scholar
 starts from a higher floor and the same tier-2 escalation compounds on top. Tiering pays *more* as the
@@ -38,7 +46,9 @@ false-negatives — consistent pattern; batch authoritative). Report:
 `bench/swebench/v4pro-hybrid-300-report.json` (resolved_ids = 121). Predictions:
 `predictions-v4pro-hybrid-300.jsonl`. `psf__requests-2317` excluded-as-unresolved per KNOWN_FLAKY.md.
 
-## Verdict
+## Consequences
+
+### Verdict
 
 The cheap-base + tiered-escalation paradigm reaches **40.3%** on SWE-bench Lite — well past where the
 "architecture ceiling" looked fixed at 15.3%. Two compounding levers (newer cheap base; frontier-tail

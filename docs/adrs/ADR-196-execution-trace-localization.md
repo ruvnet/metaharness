@@ -1,6 +1,6 @@
 # ADR-196 — Execution-trace localization: the dynamic localizer (repro → run → trace → fix-site)
 
-**Status:** Implemented (build), validation pending budget — shipped as a modular, unit-tested module (`bench/swebench/trace-localize.mjs`, 13 unit tests) + a Phase-2 genome gene `traceLocalize` (default OFF) + a `--trace-localize` flag in `solve-agentic`. ZERO paid runs. See LEARNINGS §53/§54.
+**Status**: Implemented (build), validation pending budget — shipped as a modular, unit-tested module (`bench/swebench/trace-localize.mjs`, 13 unit tests) + a Phase-2 genome gene `traceLocalize` (default OFF) + a `--trace-localize` flag in `solve-agentic`. ZERO paid runs. See LEARNINGS §53/§54.
 **Date:** 2026-06-26
 **Related:** ADR-195 (Phase-2 capability stack — this REUSES §195's repro-WRITE half), ADR-175 (Test-Driven Repair), ADR-190 (AST-fused mincut localization), ADR-153 (agentic-loop). LEARNINGS §52 (naive HNSW localization FAILED — symptom-anchoring) and §53 (field SOTA research: execution-trace localization is the #1 untried hard-tail lever). Research: CoSIL (arXiv 2503.22424), ORACLE-SWE (2604.07789), AutoCodeRecover.
 

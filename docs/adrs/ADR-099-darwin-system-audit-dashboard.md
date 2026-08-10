@@ -5,6 +5,8 @@
 **Project**: `ruvnet/agent-harness-generator`
 **Related**: ADR-075 (reproducibility), ADR-091 (niches), ADR-094 (clade), ADR-096 (FDR), ADR-097 (curriculum)
 
+## Context
+
 > Before claiming the evolution engine is "beyond SOTA", prove it is a reliable scientific instrument. This ADR adds a dashboard that benchmarks the ENGINE — determinism, statistical rigor, clade productivity, niche diversity — not task accuracy. It reports real numbers, including the uncomfortable one.
 
 ## Decision

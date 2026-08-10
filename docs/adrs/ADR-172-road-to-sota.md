@@ -52,13 +52,15 @@ External 2026 SOTA for reference (not our metric): ~70% SWE-bench Pro, 80%+ Veri
 - **Cost-per-resolve is the objective**; `--max-cost` (in-solver, ADR shipped) bounds every paid run.
 - SWE-bench Lite (our number) kept strictly separate from Verified/Pro (external SOTA).
 
-## The honest ceiling (ADR-170 §6.3)
+## Consequences
+
+### The honest ceiling (ADR-170 §6.3)
 Every lever here optimizes an agent over an **existing** codebase — the Maintainer task SWE-bench
 measures. Brute-forcing parallel PTY + best-of-N + a frontier Sage can plausibly reach **~75–85% on
 Lite**, but none of it makes the system an **Architect** (zero-to-one design). The durable product
 framing remains "autonomous Senior Staff Maintainer," and that is exactly what SWE-bench rewards.
 
-## Immediate next step
+### Immediate next step
 The in-flight full-tail Opus-4.8 run (lever 1) → batch → new headline. Then lever 2 (Sage-from-scratch)
 on a top-up, then build lever 4 (PTY loop) at $0 so it's ready. Expected trajectory: **64.7% → ~71%
 (lever 1) → mid-70s (levers 2–3) → 80%+ (levers 4–5, architectural).**

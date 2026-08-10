@@ -1,6 +1,6 @@
 # ADR-194 — Crack-the-tail: per-instance parallel evolution → generalizable capabilities → conformant validation
 
-**Status:** Proposed (per-instance evolution harness in flight)
+**Status**: Proposed (per-instance evolution harness in flight)
 **Date:** 2026-06-26
 **Related:** ADR-153 (agentic-loop architecture for the 65-88% tier), ADR-176 (SWE Conductor — role-specialized localize/repro/fix/review), ADR-184/187/188 (Darwin genome evolution), LEARNINGS §44 (candidate-generation is the wall), §49 (cheap frontier mapped), §50 (Opus uniquely best single tier; only BoN beats it), the HARD-25 discriminator (`hard-lite-ids.json`, the 25 Opus-give-ups).
 

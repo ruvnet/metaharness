@@ -188,6 +188,9 @@ export class Router {
   }
 }
 
+// Calibration audit — is predictedQuality honest against realized outcomes?
+export * from './calibration.js';
+
 // Training pipeline (ADR-043) — kernel ridge regression router.
 export * from './train.js';
 

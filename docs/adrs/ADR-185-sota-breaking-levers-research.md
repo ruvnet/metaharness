@@ -1,6 +1,6 @@
 # ADR-185 — SOTA-breaking levers beyond the empty-patch cascade (research → roadmap)
 
-**Status:** Proposed (research complete; top-3 queued for n=25 → n=300 validation)
+**Status**: Proposed (research complete; top-3 queued for n=25 → n=300 validation)
 **Date:** 2026-06-24
 **Related:** ADR-184 (Sovereign Evolution), SAKANA_FUGU report (§5), LEARNINGS §28 (cascade 51.3%), §30 (xcascade 56%)
 

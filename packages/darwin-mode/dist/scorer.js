@@ -12,6 +12,15 @@
 //
 // Pure function, no I/O. Re-running it on the same traces yields the identical
 // finalScore and promoted verdict (ADR-072 reproducibility clause).
+//
+// ADR-249 signal seams: two ADDITIVE, OPT-IN inputs (injected trace quality +
+// deterministic abstract cost-units) refine `traceQuality` / `costEfficiency`
+// per the ADR-235 additive-optional-field precedent. Honest bound: with the
+// seams absent the output is byte-identical to the pre-seam scorer, and the
+// seams can move ONLY the weighted base terms (≤ 0.15 + 0.10 of baseScore) —
+// they never touch the penalty layer or any promotion-gate clause, and
+// determinism is the caller's obligation (garbage cost-units in ⇒ garbage
+// costEfficiency out, reproducibly).
 /** Reserved disqualification exit code (mirrors sandbox.ts). */
 const DISQUALIFIED_EXIT_CODE = 99;
 /** Combined stdout+stderr above this size marks a trace as low quality. */
@@ -57,15 +66,24 @@ export function scoreWeights() {
  * @param parentScore    the parent's scorecard, or null for the baseline
  * @param promotionDelta anti-noise margin a child must beat the parent by
  * @param taskTimeoutMs  wall-clock budget used to normalise latency
+ * @param signals        opt-in deterministic signal seams (ADR-249); omit for
+ *                       byte-identical pre-seam behaviour
  */
-export function scoreVariant(variantId, traces, parentScore, promotionDelta, taskTimeoutMs = DEFAULT_TASK_TIMEOUT_MS) {
+export function scoreVariant(variantId, traces, parentScore, promotionDelta, taskTimeoutMs = DEFAULT_TASK_TIMEOUT_MS, signals) {
     const total = traces.length;
     const passed = traces.filter((t) => t.exitCode === 0).length;
     const taskSuccess = total > 0 ? passed / total : 0;
     const testPassRate = taskSuccess;
-    // Trace quality: high unless any trace produced an oversized output buffer.
+    // Trace quality (ADR-249 seam): an injected [0,1] signal wins when present
+    // and finite; otherwise the original binary size heuristic runs unchanged,
+    // so an absent seam is byte-identical to the pre-seam scorer.
+    const injectedTraceQuality = signals?.traceQuality;
     const allCompact = traces.every((t) => t.stdout.length + t.stderr.length < TRACE_QUALITY_BYTE_CAP);
-    const traceQuality = allCompact ? 0.9 : 0.5;
+    const traceQuality = injectedTraceQuality !== undefined && Number.isFinite(injectedTraceQuality)
+        ? round6(Math.min(1, Math.max(0, injectedTraceQuality)))
+        : allCompact
+            ? 0.9
+            : 0.5;
     // Latency + cost are DETERMINISTIC prototype hooks (full marks), exactly like
     // each other. At prototype level every variant runs the identical repo test
     // command, so per-variant wall-clock differences are pure measurement NOISE —
@@ -78,7 +96,21 @@ export function scoreVariant(variantId, traces, parentScore, promotionDelta, tas
     // the timeout-driven tool-loop penalty below.
     void taskTimeoutMs;
     const latencyEfficiency = 1.0;
-    const costEfficiency = 1.0;
+    // Cost efficiency (ADR-249 seam): abstract cost-units injected by the
+    // caller — deterministic by construction, unlike wall-clock. Full marks at
+    // or under budget; over budget the term decays as budget/units, which is
+    // monotone non-increasing in units and stays in (0, 1). Absent or malformed
+    // (non-finite, budget ≤ 0, units < 0) input keeps the pre-seam constant 1.0.
+    const cost = signals?.cost;
+    const costEfficiency = cost !== undefined &&
+        Number.isFinite(cost.units) &&
+        Number.isFinite(cost.budgetUnits) &&
+        cost.budgetUnits > 0 &&
+        cost.units >= 0
+        ? cost.units <= cost.budgetUnits
+            ? 1.0
+            : round6(cost.budgetUnits / cost.units)
+        : 1.0;
     // Safety: any blocked action across the run zeroes the term.
     const totalBlocked = traces.reduce((sum, t) => sum + t.blockedActions.length, 0);
     const safetyScore = totalBlocked === 0 ? 1.0 : 0.0;

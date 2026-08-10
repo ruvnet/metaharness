@@ -5,6 +5,10 @@
 **Project**: `ruvnet/agent-harness-generator`
 **Related**: ADR-143 (repair solver), ADR-144 (baseline 300), ADR-146 (localization), ADR-126 (repair loop design), ADR-148 (next: hybrid escalation)
 
+## Context
+
+Open-loop single-shot solving reached 7.7% on full-300 SWE-bench Lite (ADR-144) and LLM localization lifted it only to 8.0% (ADR-146); this ADR scales the ADR-126/143 closed-loop repair loop to the full 300 to measure its lift at near-constant cheap-model cost (see **Related**).
+
 ## Result (official `swebench` Docker harness, FAIL_TO_PASS ∧ PASS_TO_PASS)
 
 | stage | resolved | rate | Wilson 95% CI | ADR |
@@ -18,7 +22,9 @@ essentially disjoint (baseline upper 11.2 vs repair lower 11.7) — a statistica
 not noise. Model throughout: `deepseek/deepseek-chat` (cheap, ~$0.01–0.02/instance). Total repair
 cost across the run ≈ a few dollars of OpenRouter.
 
-## What the repair loop does (ADR-126/143)
+## Decision
+
+### What the repair loop does (ADR-126/143)
 
 Per instance, up to 3 attempts: localize → search/replace patch → **run the instance's FAIL_TO_PASS
 tests in its official swebench Docker image** → if resolved, stop; else feed the failure back
@@ -40,7 +46,9 @@ is the test-feedback signal converting first-shot misses into fixes — the emis
 - Concurrency lesson (recorded in fetchRepo): 6 parallel anonymous GitHub clones triggered
   rate-limit fetch failures; the fix is retry-with-backoff + capped concurrency (2–3).
 
-## Honest framing vs SOTA
+## Consequences
+
+### Honest framing vs SOTA
 
 15.3% is a **cheap-model** result (deepseek, ~$0.01–0.02/instance). Leaderboard leaders reach
 65–88% on Verified using frontier models + deeper agentic loops at $1–20/instance. The contribution

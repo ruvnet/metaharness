@@ -9,13 +9,13 @@
 
 ---
 
-## 1. Context
+## Context (§1)
 
 The `@metaharness/flywheel` engine's central open question is empirical: **does it compound on a REAL domain with a REAL model?** The SWE-bench D1 run (ADR-236) answered it only as an HONEST NULL, and a *positive* run there is gated on **machine-hours** — an agentic solver over a Docker gold-scoring harness is multi-hour and GPU/CPU-saturating, so it stays confirm-gated and small.
 
 The evals-* verticals shipped SYNTHETIC-proven. But **one of them is genuinely runnable LIVE, fast, and free**: math. GSM8K is a **public** HuggingFace dataset (loadable via the datasets-server rows API with **no token**), its gold answers are integers (`#### N`), and grading is **exact-match**. So a real flywheel compounding experiment on math is **text-Q&A only** — no Docker, no test execution — and runs in **minutes** against a **$0** local endpoint. It answers the same core question as SWE-bench, without the gate.
 
-## 2. Decision
+## Decision (§2)
 
 Wire evals-math for a live GSM8K run, reusing the proven SWE-bench live-run shape:
 
@@ -31,7 +31,7 @@ The pipeline is **validated end-to-end at $0**: a small run (`qwen2.5-coder:7b` 
 
 **GPU note (why model choice matters):** `qwen2.5-coder:7b` (≈4.7 GB) fits the 16 GB GPU (≈2–4 s/call); `qwen2.5-coder:32b` (≈24 GB) does **not** — it CPU-offloads at ≈53 s/call, which would make a real run impractically slow. A coder model also tends to emit code; the numeric-first normalizer still extracts the final answer, but a general-reasoning model may give a cleaner signal.
 
-## 4. Consequences
+## Consequences (§4)
 
 - MetaHarness gains a **fast, $0, non-gated** path to a real flywheel-compounding result — the complement to the machine-hour-gated SWE-bench run.
 - The full experiment (≈40-item holdout, 6–8 generations, mutating verification/self-consistency/confidence/normalization levers) is a **one-command, minutes-long, $0** launch. It will produce either a real compounding curve or an honest null — gold-scored by exact-match, replay-verifiable — **without weakening the frozen promotion rule**.

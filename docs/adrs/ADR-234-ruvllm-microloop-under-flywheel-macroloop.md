@@ -10,7 +10,7 @@
 
 ---
 
-## 1. Context
+## Context (§1)
 
 The flywheel (`@metaharness/flywheel`) optimizes the **scaffolding around a static engine**: it freezes the model and evolves the harness policy, promoting only what proves lift on a frozen holdout. It treats the model as a black box.
 
@@ -28,7 +28,7 @@ Running the ruvllm MCP surface directly:
 
 These primitives are genuine. That is the floor this ADR builds on — and the ceiling of what is *proven*: we exercised the **adaptation primitives**, not a served local model doing MicroLoRA-during-inference end-to-end (no model was loaded; wasm uninitialized).
 
-## 2. Decision
+## Decision (§2)
 
 Adopt the **two-layer** composition, with the flywheel as the **programmatic fail-safe** over ruvllm's live adaptation:
 
@@ -46,7 +46,7 @@ Any model that learns from live interactions can drift — slowly catering to re
 
 The anchor suite is exactly the "did it forget?" oracle: a MicroLoRA that improves the live task but drops the anchor is rejected as a Goodhart/forgetting regression.
 
-## 4. Consequences
+## Consequences (§4)
 
 - **A dynamic engine under dynamic scaffolding.** Standard flywheel bends the *policy* around a static model; dropping ruvllm into the core lets the *weights* bend too — with the flywheel's frozen gate as the trust boundary that keeps live weight-adaptation honest.
 - **Latency stays low.** ruvllm's Rust/SIMD memory search + routing run in a few ms, so the heavy flywheel evaluation can run in the background without stalling the interactive path.

@@ -5,13 +5,17 @@
 **Project**: `ruvnet/agent-harness-generator`
 **Related**: ADR-128 (camelCase tokenization — the tractable half), ADR-127 (selection finding), ADR-125 (runner)
 
+## Context
+
 > ADR-128 fixed selection when a symbol's stem matches its filename (`paretoFront`→`pareto.ts`) but showed path tokenization cannot find a symbol whose name differs from the file (`poincareDistance` ∈ `phenotype.ts`). This adds symbol indexing and closes that gap.
 
-## Change
+## Decision
+
+### Change
 
 The runner's `selectFiles()` augments the contextBuilder rather than replacing it (the contextBuilder stays a pure path-only surface). It extracts **identifier-like tokens** from the problem statement (camelCase / snake_case only — so plain words like "boundary" don't match), finds files that **define** any such symbol (`function|const|class|… <sym>`), prioritizes those, then fills the rest from the contextBuilder's path ranking. Symbol scan is orchestration-layer IO; `buildContext` is unchanged.
 
-## Result
+### Result
 
 **Deterministic A/B** over the 21 real `src` files, query `"paretoFront returns dominated items; poincareDistance fails near the boundary"` (`bench/experiments/symbol-index-selection.mjs`):
 

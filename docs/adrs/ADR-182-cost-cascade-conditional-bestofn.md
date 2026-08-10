@@ -1,6 +1,6 @@
 # ADR-182 — Cost cascade (conditional Best-of-N) via the repo-test gate
 
-**Status:** Implemented (`solve-agentic.mjs --cascade <model2>`); first run pending
+**Status**: Implemented (`solve-agentic.mjs --cascade <model2>`); first run pending
 **Date:** 2026-06-23
 **Related:** ADR-178 (discriminator), §18 (Best-of-3 = 39.7% / 45% union)
 

@@ -1,6 +1,6 @@
 # ADR-192 — Polyglot solver + SWE-bench Pro eval hardening
 
-**Status:** Proposed (parallel workflow in flight)
+**Status**: Proposed (parallel workflow in flight)
 **Date:** 2026-06-24
 **Related:** ADR-185 (localization findings), §38 (ReAct self-localizes on Python), the Pro integration (gcp-cluster `pro` board, pro-25.json)
 

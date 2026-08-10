@@ -5,12 +5,14 @@
 **Project**: `ruvnet/agent-harness-generator`
 **Closes**: the ADR-173/174/176 leaderboard-conformant SOTA push (this session). Tracked in #45.
 
-## What we set out to do
+## Context
+
+### What we set out to do
 A LEGITIMATE, leaderboard-conformant top-10 on SWE-bench Lite (≥45%) at the cost-per-resolve frontier
 ("lowest cost at best intelligence"). Conformant = the solver never sees the gold FAIL_TO_PASS/PASS_TO_PASS
 during solving; gold scores once at the end. Only batch-eval numbers + Wilson CIs claimed; nothing fabricated.
 
-## The complete ablation (all gold-graded, conformant, 25-instance Lite pilots unless noted)
+### The complete ablation (all gold-graded, conformant, 25-instance Lite pilots unless noted)
 
 | config | gold resolve | $/inst | note |
 |---|---|---|---|
@@ -24,7 +26,7 @@ during solving; gold scores once at the end. Only batch-eval numbers + Wilson CI
 | DeepSeek + plan-then-edit (L2) | 4/25 = 16% | $0.08 | **no lift** |
 | **Opus critic + Opus coder (best-of-3)** | **6/18 = 33%** | **$3.49** | **the only config that lifts — frontier coding** |
 
-## The findings (each measured, CIs wide at n=18-25 — directions are clear)
+### The findings (each measured, CIs wide at n=18-25 — directions are clear)
 1. **The coder binds, not the oracle.** A strong Opus repro lifts the cheap coder only 12→16% (noise).
 2. **Cheap-Pareto-SOTA is falsified.** Opus-oracle + cheap-coder (16%) ≠ frontier (33%). A faithful
    contract can't make a cheap model *write* a cross-file fix it can't reason out.
@@ -48,7 +50,9 @@ No conformant lever in this scaffold reaches the 45% top-10 bar. A real top-10 a
 on a full-300 Opus run for a projected sub-top-10 (~33%) number — that decision needs explicit human
 go/no-go (poor ROI for a non-placing result). Idle on health + upkeep per the loop directive.
 
-## What this session DID deliver (the real contributions)
+## Consequences
+
+### What this session DID deliver (the real contributions)
 - A **rigorous, honest conformant ablation** that maps exactly what cheap-model conformant repair can and
   cannot do — a result the field's "SOTA at pennies" narratives lack.
 - Reusable infrastructure: conformant Docker test-runner, Test-Critic, line-applicator, container-reuse,
@@ -57,7 +61,7 @@ go/no-go (poor ROI for a non-placing result). Idle on health + upkeep per the lo
   the shippable, honest product number; conformant mode is the harder no-test capability.
 - Downstream-validated design (#47 Goodhart) — now empirically confirmed.
 
-## Open options for the human (not taken autonomously)
+### Open options for the human (not taken autonomously)
 1. **Spend ~$1000** on a full-300 Opus best-of-3 conformant run → a real (~33%, sub-top-10) submittable
    number + a Pareto-cost data point. (Poor placement ROI; real research value.)
 2. **Build the mini-SWE-agent-v2-class scaffold** (multi-week) — the only credible path to ≥45% conformant.

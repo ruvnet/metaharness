@@ -5,9 +5,15 @@
 **Project**: `ruvnet/agent-harness-generator`
 **Indexes**: ADR-084 … ADR-141 (the evolution stack + the SWE-bench arc, built on the ADR-070…083 baseline)
 
+## Context
+
 > One document a reviewer can read to understand the whole contribution. Darwin Mode's differentiator is not a model — it is an **auditable, statistically-gated, recursive lineage**: a self-improving agent harness where every claim is a committed, reproducible number and every limitation is recorded. This ADR is the provenance.
 
-## The arc (what was built, in order)
+## Decision
+
+Record this synthesis as the decision of record for the series: keep the stack as built and measured, with the open problems and the ADR-098 frontier explicitly carried forward. The arc and the evidence below are that record, unchanged.
+
+### The arc (what was built, in order)
 
 1. **Engine** (ADR-070…083, prior): frozen model + evolving harness over 7 mutation surfaces; sandbox; immutable scorer; archive-as-tree; safety gate.
 2. **Variation** — failure-driven mutation (084), LLM mutator + 15-model polyglot model frontier (085), sibling-diversity nonce fixing one-directional mutation (104), genetic crossover (089), epistatic linkage / topology-aware crossover (093).
@@ -25,7 +31,7 @@
    - **Honest finding**: a self-hosted historical-bug corpus is NOT viable here (this repo's fixes are behavioral, not revertable-unit-bug pairs) — the ADR-098 corpus must be external (recorded in ADR-098).
    - **External generalization + the evolve capstone (131–133)**: the runner resolves a real bug in a *different* package (131, kernel-js); a **multi-package corpus** gives a **4/4 cross-package resolve-rate** (132); and a `(1+λ)` **evolutionary loop optimizes the harness genome against that real cross-package SWE fitness** (133) — engine + runner + corpus + fitness composed into a self-optimizing loop. Honest: small-file corpora saturate resolve-rate, so evolution converges on *cost*; capability-gene discrimination needs harder tasks — shown in 134, where a discriminating multi-fault corpus makes evolution select search/replace by capability, not cost (full external scale = step 3).
 
-## The evidence (real, reproducible — `packages/darwin-mode/bench/results/`)
+### The evidence (real, reproducible — `packages/darwin-mode/bench/results/`)
 
 | Finding | ADR | Number |
 |---|---|---|
@@ -59,14 +65,16 @@
 | Diversity+crossover+averaging assembles the optimum | 140 | per-model MAP-Elites preserves the deepseek gene → crossover assembles **deepseek/searchreplace (3/3 sd0)** that naive 136/137 missed — ADR-105 reproduced rigorously on real SWE code |
 | Full objective reaches the optimum (discriminating corpus) | 141 | resolve-rate culls whole-file + weak models; crossover assembles survivors; cost picks **deepseek/searchreplace (2/2 $0.005)** — unambiguous, removes 140's ceiling-tie caveat |
 
-## Honest open problems (recorded, not hidden)
+## Consequences
+
+### Honest open problems (recorded, not hidden)
 
 - **Real-world fidelity**: largely addressed by the SWE arc (117–130) — real LLM fixes real code (incl. this package's own, verified by its own vitest suite, 120/121) under the real resolved criterion (123). What is *not* yet done is running it **in-loop at corpus scale** (per-variant LLM cost) and on an **external** benchmark — ADR-098 step 3, user-gated. No benchmark/leaderboard number is claimed until a real external run exists.
 - **Clade < behavioral-diversity** (4/5 vs 5/5): clade explores but doesn't pair complementary stepping-stones; a trace-niche-diversity fix was net-neutral and reverted (105 follow-up). Closing it needs a *parameter-aware* (genotypic) diversity signal — future.
 - **Strong deception** (needs two surfaces far past baseline) is crossed by *none* of the strategies (105) — an honest capability ceiling.
 - **Mutator scope**: deterministic edits are bounded perturbations; the rich path is the LLM mutator (085).
 
-## The frontier: ADR-098 (now built end-to-end; only the corpus remains)
+### The frontier: ADR-098 (now built end-to-end; only the corpus remains)
 
 Real LLM solving real SWE-bench-style tasks. The SWE arc (117–130) **built and validated every link**: real file selection (symbol-aware, 128/129), surgical patching (search/replace, 127), the real resolved criterion (123), a `git apply` primitive (124), a consolidated `runSweBenchTask()` runner (125) with a repair loop (126), and that runner as a **fitness function** for harness selection (130). Roadmap status: **step 1 (validation harness) ✅ 122, step 2 (runner adapter) ✅ 123, patch primitive ✅ 124** — and the runner is now shown to **generalize across packages** (131/132) and to be **driveable by an evolutionary loop** (133). Only **step 3 remains: a real external multi-file corpus at scale + a token budget**, genuinely user-gated (a self-hosted historical corpus was found non-viable, so the dataset must be external; ADR-098). No new mechanism is required — `score(genome) = resolveRate(corpus)` with a cost tie-break (130) is already exercised by an actual mutate→evaluate→select loop (133); step 3 is that loop on a capability-discriminating external corpus.
 

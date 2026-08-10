@@ -5,9 +5,13 @@
 **Project**: `ruvnet/agent-harness-generator`
 **Related**: ADR-143 (repair loop), ADR-146 (emission wall), ADR-145 (learned router), ADR-144 (7.7% baseline)
 
+## Context
+
 > The cheap model (`deepseek-chat`) has a **reasoning ceiling**: even with the exact pytest traceback, some bugs exceed its capacity to synthesize correct logic. Hardwiring a frontier model everywhere is economically absurd ($2–8/instance × 300 ≈ $600–2400/run, destroying the evolutionary premise). This ADR specifies the middle path: run the cheap model first, **escalate only the failures** to a frontier model. "Barbarian and the Scholar."
 
-## Design
+## Decision
+
+### Design
 
 A failure-triggered escalation wrapper around the existing repair loop (`solve-repair.mjs`):
 

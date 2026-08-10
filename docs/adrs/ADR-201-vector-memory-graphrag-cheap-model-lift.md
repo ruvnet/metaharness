@@ -1,6 +1,6 @@
 # ADR-201: Vector-Memory Ablation — does GraphRAG (ruvector) lift cheap models over the turn-budget cliff?
 
-**Status:** H3 CLOSED — NOT SUPPORTED for kHop-expansion+cosine on FRAMES (structural null) AND on the **code axis** (H3-code: the graph *traverses* this time — graphHits>0, 5/5 — but pure kHop+PageRank topology gives no significant cheap-model lift, and the "sparse code" premise is FALSIFIED: code is cosine-DENSE under ONNX); H1 CLOSED — NOT SUPPORTED for dense cosine on FRAMES; **H5 (difficulty routing) CLOSED — NOT SUPPORTED on FRAMES for the shipped `@ruvector/router` SemanticRouter (embedding-only; hard-detection AUC≈chance)**. H2/H4 deferred pending ruvector graph-node binding for Node.js. A powered large-repo *hybrid*-retriever Docker-resolve run is the one open horizon (needs its own budget).
+**Status**: H3 CLOSED — NOT SUPPORTED for kHop-expansion+cosine on FRAMES (structural null) AND on the **code axis** (H3-code: the graph *traverses* this time — graphHits>0, 5/5 — but pure kHop+PageRank topology gives no significant cheap-model lift, and the "sparse code" premise is FALSIFIED: code is cosine-DENSE under ONNX); H1 CLOSED — NOT SUPPORTED for dense cosine on FRAMES; **H5 (difficulty routing) CLOSED — NOT SUPPORTED on FRAMES for the shipped `@ruvector/router` SemanticRouter (embedding-only; hard-detection AUC≈chance)**. H2/H4 deferred pending ruvector graph-node binding for Node.js. A powered large-repo *hybrid*-retriever Docker-resolve run is the one open horizon (needs its own budget).
 **Date:** 2026-06-28 (empirical phase completed 2026-06-28)
 **Related:** ADR-194 (crack-the-tail), ADR-198 (weight-eft), the cheap-vs-frontier research (`docs/research/cheap-vs-frontier/`), §5b harness-artifact schema.
 
@@ -167,3 +167,8 @@ prize is the rare hard tail, which needs an accurate difficulty classifier. The
 shipped SemanticRouter is embedding-only kNN (not RouteLLM's *trained* classifier);
 a supervised difficulty model, or the **code axis** (SWE-bench, where cheap≠frontier
 on hard instances), remain open and are not refuted here.
+
+## Consequences
+
+- H1 (dense-cosine RAG knowledge flattening), H3 (kHop+cosine GraphRAG on FRAMES), H3-code (pure kHop+PageRank topology on the code axis), and H5 (embedding-only difficulty routing) are CLOSED — NOT SUPPORTED, per the Empirical Verdicts above; the **Status** line is the authoritative summary.
+- H2/H4 remain deferred pending a ruvector graph-node Node.js binding; the one open horizon is a powered (n ≥ 100) large-repo *hybrid*-retriever end-to-end Docker-resolve run, which needs its own budget.

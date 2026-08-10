@@ -1,6 +1,6 @@
 # ADR-179 — Cost–Performance Pareto leaderboard (Value Score, multi-benchmark, public)
 
-**Status:** Accepted (live: https://ruvnet.github.io/agent-harness-generator/cost-pareto.html)
+**Status**: Accepted (live: https://ruvnet.github.io/agent-harness-generator/cost-pareto.html)
 **Date:** 2026-06-23
 **Related:** ADR-178, the Studio (apps/web-ui)
 

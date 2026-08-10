@@ -5,6 +5,8 @@
 **Project**: `ruvnet/agent-harness-generator`
 **Related**: ADR-109 (surface gates real LLM), ADR-106 (Tier-2), ADR-103 (self-improvement on mock), ADR-098 (SWE-bench, deferred)
 
+## Context
+
 > ADR-109 showed a *static* contrast: a wide-window variant lets a real LLM fix a real test that a narrow one cannot. This ADR closes the loop **dynamically**: a real evolutionary search, scored end-to-end by the real surface→real-LLM→real-test pipeline, *discovers* the better harness and lifts a real LLM's real-test pass-rate. It is the full self-improvement premise on the fully-real substrate.
 
 ## Decision

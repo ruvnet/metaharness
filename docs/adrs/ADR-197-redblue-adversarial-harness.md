@@ -5,6 +5,8 @@
 **Project**: `ruvnet/agent-harness-generator`
 **Related**: ADR-071 (darwin OpenRouter mutator — same `validateGeneratedCode`-style safety-gate discipline), the MetaHarness package conventions (darwin-mode), OWASP LLM Top-10, NIST AI RMF
 
+## Context
+
 > The MetaHarness thesis is "freeze the model, evolve the harness." This ADR applies the same controlled-harness discipline to **security testing**: use uncensored OpenRouter models as adversarial *system actors* (simulated insiders/attackers/careless operators) against a target you own, while the **harness stays controlled**. Red team finds failures → blue team patches → retest → measure the delta. The novel, shippable property is that the red actors are uncontrolled in **behavior** but hard-bounded in **capability** — enforced in code, not docs.
 
 ## Decision

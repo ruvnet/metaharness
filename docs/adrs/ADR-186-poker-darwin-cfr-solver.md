@@ -1,6 +1,6 @@
 # ADR-186 — poker-darwin: a CFR poker solver with exact exploitability + ruvector/candle/rs_poker
 
-**Status:** Implemented (`crates/poker-darwin`, 26 tests passing)
+**Status**: Implemented (`crates/poker-darwin`, 26 tests passing)
 **Date:** 2026-06-24
 **Related:** ADR-119 (Darwin multidomain evolution), ADR-161 (ruVector memory tiers), ADR-187 (non-stationary genome), ADR-188 (Chebyshev schedules)
 

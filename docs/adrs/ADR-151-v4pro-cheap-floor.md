@@ -5,6 +5,10 @@
 **Project**: `ruvnet/agent-harness-generator`
 **Related**: ADR-149 (V3 repair floor), ADR-148 (hybrid), issue #39 (decision criteria)
 
+## Context
+
+ADR-149 left the cheap Barbarian repair floor at 15.3%, and issue #39 set the criteria for deciding whether the searchreplace+repair paradigm was exhausted; this ADR swaps the cheap base model to deepseek-v4-pro (same harness) and re-measures the floor (see **Related**).
+
 ## Result (official `swebench` Docker harness, full 300, batch-verified, 0 errors)
 
 | Barbarian (cheap, + repair) | resolved | Wilson 95% CI | ~$/instance |
@@ -16,7 +20,9 @@
 harness (localize + search/replace + ≤3 test-feedback repair), no frontier escalation. 209/300
 non-empty patches (vs V3's 195). Cost ~$33.51 for the full 300.
 
-## What this settles (the floor-test verdict, issue #39)
+## Decision
+
+### What this settles (the floor-test verdict, issue #39)
 
 The ADR-149/150 hypothesis — "the `searchreplace`+repair *paradigm* is exhausted regardless of model
 IQ" — is **falsified for the cheap-model axis**. A newer cheap model (v4-pro, Apr 2026, $0.43/Mtok)
@@ -28,7 +34,9 @@ v4-pro-alone (29.3%) gets **88% of the V3+Scholar hybrid's resolves (33.3%) at ~
 ($0.11 vs $0.34/instance; no $99 frontier pass). The cheap-only ceiling rose to within a CI of the
 old hybrid.
 
-## Next lever (highest-value, queued)
+## Consequences
+
+### Next lever (highest-value, queued)
 
 **v4-pro Barbarian + Scholar hybrid**: escalate only the 212 instances v4-pro failed to a frontier
 Scholar (sonnet-4). If the Scholar recovers ~20% of that tail (as it did on the V3 tail), the blended

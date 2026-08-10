@@ -9,7 +9,7 @@
 
 ---
 
-## 1. Context
+## Context (§1)
 
 A perpetual agent's terminal success/failure score says nothing about which of 30 actions mattered.
 Uniform credit (GRPO-style) degrades fast with horizon; AgentOPSD reports −0.54 success points per
@@ -23,7 +23,7 @@ per-decision credit (tools, routes, retries); Darwin needs to know whether a mut
 outcome change; RuVector retrieval wants credit-weighted feedback; receipts need the belief revisions
 as audit evidence. All of that is model-independent and reversible.
 
-## 2. Decision
+## Decision (§2)
 
 Ship `@metaharness/turn-credit` — a pure, dependency-free (Node built-ins), phase-1 package:
 
@@ -57,7 +57,7 @@ RuVector-retrieved skill/pattern as privileged context) happens **upstream in th
 replay machinery in the companion repo, or any host harness. This package only consumes the pairs,
 which is what keeps it $0, pure, and host-agnostic.
 
-## 3. Consequences
+## Consequences (§3)
 
 - RuFlo/SONA, Darwin, router, and retrieval each gain a per-turn credit signal from data they already
   record; nothing existing changes behavior until a caller opts in. `meetsPromotionRule`, the Darwin

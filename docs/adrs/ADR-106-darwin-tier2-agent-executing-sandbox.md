@@ -5,6 +5,8 @@
 **Project**: `ruvnet/agent-harness-generator`
 **Related**: ADR-101 (the keystone requirement), ADR-102 (Tier-1 deterministic mock), ADR-071 (safety sandbox), ADR-104 (mutation exploration). This is **Tier 2** of ADR-101.
 
+## Context
+
 > ADR-102 (Tier 1) made traces depend on surface *parameters* (regex-extracted). This ADR runs the surfaces' *actual code*: a variant's real `planner` / `contextBuilder` / `retryPolicy` / `toolPolicy` modules execute in a child process and drive the agent loop. The harness's evolved logic — not a proxy for it — now decides the outcome.
 
 ## Decision

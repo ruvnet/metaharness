@@ -1,6 +1,6 @@
 # ADR-204 — "Unlimited"-feeling flat-rate subscriptions on Cognitum Fugu: business model + budget-defense architecture
 
-**Status:** Proposed (rev 2)
+**Status**: Proposed (rev 2)
 **Date:** 2026-06-29 — **rev 2** (peer review of the §5 Reserve-and-Commit design addressed: §5.2 multi-worker agent **sharding** + a **decoupled** account-headroom flag in place of an in-transaction subcollection scan, plus a new **§5.5** reservation-lease / recovery formalization; see the *Peer review addressed (rev 2)* changelog at the end). Status unchanged: **Proposed**.
 **Companion to:** ADR-203 (Cognitum Fugu — GCP-hosted metered, tiered Completions API). This ADR is the **business model + abuse-defense** layer on top of ADR-203's tiering/metering/streaming. It adds **no new serving primitive** — it adds *packaging* (flat-rate bundles) and *one new control plane mechanism* (atomic budget **Reserve-and-Commit**), and reuses ADR-203 §5.1 (progressive token accounting) and §5.3 (scatter-gather rate limiting) for two of the three structural dangers.
 **Related:** ADR-203 (tiered completions API — REQUIRED reading), ADR-201 (cheap-model lift / cheap-vs-frontier), ADR-150 ($0 local inference; removable-augmentation discipline), ADR-180 (GCP VM runner + Firestore store), cognitum-one/api ADR-092 (api.cognitum.one gateway, `cog_…` keys), AgentBBS ADR-0012 (emulator-first GCP).
@@ -54,7 +54,7 @@ metered event rather than a free-for-all.
 
 ---
 
-## 1. Context / problem
+## Context / problem (§1)
 
 ADR-203 ships a **usage-metered** tiered API: every request is priced linearly on the
 *resolved* tier and written to `usage_ledger`. That is the correct *wholesale* primitive,
@@ -79,7 +79,7 @@ explicit and measurable.
 
 ---
 
-## 2. Decision
+## Decision (§2)
 
 1. Ship **two flat-rate bundles** over the ADR-203 API (§3), packaged as scope + routing-
    control presets on the existing `cog_…` key — **no new auth system, no new serving
@@ -542,7 +542,7 @@ costs at most one lease-window of phantom-reserved headroom, itself bounded by t
 
 ---
 
-## 6. Consequences
+## Consequences (§6)
 
 **Positive**
 - A flat-rate retail product over the ADR-203 wholesale meter, sold against a **measured**

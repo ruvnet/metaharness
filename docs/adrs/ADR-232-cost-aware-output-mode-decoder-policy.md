@@ -10,7 +10,7 @@
 
 ---
 
-## 1. Context
+## Context (§1)
 
 The FABLE-REPORT (`docs/FABLE-REPORT.md`) establishes Fable 5 as the best hard-tail code-repair actuator we measured (92% on hard-25) and the **most expensive per token** ($10/M input, **$50/M output** — output is 5× input). ADR-205 makes Fable the top rung of the escalation cascade: darwin routes, and the hard tail is handed to a `claude -p` + Fable subprocess.
 
@@ -18,7 +18,7 @@ The naive cost lever is to shrink *input* (prompt caching, retrieval). But **out
 
 Where Fable currently over-generates: the ADR-205 handoff prompt asks for a minimal change but does not forbid a final explanatory essay; the `claude -p` loop narrates its reasoning every turn; and there is no structured verdict/continuation contract, so review and "keep going?" decisions are prose.
 
-## 2. Decision
+## Decision (§2)
 
 Adopt a **cost-aware output-mode decoder policy**. Every generation on the cascade is assigned an output *mode* with a token budget wired to the gateway `max_tokens`; the Fable rung is constrained to a narrow, prose-free mode set; and the objective is cost-per-accepted-task under hard correctness/defect/receipt gates.
 
@@ -157,7 +157,7 @@ Implemented as `detectErosion(auditRows)` (JSONL-scan equivalent); surfaced in t
 
 Input policy (cache-first → retrieve-second → pxpipe only for static read-mostly context) is a **separate experiment** — input and output savings must not be blended into one number, or the input floor produces a false blended win.
 
-## 3. Consequences
+## Consequences (§3)
 
 **What changes.** Under `--output-modes`, the Fable/`claude -p` rung runs in `minimal_patch` (asserted — never `full_prose`); the handoff prompt appends an output contract forbidding a final prose narration; each Fable call emits an audit line; the report carries an `outputModes` summary with the erosion count. Default runs (flag absent) are **byte-identical** to pre-ADR-232 behaviour.
 

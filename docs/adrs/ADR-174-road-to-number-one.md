@@ -3,6 +3,8 @@
 **Status**: Implementing — L0.6+L2 built & measured (DeepSeek-only floor 20.0%); asymmetric MiniMax-patch swap next
 **Date**: 2026-06-22
 **Project**: `ruvnet/agent-harness-generator`
+## Context
+
 **Builds on**: ADR-173 (conformant leaderboard path). The conformant L1 (MiniMax M2.5, linear loop)
 showed a **low submit-rate** — a linear agentic loop hits a context-collapse wall and won't reach
 80%+. To take #1 *overall* (beat the 80% brute-force SOTA AND hold the Pareto cost crown) we pair
@@ -90,6 +92,8 @@ search/replace with the agentic read-then-edit loop per branch (or whole-functio
 with fuzzy hunks). This lifts *attempt-rate* for both models at ~zero extra model cost — the only lever
 the data says can move the floor. Then re-measure conditional-resolve and decide on k=10 + Opus sniper.
 
-## Honest ceiling (carried from ADR-170 §6 / ADR-172)
+## Consequences
+
+### Honest ceiling (carried from ADR-170 §6 / ADR-172)
 Even at 85% this is an autonomous **Senior Staff Maintainer**, not an Architect. SWE-bench rewards
 exactly the maintainer task — which is why the stack can win it.

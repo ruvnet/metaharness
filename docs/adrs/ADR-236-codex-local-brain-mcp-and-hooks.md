@@ -9,7 +9,7 @@
 
 ---
 
-## 1. Context
+## Context (§1)
 
 The current workspace has three separate but related surfaces:
 
@@ -19,7 +19,7 @@ The current workspace has three separate but related surfaces:
 
 Codex also has a local plugin system with `.codex-plugin/plugin.json`, `.mcp.json`, skills, and cached plugin installation. Cached curated plugins may carry `hooks.json`, but the local plugin validator currently rejects a manifest-level `hooks` field. Therefore hook files can be packaged as local assets, but they cannot be claimed as first-class active Codex plugin hooks until the accepted manifest schema supports them.
 
-## 2. Decision
+## Decision (§2)
 
 Use **`ruvultra-mcp` as the Codex brain MCP**, not a new MCP memory server. The active local Codex config registers:
 
@@ -52,7 +52,7 @@ The local integration was verified on 2026-07-08:
 - `codex plugin add metaharness-brain@personal` installed and enabled the plugin;
 - the packaged hook script ran cleanly against the current repo diff.
 
-## 4. Consequences
+## Consequences (§4)
 
 - **Codex can now inspect and use the local brain** through MCP: health, info, semantic search, memory list/get/write, preference pairs, checkpoints, RVF validation, index stats, and training-pair export.
 - **Self-learning writes are possible but explicit.** Running `ruvultra-mcp --enable-mutations` enables memory and checkpoint tools, so the operational rule is: read first, write only when the user asked for behavior-changing memory/checkpoint work, and summarize exactly what changed.

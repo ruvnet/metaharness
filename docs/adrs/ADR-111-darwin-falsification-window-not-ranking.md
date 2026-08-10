@@ -5,6 +5,8 @@
 **Project**: `ruvnet/agent-harness-generator`
 **Related**: ADR-109 (surface gates real LLM), ADR-110 (capstone), ADR-085 (where ranking *did* matter)
 
+## Context
+
 > An adversarial review flagged that ADR-109/110 may show only a context-WINDOW-SIZE effect, not contextBuilder RANKING quality. I ran the proposed null-model falsification. The review was right. This ADR records the result and corrects the earlier framing — testing and falsifying our own claims is the point.
 
 ## The falsification (zero LLM calls — the fix is deterministic)
@@ -19,19 +21,23 @@ For each of three tasks (buggy file planted at rank 8/38/65 among same-overlap d
 
 **The real contextBuilder and a naive first-N selector give identical results at every window.** The ranking logic contributes nothing here; the only thing that changes solvability is the window *size* (how many files are returned). Reason: the distractor files share the buggy file's exact terms, so `buildContext`'s overlap scores are flat and it falls back to input order — i.e., it *is* first-N.
 
-## Correction to ADR-109 / ADR-110
+## Decision
+
+### Correction to ADR-109 / ADR-110
 
 - **Was framed as:** "the harness's real contextBuilder *surface* gates / determines whether the LLM can fix the bug."
 - **Honest claim:** the contextBuilder's **window parameter** (`.slice(0, N)`) gates how many files the LLM sees, and that gates solvability. The **ranking quality was never tested** (flat-overlap distractors), and a no-ranking first-N selector performs identically.
 - **ADR-110 capstone** is therefore a **1-D, monotonic, noise-free window-size sweep** — a hill-climber (or random restart) would find `window ≥ 66` trivially. It demonstrates the surface→real-LLM→real-test **pipeline is wired end-to-end and that an evolvable surface parameter causally gates real-LLM capability** — it does **not** demonstrate non-trivial evolutionary search on the real substrate (that remains shown only on the mock substrate, ADR-105).
 
-## What still stands
+## Consequences
+
+### What still stands
 
 - The *pipeline* is real and end-to-end (real surface param → real LLM → real test). An evolvable surface parameter does causally control real-LLM capability. That is a true, useful result — just narrower than "ranking determines outcomes."
 - Where ranking/quality genuinely matters is the **polyglot benchmark (ADR-085)**, which scores real model output by execution — that result is unaffected.
 - The reproducible deception result (ADR-105, mock) is where evolutionary search beats greedy; it is untouched.
 
-## The honest next step (per the review)
+### The honest next step (per the review)
 
 Before any SWE-bench run (ADR-098), demonstrate evolutionary search beating a random/greedy baseline **on the real substrate** with a *non-trivial* landscape: a task solvable only if **two** surfaces are improved simultaneously (the ADR-105 epistatic structure) **and** distractors that are semantically similar to the buggy file so **ranking quality** actually matters. If diversity-selection crosses it where greedy/random does not, the evolutionary-mechanism claim holds on the real substrate. If not, that is learned cheaply before spending SWE-bench tokens.
 

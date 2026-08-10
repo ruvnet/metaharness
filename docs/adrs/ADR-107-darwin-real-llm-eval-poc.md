@@ -5,6 +5,8 @@
 **Project**: `ruvnet/agent-harness-generator`
 **Related**: ADR-106 (Tier-2 real surface code on synthetic tasks), ADR-098 (SWE-bench targeting, deferred), ADR-087 (graded promotion / real-test oracle)
 
+## Context
+
 > Tier-2 (ADR-106) executes a variant's real surface *code*, but on synthetic file-location tasks. The last conceptual gap to real-world capability is a **real model fixing a real failing test, scored by the real test command**. This ADR proves that path works end-to-end — with a single, half-a-cent call — without the cost of wiring it into the full loop.
 
 ## Decision

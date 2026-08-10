@@ -9,7 +9,7 @@
 
 ---
 
-## 1. Context
+## Context (§1)
 
 HLE (Humanity's Last Exam) is closed-answer expert QA — ~2,500 expert-vetted questions (Artificial Analysis evaluates the 2,158 **text-only** ones as pass@1 via an equality checker) designed to resist internet lookup and require specialist expertise. The current top public score there is **Claude Fable 5 at 53.3%**, ahead of Opus 4.8 (45.7%) and Gemini 3.1 Pro Preview (44.7%).
 
@@ -27,7 +27,7 @@ The recoverable win on HLE is **preventable loss**, not "reasoning harder":
 | Cross-model routing | 1–4 pp |
 | Self-consistency / candidate selection | 2–6 pp (at much higher cost) |
 
-## 2. Decision
+## Decision (§2)
 
 Ship **`@metaharness/evals-hle`** as a **benchmark adapter, not core logic**. It exports a `Proposer` + `Evaluator` (+ a stricter composite `PromotionRule`) that plug into the benchmark-agnostic `@metaharness/flywheel`. The flywheel never learns what "HLE" is — everything HLE-specific lives in the caller, exactly as the SWE-bench adapter (ADR-D1 track) does.
 
@@ -67,7 +67,7 @@ On 2,158 text questions, **1 pp ≈ 22 correct answers**; a +5 pp lift ≈ 108 m
 - **LIVE run — DEFERRED (blocked + budget-gated).** `cais/hle` is a **GATED HuggingFace dataset**: a human must accept its terms at huggingface.co/datasets/cais/hle before any token can read it (the org's `HUGGINGFACE_API_KEY` currently 403s). `loadHleFromHub` throws an actionable error rather than ever substituting synthetic data for a real score. **No real HLE number is fabricated anywhere.**
 - **Sizing**: begin with **small 25-instance flywheel runs** (not the full ≥500) to validate the live pipeline end-to-end + pin per-question cost before scaling to the ≥500 frozen-holdout acceptance run under a hard $-cap.
 
-## 5. Consequences
+## Consequences (§5)
 
 - MetaHarness gains a **second real, non-code-repair domain** on the flywheel — the multi-vertical evidence that the `@metaharness/flywheel` engine generalizes with **zero benchmark-specific branches** in the core (the SWE-bench D1 track is the code-repair vertical; this is the expert-QA vertical).
 - The composite-gate pattern (call the frozen default verbatim, AND stricter domain clauses, fingerprint the composite) is now demonstrated twice — it is the reusable way to specialize the gate **without weakening the product's frozen promotion rule**.

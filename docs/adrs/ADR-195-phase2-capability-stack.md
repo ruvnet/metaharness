@@ -1,6 +1,6 @@
 # ADR-195 — Phase-2 capability stack: localization, reproduction-gate, reviewer (the new-code harness investments)
 
-**Status:** Implemented (build), validation pending budget — all three capabilities shipped as modular, unit-tested code + Phase-2 genome genes (default off); zero paid runs. See LEARNINGS §51.
+**Status**: Implemented (build), validation pending budget — all three capabilities shipped as modular, unit-tested code + Phase-2 genome genes (default off); zero paid runs. See LEARNINGS §51.
 **Date:** 2026-06-26
 **Related:** ADR-194 (crack-the-tail: per-instance evolution → generalizable capabilities → conformant validation), ADR-153 (agentic-loop architecture for the 65-88% tier), ADR-176 (SWE Conductor — role-specialized localize/repro/fix/review), ADR-190 (AST-fused mincut localization, declined for the cheap cascade), ADR-175 (Test-Driven Repair), RuVector (`ruvector-core` HNSW, `ruvector-gnn-rerank`, `ruvector-mincut`). LEARNINGS §44/§49/§50 + the HARD-25 1-3/25 signal.
 

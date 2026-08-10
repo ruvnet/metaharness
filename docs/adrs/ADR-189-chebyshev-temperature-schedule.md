@@ -1,6 +1,6 @@
 # ADR-189 — Chebyshev-Scheduled Temperature Curves for ReAct Trajectory Stabilization
 
-**Status:** Proposed (n=25 A/B in-flight)
+**Status**: Proposed (n=25 A/B in-flight)
 **Date:** 2026-06-24
 **Related:** ADR-185 (SOTA-breaking levers, Lever #2), ADR-188 (Chebyshev functional-schedule genome, PR #49), LEARNINGS §32-33
 

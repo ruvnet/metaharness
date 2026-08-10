@@ -5,9 +5,13 @@
 **Project**: `ruvnet/agent-harness-generator`
 **Related**: ADR-102 (live manifold), ADR-094 (clade), ADR-091 (phenotype), ADR-097 (curriculum), ADR-073 (archive)
 
+## Context
+
 > ADR-102 made the manifold live (traces depend on surfaces). The decisive question remained: does the loop actually *self-improve*? This ADR answers it with reproducible numbers — yes, when the fitness gradient is reachable by the mutator — and is equally explicit about the cases where it does **not**.
 
-## Result — it climbs
+## Decision
+
+### Result — it climbs
 
 `evolve()` in `sandboxMode: 'mock'` over the graduated context-gated `DEFAULT_MOCK_TASKS` ladder (12 generations × 6 children, seed 11, crossover + epistasis), best-so-far `finalScore` per generation:
 
@@ -18,7 +22,7 @@ baseline contextWindow 30  →  winner contextWindow 70
 
 Both `selection: 'clade'` and `'behavioral-diversity'` reproduce it: the loop **evolves the `contextBuilder` surface** (window 30 → 70) to solve more rungs of the ladder, climbing `finalScore` from **0.765 to 0.985** (the gate ceiling) by generation 3. That is the full chain working end-to-end: mutation → surface-dependent evaluation (ADR-102) → scoring → promotion → selection → a measurably better harness. (`bench/results/self-improvement-demo.json`.)
 
-## Where it does NOT climb (reported honestly)
+### Where it does NOT climb (reported honestly)
 
 Getting here required confronting two real failures, both informative:
 

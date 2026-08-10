@@ -11,7 +11,7 @@
 
 ---
 
-## 1. Context — two signals converged
+## Context — two signals converged (§1)
 
 **(a) A worthwhile external discipline.** PR #64's `metaharness-proof` ships **independent verifiers that RE-EXECUTE from sealed inputs and trust no service logs**: for each generation they recompute every hash and **re-run the real ADR-076 promotion gate** on the sealed raw outcomes, asserting the decision reproduces **bit-for-bit** (`verify-lineage`: `check('decision reproduces (bit-for-bit)', eq(recomputed, sealed.decision))`; `verify-real-eval` re-runs BOTH solvers on the sealed systems; `verify-plateau` recomputes the plateau detector). Reviewed + **executed locally: all three verifiers PASS (0 checks failed)**. Crucially, they treat an **honest null** as a first-class VERIFIED outcome — the plateau verifier PASSES with `promotionRate=0`. The README also polices its own claims ("a single-round proof-of-mechanism… NOT flywheel proof… do not use its synthetic promotion as marketing evidence") — the exact SYNTHETIC-vs-real discipline this series enforces.
 
@@ -26,13 +26,13 @@ const allPromoted = promos.length > 0 && promos.every((c) => c.verdict === 'PROM
 
 The `promos.length > 0 &&` guard requires **≥1 promotion** for a bundle to verify. But a 0-promotion run (the flywheel honestly found nothing to promote — common with a weak model or a saturated policy) is a legitimate, signed, reconstructable result. The check's intent — "no rejected node smuggled into the promoted chain" — is satisfied **vacuously** by an empty non-root set.
 
-## 2. Decision
+## Decision (§2)
 
 1. **Honest-null runs are VALID and must replay-PASS.** Fixed the gate: `allPromoted = promos.every((c) => c.verdict === 'PROMOTED')` (vacuously true for a root-only chain). A run that produces zero verified improvements is a real, replayable outcome — not a broken bundle. Regression tests pin both directions: a root-only chain PASSES; a chain with a smuggled non-`PROMOTED` commit still FAILS. First shipped in `@metaharness/flywheel` **0.1.2**; latest published fixed release checked here is **0.1.7**.
 
 2. **Adopt the re-executing-verifier discipline as the metaharness standard** (from PR #64). A replay verifier should not merely check that a *signed decision* is well-formed — it should **RE-RUN the gate function on the sealed scores and assert the recorded verdict reproduces bit-for-bit**. This is now implemented: `LineageCommit` carries optional `baselineScore` + `candidateScore`, and `verifyReplayBundle(..., { promotionRule })` adds a `gateReExecutes` check that recomputes `promotionRule({baseline, candidate})` and asserts a `PROMOTED` commit still promotes under the supplied fingerprint-matched rule. This closes the gap between "a signature over a claimed verdict" and "the verdict is what the frozen gate actually decides" — catching a signed-but-wrong promotion that the fingerprint check alone cannot.
 
-## 3. Consequences
+## Consequences (§3)
 
 - **Correctness:** the D1-S4 honest-null bundle now verifies (`pass: true`). Every future weak/plateaued run replays honestly instead of masquerading as broken — which matters precisely because we must be able to publish negatives (a weak cheap model resolving `1/25` is a real, signed result, not a bug).
 - **Trust model strengthened:** re-executing the gate on sealed scores means an external reviewer trusts *the gate re-run*, not *our logged verdict* — the ADR-249/PR#64 "trust none of the logs" property, applied to promotion decisions.

@@ -9,14 +9,14 @@
 
 ---
 
-## 1. Context
+## Context (§1)
 
 ADR-238 shipped `@metaharness/workspace-lens`: it reads the model's internal workspace into a
 `WorkspaceLensReceipt` per decision. That's the primitive. What was missing is the *application* — how
 MetaHarness evaluation and Darwin Mode consume those receipts. Adding it to workspace-lens would couple
 the measurement primitive to flywheel/Darwin concerns; a thin separate package keeps the primitive clean.
 
-## 2. Decision
+## Decision (§2)
 
 Ship `@metaharness/workspace-probe` — a pure, dependency-light bridge (only the workspace-lens types):
 
@@ -28,7 +28,7 @@ Ship `@metaharness/workspace-probe` — a pure, dependency-light bridge (only th
   even if final answers improved. Structurally-brittle mutations lose the workspace's grip on the right
   concept. It **pairs with** the gold/final-answer gate (keep only if both pass) and never weakens it.
 
-## 3. Consequences
+## Consequences (§3)
 
 - MetaHarness evaluation gains a `workspace_probe` score; Darwin Mode gains internal-process mutation
   evidence beyond black-box accuracy. `meetsPromotionRule` is untouched — this is an ADDITIONAL veto.

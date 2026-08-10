@@ -13,7 +13,7 @@
 
 ---
 
-## 1. Context
+## Context (§1)
 
 A repo-wide check found **zero existing references** to AGNTCY, Outshift, OASF, CASA, SLIM, or Mycelium anywhere in this codebase or in ruflo's — this is genuinely greenfield integration, not a gap in an existing effort.
 
@@ -26,7 +26,7 @@ What already exists that this ADR must not duplicate:
 
 None of these give a generated harness, or the agents/MCP servers inside it, an identity or capability description that a system **outside** this project can verify or discover. AGNTCY (Linux Foundation governed, ~150 participating members per the brief) offers three components that map directly onto that gap: **Identity** (external identity providers, W3C DIDs, verifiable credentials, task-specific badges), **Directory** (OASF capability records + distributed discovery, signed claims, provenance, dependency relationships, version histories), and **Observe** (OpenTelemetry semantic-convention extensions for agents). This ADR adopts all three at the build/manifest layer.
 
-## 2. Decision
+## Decision (§2)
 
 ### 2.1 AGNTCY identity in the harness manifest
 
@@ -113,7 +113,9 @@ Shared with ADR-380, split by ownership: generate a MetaHarness agent, publish i
 - **Letting MetaHarness itself enforce CASA at generation time** (bake a fixed policy into the harness). Rejected — objectives are per-session/per-tenant, not per-harness-build; baking them in would require regenerating a harness for every new user intent, defeating the point of a reusable generated harness.
 - **Skipping the OTel semantic-convention mapping**, keeping only this repo's internal telemetry vocabulary. Rejected for Phase 1 given the cost (5–8 days) relative to the enterprise-adoption unlock (no proprietary-dashboard requirement).
 
-## 8. Risks / honest boundaries
+## Consequences
+
+### 8. Risks / honest boundaries
 
 - AGNTCY is an early, Cisco-Outshift-led ecosystem. Linux Foundation governance de-risks single-vendor lock-in per the brief, but the Identity/Directory/Observe schema surface can still move before 1.0 stability. `@metaharness/agntcy` ships as an optional, versioned peer package precisely so a breaking upstream change never blocks a harness build.
 - OASF's "evaluation history" and "pricing and metering class" fields need a stable internal source before export; §2.2 is explicitly scoped to *already-computed* facts rather than inventing new evaluation machinery under schema-completeness pressure.

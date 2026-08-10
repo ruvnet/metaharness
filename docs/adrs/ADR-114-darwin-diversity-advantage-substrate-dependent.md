@@ -5,13 +5,17 @@
 **Project**: `ruvnet/agent-harness-generator`
 **Related**: ADR-105 (diversity beats greedy on the MOCK substrate), ADR-106 (Tier-2 agent substrate), the adversarial review's item C
 
+## Context
+
 > The review's highest-value next step was: replicate ADR-105's "diversity beats greedy on deception" on the *real* substrate before committing SWE-bench tokens — "if it does not replicate, you learn something important." It did not replicate. That is the finding, and it is more valuable than a confirmation.
 
 ## Experiment
 
 A two-surface epistatic deception on the **agent substrate** (Tier-2, the variant's real surface CODE executes; zero LLM — the agent loop is deterministic): two easy tasks any variant solves, plus a treasure solvable only if **both** the contextBuilder window > 38 (surface the buried buggy file) **and** the retryPolicy `maxAttempts` > 3 (reach the required attempt). Single-surface improvements are score-neutral → epistatic. `evolve` with crossover + epistasis, 8 generations × 6 children, 3 seeds, `score` (greedy) vs `behavioral-diversity`. (`bench/experiments/real-substrate-deception.mjs`.)
 
-## Result (real, 2026-06-18)
+## Decision
+
+### Result (real, 2026-06-18)
 
 | substrate | landscape | greedy `score` | `behavioral-diversity` |
 |---|---|--:|--:|
@@ -20,7 +24,7 @@ A two-surface epistatic deception on the **agent substrate** (Tier-2, the varian
 
 On the real-surface substrate, **greedy+crossover crossed the deception on all 3 seeds; diversity on only 2/3** — the reverse of the mock finding.
 
-## Interpretation (honest)
+### Interpretation (honest)
 
 - The **diversity-beats-greedy advantage is NOT universal; it is substrate/landscape-dependent.** ADR-105's result holds for the *mock scorer*, whose plateau is perfectly flat (every safe variant = 0.985), so greedy has no gradient and its crossover pairs the wrong (tied, earliest-inserted) parents. On the *agent* substrate, the Tier-2 traces differ across variants (retries, context size, durations), so `finalScore` has texture even on the "plateau" — greedy gets a usable gradient, selects the partial-solvers as parents, and **crossover combines the two stepping-stones for it too**. Diversity's niche-spreading then offers no edge (and can even pick less-fit far-niche parents).
 - **Caveat: n=3 seeds.** 3/3 vs 2/3 is not a statistically strong separation; the firm claim is the *non-replication* (diversity did not beat greedy; greedy was competitive-or-better), not "greedy is better." More seeds would sharpen it.

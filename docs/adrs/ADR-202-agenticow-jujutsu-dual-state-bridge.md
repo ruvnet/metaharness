@@ -1,6 +1,6 @@
 # ADR-202: Dual-state branching — agentic-jujutsu (code/op) ⇄ agenticow (memory)
 
-**Status:** Proposed — bridge WIRED end-to-end (real jj 0.35.0 bookmarks + agenticow COW); cross-branch ANN query STUBBED behind an interface pending RuVector PR #617.
+**Status**: Proposed — bridge WIRED end-to-end (real jj 0.35.0 bookmarks + agenticow COW); cross-branch ANN query STUBBED behind an interface pending RuVector PR #617.
 **Date:** 2026-06-28
 **Related:** ADR-006 (memory & learning integration), ADR-022 (MCP primitive), ADR-074 (darwin ruvector memory fabric), ADR-161 (ruvector memory tiers), ADR-201 (vector-memory lift). Architectural constraint: **ADR-150 principle** (removable augmentation, never a required runtime dep — see "On ADR-150" below).
 

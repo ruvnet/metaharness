@@ -5,6 +5,8 @@
 **Project**: `ruvnet/agent-harness-generator`
 **Related**: ADR-144 (full-300 baseline 7.7%), ADR-142 (empty-patch flag), ADR-143 (repair loop), ADR-126/127 (search/replace)
 
+## Context
+
 > ADR-144's baseline had a 67% empty-patch rate. The diagnostic (this ADR's first half) showed **selection recall was only 44.7%** and 65% of empties were selection-misses → localization was the indicated fix. This ADR ships it, measures it on the full 300, and reports an honest result: **recall rose +15pp, but resolve-rate did not move** — the bottleneck relocated from retrieval to patch-emission.
 
 ## Change
@@ -32,7 +34,9 @@
 
 Stack the ADR-143 closed-loop repair (run `FAIL_TO_PASS` in Docker, feed failure back, retry ≤3) **on top of `--localize`**, on the full 300. Localization ensures the right file is in context; the repair loop attacks the emission wall it exposed. This is the direct countermeasure to the measured bottleneck — not a guess.
 
-## Honest scope / cost
+## Consequences
+
+### Honest scope / cost
 
 - Recall is measured against gold-patch file paths (no LLM); resolve-rate by the official harness. n=300, tight CIs.
 - Localization adds ~$0.60 (the extra localize call/instance) for no resolve-rate gain *standalone* — it is a **prerequisite** for the repair loop's value, not a standalone win.

@@ -1,6 +1,6 @@
 # ADR-178 — Best-of-N selection via env-filter + LLM-judge discriminator
 
-**Status:** Accepted (implemented: `bench/swebench/discriminator.mjs`)
+**Status**: Accepted (implemented: `bench/swebench/discriminator.mjs`)
 **Date:** 2026-06-23
 **Related:** ADR-174 (MCTS dead-end), LEARNINGS §13–17
 

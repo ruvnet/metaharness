@@ -1,6 +1,6 @@
 # ADR-228: GEPA-distilled executor genome — offline evolutionary optimization of the cheap executor's operating policy
 
-**Status:** Proposed — harness built + $0-tested; GEPA pilot gated (budget + arms-finished gate, §9.5)
+**Status**: Proposed — harness built + $0-tested; GEPA pilot gated (budget + arms-finished gate, §9.5)
 **Date:** 2026-07-02
 **Related:** ADR-226 *(this repo — advisor-loop; the runtime-advice null this ADR answers)*, ADR-227 *(meta-llm repo — RESERVED for the completions-gateway data flywheel; see numbering note)*, ADR-194 *(this repo — crack-the-tail per-instance evolution; the Darwin frame GEPA operationalizes)*, ADR-205 *(this repo — harness handoff beats model embedding)*, ADR-201 *(this repo — H1: small models fail to use even oracle context mid-flight)*, GEPA: arXiv 2507.19457 (ICLR 2026 Oral), caution: arXiv 2603.18388 (ACL SRW 2026), `packages/darwin-mode/bench/swebench/{agentic-loop.mjs, advisor-loop.mjs, solve-advisor.mjs, gepa/}`.
 
@@ -20,7 +20,7 @@ Deliverables: this ADR; `bench/swebench/gepa/` — genome extraction with a byte
 
 ---
 
-## 1. Context
+## Context (§1)
 
 ### 1.1 The ADR-226 result (today, gold-scored, medium-24)
 
@@ -52,7 +52,7 @@ GEPA — arXiv **2507.19457**, "GEPA: Reflective Prompt Evolution Can Outperform
 
 ---
 
-## 2. Decision
+## Decision (§2)
 
 Build a GEPA optimization harness over the **cheap executor's operating policy** — the genome, a named set of text components (§3) — using paired solo-fail/teacher-success traces from today's ADR-226 + Fable-arm runs as the reflective dataset, the existing `solve-advisor.mjs` D0 path as the rollout engine, gold resolve with cost/thrash penalties as the metric (§5, pre-registered), and Pareto selection over per-instance score vectors. Run 1 optimizes prompts/policies only — **no architecture search** (§6). Promotion of any evolved genome to "the executor policy" happens only through shadow + paired eval (§4 steps 11–12). The paid pilot is hard-gated (§9.5).
 
@@ -256,7 +256,7 @@ ADR-194 evolved per-instance capability genomes with hand-rolled mutation. GEPA 
 
 ---
 
-## 11. Consequences
+## Consequences (§11)
 
 **Positive:** judgment compounds offline at $0 marginal runtime cost; every mutation is empirically selected on gold, not trusted; seed byte-equivalence means zero regression risk until a mutation is *promoted*; the genome doubles as a tenant-scoped product surface (§10.2).
 

@@ -9,7 +9,7 @@
 
 ---
 
-## 1. Context
+## Context (§1)
 
 Classic **logit lens** decodes an intermediate activation through the unembedding directly, assuming
 middle layers already live in final-output coordinates — they don't, so the readout is noisy. The
@@ -22,7 +22,7 @@ manipulation, "secretly", "trick") appear there even when absent from the output
 We want this as **interpretability infrastructure**, not a research artifact: a diagnostic + governance
 probe for open-weight models — "Interpretability Operations (IntOps)".
 
-## 2. Decision
+## Decision (§2)
 
 Ship `@metaharness/workspace-lens` as a **runtime measurement primitive**:
 
@@ -39,7 +39,7 @@ Ship `@metaharness/workspace-lens` as a **runtime measurement primitive**:
   arrived, drift, entropy, competing objectives); `decide` = `taskResolved && drift<θ &&
   noCriticalFlags && receiptCoverage===1`. Correctness first, cost second, receipts always.
 
-## 3. Consequences
+## Consequences (§3)
 
 - MetaHarness gains a `workspace_probe` surface (does a harness make the model hold better intermediate
   concepts?), Darwin-Mode **mutation evidence** (reject a mutation that improves the final token but loses

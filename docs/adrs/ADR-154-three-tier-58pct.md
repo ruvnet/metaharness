@@ -5,6 +5,10 @@
 **Project**: `ruvnet/agent-harness-generator`
 **Related**: ADR-152 (2-tier 40.3%), ADR-151 (v4-pro), ADR-148/149 (repair/hybrid)
 
+## Context
+
+ADR-152's two-tier hybrid reached 40.3%; this ADR adds a third tier — an opus-4.8 Sage over the post-Scholar residual — and measures the blended result on the full 300 (see **Related**).
+
 ## Result (official `swebench` Docker harness, full 300, batch-verified)
 
 | stage | resolved | Wilson 95% CI | ~$/inst blended |
@@ -17,6 +21,10 @@
 
 **58.3% — 7.6× the open-loop baseline.** Tiers: v4-pro Barbarian (88) → sonnet-4 Scholar on the
 212-tail (+33 → 121) → opus-4.8 Sage on the residual (+54 → 175).
+
+## Decision
+
+Adopt the three-tier v4-pro Barbarian → sonnet-4 Scholar → opus-4.8 Sage escalation as the reference configuration (58.3%, batch-verified); the sections below verify and bound that number.
 
 ## Reproducibility (why this surprising number is trusted)
 
@@ -39,7 +47,9 @@ Blended ~$0.74/instance for the full 3-tier on 300: v4-pro $33.51 + sonnet-4 $84
 ~$104 ≈ $222. Still far below running a frontier agent on all 300 at $1–20/instance — the cheap base
 banks 88 and each tier only pays for the shrinking residual.
 
-## Verdict
+## Consequences
+
+### Verdict
 
 The cheap-base + tiered-frontier-escalation paradigm reaches **58.3%** on SWE-bench Lite — into the
 SOTA-adjacent band, and a *lower bound*. The mid-arc "architecture ceiling at 15.3%" was emphatically

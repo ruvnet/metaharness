@@ -1,6 +1,6 @@
 # ADR-188 — Chebyshev functional-schedule genome, lineage tracking, and a domain-agnostic hook
 
-**Status:** Implemented (`crates/poker-darwin`, kind-5 genome + `optimize` module)
+**Status**: Implemented (`crates/poker-darwin`, kind-5 genome + `optimize` module)
 **Date:** 2026-06-24
 **Related:** ADR-186 (poker-darwin), ADR-187 (non-stationary genome)
 

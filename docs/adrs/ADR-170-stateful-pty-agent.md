@@ -13,7 +13,7 @@
 > authored blueprint, reconciled with the fact that a first-generation agentic loop already exists
 > (ADR-153) — this ADR is the **PTY/bash upgrade** to it, not a from-scratch first step.
 
-## 1. Context and Problem Statement
+## Context and Problem Statement (§1)
 
 Our Darwin Mode arc relies on a `searchreplace` formatting primitive: given localized files, an issue,
 and a test traceback, the model emits a single perfectly-formatted edit block. ADR-144–150 proved a
@@ -30,7 +30,7 @@ shot (even the ADR-153 search/replace `edit`) is an unnatural constraint. SOTA a
 **stateful bash terminal** inside the container: explore (`grep`/`cat`), edit by line range, run
 `pytest` themselves, read the traceback, and self-correct before submitting.
 
-## 2. Decision
+## Decision (§2)
 
 Deprecate single-shot `searchreplace` as the primary edit primitive in favor of a **stateful PTY
 (pseudo-terminal) agent loop**. The orchestrator stops parsing markdown patches and becomes a routing
@@ -57,7 +57,7 @@ bridge between the LLM and a persistent bash session inside the SWE-bench testbe
 - **Leverages high-context cheap models.** v4-pro (~$0.05/inst, 1M-token context) can run a 50-turn
   session and ingest full test stdout without truncation.
 
-## 4. Consequences
+## Consequences (§4)
 - **Positive:** unlocks multi-file refactors; pushes the resolve-rate ceiling toward 60%+.
 - **Negative:** wall-clock per instance rises (~2min → ~15min); failure modes (tool-thrash, context
   blow-up) the single-shot loop lacks — mitigated by the ADR-169 anti-thrash + the 50-turn cap.

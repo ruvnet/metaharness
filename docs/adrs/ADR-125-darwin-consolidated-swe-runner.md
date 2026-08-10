@@ -5,9 +5,13 @@
 **Project**: `ruvnet/agent-harness-generator`
 **Related**: ADR-123 (resolved criterion), ADR-124 (whole-file patch primitive decision), ADR-098 (strategy)
 
+## Context
+
 > ADR-122/123/124 proved the pieces separately (validation harness, resolved criterion, patch primitive). This consolidates them into ONE function — `runSweBenchTask(task, opts)` — so step 3 is literally `for (const task of dataset) await runSweBenchTask(task, { model, key })`.
 
-## What it does
+## Decision
+
+### What it does
 
 `bench/swe-bench-runner.mjs` exports `runSweBenchTask(task)`. A `task` carries `{ instance_id, problem_statement, test_suites, materialize(workDir) }` (a real corpus task's `materialize` would `git checkout base_commit` + apply `test_patch`). The runner:
 
@@ -19,7 +23,7 @@
 
 Returns `{ instance_id, resolved, f2p, p2p, chose, patchBytes, tokens, cost_usd }`.
 
-## Result (real, 2026-06-18)
+### Result (real, 2026-06-18)
 
 ```
 runSweBenchTask(synthetic__pareto-dominance):
@@ -28,11 +32,11 @@ runSweBenchTask(synthetic__pareto-dominance):
 
 The full reliable pipeline runs end-to-end in a single call and resolves the instance under the true criterion, emitting a real unified-diff artifact.
 
-## Significance
+### Significance
 
 This is the deliverable ADR-098 step 3 plugs into: a measured, corpus-ready runner with the resolved criterion and the decided reliable patch primitive baked in. No orchestration remains to invent — only a real dataset + token budget.
 
-## Honest scope
+### Honest scope
 
 - The validated instance is **synthetic** (built from this package), shaped like a real one; this validates the *runner*, not a leaderboard score.
 - `materialize` for a real corpus must implement `git checkout base_commit` + `git apply test_patch`; the synthetic one copies the package + introduces the bug. The runner contract is identical.

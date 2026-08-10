@@ -1,6 +1,6 @@
 # ADR-181 — Multi-model, multi-benchmark cost-Pareto fleet
 
-**Status:** Accepted / in progress
+**Status**: Accepted / in progress
 **Date:** 2026-06-23
 **Related:** ADR-179 (leaderboard), ADR-180 (GCP+Firestore), ADR-150
 

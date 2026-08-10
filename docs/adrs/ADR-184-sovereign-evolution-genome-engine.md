@@ -1,6 +1,6 @@
 # ADR-184 — Sovereign Evolution: evolve the solver architecture (genome engine)
 
-**Status:** Engine implemented + validated on mock fitness (`evolve-arch.mjs`); real-data (Firestore) fitness wired + tested; live prove-dispatch loop in gcp-cluster evolve
+**Status**: Engine implemented + validated on mock fitness (`evolve-arch.mjs`); real-data (Firestore) fitness wired + tested; live prove-dispatch loop in gcp-cluster evolve
 **Date:** 2026-06-23
 **Related:** ADR-179 (Value Score), ADR-181 (prove substrate), ADR-087/096 (statistical-gate promotion), §18-20
 

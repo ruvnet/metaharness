@@ -1,6 +1,6 @@
 # ADR-226: Advisor-loop — strong-model read-only advisor over a cheap-model agentic harness
 
-**Status:** **Accepted — NULL result, advisor track KILLED.** The harness WAS built (`advisor-loop.mjs` / `solve-advisor.mjs` shipped; the "no code written yet" below is the stale pre-registration header). The pre-registered experiment ran, and its extension — the ADR-240 **G3 replay** with the GEPA-tuned **cand-6** executor swapped in — was measured on 2026-07-04. **A read-only strong advisor does NOT convert to task success, even on top of a GEPA-tuned executor.** See the Measured-result block immediately below. Consequence: the advisor track is killed and cand-6 live-injection (which ADR-235 §4.1 gated on this replay confirming transfer) stays **unwired**.
+**Status**: **Accepted — NULL result, advisor track KILLED.** The harness WAS built (`advisor-loop.mjs` / `solve-advisor.mjs` shipped; the "no code written yet" below is the stale pre-registration header). The pre-registered experiment ran, and its extension — the ADR-240 **G3 replay** with the GEPA-tuned **cand-6** executor swapped in — was measured on 2026-07-04. **A read-only strong advisor does NOT convert to task success, even on top of a GEPA-tuned executor.** See the Measured-result block immediately below. Consequence: the advisor track is killed and cand-6 live-injection (which ADR-235 §4.1 gated on this replay confirming transfer) stays **unwired**.
 **Date:** 2026-07-02 (measured + accepted 2026-07-04)
 
 ---
@@ -40,7 +40,7 @@ Deliverables: `advisor-loop.mjs` (pure, dependency-injected, sibling of `fusion-
 
 ---
 
-## 1. Context / problem
+## Context / problem (§1)
 
 ### 1.1 The ADR-222 fusion result (INCONCLUSIVE, N=8)
 
@@ -72,7 +72,7 @@ Claude Code harnesses ship this exact shape in production: a working agent with 
 
 ---
 
-## 2. Decision
+## Decision (§2)
 
 Build **advisor-loop**: a variant of `agenticSolve` in which the cheap model emits every tool action and a strong model is consulted read-only via three bounded trigger paths — a voluntary `advise` tool, an involuntary checkpoint gate (same signals fusion used for escalation), and a mandatory pre-submit review with a bounded veto. Benchmark it as **Arm D vs a same-model placebo D-self vs a pure-cheap control D0** on the fusion hard-8 slice plus a new medium-25 slice, gold-scored, with a pre-registered decision table (§4). This is a **screening / effect-size-estimation run**, not a confirmatory one — consistent with ADR-222 §1's (meta-llm) "no hard-benchmark routing win exists to cite; don't bank the claim."
 
@@ -290,7 +290,7 @@ Hard-slice gold resolve staying 0 across all arms is *unmeasurable, not falsifie
 
 ---
 
-## 9. Consequences
+## Consequences (§9)
 
 ### Positive
 - Frontier judgment at a bounded 2–4 (cap 7) calls per instance; the frontier path **never touches the tool-call-format confound**.

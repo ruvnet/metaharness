@@ -1,6 +1,6 @@
 # ADR-183 — Judge-validated self-written repro test as a resolution gate (Goodhart counter-measure)
 
-**Status:** Pilot running (`repro-gate-pilot.mjs`); decision pending
+**Status**: Pilot running (`repro-gate-pilot.mjs`); decision pending
 **Date:** 2026-06-23
 **Related:** §10 (MCTS Goodhart), §19 (cascade refuted — repo tests = regression guard, not resolution),
 ADR-182 (cascade), §18 (Best-of-3 = 39.7% @ $0.015 — the bar)

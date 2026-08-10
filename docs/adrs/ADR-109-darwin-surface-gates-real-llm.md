@@ -5,6 +5,8 @@
 **Project**: `ruvnet/agent-harness-generator`
 **Related**: ADR-106 (Tier-2 real surface code), ADR-107 (real LLM + real test), ADR-098 (SWE-bench, deferred)
 
+## Context
+
 > ADR-106 ran real surface code on synthetic tasks; ADR-107 had a real LLM fix a real test (but the surfaces weren't in the loop). This ADR joins them: a variant's **real contextBuilder** decides which files a **real LLM** may see, and a **real test** is the verdict. It demonstrates the core self-improvement premise — *the evolved harness determines what the agent can solve* — with all three layers real.
 
 ## Decision

@@ -5,7 +5,9 @@
 **Project**: `ruvnet/agent-harness-generator`
 **Related**: ADR-149/151/152 (the 7.7→40.3% ladder), ADR-148 (tiering), issue #39
 
-## Why now
+## Context
+
+### Why now
 
 The single-shot-localize + search/replace + repair + tiered-escalation paradigm has been pushed to a
 measured **40.3%** on SWE-bench Lite (ADR-152), via two compounding levers:
@@ -22,7 +24,7 @@ follow-up) attacks an ever-harder residual at steeply rising $/resolve; router (
 evolution are cost optimizations, not resolve-rate. **The gap from 40.3% to the 65–88% agentic-SOTA
 tier is architectural, not a tuning gap.**
 
-## The structural limitation
+### The structural limitation
 
 Every solver in this arc is **single-turn-per-attempt**: localize → emit a patch → (repair) re-emit.
 It never *explores*. The instances it fails share a signature: the fix requires **discovering**
@@ -30,7 +32,9 @@ context the lexical/LLM localizer can't surface in one shot — reading call sit
 test to see the actual stack, grep-ing for a helper, checking a sibling module's convention. SOTA
 agents (the 65–88% systems) are **multi-step autonomous loops** with a real tool surface.
 
-## Proposal: an agentic execution loop as a new sandbox mode
+## Decision
+
+### Proposal: an agentic execution loop as a new sandbox mode
 
 Add `--sandbox agentic` (alongside `real`/`mock`/`agent`) — a bounded ReAct-style loop where the model
 drives, per step, a **restricted tool surface inside the existing safety gate**:
@@ -45,7 +49,7 @@ safety gate** (no new imports/network/shell/secret access in emitted edits). Dar
 surfaces become the *policy* the loop evolves: `planner` = step strategy, `toolPolicy` = tool
 ordering/budget, `contextBuilder` = what to read next, `retryPolicy` = when to re-test vs re-read.
 
-## Why this is the right next investment
+### Why this is the right next investment
 
 1. It targets the *measured* failure mode (can't-discover, not can't-emit) — §9's emission wall was
    climbed by repair; the residual is a **discovery** wall.
@@ -54,13 +58,15 @@ ordering/budget, `contextBuilder` = what to read next, `retryPolicy` = when to r
 3. It keeps the project's thesis intact: **the harness (now an agentic loop) is the lever**; evolve
    the loop's policies, keep the model swappable.
 
-## Honest expectation
+### Honest expectation
 
 Agentic loops are where the 65–88% numbers live, but they cost more tokens/instance (multi-step) and
 add failure modes (loops, tool-thrash, context blow-up) the single-shot paradigm doesn't have. The
 deliverable of this ADR is the *architecture + safety envelope*; the empirical number is the next arc.
 
-## Status of the current paradigm
+## Consequences
+
+### Status of the current paradigm
 
 Frozen at **40.3%** (ADR-152) as the cheap-base + tiered-escalation ceiling. Further escalation tiers
 are recorded but yield diminishing pp at rising cost. The resolve-rate frontier now moves to this

@@ -5,6 +5,10 @@
 **Project**: `ruvnet/agent-harness-generator`
 **Related**: ADR-149 (repair loop), ADR-144 (baseline), ADR-145 (router), ADR-150 (local)
 
+## Context
+
+The cheap Barbarian floor stood at 15.3% after closed-loop repair (ADR-149), far below the frontier tier; this ADR measures the cheap→frontier escalation hypothesis — sweep all 300 with the cheap model, escalate only its residual tail to a frontier Scholar (see **Related**).
+
 ## Result (official `swebench` Docker harness, full 300, batch-verified)
 
 | stage | resolved | Wilson 95% CI | $/instance |
@@ -16,7 +20,9 @@
 
 **The hybrid more than doubles repair-alone (15.3% → 33.3%)** and is **4.3× the open-loop baseline.**
 
-## The strategy
+## Decision
+
+### The strategy
 
 1. **Barbarian** (cheap, deepseek-V3 + repair) sweeps all 300 and **banks 46 easy wins** at ~$0.01/instance.
 2. **Scholar** (frontier, claude-sonnet-4 + repair) is escalated **only to the 254-instance hard tail** the Barbarian failed — and resolves **55/254 = 21.7%** of instances the cheap model couldn't touch.
@@ -41,7 +47,9 @@ sweep. Real, and worth it for the ceiling, but the steepening cost curve is expl
 - 1 instance (`requests-2317`) errored in the hybrid eval (Docker hang killed) → counted unresolved;
   true ceiling is ≥100/300.
 
-## Verdict
+## Consequences
+
+### Verdict
 
 This validates the "Barbarian & Scholar" thesis: **tier the models, escalate only the residual.**
 33.3% is strong for a hybrid built on a cheap base. But it remains below the 65–88% agentic-SOTA

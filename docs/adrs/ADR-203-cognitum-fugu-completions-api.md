@@ -1,6 +1,6 @@
 # ADR-203 — Cognitum Fugu: a GCP-hosted, metered, tiered Completions API on MetaHarness
 
-**Status:** Proposed (rev 4 — optional midstream inflight-streaming upgrade; ready for Approved)
+**Status**: Proposed (rev 4 — optional midstream inflight-streaming upgrade; ready for Approved)
 **Date:** 2026-06-29
 **Rev 4 note:** This revision adds an **OPTIONAL, firewalled** integration of
 `ruvnet/midstream` for **inflight streaming escalation** (new §3.5 + a §10 risk row +
@@ -54,7 +54,7 @@ when the gap is real.
 
 ---
 
-## 1. Context / problem
+## Context / problem (§1)
 
 ### 1.1 Why a metered Completions API for Cognitum
 
@@ -93,7 +93,7 @@ alternative.
 
 ---
 
-## 2. Decision
+## Decision (§2)
 
 1. Ship a new upstream behind the existing `api.cognitum.one` gateway:
    **`apicompletions`** — a **Cloud Run service** (not a Cloud Function: completions
@@ -769,7 +769,7 @@ path is 3→4→6→8. Step 7 gates 8 (no deploy without green offline tests).
 
 ---
 
-## 9. Consequences
+## Consequences (§9)
 
 **Positive**
 - One OpenAI-drop-in endpoint monetizes the org's core asset on infra and an auth system

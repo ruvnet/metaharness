@@ -1,6 +1,6 @@
 # ADR-180 — Distributed benchmark runs: GCP VM runner + Firestore results store
 
-**Status:** Accepted (runner: `scripts/gcp-swebench-runner.sh`; store: Firestore `darwin_runs`)
+**Status**: Accepted (runner: `scripts/gcp-swebench-runner.sh`; store: Firestore `darwin_runs`)
 **Date:** 2026-06-23
 **Related:** ADR-150 (local $0 inference), ADR-179
 

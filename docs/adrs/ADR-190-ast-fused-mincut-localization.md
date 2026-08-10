@@ -1,6 +1,6 @@
 # ADR-190 — AST-Fused Dynamic Mincut for Structural Pre-Seeding (localization)
 
-**Status:** Deferred / likely-declined — LEARNINGS §38 measured our ReAct agent self-localizes 7/7 (0 localization-misses among committed patches); the retrieve-pipeline bottleneck this ADR targets does not transfer to our agentic architecture. Kept for record; do not build without a fresh larger-sample localization-gap measurement first.
+**Status**: Deferred / likely-declined — LEARNINGS §38 measured our ReAct agent self-localizes 7/7 (0 localization-misses among committed patches); the retrieve-pipeline bottleneck this ADR targets does not transfer to our agentic architecture. Kept for record; do not build without a fresh larger-sample localization-gap measurement first.
 **Date:** 2026-06-24
 **Related:** ADR-185 (SOTA-breaking levers, **Lever #1 — function-level localization**), ADR-189 (Chebyshev temperature), `crates/poker-darwin` / `ruvector` (PR #49)
 
