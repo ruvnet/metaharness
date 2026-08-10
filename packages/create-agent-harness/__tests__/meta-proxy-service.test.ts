@@ -141,6 +141,28 @@ describe('enable', () => {
     expect(existsSync(serviceUnitPath('linux', home)!)).toBe(false);
   });
 
+  it('compensates a registration when starting the registered job fails', () => {
+    installFakeDaemon('darwin');
+    const calls: ServiceCommand[] = [];
+    const run = (invocation: ServiceCommand): CommandOutcome => {
+      calls.push(invocation);
+      const action = invocation.args[0];
+      if (action === 'kickstart') return { ok: false, output: 'kickstart failed' };
+      return { ok: true, output: '' };
+    };
+
+    const result = enableMetaProxyService({ home, platform: 'darwin', run });
+
+    expect(result.ok).toBe(false);
+    expect(calls.map((call) => call.args[0])).toEqual([
+      'bootstrap',
+      'kickstart',
+      'print',
+      'bootout',
+    ]);
+    expect(existsSync(serviceUnitPath('darwin', home)!)).toBe(false);
+  });
+
   it('says so rather than pretending on an unsupported platform', () => {
     const result = enableMetaProxyService({ home, platform: 'freebsd' as NodeJS.Platform });
     expect(result.ok).toBe(false);
@@ -162,25 +184,35 @@ describe('disable', () => {
   });
 
   it('is a no-op when start-at-login was never enabled', () => {
-    const { calls, run } = recorder();
+    const calls: ServiceCommand[] = [];
+    const run = (invocation: ServiceCommand): CommandOutcome => {
+      calls.push(invocation);
+      return { ok: false, output: 'disabled' };
+    };
     const result = disableMetaProxyService({ home, platform: 'linux', run });
     expect(result.ok).toBe(true);
     expect(result.message).toContain('not set to start at login');
-    expect(calls).toEqual([]);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.args).toContain('is-enabled');
   });
 
-  /// A stale definition left behind is the state that lies to `proxy status`,
-  /// so removal must not be conditional on the service manager cooperating.
-  it('still removes the definition when the service manager complains', () => {
+  it('reports failure and preserves the definition when unregistering fails', () => {
     installFakeDaemon('linux');
-    const ok = recorder();
-    enableMetaProxyService({ home, platform: 'linux', run: ok.run });
+    const unit = serviceUnitPath('linux', home)!;
+    mkdirSync(dirname(unit), { recursive: true });
+    writeFileSync(unit, 'owned unit');
 
-    const failing = recorder(false);
-    const result = disableMetaProxyService({ home, platform: 'linux', run: failing.run });
-    expect(result.ok).toBe(true);
-    expect(existsSync(serviceUnitPath('linux', home)!)).toBe(false);
-    expect(result.message).toContain('boom');
+    const result = disableMetaProxyService({
+      home,
+      platform: 'linux',
+      run: (invocation) =>
+        invocation.args.includes('is-enabled')
+          ? { ok: true, output: 'enabled' }
+          : { ok: false, output: 'disable failed' },
+    });
+    expect(result.ok).toBe(false);
+    expect(existsSync(unit)).toBe(true);
+    expect(result.message).toContain('disable failed');
   });
 });
 
@@ -189,11 +221,38 @@ describe('state reporting', () => {
     expect(metaProxyServiceState('darwin', home).installed).toBe(false);
 
     installFakeDaemon('darwin');
-    enableMetaProxyService({ home, platform: 'darwin', run: recorder().run });
-    expect(metaProxyServiceState('darwin', home).installed).toBe(true);
+    const enabled = recorder().run;
+    enableMetaProxyService({ home, platform: 'darwin', run: enabled });
+    expect(metaProxyServiceState('darwin', home, enabled).installed).toBe(true);
 
     const unsupported = metaProxyServiceState('freebsd' as NodeJS.Platform, home);
     expect(unsupported.supported).toBe(false);
     expect(unsupported.unitPath).toBeNull();
+  });
+
+  it('trusts the service manager over a stale definition file', () => {
+    const unit = serviceUnitPath('darwin', home)!;
+    mkdirSync(dirname(unit), { recursive: true });
+    writeFileSync(unit, 'stale definition');
+
+    const state = metaProxyServiceState('darwin', home, () => ({
+      ok: false,
+      output: 'Could not find service',
+    }));
+
+    expect(state.managerState).toBe('disabled');
+    expect(state.installed).toBe(false);
+    expect(state.definitionPresent).toBe(true);
+  });
+
+  it('reports an externally registered service even when its definition is missing', () => {
+    const state = metaProxyServiceState('darwin', home, () => ({
+      ok: true,
+      output: 'service = one.cognitum.meta-proxy',
+    }));
+
+    expect(state.managerState).toBe('enabled');
+    expect(state.installed).toBe(true);
+    expect(state.definitionPresent).toBe(false);
   });
 });

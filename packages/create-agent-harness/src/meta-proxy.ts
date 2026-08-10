@@ -16,6 +16,7 @@ import {
   mkdirSync,
   mkdtempSync,
   openSync,
+  readSync,
   readFileSync,
   readdirSync,
   renameSync,
@@ -26,7 +27,7 @@ import {
 import { homedir } from 'node:os';
 import { basename, join } from 'node:path';
 
-export const META_PROXY_VERSION = '0.7.2';
+export const META_PROXY_VERSION = '0.7.4';
 export const META_PROXY_RELEASE_BASE = 'https://github.com/cognitum-one/meta-proxy-dist/releases/download';
 
 /** The release signing key, pinned in the client rather than fetched from GitHub. */
@@ -184,6 +185,58 @@ function pidPath(home = homedir()): string {
 
 function versionPath(bin: string): string {
   return `${bin}.version`;
+}
+
+export function metaProxyLogLines(home = homedir(), count = 100): string[] {
+  const safeCount = Number.isSafeInteger(count) && count > 0 ? Math.min(count, 10_000) : 100;
+  const path = join(metaProxyDataDir(home), 'meta-proxy.log');
+  let descriptor: number | null = null;
+  try {
+    const size = statSync(path).size;
+    const byteCount = Math.min(size, 1024 * 1024);
+    const bytes = Buffer.alloc(byteCount);
+    descriptor = openSync(path, 'r');
+    readSync(descriptor, bytes, 0, byteCount, size - byteCount);
+    return bytes.toString('utf8')
+      .split(/\r?\n/)
+      .filter(Boolean)
+      .slice(-safeCount);
+  } catch {
+    return [];
+  } finally {
+    if (descriptor !== null) closeSync(descriptor);
+  }
+}
+
+export interface UninstallMetaProxyOptions {
+  home?: string;
+  platform?: NodeJS.Platform;
+  run?: import('./meta-proxy-service.js').CommandRunner;
+}
+
+export async function uninstallMetaProxy(options: UninstallMetaProxyOptions = {}): Promise<MetaProxyInstallResult> {
+  const home = options.home ?? homedir();
+  const platform = options.platform ?? process.platform;
+  const service = await import('./meta-proxy-service.js');
+  const disabled = service.disableMetaProxyService({ home, platform, run: options.run });
+  if (!disabled.ok) {
+    return { ok: false, message: `Refusing to uninstall while service cleanup is incomplete: ${disabled.message}` };
+  }
+
+  const stopped = stopMetaProxy(home, platform);
+  if (!stopped.ok) return stopped;
+
+  const binary = metaProxyBinaryPath(platform, home);
+  for (const ownedPath of [
+    binary,
+    versionPath(binary),
+    pidPath(home),
+    join(metaProxyDataDir(home), 'meta-proxy.log'),
+    service.scheduledTaskPath(home),
+  ]) {
+    rmSync(ownedPath, { force: true });
+  }
+  return { ok: true, message: 'Uninstalled Meta-Proxy owned files. Routing credentials and configuration were preserved.' };
 }
 
 export interface FetchResponse {
@@ -372,12 +425,15 @@ export function startMetaProxy(home = homedir(), platform: NodeJS.Platform = pro
   }
 }
 
-export function stopMetaProxy(home = homedir()): MetaProxyInstallResult {
+export function stopMetaProxy(
+  home = homedir(),
+  platform: NodeJS.Platform = process.platform,
+): MetaProxyInstallResult {
   let pid: number;
   try { pid = Number.parseInt(readFileSync(pidPath(home), 'utf8').trim(), 10); } catch {
     return { ok: true, message: 'Meta-Proxy is not running (no managed pid file).' };
   }
-  const status = metaProxyStatus(home);
+  const status = metaProxyStatus(home, platform);
   if (!Number.isSafeInteger(pid) || pid <= 0 || !status.running || status.pid !== pid) {
     rmSync(pidPath(home), { force: true });
     return { ok: true, message: 'Meta-Proxy is not running under this managed binary (stale pid file removed).' };
@@ -469,13 +525,15 @@ export async function metaProxyCmd(args: string[]): Promise<ProxyCommandResult> 
     return {
       code: 0,
       lines: [
-        'Usage: metaharness proxy <install|status|start|stop|enable|disable|path|login|logout|run> [options]',
+        'Usage: metaharness proxy <install|status|start|stop|enable|disable|logs|uninstall|path|login|logout|run> [options]',
         '',
         'Optional signed Meta-Proxy sidecar for local Claude-compatible routing.',
         `  install [--version ${META_PROXY_VERSION}] --yes  download, verify, and install`,
         '  status                                      show installed version and managed process state',
         '  start | stop | path                         manage the optional local sidecar',
         '  enable | disable                            start the sidecar at login (opt-in), or stop doing so',
+        '  logs [--lines N]                            show the bounded daemon log tail',
+        '  uninstall --yes                             disable service and remove only owned files',
         '  login | logout                              run Meta-Proxy Cognitum OAuth login/logout',
         '  run [--policy <critical|standard|economy>] [--] <client> [args...]',
         '                                               launch Claude-compatible client through Meta-Proxy',
@@ -500,6 +558,8 @@ export async function metaProxyCmd(args: string[]): Promise<ProxyCommandResult> 
     const service = metaProxyServiceState();
     const startAtLogin = !service.supported
       ? 'not supported on this platform'
+      : service.managerState === 'unknown'
+        ? `unknown — manager query failed (definition ${service.definitionPresent ? 'present' : 'absent'})`
       : service.installed
         ? `enabled (${service.unitPath})`
         : 'disabled — enable with `metaharness proxy enable`';
@@ -537,6 +597,22 @@ export async function metaProxyCmd(args: string[]): Promise<ProxyCommandResult> 
     const result = disableMetaProxyService();
     return { code: result.ok ? 0 : 1, lines: result.message.split('\n') };
   }
+  if (subcommand === 'logs') {
+    const lineIndex = args.indexOf('--lines');
+    const parsed = lineIndex >= 0 ? Number.parseInt(args[lineIndex + 1] ?? '', 10) : 100;
+    if (!Number.isSafeInteger(parsed) || parsed <= 0 || parsed > 10_000) {
+      return { code: 2, lines: ['--lines must be an integer between 1 and 10000.'] };
+    }
+    const lines = metaProxyLogLines(homedir(), parsed);
+    return { code: 0, lines: lines.length > 0 ? lines : ['Meta-Proxy log is empty or unavailable.'] };
+  }
+  if (subcommand === 'uninstall') {
+    if (!args.includes('--yes')) {
+      return { code: 2, lines: ['Refusing to uninstall without explicit consent. Re-run: metaharness proxy uninstall --yes'] };
+    }
+    const result = await uninstallMetaProxy();
+    return { code: result.ok ? 0 : 1, lines: [result.message] };
+  }
   if (subcommand === 'run') {
     return runThroughMetaProxy(args.slice(1));
   }
@@ -547,5 +623,5 @@ export async function metaProxyCmd(args: string[]): Promise<ProxyCommandResult> 
     if (result.error) return { code: 1, lines: [`Could not run Meta-Proxy ${subcommand}: ${result.error.message}`] };
     return { code: result.status ?? 1, lines: [] };
   }
-  return { code: 2, lines: [`Unknown proxy subcommand "${subcommand}". Try: install | status | start | stop | enable | disable | path | login | logout | run`] };
+  return { code: 2, lines: [`Unknown proxy subcommand "${subcommand}". Try: install | status | start | stop | enable | disable | logs | uninstall | path | login | logout | run`] };
 }

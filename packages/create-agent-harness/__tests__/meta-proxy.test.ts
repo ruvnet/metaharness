@@ -8,18 +8,24 @@ import {
   metaProxyClientEnvironment,
   metaProxyCmd,
   metaProxyEndpoint,
+  metaProxyLogLines,
   parseSha256Sums,
   resolveMetaProxyAsset,
   sha256Hex,
   verifyMetaProxyChecksum,
   verifyMetaProxyManifest,
+  uninstallMetaProxy,
   worktreeFingerprint,
 } from '../src/meta-proxy.js';
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 describe('optional Meta-Proxy integration', () => {
+  it('pins the daemon release required by the signed extension', () => {
+    expect(META_PROXY_VERSION).toBe('0.7.4');
+  });
+
   it('maps each supported platform to the signed v0.3.0 asset name', () => {
     expect(resolveMetaProxyAsset('win32', 'x64')).toMatchObject({
       target: 'x86_64-pc-windows-msvc',
@@ -94,5 +100,71 @@ describe('optional Meta-Proxy integration', () => {
     expect(claim).toMatchObject({ policy: 'economy', exp: 28_800 });
     expect(claim.worktree).toMatch(/^[a-f0-9]{32}$/);
     expect(JSON.stringify(claim)).not.toContain('C:/tmp/herd/agent-a');
+  });
+
+  it('tails logs without returning the whole file', () => {
+    const home = mkdtempSync(join(tmpdir(), 'proxy-logs-'));
+    try {
+      const root = join(home, '.metaharness', 'meta-proxy');
+      mkdirSync(root, { recursive: true });
+      writeFileSync(join(root, 'meta-proxy.log'), 'one\ntwo\nthree\n');
+      expect(metaProxyLogLines(home, 2)).toEqual(['two', 'three']);
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+    }
+  });
+
+  it('uninstalls only owned files and preserves user routing state', async () => {
+    const home = mkdtempSync(join(tmpdir(), 'proxy-uninstall-'));
+    try {
+      const root = join(home, '.metaharness', 'meta-proxy');
+      const bin = join(root, 'bin', 'meta-proxy');
+      const userState = join(home, '.ruflo');
+      mkdirSync(join(root, 'bin'), { recursive: true });
+      mkdirSync(userState, { recursive: true });
+      writeFileSync(bin, 'binary');
+      writeFileSync(`${bin}.version`, '0.7.3\n');
+      writeFileSync(join(root, 'meta-proxy.log'), 'log');
+      writeFileSync(join(root, 'unrelated-user-note'), 'keep');
+      writeFileSync(join(userState, 'proxy-token'), 'keep');
+      writeFileSync(join(userState, 'proxy-config.toml'), 'keep');
+
+      const result = await uninstallMetaProxy({
+        home,
+        platform: 'darwin',
+        run: () => ({ ok: false, output: 'not registered' }),
+      });
+
+      expect(result.ok).toBe(true);
+      expect(existsSync(bin)).toBe(false);
+      expect(existsSync(`${bin}.version`)).toBe(false);
+      expect(existsSync(join(root, 'meta-proxy.log'))).toBe(false);
+      expect(existsSync(join(root, 'unrelated-user-note'))).toBe(true);
+      expect(existsSync(join(userState, 'proxy-token'))).toBe(true);
+      expect(existsSync(join(userState, 'proxy-config.toml'))).toBe(true);
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+    }
+  });
+
+  it('refuses to remove the binary when service-manager state is unknown', async () => {
+    const home = mkdtempSync(join(tmpdir(), 'proxy-uninstall-failure-'));
+    try {
+      const bin = join(home, '.metaharness', 'meta-proxy', 'bin', 'meta-proxy');
+      mkdirSync(join(home, '.metaharness', 'meta-proxy', 'bin'), { recursive: true });
+      writeFileSync(bin, 'binary');
+
+      const result = await uninstallMetaProxy({
+        home,
+        platform: 'darwin',
+        run: () => ({ ok: false, output: 'launchctl unavailable', error: 'ENOENT' }),
+      });
+
+      expect(result.ok).toBe(false);
+      expect(result.message).toMatch(/refusing to uninstall/i);
+      expect(existsSync(bin)).toBe(true);
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+    }
   });
 });
