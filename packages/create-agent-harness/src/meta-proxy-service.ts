@@ -184,9 +184,9 @@ WantedBy=default.target
 
 /** Task Scheduler definition — Windows has no launchd/systemd equivalent. */
 export function renderScheduledTask(binaryPath: string): string {
-  // This string is persisted with Node's utf8 encoding. Keep the declaration
-  // truthful or Task Scheduler may reject the definition on stricter hosts.
-  return `<?xml version="1.0" encoding="UTF-8"?>
+  // Task Scheduler's XML importer requires its canonical BOM-marked UTF-16
+  // representation; enableMetaProxyService persists this string as utf16le.
+  return `\uFEFF<?xml version="1.0" encoding="UTF-16"?>
 <Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
   <RegistrationInfo>
     <Description>Cognitum Meta-Proxy sidecar</Description>
@@ -413,7 +413,8 @@ export function enableMetaProxyService(options: ServiceOptions = {}): ServiceRes
   if (before.managerState === 'unknown') {
     return { ok: false, message: `Could not determine service-manager state; preserved ${unitPath}.`, unitPath };
   }
-  if (before.definitionPresent && readFileSync(unitPath, 'utf8') !== definition) {
+  const persistedEncoding = platform === 'win32' ? 'utf16le' : 'utf8';
+  if (before.definitionPresent && readFileSync(unitPath, persistedEncoding) !== definition) {
     return {
       ok: false,
       message: `A different Meta-Proxy service definition already exists at ${unitPath}. Disable it before replacement.`,
@@ -432,7 +433,7 @@ export function enableMetaProxyService(options: ServiceOptions = {}): ServiceRes
   }
 
   mkdirSync(dirname(unitPath), { recursive: true, mode: 0o700 });
-  writeFileSync(unitPath, definition, { encoding: 'utf8', mode: 0o600 });
+  writeFileSync(unitPath, definition, { encoding: persistedEncoding, mode: 0o600 });
 
   for (const invocation of enableCommands(platform, unitPath, label)) {
     const outcome = run(invocation);

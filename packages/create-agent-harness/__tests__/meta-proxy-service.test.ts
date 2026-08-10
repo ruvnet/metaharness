@@ -89,7 +89,7 @@ describe('unit rendering', () => {
 
   it('restarts on failure on Windows and does not time out', () => {
     const task = renderScheduledTask('C:\\meta-proxy.exe');
-    expect(task).toContain('encoding="UTF-8"');
+    expect(task.startsWith('\uFEFF<?xml version="1.0" encoding="UTF-16"?>')).toBe(true);
     expect(task).toContain('<LogonTrigger>');
     expect(task).toContain('<LogonType>InteractiveToken</LogonType>');
     expect(task).toContain('<RunLevel>LeastPrivilege</RunLevel>');
@@ -169,6 +169,27 @@ describe('enable', () => {
 
     expect(again.ok).toBe(true);
     expect(calls.map((call) => call.args[0])).toEqual(['print']);
+  });
+
+  it('writes canonical UTF-16LE Windows XML and can read it idempotently', () => {
+    installFakeDaemon('win32');
+    let registered = false;
+    const run = (invocation: ServiceCommand): CommandOutcome => {
+      if (invocation.args[0] === '/query') {
+        return registered
+          ? { ok: true, output: 'Status: Ready' }
+          : { ok: false, output: 'ERROR: The system cannot find the file specified.' };
+      }
+      if (invocation.args[0] === '/create') registered = true;
+      return { ok: true, output: '' };
+    };
+
+    expect(enableMetaProxyService({ home, platform: 'win32', run }).ok).toBe(true);
+    const unitPath = serviceUnitPath('win32', home)!;
+    const bytes = readFileSync(unitPath);
+    expect([...bytes.subarray(0, 2)]).toEqual([0xff, 0xfe]);
+    expect(bytes.toString('utf16le')).toBe(renderScheduledTask(metaProxyBinaryPath('win32', home)));
+    expect(enableMetaProxyService({ home, platform: 'win32', run }).ok).toBe(true);
   });
 
   it('does not overwrite a different stopped LaunchAgent definition', () => {
