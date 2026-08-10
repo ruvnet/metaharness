@@ -9,7 +9,7 @@ describe('Meta-Proxy native lifecycle gate', () => {
     const workflow = readFileSync(
       fileURLToPath(new URL('../../../.github/workflows/ci.yml', import.meta.url)),
       'utf8',
-    );
+    ).replace(/\r\n/g, '\n');
 
     expect(workflow).toMatch(/meta-proxy-launchagent:\n[\s\S]*runs-on: macos-latest/);
     expect(workflow).toMatch(/RUN_REAL_LAUNCHD_ACCEPTANCE: ['"]1['"]/);
@@ -21,7 +21,7 @@ describe('Meta-Proxy native lifecycle gate', () => {
     const workflow = readFileSync(
       fileURLToPath(new URL('../../../.github/workflows/ci.yml', import.meta.url)),
       'utf8',
-    );
+    ).replace(/\r\n/g, '\n');
 
     expect(workflow).toMatch(/meta-proxy-scheduled-task:\n[\s\S]*runs-on: windows-latest/);
     expect(workflow).toMatch(/RUN_REAL_SCHEDULED_TASK_ACCEPTANCE: ['"]1['"]/);
