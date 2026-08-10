@@ -72,7 +72,11 @@ it.runIf(real)('proves isolated LaunchAgent login start, crash restart, clean st
     const disabled = disableMetaProxyService({ home, platform: 'darwin', label });
     expect(disabled.ok, disabled.message).toBe(true);
     expect(existsSync(serviceUnitPath('darwin', home, label)!)).toBe(false);
-    expect(metaProxyServiceState('darwin', home, undefined, label).managerState).toBe('disabled');
+    const unloaded = await eventually(
+      () => metaProxyServiceState('darwin', home, undefined, label).managerState,
+      (state) => state === 'disabled',
+    );
+    expect(unloaded).toBe('disabled');
   } finally {
     const cleanup = launchctl('bootout', target);
     const alreadyGone = /could not find service|no such process/i.test(`${cleanup.stdout}${cleanup.stderr}`);
