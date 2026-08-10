@@ -177,6 +177,27 @@ jobs:
         shell: bash
         run: node examples/vertical-tour/vertical-tour.mjs
 
+  # Real user LaunchAgent contract. This must stay a required, non-skipped job:
+  # unit render tests cannot prove launchd restart and bootout behavior.
+  meta-proxy-launchagent:
+    name: Meta-Proxy / native macOS lifecycle
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '20'
+      - name: Install exact dependencies
+        run: npm ci
+      - name: Build MetaHarness CLI
+        run: npm run -w packages/create-agent-harness build
+      - name: Exercise real isolated LaunchAgent lifecycle
+        working-directory: packages/create-agent-harness
+        env:
+          RUN_REAL_LAUNCHD_ACCEPTANCE: '1'
+        run: npx vitest run __tests__/meta-proxy-launchagent.real.test.ts
+
   # ─────────────────────────────────────────────────────────────────────
   # Per-platform npm pack + install smoke for every published package
   # ─────────────────────────────────────────────────────────────────────
@@ -247,7 +268,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────
   ci-pass:
     name: CI passed
-    needs: [rust, wasm, node, pack-install, bench]
+    needs: [rust, wasm, node, meta-proxy-launchagent, pack-install, bench]
     runs-on: ubuntu-latest
     steps:
       - run: echo "All cross-platform gates green."

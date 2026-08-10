@@ -59,11 +59,13 @@ export interface ServiceResult {
 
 export interface ServiceState {
   supported: boolean;
-  /** A definition exists on disk (macOS/Linux) or the task is registered (Windows). */
+  /** The service manager currently has the job/unit/task loaded. */
   installed: boolean;
   unitPath: string | null;
   managerState: 'enabled' | 'disabled' | 'unknown';
   definitionPresent: boolean;
+  /** Whether the service manager currently has the job/unit/task loaded. */
+  loaded: boolean | null;
   /** Whether the service remains configured to start on the user's next login. */
   enabledAtLogin: boolean;
   /** null means the manager answered but does not expose a portable run state. */
@@ -283,31 +285,40 @@ function knownMissingService(platform: NodeJS.Platform, output: string): boolean
   return false;
 }
 
-function parseManagerState(platform: NodeJS.Platform, outcome: CommandOutcome): Pick<ServiceState, 'managerState' | 'running' | 'pid'> {
-  if (outcome.error) return { managerState: 'unknown', running: null, pid: null };
+function parseManagerState(
+  platform: NodeJS.Platform,
+  outcome: CommandOutcome,
+  definitionPresent: boolean,
+): Pick<ServiceState, 'managerState' | 'loaded' | 'enabledAtLogin' | 'running' | 'pid'> {
+  if (outcome.error) return { managerState: 'unknown', loaded: null, enabledAtLogin: false, running: null, pid: null };
   if (!outcome.ok) {
     return knownMissingService(platform, outcome.output)
-      ? { managerState: 'disabled', running: false, pid: null }
-      : { managerState: 'unknown', running: null, pid: null };
+      ? { managerState: 'disabled', loaded: false, enabledAtLogin: platform === 'darwin' && definitionPresent, running: false, pid: null }
+      : { managerState: 'unknown', loaded: null, enabledAtLogin: false, running: null, pid: null };
   }
 
   if (platform === 'darwin') {
     const pid = outcome.output.match(/\bpid\s*=\s*(\d+)/)?.[1];
     return {
       managerState: 'enabled',
+      loaded: true,
+      enabledAtLogin: definitionPresent,
       running: /\bstate\s*=\s*running\b/.test(outcome.output) || pid !== undefined,
       pid: pid ? Number.parseInt(pid, 10) : null,
     };
   }
   if (platform === 'linux') {
     if (/^LoadState=not-found$/m.test(outcome.output)) {
-      return { managerState: 'disabled', running: false, pid: null };
+      return { managerState: 'disabled', loaded: false, enabledAtLogin: false, running: false, pid: null };
     }
     const enabled = /^UnitFileState=(?:enabled|enabled-runtime|linked|linked-runtime)$/m.test(outcome.output);
+    const loaded = /^LoadState=loaded$/m.test(outcome.output);
     const pidText = outcome.output.match(/^MainPID=(\d+)$/m)?.[1];
     const pid = pidText && pidText !== '0' ? Number.parseInt(pidText, 10) : null;
     return {
-      managerState: enabled ? 'enabled' : 'disabled',
+      managerState: loaded ? 'enabled' : 'disabled',
+      loaded,
+      enabledAtLogin: enabled,
       running: /^ActiveState=active$/m.test(outcome.output),
       pid,
     };
@@ -315,11 +326,17 @@ function parseManagerState(platform: NodeJS.Platform, outcome: CommandOutcome): 
   if (platform === 'win32') {
     return {
       managerState: 'enabled',
-      running: /^Status:\s+Running\s*$/im.test(outcome.output),
+      loaded: true,
+      enabledAtLogin: true,
+      running: /^Status:\s+Running\s*$/im.test(outcome.output)
+        ? true
+        : /^Status:\s+(?:Ready|Disabled)\s*$/im.test(outcome.output)
+          ? false
+          : null,
       pid: null,
     };
   }
-  return { managerState: 'unknown', running: null, pid: null };
+  return { managerState: 'unknown', loaded: null, enabledAtLogin: false, running: null, pid: null };
 }
 
 // --- public API -------------------------------------------------------------
@@ -331,13 +348,12 @@ export function metaProxyServiceState(
   label = SERVICE_LABEL,
 ): ServiceState {
   const unitPath = serviceUnitPath(platform, home, label);
-  if (!unitPath) return { supported: false, installed: false, unitPath: null, managerState: 'unknown', definitionPresent: false, enabledAtLogin: false, running: null, pid: null };
+  if (!unitPath) return { supported: false, installed: false, unitPath: null, managerState: 'unknown', definitionPresent: false, loaded: null, enabledAtLogin: false, running: null, pid: null };
   const definitionPresent = existsSync(unitPath);
   const command = serviceStateCommand(platform, label);
   const outcome = command ? run(command) : { ok: false, output: '', error: 'unsupported' };
-  const manager = parseManagerState(platform, outcome);
-  const enabledAtLogin = manager.managerState === 'enabled' || (platform === 'darwin' && definitionPresent);
-  return { supported: true, installed: manager.managerState === 'enabled', unitPath, definitionPresent, enabledAtLogin, ...manager };
+  const manager = parseManagerState(platform, outcome, definitionPresent);
+  return { supported: true, installed: manager.loaded === true, unitPath, definitionPresent, ...manager };
 }
 
 export interface ServiceOptions {
@@ -386,7 +402,7 @@ export function enableMetaProxyService(options: ServiceOptions = {}): ServiceRes
       unitPath,
     };
   }
-  if (before.managerState === 'enabled') {
+  if (before.managerState === 'enabled' && before.enabledAtLogin) {
     if (before.definitionPresent) {
       return { ok: true, message: `Meta-Proxy is already set to start at login. Definition: ${unitPath}`, unitPath };
     }
@@ -404,6 +420,27 @@ export function enableMetaProxyService(options: ServiceOptions = {}): ServiceRes
     const outcome = run(invocation);
     if (!outcome.ok) {
       const state = metaProxyServiceState(platform, home, run, label);
+      if (before.definitionPresent) {
+        // This enable started from an existing owned definition. Never erase it
+        // or stop a pre-existing active service while compensating a failed
+        // attempt to change only its login-start state.
+        if (before.loaded === false && state.managerState === 'enabled') {
+          const cleanup = disableCommands(platform, unitPath, label)[0];
+          const cleanupOutcome = cleanup ? run(cleanup) : { ok: false, output: 'cleanup command unavailable' };
+          if (!cleanupOutcome.ok) {
+            return {
+              ok: false,
+              message: `Could not enable start-at-login and compensating cleanup failed: ${cleanupOutcome.output || 'command failed'}. Definition preserved at ${unitPath}.`,
+              unitPath,
+            };
+          }
+        }
+        return {
+          ok: false,
+          message: `Could not enable start-at-login (${invocation.command} ${invocation.args.join(' ')}): ${outcome.output || 'command failed'}. Definition preserved at ${unitPath}.`,
+          unitPath,
+        };
+      }
       if (state.managerState === 'enabled') {
         const cleanupFailures = disableCommands(platform, unitPath, label)
           .map((cleanup) => run(cleanup))
@@ -516,30 +553,62 @@ export function disableMetaProxyService(options: ServiceOptions = {}): ServiceRe
     return { ok: true, message: 'Meta-Proxy is not set to start at login.' };
   }
 
-  const failures: string[] = [];
-  if (state.managerState === 'enabled') {
-    const commands = disableCommands(platform, unitPath, label);
-    const unregister = commands[0];
-    if (unregister) {
-      const outcome = run(unregister);
-      if (!outcome.ok) failures.push(outcome.output || `${unregister.command} failed`);
+  if (platform === 'win32' && state.managerState === 'enabled') {
+    // Deleting a running task loses the only manager handle while its child
+    // can remain alive. End first and require an authoritative stopped state.
+    const end = stopCommand(platform, label);
+    if (!end) return { ok: false, message: 'Could not construct the Windows stop command.', unitPath };
+    run(end);
+    const stopped = metaProxyServiceState(platform, home, run, label);
+    if (stopped.managerState === 'unknown' || stopped.running !== false) {
+      return {
+        ok: false,
+        message: `Could not confirm the Meta-Proxy task stopped; preserved task and ${unitPath}.`,
+        unitPath,
+      };
+    }
+    const removeTask = disableCommands(platform, unitPath, label)[0];
+    const removed = removeTask ? run(removeTask) : { ok: false, output: 'delete command unavailable' };
+    if (!removed.ok) {
+      return {
+        ok: false,
+        message: `Could not delete the stopped Meta-Proxy task: ${removed.output || 'command failed'}. Definition preserved at ${unitPath}.`,
+        unitPath,
+      };
+    }
+    rmSync(unitPath, { force: true });
+    return { ok: true, message: `Meta-Proxy will no longer start at login. Removed ${unitPath}.` };
+  }
+
+  const unregister = state.managerState === 'enabled'
+    ? disableCommands(platform, unitPath, label)[0]
+    : undefined;
+  if (unregister) {
+    const outcome = run(unregister);
+    if (!outcome.ok) {
+      return {
+        ok: false,
+        message: `Could not disable start-at-login: ${outcome.output || `${unregister.command} failed`}. Definition preserved at ${unitPath}.`,
+        unitPath,
+      };
     }
   }
-  if (failures.length > 0) {
-    return {
-      ok: false,
-      message: `Could not disable start-at-login: ${failures.join('; ')}. Definition preserved at ${unitPath}.`,
-      unitPath,
-    };
-  }
+
+  const definition = state.definitionPresent ? readFileSync(unitPath, 'utf8') : null;
   rmSync(unitPath, { force: true });
   if (platform === 'linux') {
     const refresh = disableCommands(platform, unitPath, label)[1];
-    if (refresh) {
-      const outcome = run(refresh);
-      if (!outcome.ok) {
-        return { ok: false, message: `Disabled service, but daemon-reload failed: ${outcome.output || 'command failed'}.` };
+    const outcome = refresh ? run(refresh) : { ok: false, output: 'daemon-reload command unavailable' };
+    if (!outcome.ok) {
+      if (definition !== null) {
+        mkdirSync(dirname(unitPath), { recursive: true, mode: 0o700 });
+        writeFileSync(unitPath, definition, { encoding: 'utf8', mode: 0o600 });
       }
+      return {
+        ok: false,
+        message: `Disabled service, but daemon-reload failed: ${outcome.output || 'command failed'}. Definition restored at ${unitPath}.`,
+        unitPath,
+      };
     }
   }
   return { ok: true, message: `Meta-Proxy will no longer start at login. Removed ${unitPath}.` };

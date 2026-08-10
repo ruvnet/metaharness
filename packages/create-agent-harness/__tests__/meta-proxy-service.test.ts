@@ -175,8 +175,30 @@ describe('enable', () => {
     expect(calls.map((call) => call.args[0])).toEqual(['print']);
   });
 
-  /// A unit file present but never loaded makes `proxy status` claim
-  /// start-at-login is on when it is not.
+  it('preserves an active loaded Linux unit when enabling login start fails', () => {
+    const binary = installFakeDaemon('linux');
+    const unitPath = serviceUnitPath('linux', home)!;
+    mkdirSync(dirname(unitPath), { recursive: true });
+    const definition = renderSystemdUnit(binary);
+    writeFileSync(unitPath, definition);
+    const calls: ServiceCommand[] = [];
+    const run = (invocation: ServiceCommand): CommandOutcome => {
+      calls.push(invocation);
+      if (invocation.args.includes('show')) {
+        return { ok: true, output: 'LoadState=loaded\nUnitFileState=disabled\nActiveState=active\nMainPID=718' };
+      }
+      if (invocation.args.includes('daemon-reload')) return { ok: false, output: 'reload unavailable' };
+      return { ok: false, output: 'unexpected command' };
+    };
+
+    const result = enableMetaProxyService({ home, platform: 'linux', run });
+
+    expect(result.ok).toBe(false);
+    expect(readFileSync(unitPath, 'utf8')).toBe(definition);
+    expect(calls.some((call) => call.args.includes('disable'))).toBe(false);
+  });
+
+  /// A rejected first-time enable must not leave a new definition behind.
   it('leaves nothing behind when the service manager rejects it', () => {
     installFakeDaemon('linux');
     const { run } = recorder(false);
@@ -269,6 +291,77 @@ describe('disable', () => {
     expect(existsSync(unit)).toBe(true);
     expect(result.message).toContain('disable failed');
   });
+
+  it('restores the Linux definition when daemon-reload fails after disable', () => {
+    const binary = installFakeDaemon('linux');
+    const unitPath = serviceUnitPath('linux', home)!;
+    mkdirSync(dirname(unitPath), { recursive: true });
+    const definition = renderSystemdUnit(binary);
+    writeFileSync(unitPath, definition);
+    const calls: ServiceCommand[] = [];
+    const run = (invocation: ServiceCommand): CommandOutcome => {
+      calls.push(invocation);
+      if (invocation.args.includes('show')) {
+        return { ok: true, output: 'LoadState=loaded\nUnitFileState=enabled\nActiveState=active\nMainPID=456' };
+      }
+      if (invocation.args.includes('disable')) return { ok: true, output: '' };
+      if (invocation.args.includes('daemon-reload')) return { ok: false, output: 'manager unavailable' };
+      return { ok: false, output: 'unexpected command' };
+    };
+
+    const result = disableMetaProxyService({ home, platform: 'linux', run });
+
+    expect(result.ok).toBe(false);
+    expect(readFileSync(unitPath, 'utf8')).toBe(definition);
+    expect(calls.some((call) => call.args.includes('daemon-reload'))).toBe(true);
+  });
+
+  it('ends and confirms a Windows task before deleting it', () => {
+    installFakeDaemon('win32');
+    const unitPath = serviceUnitPath('win32', home)!;
+    mkdirSync(dirname(unitPath), { recursive: true });
+    writeFileSync(unitPath, '<Task>owned definition</Task>');
+    let running = true;
+    const calls: ServiceCommand[] = [];
+    const run = (invocation: ServiceCommand): CommandOutcome => {
+      calls.push(invocation);
+      if (invocation.args[0] === '/query') {
+        return { ok: true, output: running ? 'Status: Running' : 'Status: Ready' };
+      }
+      if (invocation.args[0] === '/end') {
+        running = false;
+        return { ok: true, output: '' };
+      }
+      if (invocation.args[0] === '/delete') return { ok: false, output: 'delete denied' };
+      return { ok: false, output: 'unexpected command' };
+    };
+
+    const result = disableMetaProxyService({ home, platform: 'win32', run });
+
+    expect(result.ok).toBe(false);
+    expect(calls.map((call) => call.args[0])).toEqual(['/query', '/end', '/query', '/delete']);
+    expect(existsSync(unitPath)).toBe(true);
+  });
+
+  it('preserves a Windows task when stop cannot be confirmed', () => {
+    installFakeDaemon('win32');
+    const unitPath = serviceUnitPath('win32', home)!;
+    mkdirSync(dirname(unitPath), { recursive: true });
+    writeFileSync(unitPath, '<Task>owned definition</Task>');
+    const calls: ServiceCommand[] = [];
+    const run = (invocation: ServiceCommand): CommandOutcome => {
+      calls.push(invocation);
+      if (invocation.args[0] === '/query') return { ok: true, output: 'Status: Running' };
+      if (invocation.args[0] === '/end') return { ok: true, output: '' };
+      return { ok: false, output: 'unexpected command' };
+    };
+
+    const result = disableMetaProxyService({ home, platform: 'win32', run });
+
+    expect(result.ok).toBe(false);
+    expect(calls.some((call) => call.args[0] === '/delete')).toBe(false);
+    expect(existsSync(unitPath)).toBe(true);
+  });
 });
 
 describe('state reporting', () => {
@@ -295,7 +388,7 @@ describe('state reporting', () => {
     expect(unsupported.unitPath).toBeNull();
   });
 
-  it('trusts the service manager over a stale definition file', () => {
+  it('separates current manager load state from a next-login definition', () => {
     const unit = serviceUnitPath('darwin', home)!;
     mkdirSync(dirname(unit), { recursive: true });
     writeFileSync(unit, 'stale definition');
@@ -322,6 +415,34 @@ describe('state reporting', () => {
     expect(state.managerState).toBe('unknown');
     expect(disabled.ok).toBe(false);
     expect(existsSync(unit)).toBe(true);
+  });
+
+  it('reports and stops an active loaded Linux service even when login start is disabled', () => {
+    const binary = installFakeDaemon('linux');
+    const unit = serviceUnitPath('linux', home)!;
+    mkdirSync(dirname(unit), { recursive: true });
+    writeFileSync(unit, renderSystemdUnit(binary));
+    let active = true;
+    const calls: ServiceCommand[] = [];
+    const run = (invocation: ServiceCommand): CommandOutcome => {
+      calls.push(invocation);
+      if (invocation.args.includes('show')) {
+        return {
+          ok: true,
+          output: `LoadState=loaded\nUnitFileState=disabled\nActiveState=${active ? 'active' : 'inactive'}\nMainPID=${active ? '991' : '0'}`,
+        };
+      }
+      if (invocation.args.includes('stop')) {
+        active = false;
+        return { ok: true, output: '' };
+      }
+      return { ok: false, output: 'unexpected command' };
+    };
+
+    const before = metaProxyServiceState('linux', home, run);
+    expect(before).toMatchObject({ installed: true, loaded: true, enabledAtLogin: false, running: true, pid: 991 });
+    expect(stopMetaProxyService({ home, platform: 'linux', run }).ok).toBe(true);
+    expect(calls.some((call) => call.args.includes('stop'))).toBe(true);
   });
 
   it('reports the supervisor pid and stops it without a MetaHarness pid file', () => {
