@@ -29,6 +29,14 @@ import { metaProxyBinaryPath } from '../src/meta-proxy.js';
 
 let home: string;
 
+function isWindowsQuery(invocation: ServiceCommand): boolean {
+  return invocation.command === 'powershell.exe';
+}
+
+function windowsState(state: 1 | 3 | 4, enabled = true): CommandOutcome {
+  return { ok: true, output: `TaskState=${state}\nEnabled=${enabled ? '1' : '0'}` };
+}
+
 /** Records what would have been run, and lets a test force a failure. */
 function recorder(ok = true) {
   const calls: ServiceCommand[] = [];
@@ -36,7 +44,7 @@ function recorder(ok = true) {
     calls.push(invocation);
     if (invocation.args[0] === 'print') return { ok: false, output: 'Could not find service' };
     if (invocation.args.includes('show')) return { ok: true, output: 'LoadState=not-found' };
-    if (invocation.args[0] === '/query') return { ok: false, output: 'ERROR: The system cannot find the file specified.' };
+    if (isWindowsQuery(invocation)) return { ok: true, output: 'TaskState=Missing' };
     return ok ? { ok: true, output: '' } : { ok: false, output: 'boom' };
   };
   return { calls, run };
@@ -175,10 +183,10 @@ describe('enable', () => {
     installFakeDaemon('win32');
     let registered = false;
     const run = (invocation: ServiceCommand): CommandOutcome => {
-      if (invocation.args[0] === '/query') {
+      if (isWindowsQuery(invocation)) {
         return registered
-          ? { ok: true, output: 'Status: Ready' }
-          : { ok: false, output: 'ERROR: The system cannot find the file specified.' };
+          ? windowsState(3)
+          : { ok: true, output: 'TaskState=Missing' };
       }
       if (invocation.args[0] === '/create') registered = true;
       return { ok: true, output: '' };
@@ -310,6 +318,32 @@ describe('enable', () => {
     expect(existsSync(serviceUnitPath('darwin', home)!)).toBe(false);
   });
 
+  it('stops, proves stopped, and deletes a Windows task after an ambiguous run failure', () => {
+    const binary = installFakeDaemon('win32');
+    let registered = false;
+    let running = false;
+    const calls: ServiceCommand[] = [];
+    const run = (invocation: ServiceCommand): CommandOutcome => {
+      calls.push(invocation);
+      if (isWindowsQuery(invocation)) return registered ? windowsState(running ? 4 : 3) : { ok: true, output: 'TaskState=Missing' };
+      if (invocation.args[0] === '/create') { registered = true; return { ok: true, output: '' }; }
+      if (invocation.args[0] === '/run') { running = true; return { ok: false, output: 'simulated lost run response' }; }
+      if (invocation.args[0] === '/end') { running = false; return { ok: true, output: '' }; }
+      if (invocation.args[0] === '/delete') { registered = false; return { ok: true, output: '' }; }
+      return { ok: false, output: 'unexpected command' };
+    };
+
+    const result = enableMetaProxyService({ home, platform: 'win32', run, wait: () => {} });
+
+    expect(result.ok).toBe(false);
+    expect(result.message).toContain('simulated lost run response');
+    expect(existsSync(serviceUnitPath('win32', home)!)).toBe(false);
+    expect(calls.some((call) => call.args[0] === '/end')).toBe(true);
+    expect(calls.some((call) => call.args[0] === '/delete')).toBe(true);
+    rmSync(binary);
+    expect(existsSync(binary)).toBe(false);
+  });
+
   it('says so rather than pretending on an unsupported platform', () => {
     const result = enableMetaProxyService({ home, platform: 'freebsd' as NodeJS.Platform });
     expect(result.ok).toBe(false);
@@ -362,20 +396,25 @@ describe('disable', () => {
     expect(result.message).toContain('disable failed');
   });
 
-  it('restores the Linux definition when daemon-reload fails after disable', () => {
+  it('transactionally restores Linux definition, login enablement, and running state when reload fails', () => {
     const binary = installFakeDaemon('linux');
     const unitPath = serviceUnitPath('linux', home)!;
     mkdirSync(dirname(unitPath), { recursive: true });
     const definition = renderSystemdUnit(binary);
     writeFileSync(unitPath, definition);
     const calls: ServiceCommand[] = [];
+    let enabledAtLogin = true;
+    let active = true;
+    let reloads = 0;
     const run = (invocation: ServiceCommand): CommandOutcome => {
       calls.push(invocation);
       if (invocation.args.includes('show')) {
-        return { ok: true, output: 'LoadState=loaded\nUnitFileState=enabled\nActiveState=active\nMainPID=456' };
+        return { ok: true, output: `LoadState=loaded\nUnitFileState=${enabledAtLogin ? 'enabled' : 'disabled'}\nActiveState=${active ? 'active' : 'inactive'}\nMainPID=${active ? '456' : '0'}` };
       }
-      if (invocation.args.includes('disable')) return { ok: true, output: '' };
-      if (invocation.args.includes('daemon-reload')) return { ok: false, output: 'manager unavailable' };
+      if (invocation.args.includes('disable')) { enabledAtLogin = false; active = false; return { ok: true, output: '' }; }
+      if (invocation.args.includes('daemon-reload')) return ++reloads === 1 ? { ok: false, output: 'transient manager failure' } : { ok: true, output: '' };
+      if (invocation.args.includes('enable')) { enabledAtLogin = true; return { ok: true, output: '' }; }
+      if (invocation.args.includes('start')) { active = true; return { ok: true, output: '' }; }
       return { ok: false, output: 'unexpected command' };
     };
 
@@ -383,7 +422,10 @@ describe('disable', () => {
 
     expect(result.ok).toBe(false);
     expect(readFileSync(unitPath, 'utf8')).toBe(definition);
-    expect(calls.some((call) => call.args.includes('daemon-reload'))).toBe(true);
+    expect(metaProxyServiceState('linux', home, run)).toMatchObject({ enabledAtLogin: true, running: true, pid: 456 });
+    expect(reloads).toBe(2);
+    expect(calls.some((call) => call.args.includes('enable'))).toBe(true);
+    expect(calls.some((call) => call.args.includes('start'))).toBe(true);
   });
 
   it('ends and confirms a Windows task before deleting it', () => {
@@ -395,8 +437,8 @@ describe('disable', () => {
     const calls: ServiceCommand[] = [];
     const run = (invocation: ServiceCommand): CommandOutcome => {
       calls.push(invocation);
-      if (invocation.args[0] === '/query') {
-        return { ok: true, output: running ? 'Status: Running' : 'Status: Ready' };
+      if (isWindowsQuery(invocation)) {
+        return windowsState(running ? 4 : 3);
       }
       if (invocation.args[0] === '/end') {
         running = false;
@@ -409,7 +451,7 @@ describe('disable', () => {
     const result = disableMetaProxyService({ home, platform: 'win32', run, wait: () => {} });
 
     expect(result.ok).toBe(false);
-    expect(calls.map((call) => call.args[0])).toEqual(['/query', '/end', '/query', '/query', '/delete']);
+    expect(calls.map((call) => call.command === 'powershell.exe' ? 'query' : call.args[0])).toEqual(['query', '/end', 'query', 'query', '/delete']);
     expect(existsSync(unitPath)).toBe(true);
   });
 
@@ -421,7 +463,7 @@ describe('disable', () => {
     const calls: ServiceCommand[] = [];
     const run = (invocation: ServiceCommand): CommandOutcome => {
       calls.push(invocation);
-      if (invocation.args[0] === '/query') return { ok: true, output: 'Status: Running' };
+      if (isWindowsQuery(invocation)) return windowsState(4);
       if (invocation.args[0] === '/end') return { ok: true, output: '' };
       return { ok: false, output: 'unexpected command' };
     };
@@ -442,9 +484,9 @@ describe('disable', () => {
     let postEndQueries = 0;
     const waits: number[] = [];
     const run = (invocation: ServiceCommand): CommandOutcome => {
-      if (invocation.args[0] === '/query') {
-        if (ended && ++postEndQueries >= 3) return { ok: true, output: 'Status: Ready' };
-        return { ok: true, output: 'Status: Running' };
+      if (isWindowsQuery(invocation)) {
+        if (ended && ++postEndQueries >= 3) return windowsState(3);
+        return windowsState(4);
       }
       if (invocation.args[0] === '/end') {
         ended = true;
@@ -469,6 +511,16 @@ describe('disable', () => {
 });
 
 describe('state reporting', () => {
+  it('reports a registered but Task-Scheduler-disabled task without inventing login enablement', () => {
+    const state = metaProxyServiceState('win32', home, () => windowsState(1, false));
+    expect(state).toMatchObject({ managerState: 'enabled', loaded: true, enabledAtLogin: false, running: false });
+  });
+
+  it('fails closed on an unstructured Windows manager response', () => {
+    const state = metaProxyServiceState('win32', home, () => ({ ok: true, output: 'Status: Ready' }));
+    expect(state).toMatchObject({ managerState: 'unknown', loaded: null, running: null });
+  });
+
   it('distinguishes enabled from disabled from unsupported', () => {
     const missing = () => ({ ok: false, output: 'Could not find service' });
     expect(metaProxyServiceState('darwin', home, missing).installed).toBe(false);

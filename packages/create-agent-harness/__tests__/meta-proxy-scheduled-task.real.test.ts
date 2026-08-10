@@ -9,6 +9,8 @@ import {
   enableMetaProxyService,
   metaProxyServiceState,
   serviceUnitPath,
+  type CommandOutcome,
+  type ServiceCommand,
 } from '../src/meta-proxy-service.js';
 import { metaProxyBinaryPath } from '../src/meta-proxy.js';
 
@@ -55,6 +57,25 @@ it.runIf(real)('proves an isolated Scheduled Task starts, reports, stops, and de
     expect(disabled.ok, disabled.message).toBe(true);
     expect(existsSync(serviceUnitPath('win32', home, label)!)).toBe(false);
     expect(metaProxyServiceState('win32', home, undefined, label).managerState).toBe('disabled');
+
+    // A successful /run whose response is lost is indistinguishable from a
+    // failed start to the caller. Exercise the real manager, then lie only
+    // about that response and require compensation to stop + delete safely.
+    const ambiguousRun = (invocation: ServiceCommand): CommandOutcome => {
+      const result = spawnSync(invocation.command, invocation.args, { encoding: 'utf8', timeout: 15_000, windowsHide: true });
+      const output = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
+      if (invocation.args[0] === '/run' && result.status === 0) {
+        return { ok: false, output: 'simulated lost /run response' };
+      }
+      return result.error
+        ? { ok: false, output: result.error.message, error: result.error.message }
+        : { ok: result.status === 0, output };
+    };
+    const ambiguous = enableMetaProxyService({ home, platform: 'win32', label, run: ambiguousRun });
+    expect(ambiguous.ok).toBe(false);
+    expect(ambiguous.message).toContain('simulated lost /run response');
+    expect(metaProxyServiceState('win32', home, undefined, label).managerState).toBe('disabled');
+    expect(existsSync(serviceUnitPath('win32', home, label)!)).toBe(false);
     const binaryReleased = await eventually(
       () => {
         try {

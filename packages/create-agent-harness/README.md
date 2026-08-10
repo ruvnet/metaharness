@@ -106,6 +106,11 @@ managed log, `proxy disable` to remove login start, and `proxy uninstall --yes`
 to remove the managed runtime. Uninstall intentionally preserves credentials;
 run `proxy logout` first when credential removal is required.
 
+On Windows this is a least-privilege per-user Scheduled Task. Status comes from
+locale-neutral ScheduledTasks API enum state and reports registration, task
+enablement, and running state separately. Disable and ambiguous-start cleanup
+require a stable stopped state before deleting either the task or its XML.
+
 ### Per-worktree routing policy
 
 `proxy run` attaches a short-lived, HMAC-signed local capability to the

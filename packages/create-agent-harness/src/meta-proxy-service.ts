@@ -276,9 +276,11 @@ export function serviceStateCommand(platform: NodeJS.Platform, label = SERVICE_L
     };
   }
   if (platform === 'win32') {
-    // LIST /v provides the stable `Status: Running|Ready` field consumed below;
-    // the default table format is column-aligned and locale/width dependent.
-    return { command: 'schtasks', args: ['/query', '/tn', label, '/fo', 'LIST', '/v'] };
+    // schtasks renders both headings and states in the user's UI language.
+    // Query the ScheduledTasks API and serialize numeric enum/bool values so
+    // state and login enablement are authoritative and locale-neutral.
+    const script = `$task = Get-ScheduledTask -ErrorAction Stop | Where-Object { $_.TaskName -ceq '${label}' -and $_.TaskPath -eq '\\' } | Select-Object -First 1; if ($null -eq $task) { Write-Output 'TaskState=Missing'; exit 0 }; Write-Output ('TaskState=' + [int]$task.State)`;
+    return { command: 'powershell.exe', args: ['-NoProfile', '-NonInteractive', '-Command', script] };
   }
   return null;
 }
@@ -292,7 +294,7 @@ function knownMissingService(platform: NodeJS.Platform, output: string): boolean
     return text.includes('loadstate=not-found') || text.includes('unit meta-proxy.service could not be found');
   }
   if (platform === 'win32') {
-    return text.includes('cannot find the file specified') || text.includes('task does not exist');
+    return /^taskstate=missing$/m.test(text);
   }
   return false;
 }
@@ -336,15 +338,20 @@ function parseManagerState(
     };
   }
   if (platform === 'win32') {
+    if (/^TaskState=Missing$/m.test(outcome.output)) {
+      return { managerState: 'disabled', loaded: false, enabledAtLogin: false, running: false, pid: null };
+    }
+    const state = outcome.output.match(/^TaskState=(\d+)$/m)?.[1];
+    if (state === undefined || !['0', '1', '2', '3', '4'].includes(state)) {
+      return { managerState: 'unknown', loaded: null, enabledAtLogin: false, running: null, pid: null };
+    }
     return {
       managerState: 'enabled',
       loaded: true,
-      enabledAtLogin: true,
-      running: /^Status:\s+Running\s*$/im.test(outcome.output)
-        ? true
-        : /^Status:\s+(?:Ready|Disabled)\s*$/im.test(outcome.output)
-          ? false
-          : null,
+      // TASK_STATE_DISABLED is the authoritative registered-but-disabled state;
+      // all other known registered states remain enabled for their triggers.
+      enabledAtLogin: state !== '1',
+      running: state === '4' ? true : state === '1' || state === '3' ? false : null,
       pid: null,
     };
   }
@@ -387,6 +394,7 @@ export function enableMetaProxyService(options: ServiceOptions = {}): ServiceRes
   const platform = options.platform ?? process.platform;
   const run = options.run ?? defaultRunner;
   const label = options.label ?? SERVICE_LABEL;
+  const wait = options.wait ?? defaultWait;
 
   const unitPath = serviceUnitPath(platform, home, label);
   if (!unitPath) {
@@ -492,6 +500,20 @@ export function enableMetaProxyService(options: ServiceOptions = {}): ServiceRes
         };
       }
       if (state.managerState === 'enabled') {
+        if (platform === 'win32') {
+          const cleanup = stopAndDeleteWindowsTask(home, unitPath, label, run, wait);
+          if (!cleanup.ok) {
+            return {
+              ok: false,
+              message: `Could not enable start-at-login and compensating cleanup failed: ${cleanup.message}`,
+              unitPath,
+            };
+          }
+          return {
+            ok: false,
+            message: `Could not enable start-at-login (${invocation.command} ${invocation.args.join(' ')}): ${outcome.output || 'command failed'}`,
+          };
+        }
         const cleanupFailures = disableCommands(platform, unitPath, label)
           .map((cleanup) => run(cleanup))
           .filter((cleanup) => !cleanup.ok);
@@ -605,36 +627,7 @@ export function disableMetaProxyService(options: ServiceOptions = {}): ServiceRe
   }
 
   if (platform === 'win32' && state.managerState === 'enabled') {
-    // Deleting a running task loses the only manager handle while its child
-    // can remain alive. End first and require an authoritative stopped state.
-    const end = stopCommand(platform, label);
-    if (!end) return { ok: false, message: 'Could not construct the Windows stop command.', unitPath };
-    run(end);
-    let stopped = metaProxyServiceState(platform, home, run, label);
-    let consecutiveStopped = stopped.running === false ? 1 : 0;
-    for (let attempt = 0; attempt < 20 && stopped.managerState !== 'unknown' && consecutiveStopped < 2; attempt++) {
-      wait(100);
-      stopped = metaProxyServiceState(platform, home, run, label);
-      consecutiveStopped = stopped.running === false ? consecutiveStopped + 1 : 0;
-    }
-    if (stopped.managerState === 'unknown' || consecutiveStopped < 2) {
-      return {
-        ok: false,
-        message: `Could not confirm the Meta-Proxy task stopped; preserved task and ${unitPath}.`,
-        unitPath,
-      };
-    }
-    const removeTask = disableCommands(platform, unitPath, label)[0];
-    const removed = removeTask ? run(removeTask) : { ok: false, output: 'delete command unavailable' };
-    if (!removed.ok) {
-      return {
-        ok: false,
-        message: `Could not delete the stopped Meta-Proxy task: ${removed.output || 'command failed'}. Definition preserved at ${unitPath}.`,
-        unitPath,
-      };
-    }
-    rmSync(unitPath, { force: true });
-    return { ok: true, message: `Meta-Proxy will no longer start at login. Removed ${unitPath}.` };
+    return stopAndDeleteWindowsTask(home, unitPath, label, run, wait);
   }
 
   const unregister = state.managerState === 'enabled'
@@ -661,12 +654,61 @@ export function disableMetaProxyService(options: ServiceOptions = {}): ServiceRe
         mkdirSync(dirname(unitPath), { recursive: true, mode: 0o700 });
         writeFileSync(unitPath, definition, { encoding: 'utf8', mode: 0o600 });
       }
+      const restoreReload = refresh ? run(refresh) : { ok: false, output: 'daemon-reload command unavailable' };
+      const restoreCommands: ServiceCommand[] = [];
+      if (state.enabledAtLogin) restoreCommands.push({ command: 'systemctl', args: ['--user', 'enable', 'meta-proxy.service'] });
+      if (state.running) restoreCommands.push({ command: 'systemctl', args: ['--user', 'start', 'meta-proxy.service'] });
+      const restoreFailure = !restoreReload.ok
+        ? restoreReload
+        : restoreCommands.map((command) => run(command)).find((result) => !result.ok);
+      const restored = restoreFailure ? null : metaProxyServiceState(platform, home, run, label);
+      if (
+        restoreFailure
+        || restored?.managerState === 'unknown'
+        || restored?.enabledAtLogin !== state.enabledAtLogin
+        || restored?.running !== state.running
+      ) {
+        return {
+          ok: false,
+          message: `Disabled service and daemon-reload failed; restoring the prior manager state also failed: ${restoreFailure?.output || 'state mismatch'}. Definition preserved at ${unitPath}.`,
+          unitPath,
+        };
+      }
       return {
         ok: false,
-        message: `Disabled service, but daemon-reload failed: ${outcome.output || 'command failed'}. Definition restored at ${unitPath}.`,
+        message: `Disable rolled back after daemon-reload failed: ${outcome.output || 'command failed'}. Prior definition, login enablement, and running state restored at ${unitPath}.`,
         unitPath,
       };
     }
   }
+  return { ok: true, message: `Meta-Proxy will no longer start at login. Removed ${unitPath}.` };
+}
+
+function stopAndDeleteWindowsTask(
+  home: string,
+  unitPath: string,
+  label: string,
+  run: CommandRunner,
+  wait: (milliseconds: number) => void,
+): ServiceResult {
+  const end = stopCommand('win32', label);
+  if (!end) return { ok: false, message: 'Could not construct the Windows stop command.', unitPath };
+  run(end);
+  let stopped = metaProxyServiceState('win32', home, run, label);
+  let consecutiveStopped = stopped.running === false ? 1 : 0;
+  for (let attempt = 0; attempt < 20 && stopped.managerState !== 'unknown' && consecutiveStopped < 2; attempt++) {
+    wait(100);
+    stopped = metaProxyServiceState('win32', home, run, label);
+    consecutiveStopped = stopped.running === false ? consecutiveStopped + 1 : 0;
+  }
+  if (stopped.managerState === 'unknown' || consecutiveStopped < 2) {
+    return { ok: false, message: `Could not confirm the Meta-Proxy task stopped; preserved task and ${unitPath}.`, unitPath };
+  }
+  const removeTask = disableCommands('win32', unitPath, label)[0];
+  const removed = removeTask ? run(removeTask) : { ok: false, output: 'delete command unavailable' };
+  if (!removed.ok) {
+    return { ok: false, message: `Could not delete the stopped Meta-Proxy task: ${removed.output || 'command failed'}. Definition preserved at ${unitPath}.`, unitPath };
+  }
+  rmSync(unitPath, { force: true });
   return { ok: true, message: `Meta-Proxy will no longer start at login. Removed ${unitPath}.` };
 }
