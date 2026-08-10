@@ -191,7 +191,9 @@ jobs:
       - name: Install exact dependencies
         run: npm ci
       - name: Build MetaHarness CLI
-        run: npm run -w packages/create-agent-harness build
+        # The CLI imports internal workspaces; the ordered root build produces
+        # their declarations before compiling create-agent-harness.
+        run: npm run build
       - name: Exercise real isolated LaunchAgent lifecycle
         working-directory: packages/create-agent-harness
         env:
