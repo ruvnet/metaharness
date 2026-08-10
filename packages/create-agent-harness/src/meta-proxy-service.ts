@@ -22,7 +22,7 @@
 // in meta-proxy.ts, which already takes an injected `run`.
 
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 
@@ -64,6 +64,11 @@ export interface ServiceState {
   unitPath: string | null;
   managerState: 'enabled' | 'disabled' | 'unknown';
   definitionPresent: boolean;
+  /** Whether the service remains configured to start on the user's next login. */
+  enabledAtLogin: boolean;
+  /** null means the manager answered but does not expose a portable run state. */
+  running: boolean | null;
+  pid: number | null;
 }
 
 function defaultRunner(invocation: ServiceCommand): CommandOutcome {
@@ -128,6 +133,7 @@ export function renderLaunchAgent(binaryPath: string, logPath: string, label = S
   <key>ProgramArguments</key>
   <array>
     <string>${escapeXml(binaryPath)}</string>
+    <string>--supervised</string>
   </array>
   <key>RunAtLoad</key>
   <true/>
@@ -163,7 +169,7 @@ After=network-online.target
 
 [Service]
 Type=simple
-ExecStart=${binaryPath}
+ExecStart=${binaryPath} --supervised
 Restart=on-failure
 RestartSec=10
 
@@ -198,6 +204,7 @@ export function renderScheduledTask(binaryPath: string): string {
   <Actions Context="Author">
     <Exec>
       <Command>${escapeXml(binaryPath)}</Command>
+      <Arguments>--supervised</Arguments>
     </Exec>
   </Actions>
 </Task>
@@ -251,12 +258,68 @@ export function serviceStateCommand(platform: NodeJS.Platform, label = SERVICE_L
     return { command: 'launchctl', args: ['print', `gui/${process.getuid?.() ?? 0}/${label}`] };
   }
   if (platform === 'linux') {
-    return { command: 'systemctl', args: ['--user', 'is-enabled', 'meta-proxy.service'] };
+    return {
+      command: 'systemctl',
+      args: ['--user', 'show', 'meta-proxy.service', '--property=LoadState,UnitFileState,ActiveState,MainPID'],
+    };
   }
   if (platform === 'win32') {
     return { command: 'schtasks', args: ['/query', '/tn', SERVICE_LABEL] };
   }
   return null;
+}
+
+function knownMissingService(platform: NodeJS.Platform, output: string): boolean {
+  const text = output.toLowerCase();
+  if (platform === 'darwin') {
+    return text.includes('could not find service') || text.includes('service not found');
+  }
+  if (platform === 'linux') {
+    return text.includes('loadstate=not-found') || text.includes('unit meta-proxy.service could not be found');
+  }
+  if (platform === 'win32') {
+    return text.includes('cannot find the file specified') || text.includes('task does not exist');
+  }
+  return false;
+}
+
+function parseManagerState(platform: NodeJS.Platform, outcome: CommandOutcome): Pick<ServiceState, 'managerState' | 'running' | 'pid'> {
+  if (outcome.error) return { managerState: 'unknown', running: null, pid: null };
+  if (!outcome.ok) {
+    return knownMissingService(platform, outcome.output)
+      ? { managerState: 'disabled', running: false, pid: null }
+      : { managerState: 'unknown', running: null, pid: null };
+  }
+
+  if (platform === 'darwin') {
+    const pid = outcome.output.match(/\bpid\s*=\s*(\d+)/)?.[1];
+    return {
+      managerState: 'enabled',
+      running: /\bstate\s*=\s*running\b/.test(outcome.output) || pid !== undefined,
+      pid: pid ? Number.parseInt(pid, 10) : null,
+    };
+  }
+  if (platform === 'linux') {
+    if (/^LoadState=not-found$/m.test(outcome.output)) {
+      return { managerState: 'disabled', running: false, pid: null };
+    }
+    const enabled = /^UnitFileState=(?:enabled|enabled-runtime|linked|linked-runtime)$/m.test(outcome.output);
+    const pidText = outcome.output.match(/^MainPID=(\d+)$/m)?.[1];
+    const pid = pidText && pidText !== '0' ? Number.parseInt(pidText, 10) : null;
+    return {
+      managerState: enabled ? 'enabled' : 'disabled',
+      running: /^ActiveState=active$/m.test(outcome.output),
+      pid,
+    };
+  }
+  if (platform === 'win32') {
+    return {
+      managerState: 'enabled',
+      running: /^Status:\s+Running\s*$/im.test(outcome.output),
+      pid: null,
+    };
+  }
+  return { managerState: 'unknown', running: null, pid: null };
 }
 
 // --- public API -------------------------------------------------------------
@@ -268,12 +331,13 @@ export function metaProxyServiceState(
   label = SERVICE_LABEL,
 ): ServiceState {
   const unitPath = serviceUnitPath(platform, home, label);
-  if (!unitPath) return { supported: false, installed: false, unitPath: null, managerState: 'unknown', definitionPresent: false };
+  if (!unitPath) return { supported: false, installed: false, unitPath: null, managerState: 'unknown', definitionPresent: false, enabledAtLogin: false, running: null, pid: null };
   const definitionPresent = existsSync(unitPath);
   const command = serviceStateCommand(platform, label);
   const outcome = command ? run(command) : { ok: false, output: '', error: 'unsupported' };
-  const managerState = outcome.error ? 'unknown' : outcome.ok ? 'enabled' : 'disabled';
-  return { supported: true, installed: managerState === 'enabled', unitPath, managerState, definitionPresent };
+  const manager = parseManagerState(platform, outcome);
+  const enabledAtLogin = manager.managerState === 'enabled' || (platform === 'darwin' && definitionPresent);
+  return { supported: true, installed: manager.managerState === 'enabled', unitPath, definitionPresent, enabledAtLogin, ...manager };
 }
 
 export interface ServiceOptions {
@@ -310,6 +374,28 @@ export function enableMetaProxyService(options: ServiceOptions = {}): ServiceRes
       : platform === 'linux'
         ? renderSystemdUnit(binaryPath)
         : renderScheduledTask(binaryPath);
+
+  const before = metaProxyServiceState(platform, home, run, label);
+  if (before.managerState === 'unknown') {
+    return { ok: false, message: `Could not determine service-manager state; preserved ${unitPath}.`, unitPath };
+  }
+  if (before.definitionPresent && readFileSync(unitPath, 'utf8') !== definition) {
+    return {
+      ok: false,
+      message: `A different Meta-Proxy service definition already exists at ${unitPath}. Disable it before replacement.`,
+      unitPath,
+    };
+  }
+  if (before.managerState === 'enabled') {
+    if (before.definitionPresent) {
+      return { ok: true, message: `Meta-Proxy is already set to start at login. Definition: ${unitPath}`, unitPath };
+    }
+    return {
+      ok: false,
+      message: `A Meta-Proxy service is already registered with a different or missing definition. Disable it before replacing ${unitPath}.`,
+      unitPath,
+    };
+  }
 
   mkdirSync(dirname(unitPath), { recursive: true, mode: 0o700 });
   writeFileSync(unitPath, definition, { encoding: 'utf8', mode: 0o600 });
@@ -349,6 +435,67 @@ export function enableMetaProxyService(options: ServiceOptions = {}): ServiceRes
     message: `Meta-Proxy will start at login. Definition: ${unitPath}\nDisable with: metaharness proxy disable`,
     unitPath,
   };
+}
+
+function startCommand(platform: NodeJS.Platform, label = SERVICE_LABEL): ServiceCommand | null {
+  if (platform === 'darwin') return { command: 'launchctl', args: ['kickstart', `gui/${process.getuid?.() ?? 0}/${label}`] };
+  if (platform === 'linux') return { command: 'systemctl', args: ['--user', 'start', 'meta-proxy.service'] };
+  if (platform === 'win32') return { command: 'schtasks', args: ['/run', '/tn', SERVICE_LABEL] };
+  return null;
+}
+
+function stopCommand(platform: NodeJS.Platform, label = SERVICE_LABEL): ServiceCommand | null {
+  // `launchctl kill SIGTERM` may still be classified by launchd as an
+  // unsuccessful termination and restarted under KeepAlive. Bootout unloads
+  // the current job but deliberately leaves the plist in LaunchAgents, so the
+  // explicit stop stays stopped now and remains configured for next login.
+  if (platform === 'darwin') return { command: 'launchctl', args: ['bootout', `gui/${process.getuid?.() ?? 0}/${label}`] };
+  if (platform === 'linux') return { command: 'systemctl', args: ['--user', 'stop', 'meta-proxy.service'] };
+  if (platform === 'win32') return { command: 'schtasks', args: ['/end', '/tn', SERVICE_LABEL] };
+  return null;
+}
+
+export function startMetaProxyService(options: ServiceOptions = {}): ServiceResult {
+  const home = options.home ?? homedir();
+  const platform = options.platform ?? process.platform;
+  const run = options.run ?? defaultRunner;
+  const label = options.label ?? SERVICE_LABEL;
+  const state = metaProxyServiceState(platform, home, run, label);
+  if (state.managerState === 'unknown') return { ok: false, message: 'Could not determine service-manager state.' };
+  if (state.managerState !== 'enabled' && !(platform === 'darwin' && state.definitionPresent)) {
+    return { ok: false, message: 'Meta-Proxy is not enabled at login.' };
+  }
+  if (state.running) return { ok: true, message: `Meta-Proxy is already running${state.pid ? ` (pid ${state.pid})` : ''}.` };
+  const commands = platform === 'darwin' && state.managerState === 'disabled' && state.unitPath
+    ? enableCommands(platform, state.unitPath, label)
+    : [startCommand(platform, label)].filter((command): command is ServiceCommand => command !== null);
+  if (commands.length === 0) return { ok: false, message: `Managed start is not supported on ${platform}.` };
+  for (const command of commands) {
+    const outcome = run(command);
+    if (!outcome.ok) return { ok: false, message: `Could not start Meta-Proxy: ${outcome.output || 'command failed'}` };
+  }
+  return { ok: true, message: 'Meta-Proxy managed start requested.' };
+}
+
+export function stopMetaProxyService(options: ServiceOptions = {}): ServiceResult {
+  const home = options.home ?? homedir();
+  const platform = options.platform ?? process.platform;
+  const run = options.run ?? defaultRunner;
+  const label = options.label ?? SERVICE_LABEL;
+  const state = metaProxyServiceState(platform, home, run, label);
+  if (state.managerState === 'unknown') return { ok: false, message: 'Could not determine service-manager state.' };
+  if (state.managerState !== 'enabled') {
+    return state.enabledAtLogin
+      ? { ok: true, message: 'Meta-Proxy managed service is already stopped.' }
+      : { ok: false, message: 'Meta-Proxy is not enabled at login.' };
+  }
+  if (state.running === false) return { ok: true, message: 'Meta-Proxy managed service is already stopped.' };
+  const command = stopCommand(platform, label);
+  if (!command) return { ok: false, message: `Managed stop is not supported on ${platform}.` };
+  const outcome = run(command);
+  return outcome.ok
+    ? { ok: true, message: 'Meta-Proxy managed stop requested.' }
+    : { ok: false, message: `Could not stop Meta-Proxy: ${outcome.output || 'command failed'}` };
 }
 
 export function disableMetaProxyService(options: ServiceOptions = {}): ServiceResult {

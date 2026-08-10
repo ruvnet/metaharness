@@ -85,7 +85,7 @@ of normal harness scaffolding. Install it only when you want a locally bound,
 Claude-compatible routing endpoint with Meta-Proxy's own Cognitum OAuth flow:
 
 ```bash
-npx metaharness proxy install --yes   # signed v0.7.1 download; checksum + Ed25519 verified
+npx metaharness proxy install --yes   # pinned signed download; checksum + Ed25519 verified
 npx metaharness proxy run -- claude   # starts the sidecar and routes this Claude session through it
 npx metaharness proxy run --policy critical -- claude -p "review this migration"
 ```
@@ -99,7 +99,12 @@ select consented Cloud or Sponsored capacity per request. Cognitum login is
 needed only for Cloud routing, not for installation or normal Passthrough.
 
 Use `npx metaharness proxy login` to authorize Cognitum Cloud routing, and
-`npx metaharness proxy status` to inspect the managed sidecar.
+`npx metaharness proxy status` to inspect the managed sidecar. Use `proxy enable`
+to configure login start, `proxy stop` for a stop that survives crash-restart
+policy in the current session, `proxy start` to resume it, `proxy logs` for the
+managed log, `proxy disable` to remove login start, and `proxy uninstall --yes`
+to remove the managed runtime. Uninstall intentionally preserves credentials;
+run `proxy logout` first when credential removal is required.
 
 ### Per-worktree routing policy
 

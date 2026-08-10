@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 
+import { EventEmitter } from 'node:events';
 import { describe, it, expect } from 'vitest';
-import { check, fetch, secretsDispatch, type GcloudRunner } from '../src/secrets.js';
+import { check, commandOnPath, fetch, secretsDispatch, type GcloudRunner } from '../src/secrets.js';
 
 function mockRunner(table: Record<string, { code: number; stdout: string; stderr?: string }>): GcloudRunner {
   return {
@@ -22,12 +23,7 @@ describe('harness secrets check', () => {
       'secrets describe NPM_TOKEN': { code: 0, stdout: 'projects/123/secrets/NPM_TOKEN\n' },
       'iam workload-identity-pools list': { code: 0, stdout: 'GitHub Actions\n' },
     });
-    const { code, lines } = await check([], runner);
-    // gcloud-on-PATH might be false in CI without gcloud — accept either path.
-    if (lines[1]?.includes('FAIL gcloud CLI not on PATH')) {
-      expect(code).toBe(1);
-      return;
-    }
+    const { code, lines } = await check([], runner, async () => true);
     expect(code).toBe(0);
     expect(lines.some(l => l.startsWith('Result: HEALTHY'))).toBe(true);
   });
@@ -36,12 +32,7 @@ describe('harness secrets check', () => {
     const runner = mockRunner({
       'config get-value project': { code: 0, stdout: '(unset)\n' },
     });
-    const { code, lines } = await check([], runner);
-    if (lines[1]?.includes('FAIL gcloud CLI not on PATH')) {
-      // Skip — no gcloud installed in CI sandbox
-      expect(code).toBe(1);
-      return;
-    }
+    const { code, lines } = await check([], runner, async () => true);
     expect(code).toBe(1);
     expect(lines.join('\n')).toMatch(/no active gcloud project/);
   });
@@ -56,9 +47,19 @@ describe('harness secrets check', () => {
         code: 0, stdout: 'GitHub Actions\n',
       },
     });
-    const { lines } = await check(['--project=forced-proj'], runner);
-    if (lines[1]?.includes('FAIL gcloud CLI not on PATH')) return;
+    const { lines } = await check(['--project=forced-proj'], runner, async () => true);
     expect(lines.some(l => l.includes('forced-proj'))).toBe(true);
+  });
+
+  it('bounds a hung PATH lookup and terminates its child', async () => {
+    class HungChild extends EventEmitter {
+      killed = false;
+      kill() { this.killed = true; return true; }
+    }
+    const child = new HungChild();
+    const found = await commandOnPath('gcloud', 'win32', () => child, 5);
+    expect(found).toBe(false);
+    expect(child.killed).toBe(true);
   });
 });
 

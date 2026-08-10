@@ -487,7 +487,14 @@ function parseRunArgs(args: string[]): { policy: WorktreePolicy; commandArgs: st
 export async function runThroughMetaProxy(args: string[], home = homedir()): Promise<ProxyCommandResult> {
   const parsed = parseRunArgs(args);
   if (typeof parsed === 'string') return { code: 2, lines: [parsed] };
-  const started = startMetaProxy(home);
+  const service = await import('./meta-proxy-service.js');
+  const serviceState = service.metaProxyServiceState(process.platform, home);
+  if (serviceState.managerState === 'unknown') {
+    return { code: 1, lines: ['Could not determine Meta-Proxy service-manager state; refusing to start a competing process.'] };
+  }
+  const started = serviceState.enabledAtLogin
+    ? service.startMetaProxyService({ home })
+    : startMetaProxy(home);
   if (!started.ok) return { code: 1, lines: [started.message] };
 
   let clientEnv: Record<string, string>;
@@ -556,11 +563,20 @@ export async function metaProxyCmd(args: string[]): Promise<ProxyCommandResult> 
     // conflating them is why "it worked yesterday" reports were unanswerable.
     const { metaProxyServiceState } = await import('./meta-proxy-service.js');
     const service = metaProxyServiceState();
+    const running = service.managerState === 'enabled'
+      ? service.running === null
+        ? 'unknown (service manager did not expose process state)'
+        : service.running
+          ? `running under service manager${service.pid ? ` (pid ${service.pid})` : ''}`
+          : 'stopped under service manager'
+      : status.running
+        ? `running (pid ${status.pid})`
+        : 'not running';
     const startAtLogin = !service.supported
       ? 'not supported on this platform'
       : service.managerState === 'unknown'
         ? `unknown — manager query failed (definition ${service.definitionPresent ? 'present' : 'absent'})`
-      : service.installed
+      : service.enabledAtLogin
         ? `enabled (${service.unitPath})`
         : 'disabled — enable with `metaharness proxy enable`';
     return {
@@ -570,7 +586,7 @@ export async function metaProxyCmd(args: string[]): Promise<ProxyCommandResult> 
         `  installed: ${status.installed ? 'yes' : 'no'}`,
         `  binary: ${status.binaryPath}`,
         `  version: ${status.version ?? 'unknown'}`,
-        `  managed process: ${status.running ? `running (pid ${status.pid})` : 'not running'}`,
+        `  managed process: ${running}`,
         `  start at login: ${startAtLogin}`,
       ],
     };
@@ -580,11 +596,25 @@ export async function metaProxyCmd(args: string[]): Promise<ProxyCommandResult> 
     return { code: status.installed ? 0 : 1, lines: status.installed ? [status.binaryPath] : ['Meta-Proxy is not installed. Run `metaharness proxy install --yes`.'] };
   }
   if (subcommand === 'start') {
-    const result = startMetaProxy();
+    const service = await import('./meta-proxy-service.js');
+    const state = service.metaProxyServiceState();
+    if (state.managerState === 'unknown') {
+      return { code: 1, lines: ['Could not determine Meta-Proxy service-manager state; refusing to start a competing process.'] };
+    }
+    const result = state.enabledAtLogin
+      ? service.startMetaProxyService()
+      : startMetaProxy();
     return { code: result.ok ? 0 : 1, lines: [result.message] };
   }
   if (subcommand === 'stop') {
-    const result = stopMetaProxy();
+    const service = await import('./meta-proxy-service.js');
+    const state = service.metaProxyServiceState();
+    if (state.managerState === 'unknown') {
+      return { code: 1, lines: ['Could not determine Meta-Proxy service-manager state; refusing to signal an unverified process.'] };
+    }
+    const result = state.enabledAtLogin
+      ? service.stopMetaProxyService()
+      : stopMetaProxy();
     return { code: result.ok ? 0 : 1, lines: [result.message] };
   }
   if (subcommand === 'enable') {

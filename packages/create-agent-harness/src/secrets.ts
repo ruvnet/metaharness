@@ -46,23 +46,55 @@ export const defaultRunner: GcloudRunner = {
   },
 };
 
-function isGcloudOnPath(): Promise<boolean> {
+export interface PathLookupProcess {
+  once(event: string, listener: (value: unknown) => void): PathLookupProcess;
+  kill(): boolean;
+}
+
+export type PathSpawner = (
+  command: string,
+  args: string[],
+  options: { stdio: 'ignore'; windowsHide: boolean },
+) => PathLookupProcess;
+
+/** PATH discovery is diagnostic, so it must never hang the command or CI. */
+export function commandOnPath(
+  executable: string,
+  platform: NodeJS.Platform = process.platform,
+  spawnCommand: PathSpawner = (command, args, options) => spawn(command, args, options) as PathLookupProcess,
+  timeoutMs = 2_000,
+): Promise<boolean> {
   return new Promise(resolve => {
-    const cmd = process.platform === 'win32' ? 'where' : 'which';
-    const p = spawn(cmd, ['gcloud'], { stdio: 'ignore', windowsHide: true });
-    p.on('error', () => resolve(false));
-    p.on('exit', code => resolve(code === 0));
+    const cmd = platform === 'win32' ? 'where' : 'which';
+    const child = spawnCommand(cmd, [executable], { stdio: 'ignore', windowsHide: true });
+    let settled = false;
+    const finish = (found: boolean) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve(found);
+    };
+    const timer = setTimeout(() => {
+      child.kill();
+      finish(false);
+    }, timeoutMs);
+    child.once('error', () => finish(false));
+    child.once('exit', code => finish(code === 0));
   });
 }
 
 /** Validate full GCP setup for publish-time secret fetch. */
-export async function check(args: string[], runner: GcloudRunner = defaultRunner): Promise<SubcommandResult> {
+export async function check(
+  args: string[],
+  runner: GcloudRunner = defaultRunner,
+  pathProbe: () => Promise<boolean> = () => commandOnPath('gcloud'),
+): Promise<SubcommandResult> {
   const lines: string[] = ['harness secrets check'];
   let problems = 0;
   const projectFromFlag = args.find(a => a.startsWith('--project='))?.slice('--project='.length);
   const secretName = args.find(a => a.startsWith('--secret='))?.slice('--secret='.length) ?? 'NPM_TOKEN';
 
-  if (!(await isGcloudOnPath())) {
+  if (!(await pathProbe())) {
     lines.push('  FAIL gcloud CLI not on PATH');
     lines.push('       install: https://cloud.google.com/sdk/docs/install');
     return { code: 1, lines };

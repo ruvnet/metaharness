@@ -132,7 +132,7 @@ describe('optional Meta-Proxy integration', () => {
       const result = await uninstallMetaProxy({
         home,
         platform: 'darwin',
-        run: () => ({ ok: false, output: 'not registered' }),
+        run: () => ({ ok: false, output: 'Could not find service' }),
       });
 
       expect(result.ok).toBe(true);

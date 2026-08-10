@@ -9,6 +9,8 @@ import {
   enableMetaProxyService,
   metaProxyServiceState,
   serviceUnitPath,
+  startMetaProxyService,
+  stopMetaProxyService,
 } from '../src/meta-proxy-service.js';
 import { metaProxyBinaryPath } from '../src/meta-proxy.js';
 
@@ -57,17 +59,24 @@ it.runIf(real)('proves isolated LaunchAgent login start, crash restart, clean st
     );
     expect(restartedPid).not.toBe(firstPid);
 
-    expect(launchctl('kill', 'SIGTERM', target).status).toBe(0);
+    const stopped = stopMetaProxyService({ home, platform: 'darwin', label });
+    expect(stopped.ok, stopped.message).toBe(true);
     expect(await eventually(() => pidFor(target), (pid) => pid === null, 20_000)).toBeNull();
     await new Promise((resolve) => setTimeout(resolve, 11_000));
     expect(pidFor(target)).toBeNull();
+
+    const started = startMetaProxyService({ home, platform: 'darwin', label });
+    expect(started.ok, started.message).toBe(true);
+    expect(await eventually(() => pidFor(target), (pid) => pid !== null)).not.toBeNull();
 
     const disabled = disableMetaProxyService({ home, platform: 'darwin', label });
     expect(disabled.ok, disabled.message).toBe(true);
     expect(existsSync(serviceUnitPath('darwin', home, label)!)).toBe(false);
     expect(metaProxyServiceState('darwin', home, undefined, label).managerState).toBe('disabled');
   } finally {
-    launchctl('bootout', target);
+    const cleanup = launchctl('bootout', target);
+    const alreadyGone = /could not find service|no such process/i.test(`${cleanup.stdout}${cleanup.stderr}`);
+    expect(cleanup.status === 0 || alreadyGone, `${cleanup.stdout}${cleanup.stderr}`).toBe(true);
     rmSync(home, { recursive: true, force: true });
   }
 }, 60_000);

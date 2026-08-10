@@ -4,7 +4,7 @@
 // pure, so the full macOS/Linux/Windows matrix is asserted on one machine
 // without touching launchctl, systemctl or schtasks.
 
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -18,6 +18,8 @@ import {
   renderLaunchAgent,
   renderScheduledTask,
   renderSystemdUnit,
+  startMetaProxyService,
+  stopMetaProxyService,
   serviceUnitPath,
   SERVICE_LABEL,
   type CommandOutcome,
@@ -32,6 +34,9 @@ function recorder(ok = true) {
   const calls: ServiceCommand[] = [];
   const run = (invocation: ServiceCommand): CommandOutcome => {
     calls.push(invocation);
+    if (invocation.args[0] === 'print') return { ok: false, output: 'Could not find service' };
+    if (invocation.args.includes('show')) return { ok: true, output: 'LoadState=not-found' };
+    if (invocation.args[0] === '/query') return { ok: false, output: 'ERROR: The system cannot find the file specified.' };
     return ok ? { ok: true, output: '' } : { ok: false, output: 'boom' };
   };
   return { calls, run };
@@ -61,6 +66,7 @@ describe('unit rendering', () => {
     expect(plist).toContain('<key>SuccessfulExit</key>');
     expect(plist).toContain('<false/>');
     expect(plist).toContain(SERVICE_LABEL);
+    expect(plist).toContain('<string>--supervised</string>');
   });
 
   it('escapes a home directory that contains XML metacharacters', () => {
@@ -77,7 +83,7 @@ describe('unit rendering', () => {
     // must not run a user's proxy.
     expect(unit).toContain('WantedBy=default.target');
     expect(unit).toContain('Restart=on-failure');
-    expect(unit).toContain('ExecStart=/bin/meta-proxy');
+    expect(unit).toContain('ExecStart=/bin/meta-proxy --supervised');
     expect(unit).not.toContain('multi-user.target');
   });
 
@@ -87,6 +93,7 @@ describe('unit rendering', () => {
     expect(task).toContain('<RestartOnFailure>');
     // A long-lived daemon must not be killed by the default 72h limit.
     expect(task).toContain('<ExecutionTimeLimit>PT0S</ExecutionTimeLimit>');
+    expect(task).toContain('<Arguments>--supervised</Arguments>');
   });
 });
 
@@ -123,10 +130,49 @@ describe('enable', () => {
     const unitPath = serviceUnitPath('darwin', home)!;
     expect(existsSync(unitPath)).toBe(true);
     expect(calls[0]!.command).toBe('launchctl');
-    expect(calls[0]!.args[0]).toBe('bootstrap');
+    expect(calls[0]!.args[0]).toBe('print');
+    expect(calls.some((call) => call.args[0] === 'bootstrap')).toBe(true);
     // The definition points at the managed binary, not a PATH lookup.
     expect(result.unitPath).toBe(unitPath);
     expect(binary.length).toBeGreaterThan(0);
+  });
+
+  it('is idempotent when the same LaunchAgent is already enabled', () => {
+    installFakeDaemon('darwin');
+    const calls: ServiceCommand[] = [];
+    let registered = false;
+    const run = (invocation: ServiceCommand): CommandOutcome => {
+      calls.push(invocation);
+      if (invocation.args[0] === 'print') {
+        return registered
+          ? { ok: true, output: 'state = running\npid = 123' }
+          : { ok: false, output: 'Could not find service' };
+      }
+      if (invocation.args[0] === 'bootstrap') registered = true;
+      return { ok: true, output: '' };
+    };
+
+    expect(enableMetaProxyService({ home, platform: 'darwin', run }).ok).toBe(true);
+    calls.length = 0;
+    const again = enableMetaProxyService({ home, platform: 'darwin', run });
+
+    expect(again.ok).toBe(true);
+    expect(calls.map((call) => call.args[0])).toEqual(['print']);
+  });
+
+  it('does not overwrite a different stopped LaunchAgent definition', () => {
+    installFakeDaemon('darwin');
+    const unitPath = serviceUnitPath('darwin', home)!;
+    mkdirSync(dirname(unitPath), { recursive: true });
+    writeFileSync(unitPath, 'foreign or tampered definition');
+    const { calls, run } = recorder();
+
+    const result = enableMetaProxyService({ home, platform: 'darwin', run });
+
+    expect(result.ok).toBe(false);
+    expect(result.message).toMatch(/different.*definition/i);
+    expect(readFileSync(unitPath, 'utf8')).toBe('foreign or tampered definition');
+    expect(calls.map((call) => call.args[0])).toEqual(['print']);
   });
 
   /// A unit file present but never loaded makes `proxy status` claim
@@ -144,10 +190,18 @@ describe('enable', () => {
   it('compensates a registration when starting the registered job fails', () => {
     installFakeDaemon('darwin');
     const calls: ServiceCommand[] = [];
+    let registered = false;
     const run = (invocation: ServiceCommand): CommandOutcome => {
       calls.push(invocation);
       const action = invocation.args[0];
+      if (action === 'print') {
+        return registered
+          ? { ok: true, output: 'state = running\npid = 123' }
+          : { ok: false, output: 'Could not find service' };
+      }
+      if (action === 'bootstrap') registered = true;
       if (action === 'kickstart') return { ok: false, output: 'kickstart failed' };
+      if (action === 'bootout') registered = false;
       return { ok: true, output: '' };
     };
 
@@ -155,6 +209,7 @@ describe('enable', () => {
 
     expect(result.ok).toBe(false);
     expect(calls.map((call) => call.args[0])).toEqual([
+      'print',
       'bootstrap',
       'kickstart',
       'print',
@@ -187,13 +242,13 @@ describe('disable', () => {
     const calls: ServiceCommand[] = [];
     const run = (invocation: ServiceCommand): CommandOutcome => {
       calls.push(invocation);
-      return { ok: false, output: 'disabled' };
+      return { ok: true, output: 'LoadState=not-found' };
     };
     const result = disableMetaProxyService({ home, platform: 'linux', run });
     expect(result.ok).toBe(true);
     expect(result.message).toContain('not set to start at login');
     expect(calls).toHaveLength(1);
-    expect(calls[0]?.args).toContain('is-enabled');
+    expect(calls[0]?.args).toContain('show');
   });
 
   it('reports failure and preserves the definition when unregistering fails', () => {
@@ -206,8 +261,8 @@ describe('disable', () => {
       home,
       platform: 'linux',
       run: (invocation) =>
-        invocation.args.includes('is-enabled')
-          ? { ok: true, output: 'enabled' }
+        invocation.args.includes('show')
+          ? { ok: true, output: 'LoadState=loaded\nUnitFileState=enabled\nActiveState=active\nMainPID=123' }
           : { ok: false, output: 'disable failed' },
     });
     expect(result.ok).toBe(false);
@@ -218,10 +273,20 @@ describe('disable', () => {
 
 describe('state reporting', () => {
   it('distinguishes enabled from disabled from unsupported', () => {
-    expect(metaProxyServiceState('darwin', home).installed).toBe(false);
+    const missing = () => ({ ok: false, output: 'Could not find service' });
+    expect(metaProxyServiceState('darwin', home, missing).installed).toBe(false);
 
     installFakeDaemon('darwin');
-    const enabled = recorder().run;
+    let registered = false;
+    const enabled = (invocation: ServiceCommand): CommandOutcome => {
+      if (invocation.args[0] === 'print') {
+        return registered
+          ? { ok: true, output: 'state = running\npid = 123' }
+          : { ok: false, output: 'Could not find service' };
+      }
+      if (invocation.args[0] === 'bootstrap') registered = true;
+      return { ok: true, output: '' };
+    };
     enableMetaProxyService({ home, platform: 'darwin', run: enabled });
     expect(metaProxyServiceState('darwin', home, enabled).installed).toBe(true);
 
@@ -243,6 +308,59 @@ describe('state reporting', () => {
     expect(state.managerState).toBe('disabled');
     expect(state.installed).toBe(false);
     expect(state.definitionPresent).toBe(true);
+  });
+
+  it('fails closed when a manager query is denied instead of treating it as disabled', () => {
+    const unit = serviceUnitPath('darwin', home)!;
+    mkdirSync(dirname(unit), { recursive: true });
+    writeFileSync(unit, 'owned definition');
+
+    const run = () => ({ ok: false, output: 'Operation not permitted' });
+    const state = metaProxyServiceState('darwin', home, run);
+    const disabled = disableMetaProxyService({ home, platform: 'darwin', run });
+
+    expect(state.managerState).toBe('unknown');
+    expect(disabled.ok).toBe(false);
+    expect(existsSync(unit)).toBe(true);
+  });
+
+  it('reports the supervisor pid and stops it without a MetaHarness pid file', () => {
+    const binary = installFakeDaemon('darwin');
+    const unit = serviceUnitPath('darwin', home)!;
+    mkdirSync(dirname(unit), { recursive: true });
+    writeFileSync(unit, renderLaunchAgent(binary, join(home, 'proxy.log')));
+    let running = true;
+    let registered = true;
+    const calls: ServiceCommand[] = [];
+    const run = (invocation: ServiceCommand): CommandOutcome => {
+      calls.push(invocation);
+      if (invocation.args[0] === 'print') {
+        return registered
+          ? { ok: true, output: running ? 'state = running\npid = 4242' : 'state = exited' }
+          : { ok: false, output: 'Could not find service' };
+      }
+      if (invocation.args[0] === 'bootout') {
+        registered = false;
+        running = false;
+      }
+      if (invocation.args[0] === 'bootstrap') registered = true;
+      if (invocation.args[0] === 'kickstart') running = true;
+      return { ok: true, output: '' };
+    };
+
+    const before = metaProxyServiceState('darwin', home, run);
+    expect(before.running).toBe(true);
+    expect(before.pid).toBe(4242);
+
+    const stopped = stopMetaProxyService({ home, platform: 'darwin', run });
+    expect(stopped.ok).toBe(true);
+    expect(calls.some((call) => call.args[0] === 'bootout')).toBe(true);
+    expect(metaProxyServiceState('darwin', home, run).running).toBe(false);
+
+    const started = startMetaProxyService({ home, platform: 'darwin', run });
+    expect(started.ok).toBe(true);
+    expect(calls.some((call) => call.args[0] === 'bootstrap')).toBe(true);
+    expect(calls.some((call) => call.args[0] === 'kickstart')).toBe(true);
   });
 
   it('reports an externally registered service even when its definition is missing', () => {
