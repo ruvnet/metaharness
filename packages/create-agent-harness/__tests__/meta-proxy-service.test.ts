@@ -344,6 +344,61 @@ describe('enable', () => {
     expect(existsSync(binary)).toBe(false);
   });
 
+  it('preserves a pre-existing definition while removing a newly-created Windows task after an ambiguous run', () => {
+    const binary = installFakeDaemon('win32');
+    const unitPath = serviceUnitPath('win32', home)!;
+    mkdirSync(dirname(unitPath), { recursive: true });
+    const definition = renderScheduledTask(binary);
+    writeFileSync(unitPath, definition, 'utf16le');
+    let registered = false;
+    let running = false;
+    const calls: ServiceCommand[] = [];
+    const run = (invocation: ServiceCommand): CommandOutcome => {
+      calls.push(invocation);
+      if (isWindowsQuery(invocation)) return registered ? windowsState(running ? 4 : 3) : { ok: true, output: 'TaskState=Missing' };
+      if (invocation.args[0] === '/create') { registered = true; return { ok: true, output: '' }; }
+      if (invocation.args[0] === '/run') { running = true; return { ok: false, output: 'simulated lost run response' }; }
+      if (invocation.args[0] === '/end') { running = false; return { ok: true, output: '' }; }
+      if (invocation.args[0] === '/delete') { registered = false; return { ok: true, output: '' }; }
+      return { ok: false, output: 'unexpected command' };
+    };
+
+    const result = enableMetaProxyService({ home, platform: 'win32', run, wait: () => {} });
+
+    expect(result.ok).toBe(false);
+    expect(registered).toBe(false);
+    expect(readFileSync(unitPath, 'utf16le')).toBe(definition);
+    expect(calls.some((call) => call.args[0] === '/end')).toBe(true);
+  });
+
+  it('restores a pre-existing disabled Windows task after an ambiguous run', () => {
+    const binary = installFakeDaemon('win32');
+    const unitPath = serviceUnitPath('win32', home)!;
+    mkdirSync(dirname(unitPath), { recursive: true });
+    const definition = renderScheduledTask(binary);
+    writeFileSync(unitPath, definition, 'utf16le');
+    let taskState: 1 | 3 | 4 = 1;
+    const calls: ServiceCommand[] = [];
+    const run = (invocation: ServiceCommand): CommandOutcome => {
+      calls.push(invocation);
+      if (isWindowsQuery(invocation)) return windowsState(taskState);
+      if (invocation.args[0] === '/create') { taskState = 3; return { ok: true, output: '' }; }
+      if (invocation.args[0] === '/run') { taskState = 4; return { ok: false, output: 'simulated lost run response' }; }
+      if (invocation.args[0] === '/end') { taskState = 3; return { ok: true, output: '' }; }
+      if (invocation.args[0] === '/change' && invocation.args.includes('/disable')) { taskState = 1; return { ok: true, output: '' }; }
+      return { ok: false, output: 'unexpected command' };
+    };
+
+    const result = enableMetaProxyService({ home, platform: 'win32', run, wait: () => {} });
+
+    expect(result.ok).toBe(false);
+    expect(metaProxyServiceState('win32', home, run)).toMatchObject({ loaded: true, enabledAtLogin: false, running: false });
+    expect(readFileSync(unitPath, 'utf16le')).toBe(definition);
+    expect(calls.some((call) => call.args[0] === '/end')).toBe(true);
+    expect(calls.some((call) => call.args[0] === '/change' && call.args.includes('/disable'))).toBe(true);
+    expect(calls.some((call) => call.args[0] === '/delete')).toBe(false);
+  });
+
   it('says so rather than pretending on an unsupported platform', () => {
     const result = enableMetaProxyService({ home, platform: 'freebsd' as NodeJS.Platform });
     expect(result.ok).toBe(false);
@@ -424,6 +479,40 @@ describe('disable', () => {
     expect(readFileSync(unitPath, 'utf8')).toBe(definition);
     expect(metaProxyServiceState('linux', home, run)).toMatchObject({ enabledAtLogin: true, running: true, pid: 456 });
     expect(reloads).toBe(2);
+    expect(calls.some((call) => call.args.includes('enable'))).toBe(true);
+    expect(calls.some((call) => call.args.includes('start'))).toBe(true);
+  });
+
+  it('restores Linux login enablement and running state after an ambiguous disable failure', () => {
+    const binary = installFakeDaemon('linux');
+    const unitPath = serviceUnitPath('linux', home)!;
+    mkdirSync(dirname(unitPath), { recursive: true });
+    const definition = renderSystemdUnit(binary);
+    writeFileSync(unitPath, definition);
+    let enabledAtLogin = true;
+    let active = true;
+    const calls: ServiceCommand[] = [];
+    const run = (invocation: ServiceCommand): CommandOutcome => {
+      calls.push(invocation);
+      if (invocation.args.includes('show')) {
+        return { ok: true, output: `LoadState=loaded\nUnitFileState=${enabledAtLogin ? 'enabled' : 'disabled'}\nActiveState=${active ? 'active' : 'inactive'}\nMainPID=${active ? '772' : '0'}` };
+      }
+      if (invocation.args.includes('disable') && invocation.args.includes('--now')) {
+        enabledAtLogin = false;
+        active = false;
+        return { ok: false, output: 'simulated lost disable response' };
+      }
+      if (invocation.args.includes('enable')) { enabledAtLogin = true; return { ok: true, output: '' }; }
+      if (invocation.args.includes('start')) { active = true; return { ok: true, output: '' }; }
+      return { ok: false, output: 'unexpected command' };
+    };
+
+    const result = disableMetaProxyService({ home, platform: 'linux', run });
+
+    expect(result.ok).toBe(false);
+    expect(result.message).toContain('simulated lost disable response');
+    expect(readFileSync(unitPath, 'utf8')).toBe(definition);
+    expect(metaProxyServiceState('linux', home, run)).toMatchObject({ enabledAtLogin: true, running: true, pid: 772 });
     expect(calls.some((call) => call.args.includes('enable'))).toBe(true);
     expect(calls.some((call) => call.args.includes('start'))).toBe(true);
   });

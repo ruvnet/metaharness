@@ -482,6 +482,45 @@ export function enableMetaProxyService(options: ServiceOptions = {}): ServiceRes
             };
           }
         }
+        if (platform === 'win32' && before.loaded === false && state.loaded === true) {
+          const cleanup = stopAndDeleteWindowsTask(home, unitPath, label, run, wait, false);
+          if (!cleanup.ok) {
+            return {
+              ok: false,
+              message: `Could not enable start-at-login and restoring the prior absent task failed: ${cleanup.message}`,
+              unitPath,
+            };
+          }
+          return {
+            ok: false,
+            message: `Could not enable start-at-login (${invocation.command} ${invocation.args.join(' ')}): ${outcome.output || 'command failed'}. Prior definition preserved at ${unitPath}.`,
+            unitPath,
+          };
+        }
+        if (platform === 'win32' && before.loaded === true && !before.enabledAtLogin) {
+          const stopped = confirmWindowsTaskStopped(home, unitPath, label, run, wait);
+          if (!stopped.ok) {
+            return {
+              ok: false,
+              message: `Could not enable start-at-login and restoring the prior disabled task failed: ${stopped.message}`,
+              unitPath,
+            };
+          }
+          const disabled = run({ command: 'schtasks', args: ['/change', '/tn', label, '/disable'] });
+          const restored = disabled.ok ? metaProxyServiceState('win32', home, run, label) : null;
+          if (!disabled.ok || restored?.loaded !== true || restored.enabledAtLogin || restored.running !== false) {
+            return {
+              ok: false,
+              message: `Could not enable start-at-login and restoring the prior disabled task failed: ${disabled.output || 'state mismatch'}. Definition preserved at ${unitPath}.`,
+              unitPath,
+            };
+          }
+          return {
+            ok: false,
+            message: `Could not enable start-at-login (${invocation.command} ${invocation.args.join(' ')}): ${outcome.output || 'command failed'}. Prior disabled task and definition restored at ${unitPath}.`,
+            unitPath,
+          };
+        }
         if (before.loaded === false && state.managerState === 'enabled') {
           const cleanup = disableCommands(platform, unitPath, label)[0];
           const cleanupOutcome = cleanup ? run(cleanup) : { ok: false, output: 'cleanup command unavailable' };
@@ -636,6 +675,43 @@ export function disableMetaProxyService(options: ServiceOptions = {}): ServiceRe
   if (unregister) {
     const outcome = run(unregister);
     if (!outcome.ok) {
+      if (platform === 'linux') {
+        const after = metaProxyServiceState(platform, home, run, label);
+        if (after.managerState === 'unknown') {
+          return {
+            ok: false,
+            message: `Could not disable start-at-login and could not determine whether it partially changed state: ${outcome.output || `${unregister.command} failed`}. Definition preserved at ${unitPath}.`,
+            unitPath,
+          };
+        }
+        const restore: ServiceCommand[] = [];
+        if (state.enabledAtLogin !== after.enabledAtLogin) {
+          restore.push({ command: 'systemctl', args: ['--user', state.enabledAtLogin ? 'enable' : 'disable', 'meta-proxy.service'] });
+        }
+        if (state.running !== after.running) {
+          restore.push({ command: 'systemctl', args: ['--user', state.running ? 'start' : 'stop', 'meta-proxy.service'] });
+        }
+        const restoreFailure = restore.map((command) => run(command)).find((result) => !result.ok);
+        const restored = restoreFailure ? null : metaProxyServiceState(platform, home, run, label);
+        if (
+          restoreFailure
+          || restored?.managerState === 'unknown'
+          || restored?.loaded !== state.loaded
+          || restored?.enabledAtLogin !== state.enabledAtLogin
+          || restored?.running !== state.running
+        ) {
+          return {
+            ok: false,
+            message: `Could not disable start-at-login and restoring its possible partial changes failed: ${restoreFailure?.output || 'state mismatch'}. Definition preserved at ${unitPath}.`,
+            unitPath,
+          };
+        }
+        return {
+          ok: false,
+          message: `Could not disable start-at-login (${outcome.output || `${unregister.command} failed`}); prior login enablement and running state were restored. Definition preserved at ${unitPath}.`,
+          unitPath,
+        };
+      }
       return {
         ok: false,
         message: `Could not disable start-at-login: ${outcome.output || `${unregister.command} failed`}. Definition preserved at ${unitPath}.`,
@@ -690,6 +766,25 @@ function stopAndDeleteWindowsTask(
   label: string,
   run: CommandRunner,
   wait: (milliseconds: number) => void,
+  removeDefinition = true,
+): ServiceResult {
+  const stopped = confirmWindowsTaskStopped(home, unitPath, label, run, wait);
+  if (!stopped.ok) return stopped;
+  const removeTask = disableCommands('win32', unitPath, label)[0];
+  const removed = removeTask ? run(removeTask) : { ok: false, output: 'delete command unavailable' };
+  if (!removed.ok) {
+    return { ok: false, message: `Could not delete the stopped Meta-Proxy task: ${removed.output || 'command failed'}. Definition preserved at ${unitPath}.`, unitPath };
+  }
+  if (removeDefinition) rmSync(unitPath, { force: true });
+  return { ok: true, message: removeDefinition ? `Meta-Proxy will no longer start at login. Removed ${unitPath}.` : 'Newly-created Meta-Proxy task removed; prior definition preserved.', unitPath };
+}
+
+function confirmWindowsTaskStopped(
+  home: string,
+  unitPath: string,
+  label: string,
+  run: CommandRunner,
+  wait: (milliseconds: number) => void,
 ): ServiceResult {
   const end = stopCommand('win32', label);
   if (!end) return { ok: false, message: 'Could not construct the Windows stop command.', unitPath };
@@ -704,11 +799,5 @@ function stopAndDeleteWindowsTask(
   if (stopped.managerState === 'unknown' || consecutiveStopped < 2) {
     return { ok: false, message: `Could not confirm the Meta-Proxy task stopped; preserved task and ${unitPath}.`, unitPath };
   }
-  const removeTask = disableCommands('win32', unitPath, label)[0];
-  const removed = removeTask ? run(removeTask) : { ok: false, output: 'delete command unavailable' };
-  if (!removed.ok) {
-    return { ok: false, message: `Could not delete the stopped Meta-Proxy task: ${removed.output || 'command failed'}. Definition preserved at ${unitPath}.`, unitPath };
-  }
-  rmSync(unitPath, { force: true });
-  return { ok: true, message: `Meta-Proxy will no longer start at login. Removed ${unitPath}.` };
+  return { ok: true, message: 'Meta-Proxy task is stably stopped.', unitPath };
 }

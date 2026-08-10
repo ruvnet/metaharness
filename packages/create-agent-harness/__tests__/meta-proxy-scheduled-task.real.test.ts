@@ -60,7 +60,7 @@ it.runIf(real)('proves an isolated Scheduled Task starts, reports, stops, and de
 
     // A successful /run whose response is lost is indistinguishable from a
     // failed start to the caller. Exercise the real manager, then lie only
-    // about that response and require compensation to stop + delete safely.
+    // about that response and require exact compensation.
     const ambiguousRun = (invocation: ServiceCommand): CommandOutcome => {
       const result = spawnSync(invocation.command, invocation.args, { encoding: 'utf8', timeout: 15_000, windowsHide: true });
       const output = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
@@ -71,6 +71,28 @@ it.runIf(real)('proves an isolated Scheduled Task starts, reports, stops, and de
         ? { ok: false, output: result.error.message, error: result.error.message }
         : { ok: result.status === 0, output };
     };
+
+    // First prove a task which existed in the disabled state is restored to
+    // that same state rather than deleted or left running.
+    const preexisting = enableMetaProxyService({ home, platform: 'win32', label });
+    expect(preexisting.ok, preexisting.message).toBe(true);
+    expect(schtasks('/end', '/tn', label).status).toBe(0);
+    await eventually(
+      () => metaProxyServiceState('win32', home, undefined, label),
+      (state) => state.running === false,
+    );
+    expect(schtasks('/change', '/tn', label, '/disable').status).toBe(0);
+    expect(metaProxyServiceState('win32', home, undefined, label)).toMatchObject({ loaded: true, enabledAtLogin: false, running: false });
+    const restoredDisabled = enableMetaProxyService({ home, platform: 'win32', label, run: ambiguousRun });
+    expect(restoredDisabled.ok).toBe(false);
+    expect(restoredDisabled.message).toContain('simulated lost /run response');
+    expect(metaProxyServiceState('win32', home, undefined, label)).toMatchObject({ loaded: true, enabledAtLogin: false, running: false });
+    expect(existsSync(serviceUnitPath('win32', home, label)!)).toBe(true);
+    const cleanupRestored = disableMetaProxyService({ home, platform: 'win32', label });
+    expect(cleanupRestored.ok, cleanupRestored.message).toBe(true);
+
+    // Then prove a task newly created by the ambiguous request is stopped and
+    // removed, and that no process retains the daemon executable afterward.
     const ambiguous = enableMetaProxyService({ home, platform: 'win32', label, run: ambiguousRun });
     expect(ambiguous.ok).toBe(false);
     expect(ambiguous.message).toContain('simulated lost /run response');
