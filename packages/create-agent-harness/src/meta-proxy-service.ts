@@ -96,14 +96,16 @@ export function systemdUnitPath(home = homedir()): string {
 }
 
 /** The XML definition handed to `schtasks /create /xml`. */
-export function scheduledTaskPath(home = homedir()): string {
-  return join(metaProxyDataDir(home), 'meta-proxy-task.xml');
+export function scheduledTaskPath(home = homedir(), label = SERVICE_LABEL): string {
+  assertServiceLabel(label);
+  const filename = label === SERVICE_LABEL ? 'meta-proxy-task.xml' : `${label}-task.xml`;
+  return join(metaProxyDataDir(home), filename);
 }
 
 export function serviceUnitPath(platform: NodeJS.Platform, home = homedir(), label = SERVICE_LABEL): string | null {
   if (platform === 'darwin') return launchAgentPath(home, label);
   if (platform === 'linux') return systemdUnitPath(home);
-  if (platform === 'win32') return scheduledTaskPath(home);
+  if (platform === 'win32') return scheduledTaskPath(home, label);
   return null;
 }
 
@@ -182,11 +184,19 @@ WantedBy=default.target
 
 /** Task Scheduler definition — Windows has no launchd/systemd equivalent. */
 export function renderScheduledTask(binaryPath: string): string {
-  return `<?xml version="1.0" encoding="UTF-16"?>
+  // This string is persisted with Node's utf8 encoding. Keep the declaration
+  // truthful or Task Scheduler may reject the definition on stricter hosts.
+  return `<?xml version="1.0" encoding="UTF-8"?>
 <Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
   <RegistrationInfo>
     <Description>Cognitum Meta-Proxy sidecar</Description>
   </RegistrationInfo>
+  <Principals>
+    <Principal id="Author">
+      <LogonType>InteractiveToken</LogonType>
+      <RunLevel>LeastPrivilege</RunLevel>
+    </Principal>
+  </Principals>
   <Triggers>
     <LogonTrigger>
       <Enabled>true</Enabled>
@@ -232,8 +242,8 @@ export function enableCommands(platform: NodeJS.Platform, unitPath: string, labe
   }
   if (platform === 'win32') {
     return [
-      { command: 'schtasks', args: ['/create', '/tn', SERVICE_LABEL, '/xml', unitPath, '/f'] },
-      { command: 'schtasks', args: ['/run', '/tn', SERVICE_LABEL] },
+      { command: 'schtasks', args: ['/create', '/tn', label, '/xml', unitPath, '/f'] },
+      { command: 'schtasks', args: ['/run', '/tn', label] },
     ];
   }
   return [];
@@ -250,7 +260,7 @@ export function disableCommands(platform: NodeJS.Platform, unitPath: string, lab
     ];
   }
   if (platform === 'win32') {
-    return [{ command: 'schtasks', args: ['/delete', '/tn', SERVICE_LABEL, '/f'] }];
+    return [{ command: 'schtasks', args: ['/delete', '/tn', label, '/f'] }];
   }
   return [];
 }
@@ -266,7 +276,9 @@ export function serviceStateCommand(platform: NodeJS.Platform, label = SERVICE_L
     };
   }
   if (platform === 'win32') {
-    return { command: 'schtasks', args: ['/query', '/tn', SERVICE_LABEL] };
+    // LIST /v provides the stable `Status: Running|Ready` field consumed below;
+    // the default table format is column-aligned and locale/width dependent.
+    return { command: 'schtasks', args: ['/query', '/tn', label, '/fo', 'LIST', '/v'] };
   }
   return null;
 }
@@ -362,6 +374,12 @@ export interface ServiceOptions {
   run?: CommandRunner;
   /** Test/enterprise isolation hook; normal users always use SERVICE_LABEL. */
   label?: string;
+  /** Bounded synchronous polling seam; production waits without spawning. */
+  wait?: (milliseconds: number) => void;
+}
+
+function defaultWait(milliseconds: number): void {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds);
 }
 
 export function enableMetaProxyService(options: ServiceOptions = {}): ServiceResult {
@@ -424,6 +442,37 @@ export function enableMetaProxyService(options: ServiceOptions = {}): ServiceRes
         // This enable started from an existing owned definition. Never erase it
         // or stop a pre-existing active service while compensating a failed
         // attempt to change only its login-start state.
+        if (platform === 'linux') {
+          const restore: ServiceCommand[] = [];
+          if (!before.enabledAtLogin && state.enabledAtLogin) {
+            // Deliberately omit --now: a service that was already active must
+            // remain active while only its prior login-enable bit is restored.
+            restore.push({ command: 'systemctl', args: ['--user', 'disable', 'meta-proxy.service'] });
+          }
+          if (before.running === false && state.running === true) {
+            restore.push({ command: 'systemctl', args: ['--user', 'stop', 'meta-proxy.service'] });
+          }
+          const restoreFailure = restore.map((command) => run(command)).find((result) => !result.ok);
+          if (restoreFailure) {
+            return {
+              ok: false,
+              message: `Could not enable start-at-login and restoring the prior service state failed: ${restoreFailure.output || 'command failed'}. Definition preserved at ${unitPath}.`,
+              unitPath,
+            };
+          }
+          const restored = metaProxyServiceState(platform, home, run, label);
+          if (
+            restored.managerState === 'unknown'
+            || restored.enabledAtLogin !== before.enabledAtLogin
+            || restored.running !== before.running
+          ) {
+            return {
+              ok: false,
+              message: `Could not prove the prior service state was restored. Definition preserved at ${unitPath}.`,
+              unitPath,
+            };
+          }
+        }
         if (before.loaded === false && state.managerState === 'enabled') {
           const cleanup = disableCommands(platform, unitPath, label)[0];
           const cleanupOutcome = cleanup ? run(cleanup) : { ok: false, output: 'cleanup command unavailable' };
@@ -477,7 +526,7 @@ export function enableMetaProxyService(options: ServiceOptions = {}): ServiceRes
 function startCommand(platform: NodeJS.Platform, label = SERVICE_LABEL): ServiceCommand | null {
   if (platform === 'darwin') return { command: 'launchctl', args: ['kickstart', `gui/${process.getuid?.() ?? 0}/${label}`] };
   if (platform === 'linux') return { command: 'systemctl', args: ['--user', 'start', 'meta-proxy.service'] };
-  if (platform === 'win32') return { command: 'schtasks', args: ['/run', '/tn', SERVICE_LABEL] };
+  if (platform === 'win32') return { command: 'schtasks', args: ['/run', '/tn', label] };
   return null;
 }
 
@@ -488,7 +537,7 @@ function stopCommand(platform: NodeJS.Platform, label = SERVICE_LABEL): ServiceC
   // explicit stop stays stopped now and remains configured for next login.
   if (platform === 'darwin') return { command: 'launchctl', args: ['bootout', `gui/${process.getuid?.() ?? 0}/${label}`] };
   if (platform === 'linux') return { command: 'systemctl', args: ['--user', 'stop', 'meta-proxy.service'] };
-  if (platform === 'win32') return { command: 'schtasks', args: ['/end', '/tn', SERVICE_LABEL] };
+  if (platform === 'win32') return { command: 'schtasks', args: ['/end', '/tn', label] };
   return null;
 }
 
@@ -540,6 +589,7 @@ export function disableMetaProxyService(options: ServiceOptions = {}): ServiceRe
   const platform = options.platform ?? process.platform;
   const run = options.run ?? defaultRunner;
   const label = options.label ?? SERVICE_LABEL;
+  const wait = options.wait ?? defaultWait;
 
   const unitPath = serviceUnitPath(platform, home, label);
   if (!unitPath) {
@@ -559,7 +609,11 @@ export function disableMetaProxyService(options: ServiceOptions = {}): ServiceRe
     const end = stopCommand(platform, label);
     if (!end) return { ok: false, message: 'Could not construct the Windows stop command.', unitPath };
     run(end);
-    const stopped = metaProxyServiceState(platform, home, run, label);
+    let stopped = metaProxyServiceState(platform, home, run, label);
+    for (let attempt = 0; attempt < 20 && stopped.managerState !== 'unknown' && stopped.running !== false; attempt++) {
+      wait(100);
+      stopped = metaProxyServiceState(platform, home, run, label);
+    }
     if (stopped.managerState === 'unknown' || stopped.running !== false) {
       return {
         ok: false,

@@ -89,7 +89,10 @@ describe('unit rendering', () => {
 
   it('restarts on failure on Windows and does not time out', () => {
     const task = renderScheduledTask('C:\\meta-proxy.exe');
+    expect(task).toContain('encoding="UTF-8"');
     expect(task).toContain('<LogonTrigger>');
+    expect(task).toContain('<LogonType>InteractiveToken</LogonType>');
+    expect(task).toContain('<RunLevel>LeastPrivilege</RunLevel>');
     expect(task).toContain('<RestartOnFailure>');
     // A long-lived daemon must not be killed by the default 72h limit.
     expect(task).toContain('<ExecutionTimeLimit>PT0S</ExecutionTimeLimit>');
@@ -102,6 +105,14 @@ describe('command construction', () => {
     expect(enableCommands('linux', '/u').every((c) => c.args.includes('--user'))).toBe(true);
     expect(enableCommands('darwin', '/u')[0]!.args[1]).toMatch(/^gui\//);
     expect(disableCommands('linux', '/u').every((c) => c.args.includes('--user'))).toBe(true);
+  });
+
+  it('isolates Windows commands and definitions by the requested task label', () => {
+    const label = 'CognitumMetaProxyQE-123';
+    const unitPath = serviceUnitPath('win32', home, label)!;
+    expect(unitPath).toContain(label);
+    expect(enableCommands('win32', unitPath, label).every((command) => command.args.includes(label))).toBe(true);
+    expect(disableCommands('win32', unitPath, label)[0]!.args).toContain(label);
   });
 
   it('has no commands for an unsupported platform', () => {
@@ -196,6 +207,44 @@ describe('enable', () => {
     expect(result.ok).toBe(false);
     expect(readFileSync(unitPath, 'utf8')).toBe(definition);
     expect(calls.some((call) => call.args.includes('disable'))).toBe(false);
+  });
+
+  it('restores disabled-but-active Linux state after a partial enable failure', () => {
+    const binary = installFakeDaemon('linux');
+    const unitPath = serviceUnitPath('linux', home)!;
+    mkdirSync(dirname(unitPath), { recursive: true });
+    writeFileSync(unitPath, renderSystemdUnit(binary));
+    let enabledAtLogin = false;
+    let active = true;
+    const calls: ServiceCommand[] = [];
+    const run = (invocation: ServiceCommand): CommandOutcome => {
+      calls.push(invocation);
+      if (invocation.args.includes('show')) {
+        return {
+          ok: true,
+          output: `LoadState=loaded\nUnitFileState=${enabledAtLogin ? 'enabled' : 'disabled'}\nActiveState=${active ? 'active' : 'inactive'}\nMainPID=${active ? '718' : '0'}`,
+        };
+      }
+      if (invocation.args.includes('daemon-reload')) return { ok: true, output: '' };
+      if (invocation.args.includes('enable')) {
+        enabledAtLogin = true;
+        return { ok: false, output: 'enable reported failure after changing state' };
+      }
+      if (invocation.args.includes('disable')) {
+        enabledAtLogin = false;
+        if (invocation.args.includes('--now')) active = false;
+        return { ok: true, output: '' };
+      }
+      return { ok: false, output: 'unexpected command' };
+    };
+
+    const result = enableMetaProxyService({ home, platform: 'linux', run });
+    const after = metaProxyServiceState('linux', home, run);
+
+    expect(result.ok).toBe(false);
+    expect(after).toMatchObject({ loaded: true, enabledAtLogin: false, running: true, pid: 718 });
+    const compensation = calls.find((call) => call.args.includes('disable'));
+    expect(compensation?.args).toEqual(['--user', 'disable', 'meta-proxy.service']);
   });
 
   /// A rejected first-time enable must not leave a new definition behind.
@@ -336,7 +385,7 @@ describe('disable', () => {
       return { ok: false, output: 'unexpected command' };
     };
 
-    const result = disableMetaProxyService({ home, platform: 'win32', run });
+    const result = disableMetaProxyService({ home, platform: 'win32', run, wait: () => {} });
 
     expect(result.ok).toBe(false);
     expect(calls.map((call) => call.args[0])).toEqual(['/query', '/end', '/query', '/delete']);
@@ -356,11 +405,45 @@ describe('disable', () => {
       return { ok: false, output: 'unexpected command' };
     };
 
-    const result = disableMetaProxyService({ home, platform: 'win32', run });
+    const result = disableMetaProxyService({ home, platform: 'win32', run, wait: () => {} });
 
     expect(result.ok).toBe(false);
     expect(calls.some((call) => call.args[0] === '/delete')).toBe(false);
     expect(existsSync(unitPath)).toBe(true);
+  });
+
+  it('bounded-polls a Windows task whose stopped state is asynchronous', () => {
+    installFakeDaemon('win32');
+    const unitPath = serviceUnitPath('win32', home)!;
+    mkdirSync(dirname(unitPath), { recursive: true });
+    writeFileSync(unitPath, '<Task>owned definition</Task>');
+    let ended = false;
+    let postEndQueries = 0;
+    const waits: number[] = [];
+    const run = (invocation: ServiceCommand): CommandOutcome => {
+      if (invocation.args[0] === '/query') {
+        if (ended && ++postEndQueries >= 3) return { ok: true, output: 'Status: Ready' };
+        return { ok: true, output: 'Status: Running' };
+      }
+      if (invocation.args[0] === '/end') {
+        ended = true;
+        return { ok: true, output: '' };
+      }
+      if (invocation.args[0] === '/delete') return { ok: true, output: '' };
+      return { ok: false, output: 'unexpected command' };
+    };
+
+    const result = disableMetaProxyService({
+      home,
+      platform: 'win32',
+      run,
+      wait: (ms) => waits.push(ms),
+    });
+
+    expect(result.ok).toBe(true);
+    expect(postEndQueries).toBe(3);
+    expect(waits).toEqual([100, 100]);
+    expect(existsSync(unitPath)).toBe(false);
   });
 });
 

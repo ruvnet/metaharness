@@ -200,6 +200,27 @@ jobs:
           RUN_REAL_LAUNCHD_ACCEPTANCE: '1'
         run: npx vitest run __tests__/meta-proxy-launchagent.real.test.ts
 
+  # Real per-user Task Scheduler contract. Unique task names and a temporary
+  # fixture keep this isolated from any runner/user Meta-Proxy installation.
+  meta-proxy-scheduled-task:
+    name: Meta-Proxy / native Windows lifecycle
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '20'
+      - name: Install exact dependencies
+        run: npm ci
+      - name: Build MetaHarness CLI
+        run: npm run build
+      - name: Exercise real isolated Scheduled Task lifecycle
+        working-directory: packages/create-agent-harness
+        env:
+          RUN_REAL_SCHEDULED_TASK_ACCEPTANCE: '1'
+        run: npx vitest run __tests__/meta-proxy-scheduled-task.real.test.ts
+
   # ─────────────────────────────────────────────────────────────────────
   # Per-platform npm pack + install smoke for every published package
   # ─────────────────────────────────────────────────────────────────────
@@ -270,7 +291,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────
   ci-pass:
     name: CI passed
-    needs: [rust, wasm, node, meta-proxy-launchagent, pack-install, bench]
+    needs: [rust, wasm, node, meta-proxy-launchagent, meta-proxy-scheduled-task, pack-install, bench]
     runs-on: ubuntu-latest
     steps:
       - run: echo "All cross-platform gates green."
