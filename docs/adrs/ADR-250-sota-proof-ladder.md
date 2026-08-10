@@ -1,6 +1,6 @@
 # ADR-250: The SOTA-proof ladder — explicit rungs from mechanism proof to benchmark claim
 
-- **Status**: Accepted — rung 2 artifacts shipped and replay-verified; rungs 3-5 explicitly open.
+- **Status**: Accepted — rung 2 artifacts shipped and replay-verified; rung 3 EXECUTED twice (honest nulls on a saturated domain — see appendix); rungs 4-5 explicitly open.
 - **Date**: 2026-08-10
 - **Deciders**: ruv
 - **Tags**: proof-ladder, honesty-discipline, acceptance-gates, turn-credit, flywheel, router, darwin-mode, synthetic, replay, receipts, metaharness
@@ -230,3 +230,27 @@ building its harness adapter — not started.
 - Rung labels describe *evidence strength inside this repo's discipline*;
   they say nothing about the cited preprints' own reproducibility (ADR-248
   §4's caveat on AgentOPSD stands).
+
+## Rung-3 evidence appendix (2026-08-10, same-day live runs)
+
+Rung 3 was EXECUTED twice on the frozen GSM8K split (fp `5c2af7519d09`,
+frozen `mathPromotionRule`, never-optimized anchor, `dataSource: LIVE`,
+Ed25519 replay PASS on both bundles):
+
+| run | model | scale (holdout/anchor/gens) | root primary | promotions | verified improvements | anchor | est. token spend |
+|---|---|---|---|---|---|---|---|
+| free | `google/gemma-4-26b-a4b-it:free` | 20/12/3 | 0.900 | 0 of 12 candidates | 0 | 0.833 held | ~$0.14 est., $0 actual |
+| paid | `deepseek/deepseek-v3.2` | 40/30/6 | 0.975 | 1 of 24 (confidenceRule, primaryΔ 0 — secondary-axis win) | 0 | 0.867 held | ~$0.44 est., ≲$0.25 actual |
+
+**Honest reading: two nulls, and the nulls are the finding.** Modern models
+saturate GSM8K (0.900 free / 0.975 paid at the root policy), so there is no
+headroom for operating-policy lift and the frozen gate correctly refused to
+promote noise (35 of 36 candidates rejected; zero anchor regressions). This
+reproduces ADR-237's null with two more models at two price points, and it
+REDIRECTS rung 3 rather than closing it: live policy-lift evidence requires a
+domain where the base model leaves recoverable headroom — the repo's harder
+suites (evals-hle, evals-sql) or the long-horizon RuFlo tasks that rung 4's
+§6 gate targets. Scaling the model up on a saturated domain buys accuracy,
+not evidence. Bundles: `packages/evals-math/bench/proof-bundle-gsm8k-gemma4-26b-free.json`,
+`.../proof-bundle-gsm8k-deepseek-v32-paid.json` (force-added per the ADR-237
+bundle precedent).
