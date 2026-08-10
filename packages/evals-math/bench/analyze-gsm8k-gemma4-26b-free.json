@@ -1,0 +1,58 @@
+{
+  "generations": 3,
+  "candidates": 12,
+  "promotions": 0,
+  "rejections": 12,
+  "anchorRegressed": 0,
+  "byTarget": [
+    {
+      "target": "maxCandidates",
+      "attempts": 3,
+      "promotions": 0,
+      "rejections": 3,
+      "promoteRate": 0,
+      "avgDeltaPromoted": 0,
+      "avgDeltaAll": -0.01666666666666672,
+      "bestDelta": 0.04999999999999993,
+      "avgCostPerWinPromoted": 0,
+      "bestCostPerWin": 0
+    },
+    {
+      "target": "verificationMode",
+      "attempts": 3,
+      "promotions": 0,
+      "rejections": 3,
+      "promoteRate": 0,
+      "avgDeltaPromoted": 0,
+      "avgDeltaAll": -0.05000000000000001,
+      "bestDelta": 0,
+      "avgCostPerWinPromoted": 0,
+      "bestCostPerWin": 0
+    },
+    {
+      "target": "normalizeFinalAnswer",
+      "attempts": 3,
+      "promotions": 0,
+      "rejections": 3,
+      "promoteRate": 0,
+      "avgDeltaPromoted": 0,
+      "avgDeltaAll": -0.0666666666666667,
+      "bestDelta": 0,
+      "avgCostPerWinPromoted": 0,
+      "bestCostPerWin": 0
+    },
+    {
+      "target": "confidenceRule",
+      "attempts": 3,
+      "promotions": 0,
+      "rejections": 3,
+      "promoteRate": 0,
+      "avgDeltaPromoted": 0,
+      "avgDeltaAll": -0.1166666666666667,
+      "bestDelta": 0,
+      "avgCostPerWinPromoted": 0,
+      "bestCostPerWin": 0
+    }
+  ],
+  "costPerWinTrend": []
+}
