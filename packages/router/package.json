@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/router",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "description": "Cost-optimal model router for AI agent harnesses — route each query to the cheapest model that's good enough (k-NN over labelled embeddings). The productized DRACO Phase-2 finding.",
   "type": "module",
   "main": "./dist/index.js",
