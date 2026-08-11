@@ -805,3 +805,68 @@ describe('state reporting', () => {
     expect(state.definitionPresent).toBe(false);
   });
 });
+
+describe('foreign registrations are never touched (ownership guard)', () => {
+  const foreignPrint: CommandOutcome = { ok: true, output: 'state = running\npid = 55' };
+  const foreignShow: CommandOutcome = {
+    ok: true,
+    output: 'LoadState=loaded\nUnitFileState=static\nActiveState=active\nMainPID=99',
+  };
+
+  it('enable refuses a label-matching macOS job it does not own', () => {
+    installFakeDaemon('darwin');
+    const calls: ServiceCommand[] = [];
+    const run = (invocation: ServiceCommand): CommandOutcome => {
+      calls.push(invocation);
+      if (invocation.args[0] === 'print') return foreignPrint;
+      return { ok: true, output: '' };
+    };
+    const result = enableMetaProxyService({ home, platform: 'darwin', run });
+    expect(result.ok).toBe(false);
+    expect(result.message).toContain('registered without the owned definition');
+    // Only the state read may run — no bootstrap, and above all no bootout.
+    expect(calls.map((call) => call.args[0])).toEqual(['print']);
+    expect(existsSync(serviceUnitPath('darwin', home)!)).toBe(false);
+  });
+
+  it('enable refuses a shadowing systemd unit it does not own', () => {
+    installFakeDaemon('linux');
+    const calls: ServiceCommand[] = [];
+    const run = (invocation: ServiceCommand): CommandOutcome => {
+      calls.push(invocation);
+      if (invocation.args.includes('show')) return foreignShow;
+      return { ok: true, output: '' };
+    };
+    const result = enableMetaProxyService({ home, platform: 'linux', run });
+    expect(result.ok).toBe(false);
+    expect(result.message).toContain('registered without the owned definition');
+    expect(calls).toHaveLength(1);
+    expect(existsSync(serviceUnitPath('linux', home)!)).toBe(false);
+  });
+
+  it('disable refuses to boot out a macOS job without the owned definition', () => {
+    const calls: ServiceCommand[] = [];
+    const run = (invocation: ServiceCommand): CommandOutcome => {
+      calls.push(invocation);
+      if (invocation.args[0] === 'print') return foreignPrint;
+      return { ok: true, output: '' };
+    };
+    const result = disableMetaProxyService({ home, platform: 'darwin', run });
+    expect(result.ok).toBe(false);
+    expect(result.message).toContain('refusing to stop or delete it by label alone');
+    expect(calls.map((call) => call.args[0])).toEqual(['print']);
+  });
+
+  it('disable refuses to unregister a Linux unit without the owned definition', () => {
+    const calls: ServiceCommand[] = [];
+    const run = (invocation: ServiceCommand): CommandOutcome => {
+      calls.push(invocation);
+      if (invocation.args.includes('show')) return foreignShow;
+      return { ok: true, output: '' };
+    };
+    const result = disableMetaProxyService({ home, platform: 'linux', run });
+    expect(result.ok).toBe(false);
+    expect(result.message).toContain('refusing to stop or delete it by label alone');
+    expect(calls).toHaveLength(1);
+  });
+});

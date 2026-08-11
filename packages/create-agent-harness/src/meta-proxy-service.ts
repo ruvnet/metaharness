@@ -421,10 +421,14 @@ export function enableMetaProxyService(options: ServiceOptions = {}): ServiceRes
   if (before.managerState === 'unknown') {
     return { ok: false, message: `Could not determine service-manager state; preserved ${unitPath}.`, unitPath };
   }
-  if (platform === 'win32' && before.loaded === true && !before.definitionPresent) {
+  if (before.loaded === true && !before.definitionPresent) {
+    // Something answers to our label but no owned definition exists — another
+    // installer's job, or a unit shadowing ours from a different path. On
+    // darwin/linux a failed enable from this state would be "compensated" by
+    // booting out that foreign service, so refuse up front on every platform.
     return {
       ok: false,
-      message: `A Meta-Proxy task is registered without the owned definition at ${unitPath}. Inspect and remove it manually before replacement.`,
+      message: `A Meta-Proxy ${platform === 'win32' ? 'task' : 'service'} is registered without the owned definition at ${unitPath}. Inspect and remove it manually before replacement.`,
       unitPath,
     };
   }
@@ -693,10 +697,13 @@ export function disableMetaProxyService(options: ServiceOptions = {}): ServiceRe
   if (state.managerState === 'disabled' && !state.definitionPresent) {
     return { ok: true, message: 'Meta-Proxy is not set to start at login.' };
   }
-  if (platform === 'win32' && state.loaded === true && !state.definitionPresent) {
+  if (state.loaded === true && !state.definitionPresent) {
+    // Same ownership rule as enable: without the owned definition on disk we
+    // cannot prove the registered job is ours, and unregistering by label
+    // alone would stop another installer's service.
     return {
       ok: false,
-      message: `A Meta-Proxy task is registered without the owned definition at ${unitPath}; refusing to stop or delete it by label alone.`,
+      message: `A Meta-Proxy ${platform === 'win32' ? 'task' : 'service'} is registered without the owned definition at ${unitPath}; refusing to stop or delete it by label alone.`,
       unitPath,
     };
   }

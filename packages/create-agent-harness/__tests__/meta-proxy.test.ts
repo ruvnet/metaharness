@@ -167,4 +167,34 @@ describe('optional Meta-Proxy integration', () => {
       rmSync(home, { recursive: true, force: true });
     }
   });
+
+  it('reports files it could not remove instead of throwing mid-uninstall', async () => {
+    const home = mkdtempSync(join(tmpdir(), 'proxy-uninstall-locked-'));
+    try {
+      const root = join(home, '.metaharness', 'meta-proxy');
+      const bin = join(root, 'bin', 'meta-proxy');
+      mkdirSync(join(root, 'bin'), { recursive: true });
+      writeFileSync(bin, 'binary');
+      // A non-empty directory where the log file lives makes
+      // `rmSync(path, { force: true })` throw, standing in for the Windows
+      // EBUSY on a still-locked executable.
+      mkdirSync(join(root, 'meta-proxy.log', 'held'), { recursive: true });
+
+      const result = await uninstallMetaProxy({
+        home,
+        platform: 'darwin',
+        run: () => ({ ok: false, output: 'Could not find service' }),
+        wait: async () => {},
+      });
+
+      expect(result.ok).toBe(false);
+      expect(result.message).toContain('meta-proxy.log');
+      expect(result.message).toContain('re-run: metaharness proxy uninstall --yes');
+      // The failure is reported, not thrown, and the other owned files were
+      // still removed.
+      expect(existsSync(bin)).toBe(false);
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+    }
+  });
 });

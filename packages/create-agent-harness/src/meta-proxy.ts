@@ -212,6 +212,8 @@ export interface UninstallMetaProxyOptions {
   home?: string;
   platform?: NodeJS.Platform;
   run?: import('./meta-proxy-service.js').CommandRunner;
+  /** Test seam for the locked-file retry delay. */
+  wait?: (milliseconds: number) => Promise<void>;
 }
 
 export async function uninstallMetaProxy(options: UninstallMetaProxyOptions = {}): Promise<MetaProxyInstallResult> {
@@ -226,7 +228,9 @@ export async function uninstallMetaProxy(options: UninstallMetaProxyOptions = {}
   const stopped = stopMetaProxy(home, platform);
   if (!stopped.ok) return stopped;
 
+  const wait = options.wait ?? ((milliseconds: number) => new Promise<void>((resolve) => setTimeout(resolve, milliseconds)));
   const binary = metaProxyBinaryPath(platform, home);
+  const stillPresent: string[] = [];
   for (const ownedPath of [
     binary,
     versionPath(binary),
@@ -234,7 +238,30 @@ export async function uninstallMetaProxy(options: UninstallMetaProxyOptions = {}
     join(metaProxyDataDir(home), 'meta-proxy.log'),
     service.scheduledTaskPath(home),
   ]) {
-    rmSync(ownedPath, { force: true });
+    // On Windows the just-stopped executable can stay locked for seconds after
+    // the task reports stopped; `force` only suppresses ENOENT and rmSync has
+    // no retry for a plain file. Retry the locked-file codes briefly, and keep
+    // removing the remaining owned files instead of leaking a raw exception.
+    let lastError: unknown = null;
+    for (let attempt = 0; attempt < 20; attempt++) {
+      try {
+        rmSync(ownedPath, { force: true });
+        lastError = null;
+        break;
+      } catch (error) {
+        lastError = error;
+        const code = (error as NodeJS.ErrnoException).code;
+        if (code !== 'EBUSY' && code !== 'EPERM') break;
+        await wait(250);
+      }
+    }
+    if (lastError !== null) stillPresent.push(ownedPath);
+  }
+  if (stillPresent.length > 0) {
+    return {
+      ok: false,
+      message: `Uninstalled the Meta-Proxy service, but these owned files are still in use and were not removed: ${stillPresent.join(', ')}. Close whatever is using them and re-run: metaharness proxy uninstall --yes`,
+    };
   }
   return { ok: true, message: 'Uninstalled Meta-Proxy owned files. Routing credentials and configuration were preserved.' };
 }
