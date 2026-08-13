@@ -154,6 +154,12 @@ jobs:
           node scripts/nightly-sota-gate.test.mjs
           node packages/darwin-mode/bench/swebench/solver-trajectory.test.mjs
           node packages/darwin-mode/bench/swebench/test-critic.test.mjs
+      - name: Meta-Proxy pin-drift watcher gate (#174)
+        # The watcher decides whether to open, retitle, or close a drift issue and
+        # whether the pinned signing key still verifies the pinned release. Its `gh`
+        # and network calls are injected, so this is $0 and offline.
+        shell: bash
+        run: node scripts/proxy-pin-drift.test.mjs
       - name: Native-router interop guard (ADR-043 — CJS default-unwrap regression)
         # tiny-dancer is CJS; vitest's interop masks the ESM `.default` unwrap, so
         # this runs under plain `node` (the real install condition) and fails if a
