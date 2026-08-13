@@ -42,9 +42,10 @@ describe('attack-family generators', () => {
     expect(cases).toHaveLength(100);
     const byFamily = new Map<string, number>();
     for (const c of cases) byFamily.set(c.family, (byFamily.get(c.family) ?? 0) + 1);
-    expect(byFamily.size).toBe(5);
+    expect(byFamily.size).toBe(ALL_FAMILIES.length);
+    const minExpected = Math.floor(100 / ALL_FAMILIES.length) - 1;
     for (const count of byFamily.values()) {
-      expect(count).toBeGreaterThanOrEqual(20 - 1);
+      expect(count).toBeGreaterThanOrEqual(minExpected);
     }
   });
 

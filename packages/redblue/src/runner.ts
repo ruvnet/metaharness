@@ -82,7 +82,10 @@ export function computeRates(results: TestResult[]): RunRates {
   const n = results.length || 1;
   const compromised = results.filter((r) => r.compromised);
   const piResults = results.filter(
-    (r) => r.family === 'direct_prompt_injection' || r.family === 'role_confusion',
+    (r) =>
+      r.family === 'direct_prompt_injection' ||
+      r.family === 'indirect_prompt_injection' ||
+      r.family === 'role_confusion',
   );
   const piSuccess = piResults.filter((r) => r.compromised).length;
   return {

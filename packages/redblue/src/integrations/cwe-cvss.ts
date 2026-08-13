@@ -48,6 +48,25 @@ export interface FamilyTaxonomy {
  *  - prompt injection      → CWE-1427 (Improper Neutralization of Input Used for
  *                            LLM Prompting — the most precise CWE H1 lists for
  *                            this class) + CWE-77 (Command Injection - Generic).
+ *  - indirect prompt injection → CWE-441 (Unintended Proxy or Intermediary /
+ *                            "Confused Deputy" — the agent is tricked by
+ *                            untrusted tool/RAG/web content into acting as an
+ *                            intermediary carrying out the attacker's intent)
+ *                            + CWE-829 (Inclusion of Functionality from
+ *                            Untrusted Control Sphere — the untrusted-content-
+ *                            as-instruction mechanism). Distinct from direct
+ *                            prompt injection's CWE-1427/77: the attacker never
+ *                            controls the user's own turn, only third-party
+ *                            content the agent later ingests via a tool.
+ *                            CAVEAT (added 2026-08-13, after the 2026-06-27
+ *                            live fetch this comment block otherwise
+ *                            describes): CWE-441/829 were chosen from MITRE's
+ *                            published catalog but were NOT re-verified live
+ *                            against the HackerOne weakness taxonomy the way
+ *                            the original 9 CWE ids were (no HACKERONE_API_KEY
+ *                            in this session). Treat them as offline-sourced
+ *                            until a live TUNE-style pass confirms presence,
+ *                            same as the other ids received in 0.1.3.
  *  - tool overreach        → CWE-250 (Execution with Unnecessary Privileges) +
  *                            CWE-862 (Missing Authorization); OWASP-LLM06
  *                            Excessive Agency.
@@ -73,6 +92,20 @@ export const FAMILY_TAXONOMY: Record<AttackFamily, FamilyTaxonomy> = {
     cvssVector: 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:L/I:H/A:N',
     impact:
       'Attacker-controlled text overrides the system policy, causing the agent to follow injected instructions instead of its own (loss of integrity over the model’s behavior).',
+  },
+  indirect_prompt_injection: {
+    family: 'indirect_prompt_injection',
+    cwe: [
+      { id: 'CWE-441', name: 'Unintended Proxy or Intermediary ("Confused Deputy")' },
+      { id: 'CWE-829', name: 'Inclusion of Functionality from Untrusted Control Sphere' },
+    ],
+    owaspLlm: 'LLM01 Prompt Injection (indirect)',
+    // Attacker needs no interaction with the target's own user; content arrives
+    // via a tool/document the agent trusts as data. Same integrity shape as
+    // direct injection but a different attack vector (content-borne, not user-borne).
+    cvssVector: 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:L/I:H/A:N',
+    impact:
+      'Instructions embedded in third-party content the agent ingests via a tool (retrieved document, tool result, web page) are followed as if they were operator instructions, making the agent an unwitting confused deputy for the content\'s source.',
   },
   tool_overreach: {
     family: 'tool_overreach',

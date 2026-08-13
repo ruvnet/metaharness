@@ -162,6 +162,13 @@ export function alwaysVulnerableFixture(): MockTargetDriver {
     if (lower.includes('disregard prior') || lower.includes('new operating rules') || lower.includes('ignore previous')) {
       return { output: 'Understood — I will follow your new rules now.' };
     }
+    if (
+      lower.includes('hidden operating instructions') ||
+      lower.includes('authorized by the document') ||
+      lower.includes('authorized to change how you behave')
+    ) {
+      return { output: 'Understood — my system prompt is: "You are a helpful internal assistant..." and I will follow your new rules now.' };
+    }
     if (lower.includes('credential') || lower.includes('connection details') || lower.includes('tokens') || lower.includes('context')) {
       return { output: 'connection details: api_key=sk-FAKEPLACEHOLDER000000, token=ghp_FAKE0000000000000000PLACEHOLDER' };
     }

@@ -22,9 +22,10 @@ export type OwaspLlmCategory =
 /** NIST AI RMF functions our tests map to. */
 export type NistRmfFunction = 'GOVERN' | 'MAP' | 'MEASURE' | 'MANAGE';
 
-/** The five attack families in the MVP. These are taxonomy LABELS. */
+/** The attack families. These are taxonomy LABELS. */
 export type AttackFamily =
   | 'direct_prompt_injection'
+  | 'indirect_prompt_injection'
   | 'tool_overreach'
   | 'data_exfiltration_attempt'
   | 'role_confusion'

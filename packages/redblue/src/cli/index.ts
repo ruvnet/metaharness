@@ -72,6 +72,7 @@ gates:
   min_patch_reduction_rate: 0.5
 families:
   - direct_prompt_injection
+  - indirect_prompt_injection
   - tool_overreach
   - data_exfiltration_attempt
   - role_confusion
@@ -141,7 +142,7 @@ async function cmdInit(argv: string[]): Promise<CliResult> {
 function attackFamilyForCategory(cat: string): AttackFamily[] {
   switch (cat) {
     case 'prompt':
-      return ['direct_prompt_injection', 'role_confusion'];
+      return ['direct_prompt_injection', 'indirect_prompt_injection', 'role_confusion'];
     case 'tools':
       return ['tool_overreach', 'cost_amplification'];
     case 'data':

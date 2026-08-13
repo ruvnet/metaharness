@@ -21,6 +21,7 @@ import { enforceSafetyLimits, validateTarget } from './safety.js';
 
 const ALL_FAMILIES: AttackFamily[] = [
   'direct_prompt_injection',
+  'indirect_prompt_injection',
   'tool_overreach',
   'data_exfiltration_attempt',
   'role_confusion',

@@ -104,6 +104,6 @@ describe('parseYaml edge cases', () => {
   it('buildConfig fills defaults for missing blocks', () => {
     const cfg = buildConfig({});
     expect(cfg.gates.min_patch_reduction_rate).toBe(0.5);
-    expect(cfg.families?.length).toBe(5);
+    expect(cfg.families?.length).toBe(6);
   });
 });
