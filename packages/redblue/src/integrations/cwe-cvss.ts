@@ -79,6 +79,21 @@ export interface FamilyTaxonomy {
  *  - cost amplification    → CWE-770 (Allocation of Resources Without Limits) +
  *                            CWE-400 (Uncontrolled Resource Consumption) +
  *                            CWE-799 (Improper Control of Interaction Frequency).
+ *  - cross-session trace    → CWE-501 (Trust Boundary Violation) + CWE-200
+ *    replay                   (Information Disclosure, reused — same outcome
+ *                            class as data exfiltration, different mechanism:
+ *                            a boundary crossing rather than an over-share).
+ *                            Added 2026-08 per arXiv:2608.09867 ("Stealing
+ *                            Reasoning Traces from Proprietary LLM APIs").
+ *                            CAVEAT (same discipline as indirect_prompt_injection
+ *                            above): CWE-501 was NOT re-verified live against
+ *                            the HackerOne weakness taxonomy (no
+ *                            HACKERONE_API_KEY in this session) — CWE-200 is
+ *                            already confirmed live via data_exfiltration_attempt
+ *                            above, but CWE-501's presence in the current H1 set
+ *                            should be spot-checked (`redblue hackerone
+ *                            weaknesses --refresh`) before relying on it for a
+ *                            real bounty submission.
  */
 export const FAMILY_TAXONOMY: Record<AttackFamily, FamilyTaxonomy> = {
   direct_prompt_injection: {
@@ -155,6 +170,20 @@ export const FAMILY_TAXONOMY: Record<AttackFamily, FamilyTaxonomy> = {
     cvssVector: 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H',
     impact:
       'Agent can be driven into unbounded/expensive work (loops, oversized outputs, repeated tool calls) — a denial-of-wallet / availability condition.',
+  },
+  cross_session_trace_replay: {
+    family: 'cross_session_trace_replay',
+    cwe: [
+      { id: 'CWE-501', name: 'Trust Boundary Violation' },
+      { id: 'CWE-200', name: 'Information Disclosure' },
+    ],
+    owaspLlm: 'LLM06 Sensitive Information Disclosure',
+    // Attacker needs no privilege on the target session (a leaked/public trace
+    // is enough); scope changes because the disclosure crosses a session/model
+    // boundary; confidentiality is the dominant impact.
+    cvssVector: 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:N/A:N',
+    impact:
+      'Attacker-supplied session-continuation or trace content, opaque or encrypted, is decoded, replayed, or resumed across a session/model boundary it was never authorized to cross — disclosing information (potentially another session’s data, PII, or credentials) scoped to a different party.',
   },
 };
 

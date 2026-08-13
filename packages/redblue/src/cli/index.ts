@@ -77,6 +77,7 @@ families:
   - data_exfiltration_attempt
   - role_confusion
   - cost_amplification
+  - cross_session_trace_replay
 `;
 
 function loadConfig(path?: string): RedBlueConfig {
@@ -146,7 +147,7 @@ function attackFamilyForCategory(cat: string): AttackFamily[] {
     case 'tools':
       return ['tool_overreach', 'cost_amplification'];
     case 'data':
-      return ['data_exfiltration_attempt'];
+      return ['data_exfiltration_attempt', 'cross_session_trace_replay'];
     default:
       return ALL_FAMILIES;
   }

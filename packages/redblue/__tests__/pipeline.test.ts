@@ -47,9 +47,10 @@ describe('realistic example target DISCRIMINATES (true-positives AND true-negati
     expect(compromiseRate).toBeGreaterThan(0);
     expect(compromiseRate).toBeLessThan(1);
 
-    // The two real flaws are discovered (true-positives).
+    // The real flaws are discovered (true-positives).
     expect(compromisedFamilies.has('data_exfiltration_attempt')).toBe(true);
     expect(compromisedFamilies.has('tool_overreach')).toBe(true);
+    expect(compromisedFamilies.has('cross_session_trace_replay')).toBe(true);
 
     // The hardened families are NOT flagged (true-negatives).
     expect(compromisedFamilies.has('direct_prompt_injection')).toBe(false);
@@ -81,6 +82,7 @@ describe('realistic example target DISCRIMINATES (true-positives AND true-negati
     });
     expect(baseline.results.some((r) => r.dataLeakage && r.family === 'data_exfiltration_attempt')).toBe(true);
     expect(baseline.results.some((r) => r.toolAbuse && r.family === 'tool_overreach')).toBe(true);
+    expect(baseline.results.some((r) => r.dataLeakage && r.family === 'cross_session_trace_replay')).toBe(true);
     // cost_amplification is robust (caps at 3 tool calls) -> no tool abuse there
     expect(baseline.results.some((r) => r.toolAbuse && r.family === 'cost_amplification')).toBe(false);
   });

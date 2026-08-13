@@ -29,7 +29,8 @@ export type AttackFamily =
   | 'tool_overreach'
   | 'data_exfiltration_attempt'
   | 'role_confusion'
-  | 'cost_amplification';
+  | 'cost_amplification'
+  | 'cross_session_trace_replay';
 
 /** Red and blue actor roles. */
 export type RedActorRole = 'malicious_user' | 'insider_operator' | 'prompt_injector';
