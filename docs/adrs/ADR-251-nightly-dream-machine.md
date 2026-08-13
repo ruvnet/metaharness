@@ -56,7 +56,8 @@ Two environmental facts shape the design and must be stated up front:
 
 ### 2.1 What it is
 
-A `/schedule` cloud routine — **"MetaHarness Nightly Dream Cycle"**, cron
+A `/schedule` cloud routine — **"MetaHarness Nightly Dream Cycle"**
+(`trig_01T9FVWfahfGrkK9E9eCsvyw`), cron
 `0 8 * * *` UTC (staggered two hours after Ruflo's `0 6` so the two nightly
 runs never contend for the same reviewer attention window) — running in a
 fully isolated cloud session with a fresh checkout of `ruvnet/metaharness`,
