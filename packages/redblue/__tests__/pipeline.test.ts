@@ -47,9 +47,12 @@ describe('realistic example target DISCRIMINATES (true-positives AND true-negati
     expect(compromiseRate).toBeGreaterThan(0);
     expect(compromiseRate).toBeLessThan(1);
 
-    // The two real flaws are discovered (true-positives).
+    // The real flaws are discovered (true-positives).
     expect(compromisedFamilies.has('data_exfiltration_attempt')).toBe(true);
     expect(compromisedFamilies.has('tool_overreach')).toBe(true);
+    // indirect_prompt_injection: previously a vacuous null (exampleAgentTarget
+    // had no branch for it at all — see ruvnet/metaharness#185). Now non-vacuous.
+    expect(compromisedFamilies.has('indirect_prompt_injection')).toBe(true);
 
     // The hardened families are NOT flagged (true-negatives).
     expect(compromisedFamilies.has('direct_prompt_injection')).toBe(false);
