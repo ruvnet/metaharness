@@ -50,6 +50,7 @@ describe('realistic example target DISCRIMINATES (true-positives AND true-negati
     // The real flaws are discovered (true-positives).
     expect(compromisedFamilies.has('data_exfiltration_attempt')).toBe(true);
     expect(compromisedFamilies.has('tool_overreach')).toBe(true);
+    expect(compromisedFamilies.has('cross_session_trace_replay')).toBe(true);
     // indirect_prompt_injection: previously a vacuous null (exampleAgentTarget
     // had no branch for it at all — see ruvnet/metaharness#185). Now non-vacuous.
     expect(compromisedFamilies.has('indirect_prompt_injection')).toBe(true);
@@ -84,6 +85,7 @@ describe('realistic example target DISCRIMINATES (true-positives AND true-negati
     });
     expect(baseline.results.some((r) => r.dataLeakage && r.family === 'data_exfiltration_attempt')).toBe(true);
     expect(baseline.results.some((r) => r.toolAbuse && r.family === 'tool_overreach')).toBe(true);
+    expect(baseline.results.some((r) => r.dataLeakage && r.family === 'cross_session_trace_replay')).toBe(true);
     // cost_amplification is robust (caps at 3 tool calls) -> no tool abuse there
     expect(baseline.results.some((r) => r.toolAbuse && r.family === 'cost_amplification')).toBe(false);
   });

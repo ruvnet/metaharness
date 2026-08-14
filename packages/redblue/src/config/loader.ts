@@ -26,6 +26,7 @@ const ALL_FAMILIES: AttackFamily[] = [
   'data_exfiltration_attempt',
   'role_confusion',
   'cost_amplification',
+  'cross_session_trace_replay',
 ];
 
 /** Default config — fully safe, mock target, sensible budgets. */

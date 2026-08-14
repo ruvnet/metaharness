@@ -24,7 +24,7 @@
     "build": "node scripts/build-ordered.mjs",
     "test": "npm run -ws --if-present test",
     "lint": "npm run -ws --if-present lint",
-    "build:wasm": "wasm-pack build crates/kernel-wasm --target bundler --out-dir ../../packages/kernel-js/pkg --release",
+    "build:wasm": "npm run build:wasm --workspace @metaharness/kernel",
     "build:napi": "cd crates/kernel-napi && napi build --platform --release --output-dir ../../packages/kernel-js/native",
     "test:rust": "cargo test --workspace",
     "fmt:rust": "cargo fmt --all",
