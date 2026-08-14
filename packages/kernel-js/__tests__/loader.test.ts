@@ -107,7 +107,7 @@ describe('METAHARNESS_KERNEL_BACKEND selection (GH #22)', () => {
 // `npm install` can reach the fast Rust backend, not silently fall to the JS floor. The bug was the
 // publish workflow building `wasm-pack --target bundler` while the runtime loader expects `--target
 // nodejs` (CommonJS auto-init) — an unloadable mismatch.
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -121,6 +121,30 @@ describe('GH #20 — publish ships a loadable wasm (nodejs target)', () => {
     expect(wf).not.toMatch(/wasm-pack build[^\n]*--target\s+bundler/);
     // it must use build:wasm (nodejs target + fixups) or an explicit --target nodejs
     expect(/build:wasm|--target\s+nodejs/.test(wf)).toBe(true);
+  });
+
+  // GH #192 — the always-on half of this guard must cover EVERY build entry point, not just
+  // publish.yml: #173 shipped a bundler-target build in root package.json aimed at this package's
+  // pkg/ dir, and it stayed invisible because the runtime guard below skips until wasm is built.
+  // Bundler builds without --out-dir are legitimate (they land in crates/kernel-wasm/pkg); the
+  // regression is specifically a bundler artifact written into packages/kernel-js/pkg.
+  it('no build entry point writes a bundler-target artifact into packages/kernel-js/pkg', () => {
+    const repoRoot = join(kjsRoot, '..', '..');
+    const entryPoints = [
+      join(repoRoot, 'package.json'),
+      join(kjsRoot, 'package.json'),
+      join(repoRoot, 'scripts', 'preflight.mjs'),
+      ...readdirSync(join(repoRoot, '.github', 'workflows'))
+        .filter((f) => /\.ya?ml$/.test(f))
+        .map((f) => join(repoRoot, '.github', 'workflows', f)),
+    ].filter((p) => existsSync(p));
+    const bundlerIntoLoaderPkg =
+      /wasm-pack\s+build[^\n]*--target\s+bundler[^\n]*--out-dir\s+\S*packages\/kernel-js\/pkg|wasm-pack\s+build[^\n]*--out-dir\s+\S*packages\/kernel-js\/pkg[^\n]*--target\s+bundler/;
+    for (const p of entryPoints) {
+      expect(readFileSync(p, 'utf8'), `bundler-target build aimed at kernel-js/pkg in ${p}`).not.toMatch(
+        bundlerIntoLoaderPkg,
+      );
+    }
   });
 
   // Only runs where the wasm artifact has been built (locally after `npm run build:wasm`, and in the
