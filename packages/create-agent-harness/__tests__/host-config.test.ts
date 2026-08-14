@@ -45,6 +45,23 @@ describe('hostConfigFiles (ADR-045)', () => {
     expect(wf.content).toContain('ANTHROPIC_API_KEY:');
   });
 
+  it('hermes emits a personality keyed by the harness name', () => {
+    const cfg = hostConfigFiles('hermes', base).find((f) => f.path === 'cli-config.yaml')!;
+    expect(cfg.content).toContain('demo-bot: "A demo harness."');
+  });
+
+  // Regression: `cfg.name` lands in YAML *key* position
+  // (`agent.personalities.<name>`) and is unconstrained at this type's
+  // level — a name containing `:` previously produced two top-level `:` on
+  // one line (corrupted YAML). Kept in lockstep with
+  // @metaharness/host-hermes's own yamlKey() fix and the web-ui generator's
+  // copy (ADR-027 byte-for-byte parity).
+  it('hermes escapes a harness name containing YAML-significant characters as a mapping key', () => {
+    const cfg = hostConfigFiles('hermes', { ...base, name: 'evil: name' }).find((f) => f.path === 'cli-config.yaml')!;
+    expect(cfg.content).toContain('"evil: name": "A demo harness."');
+    expect(cfg.content).not.toMatch(/^ {4}evil: name:/m);
+  });
+
   it('pi-dev emits trust.json + copilot emits copilot-instructions.md', () => {
     expect(hostConfigFiles('pi-dev', base).map((f) => f.path)).toContain('trust.json');
     expect(hostConfigFiles('copilot', base).map((f) => f.path)).toContain('.github/copilot-instructions.md');

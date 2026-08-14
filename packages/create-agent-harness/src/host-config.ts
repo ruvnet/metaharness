@@ -14,6 +14,24 @@
 // richer .claude/ tree (settings.json, commands, plugin manifest). This module
 // emits the OTHER nine hosts' native config.
 
+// YAML 1.1 core-schema bare scalars a PyYAML-family loader (hermes) would
+// resolve to bool/null/int instead of a string, even though they match the
+// bare-identifier shape below.
+const YAML_RESERVED_BARE = /^(?:null|~|true|false|yes|no|on|off|[+-]?\d+(?:\.\d+)?)$/i;
+
+/**
+ * Escape a string for YAML *mapping-key* position (kept in lockstep with
+ * `@metaharness/host-hermes`'s `yamlKey()` — this module is intentionally
+ * dependency-free so it can't import that package, see header). `cfg.name`
+ * is unconstrained at this type's level and lands in
+ * `agent.personalities.<name>` key position for the hermes case below; a
+ * name containing `:`/`#`/etc previously corrupted the emitted YAML.
+ */
+function yamlKey(s: string): string {
+  const isSafeIdentifier = /^[A-Za-z0-9_][A-Za-z0-9_.-]*$/.test(s);
+  return isSafeIdentifier && !YAML_RESERVED_BARE.test(s) ? s : JSON.stringify(s.replace(/[\r\n]+/g, ' '));
+}
+
 export interface HostConfigInput {
   name: string;
   description: string;
@@ -86,7 +104,7 @@ export function hostConfigFiles(host: string, cfg: HostConfigInput): HostFile[] 
       // `model:` + `agent.personalities` schema; no name/description/scrub keys.
       const persona = (cfg.description || `You are ${cfg.name}.`).replace(/[\r\n]+/g, ' ');
       const files: HostFile[] = [
-        { path: 'cli-config.yaml', content: `# Hermes Agent config for ${cfg.name} — subset of cli-config.yaml.example.\nmodel:\n  provider: "auto"\nagent:\n  personalities:\n    ${cfg.name}: ${JSON.stringify(persona)}\n` },
+        { path: 'cli-config.yaml', content: `# Hermes Agent config for ${cfg.name} — subset of cli-config.yaml.example.\nmodel:\n  provider: "auto"\nagent:\n  personalities:\n    ${yamlKey(cfg.name)}: ${JSON.stringify(persona)}\n` },
       ];
       if (server) files.push({ path: `optional-mcps/${cfg.name}.json`, content: JSON.stringify({ [cfg.name]: server }, null, 2) + '\n' });
       return files;
