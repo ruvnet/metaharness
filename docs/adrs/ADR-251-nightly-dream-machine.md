@@ -1,11 +1,12 @@
 # ADR-251: The MetaHarness Dream Machine — a nightly, cloud-scheduled, evidence-gated evolution routine
 
-- **Status**: Proposed — routine created in the cloud scheduler; first live run pending; ledger is created by the first run
+- **Status**: Proposed — routine live in the cloud scheduler; first two runs completed (2026-08-13 → PR #181 merged, 2026-08-14 → PR #188 merged); ledger active
 - **Date**: 2026-08-13
+- **Updated**: 2026-08-14 — prompt bumped v1 → v2, porting the Ruflo Dream Cycle v3.1 research-depth protections (operator feedback: research had thinned under budget pressure; STEP 0.6 now protects research and cuts from the end of the pipeline, STEP 1 gains the sparse-ledger caution, STEP 3 gains a minimum-research-depth rule). Scheduler copy and `docs/dream-cycle/PROMPT.md` updated together per the mirror rule.
 - **Deciders**: ruv
 - **Tags**: dream-cycle, scheduling, autonomy, flywheel, darwin-mode, redblue, evidence-discipline, promotion-gate, witness
 - **Extends**: ADR-250 (SOTA-proof ladder — the honesty discipline every nightly claim must respect), ADR-248 (frozen acceptance gates), ADR-243 (mechanism-testbed-not-benchmark precedent)
-- **Prior art**: the Ruflo Nightly Dream Cycle v3 (`ruvnet/ruflo`, routine cron `0 6 * * *` UTC) — this ADR ports that architecture to this repository, with the deltas listed in §2.4
+- **Prior art**: the Ruflo Nightly Dream Cycle v3.1 (`ruvnet/ruflo`, routine cron `0 6 * * *` UTC) — this ADR ports that architecture to this repository, with the deltas listed in §2.4
 - **Artifacts**: `docs/dream-cycle/PROMPT.md` (version-controlled mirror of the routine prompt), `docs/dream-cycle/LEDGER.md` (created by the first run)
 
 ---

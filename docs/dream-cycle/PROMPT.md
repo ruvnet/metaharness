@@ -1,4 +1,14 @@
-# MetaHarness Dream Cycle Agent v1 — nightly routine prompt
+# MetaHarness Dream Cycle Agent v2 — nightly routine prompt
+
+> **v2 (aligned with Ruflo Dream Cycle v3.1).** v2 ports the v3.1 changes
+> made after direct operator feedback on the first Ruflo v3 nights: the
+> SOTA-research phase had visibly thinned — competitor tables landing with
+> mostly "None" rows and thin justification — and the budget language
+> ("well under half of tonight's total budget") was quietly training the
+> agent to shortchange research in favor of the newer evaluation/Darwin
+> machinery. STEP 0.6, STEP 1, and STEP 3 below are tightened to fix that
+> without discarding the evidence pipeline — research depth is now the
+> thing protected under budget pressure, not the thing cut.
 
 > **Authority note (read before editing).** The authoritative copy of this
 > prompt is the one stored in the Anthropic cloud scheduler routine
@@ -60,6 +70,8 @@ evidence supports.
 Be terse, technical, reproducible, and evidence driven.
 
 # GLOBAL INVARIANTS
+
+The Dream Cycle optimizes for trustworthy improvement rather than activity.
 
 Every run must end in one of three states:
 
@@ -210,11 +222,22 @@ accordingly. Do not fabricate model-call results.
 Set a budget before research begins:
 
 ```text
-research phase   : well under half of tonight's total budget
+research phase   : protected — a full, substantive STEP 3 pass (all 5 roles,
+                   real primary sources, STEP 3.1 grading) is not optional
+                   and is not the thing to shrink when the night runs long.
+                   Research is comparatively cheap (no evaluation infra, no
+                   Darwin generations) and it is the part of the pipeline
+                   the operator most directly reads and judges the night by.
 evaluation phase : baseline + candidate + Darwin, bounded by the STEP 12
                    caps — never add generations/candidates to chase a result
-hard ceiling     : if elapsed effort clearly exceeds a normal night, stop
-                   adding work; document the state that exists
+hard ceiling     : if elapsed effort clearly exceeds a normal night, cut
+                   from the END of the pipeline first — fewer Darwin
+                   generations/candidates, a smaller benchmark corpus, a
+                   lighter adversarial pass — rather than compressing
+                   research. If budget is tight enough that research itself
+                   must be shortened, say so explicitly in the gist and
+                   issue rather than silently producing a thinner research
+                   section that looks the same as a thorough one.
 ```
 
 The one invariant that survives any budget pressure: STEP 25 (ledger update)
@@ -250,6 +273,22 @@ no meaningful follow-up).
 
 If `gh` is unavailable or unauthenticated: set `FALLBACK=true`, continue
 local work, skip remote publication, never fabricate GitHub state.
+
+**Do not infer a failure from an empty or short ledger section alone.** A
+ledger table with fewer rows than expected means entries have not
+accumulated yet — it does not by itself mean STEP 24 (draft PR) or STEP 25
+(ledger update) silently failed on prior nights. Before reporting any prior
+night as having skipped a step, verify directly:
+
+```bash
+git ls-remote --heads origin "dream/*"
+gh pr list --search "head:dream/" --state all --json number,headRefName,state,createdAt
+```
+
+If branches and PRs exist for those dates, the pipeline ran; a sparse
+ledger table is a separate, cosmetic fact — report it as such, not as a
+pipeline failure. Only report a step as skipped when direct evidence (a
+missing branch, a missing PR, a missing gist) shows it did not happen.
 
 # STEP 1.1: LEARNING SIGNALS
 
@@ -351,6 +390,35 @@ derivatives, agent-harness leaderboard methodology changes, and published
 harness-vs-model ablation studies.
 
 For security use OWASP agentic/LLM guidance as one rubric.
+
+**Minimum research depth (added v2).** A competitor comparison row of
+"None" for every competitor is a legitimate finding, but it is not, by
+itself, a complete research contribution — it is the START of the
+interesting question, not the end of it. When a row would otherwise read
+"None" across the board:
+
+```text
+Explain WHY: is this a genuine open gap, a solved-but-unpublished problem,
+or something competitors deliberately avoid for a stated reason (cost,
+complexity, a known failure mode)?
+
+Look past the fixed competitor/venue lists above — they are a floor, not a
+ceiling. If tonight's surface has a more specific, less obvious point of
+comparison (a smaller project, a recent blog post from a named
+practitioner, a GitHub issue thread with real technical debate), use it
+instead of or in addition to the defaults.
+
+Prefer at least one source dated within roughly the last 12 months when the
+surface has active development — a comparison built entirely on stale
+sources for a fast-moving area is a weaker research contribution even if
+every claim is individually well-sourced.
+```
+
+The Deep Researcher and Competitor Analyst roles exist specifically to
+produce this depth — do not let their output collapse into a same-shaped
+table every night. If nothing new turns up after a genuine search, say so
+explicitly ("searched X, Y, Z; found no material change since <date>")
+rather than passing through last time's framing.
 
 # STEP 3.1: CLAIM GRADING
 
@@ -478,6 +546,11 @@ Record: corpus path, task count, categories, gold data source, random seed,
 `created_by_date`, `created_by_hypothesis`.
 
 The candidate may not modify evaluation gold answers.
+
+A corpus created tonight is graded by the same session that will use it to
+evaluate tonight's own candidate — nothing yet checks whether the corpus
+itself was subtly shaped to be easy to pass. STEP 10's periodic corpus
+fairness check exists for exactly this reason.
 
 # STEP 8: BASELINE EVALUATION
 
