@@ -56,6 +56,30 @@ describe('@metaharness/host-hermes — Hermes-4 quirk handling', () => {
       });
       expect(y).toContain('url: https://example.com/mcp');
     });
+
+    // Regression: env var names land in a YAML *key* position, not a value
+    // position — unlike env values (already JSON-escaped), the key itself
+    // was previously interpolated bare.
+    it('leaves a conventional env var name unquoted', () => {
+      const y = optionalMcpYaml({
+        name: 'demo',
+        command: ['npx', 'demo'],
+        env: [['API_KEY', 'secret']],
+      });
+      expect(y).toContain('API_KEY: "secret"');
+    });
+
+    it('escapes an env var name containing a YAML-significant character as a mapping key', () => {
+      const y = optionalMcpYaml({
+        name: 'demo',
+        command: ['npx', 'demo'],
+        env: [['weird:key', 'value']],
+      });
+      expect(y).toContain('"weird:key": "value"');
+      // The old unquoted form would have produced a second, spurious
+      // top-level `:` on the same line — no longer present.
+      expect(y).not.toMatch(/^  weird:key:/m);
+    });
   });
 
   // ADR-046 — verified against the authoritative hermes cli-config.yaml.example.
@@ -80,6 +104,64 @@ describe('@metaharness/host-hermes — Hermes-4 quirk handling', () => {
       } as any);
       expect(c).toContain('reviewer: "Review code."');
       expect(c).toContain('tester: "Write tests."');
+    });
+
+    it('leaves conventional kebab/snake-case names unquoted (no unnecessary re-quoting)', () => {
+      const c = cliConfigYaml({
+        name: 'my-harness',
+        agents: [{ name: 'code_reviewer', systemPrompt: 'x' }],
+      } as any);
+      expect(c).toContain('my-harness: ');
+      expect(c).not.toContain('"my-harness"');
+      expect(c).toContain('code_reviewer: "x"');
+    });
+
+    // Regression: `spec.name`/`AgentSpec.name` land in a YAML *key* position
+    // (`agent.personalities.<name>`) but were previously interpolated bare.
+    // A name containing `:` (unconstrained at the kernel type level — see
+    // packages/kernel-js/src/types.ts, AgentSpec.name is a plain `string`)
+    // silently corrupted the document: the personality's own colon plus the
+    // name's embedded colon produced two top-level `:` on one line, which
+    // either breaks parsing or smuggles a bogus second key depending on the
+    // parser. This is a real, reachable defect — harness/agent names can
+    // originate outside @metaharness/sdk's kebab-case-enforcing
+    // `defineHarness`/`defineAgent` (e.g. hand-authored or generated
+    // HarnessSpec JSON), so the kernel type does not guarantee safety.
+    it('escapes a harness/agent name containing YAML-significant characters as a mapping key', () => {
+      const c = cliConfigYaml({
+        name: 'h',
+        agents: [{ name: 'evil: agent', systemPrompt: 'x' }],
+      } as any);
+      expect(c).toContain('"evil: agent": "x"');
+      // The old unquoted form: `    evil: agent: "x"` — two top-level `:`.
+      expect(c).not.toMatch(/^ {4}evil: agent:/m);
+    });
+
+    it('escapes the top-level harness name the same way when it needs quoting', () => {
+      const c = cliConfigYaml({ name: 'weird#name', systemPrompt: 'x' } as any);
+      expect(c).toContain('"weird#name": "x"');
+    });
+
+    // Adversarial-critique finding: a bare name matching the identifier
+    // regex can still be a YAML 1.1 reserved scalar (PyYAML-family loaders,
+    // which is what Hermes-agent uses, resolve bare `true`/`null`/digits to
+    // bool/null/int, not string) — a silent semantic mistype, not a syntax
+    // break, but no less real. Must stay quoted even though it "looks safe".
+    it('quotes an agent name that is a YAML-reserved bare scalar even though it matches the identifier shape', () => {
+      const c = cliConfigYaml({
+        name: 'h',
+        agents: [
+          { name: 'true', systemPrompt: 'a' },
+          { name: 'null', systemPrompt: 'b' },
+          { name: '123', systemPrompt: 'c' },
+        ],
+      } as any);
+      expect(c).toContain('"true": "a"');
+      expect(c).toContain('"null": "b"');
+      expect(c).toContain('"123": "c"');
+      expect(c).not.toMatch(/^ {4}true:/m);
+      expect(c).not.toMatch(/^ {4}null:/m);
+      expect(c).not.toMatch(/^ {4}123:/m);
     });
   });
 

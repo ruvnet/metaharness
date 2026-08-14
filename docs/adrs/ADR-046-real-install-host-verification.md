@@ -107,3 +107,41 @@ tests updated to assert the verified-real schema.
   the pinned shape was never validated against a real install and had drifted.
 - pi-dev/rvm/copilot remain schema-/content-verified only, with the specific
   reason each can't be run here recorded above (no silent "verified").
+
+## 2026-08-14 — Dream Cycle: YAML mapping-key injection in the hermes path (fixed, all 3 codegen copies)
+
+Real-install verification (above) proved the hermes `cli-config.yaml` shape
+matches the real loader for well-formed harness/agent names. It never tested
+adversarial names. Tonight's Dream Cycle found that `AgentSpec.name`/
+`HarnessSpec.name` — a plain, unconstrained `string` at the kernel type level
+— was interpolated **unescaped into YAML mapping-key position**
+(`agent.personalities.<name>:`) in all three of this ADR's "byte-for-byte in
+parity" codegen copies: `@metaharness/host-hermes`, the CLI scaffold's
+`host-config.ts`, and the web-UI generator's `scaffold.ts`. A name containing
+`:` (e.g. `evil: agent`) produced two top-level `:` on one line — reproduced,
+verified against the real dist output, not a hypothetical:
+
+```
+BASELINE (pre-fix):  evil: agent: "x"     ← corrupted
+CANDIDATE (post-fix): "evil: agent": "x"  ← single valid mapping entry
+```
+
+**Fix**: a `yamlKey()` helper (bare only when the string is a conventional
+identifier AND not a YAML-1.1-reserved bare scalar like `true`/`null`/`123`;
+quoted otherwise), duplicated in lockstep across all three files per this
+ADR's existing "no shared import, kept byte-for-byte in parity" design.
+Independently critiqued (`@metaharness/host-hermes` copy) —
+ACCEPT-WITH-CAVEATS; the critic caught the reserved-scalar hazard pre-ship
+and flagged two still-open sibling gaps (a comment-line newline-injection
+present in all three files, and unescaped MCP-server `name`/`command`/`url`
+*values* in the adapter's `optionalMcpYaml`) — not fixed tonight, tracked as
+follow-up. 19+15+18/18 tests green across the three affected suites,
+additive only. Full receipt: `docs/dream-cycle/2026-08-14-gist.md`, issue
+and PR linked from `docs/dream-cycle/LEDGER.md`.
+
+**Lesson for this ADR's "real-install" discipline**: real-install testing
+proves the *happy path* against a real loader; it does not by itself catch
+*input-shape* defects (unconstrained upstream types reaching structured
+output unescaped). Both checks are needed — this ADR's real-install tier for
+schema/runtime drift, plus adversarial-input unit coverage (now added) for
+injection-class defects.

@@ -211,6 +211,26 @@ function providerEnvLines(indent: string): string[] {
   ];
 }
 
+// YAML 1.1 core-schema bare scalars a PyYAML-family loader (hermes) would
+// resolve to bool/null/int instead of a string, even though they match the
+// bare-identifier shape below.
+const YAML_RESERVED_BARE = /^(?:null|~|true|false|yes|no|on|off|[+-]?\d+(?:\.\d+)?)$/i;
+
+/**
+ * Escape a string for YAML *mapping-key* position (kept in lockstep with
+ * `@metaharness/host-hermes`'s `yamlKey()` and the CLI scaffold path's copy
+ * in `packages/create-agent-harness/src/host-config.ts` — this module must
+ * stay byte-for-byte in parity with that file per ADR-027, so the same fix
+ * is duplicated here rather than shared via import). `cfg.name` is
+ * unconstrained and lands in `agent.personalities.<name>` key position for
+ * the hermes case below; a name containing `:`/`#`/etc previously corrupted
+ * the emitted YAML.
+ */
+function yamlKey(s: string): string {
+  const isSafeIdentifier = /^[A-Za-z0-9_][A-Za-z0-9_.-]*$/.test(s);
+  return isSafeIdentifier && !YAML_RESERVED_BARE.test(s) ? s : JSON.stringify(s.replace(/[\r\n]+/g, ' '));
+}
+
 /** The MCP server entry a host config registers, or null when MCP is off. */
 function mcpServerEntry(cfg: HarnessConfig): Record<string, unknown> | null {
   if (cfg.primitives.mcp === 'off') return null;
@@ -240,7 +260,7 @@ function hostFiles(host: HostId, cfg: HarnessConfig): GenFile[] {
       // `model:` + `agent.personalities`; no name/description/scrub keys.
       const persona = (cfg.description || `You are ${cfg.name}.`).replace(/[\r\n]+/g, ' ');
       const files: GenFile[] = [
-        { path: 'cli-config.yaml', content: `# Hermes Agent config for ${cfg.name} — subset of cli-config.yaml.example.\nmodel:\n  provider: "auto"\nagent:\n  personalities:\n    ${cfg.name}: ${JSON.stringify(persona)}\n` },
+        { path: 'cli-config.yaml', content: `# Hermes Agent config for ${cfg.name} — subset of cli-config.yaml.example.\nmodel:\n  provider: "auto"\nagent:\n  personalities:\n    ${yamlKey(cfg.name)}: ${JSON.stringify(persona)}\n` },
       ];
       if (cfg.primitives.mcp !== 'off') {
         files.push({ path: `optional-mcps/${cfg.name}.json`, content: JSON.stringify({ [cfg.name]: mcpServerEntry(cfg) }, null, 2) + '\n' });

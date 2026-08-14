@@ -54,6 +54,38 @@ export function scrubHermesBlocks(text: string): string {
 }
 
 /**
+ * Escape a string for use as a YAML double-quoted flow scalar. JSON string
+ * syntax is a valid subset of YAML double-quoted scalar syntax, so
+ * `JSON.stringify` is sufficient and matches this file's existing
+ * `args`/`env`-value escaping (below).
+ */
+function yamlStr(s: string): string {
+  return JSON.stringify(s.replace(/[\r\n]+/g, ' '));
+}
+
+// YAML 1.1 core-schema bare scalars that a PyYAML-family loader (Hermes is
+// Python) resolves to bool/null instead of a string — adversarial-critique
+// finding: these match the identifier regex below but are NOT safe to leave
+// bare (a personality literally named `true` or `123` would be silently
+// mistyped, not a syntax break but a semantic one).
+const YAML_RESERVED_BARE = /^(?:null|~|true|false|yes|no|on|off|[+-]?\d+(?:\.\d+)?)$/i;
+
+/**
+ * Escape a string for use as a YAML *mapping key*. Values interpolated
+ * into a key position (e.g. `agent.personalities.<name>`, an MCP server's
+ * `env` var name) are NOT scalar values and were previously written
+ * unquoted — a name containing `:`, `#`, or other YAML-significant
+ * characters silently corrupts the document or smuggles extra keys.
+ * Bare (unquoted) only when the whole string is already a conventional
+ * safe identifier and not a YAML-reserved bare scalar; quoted (JSON/YAML
+ * double-quote syntax) otherwise.
+ */
+function yamlKey(s: string): string {
+  const isSafeIdentifier = /^[A-Za-z0-9_][A-Za-z0-9_.-]*$/.test(s);
+  return isSafeIdentifier && !YAML_RESERVED_BARE.test(s) ? s : yamlStr(s);
+}
+
+/**
  * Hermes optional-mcps/ directory layout: one YAML file per MCP server
  * with `name`, `command`, `args`, `env`.
  */
@@ -74,7 +106,7 @@ export function optionalMcpYaml(server: McpServerSpec): string {
   if (server.env && server.env.length > 0) {
     lines.push(`env:`);
     for (const [k, v] of server.env) {
-      lines.push(`  ${k}: ${JSON.stringify(v)}`);
+      lines.push(`  ${yamlKey(k)}: ${JSON.stringify(v)}`);
     }
   }
   return lines.join('\n') + '\n';
@@ -97,7 +129,6 @@ export function optionalMcpYaml(server: McpServerSpec): string {
  * not a config key, so it is no longer emitted into the YAML.
  */
 export function cliConfigYaml(spec: HarnessSpec): string {
-  const yamlStr = (s: string) => JSON.stringify(s.replace(/[\r\n]+/g, ' '));
   const lines: string[] = [
     `# Hermes Agent config for ${spec.name} — subset of cli-config.yaml.example.`,
     'model:',
@@ -107,9 +138,9 @@ export function cliConfigYaml(spec: HarnessSpec): string {
   ];
   // Harness identity → the default personality.
   const persona = spec.systemPrompt ?? spec.description ?? `You are ${spec.name}.`;
-  lines.push(`    ${spec.name}: ${yamlStr(persona)}`);
+  lines.push(`    ${yamlKey(spec.name)}: ${yamlStr(persona)}`);
   for (const a of spec.agents ?? []) {
-    lines.push(`    ${a.name}: ${yamlStr(a.systemPrompt ?? `You are the ${a.name} agent.`)}`);
+    lines.push(`    ${yamlKey(a.name)}: ${yamlStr(a.systemPrompt ?? `You are the ${a.name} agent.`)}`);
   }
   return lines.join('\n') + '\n';
 }

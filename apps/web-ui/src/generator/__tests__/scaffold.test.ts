@@ -56,6 +56,23 @@ describe('buildScaffold', () => {
     expect(paths({ ...base, hosts: ['hermes'] })).toContain('cli-config.yaml');
   });
 
+  it('hermes emits a personality keyed by the harness name', () => {
+    const cfg = buildScaffold({ ...base, hosts: ['hermes'] }).find((f) => f.path === 'cli-config.yaml')!;
+    expect(cfg.content).toContain('legal-redline: "Redline contracts fast"');
+  });
+
+  // Regression: `cfg.name` lands in YAML *key* position
+  // (`agent.personalities.<name>`) and is unconstrained on `HarnessConfig`
+  // — a name containing `:` previously produced two top-level `:` on one
+  // line (corrupted YAML). Kept in lockstep with @metaharness/host-hermes's
+  // own yamlKey() fix and the CLI scaffold path's copy (ADR-027
+  // byte-for-byte parity).
+  it('hermes escapes a harness name containing YAML-significant characters as a mapping key', () => {
+    const cfg = buildScaffold({ ...base, name: 'evil: name', hosts: ['hermes'] }).find((f) => f.path === 'cli-config.yaml')!;
+    expect(cfg.content).toContain('"evil: name": "Redline contracts fast"');
+    expect(cfg.content).not.toMatch(/^ {4}evil: name:/m);
+  });
+
   it('multi-host emits every adapter', () => {
     const p = paths({ ...base, hosts: ['claude-code', 'codex'] });
     expect(p).toContain('.claude/settings.json');
