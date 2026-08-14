@@ -46,7 +46,7 @@ target:
   # responsePath: output
 models:
   red:
-    - cognitivecomputations/dolphin-mixtral-8x22b
+    - cognitivecomputations/dolphin-mistral-24b-venice-edition
   blue:
     - anthropic/claude-3.5-sonnet
   judge:

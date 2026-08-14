@@ -182,17 +182,23 @@ export async function generatePatches(
   for (const f of top) {
     const patch = basePatchFor(f);
     if (opts?.client && opts.model) {
-      const res = await opts.client.complete({
-        model: opts.model,
-        system:
-          'You are a BLUE-team defender. Given a finding, write a one-sentence mitigation description. ' +
-          'Do not include code; the enforcement is handled by structured rules.',
-        user: `Finding family: ${f.family}. Recommended fix from judge: ${f.recommendedFix ?? '(none)'}.`,
-        maxTokens: 80,
-        temperature: 0.3,
-      });
-      costUsd += res.costUsd;
-      if (res.text.trim()) patch.description = res.text.trim().slice(0, 300);
+      try {
+        const res = await opts.client.complete({
+          model: opts.model,
+          system:
+            'You are a BLUE-team defender. Given a finding, write a one-sentence mitigation description. ' +
+            'Do not include code; the enforcement is handled by structured rules.',
+          user: `Finding family: ${f.family}. Recommended fix from judge: ${f.recommendedFix ?? '(none)'}.`,
+          maxTokens: 80,
+          temperature: 0.3,
+        });
+        costUsd += res.costUsd;
+        if (res.text.trim()) patch.description = res.text.trim().slice(0, 300);
+      } catch (e) {
+        // Cosmetic description upgrade only — keep the structured base patch,
+        // but surface the model failure instead of hiding it (#183).
+        console.warn(`redblue: patch-description model call failed: ${(e as Error).message} — keeping base description`);
+      }
     }
     patches.push(patch);
   }

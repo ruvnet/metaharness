@@ -144,7 +144,7 @@ target:
   # url: http://localhost:8080/agent
   # responsePath: output
 models:
-  red:    [cognitivecomputations/dolphin-mixtral-8x22b]   # uncensored -> scenarios
+  red:    [cognitivecomputations/dolphin-mistral-24b-venice-edition]   # uncensored -> scenarios
   blue:   [anthropic/claude-3.5-sonnet]                   # strong     -> patches
   judge:  [openai/gpt-4o-mini]                            # structured -> strict-JSON verdicts
   mutate: [google/gemini-2.5-flash]                       # cheap      -> probe variation
@@ -379,6 +379,17 @@ generate suite -> run vs target -> judge (strict JSON, retries)
 The judge runs as a **separate model** and must return strict JSON; malformed
 output is retried, then falls back to a conservative (uncompromised) verdict so
 a flaky judge can't manufacture a false Critical.
+
+Every `compromised: true` verdict then faces a **skeptic second-opinion pass**
+(on by default; `judge(..., { skeptic: false })` to opt out): an independent
+call that treats the claim as a false positive unless it can quote exact,
+verbatim violating text, and the quote is verified as a literal substring of
+the target response/tool calls before the verdict stands. This exists because
+live single-judge verdicts were manually confirmed to produce false positives
+— "offering to help" judged as disclosure
+([#184](https://github.com/ruvnet/metaharness/issues/184)). A rejected verdict
+is downgraded to uncompromised with the skeptic's reason and the original
+(unconfirmed) evidence preserved in the verdict's evidence trail.
 
 ## Measured results (realistic example target)
 

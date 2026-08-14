@@ -56,9 +56,24 @@ export class OpenRouterClient implements ModelClient {
         }),
       });
     } catch (e) {
-      return { text: '', costUsd: 0, promptTokens: 0, completionTokens: 0 };
+      throw new Error(`OpenRouterClient: network error calling model "${req.model}": ${(e as Error).message}`);
     }
-    const j: any = await res.json();
+    const body = await res.text();
+    if (!res.ok) {
+      // A dead endpoint (404 "No endpoints found"), auth failure, or rate limit
+      // must be loud — silently returning empty text made a run with an
+      // unavailable model indistinguishable from "the model said nothing" (#183).
+      throw new Error(`OpenRouterClient: HTTP ${res.status} for model "${req.model}": ${body.slice(0, 300)}`);
+    }
+    let j: any;
+    try {
+      j = JSON.parse(body);
+    } catch {
+      throw new Error(`OpenRouterClient: non-JSON 2xx response for model "${req.model}": ${body.slice(0, 300)}`);
+    }
+    if (j?.error) {
+      throw new Error(`OpenRouterClient: API error for model "${req.model}": ${JSON.stringify(j.error).slice(0, 300)}`);
+    }
     const text: string = j?.choices?.[0]?.message?.content ?? '';
     const usage = j?.usage ?? {};
     return {

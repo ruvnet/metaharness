@@ -33,7 +33,7 @@ export function defaultConfig(): RedBlueConfig {
   return {
     target: { kind: 'none' },
     models: {
-      red: ['cognitivecomputations/dolphin-mixtral-8x22b'],
+      red: ['cognitivecomputations/dolphin-mistral-24b-venice-edition'],
       blue: ['anthropic/claude-3.5-sonnet'],
       judge: ['openai/gpt-4o-mini'],
       mutate: ['google/gemini-2.5-flash'],
