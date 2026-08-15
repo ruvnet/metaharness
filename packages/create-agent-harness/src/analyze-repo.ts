@@ -161,8 +161,17 @@ export function analyzeFiles(name: string, files: Record<string, string>): RepoP
     buildCommands.push('cargo build');
     testCommands.push('cargo test');
   }
-  if (languages.includes('python')) testCommands.push('pytest');
-  if (languages.includes('go')) testCommands.push('go test ./...');
+  if (languages.includes('python')) {
+    // pyproject.toml signals a packageable project (editable install is the
+    // build step); requirements.txt-only repos are app-shaped, not a
+    // package, so their build step is installing the pinned deps.
+    buildCommands.push(get('pyproject.toml') ? 'pip install -e .' : 'pip install -r requirements.txt');
+    testCommands.push('pytest');
+  }
+  if (languages.includes('go')) {
+    buildCommands.push('go build ./...');
+    testCommands.push('go test ./...');
+  }
 
   const text = [get('README.md'), get('package.json'), get('Cargo.toml'), get('pyproject.toml'), get('CONTRIBUTING.md')].join('\n');
   return {
