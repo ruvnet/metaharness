@@ -149,6 +149,21 @@ async function main() {
     const curriculum = process.argv.includes('--curriculum');
     const sbRaw = flag('--sandbox', 'real');
     const sandboxMode = sbRaw === 'mock' || sbRaw === 'agent' ? sbRaw : 'real';
+    // ADR-099/102: 'real' (the default — no --sandbox flag passed) scores every
+    // variant by the target repo's own test command, which none of the mutated
+    // harness surfaces are wired into. That makes the trace surface-independent:
+    // every variant lands on the identical score (measured: nicheEntropy=0,
+    // finalScore flat at 0.985) and evolution has no selection pressure to act
+    // on. This is documented in the README, but a first run of `evolve` with no
+    // flags gives no signal at the point it actually matters — say so here.
+    if (sandboxMode === 'real') {
+        process.stderr.write("note: --sandbox real (the default) scores variants by this repo's own test\n" +
+            'command, which cannot distinguish between mutated harness surfaces — every\n' +
+            'variant will score identically and evolution will not converge on anything\n' +
+            '(see README "The evaluation substrate", ADR-099/102). Pass --sandbox mock\n' +
+            '(fast, deterministic) or --sandbox agent (executes the real surface code)\n' +
+            'for genuine evolutionary signal.\n');
+    }
     // ADR-259: pluggable mutator backend. Default = deterministic (no network, no key).
     // --mutator ruvllm routes mutations to a local `ruvllm serve` endpoint (fully local,
     // air-gapped, zero API cost). The OpenRouter LLM mutator stays library-only.
