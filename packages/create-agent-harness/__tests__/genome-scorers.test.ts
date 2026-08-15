@@ -172,4 +172,25 @@ describe('scorePublishReadiness — Dream Cycle 2026-08-15 fix', () => {
     const { profile, plan } = maturedProfile('package.json', JSON.stringify({ name: 'x', scripts: { build: 'tsc', test: 'vitest run' } }));
     expect(scorePublishReadiness(profile, plan)).toBeLessThanOrEqual(1);
   });
+
+  it('generalizes to a language analyze-repo.ts does not detect today (closes the allow-list class of bug, not just today\'s 2 languages)', () => {
+    // analyzeFiles() only ever populates 'rust'|'typescript'|'python'|'go', so
+    // this constructs a RepoProfile by hand to prove the fix is a genuine
+    // generalization ("any detected language") and not a 4-language
+    // allow-list wearing a generalization's clothing — the adversarial
+    // critic flagged that the other tests here can't distinguish the two.
+    const { plan } = maturedProfile('go.mod', 'module demo\n\ngo 1.21\n');
+    const hypotheticalProfile = {
+      name: 'demo',
+      languages: ['zig'], // a language this codebase has never heard of
+      hasMcp: false,
+      hasClaude: false,
+      hasCodex: false,
+      hasCi: true,
+      buildCommands: ['zig build'],
+      testCommands: ['zig test'],
+      tokens: [],
+    };
+    expect(scorePublishReadiness(hypotheticalProfile, plan)).toBeGreaterThanOrEqual(0.75);
+  });
 });

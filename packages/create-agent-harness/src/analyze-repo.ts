@@ -148,6 +148,12 @@ export function analyzeFiles(name: string, files: Record<string, string>): RepoP
   if (get('pyproject.toml') || get('requirements.txt')) languages.push('python');
   if (get('go.mod')) languages.push('go');
 
+  // KNOWN SIBLING GAP (Dream Cycle 2026-08-15, disclosed not fixed): this
+  // exact language-detection + buildCommands block is duplicated in
+  // apps/web-ui/src/generator/repo.ts (the browser-side Studio importer,
+  // ADR-023/026) and was NOT updated in lockstep here — that copy still has
+  // no python/go build-command inference. Not in scope tonight (different
+  // package/deployment surface); see docs/dream-cycle/2026-08-15-gist.md.
   const buildCommands: string[] = [];
   const testCommands: string[] = [];
   try {
