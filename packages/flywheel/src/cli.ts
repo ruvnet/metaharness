@@ -49,6 +49,7 @@ async function replay(args: string[]): Promise<CliResult> {
     `  reconstructs to gen-0 root:               ${v.checks.reachesRoot ? 'PASS' : 'FAIL'}`,
     `  each generation re-bases on the winner:   ${v.checks.contiguousParents ? 'PASS' : 'FAIL'}`,
     `  every chain node is a promotion:          ${v.checks.allPromoted ? 'PASS' : 'FAIL'}`,
+    `  full diagnostic ledger receipts verify:   ${v.checks.allCommitsReceipts ? 'PASS' : 'FAIL'}`,
     `  gate UNCHANGED (fingerprint):             ${flag(args, '--gate-fingerprint') ? (v.checks.gateUnchanged ? 'PASS' : 'FAIL') : 'skipped (no --gate-fingerprint)'}`,
     `  verified improvements: ${bundle.verified_improvements}  |  anchor-surviving: ${bundle.anchor_surviving_improvements}  |  milestone: ${bundle.milestone_reached}`,
     '',
