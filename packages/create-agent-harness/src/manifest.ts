@@ -21,6 +21,26 @@ export interface HarnessMeta {
   kernel_version?: string;
 }
 
+/**
+ * Machine-readable record of the opt-in field-memory scaffold. Optional so
+ * schema-1 manifests generated before this feature remain valid.
+ */
+export interface HarnessFieldMemory {
+  /** Version of the generator-owned field-memory overlay contract. */
+  contract_schema: 1;
+  enabled: true;
+  package: '@metaharness/field-memory';
+  version: '^0.1.0';
+  module: 'src/field-memory.ts';
+  layout: 'packed';
+  minimum_support: 3;
+  hysteresis_enabled: false;
+  storage_path_required: true;
+  drift_window_enabled: true;
+  principal_identity_required: true;
+  identity_hash_key_required: true;
+}
+
 export interface HarnessManifest {
   /** Manifest schema version. Bump only on breaking shape changes. */
   schema: 1;
@@ -34,6 +54,8 @@ export interface HarnessManifest {
   vars: TemplateVars;
   /** Host adapters bundled. */
   hosts: string[];
+  /** Governed attractor-field integration, present only when opted in. */
+  field_memory?: HarnessFieldMemory;
   /** Per-rendered-file sha256, so `harness upgrade` can detect divergence. */
   files: Record<string, string>;
   /** ISO-8601 generation timestamp. */

@@ -8,6 +8,11 @@ import { writeAtomic } from './writer.js';
 import { emptyManifest, fingerprintFiles, sha256 } from './manifest.js';
 import { validateHarnessName } from './renderer.js';
 import { hostConfigFiles } from './host-config.js';
+import {
+  FIELD_MEMORY_MODULE_PATH,
+  fieldMemoryManifest,
+  integrateFieldMemory,
+} from './field-memory-scaffold.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // Templates live at packages/create-agent-harness/templates/, one level above dist/.
@@ -148,6 +153,8 @@ export interface CliArgs {
   darwin?: boolean;
   /** ADR-246 §2.3: include the recoverable-session log scaffold (default OFF; --sessions to enable). */
   sessions?: boolean;
+  /** Include the governed attractor-field integration (default OFF; --field-memory to enable). */
+  fieldMemory?: boolean;
 }
 
 export function parseArgs(argv: string[]): CliArgs {
@@ -175,6 +182,10 @@ export function parseArgs(argv: string[]): CliArgs {
       out.sessions = true;
     } else if (a === '--no-sessions') {
       out.sessions = false;
+    } else if (a === '--field-memory') {
+      out.fieldMemory = true;
+    } else if (a === '--no-field-memory') {
+      out.fieldMemory = false;
     } else if (a === '--description' || a === '-d') {
       out.description = argv[++i];
     } else if (a === '--target') {
@@ -241,6 +252,11 @@ export interface ScaffoldOptions {
    * are an *optional* primitive per the ADR; opt in with `--sessions`.
    */
   sessions?: boolean;
+  /**
+   * Emit an @metaharness/field-memory bootstrap with conservative, fail-closed
+   * defaults. Default OFF; opt in with `--field-memory`.
+   */
+  fieldMemory?: boolean;
 }
 
 /** ADR-147: the darwin version a scaffolded harness depends on. */
@@ -714,6 +730,22 @@ export async function scaffold(opts: ScaffoldOptions): Promise<ScaffoldResult> {
     }
   }
 
+  // Opt-in field memory. This is configuration-only integration: the energy
+  // model, aggregation, persistence contract, and principal verification stay
+  // in @metaharness/field-memory and its storage adapter. The generated wrapper
+  // requires an explicit absolute path and authenticated principal evidence,
+  // avoiding the implicit database reopen and Sybil-prone caller-id patterns
+  // found during the discovery benchmark.
+  if (opts.fieldMemory === true) {
+    const existingModule = join(opts.targetDir, ...FIELD_MEMORY_MODULE_PATH.split('/'));
+    if (existsSync(existingModule)) {
+      throw new Error(
+        `--field-memory refuses to overwrite existing ${FIELD_MEMORY_MODULE_PATH}`,
+      );
+    }
+    integrateFieldMemory(rendered);
+  }
+
   const fileMap = asFileMap(rendered);
 
   // iter 58: stamp kernel_version at scaffold time (ADR-027 diagnostic).
@@ -724,6 +756,9 @@ export async function scaffold(opts: ScaffoldOptions): Promise<ScaffoldResult> {
   });
   manifest.vars = vars;
   manifest.hosts = hostSet; // GH #10: full host set, not just the primary
+  if (opts.fieldMemory === true) {
+    manifest.field_memory = fieldMemoryManifest();
+  }
   manifest.files = fingerprintFiles(fileMap);
   // Self-hash the manifest itself so `harness upgrade` can detect a hand-
   // edited manifest.
@@ -994,6 +1029,7 @@ export async function main(argv: string[]): Promise<number> {
     console.log('       --target <path>   write the harness to <path> instead of ./<name>');
     console.log('       --no-darwin       skip Darwin Mode self-improvement (default: integrated; adds `npm run evolve`)');
     console.log('       --sessions        add a crash-recoverable session log (src/sessions/log.ts — ADR-246 §2.3; default: off)');
+    console.log('       --field-memory    add governed attractor-field memory via @metaharness/field-memory (default: off)');
     console.log('       --with-wasm <crate-path>   build a wasm-pack crate into the harness as commands (GH #25)');
     console.log('       npx metaharness score <repo> [--json]   (scorecard: fit/cost/safety for a repo — ADR-041)');
     console.log('       npx metaharness analyze <repo>           (recommend a harness plan, no-exec)');
@@ -1042,6 +1078,7 @@ export async function main(argv: string[]): Promise<number> {
       force: args.force,
       darwin: args.darwin !== false, // ADR-147: deep darwin integration, default on
       sessions: args.sessions === true, // ADR-246 §2.3: sessions scaffold, default off
+      fieldMemory: args.fieldMemory === true, // governed field memory, default off
       generatorVersion: '0.1.0',
     });
     console.log(`Scaffolded ${args.name} into ${targetDir}`);
