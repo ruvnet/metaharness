@@ -97,7 +97,7 @@ describe('verifyReplayBundle — gateReExecutes: re-run the rule on sealed score
   };
   const promoted = (baselineScore: Score, candidateScore: Score): LineageCommit => ({
     id: 'c1', generation: 1, parents: ['root'], mutation: { target: 't', summary: 'adapt t' }, primaryDelta: 1,
-    anchorScore: null, verdict: 'PROMOTED', failureReasons: [], receipt: signer.sign({ kind: 'candidate', id: 'c1' }),
+    anchorScore: null, verdict: 'PROMOTED', failureReasons: [], receipt: signer.sign({ kind: 'candidate', id: 'c1', verdict: 'PROMOTED' }),
     createdAt: 'g1', baselineScore, candidateScore,
   });
   const bundleOf = (c1: LineageCommit): ReplayBundle => ({
@@ -129,6 +129,88 @@ describe('verifyReplayBundle — gateReExecutes: re-run the rule on sealed score
   it('backward-compatible: NO rule supplied ⇒ gateReExecutes unchecked (true)', () => {
     const b = bundleOf(promoted(S2(), S2({ primary: 6, noopRate: 0.2 })));
     expect(verifyReplayBundle(b, { pinnedGateFingerprint: gateFingerprint(meetsPromotionRule) }).checks.gateReExecutes).toBe(true);
+  });
+});
+
+describe('verifyReplayBundle — all_commits receipts (the full diagnostic ledger, not just the winning chain)', () => {
+  const signer = makeSigner();
+  const root: LineageCommit = {
+    id: 'root', generation: 0, parents: [], mutation: null, primaryDelta: 0, anchorScore: null,
+    verdict: 'ROOT', failureReasons: [], receipt: signer.sign({ kind: 'root', root: 'root' }), createdAt: 'g0',
+  };
+  const rejected: LineageCommit = {
+    id: 'c1', generation: 1, parents: ['root'], mutation: { target: 'x', summary: 'adapt x' }, primaryDelta: -1,
+    anchorScore: null, verdict: 'REJECTED', failureReasons: ['primary_regressed'],
+    receipt: signer.sign({ kind: 'candidate', id: 'c1', verdict: 'REJECTED' }), createdAt: 'g1',
+  };
+  const honestNullBundle: ReplayBundle = {
+    data_source: 'SYNTHETIC', root_id: 'root', chain: [root], all_commits: [rejected],
+    lift_curve: [], gate_fingerprint: gateFingerprint(meetsPromotionRule),
+    verified_improvements: 0, anchor_surviving_improvements: 0, milestone_reached: false, created_at: 'g1',
+  };
+
+  it('a genuinely-signed all_commits entry PASSES (regression pin)', () => {
+    const v = verifyReplayBundle(honestNullBundle, { pinnedGateFingerprint: gateFingerprint(meetsPromotionRule) });
+    expect(v.checks.allCommitsReceipts).toBe(true);
+    expect(v.pass).toBe(true);
+  });
+
+  it('a TAMPERED all_commits receipt (forged primaryDelta inside the signed payload) is caught even though chain alone verifies', () => {
+    const tampered: LineageCommit = {
+      ...rejected,
+      primaryDelta: 3, // claim a POSITIVE effect for what the signed receipt says was a rejection...
+      receipt: { ...rejected.receipt, payload: { ...rejected.receipt.payload, primaryDelta: 3 } }, // ...payload edited, signature NOT re-signed
+    };
+    const bad: ReplayBundle = { ...honestNullBundle, all_commits: [tampered] };
+    const v = verifyReplayBundle(bad, { pinnedGateFingerprint: gateFingerprint(meetsPromotionRule) });
+    // the promoted chain (just the root) still verifies fine — proving this check, not `receipts`, caught it
+    expect(v.checks.receipts).toBe(true);
+    expect(v.checks.allCommitsReceipts).toBe(false);
+    expect(v.pass).toBe(false);
+    expect(v.failures).toContain('allCommitsReceipts');
+  });
+
+  it('a VERDICT-FLIP (outer verdict changed to PROMOTED, signature/payload left untouched) is caught — a valid signature is not proof it is attached to the right claim', () => {
+    // the receipt is byte-for-byte the honestly-signed REJECTED receipt — verifyReceipt(receipt) alone
+    // would say "valid" — but the commit's own `verdict` field now claims PROMOTED. Splicing an
+    // unmodified-but-mismatched receipt like this is exactly what a signature-only check cannot catch.
+    const flipped: LineageCommit = { ...rejected, verdict: 'PROMOTED', failureReasons: [] };
+    const bad: ReplayBundle = { ...honestNullBundle, all_commits: [flipped] };
+    const v = verifyReplayBundle(bad, { pinnedGateFingerprint: gateFingerprint(meetsPromotionRule) });
+    expect(v.checks.allCommitsReceipts).toBe(false);
+    expect(v.pass).toBe(false);
+  });
+});
+
+describe('verifyReplayBundle — gateReExecutes: a PROMOTED commit missing sealed scores must FAIL, not skip', () => {
+  const signer = makeSigner();
+  const root: LineageCommit = {
+    id: 'root', generation: 0, parents: [], mutation: null, primaryDelta: 0, anchorScore: null,
+    verdict: 'ROOT', failureReasons: [], receipt: signer.sign({ kind: 'root', root: 'root' }), createdAt: 'g0',
+  };
+  // A PROMOTED commit with NO baselineScore/candidateScore — e.g. a forged bundle, or a legacy producer
+  // that never sealed them. Nothing here is internally inconsistent; it just cannot be re-gated.
+  const unauditablePromotion: LineageCommit = {
+    id: 'c1', generation: 1, parents: ['root'], mutation: { target: 't', summary: 'adapt t' }, primaryDelta: 5,
+    anchorScore: null, verdict: 'PROMOTED', failureReasons: [],
+    receipt: signer.sign({ kind: 'candidate', id: 'c1', verdict: 'PROMOTED' }), createdAt: 'g1',
+    // baselineScore / candidateScore deliberately omitted
+  };
+  const bundle: ReplayBundle = {
+    data_source: 'SYNTHETIC', root_id: 'root', chain: [unauditablePromotion, root], all_commits: [unauditablePromotion],
+    lift_curve: [], gate_fingerprint: gateFingerprint(meetsPromotionRule),
+    verified_improvements: 1, anchor_surviving_improvements: 0, milestone_reached: false, created_at: 'g1',
+  };
+
+  it('gateReExecutes is FALSE when a rule is supplied and a PROMOTED commit has no sealed scores to check', () => {
+    const v = verifyReplayBundle(bundle, { promotionRule: meetsPromotionRule });
+    expect(v.checks.gateReExecutes).toBe(false);
+    expect(v.pass).toBe(false);
+  });
+
+  it('unchecked (true) when NO rule is supplied — unaffected, matches existing backward-compat contract', () => {
+    const v = verifyReplayBundle(bundle, { pinnedGateFingerprint: gateFingerprint(meetsPromotionRule) });
+    expect(v.checks.gateReExecutes).toBe(true);
   });
 });
 
