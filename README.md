@@ -64,6 +64,11 @@ Output is an npm-publishable `.zip` with **your name on it, your branding, your 
   data** for a sharper fit (`npm i @metaharness/router`). Add the optional
   [`@ruvector/tiny-dancer`](https://www.npmjs.com/package/@ruvector/tiny-dancer)
   to train a fast native model instead — same training data, no API change.
+- **Route through a learned field without replaying predecessor context.**
+  [`@metaharness/field-memory`](packages/field-memory/) is an experimental,
+  single-process-by-default packed-attractor layer with verified outcome caps,
+  support quarantine, decay, cost-aware choice, and no raw-episode API. Its
+  RuVector adapter fails closed unless a corrected flat-index wrapper is used.
 - **Let your harness improve itself.** Every scaffold now ships with **Darwin Mode**
   ([`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin)) wired in —
   run `npm run evolve` and the harness mutates its own config, tests each change in a

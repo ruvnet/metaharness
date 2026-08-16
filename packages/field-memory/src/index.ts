@@ -1,0 +1,38 @@
+export { FieldMemory, createFieldMemory } from './field-memory.js';
+export { InMemoryFieldStorage } from './storage.js';
+export { createRuVectorFieldStorage, InMemoryRuVectorRecordRegistry } from './ruvector-storage.js';
+export { FIELD_MEMORY_DEFAULTS, resolveConfig } from './policy.js';
+export {
+  FIELD_MEMORY_SCHEMA_VERSION,
+  type CompactOptions,
+  type CompactResult,
+  type EmbeddingBucket,
+  type FieldChoice,
+  type FieldChoiceCandidate,
+  type FieldChoiceInput,
+  type FieldMemoryConfig,
+  type FieldMemoryOptions,
+  type FieldMemoryState,
+  type FieldMemoryStatePayload,
+  type FieldStorageAdapter,
+  type FieldUpdate,
+  type IdempotencyMarker,
+  type ImportStateOptions,
+  type InfluenceBucket,
+  type InfluenceLedger,
+  type PackedCentroidRecord,
+  type PreviousFieldChoice,
+  type PrincipalVerifier,
+  type ResolvedFieldMemoryConfig,
+  type RewardBucket,
+  type RewardHead,
+  type RuVectorDbLike,
+  type RuVectorFieldStorageOptions,
+  type RuVectorRecordRegistry,
+  type StorageSearchHit,
+  type UpdateReceipt,
+  type UpdateStatus,
+  type VectorMetric,
+  type VerifiableFieldUpdate,
+  type VerifiedPrincipal,
+} from './types.js';
