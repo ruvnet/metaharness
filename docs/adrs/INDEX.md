@@ -313,6 +313,11 @@ ADR-006 (memory + learning) and ADR-008 (drift detection) cut across all phases.
 | [ADR-237](./ADR-237-evals-math-live-gsm8k-fast-domain.md) | evals-math LIVE GSM8K — a FAST, $0 real-compounding domain testbed | Accepted — live run COMPLETE | - Status: Accepted — live run COMPLETE. Mechanism proven end-to-end on a SECOND real domain (GSM8K) at $0; compounding is an HONEST NULL (0/16 promotions), with the gate correctly rejecting a harmful mutation. Confirms the recover-not-create ceiling (ADR-234) is domain-general, not a SWE-bench artif |
 | [ADR-238](./ADR-238-workspace-lens-jacobian-interpretability.md) | @metaharness/workspace-lens — Jacobian-Lens interpretability primitive (IntOps) | Accepted — runtime measurement core shipped ($0, synthetic-tested) | - Status: Accepted — runtime measurement core shipped ($0, synthetic-tested). Lens FITTING is external (open-weight model + backward pass); this package APPLIES a fitted lens. |
 | [ADR-239](./ADR-239-workspace-probe.md) | @metaharness/workspace-probe — evaluation + Darwin-Mode bridge for workspace-lens | Accepted — logic developed + validated in isolation against the published `@metaharness/workspace-lens@0 | - Status: Accepted — logic developed + validated in isolation against the published `@metaharness/workspace-lens@0.1.0` ($0, 9 tests); re-homed into the monorepo with a local workspace dep. |
+## Autogenous integration
+
+| ADR | Title | Status | Summary |
+|-----|-------|--------|---------|
+| [ADR-251](./ADR-251-autogenous-metaharness-adapter.md) | Autogenous governed MetaHarness adapter | Accepted (implemented) | Ships `@metaharness/autogenous`: a flywheel adapter for Autogenous radio-moe that exposes only five bounded policy levers, freezes security gates and `sameAccuracyBand`, injects the real benchmark, and promotes only `Better AND Safe AND Authorized AND Reversible`. |
 
 ## Conventions used across the series
 
