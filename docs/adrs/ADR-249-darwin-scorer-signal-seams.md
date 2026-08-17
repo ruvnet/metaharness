@@ -92,3 +92,30 @@ only move the two weighted base terms they name.
   optimum; no benchmark evidence yet says it selects better variants. `latencyEfficiency` remains
   a pinned 1.0 — this ADR narrows the pinned terms from two to one *seam-wise*, it does not claim
   latency is solved.
+
+## 2026-08-17 addendum — the cost seam is now reachable from `evolve()`
+
+MetaHarness Dream Cycle, 2026-08-17 (darwin-evolution). This ADR's own "Zero-cost adoption path"
+consequence, above, observed in passing that `evolve.ts#evaluateVariant` "passes no `signals`" —
+true, but also the *only* call site in the shipped orchestration loop, and it never gained a way to
+pass any. The seam existed, tested in isolation (`scorer-signals.test.ts`), with nothing upstream able
+to reach it: `EvolutionConfig` had no field to carry a cost figure, and no other production code
+computed one for this purpose.
+
+**Change**: `EvolutionConfig` gains an optional `costBudgetBytes: number`. When set,
+`evaluateVariant` computes `variantBytes(variant.dir)` — the same deterministic surface-size signal
+`'pareto'` selection already reads for tie-breaking (`evolve.ts`, pre-existing) — and passes it as
+`signals.cost = { units, budgetUnits: costBudgetBytes }`. Omitted, `signals` stays `undefined` and the
+call is byte-for-byte what it was: the "Zero-cost adoption path" claim above continues to hold, now
+verified one level up (`evolve.test.ts`, 4 new tests, before/after stash repro:
+`evaluateVariant is not a function` pre-fix → 9/9 post-fix; full package suite 632/632, 0 regressions).
+`evaluateVariant` is also now exported (was module-private) so this wiring is directly testable
+without running a full generation.
+
+**Not done here, disclosed**: no `evolve()` caller sets `costBudgetBytes` yet (CLI flag or a config
+default is a natural follow-up), and `variantBytes`'s pre-existing gameability (a whitespace/comment-
+stripping mutation shrinks it for free) is now score-consequential rather than merely tie-break-
+consequential once a caller does opt in — flagged in the accompanying gist as a next-night audit
+candidate, not fixed tonight to keep this diff single-mechanism.
+
+Full detail: `docs/dream-cycle/2026-08-17-gist.md`, issue and PR linked from the Dream Cycle ledger.

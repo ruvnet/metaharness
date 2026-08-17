@@ -24,6 +24,7 @@ import { runVariantTasks } from './sandbox.js';
 import { runBenchmarkTaskMock, runVariantTasksMock } from './mock-sandbox.js';
 import { runVariantTasksAgent } from './tier2-sandbox.js';
 import { scoreVariant } from './scorer.js';
+import type { ScoreSignals } from './scorer.js';
 import {
   behavioralNiche,
   embedTraces,
@@ -99,8 +100,11 @@ interface Evaluation {
   score: ScoreCard;
 }
 
-/** Run + score one variant. Pure of archive mutation (caller commits results). */
-async function evaluateVariant(
+/**
+ * Run + score one variant. Pure of archive mutation (caller commits results).
+ * Exported for direct testing of the ADR-249 cost-seam wiring below.
+ */
+export async function evaluateVariant(
   variant: HarnessVariant,
   profile: RepoProfile,
   cfg: EvolutionConfig,
@@ -116,12 +120,22 @@ async function evaluateVariant(
       : cfg.sandboxMode === 'mock'
         ? await runVariantTasksMock(variant, cfg.mockTasks)
         : await runVariantTasks(variant, profile, cfg.tasks, { taskTimeoutMs: timeout });
+  // ADR-249 cost seam, wired here: when a byte budget is configured, feed the
+  // same deterministic `variantBytes` parsimony signal already used by
+  // 'pareto' selection into `scoreVariant`'s opt-in `signals.cost`. Omitted
+  // `costBudgetBytes` ⇒ `signals` stays undefined ⇒ byte-identical scoring to
+  // before this change (verified in evolve.test.ts).
+  const signals: ScoreSignals | undefined =
+    cfg.costBudgetBytes !== undefined
+      ? { cost: { units: variantBytes(variant.dir), budgetUnits: cfg.costBudgetBytes } }
+      : undefined;
   const score = scoreVariant(
     variant.id,
     traces,
     parentScore,
     cfg.promotionDelta,
     timeout,
+    signals,
   );
   return { variant, traces, score };
 }

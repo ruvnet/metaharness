@@ -62,8 +62,11 @@ async function ensureWorkRoot(workRoot) {
     await mkdir(join(workRoot, 'runs'), { recursive: true });
     await mkdir(join(workRoot, 'reports'), { recursive: true });
 }
-/** Run + score one variant. Pure of archive mutation (caller commits results). */
-async function evaluateVariant(variant, profile, cfg, parentScore) {
+/**
+ * Run + score one variant. Pure of archive mutation (caller commits results).
+ * Exported for direct testing of the ADR-249 cost-seam wiring below.
+ */
+export async function evaluateVariant(variant, profile, cfg, parentScore) {
     const timeout = cfg.taskTimeoutMs ?? DEFAULT_TASK_TIMEOUT_MS;
     // ADR-102: in 'mock' mode the surfaces actually drive a deterministic agent
     // loop, so the trace depends on surface content (manifold becomes live). The
@@ -73,7 +76,15 @@ async function evaluateVariant(variant, profile, cfg, parentScore) {
         : cfg.sandboxMode === 'mock'
             ? await runVariantTasksMock(variant, cfg.mockTasks)
             : await runVariantTasks(variant, profile, cfg.tasks, { taskTimeoutMs: timeout });
-    const score = scoreVariant(variant.id, traces, parentScore, cfg.promotionDelta, timeout);
+    // ADR-249 cost seam, wired here: when a byte budget is configured, feed the
+    // same deterministic `variantBytes` parsimony signal already used by
+    // 'pareto' selection into `scoreVariant`'s opt-in `signals.cost`. Omitted
+    // `costBudgetBytes` ⇒ `signals` stays undefined ⇒ byte-identical scoring to
+    // before this change (verified in evolve.test.ts).
+    const signals = cfg.costBudgetBytes !== undefined
+        ? { cost: { units: variantBytes(variant.dir), budgetUnits: cfg.costBudgetBytes } }
+        : undefined;
+    const score = scoreVariant(variant.id, traces, parentScore, cfg.promotionDelta, timeout, signals);
     return { variant, traces, score };
 }
 /** Cost proxy for the breaker: cumulative variant-seconds in a generation. */
