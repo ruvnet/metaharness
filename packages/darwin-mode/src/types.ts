@@ -129,6 +129,17 @@ export interface EvolutionConfig {
   taskTimeoutMs?: number;
   /** Per-generation cost-proxy budget (cumulative variant-seconds). Optional breaker. */
   costBudgetSeconds?: number;
+  /**
+   * Per-variant surface-size budget in bytes (ADR-249 cost seam, wired here).
+   * When set, `evaluateVariant` computes each variant's real on-disk surface
+   * size (the same deterministic `variantBytes` parsimony signal already used
+   * by 'pareto' selection) and passes it through `scoreVariant`'s opt-in
+   * `signals.cost` seam as `{ units, budgetUnits: costBudgetBytes }`, so
+   * `costEfficiency` decays for variants whose surfaces grow past budget.
+   * Omit for byte-identical pre-seam scoring (ADR-249's zero-cost-adoption
+   * contract, honoured one level up).
+   */
+  costBudgetBytes?: number;
   /** Deterministic seed for mutation selection (reproducibility). Default 0. */
   seed?: number;
   /**
