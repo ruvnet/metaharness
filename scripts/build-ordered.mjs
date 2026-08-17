@@ -29,7 +29,7 @@ const PHASES = [
   ['kernel-js', 'router', 'harness', 'darwin-mode', 'projects', 'redblue', 'weight-eft', 'jujutsu', 'flywheel', 'workspace-lens', 'radio', 'horizon', 'turn-credit'],
   // evals-* adapters depend on @metaharness/flywheel's dist → build AFTER phase 1 (avoid .d.ts race).
   // oo-agents (ADR-242) depends on @metaharness/radio's dist → phase 2.
-  ['vertical-base', 'evals-hle', 'evals-toolcall', 'evals-extract', 'evals-math', 'evals-sql', 'evals-servedmodel', 'workspace-probe', 'oo-agents'],
+  ['vertical-base', 'autogenous', 'evals-hle', 'evals-toolcall', 'evals-extract', 'evals-math', 'evals-sql', 'evals-servedmodel', 'workspace-probe', 'oo-agents'],
   // Phase 3: hosts + sdk + cli — all depend on kernel-js
   [
     'host-claude-code',

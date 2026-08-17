@@ -108,6 +108,9 @@ const CHECKS = {
       // @metaharness/workspace-probe (evaluation + Darwin-Mode bridge for workspace-lens, ADR-239) is
       // likewise a standalone published library on its own semver.
       '@metaharness/workspace-probe',
+      // @metaharness/autogenous is the standalone governed policy-evolution adapter
+      // for ruvnet/autogenous; it follows Autogenous' own release cadence.
+      '@metaharness/autogenous',
       '@metaharness/kernel',
       '@metaharness/host-claude-code',
       '@metaharness/host-codex',
