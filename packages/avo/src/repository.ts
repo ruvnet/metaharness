@@ -132,7 +132,15 @@ export class RepositoryEnvironmentAdapter implements EnvironmentAdapter {
     let cursor = resolve(root);
     for (const segment of segments) {
       cursor = join(cursor, segment);
-      if (existsSync(cursor) && lstatSync(cursor).isSymbolicLink()) {
+      // lstat directly: existsSync follows symlinks, so a DANGLING symlink
+      // (target missing) would bypass the guard and fail later as ENOENT.
+      let stats;
+      try {
+        stats = lstatSync(cursor);
+      } catch {
+        stats = undefined;
+      }
+      if (stats?.isSymbolicLink()) {
         throw new Error(`avo: symbolic links are not traversable in bounded workspaces: ${requested}`);
       }
     }
