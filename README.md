@@ -42,6 +42,14 @@ Output is an npm-publishable `.zip` with **your name on it, your branding, your 
 
 ### New
 
+- **Governed autonomous variation for difficult engineering work.**
+  [`@metaharness/avo`](packages/avo/) lets an agent repeatedly inspect, edit,
+  execute real tools, evaluate, repair/revert, branch, consult structured RVF
+  memory, and commit—while MetaHarness retains immutable capabilities, budgets,
+  promotion, quarantine, rollback, and signed replay receipts. Simple work stays
+  on Darwin's fast path. The runtime has a deterministic 205-action RVF
+  interruption proof; the stronger “AVO-class” claim remains blocked on the
+  preregistered 100-task unseen SWE-bench gate in [ADR-251](docs/adrs/ADR-251-governed-autonomous-variation-runtime.md).
 - **Run your harness on Prime Agent — and borrow its best ideas.** The 10th host
   ([`@metaharness/host-prime-agent`](packages/host-prime-agent/), `--host prime-agent`) emits your
   tools as project-scoped, Python-backed Prime Agent skills (`.prime/agent/skills/` — the host has

@@ -1,0 +1,66 @@
+{
+  "generatedAt": "2026-08-21T00:00:00.000Z",
+  "comparison": {
+    "schema": 1,
+    "datasetKind": "synthetic-mechanism",
+    "model": "deterministic-no-provider-fixture",
+    "reasoningConfiguration": "none",
+    "tokenBudget": 0,
+    "evaluatorVersion": "fixture-v1",
+    "taskSetHash": "sha256:synthetic-mechanism-only",
+    "arms": {
+      "darwin-fixed": {
+        "arm": "darwin-fixed",
+        "tasks": 100,
+        "resolved": 40,
+        "resolveRate": 0.4,
+        "totalCostUsd": 39.99999999999992,
+        "costPerAcceptedUsd": 0.999999999999998,
+        "wallTimeMs": 10000,
+        "policyViolations": 0,
+        "replayIntegrity": 1,
+        "rollbackRate": 0,
+        "coherenceRetention": 0.7000000000000013
+      },
+      "avo-no-supervisor": {
+        "arm": "avo-no-supervisor",
+        "tasks": 100,
+        "resolved": 45,
+        "resolveRate": 0.45,
+        "totalCostUsd": 50,
+        "costPerAcceptedUsd": 1.1111111111111112,
+        "wallTimeMs": 30000,
+        "policyViolations": 0,
+        "replayIntegrity": 1,
+        "rollbackRate": 0.1,
+        "coherenceRetention": 0.9000000000000008
+      },
+      "avo-supervisor-memory": {
+        "arm": "avo-supervisor-memory",
+        "tasks": 100,
+        "resolved": 49,
+        "resolveRate": 0.49,
+        "totalCostUsd": 56.00000000000007,
+        "costPerAcceptedUsd": 1.1428571428571443,
+        "wallTimeMs": 30000,
+        "policyViolations": 0,
+        "replayIntegrity": 1,
+        "rollbackRate": 0.1,
+        "coherenceRetention": 0.9000000000000008
+      }
+    }
+  },
+  "gate": {
+    "eligibleEvidence": false,
+    "resolutionRelativeLift": 0.22499999999999992,
+    "resolutionGatePassed": true,
+    "zeroViolationGatePassed": true,
+    "costIncrease": 0.14285714285714662,
+    "costGatePassed": true,
+    "replayGatePassed": true,
+    "ship": false,
+    "reasons": [
+      "requires exactly 100 preregistered unseen SWE-bench tasks"
+    ]
+  }
+}
