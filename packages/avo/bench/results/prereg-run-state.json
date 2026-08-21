@@ -1,0 +1,9 @@
+{
+  "phase": "prereg-committed",
+  "taskSetHash": "sha256:1da0fdf1ee3c9044705efd1874fc2b7b77ab0a04c33442700a6ec1760dc2a7ab",
+  "budgetUsd": 100.0,
+  "openrouterUsageBaseline": 4252.182356944,
+  "spentUsd": 0,
+  "next": "build packages/darwin-mode/bench/swebench/solve-avo.mjs: wrap GovernedVariationOperator per instance (repo checkout seed, official test command evaluator), 3 arms, emit SWEbenchObservation records to results/arm-<name>.jsonl with replay hashes; then run arms at concurrency 4",
+  "armProgress": {"darwin-fixed": 0, "avo-no-supervisor": 0, "avo-supervisor-memory": 0}
+}
