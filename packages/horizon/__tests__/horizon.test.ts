@@ -296,7 +296,10 @@ describe('NodeToolExecutor', () => {
     }
   });
 
-  it('does not spawn denied commands and terminates timed-out process groups', async () => {
+  // 30s budget: Windows runners take >5s (vitest default) for real subprocess
+  // spawn + process-group teardown; the executor's own 30ms timeout is what's
+  // under test, not wall-clock.
+  it('does not spawn denied commands and terminates timed-out process groups', { timeout: 30_000 }, async () => {
     const dir = await mkdtemp(join(tmpdir(), 'horizon-timeout-'));
     try {
       const executor = new NodeToolExecutor({ cwd: dir, timeoutMs: 30 });
