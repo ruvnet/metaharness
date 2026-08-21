@@ -1,7 +1,8 @@
 # ADR-251: `@metaharness/avo` — governed autonomous variation runtime
 
-**Status**: Accepted (runtime and deterministic mechanism proof implemented; live 100-task SWE-bench ship gate pending)
+**Status**: Accepted (runtime, deterministic mechanism proof, and live provider validation implemented; live 100-task SWE-bench ship gate pending)
 **Date**: 2026-08-21
+**Updated**: 2026-08-21 — live governed-loop validation completed against two real providers (OpenRouter `qwen/qwen3-8b` via GCP-secret key, and the Cognitum meta-llm Cloud Run endpoint `cognitum-low`): full inspect→edit→execute→evaluate→commit repair with signed, verified receipts and auditable usage evidence (`packages/avo/bench/results/{openrouter,cloudrun}-live-receipts.json`, test `__tests__/openrouter-live.test.ts`). Package publication proceeded on direct user order 2026-08-21; the 100-task preregistered SWE-bench gate, independent graders, and protected exact-SHA release workflow remain open — the "AVO-class" performance claim stays blocked until they pass.
 **Project**: `ruvnet/metaharness`
 **Related**: ADR-071/084 (CodeGenerator), ADR-073 (archive), ADR-074 (RuVector memory), ADR-079 (promotion statistics), ADR-157 (durable execution), ADR-245 (Horizon), ADR-250 (proof ladder)
 **External grounding**: NVIDIA AVO, arXiv:2603.24517
