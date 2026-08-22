@@ -148,6 +148,12 @@ export function analyzeFiles(name: string, files: Record<string, string>): RepoP
   if (get('pyproject.toml') || get('requirements.txt')) languages.push('python');
   if (get('go.mod')) languages.push('go');
 
+  // KNOWN SIBLING GAP (Dream Cycle 2026-08-15, disclosed not fixed): this
+  // exact language-detection + buildCommands block is duplicated in
+  // apps/web-ui/src/generator/repo.ts (the browser-side Studio importer,
+  // ADR-023/026) and was NOT updated in lockstep here — that copy still has
+  // no python/go build-command inference. Not in scope tonight (different
+  // package/deployment surface); see docs/dream-cycle/2026-08-15-gist.md.
   const buildCommands: string[] = [];
   const testCommands: string[] = [];
   try {
@@ -161,8 +167,17 @@ export function analyzeFiles(name: string, files: Record<string, string>): RepoP
     buildCommands.push('cargo build');
     testCommands.push('cargo test');
   }
-  if (languages.includes('python')) testCommands.push('pytest');
-  if (languages.includes('go')) testCommands.push('go test ./...');
+  if (languages.includes('python')) {
+    // pyproject.toml signals a packageable project (editable install is the
+    // build step); requirements.txt-only repos are app-shaped, not a
+    // package, so their build step is installing the pinned deps.
+    buildCommands.push(get('pyproject.toml') ? 'pip install -e .' : 'pip install -r requirements.txt');
+    testCommands.push('pytest');
+  }
+  if (languages.includes('go')) {
+    buildCommands.push('go build ./...');
+    testCommands.push('go test ./...');
+  }
 
   const text = [get('README.md'), get('package.json'), get('Cargo.toml'), get('pyproject.toml'), get('CONTRIBUTING.md')].join('\n');
   return {
