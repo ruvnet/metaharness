@@ -18,8 +18,10 @@ import {
   type Candidate,
   type EnvironmentAdapter,
   type EvaluationResult,
+  type PolicyDecision,
   type VariationAction,
   type VariationContext,
+  type VariationOperatorOptions,
   type VariationState,
 } from '../src/index.js';
 
@@ -153,6 +155,157 @@ describe('GovernedVariationOperator', () => {
       expect(output.receipts[0].policyDecision).toMatchObject({ verdict: 'deny' });
       expect(output.receipts[0].costUsd).toBe(0.02);
       expect(output.checkpoint.state.budget.wallTimeMsUsed).toBe(7);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it('clones inbound actions and decisions while freezing every outbound authority snapshot', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'avo-seams-'));
+    try {
+      class InspectingEnvironment extends DeterministicEnvironment {
+        frozenAction = false;
+        frozenState = false;
+        override async execute(action: VariationAction, state: Readonly<VariationState>) {
+          this.frozenAction = Object.isFrozen(action);
+          this.frozenState = Object.isFrozen(state) && Object.isFrozen(state.budget);
+          return super.execute(action, state);
+        }
+      }
+      const environment = new InspectingEnvironment();
+      const configured = await options(root, environment);
+      const value = configured.value as unknown as VariationOperatorOptions;
+      const rawAction: VariationAction = { kind: 'inspect', path: 'routing.ts' };
+      const rawDecision: PolicyDecision = {
+        verdict: 'require-approval', reason: 'test approval', policyVersion: 'policy-v1', riskCharge: 0.25,
+      };
+      let policyMutationThrew = false;
+      let approvalMutationThrew = false;
+      value.agent = { chooseAction: async () => rawAction };
+      value.policy = {
+        version: 'policy-v1',
+        authorize: (action, state) => {
+          expect(Object.isFrozen(action)).toBe(true);
+          expect(Object.isFrozen(state)).toBe(true);
+          expect(Object.isFrozen(state.budget)).toBe(true);
+          rawAction.path = 'attacker-mutated-after-return.ts';
+          try {
+            (action as { path: string }).path = 'mutate-policy-copy.ts';
+          } catch {
+            policyMutationThrew = true;
+          }
+          return rawDecision;
+        },
+      };
+      value.approval = {
+        approve: async (action, decision) => {
+          expect(Object.isFrozen(action)).toBe(true);
+          expect(Object.isFrozen(decision)).toBe(true);
+          rawDecision.riskCharge = 0.9;
+          try {
+            (decision as { riskCharge: number }).riskCharge = 1;
+          } catch {
+            approvalMutationThrew = true;
+          }
+          return true;
+        },
+      };
+      value.budget = { ...value.budget, maxActions: 1, maxBranchActions: 1 };
+
+      const output = await new GovernedVariationOperator(value).run();
+      expect(output.receipts[0].action).toEqual({ kind: 'inspect', path: 'routing.ts' });
+      expect(output.receipts[0].policyDecision.riskCharge).toBe(0.25);
+      expect(output.checkpoint.state.budget.riskUsed).toBe(0.25);
+      expect(policyMutationThrew).toBe(true);
+      expect(approvalMutationThrew).toBe(true);
+      expect(environment.frozenAction).toBe(true);
+      expect(environment.frozenState).toBe(true);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it('rejects malformed actions and nonfinite policy or evaluator metrics at runtime', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'avo-invalid-seams-'));
+    try {
+      const malformed = await options(root);
+      const malformedValue = malformed.value as unknown as VariationOperatorOptions;
+      malformedValue.agent = {
+        chooseAction: async () => ({ kind: 'inspect', path: 'routing.ts', unexpected: true } as unknown as VariationAction),
+      };
+      malformedValue.budget = { ...malformedValue.budget, maxActions: 1, maxBranchActions: 1 };
+      await expect(new GovernedVariationOperator(malformedValue).run()).rejects.toThrow(/invalid agent action: unexpected field/);
+
+      await rm(join(root, 'checkpoint.json'), { force: true });
+      const invalidPolicy = await options(root);
+      const invalidPolicyValue = invalidPolicy.value as unknown as VariationOperatorOptions;
+      invalidPolicyValue.agent = { chooseAction: async () => ({ kind: 'inspect', path: 'routing.ts' }) };
+      invalidPolicyValue.policy = {
+        version: 'policy-v1',
+        authorize: () => ({
+          verdict: 'allow', reason: 'malformed risk', policyVersion: 'policy-v1', riskCharge: Number.NaN,
+        }),
+      };
+      invalidPolicyValue.budget = { ...invalidPolicyValue.budget, maxActions: 1, maxBranchActions: 1 };
+      await expect(new GovernedVariationOperator(invalidPolicyValue).run()).rejects.toThrow(/riskCharge must be finite and nonnegative/);
+
+      await rm(join(root, 'checkpoint.json'), { force: true });
+      const invalidAgentMetering = await options(root);
+      const invalidAgentMeteringValue = invalidAgentMetering.value as unknown as VariationOperatorOptions;
+      invalidAgentMeteringValue.agent = {
+        chooseAction: async () => ({
+          action: { kind: 'inspect', path: 'routing.ts' }, costUsd: -1, durationMs: 0,
+        }),
+      };
+      invalidAgentMeteringValue.budget = {
+        ...invalidAgentMeteringValue.budget, maxActions: 1, maxBranchActions: 1,
+      };
+      await expect(new GovernedVariationOperator(invalidAgentMeteringValue).run()).rejects.toThrow(/costUsd must be finite and nonnegative/);
+
+      await rm(join(root, 'checkpoint.json'), { force: true });
+      const invalidEvaluation = await options(root);
+      const invalidEvaluationValue = invalidEvaluation.value as unknown as VariationOperatorOptions;
+      invalidEvaluationValue.evaluators = {
+        version: 'eval-v1',
+        evaluate: async () => ({ ...result('seed'), quality: Number.POSITIVE_INFINITY }),
+      };
+      await expect(new GovernedVariationOperator(invalidEvaluationValue).run()).rejects.toThrow(/quality must be finite and nonnegative/);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it('rejects negative observations and prevents promotion after a finite budget overshoot', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'avo-observation-budget-'));
+    try {
+      class NegativeCostEnvironment extends DeterministicEnvironment {
+        override async execute(action: VariationAction, state: Readonly<VariationState>) {
+          return { ...await super.execute(action, state), costUsd: -1 };
+        }
+      }
+      const negative = await options(root, new NegativeCostEnvironment());
+      const negativeValue = negative.value as unknown as VariationOperatorOptions;
+      negativeValue.agent = { chooseAction: async () => ({ kind: 'inspect', path: 'routing.ts' }) };
+      negativeValue.budget = { ...negativeValue.budget, maxActions: 1, maxBranchActions: 1 };
+      await expect(new GovernedVariationOperator(negativeValue).run()).rejects.toThrow(/costUsd must be finite and nonnegative/);
+
+      await rm(join(root, 'checkpoint.json'), { force: true });
+      class OverspendEnvironment extends DeterministicEnvironment {
+        override async execute(action: VariationAction, state: Readonly<VariationState>) {
+          return { ...await super.execute(action, state), costUsd: 2 };
+        }
+      }
+      const overspend = await options(root, new OverspendEnvironment());
+      const overspendValue = overspend.value as unknown as VariationOperatorOptions;
+      overspendValue.agent = { chooseAction: async () => ({ kind: 'inspect', path: 'routing.ts' }) };
+      overspendValue.budget = {
+        ...overspendValue.budget, maxActions: 1, maxBranchActions: 1, maxCostUsd: 1,
+      };
+      const output = await new GovernedVariationOperator(overspendValue).run();
+      expect(output.receipts[0].observation).toMatchObject({ ok: false, exitCode: 126, costUsd: 2 });
+      expect(output.receipts[0].observation.stderr).toContain('post-action budget exceeded: cost');
+      expect(output.checkpoint.state.budget.costUsdUsed).toBe(2);
+      expect(output.checkpoint.state.candidates.map((candidate) => candidate.id)).toEqual(['seed']);
     } finally {
       await rm(root, { recursive: true, force: true });
     }

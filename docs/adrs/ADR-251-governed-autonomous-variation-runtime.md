@@ -121,6 +121,20 @@ accepted result, and 100% autonomous replay integrity.
 
 ARC is explicitly deferred until that engineering benchmark passes.
 
+### Untrusted seam hardening
+
+Agent, policy, approval, environment, evaluator, supervisor, memory, and
+checkpoint adapters are authority boundaries. The operator deep-clones and
+deep-freezes every state, candidate, action, decision, and evidence snapshot
+before passing it outward. Returned actions, policy decisions, observations,
+evaluations, branches, and supervisor interventions are cloned and
+runtime-validated before they can be hashed or alter state.
+
+Costs, durations, risk charges, scores, sample metrics, and violation counts
+must be finite and nonnegative. The operator also applies a post-observation
+budget check, so an action that reports a finite cost, latency, or risk beyond
+the remaining hard limit is recorded as failed and cannot promote a candidate.
+
 ## Consequences
 
 - Difficult tasks gain iterative evidence-driven repair and semantic recovery.

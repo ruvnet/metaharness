@@ -1,6 +1,17 @@
 // SPDX-License-Identifier: MIT
 
 import { DarwinArchive, qualifies } from './archive.js';
+import {
+  frozenSnapshot,
+  validateConfiguration,
+  validatedAgentSelection,
+  validatedApproval,
+  validatedBranch,
+  validatedEvaluation,
+  validatedIntervention,
+  validatedObservation,
+  validatedPolicyDecision,
+} from './boundary.js';
 import { createCheckpoint, verifyVariationCheckpoint } from './checkpoint.js';
 import { sha256, transitionHash } from './crypto.js';
 import type {
@@ -76,6 +87,34 @@ function budgetRemaining(budget: BudgetState): boolean {
     && budget.riskUsed <= budget.riskBudget;
 }
 
+function enforceProjectedBudget(
+  state: VariationState,
+  observation: ActionObservation,
+  riskCharge: number,
+): ActionObservation {
+  const projectedCost = state.budget.costUsdUsed + observation.costUsd;
+  const projectedWallTime = state.budget.wallTimeMsUsed + observation.durationMs;
+  const projectedRisk = state.budget.riskUsed + riskCharge;
+  if (![projectedCost, projectedWallTime, projectedRisk].every(Number.isFinite)) {
+    throw new Error('avo: budget accumulation overflow');
+  }
+  const exceeded: string[] = [];
+  if (state.budget.actionsUsed + 1 > state.budget.maxActions) exceeded.push('actions');
+  if (state.budget.branchActionsUsed + 1 > state.budget.maxBranchActions) exceeded.push('branch actions');
+  if (projectedCost > state.budget.maxCostUsd) exceeded.push('cost');
+  if (projectedWallTime > state.budget.maxWallTimeMs) exceeded.push('wall time');
+  if (projectedRisk > state.budget.riskBudget) exceeded.push('risk');
+  if (exceeded.length === 0) return observation;
+  const reason = `post-action budget exceeded: ${exceeded.join(', ')}`;
+  return {
+    ...observation,
+    ok: false,
+    stderr: [observation.stderr, reason].filter(Boolean).join('\n'),
+    exitCode: 126,
+    failureSignature: reason,
+  };
+}
+
 function failureObservation(reason: string, digest: string): ActionObservation {
   return { ok: false, stderr: reason, exitCode: 126, durationMs: 0, costUsd: 0, workspaceDigest: digest, failureSignature: reason };
 }
@@ -124,9 +163,16 @@ export class GovernedVariationOperator implements VariationOperator {
   private readonly authorityVersions: readonly string[];
 
   constructor(private readonly options: VariationOperatorOptions) {
+    validateConfiguration(options.budget, options.invariants);
     this.runtimeVersion = options.runtimeVersion ?? '0.1.0';
-    this.checkpointEvery = Math.max(1, options.checkpointEveryActions ?? 1);
-    this.rvfCheckpointEvery = Math.max(1, options.rvfCheckpointEveryActions ?? 100);
+    const checkpointEvery = options.checkpointEveryActions ?? 1;
+    const rvfCheckpointEvery = options.rvfCheckpointEveryActions ?? 100;
+    if (!Number.isSafeInteger(checkpointEvery) || checkpointEvery <= 0
+      || !Number.isSafeInteger(rvfCheckpointEvery) || rvfCheckpointEvery <= 0) {
+      throw new Error('avo: checkpoint intervals must be positive safe integers');
+    }
+    this.checkpointEvery = checkpointEvery;
+    this.rvfCheckpointEvery = rvfCheckpointEvery;
     this.now = options.now ?? (() => new Date().toISOString());
     this.invariantHash = sha256(options.invariants);
     this.authorityVersions = [options.policy.version, options.evaluators.version, options.environment.version];
@@ -155,16 +201,20 @@ export class GovernedVariationOperator implements VariationOperator {
         // only, so handing it the live state/candidate would let a malicious agent
         // mutate its own evaluation (or the promotion baseline) and be committed
         // with signed receipts. It gets deep copies; authority stays in here.
-        const context: VariationContext = {
+        const context: VariationContext = frozenSnapshot({
           task: this.options.task,
-          state: structuredClone(state),
-          candidate: structuredClone(candidate),
-          recentObservations: structuredClone(state.receipts.slice(-8).map((receipt) => receipt.observation)),
-          memories: structuredClone(memories),
-          knowledge: structuredClone(knowledge),
+          state,
+          candidate,
+          recentObservations: state.receipts.slice(-8).map((receipt) => receipt.observation),
+          memories,
+          knowledge,
           allowedSurfaces: ['retrievalPolicy', 'modelRouting', 'contextPolicy', 'testPolicy', 'repairStrategy'],
-        };
-        const selected = await this.options.agent.chooseAction(context);
+        }, 'agent context');
+        const authorityBeforeAgent = sha256([state, candidate]);
+        const selected = validatedAgentSelection(await this.options.agent.chooseAction(context));
+        if (sha256([state, candidate]) !== authorityBeforeAgent) {
+          throw new Error('avo: authoritative state changed across agent seam');
+        }
         let agentDecision: AgentActionDecision | null = null;
         let action: VariationAction;
         if (isAgentActionDecision(selected)) {
@@ -173,7 +223,10 @@ export class GovernedVariationOperator implements VariationOperator {
         } else {
           action = selected;
         }
-        let decision = this.options.policy.authorize(action, state);
+        let decision = validatedPolicyDecision(this.options.policy.authorize(
+          frozenSnapshot(action, 'policy action'),
+          frozenSnapshot(state, 'policy state'),
+        ), this.options.policy.version);
         if (action.kind === 'edit' && this.options.invariants.protectedPaths.some((pattern) => protectedPathMatches(pattern, action.path))) {
           decision = {
             verdict: 'deny', reason: `protected invariant path cannot be edited: ${action.path}`,
@@ -181,7 +234,10 @@ export class GovernedVariationOperator implements VariationOperator {
           };
         }
         const approved = decision.verdict === 'allow'
-          || (decision.verdict === 'require-approval' && await this.options.approval.approve(action, decision));
+          || (decision.verdict === 'require-approval' && validatedApproval(await this.options.approval.approve(
+            frozenSnapshot(action, 'approval action'),
+            frozenSnapshot(decision, 'approval policy decision'),
+          )));
         let observation: ActionObservation;
         let evaluation: EvaluationResult | undefined;
 
@@ -192,7 +248,10 @@ export class GovernedVariationOperator implements VariationOperator {
           );
         } else if (action.kind === 'evaluate') {
           const parent = candidate.parentId ? this.archive.get(candidate.parentId)?.evaluation : undefined;
-          evaluation = await this.options.evaluators.evaluate(state.currentBranchId, parent);
+          evaluation = validatedEvaluation(await this.options.evaluators.evaluate(
+            state.currentBranchId,
+            parent === undefined ? undefined : frozenSnapshot(parent, 'evaluator parent result'),
+          ), this.options.evaluators.version);
           observation = {
             ok: evaluation.correct && evaluation.safe,
             durationMs: evaluation.wallTimeMs,
@@ -215,7 +274,9 @@ export class GovernedVariationOperator implements VariationOperator {
           if (!selected) {
             observation = failureObservation(`unknown archive candidate: ${action.parentCandidateId}`, candidate.workspaceDigest);
           } else {
-            const branch = await this.options.environment.fork(selected);
+            const branch = validatedBranch(await this.options.environment.fork(
+              frozenSnapshot(selected, 'environment fork candidate'),
+            ));
             observation = {
               ok: true,
               durationMs: 0,
@@ -229,10 +290,16 @@ export class GovernedVariationOperator implements VariationOperator {
           if (!lastEvaluation || !qualifies(lastEvaluation, candidate.evaluation, this.options.invariants.promotionDelta)) {
             observation = failureObservation('promotion gate rejected commit', state.receipts.at(-1)?.workspaceDigest ?? candidate.workspaceDigest);
           } else {
-            observation = await this.options.environment.execute(action, state);
+            observation = validatedObservation(await this.options.environment.execute(
+              frozenSnapshot(action, 'environment action'),
+              frozenSnapshot(state, 'environment state'),
+            ));
           }
         } else {
-          observation = await this.options.environment.execute(action, state);
+          observation = validatedObservation(await this.options.environment.execute(
+            frozenSnapshot(action, 'environment action'),
+            frozenSnapshot(state, 'environment state'),
+          ));
         }
 
         if (agentDecision) {
@@ -247,6 +314,9 @@ export class GovernedVariationOperator implements VariationOperator {
           };
         }
 
+        observation = validatedObservation(observation);
+        observation = enforceProjectedBudget(state, observation, decision.riskCharge);
+
         state = await this.transition(state, action, observation, decision, evaluation);
 
         if (evaluation) {
@@ -257,7 +327,9 @@ export class GovernedVariationOperator implements VariationOperator {
             await this.options.environment.quarantine(state.currentBranchId, evaluation.failureSignature ?? 'protected invariant failed');
             state.rejectedLessons.push(memoryRecord(state, action, observation, evaluation));
           }
-          const intervention = await this.options.supervisor.observe(state);
+          const intervention = validatedIntervention(await this.options.supervisor.observe(
+            frozenSnapshot(state, 'supervisor state'),
+          ), this.options.policy.version);
           if (intervention) state.interventions.push(intervention);
         }
 
@@ -291,10 +363,12 @@ export class GovernedVariationOperator implements VariationOperator {
         }
 
         const record = memoryRecord(state, action, observation, evaluation);
-        await this.options.memory.buffer(record);
+        await this.options.memory.buffer(frozenSnapshot(record, 'memory record'));
         state.memoryUpdates.push(record);
         state.memoryCursor = this.options.memory.cursor;
-        if (!await this.options.memory.verify([record])) throw new Error('avo: structured memory persistence verification failed');
+        if (await this.options.memory.verify(frozenSnapshot([record], 'memory verification records')) !== true) {
+          throw new Error('avo: structured memory persistence verification failed');
+        }
         if (state.budget.actionsUsed % this.checkpointEvery === 0) {
           await this.persist(state);
         }
@@ -324,7 +398,10 @@ export class GovernedVariationOperator implements VariationOperator {
       if (!verifyVariationCheckpoint(saved, this.options.signer)) throw new Error('avo: checkpoint signature/hash mismatch');
       return structuredClone(saved.state);
     }
-    const baselineEvaluation = await this.options.evaluators.evaluate(this.options.seed.branchId);
+    const baselineEvaluation = validatedEvaluation(
+      await this.options.evaluators.evaluate(this.options.seed.branchId),
+      this.options.evaluators.version,
+    );
     const baseline: Candidate = {
       ...this.options.seed,
       parentId: null,
@@ -336,7 +413,9 @@ export class GovernedVariationOperator implements VariationOperator {
       committed: true,
     };
     this.archive.insert(baseline);
-    const working = await this.options.environment.fork(baseline);
+    const working = validatedBranch(await this.options.environment.fork(
+      frozenSnapshot(baseline, 'environment fork candidate'),
+    ));
     const state: VariationState = {
       schema: 1,
       runId: this.options.runId,
@@ -411,7 +490,7 @@ export class GovernedVariationOperator implements VariationOperator {
       const path = await this.options.memory.packageCheckpoint(checkpoint);
       checkpoint = { ...checkpoint, rvfManifestPath: path };
     }
-    await this.options.checkpointStore.save(checkpoint);
+    await this.options.checkpointStore.save(frozenSnapshot(checkpoint, 'checkpoint store value'));
     return checkpoint;
   }
 
