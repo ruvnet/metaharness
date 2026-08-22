@@ -577,7 +577,10 @@ export function exactObservationFromRaw(
   }
   const frames = Object.freeze(raw.frames.map(exactFrameFromRaw));
   const currentFrame = frames[frames.length - 1]!;
-  const availableActions = Object.freeze([...raw.availableActions]);
+  // Sort the (validated, unique) action names before hashing/storing so a benign
+  // reorder from the environment adapter yields the same observationHash instead
+  // of faulting the run (UNLEDGERED_ENVIRONMENT_CHANGE / STALE_OBSERVATION).
+  const availableActions = Object.freeze([...raw.availableActions].sort());
   const observationHash = hashArcValue({
     opaqueGameScope,
     state: raw.state,
