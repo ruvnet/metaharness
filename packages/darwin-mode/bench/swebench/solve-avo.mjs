@@ -61,6 +61,35 @@ if (existsSync(OUT)) for (const line of readFileSync(OUT, 'utf8').split('\n')) {
 const todo = PREREG.instanceIds.filter((id) => !done.has(id)).slice(0, LIMIT);
 let globalSpent = 0;
 
+// Search/replace edit application (exact, then whitespace-tolerant fuzzy). Models
+// CANNOT reliably reproduce whole files within a token budget — full-file rewrites
+// truncate. A small SEARCH snippet applied against the real content never truncates.
+function applyEdit(content, search, replace) {
+  if (search.length && content.includes(search)) return content.replace(search, replace);
+  const cl = content.split('\n'); const sl = search.split('\n');
+  while (sl.length && sl[sl.length - 1].trim() === '') sl.pop();
+  while (sl.length && sl[0].trim() === '') sl.shift();
+  if (!sl.length) return null;
+  const norm = (s) => s.replace(/\s+/g, ' ').trim();
+  for (let i = 0; i + sl.length <= cl.length; i++) {
+    let ok = true; for (let j = 0; j < sl.length; j++) { if (norm(cl[i + j]) !== norm(sl[j])) { ok = false; break; } }
+    if (!ok) continue;
+    const indOf = (s) => (s.match(/^[ \t]*/) || [''])[0];
+    const delta = indOf(cl[i]).length - indOf(sl[0]).length;
+    const rl = replace.split('\n').map((line) => { if (!line.trim()) return line; if (delta >= 0) return ' '.repeat(delta) + line; const lead = indOf(line).length; return line.slice(Math.min(-delta, lead)); });
+    return [...cl.slice(0, i), ...rl, ...cl.slice(i + sl.length)].join('\n');
+  }
+  return null;
+}
+// Parse one or more SEARCH/REPLACE blocks (aider format) from model text.
+function parseEdits(text) {
+  const edits = [];
+  const re = /<{5,7} SEARCH\r?\n([\s\S]*?)\r?\n={5,7}\r?\n([\s\S]*?)\r?\n>{5,7} REPLACE/g;
+  let m;
+  while ((m = re.exec(text))) edits.push({ search: m[1], replace: m[2] });
+  return edits;
+}
+
 const g = (cwd, c) => execSync(c, { cwd, stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 1 << 28, env: { ...process.env, GIT_TERMINAL_PROMPT: '0' } });
 function fetchRepo(repo, sha) {
   const work = mkdtempSync(join(tmpdir(), 'avorepo-'));
@@ -142,28 +171,31 @@ async function solveFixed(inst) {
       }
     } catch { /**/ }
     if (!files.length) return { patch: '', costUsd: 0, policyViolations: 0, rollbackCount: 0, replay: { expected: 'sha256:one-call', actual: 'sha256:one-call' }, coherenceRetention: 0.7 };
-    const target = files[0];
-    let original = '';
-    try { original = readFileSync(join(work, target), 'utf8'); } catch { /**/ }
-    const others = files.slice(1, 3).map((f) => { try { return `--- CONTEXT ${f} ---\n${readFileSync(join(work, f), 'utf8').slice(0, 3000)}`; } catch { return ''; } }).filter(Boolean).join('\n\n');
+    const shown = files.slice(0, 3).map((f) => { try { return `--- FILE ${f} ---\n${readFileSync(join(work, f), 'utf8').slice(0, 9000)}`; } catch { return ''; } }).filter(Boolean).join('\n\n');
     const { text, cost } = await llm([
-      { role: 'system', content: `You fix a repository bug in one edit to the single file ${target}. Reply with ONLY the COMPLETE corrected content of that file inside one fenced code block — no diff, no prose. Preserve everything unrelated exactly.` },
-      { role: 'user', content: `Issue:\n${String(inst.problem_statement).slice(0, 5000)}\n\n--- CURRENT ${target} ---\n${original.slice(0, 14000)}\n\n${others}\n\nReturn the full corrected ${target}.` },
-    ], 8000);
-    const fence = text.match(/```(?:[a-zA-Z0-9_]*)\n([\s\S]*?)```/);
-    const newContent = fence ? fence[1] : (text.includes('\n') && !text.trim().startsWith('I ') ? text : '');
-    if (!newContent.trim() || newContent === original) {
-      return { patch: '', costUsd: cost, policyViolations: 0, rollbackCount: 0, replay: { expected: 'sha256:one-call', actual: 'sha256:one-call' }, coherenceRetention: 0.7 };
+      { role: 'system', content: 'You fix a repository bug in one shot. Return one or more SEARCH/REPLACE edit blocks and NOTHING else. Format each as:\n<<<<<<< SEARCH\n<exact lines copied verbatim from a shown file>\n=======\n<replacement lines>\n>>>>>>> REPLACE\nThe SEARCH text MUST match the file byte-for-byte. Never edit test files.' },
+      { role: 'user', content: `Issue:\n${String(inst.problem_statement).slice(0, 5000)}\n\n${shown}\n\nEmit the SEARCH/REPLACE edit(s) that fix the issue.` },
+    ], 4000);
+    const edits = parseEdits(text);
+    let applied = 0;
+    for (const f of files.slice(0, 3)) {
+      const path = join(work, f);
+      let content; try { content = readFileSync(path, 'utf8'); } catch { continue; }
+      let next = content;
+      for (const e of edits) { const r = applyEdit(next, e.search, e.replace); if (r != null && r !== next) { next = r; applied += 1; } }
+      if (next !== content) writeFileSync(path, next);
     }
-    writeFileSync(join(work, target), newContent.endsWith('\n') ? newContent : newContent + '\n');
     let patch = '';
-    try { patch = g(work, 'git diff').toString(); } catch { /**/ }
+    try { patch = applied ? g(work, 'git diff').toString() : ''; } catch { /**/ }
     return { patch, costUsd: cost, policyViolations: 0, rollbackCount: 0, replay: { expected: 'sha256:one-call', actual: 'sha256:one-call' }, coherenceRetention: 0.7 };
   } finally { rmSync(work, { recursive: true, force: true }); }
 }
 
 // ── AVO arms: governed multi-action loop ──
-function makeAgent(inst, prof) {
+// The adapter's edit writes action.content wholesale, but the MODEL emits a small
+// {search, replace} — we read the current branch file, apply it, and hand the
+// adapter correct full content. No full-file reproduction ⇒ no truncation.
+function makeAgent(inst, prof, readCurrentFile) {
   let spent = 0;
   return {
     usage: [],
@@ -172,35 +204,45 @@ function makeAgent(inst, prof) {
       const receipts = context.state.receipts;
       const history = receipts.slice(-8)
         .map((r, i, arr) => {
-          const budget = i === arr.length - 1 ? 5000 : 250; // full detail for the latest observation
+          const budget = i === arr.length - 1 ? 6000 : 250; // full detail for the latest observation
           return `${r.action.kind}${r.action.path ? ' ' + r.action.path : ''}${r.action.query ? ' ' + r.action.query : ''}: exit=${r.observation?.exitCode ?? ''} ${String(r.observation?.stdout ?? '').slice(0, budget)}`;
         })
         .join('\n');
       const { text, cost, id, tokens } = await llm([
         { role: 'system', content:
-          'You repair a repository bug through single JSON actions. Reply ONLY one JSON object. Actions: ' +
-          '{"kind":"search","query":"<git grep pattern>"} | {"kind":"inspect","path":"<file>"} | ' +
-          '{"kind":"edit","path":"<source file>","content":"<FULL new file content>"} | {"kind":"evaluate"} | ' +
-          '{"kind":"commit","summary":"<short>"} . Workflow: search/inspect to localize, edit the source (never tests), ' +
-          'evaluate to run the repo tests, iterate until they pass, then commit.' },
+          'You repair a repository bug through single JSON actions. Reply ONLY one JSON object. Actions:\n' +
+          '{"kind":"search","query":"<git grep pattern>"}\n' +
+          '{"kind":"inspect","path":"<file>"}  (returns the file content)\n' +
+          '{"kind":"edit","path":"<source file>","search":"<exact lines from the file>","replace":"<new lines>"}\n' +
+          '{"kind":"evaluate"}  (runs the repo tests)\n' +
+          '{"kind":"commit","summary":"<short>"}\n' +
+          'Workflow: search/inspect to localize, then edit source (never tests) with a search block copied VERBATIM from the inspected file, evaluate, iterate, commit. Keep search blocks small and exact.' },
         { role: 'user', content: `Issue:\n${String(inst.problem_statement).slice(0, 5000)}\n\nActions used: ${context.state.budget.actionsUsed}/${MAX_ACTIONS}\nRecent history:\n${history || '(none)'}\n\nNext action as JSON.` },
-      ], 6000);
+      ], 4000);
       spent += cost;
-      const action = sanitize(text, context, prof);
+      const action = sanitize(text, context, prof, readCurrentFile);
       this.usage.push({ generationId: id, costUsd: cost, tokens: tokens?.total_tokens ?? 0, kind: action.kind });
       return { action, costUsd: cost, durationMs: 1, receipt: { provider: 'openrouter', model: MODEL, generationId: id } };
     },
   };
 }
-function sanitize(content, context, prof) {
+function sanitize(content, context, prof, readCurrentFile) {
   let parsed = {};
   try { const m = content.match(/\{[\s\S]*\}/); parsed = m ? JSON.parse(m[0]) : {}; } catch { /**/ }
   switch (parsed.kind) {
     case 'search': if (typeof parsed.query === 'string' && parsed.query) return { kind: 'search', query: parsed.query.slice(0, 200) }; break;
     case 'inspect': if (typeof parsed.path === 'string' && parsed.path) return { kind: 'inspect', path: parsed.path }; break;
     case 'edit':
-      if (typeof parsed.path === 'string' && typeof parsed.content === 'string' && parsed.content && !prof.testPathRegex(parsed.path)) {
-        return { kind: 'edit', path: parsed.path, content: parsed.content, surface: 'repairStrategy' };
+      if (typeof parsed.path === 'string' && typeof parsed.search === 'string' && typeof parsed.replace === 'string' && parsed.search && !prof.testPathRegex(parsed.path)) {
+        const current = readCurrentFile(context.state.currentBranchId, parsed.path);
+        if (current != null) {
+          const next = applyEdit(current, parsed.search, parsed.replace);
+          if (next != null && next !== current) {
+            return { kind: 'edit', path: parsed.path, content: next.endsWith('\n') ? next : next + '\n', surface: 'repairStrategy' };
+          }
+        }
+        // search didn't match — show the model the real file so it can fix its block
+        return { kind: 'inspect', path: parsed.path };
       }
       break;
     case 'evaluate': return { kind: 'evaluate' };
@@ -224,9 +266,16 @@ async function solveAvo(inst, withSupervisor) {
       executorFor: (cwd) => new NodeToolExecutor({ cwd, timeoutMs: 60_000 }),
     });
     const branchDiff = (branchId) => { try { return g(environment.pathForBranch(branchId), 'git diff').toString(); } catch { return ''; } };
+    const readCurrentFile = (branchId, path) => {
+      for (const base of [branchId && branchId !== 'seed' ? environment.pathForBranch(branchId) : null, seed]) {
+        if (!base) continue;
+        try { return readFileSync(join(base, path), 'utf8'); } catch { /**/ }
+      }
+      return null;
+    };
     const { privateKey, publicKey } = generateKeyPairSync('ed25519');
     const signer = new Ed25519ReceiptSigner(`avo-${inst.instance_id}`, privateKey, publicKey);
-    const agent = makeAgent(inst, prof);
+    const agent = makeAgent(inst, prof, readCurrentFile);
     const evaluate = async (branchId) => {
       if (branchId === 'seed') return { evaluatorVersion: 'conformant-v1', correct: false, safe: true, replayable: true, noRegression: true, budgetValid: true, quality: 0.1, costUsd: 0, wallTimeMs: 1, policyViolations: 0, protectedTestsPassed: false, lowerConfidenceBound: 0, evidence: { branchId } };
       const r = conformantEval(inst.instance_id, branchDiff(branchId), prof);
