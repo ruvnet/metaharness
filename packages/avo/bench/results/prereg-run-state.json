@@ -1,9 +1,9 @@
 {
-  "phase": "RESULTS IN \u2014 evaluating 2+2 recovered extras then final assembly + evaluateShipGate",
+  "phase": "COMPLETE (cost-optimization concluded \u2014 negative result, understood)",
   "taskSetHash": "sha256:1da0fdf1ee3c9044705efd1874fc2b7b77ab0a04c33442700a6ec1760dc2a7ab",
   "budgetUsd": 100.0,
   "openrouterUsageBaseline": 4252.182356944,
-  "spentUsd": 4.172,
+  "spentUsd": "5.13",
   "next": "harvest both AVO eval reports \u2192 merge errored re-runs \u2192 assemble-three-arm.mjs \u2192 swebench-three-arm.mjs \u2192 evaluateShipGate \u2192 record verdict in ADR-251 + stop loop",
   "armProgress": {
     "darwin-fixed": "DONE 5/100",
@@ -29,5 +29,8 @@
     "avo-no-supervisor": "14/100 resolved (71 patches) \u2014 +180% rel lift, 0 violations",
     "avo-supervisor-memory": "13/100 resolved (72 patches) \u2014 +160% rel lift, 0 violations",
     "note": "AVO nearly TRIPLES the one-shot baseline on unseen SWE-bench_Verified. 4 recovered extras (2/arm) still evaluating; can only raise AVO. 3+1 deterministic-error instances stay unresolved (conservative)."
-  }
+  },
+  "VERDICT": "ship=false on cost. darwin-fixed 5/100, avo-no-supervisor 14/100 (+180%), avo-supervisor-memory 13/100 (+160%). Resolution/violations/replay PASS; cost/accepted +97.7% FAIL (<50% req). AVO triples resolution + perfect governance but not cost-competitive per fix. Claim blocked on COST not efficacy.",
+  "pr": "https://github.com/ruvnet/metaharness/pull/217",
+  "costOptimizationFinding": "Shipped avo 0.1.2 (opt-in stopOnVerifiedWinner) + benchmark auto-cadence (test-after-edit/commit-on-green). Cost gate NOT passable: in-loop conformant test rarely passes green even for officially-resolved patches, winning edits scattered late (action 18-20), so early-stop rarely fires and budget reduction would forfeit resolution. AVO +160% resolution and +97.7% cost are two sides of the same exploration. ship=false-on-cost stands, now mechanistically understood. Loop stopped."
 }
