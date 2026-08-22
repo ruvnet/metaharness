@@ -1,9 +1,33 @@
 {
-  "phase": "prereg-committed",
+  "phase": "RESULTS IN \u2014 evaluating 2+2 recovered extras then final assembly + evaluateShipGate",
   "taskSetHash": "sha256:1da0fdf1ee3c9044705efd1874fc2b7b77ab0a04c33442700a6ec1760dc2a7ab",
   "budgetUsd": 100.0,
   "openrouterUsageBaseline": 4252.182356944,
-  "spentUsd": 0,
-  "next": "build packages/darwin-mode/bench/swebench/solve-avo.mjs: wrap GovernedVariationOperator per instance (repo checkout seed, official test command evaluator), 3 arms, emit SWEbenchObservation records to results/arm-<name>.jsonl with replay hashes; then run arms at concurrency 4",
-  "armProgress": {"darwin-fixed": 0, "avo-no-supervisor": 0, "avo-supervisor-memory": 0}
+  "spentUsd": 4.172,
+  "next": "harvest both AVO eval reports \u2192 merge errored re-runs \u2192 assemble-three-arm.mjs \u2192 swebench-three-arm.mjs \u2192 evaluateShipGate \u2192 record verdict in ADR-251 + stop loop",
+  "armProgress": {
+    "darwin-fixed": "DONE 5/100",
+    "avo-no-supervisor": "eval 43/71; 3 deterministic ENOENT (conservative unresolved)",
+    "avo-supervisor-memory": "eval 43/72; 1 error re-solving"
+  },
+  "securityPR": "MERGED (992f119) + PUBLISHED @metaharness/avo 0.1.1 \u2014 agent-context isolation shipped",
+  "cleanupNeeded": "after arms finish: strip records with 'error' or empty model_patch-due-to-error from each arm-*.jsonl, re-run those instance ids with retry-enabled solve-avo (darwin-fixed had 14 transient fetch-failed). Only error records re-run; genuine empty patches (model produced none) stay.",
+  "note": "darwin-fixed one-shot: 61 empty (localization miss w/o iteration) \u2014 honest baseline weakness. AVO arms iterate.",
+  "evalNote": "swebench pinned to 3.0.17 (5.0.2 needs new image-key schema; 3.0.17 has --cache_level + matches pre-pulled sweb.eval images). SWE-bench_Verified split=test. Patch-apply-failures count as unresolved (correct). darwin-fixed 85/100 non-empty patches.",
+  "assembler": "assemble-three-arm.mjs built + committed \u2014 dedup, resolved-backfill from eval reports, identical-task-set enforced",
+  "criticalFinding": "darwin-fixed BLIND baseline scored 1/100 due to 68 patch-apply failures (hallucinated hunk context). Fixed: baseline now reads file content. Re-running. AVO arms unaffected (they produce real git diffs from inspected files).",
+  "baselineHistory": "v1 blind (1/100, 68 apply-fail) \u2192 v2 file-aware-but-model-diff (still apply-fail) \u2192 v3 full-file-rewrite+git-diff+density-ranked-localization (smoke: real applyable patch). v3 is the fair baseline: same edit mechanism as AVO, difference is one-call vs governed multi-action.",
+  "fairnessNote": "Both darwin-fixed and AVO use the SAME full-file edit primitive (can yield large diffs). AVO can evaluate+revert to catch regression noise; one-shot darwin-fixed cannot. That self-correction gap IS the measured mechanism difference \u2014 fair.",
+  "criticalFinding2": "Full-file edit primitive truncated large files (token limit) across ALL arms \u2014 ~half of patches were file-destroying deletions. Benchmark was invalid. Switched to search/replace (aider-style): model emits small exact snippet + replacement, harness applies against real file. Smoke: AVO +11/-4 clean fix vs prior +2/-4137. All prior arm data archived to results/invalid-fullfile/. Re-running.",
+  "validation": "CONFIRMED clean: all 3 arms produce targeted bug-fix diffs (+3/-0 .. +19/-9), 0 truncations. Benchmark sound.",
+  "baselineResolved": "darwin-fixed: 5/100 resolved (39 non-empty patches, 0 eval errors). Gate needs AVO >= 6/100 (20% rel lift) AND 0 policy violations AND <50% cost/accepted increase AND 100% replay.",
+  "mechanismSignal": "AVO arms 89% non-empty patch rate vs darwin-fixed 39% (iteration localizes); 0 policy violations both arms. Resolve-rate pending eval.",
+  "nonEmptyRates": "darwin-fixed 39/100, avo-no-supervisor 71/100, avo-supervisor-memory 72/100 (iteration nearly doubles patch production)",
+  "note2": "A few AVO instances hit a wrapper ENOENT deterministically \u2192 counted unresolved (penalizes AVO, conservative). If final gate is borderline, debug ENOENT.",
+  "RESULTS": {
+    "darwin-fixed": "5/100 resolved (39 patches)",
+    "avo-no-supervisor": "14/100 resolved (71 patches) \u2014 +180% rel lift, 0 violations",
+    "avo-supervisor-memory": "13/100 resolved (72 patches) \u2014 +160% rel lift, 0 violations",
+    "note": "AVO nearly TRIPLES the one-shot baseline on unseen SWE-bench_Verified. 4 recovered extras (2/arm) still evaluating; can only raise AVO. 3+1 deterministic-error instances stay unresolved (conservative)."
+  }
 }
