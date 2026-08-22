@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 import { createHash } from 'node:crypto';
-import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { chmod, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -586,6 +586,39 @@ describe('official hidden-assignment factory', () => {
     expect(hashArcValue(evidenceBody)).toBe(evidenceHash);
     expect(anchor.records.get('episode-accepted')?.length).toBeGreaterThan(0);
     expect(bridge.closeScorecardCalls).toBe(1);
+  });
+
+  it('does not interpret Windows stat mode bits as POSIX group permissions', async () => {
+    const bridge = new FakeOfficialBridge();
+    const anchor = new MockExternalAnchor();
+    bridge.scorecard = officialScorecard({ guid: 'opaque-guid-1', actions: 1 });
+    const evidenceRoot = await temporaryEvidenceRoot();
+    const factory = track(createOfficialArcControllerFactory({
+      assignments: [{ gameId: 'private-game-windows-mode' }],
+      bridge,
+      evidenceRoot,
+      evidenceAnchor: anchor,
+      runManifest: MANIFEST,
+    }));
+
+    const controller = await factory(context('episode-windows-mode'));
+    await recordOneAction(controller, 'windows-mode-action-0001');
+    await controller.close();
+
+    const journalFiles = (await readdir(evidenceRoot)).filter(name => name.endsWith('.jsonl'));
+    expect(journalFiles).toHaveLength(1);
+    await chmod(join(evidenceRoot, journalFiles[0]!), 0o666);
+
+    const platformDescriptor = Object.getOwnPropertyDescriptor(process, 'platform');
+    if (!platformDescriptor) throw new Error('expected process.platform descriptor');
+    Object.defineProperty(process, 'platform', { ...platformDescriptor, value: 'win32' });
+    try {
+      const evidence = await factory.finalizeEvidence();
+      expect(evidence.accepted).toBe(true);
+      expect(evidence.failures).not.toContain('INVALID_DURABLE_JOURNAL');
+    } finally {
+      Object.defineProperty(process, 'platform', platformDescriptor);
+    }
   });
 
   it('fails closed when the scorecard contains an additional malformed run', async () => {

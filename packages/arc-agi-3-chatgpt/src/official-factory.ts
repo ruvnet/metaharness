@@ -471,7 +471,12 @@ async function journalEvidence(run: OfficialEpisodeRun): Promise<{
     try {
       const info = await handle.stat();
       if (!info.isFile() || info.size > MAX_EVIDENCE_LOG_BYTES) throw new Error('invalid log');
-      privateMode = (info.mode & 0o077) === 0;
+      // Windows exposes only a limited subset of POSIX mode semantics through
+      // stat/chmod. In particular, group/other bits do not represent Windows
+      // DACLs, so they cannot validate privacy there. Journal integrity and
+      // the independent anchor are still verified below. Keep the strict 0600
+      // check everywhere Node provides meaningful POSIX permission bits.
+      privateMode = process.platform === 'win32' || (info.mode & 0o077) === 0;
       raw = await handle.readFile({ encoding: 'utf8' });
     } finally {
       await handle.close();

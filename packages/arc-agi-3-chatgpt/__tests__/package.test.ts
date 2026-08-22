@@ -13,9 +13,15 @@ const packageRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 
 describe('private package artifact', () => {
   it('packs the server, exact widget, policies, and both frozen prompts', async () => {
-    const { stdout } = await execute('npm', ['pack', '--dry-run', '--json', '--ignore-scripts', '--offline'], {
+    const npmArguments = ['pack', '--dry-run', '--json', '--ignore-scripts', '--offline'];
+    const npmExecutable = process.platform === 'win32' ? 'cmd.exe' : 'npm';
+    const npmExecutableArguments = process.platform === 'win32'
+      ? ['/d', '/s', '/c', 'npm', ...npmArguments]
+      : npmArguments;
+    const { stdout } = await execute(npmExecutable, npmExecutableArguments, {
       cwd: packageRoot,
       maxBuffer: 10 * 1024 * 1024,
+      windowsHide: true,
       env: {
         ...process.env,
         npm_config_audit: 'false',
