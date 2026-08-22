@@ -247,7 +247,17 @@ function sanitize(content, context, prof, readCurrentFile) {
   let parsed = {};
   try { const m = content.match(/\{[\s\S]*\}/); parsed = m ? JSON.parse(m[0]) : {}; } catch { /**/ }
   switch (parsed.kind) {
-    case 'search': if (typeof parsed.query === 'string' && parsed.query) return { kind: 'search', query: parsed.query.slice(0, 200) }; break;
+    case 'search': {
+      if (typeof parsed.query !== 'string' || !parsed.query) break;
+      // Cost lever: after 3 consecutive searches, force an inspect of the last
+      // located file so the model stops grepping and starts reading/editing.
+      const recent = context.state.receipts.slice(-3);
+      if (recent.length === 3 && recent.every((r) => r.action.kind === 'search')) {
+        const lastInspect = [...context.state.receipts].reverse().find((r) => r.action.kind === 'inspect');
+        if (lastInspect) return { kind: 'inspect', path: lastInspect.action.path };
+      }
+      return { kind: 'search', query: parsed.query.slice(0, 200) };
+    }
     case 'inspect': if (typeof parsed.path === 'string' && parsed.path) return { kind: 'inspect', path: parsed.path }; break;
     case 'edit':
       if (typeof parsed.path === 'string' && typeof parsed.search === 'string' && typeof parsed.replace === 'string' && parsed.search && !prof.testPathRegex(parsed.path)) {
