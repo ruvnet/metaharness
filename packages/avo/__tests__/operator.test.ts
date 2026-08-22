@@ -117,6 +117,25 @@ describe('GovernedVariationOperator', () => {
     }
   });
 
+  it('stopOnVerifiedWinner halts the loop at the first verified commit instead of exhausting the budget', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'avo-earlystop-'));
+    try {
+      const configured = await options(root);
+      configured.value.stopOnVerifiedWinner = true;
+      // Budget of 12 > the 6-action winning sequence: without early-stop the loop
+      // would keep cycling to 12; with it, it halts at the first verified commit.
+      configured.value.budget = { ...configured.value.budget, maxActions: 12, maxBranchActions: 12 };
+      const output = await new GovernedVariationOperator(configured.value).run();
+      const kinds = output.receipts.map((receipt) => receipt.action.kind);
+      expect(kinds).toEqual(['hypothesize', 'inspect', 'edit', 'execute', 'evaluate', 'commit']);
+      expect(output.checkpoint.state.budget.actionsUsed).toBe(6);
+      expect(output.winner?.evaluation.quality).toBe(0.9);
+      expect(output.receipts.every((receipt) => verifyReceipt(receipt, configured.receiptSigner))).toBe(true);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
   it('records a denied command without invoking the environment', async () => {
     const root = await mkdtemp(join(tmpdir(), 'avo-deny-'));
     try {

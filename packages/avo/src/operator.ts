@@ -57,6 +57,11 @@ export interface VariationOperatorOptions {
   runtimeVersion?: string;
   checkpointEveryActions?: number;
   rvfCheckpointEveryActions?: number;
+  /** When true, stop the loop as soon as a committed candidate passes every
+   *  promotion gate (the verified winner is captured and cannot change) — trades
+   *  further population search for lower cost/latency. Default false (keep
+   *  searching to the action budget). */
+  stopOnVerifiedWinner?: boolean;
   now?: () => string;
 }
 
@@ -137,6 +142,7 @@ export class GovernedVariationOperator implements VariationOperator {
     const protectedCapabilities = [...this.options.invariants.immutableCapabilities];
     for (const candidate of state.candidates) this.archive.insert(candidate);
 
+    let verifiedWinnerCommitted = false;
     try {
       while (budgetRemaining(state.budget)) {
         assertCapabilitiesUnchanged(protectedCapabilities, this.options.invariants.immutableCapabilities);
@@ -284,6 +290,7 @@ export class GovernedVariationOperator implements VariationOperator {
           state.candidates.push(promoted);
           state.currentCandidateId = promoted.id;
           await this.options.memory.consolidate();
+          verifiedWinnerCommitted = true;
         }
 
         const record = memoryRecord(state, action, observation, evaluation);
@@ -294,6 +301,10 @@ export class GovernedVariationOperator implements VariationOperator {
         if (state.budget.actionsUsed % this.checkpointEvery === 0) {
           await this.persist(state);
         }
+        // Early-stop: once a commit passes the promotion gate (a candidate that
+        // improves on its parent and satisfies every gate), the verified winner is
+        // captured and cannot change — continuing only burns actions/cost.
+        if (this.options.stopOnVerifiedWinner === true && verifiedWinnerCommitted) break;
       }
 
       const checkpoint = await this.persist(state, true);

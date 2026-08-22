@@ -307,6 +307,9 @@ async function solveAvo(inst, withSupervisor) {
       approval: { approve: async () => true },
       supervisor,
       signer,
+      // Cost-optimized config: stop as soon as a fix is verified (the winner is
+      // captured; further actions only add cost). Directly targets cost/accepted.
+      stopOnVerifiedWinner: process.env.AVO_STOP_ON_WIN !== '0',
       checkpointStore: new JsonCheckpointStore(join(root, 'checkpoint.json')),
       budget: { maxActions: MAX_ACTIONS, maxBranchActions: MAX_ACTIONS, maxCostUsd: PER_INSTANCE_USD, maxWallTimeMs: PREREG.config.perInstanceBudget.maxWallTimeMs, riskBudget: 1 },
       invariants: { immutableCapabilities: ['repository:read', 'repository:bounded-write'], protectedPaths: ['**/test*/**'], promotionDelta: 0.1, requireSignedReceipts: true, requireZeroPolicyViolations: true },
