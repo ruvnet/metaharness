@@ -116,27 +116,49 @@ function conformantEval(instanceId, diff, prof) {
 }
 
 // ── darwin-fixed arm: single-call generation, the CodeGenerator-equivalent baseline ──
+// One shot, but the model NEVER hand-authors the diff (it hallucinates @@ line
+// numbers that git apply rejects). It picks one file and rewrites it whole; the
+// harness writes the file and extracts the patch via `git diff` — same guaranteed-
+// applyable extraction the AVO arms use. The single difference from AVO is the
+// one-call, no-tools, no-evaluate mechanism.
 async function solveFixed(inst) {
   const work = fetchRepo(inst.repo, inst.base_commit);
   try {
     const prof = langProfile(inst, work);
-    // Fixed Darwin localizes, then reads the candidate file(s), then generates ONE
-    // patch. Blind generation hallucinates hunk context that fails to apply — the
-    // point of this baseline is the single-shot mechanism, not lack of file access.
     let files = [];
     try {
-      const kw = String(inst.problem_statement).match(/[A-Za-z_][A-Za-z0-9_]{4,}/g)?.slice(0, 6) ?? [];
-      files = kw.length ? g(work, `git grep -ln -e ${kw.map((k) => JSON.stringify(k)).join(' --or -e ')} -- '${prof.srcGlobs[0]}' | head -3 || true`).toString().split('\n').filter(Boolean) : [];
+      // Rank candidate files by keyword-match DENSITY (git grep -c), not alphabetically —
+      // distinctive identifiers from the issue concentrate in the buggy file. Prefer
+      // rarer keywords (CamelCase / long) which localize better than common words.
+      const allKw = String(inst.problem_statement).match(/[A-Za-z_][A-Za-z0-9_]{4,}/g) ?? [];
+      const kw = [...new Set(allKw)].sort((a, b) => (/[A-Z]/.test(b) ? 1 : 0) - (/[A-Z]/.test(a) ? 1 : 0) || b.length - a.length).slice(0, 8);
+      if (kw.length) {
+        const counts = g(work, `git grep -c -e ${kw.map((k) => JSON.stringify(k)).join(' --or -e ')} -- '${prof.srcGlobs[0]}' || true`).toString()
+          .split('\n').filter(Boolean)
+          .map((line) => { const idx = line.lastIndexOf(':'); return { f: line.slice(0, idx), c: Number(line.slice(idx + 1)) || 0 }; })
+          .filter((x) => x.f && !prof.testPathRegex(x.f) && !/(^|\/)(__init__|setup|conf|version)\.py$|\.pyinstaller\//.test(x.f))
+          .sort((a, b) => b.c - a.c);
+        files = counts.map((x) => x.f);
+      }
     } catch { /**/ }
-    const fileBlocks = files.slice(0, 2).map((f) => {
-      try { return `--- FILE: ${f} ---\n${readFileSync(join(work, f), 'utf8').slice(0, 8000)}`; } catch { return ''; }
-    }).filter(Boolean).join('\n\n');
+    if (!files.length) return { patch: '', costUsd: 0, policyViolations: 0, rollbackCount: 0, replay: { expected: 'sha256:one-call', actual: 'sha256:one-call' }, coherenceRetention: 0.7 };
+    const target = files[0];
+    let original = '';
+    try { original = readFileSync(join(work, target), 'utf8'); } catch { /**/ }
+    const others = files.slice(1, 3).map((f) => { try { return `--- CONTEXT ${f} ---\n${readFileSync(join(work, f), 'utf8').slice(0, 3000)}`; } catch { return ''; } }).filter(Boolean).join('\n\n');
     const { text, cost } = await llm([
-      { role: 'system', content: 'You fix a repository bug in a single edit. You are given the FULL current content of the candidate file(s). Reply with ONLY a unified git diff (start with "diff --git"), whose context lines EXACTLY match the file content shown. Never modify test files.' },
-      { role: 'user', content: `Issue:\n${String(inst.problem_statement).slice(0, 5000)}\n\n${fileBlocks || '(no candidate files located)'}\n\nProduce the unified diff that fixes the issue.` },
-    ], 4000);
-    const m = text.match(/diff --git[\s\S]*/);
-    return { patch: m ? m[0].replace(/```\s*$/, '').trim() + '\n' : '', costUsd: cost, policyViolations: 0, rollbackCount: 0, replay: { expected: 'sha256:one-call', actual: 'sha256:one-call' }, coherenceRetention: 0.7 };
+      { role: 'system', content: `You fix a repository bug in one edit to the single file ${target}. Reply with ONLY the COMPLETE corrected content of that file inside one fenced code block — no diff, no prose. Preserve everything unrelated exactly.` },
+      { role: 'user', content: `Issue:\n${String(inst.problem_statement).slice(0, 5000)}\n\n--- CURRENT ${target} ---\n${original.slice(0, 14000)}\n\n${others}\n\nReturn the full corrected ${target}.` },
+    ], 8000);
+    const fence = text.match(/```(?:[a-zA-Z0-9_]*)\n([\s\S]*?)```/);
+    const newContent = fence ? fence[1] : (text.includes('\n') && !text.trim().startsWith('I ') ? text : '');
+    if (!newContent.trim() || newContent === original) {
+      return { patch: '', costUsd: cost, policyViolations: 0, rollbackCount: 0, replay: { expected: 'sha256:one-call', actual: 'sha256:one-call' }, coherenceRetention: 0.7 };
+    }
+    writeFileSync(join(work, target), newContent.endsWith('\n') ? newContent : newContent + '\n');
+    let patch = '';
+    try { patch = g(work, 'git diff').toString(); } catch { /**/ }
+    return { patch, costUsd: cost, policyViolations: 0, rollbackCount: 0, replay: { expected: 'sha256:one-call', actual: 'sha256:one-call' }, coherenceRetention: 0.7 };
   } finally { rmSync(work, { recursive: true, force: true }); }
 }
 
