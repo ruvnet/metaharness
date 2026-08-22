@@ -4,6 +4,22 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Added — Experimental field memory (2026-08-15)
+
+- **`@metaharness/field-memory`** (`packages/field-memory/`) — experimental
+  packed-multihead attractor routing from verified aggregate outcomes, with
+  configuration-specific decay/drift, cost-aware choice, zero default
+  hysteresis, distinct-principal support quarantine, bounded per-centroid
+  influence, deterministic authenticated snapshots, and no raw-episode API.
+- **RuVector flat adapter** — dependency-free duck-typed integration that fails
+  closed unless upstream proves native effective options are verified flat,
+  in-place, canonical cosine, dimension/path matched, and revision-consistent.
+  Published `ruvector@0.2.41` is intentionally unsupported; the adapter targets
+  the corrected contract from upstream PR #831 or a later release.
+- **Release and security wiring** — ordered build/publication entries, workspace
+  lock links, package README/SECURITY/LICENSE, hostile-import regressions, and
+  held-out replay gates that keep the feature experimental.
+
 ### Added — Prime Agent integration, ADR-246/242 (2026-08-06)
 
 - **`@metaharness/host-prime-agent`** (`packages/host-prime-agent/`) — the

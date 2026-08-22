@@ -41,6 +41,7 @@ export const RELEASE_ORDER = [
   'host-prime-agent',
   'vertical-base',
   'vertical-trading',
+  'field-memory',
   'create-agent-harness',
 ];
 
