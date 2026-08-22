@@ -1,10 +1,10 @@
 # ADR-251: `@metaharness/avo` — governed autonomous variation runtime
 
-**Status**: Accepted (runtime, deterministic mechanism proof, and live provider validation implemented; live 100-task SWE-bench ship gate pending)
+**Status**: Accepted (runtime, deterministic mechanism proof, live provider validation, and ADR-253 release-claim enforcement implemented; live 100-task SWE-bench evidence still pending)
 **Date**: 2026-08-21
 **Updated**: 2026-08-21 — live governed-loop validation completed against two real providers (OpenRouter `qwen/qwen3-8b` via GCP-secret key, and the Cognitum meta-llm Cloud Run endpoint `cognitum-low`): full inspect→edit→execute→evaluate→commit repair with signed, verified receipts and auditable usage evidence (`packages/avo/bench/results/{openrouter,cloudrun}-live-receipts.json`, test `__tests__/openrouter-live.test.ts`). Package publication proceeded on direct user order 2026-08-21; the 100-task preregistered SWE-bench gate, independent graders, and protected exact-SHA release workflow remain open — the "AVO-class" performance claim stays blocked until they pass.
 **Project**: `ruvnet/metaharness`
-**Related**: ADR-071/084 (CodeGenerator), ADR-073 (archive), ADR-074 (RuVector memory), ADR-079 (promotion statistics), ADR-157 (durable execution), ADR-245 (Horizon), ADR-250 (proof ladder)
+**Related**: ADR-071/084 (CodeGenerator), ADR-073 (archive), ADR-074 (RuVector memory), ADR-079 (promotion statistics), ADR-157 (durable execution), ADR-245 (Horizon), ADR-250 (proof ladder), ADR-253 (exact-SHA release claim gate)
 **External grounding**: NVIDIA AVO, arXiv:2603.24517
 
 ## Context
@@ -120,6 +120,12 @@ resolution lift, zero policy violations, less than 50% increase in cost per
 accepted result, and 100% autonomous replay integrity.
 
 ARC is explicitly deferred until that engineering benchmark passes.
+
+ADR-253 makes this boundary executable in CI and publication. A restricted
+claim must also bind its exact protected statement into a signed
+preregistration, exact release SHA, measured cost, complete lineage roots, and
+two independently pinned official grader receipts. The existing synthetic and
+live-provider fixtures cannot satisfy that gate.
 
 ## Consequences
 

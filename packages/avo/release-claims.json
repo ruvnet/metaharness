@@ -1,0 +1,16 @@
+{
+  "schema": "metaharness.avo.release-claims/v1",
+  "claims": [
+    {
+      "id": "avo-package-surface-v1",
+      "classification": "mechanism",
+      "statement": "The AVO package exports an autonomous variation API and versioned evidence schemas."
+    }
+  ],
+  "claimSurfaces": [
+    "README.md",
+    "packages/avo/README.md"
+  ],
+  "evidenceFiles": [],
+  "trustPolicyFile": null
+}

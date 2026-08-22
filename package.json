@@ -29,6 +29,7 @@
     "test:rust": "cargo test --workspace",
     "fmt:rust": "cargo fmt --all",
     "clippy": "cargo clippy --workspace --all-targets -- -D warnings",
+    "claims:avo": "node scripts/avo-claim-gate.mjs",
     "smoke": "node scripts/smoke.mjs",
     "pretest": "npm run build"
   },
