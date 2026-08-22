@@ -120,15 +120,21 @@ async function solveFixed(inst) {
   const work = fetchRepo(inst.repo, inst.base_commit);
   try {
     const prof = langProfile(inst, work);
-    let hint = '';
+    // Fixed Darwin localizes, then reads the candidate file(s), then generates ONE
+    // patch. Blind generation hallucinates hunk context that fails to apply — the
+    // point of this baseline is the single-shot mechanism, not lack of file access.
+    let files = [];
     try {
       const kw = String(inst.problem_statement).match(/[A-Za-z_][A-Za-z0-9_]{4,}/g)?.slice(0, 6) ?? [];
-      hint = kw.length ? g(work, `git grep -ln -e ${kw.map((k) => JSON.stringify(k)).join(' --or -e ')} -- '${prof.srcGlobs[0]}' | head -8 || true`).toString() : '';
+      files = kw.length ? g(work, `git grep -ln -e ${kw.map((k) => JSON.stringify(k)).join(' --or -e ')} -- '${prof.srcGlobs[0]}' | head -3 || true`).toString().split('\n').filter(Boolean) : [];
     } catch { /**/ }
+    const fileBlocks = files.slice(0, 2).map((f) => {
+      try { return `--- FILE: ${f} ---\n${readFileSync(join(work, f), 'utf8').slice(0, 8000)}`; } catch { return ''; }
+    }).filter(Boolean).join('\n\n');
     const { text, cost } = await llm([
-      { role: 'system', content: 'You fix a repository bug. Reply with ONLY a unified git diff (start with "diff --git"). Never modify test files.' },
-      { role: 'user', content: `Issue:\n${String(inst.problem_statement).slice(0, 6000)}\n\nCandidate files:\n${hint}\n\nProduce the unified diff.` },
-    ], 3500);
+      { role: 'system', content: 'You fix a repository bug in a single edit. You are given the FULL current content of the candidate file(s). Reply with ONLY a unified git diff (start with "diff --git"), whose context lines EXACTLY match the file content shown. Never modify test files.' },
+      { role: 'user', content: `Issue:\n${String(inst.problem_statement).slice(0, 5000)}\n\n${fileBlocks || '(no candidate files located)'}\n\nProduce the unified diff that fixes the issue.` },
+    ], 4000);
     const m = text.match(/diff --git[\s\S]*/);
     return { patch: m ? m[0].replace(/```\s*$/, '').trim() + '\n' : '', costUsd: cost, policyViolations: 0, rollbackCount: 0, replay: { expected: 'sha256:one-call', actual: 'sha256:one-call' }, coherenceRetention: 0.7 };
   } finally { rmSync(work, { recursive: true, force: true }); }
