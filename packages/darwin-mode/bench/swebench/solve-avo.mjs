@@ -129,7 +129,7 @@ async function llm(messages, maxTokens = 2500) {
 
 function conformantEval(instanceId, diff, prof) {
   if (!diff.trim()) return { ran: false, passed: false, logTail: 'empty diff' };
-  const extAlt = prof.srcGlobs.map((g2) => g2.replace(/^\*\./, '').replace(/\./g, '\\.')).join('|');
+  const extAlt = prof.srcGlobs.map((g2) => g2.replace(/^\*\./, '').replace(/[.*+?^${}()|[\]\\]/g, (ch) => `\\${ch}`)).join('|');
   const re = new RegExp(`^diff --git a\\/(\\S+\\.(?:${extAlt})) `, 'gm');
   const files = [...diff.matchAll(re)].map((m) => m[1]).filter((f) => !prof.testPathRegex(f));
   const dirs = [...new Set(files.map((f) => dirname(f)))];
