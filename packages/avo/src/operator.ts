@@ -151,13 +151,17 @@ export class GovernedVariationOperator implements VariationOperator {
           8,
         );
         const knowledge = await this.options.knowledge.retrieve(this.options.task, 8);
+        // SECURITY: the agent is the UNTRUSTED party. `Readonly<>` is compile-time
+        // only, so handing it the live state/candidate would let a malicious agent
+        // mutate its own evaluation (or the promotion baseline) and be committed
+        // with signed receipts. It gets deep copies; authority stays in here.
         const context: VariationContext = {
           task: this.options.task,
-          state,
-          candidate,
-          recentObservations: state.receipts.slice(-8).map((receipt) => receipt.observation),
-          memories,
-          knowledge,
+          state: structuredClone(state),
+          candidate: structuredClone(candidate),
+          recentObservations: structuredClone(state.receipts.slice(-8).map((receipt) => receipt.observation)),
+          memories: structuredClone(memories),
+          knowledge: structuredClone(knowledge),
           allowedSurfaces: ['retrievalPolicy', 'modelRouting', 'contextPolicy', 'testPolicy', 'repairStrategy'],
         };
         const selected = await this.options.agent.chooseAction(context);

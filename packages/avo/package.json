@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/avo",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Governed autonomous variation runtime: evidence-driven repository engineering loops with bounded authority, replayable receipts, semantic supervision, and RVF working memory.",
   "type": "module",
   "main": "./dist/index.js",
@@ -11,7 +11,11 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist/**", "README.md", "LICENSE"],
+  "files": [
+    "dist/**",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
@@ -19,10 +23,19 @@
     "benchmark:swebench": "npm run build && node bench/swebench-three-arm.mjs",
     "pack:verify": "npm pack --dry-run"
   },
-  "keywords": ["agentic-variation", "long-horizon", "evolutionary-search", "rvf", "swe-bench", "metaharness"],
+  "keywords": [
+    "agentic-variation",
+    "long-horizon",
+    "evolutionary-search",
+    "rvf",
+    "swe-bench",
+    "metaharness"
+  ],
   "author": "rUv <ruv@ruv.net>",
   "license": "MIT",
-  "engines": { "node": ">=20.0.0" },
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "dependencies": {
     "@metaharness/horizon": "^0.2.0"
   },
@@ -30,12 +43,16 @@
     "agenticow": "^0.2.3"
   },
   "peerDependenciesMeta": {
-    "agenticow": { "optional": true }
+    "agenticow": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "agenticow": "^0.2.3",
     "typescript": "^5.4.0",
     "vitest": "^2.0.0"
   },
-  "publishConfig": { "access": "public" }
+  "publishConfig": {
+    "access": "public"
+  }
 }
