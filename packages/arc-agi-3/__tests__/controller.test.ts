@@ -526,6 +526,160 @@ describe('ArcController governed transition ledger', () => {
     })).rejects.toMatchObject({ code: 'STALE_SUPERVISOR_CASE' });
   });
 
+  it('requires positive non-STOP authority and renews it after expiry', async () => {
+    const environment = new FakeEnvironment();
+    const core = controller(environment, { supervisionGate: 'BLOCKING' });
+    const initial = await core.start();
+    const seed = await core.act(request(initial, 'expiring-directive-seed'));
+    const bundle = core.openSupervisorCase({
+      trigger: 'MODEL_CONTRADICTION',
+      evidenceReceiptHashes: [seed.receipt.receiptHash],
+    })!;
+    const commit: SupervisorDirectiveCommit = {
+      caseId: bundle.case.id,
+      caseHash: bundle.case.caseHash,
+      expectedObservationHash: bundle.observation.observationHash,
+      mode: 'CONTINUE',
+      diagnosis: 'Authorize one bounded probe',
+      requiredEvidence: [seed.receipt.receiptHash],
+      actionBudget: 1,
+      expiresAfterActions: 1,
+    };
+    await expect(core.commitSupervisorDirective({
+      ...commit,
+      actionBudget: 0,
+      expiresAfterActions: 0,
+    })).rejects.toThrow(/require positive/);
+
+    const directive = await core.commitSupervisorDirective(commit);
+    const governed = await core.act({
+      ...request(seed.observation, 'expiring-directive-action', {
+        name: 'ACTION6',
+        x: 0,
+        y: 0,
+      }),
+      directiveId: directive.id,
+    });
+    const expiredStatus = core.status();
+    expect(expiredStatus.activeDirectiveId).toBeUndefined();
+    expect(expiredStatus.openSupervisorCaseId).toBeDefined();
+    await expect(core.act(request(governed.observation, 'expired-directive-bypass', {
+      name: 'ACTION6',
+      x: 1,
+      y: 1,
+    }))).rejects.toMatchObject({ code: 'SUPERVISION_REQUIRED' });
+    expect(environment.stepCalls).toBe(2);
+
+    const renewal = core.openSupervisorCase()!;
+    expect(renewal.case.id).not.toBe(bundle.case.id);
+    expect(renewal.case.metrics).toMatchObject({
+      directiveExpired: 1,
+      expiredDirectiveActions: 1,
+    });
+    const renewed = await core.commitSupervisorDirective({
+      caseId: renewal.case.id,
+      caseHash: renewal.case.caseHash,
+      expectedObservationHash: renewal.observation.observationHash,
+      mode: 'CONTINUE',
+      diagnosis: 'Renew authority for one different probe',
+      requiredEvidence: renewal.case.evidenceReceiptHashes,
+      actionBudget: 1,
+      expiresAfterActions: 1,
+    });
+    await expect(core.act({
+      ...request(governed.observation, 'renewed-directive-action', {
+        name: 'ACTION6',
+        x: 1,
+        y: 1,
+      }),
+      directiveId: renewed.id,
+    })).resolves.toBeDefined();
+    expect(environment.stepCalls).toBe(3);
+    const renewedCheckpoint = await core.checkpoint();
+    expect(() => verifyArcCheckpoint(renewedCheckpoint)).not.toThrow();
+    const injectedZeroBudget = rehashedCheckpoint(renewedCheckpoint, body => {
+      const directives = body.directives as Array<Record<string, unknown>>;
+      directives[0]!.actionBudget = 0;
+      directives[0]!.expiresAfterActions = 0;
+    }).checkpoint;
+    expect(() => verifyArcCheckpoint(injectedZeroBudget)).toThrow(/positive budgets/);
+
+    const replacementEnvironment = new FakeEnvironment(environment.current);
+    const replacement = controller(replacementEnvironment, {
+      supervisionGate: 'BLOCKING',
+    });
+    const resumed = await replacement.resume(renewedCheckpoint);
+    expect(replacement.status().openSupervisorCaseId).toBeDefined();
+    await expect(replacement.act(request(resumed, 'resumed-expired-directive', {
+      name: 'ACTION6',
+      x: 2,
+      y: 1,
+    }))).rejects.toMatchObject({ code: 'SUPERVISION_REQUIRED' });
+    expect(replacementEnvironment.stepCalls).toBe(0);
+  });
+
+  it('rechecks the blocking gate after action-intent persistence', async () => {
+    const environment = new FakeEnvironment();
+    let blockNextIntent = false;
+    let releaseIntent!: () => void;
+    let markIntentEntered!: () => void;
+    const intentEntered = new Promise<void>(resolve => { markIntentEntered = resolve; });
+    const intentRelease = new Promise<void>(resolve => { releaseIntent = resolve; });
+    const sessionLog = {
+      async append(kind: string): Promise<void> {
+        if (blockNextIntent && kind === 'arc.action_intent') {
+          markIntentEntered();
+          await intentRelease;
+        }
+      },
+      stateHash(): string { return SHA_A; },
+    } as unknown as SessionLog;
+    const core = controller(environment, {
+      supervisionGate: 'BLOCKING',
+      supervisorThresholds: { noEffectCount: 1, noEffectWindow: 1 },
+      sessionLog,
+    });
+    const initial = await core.start();
+    const seed = await core.act(request(initial, 'gate-race-seed'));
+    const detected = core.openSupervisorCase()!;
+    const priorDirective = await core.commitSupervisorDirective({
+      caseId: detected.case.id,
+      caseHash: detected.case.caseHash,
+      expectedObservationHash: detected.observation.observationHash,
+      mode: 'CONTINUE',
+      diagnosis: 'Prior authority must not cover a newly opened case',
+      requiredEvidence: detected.case.evidenceReceiptHashes,
+      actionBudget: 3,
+      expiresAfterActions: 3,
+    });
+    blockNextIntent = true;
+    const pending = core.act({
+      ...request(seed.observation, 'gate-race-pending', {
+        name: 'ACTION6',
+        x: 0,
+        y: 0,
+      }),
+      directiveId: priorDirective.id,
+    });
+    const rejection = expect(pending).rejects.toMatchObject({
+      code: 'SUPERVISION_REQUIRED',
+    });
+    await intentEntered;
+    const opened = core.openSupervisorCase({
+      trigger: 'MODEL_CONTRADICTION',
+      evidenceReceiptHashes: [seed.receipt.receiptHash],
+    });
+    expect(opened).not.toBeNull();
+    releaseIntent();
+    await rejection;
+    expect(environment.stepCalls).toBe(1);
+    expect(core.status()).toMatchObject({
+      phase: 'ACTIVE',
+      actionCount: 1,
+      openSupervisorCaseId: opened!.case.id,
+    });
+  });
+
   it('halts a guarded plan on its first postcondition divergence', async () => {
     const environment = new FakeEnvironment();
     environment.queue.push(raw([[1, 0], [0, 0]]));

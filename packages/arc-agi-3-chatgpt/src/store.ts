@@ -4,8 +4,16 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { chmod, mkdir, readFile, readdir, rename, stat, unlink, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import type {
+  ArcAvoCheckpoint,
+  ArcAvoConfig,
+  ArcAvoConfigInput,
+  ArcAvoLoopApi,
+  ArcCandidatePlan,
   ArcCheckpoint,
   ArcController,
+  ArcPlanOutcome,
+  ArcPlanSelection,
+  ArcRetrodiction,
   ArcSupervisorAuthority,
   CheckpointFrameBlob,
   CheckpointTransitionReceipt,
@@ -17,8 +25,14 @@ import type { ArcControllerFactory } from './types.js';
 import { exactPublicJson } from './types.js';
 import { opaqueAuditHash } from './audit.js';
 import {
+  bindOfficialAvoRuntime,
+  captureOfficialAvoRuntime,
+} from './official-avo-runtime.js';
+import {
   hashArcValue,
   MAX_ARC_ANIMATION_FRAMES,
+  createArcAvoLoop,
+  resolveArcAvoConfig,
   validateArcRunBudget,
   verifyArcCheckpoint,
 } from '@metaharness/arc-agi-3';
@@ -27,10 +41,13 @@ export interface EpisodeRecord {
   readonly episodeId: string;
   readonly principalId: string;
   readonly controller: ArcController;
+  /** Present only for an opt-in AVO-mode store. */
+  readonly avoLoop?: ArcAvoLoopApi;
   readonly createdAt: string;
   lastObservation: ExactArcObservation;
   readonly checkpoints: Map<string, ArcCheckpoint>;
   lastRestoredCheckpointId?: string;
+  lastRestoredCheckpointHash?: string;
   lastSupervisorCase?: SupervisorCaseBundle;
   lastDirective?: SupervisorDirective;
 }
@@ -50,12 +67,21 @@ const CAS_HASH = /^[a-f0-9]{64}$/;
 const MAX_CHECKPOINT_DESCRIPTOR_BYTES = 64 * 1024 * 1024;
 const MAX_CAS_OBJECT_BYTES = 2 * 1024 * 1024;
 const MAX_CAS_OBJECTS_PER_ACTION = MAX_ARC_ANIMATION_FRAMES + 1;
+const MAX_AVO_CAS_OBJECTS_PER_ACTION = MAX_CAS_OBJECTS_PER_ACTION + 11;
 const MAX_CHECKPOINTS_PER_EPISODE = 64;
 const MAX_DIRECTIVE_BYTES = 1024 * 1024;
+const CAS_IO_CONCURRENCY = 64;
 
 function validateHandle(kind: 'episode' | 'checkpoint', value: string): void {
   const valid = kind === 'episode' ? EPISODE_ID.test(value) : CHECKPOINT_ID.test(value);
   if (!valid) throw new Error(`invalid opaque ${kind} handle`);
+}
+
+function validCasHashArray(value: unknown, maximum: number): value is string[] {
+  return Array.isArray(value)
+    && value.length <= maximum
+    && value.every(hash => typeof hash === 'string' && CAS_HASH.test(hash))
+    && new Set(value).size === value.length;
 }
 
 type CheckpointRemainder = Omit<ArcCheckpoint, 'receipts' | 'frameBlobs'>;
@@ -67,6 +93,31 @@ interface PersistedCheckpoint {
   checkpoint: CheckpointRemainder;
   receiptObjectHashes: readonly string[];
   frameObjectHashes: readonly string[];
+}
+
+type AvoArchiveRemainder = Omit<ArcAvoCheckpoint['archive'],
+  'candidates' | 'selections' | 'outcomes'>;
+type AvoWorldModelRemainder = Omit<ArcAvoCheckpoint['worldModel'], 'records'>;
+type AvoCheckpointRemainder = Omit<
+  ArcAvoCheckpoint,
+  'coreCheckpoint' | 'archive' | 'worldModel'
+> & {
+  readonly coreCheckpoint: CheckpointRemainder;
+  readonly archive: AvoArchiveRemainder;
+  readonly worldModel: AvoWorldModelRemainder;
+};
+
+interface PersistedAvoCheckpoint {
+  schema: 'metaharness.arc_mcp.avo_checkpoint_ref.v2';
+  episodeId: string;
+  checkpointId: string;
+  checkpoint: AvoCheckpointRemainder;
+  receiptObjectHashes: readonly string[];
+  frameObjectHashes: readonly string[];
+  candidateObjectHashes: readonly string[];
+  selectionObjectHashes: readonly string[];
+  outcomeObjectHashes: readonly string[];
+  retrodictionObjectHashes: readonly string[];
 }
 
 interface IdempotencyEntry {
@@ -81,6 +132,42 @@ function activeDirectiveFromCheckpoint(checkpoint: ArcCheckpoint): SupervisorDir
   );
   if (!directive) throw new Error('verified checkpoint active directive is unavailable');
   return directive;
+}
+
+function isMatchingRestoredCheckpoint(
+  record: EpisodeRecord,
+  checkpointId: string,
+  expectedCheckpointHash: string,
+): boolean {
+  if (record.lastRestoredCheckpointId !== checkpointId) return false;
+  if (record.lastRestoredCheckpointHash !== expectedCheckpointHash) {
+    throw new Error('checkpoint does not match the externally anchored hash');
+  }
+  return true;
+}
+
+function validatedAvoCheckpoint(
+  input: ArcAvoCheckpoint,
+  config: ArcAvoConfig,
+): ArcAvoCheckpoint {
+  const checkpoint = exactPublicJson(input) as ArcAvoCheckpoint;
+  if (
+    checkpoint.schema !== 'metaharness.arc_agi_3.avo_checkpoint.v1' ||
+    checkpoint.config?.configHash !== config.configHash ||
+    typeof checkpoint.checkpointHash !== 'string' ||
+    !CAS_HASH.test(checkpoint.checkpointHash)
+  ) {
+    throw new Error('AVO checkpoint configuration is invalid');
+  }
+  const { checkpointHash, ...body } = checkpoint;
+  if (hashArcValue(body) !== checkpointHash) {
+    throw new Error('AVO checkpoint failed integrity validation');
+  }
+  verifyArcCheckpoint(checkpoint.coreCheckpoint);
+  if (checkpoint.observationHash !== checkpoint.coreCheckpoint.observation.observationHash) {
+    throw new Error('AVO checkpoint observation is inconsistent');
+  }
+  return checkpoint;
 }
 
 export class NonRetryableMutationError extends Error {
@@ -136,6 +223,8 @@ export class ArcEpisodeStore {
   private readonly createLocks = new Map<string, Promise<void>>();
   private readonly resumeLocks = new Map<string, Promise<void>>();
   private readonly checkpointLocks = new Map<string, Promise<void>>();
+  private readonly preparedCasDirectories = new Set<string>();
+  private readonly avoConfig?: ArcAvoConfig;
   private closing = false;
 
   constructor(
@@ -144,6 +233,7 @@ export class ArcEpisodeStore {
     private readonly now: () => Date = () => new Date(),
     private readonly maxEpisodesPerPrincipal = 32,
     private readonly maxIdempotencyEntriesPerPrincipal = 50_000,
+    avoConfig?: ArcAvoConfig | ArcAvoConfigInput,
   ) {
     assertStoreCapacity(
       maxEpisodesPerPrincipal,
@@ -155,6 +245,7 @@ export class ArcEpisodeStore {
       'maxIdempotencyEntriesPerPrincipal',
       MAX_IDEMPOTENCY_ENTRIES_PER_PRINCIPAL,
     );
+    this.avoConfig = avoConfig === undefined ? undefined : resolveArcAvoConfig(avoConfig);
   }
 
   private async withLock<T>(
@@ -228,8 +319,16 @@ export class ArcEpisodeStore {
         throw new Error('episode limit reached; close the server or use another configured principal');
       }
       const episodeId = publicHandle('episode');
-      const context = { principalId, episodeId, runId: episodeId };
+      const context = {
+        principalId,
+        episodeId,
+        runId: episodeId,
+        ...(this.avoConfig === undefined
+          ? {}
+          : { requestedSupervisionGate: this.avoConfig.features.supervisorGate }),
+      };
       let controller: ArcController | undefined;
+      let avoLoop: ArcAvoLoopApi | undefined;
       try {
         controller = await this.factory(context);
       } catch {
@@ -242,10 +341,17 @@ export class ArcEpisodeStore {
       }
       let observation: ExactArcObservation;
       try {
-        observation = await controller.start();
+        if (this.avoConfig) {
+          avoLoop = createArcAvoLoop({ controller, config: this.avoConfig });
+          observation = (await avoLoop.start()).observation;
+          bindOfficialAvoRuntime(this.factory, context, avoLoop);
+        } else {
+          observation = await controller.start();
+        }
         exactPublicJson(observation);
       } catch {
         const cleanup = await Promise.allSettled([
+          Promise.resolve(avoLoop?.close()),
           this.closeController(controller),
           Promise.resolve(this.factory.releaseUnpublishedEpisode?.(context)),
         ]);
@@ -264,6 +370,7 @@ export class ArcEpisodeStore {
         episodeId,
         principalId,
         controller,
+        ...(avoLoop === undefined ? {} : { avoLoop }),
         createdAt: this.now().toISOString(),
         lastObservation: observation,
         checkpoints: new Map(),
@@ -299,20 +406,29 @@ export class ArcEpisodeStore {
     return join(this.checkpointDirectory(principalId, episodeId), 'objects');
   }
 
+  private async ensureCasDirectory(principalId: string, episodeId: string): Promise<string> {
+    const directory = this.casDirectory(principalId, episodeId);
+    if (!this.preparedCasDirectories.has(directory)) {
+      await mkdir(directory, { recursive: true, mode: 0o700 });
+      await chmod(directory, 0o700);
+      this.preparedCasDirectories.add(directory);
+    }
+    return directory;
+  }
+
   private async writeCasObject(
     principalId: string,
     episodeId: string,
-    value: CheckpointFrameBlob | CheckpointTransitionReceipt,
+    value: unknown,
   ): Promise<string> {
     const hash = hashArcValue(value);
     if (!CAS_HASH.test(hash)) throw new Error('checkpoint object hash is invalid');
     const encoded = JSON.stringify(value);
+    if (encoded === undefined) throw new Error('checkpoint object is not JSON serializable');
     if (Buffer.byteLength(encoded, 'utf8') > MAX_CAS_OBJECT_BYTES) {
       throw new Error('checkpoint object exceeds durable size limit');
     }
-    const directory = this.casDirectory(principalId, episodeId);
-    await mkdir(directory, { recursive: true, mode: 0o700 });
-    await chmod(directory, 0o700);
+    const directory = await this.ensureCasDirectory(principalId, episodeId);
     const target = join(directory, `${hash}.json`);
     const reuseExisting = async (): Promise<string> => {
       const info = await stat(target).catch(() => undefined);
@@ -334,7 +450,6 @@ export class ArcEpisodeStore {
     if (existing) return reuseExisting();
     const temporary = join(directory, `.${hash}.tmp-${randomBytes(8).toString('hex')}`);
     await writeFile(temporary, encoded, { encoding: 'utf8', flag: 'wx', mode: 0o600 });
-    await chmod(temporary, 0o600);
     try {
       await rename(temporary, target);
     } catch (error) {
@@ -344,6 +459,23 @@ export class ArcEpisodeStore {
       throw error;
     }
     return hash;
+  }
+
+  private async writeCasObjects(
+    principalId: string,
+    episodeId: string,
+    values: readonly unknown[],
+  ): Promise<string[]> {
+    await this.ensureCasDirectory(principalId, episodeId);
+    const hashes: string[] = [];
+    for (let index = 0; index < values.length; index += CAS_IO_CONCURRENCY) {
+      hashes.push(...await Promise.all(
+        values.slice(index, index + CAS_IO_CONCURRENCY).map(value => (
+          this.writeCasObject(principalId, episodeId, value)
+        )),
+      ));
+    }
+    return hashes;
   }
 
   private async loadCasObject<T>(
@@ -367,6 +499,22 @@ export class ArcEpisodeStore {
     return parsed as T;
   }
 
+  private async loadCasObjects<T>(
+    principalId: string,
+    episodeId: string,
+    hashes: readonly string[],
+  ): Promise<T[]> {
+    const values: T[] = [];
+    for (let index = 0; index < hashes.length; index += CAS_IO_CONCURRENCY) {
+      values.push(...await Promise.all(
+        hashes.slice(index, index + CAS_IO_CONCURRENCY).map(hash => (
+          this.loadCasObject<T>(principalId, episodeId, hash)
+        )),
+      ));
+    }
+    return values;
+  }
+
   async saveCheckpoint(record: EpisodeRecord, checkpoint: ArcCheckpoint): Promise<string> {
     if (this.closing) throw new Error('episode store is closing');
     const key = `${record.principalId}\0${record.episodeId}`;
@@ -381,6 +529,14 @@ export class ArcEpisodeStore {
   ): Promise<string> {
     exactPublicJson(checkpoint);
     verifyArcCheckpoint(checkpoint);
+    const liveStatus = record.controller.status();
+    if (
+      checkpoint.runId !== liveStatus.runId
+      || checkpoint.principalScope !== liveStatus.principalScope
+      || checkpoint.opaqueGameScope !== liveStatus.opaqueGameScope
+    ) {
+      throw new Error('checkpoint does not belong to this episode');
+    }
     if (!Number.isSafeInteger(checkpoint.budget.maxActions) || checkpoint.budget.maxActions <= 0) {
       throw new Error('checkpoint action budget is invalid');
     }
@@ -403,22 +559,16 @@ export class ArcEpisodeStore {
     if (existing.length >= MAX_CHECKPOINTS_PER_EPISODE) {
       throw new Error('durable checkpoint limit reached');
     }
-    const receiptObjectHashes: string[] = [];
-    for (const receipt of checkpoint.receipts) {
-      receiptObjectHashes.push(await this.writeCasObject(
-        record.principalId,
-        record.episodeId,
-        receipt,
-      ));
-    }
-    const frameObjectHashes: string[] = [];
-    for (const frame of checkpoint.frameBlobs) {
-      frameObjectHashes.push(await this.writeCasObject(
-        record.principalId,
-        record.episodeId,
-        frame,
-      ));
-    }
+    const receiptObjectHashes = await this.writeCasObjects(
+      record.principalId,
+      record.episodeId,
+      checkpoint.receipts,
+    );
+    const frameObjectHashes = await this.writeCasObjects(
+      record.principalId,
+      record.episodeId,
+      checkpoint.frameBlobs,
+    );
     const { receipts: _receipts, frameBlobs: _frameBlobs, ...remainder } = checkpoint;
     const body: PersistedCheckpoint = {
       schema: 'metaharness.arc_mcp.checkpoint_ref.v2',
@@ -438,6 +588,136 @@ export class ArcEpisodeStore {
     await chmod(temporary, 0o600);
     await rename(temporary, target);
     return checkpointId;
+  }
+
+  async saveAvoCheckpoint(
+    record: EpisodeRecord,
+    checkpoint: ArcAvoCheckpoint,
+  ): Promise<string> {
+    if (this.closing) throw new Error('episode store is closing');
+    if (!this.avoConfig || !record.avoLoop) {
+      throw new Error('AVO checkpoint persistence is unavailable outside AVO mode');
+    }
+    const key = `${record.principalId}\0${record.episodeId}`;
+    return this.withLock(this.checkpointLocks, key, async () => {
+      const stable = validatedAvoCheckpoint(checkpoint, this.avoConfig!);
+      const core = stable.coreCheckpoint;
+      const liveStatus = record.controller.status();
+      if (
+        core.runId !== liveStatus.runId
+        || core.principalScope !== liveStatus.principalScope
+        || core.opaqueGameScope !== liveStatus.opaqueGameScope
+      ) {
+        throw new Error('AVO checkpoint does not belong to this episode');
+      }
+      if (!Number.isSafeInteger(core.budget.maxActions) || core.budget.maxActions <= 0) {
+        throw new Error('checkpoint action budget is invalid');
+      }
+      const maximumObjects = core.budget.maxActions * MAX_AVO_CAS_OBJECTS_PER_ACTION
+        + MAX_ARC_ANIMATION_FRAMES;
+      const archiveObjectCount = stable.archive.candidates.length
+        + stable.archive.selections.length
+        + stable.archive.outcomes.length
+        + stable.worldModel.records.length;
+      if (
+        core.receipts.length > core.budget.maxActions ||
+        stable.archive.candidates.length
+          > core.budget.maxActions * stable.config.maxCandidatesPerDecision ||
+        stable.archive.selections.length > core.budget.maxActions ||
+        stable.archive.outcomes.length > core.budget.maxActions ||
+        stable.worldModel.records.length > core.budget.maxActions ||
+        core.receipts.length + core.frameBlobs.length + archiveObjectCount > maximumObjects
+      ) {
+        throw new Error('checkpoint object count exceeds its action budget');
+      }
+      const checkpointId = publicHandle('checkpoint');
+      const directory = join(
+        this.checkpointDirectory(record.principalId, record.episodeId),
+        'checkpoints',
+      );
+      await mkdir(directory, { recursive: true, mode: 0o700 });
+      await chmod(directory, 0o700);
+      const existing = (await readdir(directory)).filter((name) => {
+        const checkpointName = name.endsWith('.json')
+          ? name.slice(0, -'.json'.length)
+          : '';
+        return CHECKPOINT_ID.test(checkpointName);
+      });
+      if (existing.length >= MAX_CHECKPOINTS_PER_EPISODE) {
+        throw new Error('durable checkpoint limit reached');
+      }
+      const receiptObjectHashes = await this.writeCasObjects(
+        record.principalId,
+        record.episodeId,
+        core.receipts,
+      );
+      const frameObjectHashes = await this.writeCasObjects(
+        record.principalId,
+        record.episodeId,
+        core.frameBlobs,
+      );
+      const candidateObjectHashes = await this.writeCasObjects(
+        record.principalId,
+        record.episodeId,
+        stable.archive.candidates,
+      );
+      const selectionObjectHashes = await this.writeCasObjects(
+        record.principalId,
+        record.episodeId,
+        stable.archive.selections,
+      );
+      const outcomeObjectHashes = await this.writeCasObjects(
+        record.principalId,
+        record.episodeId,
+        stable.archive.outcomes,
+      );
+      const retrodictionObjectHashes = await this.writeCasObjects(
+        record.principalId,
+        record.episodeId,
+        stable.worldModel.records,
+      );
+      const { receipts: _receipts, frameBlobs: _frameBlobs, ...coreRemainder } = core;
+      const {
+        candidates: _candidates,
+        selections: _selections,
+        outcomes: _outcomes,
+        ...archiveRemainder
+      } = stable.archive;
+      const { records: _records, ...worldModelRemainder } = stable.worldModel;
+      const {
+        coreCheckpoint: _coreCheckpoint,
+        archive: _archive,
+        worldModel: _worldModel,
+        ...avoRemainder
+      } = stable;
+      const body: PersistedAvoCheckpoint = {
+        schema: 'metaharness.arc_mcp.avo_checkpoint_ref.v2',
+        episodeId: record.episodeId,
+        checkpointId,
+        checkpoint: {
+          ...avoRemainder,
+          coreCheckpoint: coreRemainder,
+          archive: archiveRemainder,
+          worldModel: worldModelRemainder,
+        },
+        receiptObjectHashes,
+        frameObjectHashes,
+        candidateObjectHashes,
+        selectionObjectHashes,
+        outcomeObjectHashes,
+        retrodictionObjectHashes,
+      };
+      const encoded = JSON.stringify(body);
+      if (Buffer.byteLength(encoded, 'utf8') > MAX_CHECKPOINT_DESCRIPTOR_BYTES) {
+        throw new Error('checkpoint descriptor exceeds durable size limit');
+      }
+      const target = this.checkpointPath(record.principalId, record.episodeId, checkpointId);
+      const temporary = `${target}.tmp-${randomBytes(8).toString('hex')}`;
+      await writeFile(temporary, encoded, { encoding: 'utf8', flag: 'wx', mode: 0o600 });
+      await chmod(temporary, 0o600);
+      await rename(temporary, target);
+      return checkpointId;
+    });
   }
 
   async getCheckpoint(record: EpisodeRecord, checkpointId: string): Promise<ArcCheckpoint> {
@@ -493,14 +773,16 @@ export class ArcEpisodeStore {
     ) {
       throw new Error('checkpoint is unavailable');
     }
-    const receipts: CheckpointTransitionReceipt[] = [];
-    for (const hash of stored.receiptObjectHashes) {
-      receipts.push(await this.loadCasObject<CheckpointTransitionReceipt>(principalId, episodeId, hash));
-    }
-    const frameBlobs: CheckpointFrameBlob[] = [];
-    for (const hash of stored.frameObjectHashes) {
-      frameBlobs.push(await this.loadCasObject<CheckpointFrameBlob>(principalId, episodeId, hash));
-    }
+    const receipts = await this.loadCasObjects<CheckpointTransitionReceipt>(
+      principalId,
+      episodeId,
+      stored.receiptObjectHashes,
+    );
+    const frameBlobs = await this.loadCasObjects<CheckpointFrameBlob>(
+      principalId,
+      episodeId,
+      stored.frameObjectHashes,
+    );
     const checkpoint = {
       ...stored.checkpoint,
       receipts,
@@ -515,6 +797,126 @@ export class ArcEpisodeStore {
     return checkpoint;
   }
 
+  async getAvoCheckpoint(
+    record: EpisodeRecord,
+    checkpointId: string,
+  ): Promise<ArcAvoCheckpoint> {
+    return this.loadAvoCheckpoint(record.principalId, record.episodeId, checkpointId);
+  }
+
+  async loadAvoCheckpoint(
+    principalId: string,
+    episodeId: string,
+    checkpointId: string,
+  ): Promise<ArcAvoCheckpoint> {
+    if (!this.avoConfig) throw new Error('AVO checkpoint is unavailable outside AVO mode');
+    const path = this.checkpointPath(principalId, episodeId, checkpointId);
+    const info = await stat(path).catch(() => undefined);
+    if (!info?.isFile() || info.size > MAX_CHECKPOINT_DESCRIPTOR_BYTES) {
+      throw new Error('checkpoint is unavailable');
+    }
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(await readFile(path, 'utf8'));
+    } catch {
+      throw new Error('checkpoint is unavailable');
+    }
+    const stored = parsed as Partial<PersistedAvoCheckpoint>;
+    if (
+      stored.schema !== 'metaharness.arc_mcp.avo_checkpoint_ref.v2' ||
+      stored.episodeId !== episodeId ||
+      stored.checkpointId !== checkpointId ||
+      !stored.checkpoint || typeof stored.checkpoint !== 'object' ||
+      !stored.checkpoint.coreCheckpoint ||
+      typeof stored.checkpoint.coreCheckpoint !== 'object' ||
+      !stored.checkpoint.archive || typeof stored.checkpoint.archive !== 'object' ||
+      !stored.checkpoint.worldModel || typeof stored.checkpoint.worldModel !== 'object'
+    ) {
+      throw new Error('checkpoint is unavailable');
+    }
+    let budget;
+    try {
+      budget = validateArcRunBudget(stored.checkpoint.coreCheckpoint.budget);
+    } catch {
+      throw new Error('checkpoint is unavailable');
+    }
+    const maximumObjects = budget.maxActions * MAX_AVO_CAS_OBJECTS_PER_ACTION
+      + MAX_ARC_ANIMATION_FRAMES;
+    const maxCandidates = budget.maxActions * this.avoConfig.maxCandidatesPerDecision;
+    if (
+      !validCasHashArray(stored.receiptObjectHashes, budget.maxActions) ||
+      !validCasHashArray(
+        stored.frameObjectHashes,
+        budget.maxActions * MAX_ARC_ANIMATION_FRAMES + MAX_ARC_ANIMATION_FRAMES,
+      ) ||
+      !validCasHashArray(stored.candidateObjectHashes, maxCandidates) ||
+      !validCasHashArray(stored.selectionObjectHashes, budget.maxActions) ||
+      !validCasHashArray(stored.outcomeObjectHashes, budget.maxActions) ||
+      !validCasHashArray(stored.retrodictionObjectHashes, budget.maxActions) ||
+      stored.receiptObjectHashes.length
+        + stored.frameObjectHashes.length
+        + stored.candidateObjectHashes.length
+        + stored.selectionObjectHashes.length
+        + stored.outcomeObjectHashes.length
+        + stored.retrodictionObjectHashes.length > maximumObjects
+    ) {
+      throw new Error('checkpoint is unavailable');
+    }
+    const receipts = await this.loadCasObjects<CheckpointTransitionReceipt>(
+      principalId,
+      episodeId,
+      stored.receiptObjectHashes,
+    );
+    const frameBlobs = await this.loadCasObjects<CheckpointFrameBlob>(
+      principalId,
+      episodeId,
+      stored.frameObjectHashes,
+    );
+    const candidates = await this.loadCasObjects<ArcCandidatePlan>(
+      principalId,
+      episodeId,
+      stored.candidateObjectHashes,
+    );
+    const selections = await this.loadCasObjects<ArcPlanSelection>(
+      principalId,
+      episodeId,
+      stored.selectionObjectHashes,
+    );
+    const outcomes = await this.loadCasObjects<ArcPlanOutcome>(
+      principalId,
+      episodeId,
+      stored.outcomeObjectHashes,
+    );
+    const retrodictions = await this.loadCasObjects<ArcRetrodiction>(
+      principalId,
+      episodeId,
+      stored.retrodictionObjectHashes,
+    );
+    const checkpoint = {
+      ...stored.checkpoint,
+      coreCheckpoint: {
+        ...stored.checkpoint.coreCheckpoint,
+        receipts,
+        frameBlobs,
+      },
+      archive: {
+        ...stored.checkpoint.archive,
+        candidates,
+        selections,
+        outcomes,
+      },
+      worldModel: {
+        ...stored.checkpoint.worldModel,
+        records: retrodictions,
+      },
+    } as ArcAvoCheckpoint;
+    try {
+      return validatedAvoCheckpoint(checkpoint, this.avoConfig);
+    } catch {
+      throw new Error('checkpoint failed integrity validation');
+    }
+  }
+
   async resumePersisted(
     principalId: string,
     episodeId: string,
@@ -522,6 +924,14 @@ export class ArcEpisodeStore {
     expectedCheckpointHash: string,
   ): Promise<{ record: EpisodeRecord; observation: ExactArcObservation }> {
     if (this.closing) throw new Error('episode store is closing');
+    if (this.avoConfig) {
+      return this.resumeAvoPersisted(
+        principalId,
+        episodeId,
+        checkpointId,
+        expectedCheckpointHash,
+      );
+    }
     if (this.factory.supportsResume === false) {
       throw new Error('checkpoint live resume is unavailable for this environment adapter');
     }
@@ -530,7 +940,7 @@ export class ArcEpisodeStore {
       if (this.closing) throw new Error('episode store is closing');
       const live = this.principals.get(principalId)?.get(episodeId);
       if (live) {
-        if (live.lastRestoredCheckpointId === checkpointId) {
+        if (isMatchingRestoredCheckpoint(live, checkpointId, expectedCheckpointHash)) {
           return { record: live, observation: live.lastObservation };
         }
         const checkpoint = await this.getCheckpoint(live, checkpointId);
@@ -558,6 +968,7 @@ export class ArcEpisodeStore {
           lastObservation: observation,
           checkpoints: new Map(),
           lastRestoredCheckpointId: checkpointId,
+          lastRestoredCheckpointHash: checkpoint.checkpointHash,
           lastDirective: activeDirectiveFromCheckpoint(checkpoint),
         };
         this.retiredControllers.add(live.controller);
@@ -581,7 +992,7 @@ export class ArcEpisodeStore {
         if (this.closing) throw new Error('episode store is closing');
         const nowLive = this.principals.get(principalId)?.get(episodeId);
         if (nowLive) {
-          if (nowLive.lastRestoredCheckpointId === checkpointId) {
+          if (isMatchingRestoredCheckpoint(nowLive, checkpointId, expectedCheckpointHash)) {
             return { record: nowLive, observation: nowLive.lastObservation };
           }
           throw new Error('checkpoint resume conflicted with a live episode');
@@ -614,6 +1025,7 @@ export class ArcEpisodeStore {
             lastObservation: observation,
             checkpoints: new Map(),
             lastRestoredCheckpointId: checkpointId,
+            lastRestoredCheckpointHash: checkpoint.checkpointHash,
           };
           record.lastDirective = activeDirectiveFromCheckpoint(checkpoint);
           episodes.set(episodeId, record);
@@ -622,6 +1034,141 @@ export class ArcEpisodeStore {
           if (controller) await this.closeController(controller);
           throw new Error('checkpoint resume failed');
         }
+      });
+    });
+  }
+
+  private async resumeAvoPersisted(
+    principalId: string,
+    episodeId: string,
+    checkpointId: string,
+    expectedCheckpointHash: string,
+  ): Promise<{ record: EpisodeRecord; observation: ExactArcObservation }> {
+    if (!this.avoConfig) throw new Error('AVO resume is unavailable outside AVO mode');
+    if (this.factory.supportsResume === false) {
+      throw new Error('checkpoint live resume is unavailable for this environment adapter');
+    }
+    const restore = async (checkpoint: ArcAvoCheckpoint): Promise<{
+      controller: ArcController;
+      avoLoop: ArcAvoLoopApi;
+      observation: ExactArcObservation;
+    }> => {
+      let controller: ArcController | undefined;
+      let avoLoop: ArcAvoLoopApi | undefined;
+      try {
+        controller = await this.factory({
+          principalId,
+          episodeId,
+          runId: episodeId,
+          requestedSupervisionGate: this.avoConfig!.features.supervisorGate,
+        });
+        avoLoop = createArcAvoLoop({ controller, config: this.avoConfig! });
+        const observation = (await avoLoop.resume(checkpoint)).observation;
+        exactPublicJson(observation);
+        return { controller, avoLoop, observation };
+      } catch {
+        await Promise.resolve(avoLoop?.close()).catch(() => undefined);
+        if (controller) await this.closeController(controller).catch(() => undefined);
+        throw new Error('checkpoint resume failed');
+      }
+    };
+    const closeRecord = async (record: EpisodeRecord): Promise<void> => {
+      const failures: unknown[] = [];
+      try {
+        await record.avoLoop?.close();
+      } catch (error) {
+        failures.push(error);
+      }
+      try {
+        await this.closeController(record.controller);
+      } catch (error) {
+        failures.push(error);
+      }
+      if (failures.length > 0) throw new AggregateError(failures, 'AVO episode cleanup failed');
+    };
+    const resumeKey = `${principalId}\0${episodeId}`;
+    return this.withLock(this.resumeLocks, resumeKey, async () => {
+      if (this.closing) throw new Error('episode store is closing');
+      const live = this.principals.get(principalId)?.get(episodeId);
+      if (live) {
+        if (isMatchingRestoredCheckpoint(live, checkpointId, expectedCheckpointHash)) {
+          return { record: live, observation: live.lastObservation };
+        }
+        const checkpoint = await this.getAvoCheckpoint(live, checkpointId);
+        if (checkpoint.checkpointHash !== expectedCheckpointHash) {
+          throw new Error('checkpoint does not match the externally anchored hash');
+        }
+        if (checkpoint.coreCheckpoint.environmentCheckpoint === undefined) {
+          throw new Error('checkpoint does not contain resumable environment state');
+        }
+        const restored = await restore(checkpoint);
+        const record: EpisodeRecord = {
+          episodeId,
+          principalId,
+          controller: restored.controller,
+          avoLoop: restored.avoLoop,
+          createdAt: this.now().toISOString(),
+          lastObservation: restored.observation,
+          checkpoints: new Map(),
+          lastRestoredCheckpointId: checkpointId,
+          lastRestoredCheckpointHash: checkpoint.checkpointHash,
+          lastDirective: activeDirectiveFromCheckpoint(checkpoint.coreCheckpoint),
+        };
+        this.retiredControllers.add(live.controller);
+        let closeFailure: unknown;
+        try {
+          await closeRecord(live);
+          this.retiredControllers.delete(live.controller);
+        } catch (error) {
+          closeFailure = error;
+        }
+        this.principals.get(principalId)!.set(episodeId, record);
+        if (closeFailure) {
+          throw new NonRetryableMutationError(
+            'checkpoint resumed but prior AVO controller cleanup failed',
+          );
+        }
+        return { record, observation: restored.observation };
+      }
+      return this.withLock(this.createLocks, principalId, async () => {
+        if (this.closing) throw new Error('episode store is closing');
+        const nowLive = this.principals.get(principalId)?.get(episodeId);
+        if (nowLive) {
+          if (isMatchingRestoredCheckpoint(nowLive, checkpointId, expectedCheckpointHash)) {
+            return { record: nowLive, observation: nowLive.lastObservation };
+          }
+          throw new Error('checkpoint resume conflicted with a live episode');
+        }
+        if ((this.principals.get(principalId)?.size ?? 0) >= this.maxEpisodesPerPrincipal) {
+          throw new Error('episode limit reached');
+        }
+        const checkpoint = await this.loadAvoCheckpoint(principalId, episodeId, checkpointId);
+        if (checkpoint.checkpointHash !== expectedCheckpointHash) {
+          throw new Error('checkpoint does not match the externally anchored hash');
+        }
+        if (checkpoint.coreCheckpoint.environmentCheckpoint === undefined) {
+          throw new Error('checkpoint does not contain resumable environment state');
+        }
+        const restored = await restore(checkpoint);
+        let episodes = this.principals.get(principalId);
+        if (!episodes) {
+          episodes = new Map();
+          this.principals.set(principalId, episodes);
+        }
+        const record: EpisodeRecord = {
+          episodeId,
+          principalId,
+          controller: restored.controller,
+          avoLoop: restored.avoLoop,
+          createdAt: this.now().toISOString(),
+          lastObservation: restored.observation,
+          checkpoints: new Map(),
+          lastRestoredCheckpointId: checkpointId,
+          lastRestoredCheckpointHash: checkpoint.checkpointHash,
+          lastDirective: activeDirectiveFromCheckpoint(checkpoint.coreCheckpoint),
+        };
+        episodes.set(episodeId, record);
+        return { record, observation: restored.observation };
       });
     });
   }
@@ -693,7 +1240,7 @@ export class ArcEpisodeStore {
 
   /** Runtime capability attenuation for the boss MCP lane. */
   supervisorAuthority(record: EpisodeRecord): ArcSupervisorAuthority {
-    const controller = record.controller;
+    const controller = record.avoLoop?.asSupervisor() ?? record.controller;
     return Object.freeze({
       supervisorCaseBundle: controller.supervisorCaseBundle.bind(controller),
       openSupervisorCase: controller.openSupervisorCase.bind(controller),
@@ -729,7 +1276,16 @@ export class ArcEpisodeStore {
     while (this.activeIdempotentBodies.size > 0) {
       await Promise.allSettled([...this.activeIdempotentBodies]);
     }
+    // The official AVO factory must snapshot the store-owned loop while its
+    // controller is still open. The snapshot proves archive/outcome coverage
+    // of the final authoritative receipt chain.
+    const avoAttestationResults = await Promise.allSettled([
+      captureOfficialAvoRuntime(this.factory),
+    ]);
     const records = [...this.principals.values()].flatMap((episodes) => [...episodes.values()]);
+    const loopResults = await Promise.allSettled(
+      records.flatMap((record) => record.avoLoop ? [record.avoLoop.close()] : []),
+    );
     const controllers = [...new Set([
       ...records.map((record) => record.controller),
       ...this.retiredControllers,
@@ -741,7 +1297,12 @@ export class ArcEpisodeStore {
       this.factoryClosePromise = Promise.resolve().then(async () => this.factory.close?.());
     }
     const factoryResults = await Promise.allSettled([this.factoryClosePromise]);
-    const failures = [...controllerResults, ...factoryResults]
+    const failures = [
+      ...avoAttestationResults,
+      ...loopResults,
+      ...controllerResults,
+      ...factoryResults,
+    ]
       .filter((result): result is PromiseRejectedResult => result.status === 'rejected');
     if (failures.length > 0) {
       throw new AggregateError(

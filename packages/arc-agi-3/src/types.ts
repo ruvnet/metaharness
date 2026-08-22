@@ -226,6 +226,8 @@ export interface SemanticRule {
   readonly statement: string;
   readonly preconditions: readonly string[];
   readonly predictedEffect: string;
+  /** Receipt that anchors a neutral hypothesis proposal, not support or contradiction. */
+  readonly proposalReceiptHashes: readonly string[];
   readonly supportingReceiptHashes: readonly string[];
   readonly contradictingReceiptHashes: readonly string[];
   readonly alpha: number;
@@ -243,6 +245,7 @@ export interface SemanticRuleCommit {
   readonly statement: string;
   readonly preconditions?: readonly string[];
   readonly predictedEffect: string;
+  readonly proposalReceiptHashes?: readonly string[];
   readonly supportingReceiptHashes?: readonly string[];
   readonly contradictingReceiptHashes?: readonly string[];
   readonly status?: SemanticRuleStatus;
@@ -560,6 +563,10 @@ export interface ArcControllerStatus {
   readonly lastError?: string;
 }
 
+export type ArcActionLegalityPreview =
+  | { readonly legal: true; readonly directiveId?: string }
+  | { readonly legal: false; readonly code: string };
+
 export interface ArcControllerOptions {
   readonly principalId: string;
   readonly runId: string;
@@ -570,6 +577,11 @@ export interface ArcControllerOptions {
   readonly budget?: Partial<ArcRunBudget>;
   readonly sessionLog?: ArcSessionLog;
   readonly supervisorThresholds?: Partial<SupervisorThresholds>;
+  /**
+   * OFF preserves the original advisory supervisor behavior. BLOCKING refuses
+   * every subsequent environment mutation while a supervisor case is open.
+   */
+  readonly supervisionGate?: 'OFF' | 'BLOCKING';
   readonly clock?: () => number;
 }
 

@@ -85,7 +85,7 @@ export function createFactoryFixture(options: {
     calls: 0,
     factoryCloseCalls: 0,
   };
-  const factory = (async ({ principalId, runId }) => {
+  const factory = (async ({ principalId, runId, requestedSupervisionGate }) => {
     fixture.calls += 1;
     if (options.delay) await options.delay;
     if (options.failMessage) throw new Error(options.failMessage);
@@ -102,6 +102,9 @@ export function createFactoryFixture(options: {
         environmentAdapterVersion: '@metaharness/arc-agi-3/test@0.1.0',
       },
       budget: { maxActions: options.maxActions ?? 10_000, maxWallTimeMs: 3_600_000 },
+      ...(requestedSupervisionGate === undefined
+        ? {}
+        : { supervisionGate: requestedSupervisionGate }),
     });
     fixture.environments.push(environment);
     fixture.controllers.push(controller);

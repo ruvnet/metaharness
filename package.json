@@ -30,6 +30,7 @@
     "fmt:rust": "cargo fmt --all",
     "clippy": "cargo clippy --workspace --all-targets -- -D warnings",
     "smoke": "node scripts/smoke.mjs",
+    "benchmark:arc-avo-long-horizon": "npm run build && node scripts/benchmark-arc-avo-long-horizon.mjs",
     "pretest": "npm run build"
   },
   "devDependencies": {
