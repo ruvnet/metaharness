@@ -202,6 +202,23 @@ function makeAgent(inst, prof, readCurrentFile) {
     async chooseAction(context) {
       if (spent >= PER_INSTANCE_USD) return { kind: 'commit', summary: 'budget exhausted' };
       const receipts = context.state.receipts;
+      // Cost-optimized cadence (no LLM call): after an edit, TEST; if the tests
+      // pass, COMMIT (which stops the loop via stopOnVerifiedWinner). This ends
+      // each instance the moment it is fixed instead of wandering to the budget —
+      // cutting cost with zero resolution change (same winning edit is committed).
+      if (process.env.AVO_AUTO_CADENCE !== '0') {
+        const last = receipts.at(-1);
+        if (last?.action.kind === 'edit' && last.observation?.ok) {
+          const a = { kind: 'evaluate' };
+          this.usage.push({ generationId: 'forced-evaluate', costUsd: 0, tokens: 0, kind: a.kind });
+          return { action: a, costUsd: 0, durationMs: 0, receipt: { forced: true } };
+        }
+        if (last?.action.kind === 'evaluate' && last.observation?.ok) {
+          const a = { kind: 'commit', summary: 'tests pass' };
+          this.usage.push({ generationId: 'forced-commit', costUsd: 0, tokens: 0, kind: a.kind });
+          return { action: a, costUsd: 0, durationMs: 0, receipt: { forced: true } };
+        }
+      }
       const history = receipts.slice(-8)
         .map((r, i, arr) => {
           const budget = i === arr.length - 1 ? 6000 : 250; // full detail for the latest observation
