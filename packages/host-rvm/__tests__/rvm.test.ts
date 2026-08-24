@@ -320,4 +320,33 @@ describe('installScript shell-escaping (Dream Cycle 2026-08-24)', () => {
       if (existsSync(marker)) rmSync(marker);
     }
   });
+
+  // Adversarial-critic finding: the header `#`-comment lines in both
+  // installScript() and partitionToml() interpolated spec.name raw. A
+  // comment has no quoting to escape into — a literal newline is itself
+  // the whole exploit, breaking out into a live bash statement (installScript)
+  // or a bogus new TOML section (partitionToml). No $()/backtick needed.
+  it('comment-header newline injection no longer executes (installScript)', () => {
+    const marker = path.join(os.tmpdir(), `rvm-commentsafe-marker-${process.pid}-${Math.floor(Math.random() * 1e9)}`);
+    try {
+      const evil = `x\ntouch ${marker}\n#`;
+      const s = installScript({ name: evil });
+      expect(s.split('\n')[1]).toBe(`# RVM install runbook for harness: x touch ${marker} #`);
+      try {
+        execFileSync('bash', ['-c', s], { stdio: 'pipe' });
+      } catch {
+        // rvm-loader is absent in this environment — expected to fail later.
+      }
+      expect(existsSync(marker)).toBe(false);
+    } finally {
+      if (existsSync(marker)) rmSync(marker);
+    }
+  });
+
+  it('comment-header newline injection no longer creates a bogus TOML section (partitionToml)', () => {
+    const evil = 'x\n[injected]\npwned = true\n#';
+    const out = partitionToml({ name: evil } as any);
+    expect(out.split('\n')[1]).toBe('# RVM partition manifest for harness: x [injected] pwned = true #');
+    expect(out).not.toMatch(/^\[injected\]/m);
+  });
 });
