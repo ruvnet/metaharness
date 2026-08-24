@@ -192,6 +192,20 @@ function tomlEscape(s: string): string {
 }
 
 /**
+ * Escape a string for safe interpolation inside a double-quoted POSIX/bash
+ * string. Plain double-quoting does NOT stop command substitution
+ * (`$(...)`, backticks) or variable expansion (`$var`) — an attacker-
+ * controlled `spec.name` reaching `installScript()` unescaped can run
+ * arbitrary shell commands when the generated `install-rvm.sh` is executed.
+ * Escapes the 4 characters meaningful inside a bash double-quoted string:
+ * backslash, double-quote, dollar-sign, backtick. Byte-identical output for
+ * any name without those characters.
+ */
+function shellDq(s: string): string {
+  return s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\$/g, '\\$').replace(/`/g, '\\`');
+}
+
+/**
  * Render the rvm-partition.toml content.
  */
 export function partitionToml(spec: HarnessSpec, partition: RvmPartitionSpec = defaultPartitionSpec(spec.name)): string {
@@ -249,9 +263,9 @@ export function installScript(spec: HarnessSpec): string {
     `rvm-loader caps install --table ./capability-table.json`,
     '',
     '# 4. Boot the WASM guest (the kernel wasm bundle)',
-    `rvm-loader guest boot --partition "${spec.name}" --wasm-ref ./wasm-guest.json`,
+    `rvm-loader guest boot --partition "${shellDq(spec.name)}" --wasm-ref ./wasm-guest.json`,
     '',
-    `echo "RVM partition '${spec.name}' is up. Hash-chained witness logs at ~/.rvm/witness/."`,
+    `echo "RVM partition '${shellDq(spec.name)}' is up. Hash-chained witness logs at ~/.rvm/witness/."`,
   ].join('\n') + '\n';
 }
 

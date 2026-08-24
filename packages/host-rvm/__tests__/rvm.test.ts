@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 
 import { describe, it, expect } from 'vitest';
+import { execFileSync } from 'node:child_process';
+import { existsSync, rmSync } from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
 import {
   rightsFromCapability,
   rightsFromPermission,
@@ -267,5 +271,53 @@ describe('partitionToml system_prompt (ADR-044)', () => {
     const toml = partitionToml({ name: 'h', systemPrompt: 'You are h.' } as any);
     expect(toml).toContain('[metadata]');
     expect(toml).toContain('system_prompt = "You are h."');
+  });
+});
+
+// Dream Cycle 2026-08-24 — shell injection in installScript()'s two
+// double-quoted `spec.name` interpolation sites. Double-quoting alone does
+// not stop `$(...)`/backtick command substitution, so a harness name
+// reaching this adapter's exported functions directly (bypassing the
+// CLI/web-UI's validateHarnessName kebab-case gate — the only thing that
+// prevented this before tonight) could run arbitrary shell commands the
+// moment the generated install-rvm.sh is executed.
+describe('installScript shell-escaping (Dream Cycle 2026-08-24)', () => {
+  it('benign names remain byte-identical (double-quoted, unescaped)', () => {
+    const s = installScript({ name: 'my-bot' });
+    expect(s).toMatch(/rvm-loader guest boot --partition "my-bot" --wasm-ref/);
+    expect(s).toContain(`echo "RVM partition 'my-bot' is up. Hash-chained witness logs at ~/.rvm/witness/."`);
+  });
+
+  it('escapes $, `, ", and \\ at both interpolation sites', () => {
+    const evil = 'x$(touch pwned)`id`"\\end';
+    const s = installScript({ name: evil });
+    const bootLine = s.split('\n').find(l => l.includes('guest boot'))!;
+    const echoLine = s.split('\n').find(l => l.startsWith("echo \"RVM partition"))!;
+    const escaped = 'x\\$(touch pwned)\\`id\\`\\"\\\\end';
+    expect(bootLine).toContain(`--partition "${escaped}" --wasm-ref`);
+    expect(echoLine).toContain(`'${escaped}' is up`);
+    // No raw, unescaped command-substitution or backtick sequence survives.
+    expect(bootLine).not.toMatch(/[^\\]\$\(touch pwned\)/);
+    expect(bootLine).not.toMatch(/[^\\]`id[^\\]`/);
+  });
+
+  it('real bash execution: injected command substitution no longer runs (RCE regression)', () => {
+    const marker = path.join(os.tmpdir(), `rvm-shelldq-marker-${process.pid}-${Math.floor(Math.random() * 1e9)}`);
+    try {
+      const evil = `x$(touch ${marker})`;
+      const s = installScript({ name: evil });
+      const bootLine = s.split('\n').find(l => l.includes('guest boot'))!;
+      try {
+        // rvm-loader is expected to be absent in this environment — the
+        // command itself fails; what's under test is whether the injected
+        // `touch` ran as a smuggled-in *separate* statement before that.
+        execFileSync('bash', ['-c', bootLine], { stdio: 'pipe' });
+      } catch {
+        // expected: "rvm-loader: command not found"
+      }
+      expect(existsSync(marker)).toBe(false);
+    } finally {
+      if (existsSync(marker)) rmSync(marker);
+    }
   });
 });
