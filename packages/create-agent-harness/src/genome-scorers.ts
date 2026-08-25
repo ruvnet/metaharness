@@ -92,8 +92,12 @@ export function scoreMcpRisk(profile: RepoProfile, plan: HarnessPlan): McpRisk {
  * 0.5-0.8. External research (arXiv:2606.18168, arXiv:2607.18057; SWE-bench's
  * real-execution harness; the kodustech/agent-readiness OSS scorer) confirms
  * this "manifest implies tests" shortcut is a known, actively-flagged failure
- * mode, and this package's own sibling `score.ts::scoreTestCoverage` already
- * requires real directory evidence — this brings the two into agreement.
+ * mode. This package's own sibling `score.ts::scoreTestCoverage` already
+ * weights real directory evidence as its largest single component (50/100,
+ * vs. 25 each for a declared npm-test script and CI, which still apply
+ * independently) — narrower parity than "requires" it outright, but this
+ * candidate moves genome-scorers.ts's weaker, purely-inferred version toward
+ * that same real-evidence-first shape rather than claiming full agreement.
  *
  * Without verified test files, CI alone earns only a small "infra exists but
  * unconfirmed" credit rather than the prior full test-command credit.

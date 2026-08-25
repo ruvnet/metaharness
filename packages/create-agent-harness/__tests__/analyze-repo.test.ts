@@ -38,6 +38,29 @@ describe('inventory + analyzeFiles', () => {
     const files = inventory(dir);
     expect(Object.keys(files).some((k) => k.includes('node_modules'))).toBe(false);
   });
+
+  // Dream Cycle 2026-08-25: the real fs scan behind hasVerifiedTestFiles
+  // (inventory()'s dirExists probe for tests/__tests__/test) was previously
+  // only exercised via a hand-built files map in the genome-scorers suite,
+  // never against a real filesystem — closing that gap per the independent
+  // critic's finding.
+  it('sets hasVerifiedTestFiles=true only when a real tests/__tests__/test dir exists on disk', async () => {
+    const dir = await rustRepoDir();
+    expect(analyzeFiles('ruvector', inventory(dir)).hasVerifiedTestFiles).toBe(false);
+    await mkdir(join(dir, 'tests'), { recursive: true });
+    await writeFile(join(dir, 'tests', 'smoke.rs'), '// smoke test', 'utf-8');
+    expect(analyzeFiles('ruvector', inventory(dir)).hasVerifiedTestFiles).toBe(true);
+  });
+
+  it('a manifest-only repo (test script declared, no real test dir) reads as unverified', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'analyze-manifest-only-'));
+    await writeFile(join(dir, 'package.json'), JSON.stringify({ name: 'x', scripts: { test: 'echo no tests' } }), 'utf-8');
+    await mkdir(join(dir, '.github', 'workflows'), { recursive: true });
+    await writeFile(join(dir, '.github', 'workflows', 'ci.yml'), 'name: ci', 'utf-8');
+    const p = analyzeFiles('x', inventory(dir));
+    expect(p.testCommands.length).toBeGreaterThan(0); // the old, insufficient signal is still present
+    expect(p.hasVerifiedTestFiles).toBe(false); // but no real test dir exists
+  });
 });
 
 describe('recommendPlan (lexical default)', () => {
