@@ -58,11 +58,21 @@ export function verifyReplayBundle(
   const gateUnchanged = opts.pinnedGateFingerprint ? bundle.gate_fingerprint === opts.pinnedGateFingerprint : true;
   if (!gateUnchanged) failures.push('gateUnchanged');
 
+  // The run's frozen anti-Goodhart bar is the ROOT commit's sealed `anchorScore` (set once at gen-0,
+  // run.ts — the same `rootAnchor` every live winner was compared against). Reading it off `root` here
+  // keeps the anchor re-check at the SAME sealed-field trust tier as the pre-existing
+  // baselineScore/candidateScore re-execution below — not a new/stronger guarantee. (Hardening sealed
+  // fields against bundle-editing, as opposed to signature, forgery is a separate, larger, disclosed
+  // future gap — see the PR/issue writeup — not attempted here.)
+  const rootAnchorSealed = root && root.anchorScore != null ? root.anchorScore : null;
+
   // (5) RE-EXECUTE the gate. Only when the reviewer supplies the rule (otherwise unchecked → true, so
   // existing fingerprint-only callers are unaffected). The supplied rule must be the SAME one (its
   // fingerprint must match the pinned/bundled value) or re-execution is meaningless. Then every PROMOTED
   // commit that carries its sealed scores must RE-PASS the rule — a logged promotion the frozen gate would
-  // NOT grant is a forgery.
+  // NOT grant is a forgery. This includes the anti-Goodhart anchor clause: previously `evidence.anchor`
+  // was NEVER supplied here, so `anchor_regressed` was structurally unreachable during replay even though
+  // `run.ts` enforces it live — a promotion that regressed the frozen anchor replayed clean.
   let gateReExecutes = true;
   if (opts.promotionRule) {
     const suppliedFp = gateFingerprint(opts.promotionRule);
@@ -75,7 +85,10 @@ export function verifyReplayBundle(
         if (seen.has(c.id)) continue;
         seen.add(c.id);
         if (c.verdict === 'PROMOTED' && c.baselineScore && c.candidateScore) {
-          if (!opts.promotionRule({ baseline: c.baselineScore, candidate: c.candidateScore }).promote) {
+          const anchor = rootAnchorSealed != null && c.anchorScore != null
+            ? { baseline: rootAnchorSealed, candidate: c.anchorScore }
+            : undefined;
+          if (!opts.promotionRule({ baseline: c.baselineScore, candidate: c.candidateScore, anchor }).promote) {
             gateReExecutes = false;
             break;
           }

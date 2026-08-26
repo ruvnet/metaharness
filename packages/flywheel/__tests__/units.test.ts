@@ -130,6 +130,43 @@ describe('verifyReplayBundle — gateReExecutes: re-run the rule on sealed score
     const b = bundleOf(promoted(S2(), S2({ primary: 6, noopRate: 0.2 })));
     expect(verifyReplayBundle(b, { pinnedGateFingerprint: gateFingerprint(meetsPromotionRule) }).checks.gateReExecutes).toBe(true);
   });
+
+  // [gap #1 fix, disclosed 2026-08-16 #205, closed 2026-08-26] gateReExecutes previously NEVER supplied
+  // PromotionEvidence.anchor, so a promotion that regressed the frozen anti-Goodhart anchor replayed
+  // clean. The root's sealed anchorScore is now the re-check's baseline bar.
+  it('an ANCHOR-REGRESSED promotion (root.anchorScore=5, commit.anchorScore=4) → gateReExecutes false', () => {
+    const anchoredRoot: LineageCommit = { ...root, anchorScore: 5 };
+    const c1 = { ...promoted(S2(), S2({ primary: 6, noopRate: 0.2 })), anchorScore: 4 }; // below root anchor
+    const b: ReplayBundle = { ...bundleOf(c1), chain: [c1, anchoredRoot], all_commits: [c1] };
+    const v = verifyReplayBundle(b, { promotionRule: meetsPromotionRule });
+    expect(v.checks.gateReExecutes).toBe(false);
+    expect(v.pass).toBe(false);
+  });
+
+  it('an anchor-SURVIVING promotion (root.anchorScore=5, commit.anchorScore=6) → gateReExecutes still true', () => {
+    const anchoredRoot: LineageCommit = { ...root, anchorScore: 5 };
+    const c1 = { ...promoted(S2(), S2({ primary: 6, noopRate: 0.2 })), anchorScore: 6 }; // meets/exceeds root anchor
+    const b: ReplayBundle = { ...bundleOf(c1), chain: [c1, anchoredRoot], all_commits: [c1] };
+    const v = verifyReplayBundle(b, { promotionRule: meetsPromotionRule });
+    expect(v.checks.gateReExecutes).toBe(true);
+    expect(v.pass).toBe(true);
+  });
+
+  it('anchor EQUALS root exactly (boundary: candidate=baseline) → not a regression, gateReExecutes true', () => {
+    const anchoredRoot: LineageCommit = { ...root, anchorScore: 5 };
+    const c1 = { ...promoted(S2(), S2({ primary: 6, noopRate: 0.2 })), anchorScore: 5 }; // == root anchor
+    const b: ReplayBundle = { ...bundleOf(c1), chain: [c1, anchoredRoot], all_commits: [c1] };
+    const v = verifyReplayBundle(b, { promotionRule: meetsPromotionRule });
+    expect(v.checks.gateReExecutes).toBe(true);
+    expect(v.pass).toBe(true);
+  });
+
+  it('no anchor suite used (root.anchorScore=null) → anchor clause stays unchecked, unaffected', () => {
+    const b = bundleOf(promoted(S2(), S2({ primary: 6, noopRate: 0.2 }))); // default root has anchorScore: null
+    const v = verifyReplayBundle(b, { promotionRule: meetsPromotionRule });
+    expect(v.checks.gateReExecutes).toBe(true);
+    expect(v.pass).toBe(true);
+  });
 });
 
 describe('analyzeBundle — F-P2 mutation-effectiveness', () => {
