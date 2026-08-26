@@ -14,17 +14,19 @@ Recent Evidence-Carrying Termination research evaluates a typed certificate that
 
 Add an optional evidence-carrying completion gate to `@metaharness/horizon`.
 
-A completion certificate contains named claims and transcript evidence references. When enabled, the driver accepts a final answer only when:
+A completion certificate contains named claims and stable transcript evidence references. When enabled, the driver accepts a final answer only when:
 
 1. every configured required claim appears exactly once,
-2. every evidence reference resolves to an eligible transcript event,
+2. every evidence reference resolves to one unambiguous eligible transcript event,
 3. tool evidence is successful and authorized unless the policy explicitly relaxes that requirement,
 4. any asserted artifact digest matches the recorded receipt,
 5. an injected deterministic replay function reconstructs the claimed value.
 
+Evidence references use stable event IDs rather than transcript array positions. Compaction can change array positions, so positional references would allow stale references to resolve to the wrong event. Tool events emitted by Horizon receive monotonically unique IDs derived from the persisted action counter.
+
 Rejected completion attempts are recorded as structured summary events and fed into the existing repeated-failure and iteration-budget guards so an agent can recover but cannot loop forever.
 
-The feature is opt-in. Existing Horizon users retain byte-for-byte completion behavior unless a completion policy is configured.
+The feature is opt-in. Existing Horizon users retain existing completion behavior unless a completion policy is configured.
 
 ## Interface
 
@@ -36,7 +38,7 @@ interface CompletionClaim {
 }
 
 interface CompletionEvidenceRef {
-  eventIndex: number;
+  eventId: string;
   artifactDigest?: string;
 }
 
@@ -54,7 +56,9 @@ interface CompletionConfig {
 
 ## Security invariants
 
-A certificate is evidence, not authority. It cannot grant capabilities, expand command policy, approve gated actions, or mutate the evaluator. Model-authored text cannot mark a failed or denied tool action as valid evidence. Completion fails closed when replay is missing, a reference is out of range, an artifact digest differs, or a required claim is unsupported.
+A certificate is evidence, not authority. It cannot grant capabilities, expand command policy, approve gated actions, or mutate the evaluator. Model-authored text cannot mark a failed or denied tool action as valid evidence. Completion fails closed when replay is missing, an event ID is missing or ambiguous, an artifact digest differs, or a required claim is unsupported.
+
+Compaction may remove old evidence. That produces a safe verification failure, never a retargeted reference, because event IDs are stable and never reused.
 
 ## Consequences
 
@@ -68,4 +72,4 @@ Remove the optional `completion` configuration or revert this ADR and its compan
 
 ## Acceptance
 
-The implementation must reject missing claims, stale or out-of-range evidence, denied tool evidence, digest mismatch, and replay mismatch. A driver test must demonstrate recovery after a rejected premature completion and successful completion only after new valid evidence appears.
+The implementation must reject missing claims, missing or ambiguous event IDs, denied tool evidence, digest mismatch, and replay mismatch. A driver test must demonstrate recovery after a rejected premature completion and successful completion only after new valid evidence appears.
