@@ -89,6 +89,9 @@ export async function verifyCompletionCertificate(
   if (!replay) {
     return { ok: false, errors: ['completion replay seam missing'], checkedClaims };
   }
+  if (c.requiredClaims.length === 0) {
+    return { ok: false, errors: ['at least one required completion claim is required'], checkedClaims };
+  }
   if (!Number.isInteger(c.maxEvidenceRefsPerClaim) || c.maxEvidenceRefsPerClaim < 1) {
     return { ok: false, errors: ['maxEvidenceRefsPerClaim must be a positive integer'], checkedClaims };
   }
