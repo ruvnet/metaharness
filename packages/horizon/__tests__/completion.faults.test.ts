@@ -34,6 +34,17 @@ function certificate(eventId = 'tool:1', artifactDigest = 'sha256:good'): Comple
 }
 
 describe('completion verifier deterministic fault injections', () => {
+  it('rejects an empty completion contract instead of treating it as vacuously proven', async () => {
+    const result = await verifyCompletionCertificate(
+      { claims: [] },
+      [],
+      { requiredClaims: [] },
+      async () => '',
+    );
+    expect(result.ok).toBe(false);
+    expect(result.errors).toContain('at least one required completion claim is required');
+  });
+
   it('rejects 128 unsupported completion variants', async () => {
     for (let i = 0; i < 128; i += 1) {
       const fault = i % 4;
