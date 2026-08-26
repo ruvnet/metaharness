@@ -4,6 +4,8 @@ import type { ToolExecutionResult } from './executor.js';
 
 /** Minimal transcript shape accepted by the completion verifier. */
 export interface CompletionEvidenceEvent {
+  /** Stable event identity. Tool events emitted by Horizon use `tool:<actionCount>`. */
+  id?: string;
   role: 'model' | 'tool' | 'summary';
   text: string;
   receipt?: ToolExecutionResult;
@@ -11,7 +13,8 @@ export interface CompletionEvidenceEvent {
 
 /** Reference to one immutable transcript event used as evidence for a claim. */
 export interface CompletionEvidenceRef {
-  eventIndex: number;
+  /** Stable event ID, never a mutable transcript array position. */
+  eventId: string;
   /** Optional binding to the exact workspace artifact digest observed at the event. */
   artifactDigest?: string;
 }
@@ -110,6 +113,14 @@ export async function verifyCompletionCertificate(
     byId.set(claim.id, claim);
   }
 
+  const eventsById = new Map<string, CompletionEvidenceEvent>();
+  const duplicateEventIds = new Set<string>();
+  for (const event of events) {
+    if (!event.id) continue;
+    if (eventsById.has(event.id)) duplicateEventIds.add(event.id);
+    else eventsById.set(event.id, event);
+  }
+
   for (const id of required) {
     const claim = byId.get(id);
     if (!claim) {
@@ -132,45 +143,55 @@ export async function verifyCompletionCertificate(
     }
 
     const evidence: CompletionEvidenceEvent[] = [];
-    const seenRefs = new Set<number>();
+    const seenRefs = new Set<string>();
     let invalidEvidence = false;
     for (const ref of claim.evidence) {
-      if (!ref || !Number.isInteger(ref.eventIndex) || ref.eventIndex < 0 || ref.eventIndex >= events.length) {
-        errors.push(`claim ${id}: evidence reference out of range`);
+      if (!ref || typeof ref.eventId !== 'string' || !ref.eventId) {
+        errors.push(`claim ${id}: evidence reference has invalid event id`);
         invalidEvidence = true;
         continue;
       }
-      if (seenRefs.has(ref.eventIndex)) {
-        errors.push(`claim ${id}: duplicate evidence reference ${ref.eventIndex}`);
+      if (seenRefs.has(ref.eventId)) {
+        errors.push(`claim ${id}: duplicate evidence reference ${ref.eventId}`);
         invalidEvidence = true;
         continue;
       }
-      seenRefs.add(ref.eventIndex);
+      seenRefs.add(ref.eventId);
+      if (duplicateEventIds.has(ref.eventId)) {
+        errors.push(`claim ${id}: evidence event id is ambiguous: ${ref.eventId}`);
+        invalidEvidence = true;
+        continue;
+      }
 
-      const event = events[ref.eventIndex];
+      const event = eventsById.get(ref.eventId);
+      if (!event) {
+        errors.push(`claim ${id}: evidence event not found: ${ref.eventId}`);
+        invalidEvidence = true;
+        continue;
+      }
       if (!c.allowedEvidenceRoles.includes(event.role)) {
-        errors.push(`claim ${id}: event ${ref.eventIndex} role ${event.role} is not eligible evidence`);
+        errors.push(`claim ${id}: event ${ref.eventId} role ${event.role} is not eligible evidence`);
         invalidEvidence = true;
         continue;
       }
       if (event.role === 'tool') {
         if (!event.receipt) {
-          errors.push(`claim ${id}: event ${ref.eventIndex} has no tool receipt`);
+          errors.push(`claim ${id}: event ${ref.eventId} has no tool receipt`);
           invalidEvidence = true;
           continue;
         }
         if (c.requireAuthorizedToolEvidence && !event.receipt.policyReceipt.authorized) {
-          errors.push(`claim ${id}: event ${ref.eventIndex} was not authorized`);
+          errors.push(`claim ${id}: event ${ref.eventId} was not authorized`);
           invalidEvidence = true;
           continue;
         }
         if (c.requireSuccessfulToolEvidence && event.receipt.exitCode !== 0) {
-          errors.push(`claim ${id}: event ${ref.eventIndex} did not succeed`);
+          errors.push(`claim ${id}: event ${ref.eventId} did not succeed`);
           invalidEvidence = true;
           continue;
         }
         if (ref.artifactDigest !== undefined && ref.artifactDigest !== event.receipt.artifactDigest) {
-          errors.push(`claim ${id}: artifact digest mismatch at event ${ref.eventIndex}`);
+          errors.push(`claim ${id}: artifact digest mismatch at event ${ref.eventId}`);
           invalidEvidence = true;
           continue;
         }
