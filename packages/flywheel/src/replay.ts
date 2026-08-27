@@ -10,7 +10,22 @@
 //       not the logged verdict. Catches a signed-but-forged promotion the fingerprint check cannot.
 import { verifyReceipt } from './receipts.js';
 import { gateFingerprint } from './gate.js';
-import type { ReplayBundle, PromotionRule, LineageCommit } from './types.js';
+import type { ReplayBundle, PromotionRule, LineageCommit, Score } from './types.js';
+
+// A bundle is untrusted external JSON — `baselineScore != null` only proves the field exists, not that
+// its required sub-fields are present and well-typed. `meetsPromotionRule` compares them with `<`/`>` on
+// possibly-`undefined` values, and JS comparison semantics make several of those clauses fail OPEN (e.g.
+// `undefined > n` is false, so a missing `costPerWin` or `regressed` never trips its rejection reason).
+// A Score with a missing/mistyped field is exactly as unusable as a missing Score for gate re-execution.
+function isCompleteScore(s: Score | undefined): s is Score {
+  return (
+    !!s &&
+    typeof s.primary === 'number' &&
+    typeof s.noopRate === 'number' &&
+    typeof s.costPerWin === 'number' &&
+    typeof s.regressed === 'boolean'
+  );
+}
 
 export interface ReplayVerdict {
   pass: boolean;
@@ -85,9 +100,10 @@ export function verifyReplayBundle(
         if (seen.has(c.id)) continue;
         seen.add(c.id);
         if (c.verdict !== 'PROMOTED') continue;
-        // Fail-closed: a PROMOTED commit missing the sealed scores this verification mode claims to
-        // re-execute is not "unchecked" — it cannot prove the gate re-run, so replay must not pass it.
-        if (c.baselineScore == null || c.candidateScore == null) {
+        // Fail-closed: a PROMOTED commit missing (or carrying an incomplete/mistyped) sealed score this
+        // verification mode claims to re-execute is not "unchecked" — it cannot prove the gate re-run, so
+        // replay must not pass it.
+        if (!isCompleteScore(c.baselineScore) || !isCompleteScore(c.candidateScore)) {
           gateReExecutes = false;
           break;
         }

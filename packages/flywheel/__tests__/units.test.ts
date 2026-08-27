@@ -195,6 +195,29 @@ describe('verifyReplayBundle — gateReExecutes: re-run the rule on sealed score
     expect(v.checks.gateReExecutes).toBe(false);
     expect(v.pass).toBe(false);
   });
+
+  // [private-triage follow-up on #231] `baselineScore != null` / `candidateScore != null` only proves the
+  // Score OBJECT exists — an untrusted bundle can carry one with a missing/mistyped field. Because
+  // meetsPromotionRule compares with `<`/`>` on possibly-undefined values, JS comparison semantics make
+  // several clauses fail OPEN (`undefined > n` is false ⇒ cost_per_win_worsened never fires; a missing
+  // `regressed` is falsy ⇒ safety_regressed never fires). Mutation-test EVERY required Score field, on
+  // both baseline and candidate, deleted from an otherwise gate-repassing bundle: pass must be false.
+  describe('mutation: an otherwise gate-repassing bundle with one Score field deleted → gateReExecutes false, pass false', () => {
+    const fields: (keyof Score)[] = ['primary', 'noopRate', 'costPerWin', 'regressed'];
+    for (const side of ['baselineScore', 'candidateScore'] as const) {
+      for (const field of fields) {
+        it(`${side}.${field} deleted`, () => {
+          const good = S2({ primary: 6, noopRate: 0.2 });
+          const base = side === 'baselineScore' ? { ...S2(), [field]: undefined } : S2();
+          const cand = side === 'candidateScore' ? { ...good, [field]: undefined } : good;
+          const c1 = promoted(base as Score, cand as Score);
+          const v = verifyReplayBundle(bundleOf(c1), { promotionRule: meetsPromotionRule });
+          expect(v.checks.gateReExecutes).toBe(false);
+          expect(v.pass).toBe(false);
+        });
+      }
+    }
+  });
 });
 
 describe('analyzeBundle — F-P2 mutation-effectiveness', () => {
