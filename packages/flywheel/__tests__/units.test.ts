@@ -167,6 +167,34 @@ describe('verifyReplayBundle — gateReExecutes: re-run the rule on sealed score
     expect(v.checks.gateReExecutes).toBe(true);
     expect(v.pass).toBe(true);
   });
+
+  // [fail-closed fix, review verdict on #231] missing required gate evidence must FAIL replay, not be
+  // silently treated as "unchecked" — mutation tests: delete each field from an otherwise-valid,
+  // gate-re-passing bundle and require pass === false.
+  it('mutation: PROMOTED commit missing baselineScore → gateReExecutes false, pass false', () => {
+    const c1: LineageCommit = { ...promoted(S2(), S2({ primary: 6, noopRate: 0.2 })), baselineScore: undefined };
+    const b = bundleOf(c1);
+    const v = verifyReplayBundle(b, { promotionRule: meetsPromotionRule });
+    expect(v.checks.gateReExecutes).toBe(false);
+    expect(v.pass).toBe(false);
+  });
+
+  it('mutation: PROMOTED commit missing candidateScore → gateReExecutes false, pass false', () => {
+    const c1: LineageCommit = { ...promoted(S2(), S2({ primary: 6, noopRate: 0.2 })), candidateScore: undefined };
+    const b = bundleOf(c1);
+    const v = verifyReplayBundle(b, { promotionRule: meetsPromotionRule });
+    expect(v.checks.gateReExecutes).toBe(false);
+    expect(v.pass).toBe(false);
+  });
+
+  it('mutation: root pins an anchor but the PROMOTED commit is missing its anchorScore → gateReExecutes false, pass false', () => {
+    const anchoredRoot: LineageCommit = { ...root, anchorScore: 5 };
+    const c1 = { ...promoted(S2(), S2({ primary: 6, noopRate: 0.2 })), anchorScore: null }; // deleted
+    const b: ReplayBundle = { ...bundleOf(c1), chain: [c1, anchoredRoot], all_commits: [c1] };
+    const v = verifyReplayBundle(b, { promotionRule: meetsPromotionRule });
+    expect(v.checks.gateReExecutes).toBe(false);
+    expect(v.pass).toBe(false);
+  });
 });
 
 describe('analyzeBundle — F-P2 mutation-effectiveness', () => {

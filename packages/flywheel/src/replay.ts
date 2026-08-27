@@ -84,14 +84,26 @@ export function verifyReplayBundle(
       for (const c of [...chain, ...bundle.all_commits] as LineageCommit[]) {
         if (seen.has(c.id)) continue;
         seen.add(c.id);
-        if (c.verdict === 'PROMOTED' && c.baselineScore && c.candidateScore) {
-          const anchor = rootAnchorSealed != null && c.anchorScore != null
-            ? { baseline: rootAnchorSealed, candidate: c.anchorScore }
-            : undefined;
-          if (!opts.promotionRule({ baseline: c.baselineScore, candidate: c.candidateScore, anchor }).promote) {
-            gateReExecutes = false;
-            break;
-          }
+        if (c.verdict !== 'PROMOTED') continue;
+        // Fail-closed: a PROMOTED commit missing the sealed scores this verification mode claims to
+        // re-execute is not "unchecked" — it cannot prove the gate re-run, so replay must not pass it.
+        if (c.baselineScore == null || c.candidateScore == null) {
+          gateReExecutes = false;
+          break;
+        }
+        // Same fail-closed rule for the anchor axis: once the root pins an anchor bar, a promoted commit
+        // missing its own anchorScore must not silently drop out of the anti-Goodhart check (that was the
+        // original gap — anchor: undefined made the clause unreachable instead of failing).
+        if (rootAnchorSealed != null && c.anchorScore == null) {
+          gateReExecutes = false;
+          break;
+        }
+        const anchor = rootAnchorSealed != null
+          ? { baseline: rootAnchorSealed, candidate: c.anchorScore! }
+          : undefined;
+        if (!opts.promotionRule({ baseline: c.baselineScore, candidate: c.candidateScore, anchor }).promote) {
+          gateReExecutes = false;
+          break;
         }
       }
     }
