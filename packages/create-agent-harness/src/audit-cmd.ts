@@ -111,11 +111,52 @@ export async function auditCmd(args: string[]): Promise<SubcommandResult> {
   const counts = parsed.metadata?.vulnerabilities ?? {};
   const levelIdx = LEVELS.indexOf(level as any);
   const failCount = LEVELS.slice(levelIdx).reduce((s, l) => s + (counts[l] ?? 0), 0);
-  const total = Object.values<number>(counts).reduce((s, n) => s + (n ?? 0), 0);
+  // npm's `metadata.vulnerabilities` object carries a `total` key alongside
+  // the per-severity keys — summing Object.values() double-counts it. Sum
+  // only the known severities.
+  const total = LEVELS.reduce((s, l) => s + (counts[l] ?? 0), 0);
   const offenders = Object.entries<any>(parsed.vulnerabilities ?? {})
     .filter(([, v]) => LEVELS.indexOf((v as any).severity) >= levelIdx)
     .map(([name, v]) => ({ name, severity: (v as any).severity, advisory: (v as any).via?.[0]?.title ?? null }));
   const code = failCount === 0 ? 0 : 1;
+
+  // iter: `--omit=dev` is the default (matches the standard two-tier CI
+  // pattern — gate on prod, report on everything), but a bare "PASS: 0
+  // advisories" gave no signal that devDependencies were excluded from the
+  // count at all, even when they carry a critical advisory. devDependencies
+  // execute during npm ci/test/build (CI/build-time attack surface — see
+  // the 2026 node-ipc and Shai-Hulud npm supply-chain incidents, both of
+  // which exfiltrated CI credentials via compromised build-time packages)
+  // so a silent PASS here can look cleaner than the real dependency tree
+  // is. Surface the suppressed count without changing default pass/fail
+  // semantics — a second `npm audit` scoped to metadata only, best-effort.
+  let suppressed: { total: number; atLevelOrAbove: number } | null = null;
+  if (!includeDev) {
+    try {
+      const allArgs = ['audit', '--json', `--audit-level=${level}`];
+      // Like the primary call above: `npm audit` exits non-zero once
+      // advisories at-or-above --audit-level exist, but still writes the
+      // real report JSON to stdout — that's the expected, common case here
+      // (it's exactly why the primary call has its own catch), so pull
+      // stdout from the rejection instead of discarding it.
+      let allStdout: string;
+      try {
+        const r = await execFile(npmCmd, process.platform === 'win32'
+          ? ['/d', '/s', '/c', 'npm', ...allArgs] : allArgs,
+          { cwd: dir, maxBuffer: 1024 * 1024 * 16, windowsHide: true });
+        allStdout = r.stdout;
+      } catch (e: any) {
+        allStdout = e.stdout ?? '';
+      }
+      const allParsed = JSON.parse(allStdout);
+      const allCounts = allParsed.metadata?.vulnerabilities ?? {};
+      const allTotal = LEVELS.reduce((s, l) => s + (allCounts[l] ?? 0), 0);
+      const allFailCount = LEVELS.slice(levelIdx).reduce((s, l) => s + (allCounts[l] ?? 0), 0);
+      if (allTotal >= total && allFailCount >= failCount) {
+        suppressed = { total: allTotal - total, atLevelOrAbove: allFailCount - failCount };
+      }
+    } catch { /* best-effort disclosure only — never fails the command */ }
+  }
 
   if (bundle) {
     return {
@@ -130,12 +171,16 @@ export async function auditCmd(args: string[]): Promise<SubcommandResult> {
         offenders,
         failCount,
         exitCode: code,
+        ...(suppressed ? { devDependenciesSuppressed: suppressed } : {}),
       }, null, 2)],
     };
   }
 
   lines.push(`  total advisories: ${total}`);
   lines.push(`  per severity: ${LEVELS.map(l => `${l}=${counts[l] ?? 0}`).join(', ')}`);
+  if (suppressed && (suppressed.total > 0 || suppressed.atLevelOrAbove > 0)) {
+    lines.push(`  devDependencies not counted: ${suppressed.total} advisories (${suppressed.atLevelOrAbove} at ${level}+) — re-run with --include-dev to see them`);
+  }
   if (failCount === 0) {
     lines.push(`  PASS: 0 advisories at ${level}+`);
     return { code: 0, lines };
