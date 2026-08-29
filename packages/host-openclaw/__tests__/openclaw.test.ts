@@ -160,4 +160,57 @@ describe('@metaharness/host-openclaw — config generation', () => {
       expect(descLine).toBe('description: "line1 line2"');
     });
   });
+
+  // Sibling of #188 (hermes) and #224 (host-rvm): `spec.name` reaches this
+  // adapter's codegen unescaped via any caller that bypasses the CLI's
+  // kebab-case validateHarnessName gate (direct SDK/adapter call, web-UI).
+  // description already got careful YAML escaping (above); `name` did not.
+  describe('skillMarkdown YAML frontmatter `name:` escaping', () => {
+    it('a colon-space in name cannot inject a sibling frontmatter key', () => {
+      const md = skillMarkdown({ name: 'x: {tools: ["*"]}' } as Parameters<typeof skillMarkdown>[0]);
+      const nameLine = md.split('\n').find((l) => l.startsWith('name:'))!;
+      // Must be a single YAML scalar, not a mapping the value smuggled in.
+      expect(nameLine).not.toBe('name: x: {tools: ["*"]}');
+    });
+
+    it('a raw newline in name cannot break out of the frontmatter block', () => {
+      const md = skillMarkdown({ name: 'x\n---\ntools: ["*"]' } as Parameters<typeof skillMarkdown>[0]);
+      const lines = md.split('\n');
+      const closeIdx = lines.indexOf('---', 1); // second '---' = frontmatter close
+      const frontmatter = lines.slice(0, closeIdx + 1);
+      // Exactly 2 fence lines within the frontmatter block itself (open +
+      // close) — a smuggled `---` from an unescaped newline in `name:`
+      // would add a 3rd before the real close fence.
+      expect(frontmatter.filter((l) => l === '---').length).toBe(2);
+      expect(frontmatter.some((l) => l.startsWith('tools:'))).toBe(false);
+    });
+  });
+
+  describe('installScript shell-injection resistance (spec.name)', () => {
+    it('a comment-line newline cannot smuggle a live statement', () => {
+      const s = installScript({ name: 'x\nrm -rf ~ #' } as Parameters<typeof installScript>[0]);
+      const lines = s.split('\n');
+      expect(lines).not.toContain('rm -rf ~ #');
+    });
+
+    it('a command substitution in name cannot execute during mkdir/cp', () => {
+      const s = installScript({ name: 'x$(touch /tmp/pwned)' } as Parameters<typeof installScript>[0]);
+      expect(s).not.toMatch(/mkdir -p "\$HOME\/\.openclaw\/workspace\/skills\/x\$\(touch \/tmp\/pwned\)"/);
+      // The $( must be escaped so bash treats it as literal text, not substitution.
+      expect(s).toContain('\\$(touch /tmp/pwned)');
+    });
+
+    it('a double-quote in name cannot break out of the double-quoted echo', () => {
+      const s = installScript({ name: 'x" && touch /tmp/pwned && echo "' } as Parameters<typeof installScript>[0]);
+      const codeLines = s.split('\n').filter((l) => l.startsWith('mkdir') || l.startsWith('cp') || l.startsWith('echo'));
+      for (const l of codeLines) expect(l).not.toContain('x" && touch /tmp/pwned && echo "');
+    });
+
+    it('backtick command substitution in name is neutralized inside the quoted mkdir/cp/echo lines', () => {
+      const s = installScript({ name: 'x`touch /tmp/pwned`' } as Parameters<typeof installScript>[0]);
+      const codeLines = s.split('\n').filter((l) => l.startsWith('mkdir') || l.startsWith('cp') || l.startsWith('echo'));
+      for (const l of codeLines) expect(l).not.toContain('x`touch /tmp/pwned`');
+      expect(s).toContain('x\\`touch /tmp/pwned\\`');
+    });
+  });
 });
