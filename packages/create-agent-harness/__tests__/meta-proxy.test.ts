@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   META_PROXY_VERSION,
+  acquireMetaProxyInstallLock,
   createMetaProxyPolicyToken,
   isValidReleaseVersion,
   metaProxyClientEnvironment,
@@ -10,6 +11,7 @@ import {
   metaProxyEndpoint,
   metaProxyLogLines,
   parseSha256Sums,
+  probeEffectiveMetaProxy,
   resolveMetaProxyAsset,
   sha256Hex,
   verifyMetaProxyChecksum,
@@ -84,6 +86,41 @@ describe('optional Meta-Proxy integration', () => {
 
       writeFileSync(join(state, 'proxy-config.toml'), 'bind = "0.0.0.0:11435"\n');
       expect(() => metaProxyEndpoint(home)).toThrow(/non-loopback/i);
+    } finally {
+      if (priorState === undefined) delete process.env.RUFLO_STATE_DIR;
+      else process.env.RUFLO_STATE_DIR = priorState;
+      rmSync(home, { recursive: true, force: true });
+    }
+  });
+
+  it('validates the effective daemon version response instead of trusting the install sidecar', async () => {
+    const good = await probeEffectiveMetaProxy('/tmp', async () => new Response(
+      JSON.stringify({ version: '0.7.5', pid: 1234 }),
+      { status: 200, headers: { 'content-type': 'application/json' } },
+    ));
+    expect(good).toEqual({ version: '0.7.5', pid: 1234 });
+
+    const malformed = await probeEffectiveMetaProxy('/tmp', async () => new Response(
+      JSON.stringify({ version: '../bad', pid: -1 }),
+      { status: 200, headers: { 'content-type': 'application/json' } },
+    ));
+    expect(malformed).toBeNull();
+  });
+
+  it('serializes competing installers through the shared Ruflo lease', async () => {
+    const home = mkdtempSync(join(tmpdir(), 'metaharness-proxy-lock-'));
+    const priorState = process.env.RUFLO_STATE_DIR;
+    delete process.env.RUFLO_STATE_DIR;
+    try {
+      const releaseFirst = await acquireMetaProxyInstallLock(home);
+      let waited = false;
+      const releaseSecond = await acquireMetaProxyInstallLock(home, async () => {
+        waited = true;
+        releaseFirst();
+      });
+      expect(waited).toBe(true);
+      expect(existsSync(join(home, '.ruflo', 'meta-proxy-install.lock'))).toBe(true);
+      releaseSecond();
     } finally {
       if (priorState === undefined) delete process.env.RUFLO_STATE_DIR;
       else process.env.RUFLO_STATE_DIR = priorState;
