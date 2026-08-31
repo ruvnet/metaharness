@@ -8,12 +8,17 @@
 //   (5) [ADR-235] if the reviewer supplies the (fingerprint-matched) rule, every PROMOTED commit is
 //       RE-GATED on its sealed baseline+candidate scores and must STILL promote — trust the gate re-run,
 //       not the logged verdict. Catches a signed-but-forged promotion the fingerprint check cannot.
-//   (6) for any commit whose SIGNED receipt payload carries its own copy of baselineScore/candidateScore/
-//       anchorScore/failureReasons (every receipt minted after this check was added), those signed values
-//       must match the commit's live (unsigned) fields — otherwise (5) can be defeated by a bundle editor
-//       with no signing key who splices favorable scores onto the commit object that (5) re-gates. A
-//       receipt whose payload predates this check (no sealed-field keys present) is left unchecked here,
-//       same backward-compat shape as (5)'s own opt-in — it does not retroactively secure old bundles.
+//   (6) for whichever of id/target/verdict/primaryDelta/baselineScore/candidateScore/anchorScore/
+//       failureReasons a commit's SIGNED receipt payload carries, the signed copy must match the commit's
+//       live (unsigned) fields — including 'id'. Binding 'id' matters as much as the score fields: without
+//       it, a bundle editor with no signing key can clone ONE genuine receipt across many fabricated
+//       commit ids/parents (copying the real receipt's baseline/candidate/anchor scores onto each
+//       fabricated commit too) to manufacture a fake multi-generation promoted lineage from a single real
+//       promotion — (5)'s re-gate would happily re-pass every clone since each one re-derives the same
+//       genuine (baseline, candidate) pair. Checking whichever keys a payload happens to carry keeps this
+//       additive: a receipt whose payload predates this check (carries none of these keys) is left
+//       unchecked here, same backward-compat shape as (5)'s own opt-in — it does not retroactively secure
+//       old bundles, only binds every bundle produced after this check shipped.
 import { verifyReceipt, canon } from './receipts.js';
 import { gateFingerprint } from './gate.js';
 import type { ReplayBundle, PromotionRule, LineageCommit } from './types.js';
@@ -92,9 +97,21 @@ export function verifyReplayBundle(
   }
   if (!gateReExecutes) failures.push('gateReExecutes');
 
-  // (6) SEALED-FIELD BINDING (see header). Only receipts whose payload opts in (carries at least one of
-  // the sealed keys) are checked — this is what makes it additive over every pre-existing bundle.
-  const SEALED_KEYS = ['baselineScore', 'candidateScore', 'anchorScore', 'failureReasons'] as const;
+  // (6) RECEIPT-BOUND-TO-COMMIT (see header). 'id' binds the receipt to a specific commit — without it,
+  // whichever score/reason keys a payload carries can canon-match by cloning the whole receipt (sealed
+  // fields included) onto a different, fabricated commit that copies the same values live. Only receipts
+  // whose payload opts in (carries at least one of these keys) are checked — additive over every
+  // pre-existing bundle.
+  const BOUND_KEYS: { [k: string]: (c: LineageCommit) => unknown } = {
+    id: (c) => c.id,
+    target: (c) => c.mutation?.target ?? null,
+    verdict: (c) => c.verdict,
+    primaryDelta: (c) => c.primaryDelta,
+    baselineScore: (c) => c.baselineScore ?? null,
+    candidateScore: (c) => c.candidateScore ?? null,
+    anchorScore: (c) => c.anchorScore,
+    failureReasons: (c) => c.failureReasons,
+  };
   let sealedFieldsAuthentic = true;
   {
     const seen = new Set<string>();
@@ -102,12 +119,11 @@ export function verifyReplayBundle(
       if (seen.has(c.id) || c.verdict === 'ROOT') continue;
       seen.add(c.id);
       const payload = c.receipt.payload as Record<string, unknown>;
-      if (!SEALED_KEYS.some((k) => k in payload)) continue; // old-format receipt — nothing to check
-      const live = c as unknown as Record<string, unknown>;
-      if (SEALED_KEYS.some((k) => k in payload && canon(payload[k]) !== canon(live[k] ?? null))) {
-        sealedFieldsAuthentic = false;
-        break;
+      for (const [k, live] of Object.entries(BOUND_KEYS)) {
+        if (!(k in payload)) continue;
+        if (canon(payload[k]) !== canon(live(c))) { sealedFieldsAuthentic = false; break; }
       }
+      if (!sealedFieldsAuthentic) break;
     }
   }
   if (!sealedFieldsAuthentic) failures.push('sealedFieldsAuthentic');

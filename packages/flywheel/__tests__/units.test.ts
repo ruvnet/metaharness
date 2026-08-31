@@ -185,6 +185,34 @@ describe('verifyReplayBundle — sealedFieldsAuthentic: signed scores must match
     };
     expect(verifyReplayBundle(bundleOf(c1)).checks.sealedFieldsAuthentic).toBe(true);
   });
+
+  it('cloning ONE genuine receipt onto a fabricated commit id (no signing key needed) fails — the receipt must be BOUND to the commit it decorates, not just internally consistent', () => {
+    const baselineScore = S({ primary: 5 });
+    const candidateScore = S({ primary: 6, noopRate: 0.2 });
+    // The one real, legitimately-signed promotion.
+    const genuineReceipt = signer.sign({ kind: 'candidate', id: 'c1', target: 't', verdict: 'PROMOTED', primaryDelta: 1, baselineScore, candidateScore, anchorScore: null, failureReasons: [] });
+    const genuine: LineageCommit = {
+      id: 'c1', generation: 1, parents: ['root'], mutation: { target: 't', summary: 'adapt t' }, primaryDelta: 1,
+      anchorScore: null, verdict: 'PROMOTED', failureReasons: [], receipt: genuineReceipt, createdAt: 'g1', baselineScore, candidateScore,
+    };
+    // An attacker with NO signing key clones that same receipt onto a second, fabricated commit id,
+    // copying the genuine scores onto its live fields too — so a naive "do the sealed values match"
+    // check alone would pass it. This manufactures a 2-generation promoted lineage from one real
+    // promotion; verifyReceipt still reports true for the cloned receipt (it's a genuine signature).
+    const forged: LineageCommit = {
+      id: 'c2-forged', generation: 2, parents: ['c1'], mutation: { target: 't', summary: 'adapt t' }, primaryDelta: 1,
+      anchorScore: null, verdict: 'PROMOTED', failureReasons: [], receipt: genuineReceipt, createdAt: 'g2', baselineScore, candidateScore,
+    };
+    expect(verifyReceipt(forged.receipt)).toBe(true); // the clone's signature verifies fine — that's the point
+    const bundle: ReplayBundle = {
+      data_source: 'SYNTHETIC', root_id: 'root', chain: [forged, genuine, root], all_commits: [forged, genuine],
+      lift_curve: [], gate_fingerprint: gateFingerprint(meetsPromotionRule),
+      verified_improvements: 2, anchor_surviving_improvements: 2, milestone_reached: true, created_at: 'g2',
+    };
+    const v = verifyReplayBundle(bundle);
+    expect(v.checks.sealedFieldsAuthentic).toBe(false); // forged.receipt.payload.id ('c1') != forged.id ('c2-forged')
+    expect(v.pass).toBe(false);
+  });
 });
 
 describe('analyzeBundle — F-P2 mutation-effectiveness', () => {
