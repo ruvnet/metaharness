@@ -175,16 +175,25 @@ export async function runFlywheelGenerations(cfg: FlywheelConfig): Promise<Flywh
       const isWinner = c === promotedWinner;
       const id = `${parentId}__${c.target}_gen${gen}`;
       const primaryDelta = c.score.primary - score.primary;
+      const anchorScore = isWinner ? winnerAnchor : c === winner ? winnerAnchor : null;
+      const failureReasons = isWinner ? [] : c === winner && !anchorSurvives ? ['anchor_regressed'] : c.reasons;
       const commit: LineageCommit = {
         id, generation: gen, parents: [parentId],
         // ADR-246 §2.1: an object-form proposer's summary (and rollback inverse) reaches the lineage
         // commit; a legacy string-form proposer keeps the exact `adapt <target>` summary, unchanged.
         mutation: { target: c.target, summary: c.summary ?? `adapt ${c.target}`, ...(c.inverse ? { inverse: c.inverse } : {}) },
         primaryDelta,
-        anchorScore: isWinner ? winnerAnchor : c === winner ? winnerAnchor : null,
+        anchorScore,
         verdict: isWinner ? 'PROMOTED' : 'REJECTED',
-        failureReasons: isWinner ? [] : c === winner && !anchorSurvives ? ['anchor_regressed'] : c.reasons,
-        receipt: cfg.signer.sign({ kind: 'candidate', id, target: c.target, verdict: isWinner ? 'PROMOTED' : 'REJECTED', primaryDelta }),
+        failureReasons,
+        // Sealed-field binding: baseline/candidate/anchor scores + failureReasons enter the SIGNED
+        // payload too, not just the commit's unsigned fields below — otherwise a bundle editor with no
+        // signing key can splice favorable scores onto a PROMOTED commit and gateReExecutes (replay.ts,
+        // ADR-235) would re-run the frozen rule on forged input and still pass. See sealedFieldsAuthentic.
+        receipt: cfg.signer.sign({
+          kind: 'candidate', id, target: c.target, verdict: isWinner ? 'PROMOTED' : 'REJECTED', primaryDelta,
+          baselineScore: score, candidateScore: c.score, anchorScore, failureReasons,
+        }),
         createdAt: now(gen),
         baselineScore: score,       // ADR-235 — sealed so the gate can be re-run in replay
         candidateScore: c.score,

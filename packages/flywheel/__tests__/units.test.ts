@@ -132,6 +132,61 @@ describe('verifyReplayBundle — gateReExecutes: re-run the rule on sealed score
   });
 });
 
+describe('verifyReplayBundle — sealedFieldsAuthentic: signed scores must match the live commit', () => {
+  const signer = makeSigner();
+  const root: LineageCommit = {
+    id: 'root', generation: 0, parents: [], mutation: null, primaryDelta: 0, anchorScore: null,
+    verdict: 'ROOT', failureReasons: [], receipt: signer.sign({ kind: 'root', root: 'root' }), createdAt: 'g0',
+  };
+  const bundleOf = (c1: LineageCommit): ReplayBundle => ({
+    data_source: 'SYNTHETIC', root_id: 'root', chain: [c1, root], all_commits: [c1],
+    lift_curve: [], gate_fingerprint: gateFingerprint(meetsPromotionRule),
+    verified_improvements: 1, anchor_surviving_improvements: 1, milestone_reached: false, created_at: 'g1',
+  });
+
+  it('a NEW-format receipt (sealed fields in the signed payload) matching the live commit passes', () => {
+    const baselineScore = S({ primary: 5 });
+    const candidateScore = S({ primary: 6, noopRate: 0.2 });
+    const c1: LineageCommit = {
+      id: 'c1', generation: 1, parents: ['root'], mutation: { target: 't', summary: 'adapt t' }, primaryDelta: 1,
+      anchorScore: null, verdict: 'PROMOTED', failureReasons: [],
+      receipt: signer.sign({ kind: 'candidate', id: 'c1', target: 't', verdict: 'PROMOTED', primaryDelta: 1, baselineScore, candidateScore, anchorScore: null, failureReasons: [] }),
+      createdAt: 'g1', baselineScore, candidateScore,
+    };
+    const v = verifyReplayBundle(bundleOf(c1));
+    expect(v.checks.sealedFieldsAuthentic).toBe(true);
+    expect(v.pass).toBe(true);
+  });
+
+  it('tampering with an unsigned score AFTER signing (no signing key needed) fails sealedFieldsAuthentic', () => {
+    const baselineScore = S({ primary: 5 });
+    const candidateScore = S({ primary: 6, noopRate: 0.2 });
+    const c1: LineageCommit = {
+      id: 'c1', generation: 1, parents: ['root'], mutation: { target: 't', summary: 'adapt t' }, primaryDelta: 1,
+      anchorScore: null, verdict: 'PROMOTED', failureReasons: [],
+      receipt: signer.sign({ kind: 'candidate', id: 'c1', target: 't', verdict: 'PROMOTED', primaryDelta: 1, baselineScore, candidateScore, anchorScore: null, failureReasons: [] }),
+      createdAt: 'g1', baselineScore,
+      candidateScore: S({ primary: 99, noopRate: 0 }), // ← spliced post-signing; receipt itself still verifies
+    };
+    expect(verifyReceipt(c1.receipt)).toBe(true); // the signature alone can't catch this — that's the gap
+    const v = verifyReplayBundle(bundleOf(c1));
+    expect(v.checks.sealedFieldsAuthentic).toBe(false);
+    expect(v.pass).toBe(false);
+  });
+
+  it('backward-compatible: an OLD-format receipt (no sealed keys in the payload) is unchecked (true)', () => {
+    const baselineScore = S({ primary: 5 });
+    const candidateScore = S({ primary: 6, noopRate: 0.2 });
+    const c1: LineageCommit = {
+      id: 'c1', generation: 1, parents: ['root'], mutation: { target: 't', summary: 'adapt t' }, primaryDelta: 1,
+      anchorScore: null, verdict: 'PROMOTED', failureReasons: [],
+      receipt: signer.sign({ kind: 'candidate', id: 'c1' }), // pre-fix payload shape (see ADR-235 tests above)
+      createdAt: 'g1', baselineScore, candidateScore,
+    };
+    expect(verifyReplayBundle(bundleOf(c1)).checks.sealedFieldsAuthentic).toBe(true);
+  });
+});
+
 describe('analyzeBundle — F-P2 mutation-effectiveness', () => {
   const mk = (target: string, gen: number, verdict: 'PROMOTED' | 'REJECTED', primaryDelta: number, failureReasons: string[] = [], costPerWin = 1): LineageCommit =>
     ({ id: `${target}-${gen}`, generation: gen, parents: [], mutation: { target, summary: '' }, primaryDelta, anchorScore: null, verdict, failureReasons, candidateScore: { primary: 0, noopRate: 0, costPerWin, regressed: false } } as LineageCommit);

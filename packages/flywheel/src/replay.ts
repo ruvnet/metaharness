@@ -8,7 +8,13 @@
 //   (5) [ADR-235] if the reviewer supplies the (fingerprint-matched) rule, every PROMOTED commit is
 //       RE-GATED on its sealed baseline+candidate scores and must STILL promote — trust the gate re-run,
 //       not the logged verdict. Catches a signed-but-forged promotion the fingerprint check cannot.
-import { verifyReceipt } from './receipts.js';
+//   (6) for any commit whose SIGNED receipt payload carries its own copy of baselineScore/candidateScore/
+//       anchorScore/failureReasons (every receipt minted after this check was added), those signed values
+//       must match the commit's live (unsigned) fields — otherwise (5) can be defeated by a bundle editor
+//       with no signing key who splices favorable scores onto the commit object that (5) re-gates. A
+//       receipt whose payload predates this check (no sealed-field keys present) is left unchecked here,
+//       same backward-compat shape as (5)'s own opt-in — it does not retroactively secure old bundles.
+import { verifyReceipt, canon } from './receipts.js';
 import { gateFingerprint } from './gate.js';
 import type { ReplayBundle, PromotionRule, LineageCommit } from './types.js';
 
@@ -21,6 +27,7 @@ export interface ReplayVerdict {
     allPromoted: boolean;
     gateUnchanged: boolean;
     gateReExecutes: boolean;
+    sealedFieldsAuthentic: boolean;
   };
   failures: string[];
   chainSummary: string;
@@ -85,9 +92,29 @@ export function verifyReplayBundle(
   }
   if (!gateReExecutes) failures.push('gateReExecutes');
 
+  // (6) SEALED-FIELD BINDING (see header). Only receipts whose payload opts in (carries at least one of
+  // the sealed keys) are checked — this is what makes it additive over every pre-existing bundle.
+  const SEALED_KEYS = ['baselineScore', 'candidateScore', 'anchorScore', 'failureReasons'] as const;
+  let sealedFieldsAuthentic = true;
+  {
+    const seen = new Set<string>();
+    for (const c of [...chain, ...bundle.all_commits] as LineageCommit[]) {
+      if (seen.has(c.id) || c.verdict === 'ROOT') continue;
+      seen.add(c.id);
+      const payload = c.receipt.payload as Record<string, unknown>;
+      if (!SEALED_KEYS.some((k) => k in payload)) continue; // old-format receipt — nothing to check
+      const live = c as unknown as Record<string, unknown>;
+      if (SEALED_KEYS.some((k) => k in payload && canon(payload[k]) !== canon(live[k] ?? null))) {
+        sealedFieldsAuthentic = false;
+        break;
+      }
+    }
+  }
+  if (!sealedFieldsAuthentic) failures.push('sealedFieldsAuthentic');
+
   return {
     pass: failures.length === 0,
-    checks: { receipts, reachesRoot, contiguousParents, allPromoted, gateUnchanged, gateReExecutes },
+    checks: { receipts, reachesRoot, contiguousParents, allPromoted, gateUnchanged, gateReExecutes, sealedFieldsAuthentic },
     failures,
     chainSummary: chain.map((c) => `gen${c.generation}${c.mutation ? `(${c.mutation.target})` : '(root)'}`).join(' → '),
   };
