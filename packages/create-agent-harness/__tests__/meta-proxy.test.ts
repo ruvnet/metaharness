@@ -25,7 +25,7 @@ import { join } from 'node:path';
 
 describe('optional Meta-Proxy integration', () => {
   it('pins the daemon release required by the signed extension', () => {
-    expect(META_PROXY_VERSION).toBe('0.7.4');
+    expect(META_PROXY_VERSION).toBe('0.7.5');
   });
 
   it('maps each supported platform to the signed v0.3.0 asset name', () => {

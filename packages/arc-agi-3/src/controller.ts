@@ -48,6 +48,8 @@ import {
 import type {
   ActRequest,
   ActResult,
+  ArcAction,
+  ArcActionLegalityPreview,
   ArcCheckpoint,
   ArcControllerOptions,
   ArcControllerStatus,
@@ -105,6 +107,7 @@ const MEMORY_COMMIT_KEYS = new Set([
   'statement',
   'preconditions',
   'predictedEffect',
+  'proposalReceiptHashes',
   'supportingReceiptHashes',
   'contradictingReceiptHashes',
   'status',
@@ -286,6 +289,7 @@ export class ArcController {
   private readonly manifest: NormalizedArcRunManifest;
   private readonly manifestHash: string;
   private readonly thresholds: SupervisorThresholds;
+  private readonly supervisionGate: 'OFF' | 'BLOCKING';
   private readonly configuredBudget: ArcRunBudget;
   private budget: ArcRunBudget;
   private readonly explicitGameVersion: boolean;
@@ -332,6 +336,14 @@ export class ArcController {
     this.configuredBudget = normalizeArcRunBudget(options.budget);
     this.budget = this.configuredBudget;
     this.thresholds = resolveSupervisorThresholds(options.supervisorThresholds);
+    if (options.supervisionGate !== undefined &&
+        options.supervisionGate !== 'OFF' && options.supervisionGate !== 'BLOCKING') {
+      throw new ArcValidationError(
+        'INVALID_SUPERVISION_GATE',
+        'supervisionGate must be OFF or BLOCKING',
+      );
+    }
+    this.supervisionGate = options.supervisionGate ?? 'OFF';
     this.explicitGameVersion = options.gameVersionHash !== undefined;
     this.internalGameIdentityHash = deriveGameIdentityHash(undefined, options.gameVersionHash);
     this._opaqueGameScope = opaqueGameScopeFor(
@@ -343,6 +355,44 @@ export class ArcController {
 
   get opaqueGameScope(): string {
     return this._opaqueGameScope;
+  }
+
+  /** Immutable policy fact used by wrappers before accepting this controller. */
+  get supervisionGateMode(): 'OFF' | 'BLOCKING' {
+    return this.supervisionGate;
+  }
+
+  /** Pure policy preview. act() repeats every check at the mutation boundary. */
+  previewActionLegality(action: ArcAction): ArcActionLegalityPreview {
+    validateArcAction(action);
+    try {
+      this.assertNotClosed();
+      this.assertStarted();
+      if (this.phase === 'FAULTED') {
+        throw new ArcValidationError('FAULTED', 'controller faulted and cannot act');
+      }
+      const observation = this.requireObservation();
+      const directive = this.peekActiveDirective();
+      this.assertSupervisionGate(directive);
+      if (this.receipts.length >= this.budget.maxActions) {
+        throw new ArcValidationError(
+          'ACTION_BUDGET_EXHAUSTED',
+          'run action budget is exhausted',
+        );
+      }
+      this.assertActionLegalAgainst(
+        { action, ...(directive === undefined ? {} : { directiveId: directive.id }) },
+        observation,
+        directive,
+      );
+      return Object.freeze({
+        legal: true as const,
+        ...(directive === undefined ? {} : { directiveId: directive.id }),
+      });
+    } catch (error) {
+      if (!(error instanceof ArcValidationError)) throw error;
+      return Object.freeze({ legal: false as const, code: error.code });
+    }
   }
 
   async start(): Promise<ExactArcObservation> {
@@ -436,7 +486,10 @@ export class ArcController {
   async commitMemoryRule(input: SemanticRuleCommit): Promise<SemanticRule> {
     const stableInput = snapshotMemoryCommit(input);
     return this.withMutation(async () => {
-      this.assertOperational();
+      // A terminal transition can prove or falsify the final rule. Preserve
+      // that evidence after WIN while still refusing writes to faulted/closed
+      // controllers. This method never mutates the environment.
+      this.assertEvidenceWritable();
       const commitHash = hashArcValue(stableInput);
       const memory = this.requireMemory();
       const replay = memory.ruleForCommitHash(commitHash);
@@ -503,7 +556,10 @@ export class ArcController {
       completed.push(result);
       if (!matchesPostcondition(result.observation, step.postcondition)) {
         this.planDivergenceReceiptHash = result.receipt.receiptHash;
-        this.openSupervisorCase();
+        // A terminal observation is already authoritative and no later action
+        // can cross this divergence. Keep the evidence receipt, but do not try
+        // to open an operational supervisor case after the run has stopped.
+        if (result.observation.state !== 'WIN') this.openSupervisorCase();
         return Object.freeze({
           planId,
           completed: Object.freeze(completed),
@@ -521,6 +577,8 @@ export class ArcController {
 
   supervisorCaseBundle(): SupervisorCaseBundle | null {
     if (!this.observation || !this.graph || !this.memory) return null;
+    // Materialize an expired-directive renewal before exposing the boss lane.
+    this.activeDirective();
     const open = lastOpenCase(this.supervisorCases);
     const candidate = open ?? this.detectCase();
     if (!candidate) return null;
@@ -531,6 +589,9 @@ export class ArcController {
 
   openSupervisorCase(request?: ExplicitSupervisorCaseRequest): SupervisorCaseBundle | null {
     this.assertOperational();
+    // This API remains synchronous for the isolated boss authority. act()
+    // therefore repeats its gate immediately before environment dispatch.
+    this.activeDirective();
     const open = lastOpenCase(this.supervisorCases);
     if (open) return this.bundleFor(open);
     this.validateExplicitCase(request);
@@ -700,7 +761,7 @@ export class ArcController {
       this.memoryHeads = memorySnapshotHeadsFor(
         this.memoryCommitmentScope(),
         checkpoint.episodes,
-        checkpoint.memory,
+        this.requireMemory().snapshot(),
       );
       this.requireGraph().load(checkpoint.graph);
       this.idempotency.clear();
@@ -768,7 +829,7 @@ export class ArcController {
       phase: this.phase,
       gameState: this.observation?.state,
       observationHash: this.observation?.observationHash,
-      currentBeliefKey: this.graph?.snapshot().currentBeliefKey,
+      currentBeliefKey: this.graph?.current().key,
       actionCount: this.receipts.length,
       uncertainMutationCount: this.uncertainMutationCount,
       startedAtMs: this.startedAtMs,
@@ -870,8 +931,10 @@ export class ArcController {
         'expectedObservationHash does not match the current exact observation',
       );
     }
+    const selectedDirective = this.activeDirective();
+    this.assertSupervisionGate(selectedDirective);
     this.assertActionBudget();
-    this.assertActionLegal(stableRequest, before);
+    this.assertActionLegalAgainst(stableRequest, before, selectedDirective);
     await this.appendSession('arc.action_intent', {
       idempotencyKey: stableRequest.idempotencyKey,
       expectedObservationHash: stableRequest.expectedObservationHash,
@@ -879,8 +942,13 @@ export class ArcController {
       ...(stableRequest.directiveId === undefined ? {} : { directiveId: stableRequest.directiveId }),
       requestHash,
     });
-    // Session persistence can take time; recheck immediately before mutation.
+    // Session persistence can take time, and the synchronous boss authority
+    // may open a case while it is pending. Recheck all supervisor authority
+    // immediately before the irreversible environment call.
+    const dispatchDirective = this.activeDirective();
+    this.assertSupervisionGate(dispatchDirective);
     this.assertActionBudget();
+    this.assertActionLegalAgainst(stableRequest, before, dispatchDirective);
 
     let raw;
     try {
@@ -1016,7 +1084,11 @@ export class ArcController {
     }
   }
 
-  private assertActionLegal(request: ActRequest, observation: ExactArcObservation): void {
+  private assertActionLegalAgainst(
+    request: Pick<ActRequest, 'action' | 'directiveId'>,
+    observation: ExactArcObservation,
+    directive: SupervisorDirective | undefined,
+  ): void {
     if (observation.state === 'WIN') {
       throw new ArcValidationError('RUN_WON', 'WIN is terminal; no further actions are legal');
     }
@@ -1028,7 +1100,6 @@ export class ArcController {
         !observation.availableActions.includes(request.action.name)) {
       throw new ArcValidationError('ACTION_UNAVAILABLE', 'action is not currently available');
     }
-    const directive = this.activeDirective();
     if (!directive) {
       if (request.directiveId !== undefined) {
         throw new ArcValidationError('UNKNOWN_DIRECTIVE', 'no active supervisor directive exists');
@@ -1065,11 +1136,85 @@ export class ArcController {
   }
 
   private activeDirective(): SupervisorDirective | undefined {
+    const active = this.peekActiveDirective();
+    if (active) return active;
+    if (this.activeDirectiveId !== undefined) this.activeDirectiveId = undefined;
+    if (this.supervisionGate === 'BLOCKING') {
+      const latest = this.directives.at(-1);
+      if (latest && latest.mode !== 'STOP') {
+        const used = this.receipts.length - latest.committedAtSequence;
+        if (used >= latest.expiresAfterActions) this.ensureDirectiveRenewalCase(latest, used);
+      }
+    }
+    return undefined;
+  }
+
+  private assertSupervisionGate(directive: SupervisorDirective | undefined): void {
+    if (this.supervisionGate !== 'BLOCKING') return;
+    const open = lastOpenCase(this.supervisorCases);
+    const latest = this.directives.at(-1);
+    const expiredObligation = directive === undefined && latest !== undefined &&
+      latest.mode !== 'STOP' &&
+      this.receipts.length - latest.committedAtSequence >= latest.expiresAfterActions;
+    if (open || expiredObligation) {
+      throw new ArcValidationError(
+        'SUPERVISION_REQUIRED',
+        open
+          ? 'an open supervisor case requires a newly committed directive'
+          : 'the prior supervisor directive expired and requires renewal',
+      );
+    }
+  }
+
+  private ensureDirectiveRenewalCase(
+    directive: SupervisorDirective,
+    usedActions: number,
+  ): void {
+    if (lastOpenCase(this.supervisorCases)) return;
+    const backing = this.supervisorCases.find(item => item.id === directive.caseId);
+    if (!backing) {
+      throw new ArcValidationError(
+        'INVALID_SUPERVISOR_STATE',
+        'expired directive has no backing supervisor case',
+      );
+    }
+    const expiryReceipt = this.receipts.at(-1);
+    if (!expiryReceipt) {
+      throw new ArcValidationError(
+        'INVALID_SUPERVISOR_STATE',
+        'a positive directive cannot expire without a transition receipt',
+      );
+    }
+    const base = {
+      principalScope: this.principalScope,
+      opaqueGameScope: this._opaqueGameScope,
+      runId: this.runId,
+      // Renewal is a new authority decision, not a replay of trigger-specific
+      // policy such as GAME_OVER => RESET. Bind it to the transition that
+      // exhausted authority and use a generally legal review mode.
+      trigger: 'MODEL_CONTRADICTION' as const,
+      openedAtSequence: this.receipts.length,
+      evidenceReceiptHashes: Object.freeze([expiryReceipt.receiptHash]),
+      metrics: Object.freeze({
+        directiveExpired: 1,
+        expiredDirectiveActions: usedActions,
+      }),
+      status: 'OPEN' as const,
+    };
+    const id = `supervisor_case_${hashArcValue(base).slice(0, 32)}`;
+    if (this.supervisorCases.some(item => item.id === id)) return;
+    const withId = { id, ...base };
+    this.supervisorCases.push(Object.freeze({
+      ...withId,
+      caseHash: hashArcValue(withId),
+    }));
+  }
+
+  private peekActiveDirective(): SupervisorDirective | undefined {
     const active = this.directives.find(item => item.id === this.activeDirectiveId);
     if (!active) return undefined;
     const used = this.receipts.length - active.committedAtSequence;
     if (active.mode !== 'STOP' && used >= active.expiresAfterActions) {
-      this.activeDirectiveId = undefined;
       return undefined;
     }
     return active;
@@ -1305,6 +1450,14 @@ export class ArcController {
     }
     if (this.phase === 'WON') {
       throw new ArcValidationError('RUN_WON', 'run has won and is stopped');
+    }
+  }
+
+  private assertEvidenceWritable(): void {
+    this.assertNotClosed();
+    this.assertStarted();
+    if (this.phase === 'FAULTED') {
+      throw new ArcValidationError('FAULTED', 'controller faulted and cannot commit evidence');
     }
   }
 

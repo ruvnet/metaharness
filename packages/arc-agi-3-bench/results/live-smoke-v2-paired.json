@@ -1,0 +1,71 @@
+{
+  "schema": "metaharness.arc_agi_3.live_smoke_pair.v1",
+  "generatedAt": "2026-08-22T19:59:01.162Z",
+  "benchmarkKind": "online-public-single-game-smoke",
+  "claimEligible": false,
+  "claimBoundary": "One public game and one seed in non-competition mode; this is an exploratory paired smoke test, not an official ARC score, a statistical benchmark, or evidence of increased intrinsic model intelligence.",
+  "pair": {
+    "opaqueEnvironmentHash": "0f2fcf4235f9bb70f587878aee671c329115a406cf871d5ddbd50f55c076e76e",
+    "seed": 0,
+    "actionBudgetPerArm": 80,
+    "competitionMode": false,
+    "actor": "Codex Work Mode reasoning actor; operator-visible identity",
+    "arms": [
+      {
+        "arm": "direct",
+        "profile": "DIRECT_ACTOR",
+        "profileConfigHash": "c11bd84f32fab0302929ece5ba98d53235234cf14321b6a117f16b10bf61eb7f",
+        "score": 3.571428571428571,
+        "levelsCompleted": 1,
+        "winLevels": 7,
+        "actionCount": 80,
+        "levelActionCounts": [15, 65, 0, 0, 0, 0, 0],
+        "decisionCount": 80,
+        "supervisorCalls": 0,
+        "ruleCount": 0,
+        "elapsedMs": 1182362,
+        "receiptVerification": {
+          "ok": true,
+          "count": 80,
+          "headHash": "4705c7b90e8221beb8e36706c8c949c792e9b932b10e2375c2c8ecb971df70a8"
+        }
+      },
+      {
+        "arm": "avo",
+        "profile": "AVO_FULL",
+        "profileConfigHash": "08eaa13332af6d2eda369bee1ea0e998bb12bcb719b4afcb60cb19e7170e2add",
+        "score": 3.571428571428571,
+        "levelsCompleted": 1,
+        "winLevels": 7,
+        "actionCount": 80,
+        "levelActionCounts": [22, 58, 0, 0, 0, 0, 0],
+        "decisionCount": 80,
+        "supervisorCalls": 5,
+        "ruleCount": 80,
+        "elapsedMs": 1438739,
+        "receiptVerification": {
+          "ok": true,
+          "count": 80,
+          "headHash": "2c4a1d642c153a6dc21c19da763f4e3130d6674477675b5cdb40e0a8d595d797"
+        }
+      }
+    ],
+    "comparison": {
+      "avoMinusDirectScore": 0,
+      "avoMinusDirectLevels": 0,
+      "avoMinusDirectActions": 0,
+      "avoMinusDirectElapsedMs": 256377,
+      "avoElapsedPercentChange": 21.683461
+    }
+  },
+  "acceptance": {
+    "passed": false,
+    "reason": "No score gain, no replicated games, and competition mode was disabled."
+  },
+  "limitations": [
+    "The two arms used separate online sessions; identical opaque environment hash and seed establish the intended pair but do not make one pair statistically informative.",
+    "Wall time includes interactive actor latency and is not a harness-only latency measurement.",
+    "Model token and reasoning usage were unavailable, so compute matching cannot be verified.",
+    "Raw scorecard identifiers and environment identity are intentionally omitted from this public compact artifact."
+  ]
+}
