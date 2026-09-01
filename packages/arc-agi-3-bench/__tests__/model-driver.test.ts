@@ -106,7 +106,13 @@ describe('model response boundary', () => {
       let names: string[] = [];
       for (let attempt = 0; attempt < 100 && names.length === 0; attempt += 1) {
         try {
-          names = await readdir(join(directory, 'requests'));
+          // The broker writes `<id>.json.partial` and then renames it, so a bare
+          // "directory is non-empty" poll can observe the temporary name and exit
+          // early. Wait for the settled file, or this races on slower filesystems
+          // (seen failing on ubuntu/windows CI while passing locally and on macOS).
+          names = (await readdir(join(directory, 'requests'))).filter(
+            name => !name.endsWith('.partial'),
+          );
         } catch {
           // The broker creates the directory asynchronously.
         }
