@@ -87,10 +87,12 @@ function detect(input: DetectionInput): Detection | null {
     };
   }
 
-  const coordinateEpisodes = tail(
-    input.episodes.filter(episode => episode.action.name === 'ACTION6' && episode.noEffect),
-    input.thresholds.coordinateProbeCount,
-  );
+  const coordinateEpisodes = input.episodes.length < input.thresholds.coordinateProbeCount
+    ? []
+    : tail(
+        input.episodes.filter(episode => episode.action.name === 'ACTION6' && episode.noEffect),
+        input.thresholds.coordinateProbeCount,
+      );
   if (coordinateEpisodes.length >= input.thresholds.coordinateProbeCount) {
     return {
       trigger: 'COORDINATE_PROBE',
@@ -99,7 +101,9 @@ function detect(input: DetectionInput): Detection | null {
     };
   }
 
-  const recentForRepeat = tail(input.episodes, Math.max(8, input.thresholds.repeatedEdgeCount * 4));
+  const recentForRepeat = input.episodes.length < input.thresholds.repeatedEdgeCount
+    ? []
+    : tail(input.episodes, Math.max(8, input.thresholds.repeatedEdgeCount * 4));
   const repeated = new Map<string, ArcEpisode[]>();
   for (const episode of recentForRepeat) {
     const key = hashArcValue({ observation: episode.preObservationHash, action: episode.action });
@@ -118,7 +122,9 @@ function detect(input: DetectionInput): Detection | null {
     };
   }
 
-  const noEffectWindow = tail(input.episodes, input.thresholds.noEffectWindow);
+  const noEffectWindow = input.episodes.length < input.thresholds.noEffectCount
+    ? []
+    : tail(input.episodes, input.thresholds.noEffectWindow);
   const noEffects = noEffectWindow.filter(episode => episode.noEffect);
   if (noEffects.length >= input.thresholds.noEffectCount) {
     return {
@@ -131,7 +137,9 @@ function detect(input: DetectionInput): Detection | null {
     };
   }
 
-  const predictionWindow = tail(input.episodes, input.thresholds.predictionErrorWindow);
+  const predictionWindow = input.episodes.length < input.thresholds.predictionErrorWindow
+    ? []
+    : tail(input.episodes, input.thresholds.predictionErrorWindow);
   const predictionMean = predictionWindow.length === 0
     ? 0
     : predictionWindow.reduce((sum, episode) => sum + episode.predictionError, 0) /
@@ -145,7 +153,9 @@ function detect(input: DetectionInput): Detection | null {
     };
   }
 
-  const cycleWindow = tail(input.episodes, input.thresholds.cycleWithinComponentCount);
+  const cycleWindow = input.episodes.length < input.thresholds.cycleWithinComponentCount
+    ? []
+    : tail(input.episodes, input.thresholds.cycleWithinComponentCount);
   const distinctCycleStates = new Set(cycleWindow.flatMap(episode => [
     episode.preObservationHash,
     episode.postObservationHash,
@@ -164,7 +174,9 @@ function detect(input: DetectionInput): Detection | null {
     };
   }
 
-  const stagnationWindow = tail(input.episodes, input.thresholds.stagnationWindow);
+  const stagnationWindow = input.episodes.length < input.thresholds.stagnationWindow
+    ? []
+    : tail(input.episodes, input.thresholds.stagnationWindow);
   const distinctStagnantStates = new Set(stagnationWindow.map(e => e.postObservationHash));
   if (stagnationWindow.length >= input.thresholds.stagnationWindow &&
       stagnationWindow.every(episode => episode.progressDelta === 0) &&
@@ -258,6 +270,10 @@ export function commitTypedSupervisorDirective(input: {
   }
   if (input.commit.expiresAfterActions > input.commit.actionBudget) {
     throw new Error('directive expiresAfterActions cannot exceed actionBudget');
+  }
+  if (input.commit.mode !== 'STOP' &&
+      (input.commit.actionBudget === 0 || input.commit.expiresAfterActions === 0)) {
+    throw new Error('non-STOP directives require positive actionBudget and expiresAfterActions');
   }
   const hasAdvice = input.commit.hypotheses !== undefined ||
     input.commit.recommendedStrategy !== undefined || input.commit.constraints !== undefined;

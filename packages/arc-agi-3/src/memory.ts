@@ -48,7 +48,7 @@ const RULE_REQUIRED_KEYS = new Set([
   'commitHash',
   'ruleHash',
 ]);
-const RULE_OPTIONAL_KEYS = new Set(['previousVersionHash']);
+const RULE_OPTIONAL_KEYS = new Set(['previousVersionHash', 'proposalReceiptHashes']);
 
 export interface MemoryCommitmentScope {
   readonly principalScope: string;
@@ -184,6 +184,15 @@ function validateStoredRule(
     throw new Error(`semantic rule ${record.id} has invalid bounded text`);
   }
   assertStoredStringArray(record.preconditions, 'semantic rule preconditions', 128, 1_024);
+  if (record.proposalReceiptHashes !== undefined) {
+    assertStoredStringArray(
+      record.proposalReceiptHashes,
+      'semantic rule proposal evidence',
+      256,
+      64,
+      true,
+    );
+  }
   assertStoredStringArray(
     record.supportingReceiptHashes,
     'semantic rule supporting evidence',
@@ -198,7 +207,8 @@ function validateStoredRule(
     64,
     true,
   );
-  if (record.supportingReceiptHashes.length + record.contradictingReceiptHashes.length === 0) {
+  if ((record.proposalReceiptHashes?.length ?? 0) + record.supportingReceiptHashes.length +
+      record.contradictingReceiptHashes.length === 0) {
     throw new Error(`semantic rule ${record.id} has no receipt evidence`);
   }
   if (record.alpha !== 1 + record.supportingReceiptHashes.length ||
@@ -258,11 +268,14 @@ export class EvidenceBackedMemory {
     if (statement.length > 4_096 || predictedEffect.length > 4_096) {
       throw new Error('semantic rule text exceeds 4096 characters');
     }
-    if ((input.supportingReceiptHashes !== undefined && !Array.isArray(input.supportingReceiptHashes)) ||
+    if ((input.proposalReceiptHashes !== undefined && !Array.isArray(input.proposalReceiptHashes)) ||
+        (input.supportingReceiptHashes !== undefined && !Array.isArray(input.supportingReceiptHashes)) ||
         (input.contradictingReceiptHashes !== undefined && !Array.isArray(input.contradictingReceiptHashes)) ||
+        (input.proposalReceiptHashes?.length ?? 0) > 256 ||
         (input.supportingReceiptHashes?.length ?? 0) > 256 ||
         (input.contradictingReceiptHashes?.length ?? 0) > 256 ||
-        [...(input.supportingReceiptHashes ?? []), ...(input.contradictingReceiptHashes ?? [])]
+        [...(input.proposalReceiptHashes ?? []), ...(input.supportingReceiptHashes ?? []),
+          ...(input.contradictingReceiptHashes ?? [])]
           .some(value => typeof value !== 'string' || !value.trim() || value.length > 256)) {
       throw new Error('semantic rule evidence arrays may contain at most 256 entries each');
     }
@@ -289,6 +302,10 @@ export class EvidenceBackedMemory {
     }).slice(0, 32)}`;
     const history = this.versions.get(id) ?? [];
     const previous = history[history.length - 1];
+    const proposalReceiptHashes = unique([
+      ...(previous?.proposalReceiptHashes ?? []),
+      ...(input.proposalReceiptHashes ?? []),
+    ]);
     const supportingReceiptHashes = unique([
       ...(previous?.supportingReceiptHashes ?? []),
       ...(input.supportingReceiptHashes ?? []),
@@ -297,10 +314,15 @@ export class EvidenceBackedMemory {
       ...(previous?.contradictingReceiptHashes ?? []),
       ...(input.contradictingReceiptHashes ?? []),
     ]);
-    if (supportingReceiptHashes.length > 256 || contradictingReceiptHashes.length > 256) {
+    if (proposalReceiptHashes.length > 256 || supportingReceiptHashes.length > 256 ||
+        contradictingReceiptHashes.length > 256) {
       throw new Error('versioned semantic rule evidence exceeds bounded limits');
     }
-    const evidence = unique([...supportingReceiptHashes, ...contradictingReceiptHashes]);
+    const evidence = unique([
+      ...proposalReceiptHashes,
+      ...supportingReceiptHashes,
+      ...contradictingReceiptHashes,
+    ]);
     if (evidence.length === 0) {
       throw new Error('semantic rule must cite at least one transition receipt');
     }
@@ -331,6 +353,7 @@ export class EvidenceBackedMemory {
       statement,
       preconditions,
       predictedEffect,
+      proposalReceiptHashes,
       supportingReceiptHashes,
       contradictingReceiptHashes,
       alpha: 1 + supportingReceiptHashes.length,
@@ -357,24 +380,27 @@ export class EvidenceBackedMemory {
     if (!Number.isInteger(limit) || limit < 1 || limit > 1_000) {
       throw new Error('memory query limit must be an integer in 1..1000');
     }
-    const episodes = this.episodes.filter(episode =>
-      query.receiptHash === undefined || episode.receiptHash === query.receiptHash,
-    );
-    const rules = this.orderedRules.filter(rule => {
+    const episodes = query.receiptHash === undefined
+      ? this.episodes.slice(-limit)
+      : this.episodes.filter(episode => episode.receiptHash === query.receiptHash).slice(-limit);
+    const hasRuleFilter = query.scope !== undefined || query.kind !== undefined
+      || query.status !== undefined || query.receiptHash !== undefined || text !== undefined;
+    const rules = hasRuleFilter ? this.orderedRules.filter(rule => {
       if (query.scope !== undefined && rule.scope !== query.scope) return false;
       if (query.kind !== undefined && rule.kind !== query.kind) return false;
       if (query.status !== undefined && rule.status !== query.status) return false;
       if (query.receiptHash !== undefined &&
+          !(rule.proposalReceiptHashes ?? []).includes(query.receiptHash) &&
           !rule.supportingReceiptHashes.includes(query.receiptHash) &&
           !rule.contradictingReceiptHashes.includes(query.receiptHash)) return false;
       if (text !== undefined &&
           !`${rule.statement}\n${rule.predictedEffect}\n${rule.preconditions.join('\n')}`
             .toLowerCase().includes(text)) return false;
       return true;
-    });
+    }).slice(-limit) : this.orderedRules.slice(-limit);
     return Object.freeze({
-      episodes: Object.freeze(episodes.slice(-limit)),
-      rules: Object.freeze(rules.slice(-limit)),
+      episodes: Object.freeze(episodes),
+      rules: Object.freeze(rules),
     });
   }
 
@@ -397,6 +423,7 @@ export class EvidenceBackedMemory {
     this.versions.clear();
     this.orderedRules.splice(0, this.orderedRules.length);
     this.commitResults.clear();
+    const storedRuleHeads = new Map<string, string>();
     for (const rawRule of snapshot.rules) {
       const rule = validateStoredRule(rawRule, this.options);
       if (rule.principalScope !== this.options.principalScope ||
@@ -407,7 +434,11 @@ export class EvidenceBackedMemory {
       if (hashArcValue(body) !== ruleHash) {
         throw new Error(`semantic rule ${rule.id} failed hash verification`);
       }
-      const evidence = [...rule.supportingReceiptHashes, ...rule.contradictingReceiptHashes];
+      const evidence = [
+        ...(rule.proposalReceiptHashes ?? []),
+        ...rule.supportingReceiptHashes,
+        ...rule.contradictingReceiptHashes,
+      ];
       for (const receiptHash of evidence) {
         if (!this.options.receiptExists(receiptHash)) {
           throw new Error(`semantic rule ${rule.id} cites unknown receipt ${receiptHash}`);
@@ -417,23 +448,31 @@ export class EvidenceBackedMemory {
       const expectedVersion = history.length + 1;
       if (rule.version !== expectedVersion ||
           (expectedVersion === 1 && rule.previousVersionHash !== undefined) ||
-          (expectedVersion > 1 && rule.previousVersionHash !== history.at(-1)!.ruleHash)) {
+          (expectedVersion > 1 && rule.previousVersionHash !== storedRuleHeads.get(rule.id))) {
         throw new Error(`semantic rule ${rule.id} has a broken version chain`);
       }
-      const stableRule: SemanticRule = Object.freeze({
-        ...rule,
+      const { previousVersionHash: _storedPreviousVersionHash, ...withoutPrevious } = body;
+      const hydratedBody = {
+        ...withoutPrevious,
         preconditions: Object.freeze([...rule.preconditions]),
+        proposalReceiptHashes: Object.freeze([...(rule.proposalReceiptHashes ?? [])]),
         supportingReceiptHashes: Object.freeze([...rule.supportingReceiptHashes]),
         contradictingReceiptHashes: Object.freeze([...rule.contradictingReceiptHashes]),
+        ...(expectedVersion === 1 ? {} : { previousVersionHash: history.at(-1)!.ruleHash }),
+      };
+      const stableRule: SemanticRule = Object.freeze({
+        ...hydratedBody,
+        ruleHash: hashArcValue(hydratedBody),
       });
       history.push(stableRule);
       this.versions.set(rule.id, history);
       const priorCommit = this.commitResults.get(rule.commitHash);
-      if (priorCommit && priorCommit.ruleHash !== rule.ruleHash) {
+      if (priorCommit && priorCommit.ruleHash !== stableRule.ruleHash) {
         throw new Error(`semantic rule ${rule.id} reuses a commit hash`);
       }
       this.orderedRules.push(stableRule);
       this.commitResults.set(rule.commitHash, stableRule);
+      storedRuleHeads.set(rule.id, ruleHash);
     }
   }
 

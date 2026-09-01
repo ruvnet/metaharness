@@ -588,6 +588,10 @@ function validateSupervisorState(
     if (directive.expiresAfterActions > directive.actionBudget) {
       throw new Error('supervisor directive expiry exceeds its action budget');
     }
+    if (directive.mode !== 'STOP' &&
+        (directive.actionBudget === 0 || directive.expiresAfterActions === 0)) {
+      throw new Error('non-STOP supervisor directives require positive budgets');
+    }
     assertInteger(
       directive.committedAtSequence,
       'supervisor committedAtSequence',
@@ -757,6 +761,7 @@ function validateCheckpointCrossFields(
     }
   }
   validateCheckpointBeliefHistory(checkpoint, receipts);
+  const beliefNodes = new Map(checkpoint.graph.nodes.map(node => [node.key, node]));
   const last = receipts.at(-1);
   if (last && (
     checkpoint.observation.observationHash !== last.postObservationHash ||
@@ -768,7 +773,7 @@ function validateCheckpointCrossFields(
   }
 
   const currentBeliefKey = checkpoint.graph.currentBeliefKey;
-  const currentBelief = checkpoint.graph.nodes.find(node => node.key === currentBeliefKey);
+  const currentBelief = beliefNodes.get(currentBeliefKey ?? '');
   if (!currentBelief || currentBelief.principalScope !== checkpoint.principalScope ||
       currentBelief.opaqueGameScope !== checkpoint.opaqueGameScope ||
       currentBelief.runId !== checkpoint.runId ||
@@ -786,7 +791,7 @@ function validateCheckpointCrossFields(
     const receipt = receipts[index]!;
     assertRecord(episode, 'checkpoint episode');
     assertExactKeys(episode as unknown as Record<string, unknown>, EPISODE_KEYS, 'checkpoint episode');
-    const preBelief = checkpoint.graph.nodes.find(node => node.key === receipt.preBeliefKey);
+    const preBelief = beliefNodes.get(receipt.preBeliefKey);
     const postFrame = receipt.frames.at(-1);
     const expectedEffectClass = receipt.stateAfter === 'WIN' || receipt.stateAfter === 'GAME_OVER'
       ? 'TERMINAL'
