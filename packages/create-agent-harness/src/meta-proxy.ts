@@ -12,6 +12,7 @@ import { createHash, createHmac, createPublicKey, verify as verifySignature } fr
 import {
   chmodSync,
   closeSync,
+  copyFileSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -288,6 +289,7 @@ export interface MetaProxyInstallResult {
   message: string;
   binaryPath?: string;
   version?: string;
+  pid?: number;
 }
 
 async function fetchBytes(fetcher: Fetcher, url: string): Promise<Buffer | null> {
@@ -433,10 +435,193 @@ export function metaProxyStatus(home = homedir(), platform: NodeJS.Platform = pr
   return { installed, running: pid !== null, binaryPath, version, pid };
 }
 
+export interface EffectiveMetaProxyVersion { version: string; pid: number; }
+
+const INSTALL_LOCK_STALE_MS = 120_000;
+
+/** Serialize all Ruflo/MetaHarness installers through one user-scoped lease. */
+export async function acquireMetaProxyInstallLock(
+  home = homedir(),
+  wait: (milliseconds: number) => Promise<void> = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
+): Promise<() => void> {
+  const lock = join(rufloStateDir(home), 'meta-proxy-install.lock');
+  mkdirSync(rufloStateDir(home), { recursive: true, mode: 0o700 });
+  for (let attempt = 0; attempt < 200; attempt++) {
+    try {
+      mkdirSync(lock, { mode: 0o700 });
+      writeFileSync(join(lock, 'owner'), `${process.pid}\n`, { encoding: 'utf8', mode: 0o600 });
+      return () => rmSync(lock, { recursive: true, force: true });
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+      try {
+        const age = Date.now() - statSync(lock).mtimeMs;
+        const owner = Number.parseInt(readFileSync(join(lock, 'owner'), 'utf8').trim(), 10);
+        if (age > INSTALL_LOCK_STALE_MS && (!Number.isSafeInteger(owner) || owner <= 0 || !processExists(owner))) {
+          rmSync(lock, { recursive: true, force: true });
+          continue;
+        }
+      } catch { /* A competing installer may still be creating its owner file. */ }
+      await wait(50);
+    }
+  }
+  throw new Error('Another Ruflo/MetaHarness installer still owns the Meta-Proxy install lease.');
+}
+
+/** Probe the daemon that actually owns the configured loopback port. */
+export async function probeEffectiveMetaProxy(
+  home = homedir(),
+  fetcher: typeof fetch = globalThis.fetch,
+): Promise<EffectiveMetaProxyVersion | null> {
+  const endpoint = metaProxyEndpoint(home);
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 1_000);
+    let response: Response;
+    try {
+      response = await fetcher(`${endpoint}/version`, { signal: controller.signal });
+    } finally {
+      clearTimeout(timer);
+    }
+    if (!response.ok) return null;
+    const body = await response.json() as Partial<EffectiveMetaProxyVersion>;
+    if (typeof body.version !== 'string' || !/^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]+)?$/.test(body.version)) return null;
+    if (!Number.isSafeInteger(body.pid) || (body.pid ?? 0) <= 0) return null;
+    return { version: body.version, pid: body.pid! };
+  } catch {
+    return null;
+  }
+}
+
+function supportedOwnerPath(pid: number, home: string, platform: NodeJS.Platform): string | null {
+  let executable: string | null = null;
+  try {
+    if (platform === 'linux') {
+      const result = spawnSync('readlink', ['-f', `/proc/${pid}/exe`], { encoding: 'utf8', timeout: 2_000 });
+      executable = result.status === 0 ? result.stdout.trim() || null : null;
+    } else if (platform === 'win32') {
+      const command = `$p = Get-CimInstance Win32_Process -Filter 'ProcessId = ${pid}'; if ($null -ne $p) { [Console]::Out.Write($p.ExecutablePath) }`;
+      const result = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', command], { encoding: 'utf8', timeout: 2_000, windowsHide: true });
+      executable = result.status === 0 ? result.stdout.trim() || null : null;
+    } else {
+      const result = spawnSync('ps', ['-p', String(pid), '-o', 'comm='], { encoding: 'utf8', timeout: 2_000 });
+      executable = result.status === 0 ? result.stdout.trim() || null : null;
+    }
+  } catch { return null; }
+  if (!executable) return null;
+  const name = platform === 'win32' ? 'meta-proxy.exe' : 'meta-proxy';
+  const normalize = (value: string) => platform === 'win32' ? value.toLowerCase() : value;
+  const allowed = [
+    metaProxyBinaryPath(platform, home),
+    join(home, '.ruflo', 'bin', name),
+    join(home, '.metaharness', 'bin', name),
+    join(home, '.cargo', 'bin', name),
+  ].map(normalize);
+  return allowed.includes(normalize(executable)) ? executable : null;
+}
+
+async function stopEffectiveOwner(
+  home: string,
+  platform: NodeJS.Platform,
+  wait: (milliseconds: number) => Promise<void>,
+): Promise<EffectiveMetaProxyVersion | null> {
+  const owner = await probeEffectiveMetaProxy(home);
+  if (!owner) return null;
+  if (!supportedOwnerPath(owner.pid, home, platform)) {
+    throw new Error(`Port owner pid ${owner.pid} reports Meta-Proxy ${owner.version}, but is not a supported Ruflo/MetaHarness install; refusing to signal it.`);
+  }
+  try { process.kill(owner.pid, 'SIGTERM'); } catch (error) {
+    throw new Error(`Could not stop stale Meta-Proxy pid ${owner.pid}: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  for (let attempt = 0; attempt < 40; attempt++) {
+    await wait(50);
+    const current = await probeEffectiveMetaProxy(home);
+    if (!current || current.pid !== owner.pid) return owner;
+  }
+  throw new Error(`Stale Meta-Proxy pid ${owner.pid} did not stop; refusing to start a competing daemon.`);
+}
+
+/** Stop a known competing installer, launch this install, and prove PID+version. */
+export async function replaceEffectiveMetaProxy(
+  expectedVersion: string,
+  home = homedir(),
+  platform: NodeJS.Platform = process.platform,
+  wait: (milliseconds: number) => Promise<void> = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
+): Promise<MetaProxyInstallResult> {
+  try { await stopEffectiveOwner(home, platform, wait); } catch (error) {
+    return { ok: false, message: error instanceof Error ? error.message : String(error) };
+  }
+
+  rmSync(pidPath(home), { force: true });
+  const started = startMetaProxy(home, platform);
+  if (!started.ok || !started.pid) return started;
+  for (let attempt = 0; attempt < 100; attempt++) {
+    await wait(50);
+    const current = await probeEffectiveMetaProxy(home);
+    if (current?.version === expectedVersion && current.pid === started.pid) {
+      return { ok: true, message: `Effective Meta-Proxy v${expectedVersion} verified (pid ${current.pid}).`, binaryPath: started.binaryPath, version: expectedVersion };
+    }
+    if (current && current.pid !== started.pid) {
+      try { process.kill(started.pid, 'SIGTERM'); } catch { /* already exited */ }
+      return { ok: false, message: `Competing Meta-Proxy pid ${current.pid} won the port with version ${current.version}.` };
+    }
+  }
+  try { process.kill(started.pid, 'SIGTERM'); } catch { /* already exited */ }
+  return { ok: false, message: `Installed v${expectedVersion}, but the intended binary did not become the effective daemon.` };
+}
+
+async function installAndActivateMetaProxy(version: string): Promise<MetaProxyInstallResult> {
+  const home = homedir();
+  const platform = process.platform;
+  const wait = (milliseconds: number) => new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
+  let release: (() => void) | null = null;
+  const binary = metaProxyBinaryPath(platform, home);
+  const previousBinary = `${binary}.rollback`;
+  const previousVersion = `${versionPath(binary)}.rollback`;
+  let prior: EffectiveMetaProxyVersion | null = null;
+  try {
+    release = await acquireMetaProxyInstallLock(home, wait);
+    prior = await stopEffectiveOwner(home, platform, wait);
+    rmSync(previousBinary, { force: true });
+    rmSync(previousVersion, { force: true });
+    if (existsSync(binary)) copyFileSync(binary, previousBinary);
+    if (existsSync(versionPath(binary))) copyFileSync(versionPath(binary), previousVersion);
+
+    const installed = await installMetaProxy({ version, home, platform });
+    if (!installed.ok || !installed.version) throw new Error(installed.message);
+    const effective = await replaceEffectiveMetaProxy(installed.version, home, platform, wait);
+    if (!effective.ok) throw new Error(effective.message);
+    rmSync(previousBinary, { force: true });
+    rmSync(previousVersion, { force: true });
+    return { ...effective, message: `${installed.message} ${effective.message}` };
+  } catch (error) {
+    const failure = error instanceof Error ? error.message : String(error);
+    if (existsSync(previousBinary)) {
+      try {
+        rmSync(binary, { force: true });
+        renameSync(previousBinary, binary);
+        rmSync(versionPath(binary), { force: true });
+        if (existsSync(previousVersion)) renameSync(previousVersion, versionPath(binary));
+        const restoredVersion = prior?.version ?? metaProxyStatus(home, platform).version;
+        if (restoredVersion) {
+          const restored = await replaceEffectiveMetaProxy(restoredVersion, home, platform, wait);
+          return { ok: false, message: `${failure} Previous Meta-Proxy ${restored.ok ? `v${restoredVersion} was restored and verified` : `could not be restored: ${restored.message}`}.` };
+        }
+      } catch (rollbackError) {
+        return { ok: false, message: `${failure} Rollback failed: ${rollbackError instanceof Error ? rollbackError.message : String(rollbackError)}` };
+      }
+    }
+    return { ok: false, message: failure };
+  } finally {
+    rmSync(previousBinary, { force: true });
+    rmSync(previousVersion, { force: true });
+    release?.();
+  }
+}
+
 export function startMetaProxy(home = homedir(), platform: NodeJS.Platform = process.platform): MetaProxyInstallResult {
   const status = metaProxyStatus(home, platform);
   if (!status.installed) return { ok: false, message: 'Meta-Proxy is not installed. Run `metaharness proxy install --yes` first.' };
-  if (status.running) return { ok: true, message: `Meta-Proxy is already running (pid ${status.pid}).`, binaryPath: status.binaryPath, version: status.version ?? undefined };
+  if (status.running) return { ok: true, message: `Meta-Proxy is already running (pid ${status.pid}).`, binaryPath: status.binaryPath, version: status.version ?? undefined, pid: status.pid ?? undefined };
 
   const root = metaProxyDataDir(home);
   mkdirSync(root, { recursive: true, mode: 0o700 });
@@ -446,7 +631,7 @@ export function startMetaProxy(home = homedir(), platform: NodeJS.Platform = pro
     if (!child.pid) return { ok: false, message: 'Meta-Proxy did not return a process id.' };
     child.unref();
     writeFileSync(pidPath(home), `${child.pid}\n`, { encoding: 'utf8', mode: 0o600 });
-    return { ok: true, message: `Meta-Proxy started (pid ${child.pid}).`, binaryPath: status.binaryPath, version: status.version ?? undefined };
+    return { ok: true, message: `Meta-Proxy started (pid ${child.pid}).`, binaryPath: status.binaryPath, version: status.version ?? undefined, pid: child.pid };
   } finally {
     closeSync(log);
   }
@@ -581,8 +766,11 @@ export async function metaProxyCmd(args: string[]): Promise<ProxyCommandResult> 
     if (!args.includes('--yes')) {
       return { code: 2, lines: ['Refusing to download a binary without explicit consent. Re-run: metaharness proxy install --yes'] };
     }
-    const result = await installMetaProxy({ version });
-    return { code: result.ok ? 0 : 1, lines: [result.message] };
+    const effective = await installAndActivateMetaProxy(version ?? META_PROXY_VERSION);
+    return {
+      code: effective.ok ? 0 : 1,
+      lines: [effective.message],
+    };
   }
   if (subcommand === 'status') {
     const status = metaProxyStatus();

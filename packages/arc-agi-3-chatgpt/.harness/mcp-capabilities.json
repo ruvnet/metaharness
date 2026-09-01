@@ -1,0 +1,54 @@
+{
+  "schema": "mcp-capabilities/v1",
+  "harness": "arc-agi-3-chatgpt",
+  "status": "experimental",
+  "transport": "streamable-http",
+  "routes": {
+    "actor": "/mcp",
+    "boss": "/mcp/boss"
+  },
+  "auth": "oauth-2.1-scoped-or-loopback-anonymous-or-trusted-proxy-bearer",
+  "modelHost": "chatgpt-developer-mode",
+  "openAiApiKeyRequired": false,
+  "resources": [
+    "ui://metaharness/arc-agi-3/canvas"
+  ],
+  "tools": {
+    "actor": [
+      "arc_start",
+      "arc_observe",
+      "arc_act",
+      "arc_supervise",
+      "arc_checkpoint",
+      "arc_resume",
+      "arc_status",
+      "arc_receipts_verify",
+      "arc_render",
+      "arc_memory_query",
+      "arc_memory_commit",
+      "arc_graph_frontier",
+      "arc_execute_guarded_plan"
+    ],
+    "boss": [
+      "arc_supervisor_case",
+      "arc_supervisor_directive_commit"
+    ]
+  },
+  "privilegedCapabilities": {
+    "network": {
+      "allowed": true,
+      "targets": [
+        "official-arc-environment-via-injected-controller-factory"
+      ]
+    },
+    "shell": false,
+    "fileWrite": {
+      "allowed": true,
+      "roots": [
+        "configured-state-root",
+        "configured-audit-log",
+        "configured-evidence-root"
+      ]
+    }
+  }
+}
