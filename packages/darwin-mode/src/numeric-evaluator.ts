@@ -31,11 +31,16 @@ export class ShellEvaluator implements NumericEvaluator {
       return errorCard(variantId, 'ShellEvaluator: empty command');
     }
     const timeoutMs = this.options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+    // Unlike the prompt kind's sandbox (untrusted, potentially LLM-generated
+    // test commands — deliberately env-scrubbed), `--evaluator` here is a
+    // fixed, operator-supplied command: the numeric kind's whole contract is
+    // "you already trust this command enough to run it once per candidate".
+    // Inherit the full parent env by default (a hand-picked scrub broke Node's
+    // own crypto init on Windows — CSPRNG needs more than PATH/HOME/SystemRoot
+    // — with no corresponding security benefit here). `options.env` still
+    // layers on top for evaluator-specific overrides.
     const env: Record<string, string> = {
-      PATH: process.env.PATH ?? '',
-      HOME: process.env.HOME ?? '',
-      USERPROFILE: process.env.USERPROFILE ?? '',
-      SystemRoot: process.env.SystemRoot ?? '',
+      ...(process.env as Record<string, string>),
       ...this.options.env,
     };
 
