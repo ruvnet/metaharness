@@ -1,4 +1,4 @@
-# ADR-251: The MetaHarness Dream Machine — a nightly, cloud-scheduled, evidence-gated evolution routine
+# ADR-273: The MetaHarness Dream Machine — a nightly, cloud-scheduled, evidence-gated evolution routine
 
 - **Status**: Proposed — routine live in the cloud scheduler; first two runs completed (2026-08-13 → PR #181 merged, 2026-08-14 → PR #188 merged); ledger active
 - **Date**: 2026-08-13
@@ -11,7 +11,7 @@
 
 ---
 
-## 1. Context
+## Context
 
 MetaHarness's thesis is "freeze the model, evolve the harness" — yet the
 repository's own evolution machinery (`@metaharness/flywheel` gate/receipts/
@@ -53,7 +53,7 @@ Two environmental facts shape the design and must be stated up front:
    the routine's environment exposes; provisioning a key is a deliberate
    human decision recorded outside this ADR.
 
-## 2. Decision
+## Decision
 
 ### 2.1 What it is
 
@@ -136,7 +136,7 @@ scoped candidate parameters under the frozen fitness function. All output
 lands as draft PRs, issues, gists, and ledger rows — promotion is a human
 act, every night, with no exceptions.
 
-## 3. Consequences
+## Consequences
 
 - The repo's evaluation machinery gets exercised nightly instead of
   episodically, and its rough edges (unbuildable-in-sandbox packages,
@@ -158,7 +158,7 @@ act, every night, with no exceptions.
   STALE classification (>14 days, no follow-up) is computed by the routine
   itself each night, so neglect is at least measured.
 
-## 4. Alternatives Considered
+## Alternatives Considered
 
 - **GitHub Actions cron workflow in-repo.** Rejected: the routine needs an
   agentic session (parallel research subagents, gh/gist publication,
@@ -178,7 +178,7 @@ act, every night, with no exceptions.
 - **No mirror of the prompt in-repo (Ruflo's choice).** Rejected here;
   see §2.4 delta 1.
 
-## 5. Test Contract
+## Test Contract
 
 No runtime code ships in this repository for this decision; the contract is
 operational and doc-level:
@@ -203,7 +203,7 @@ If, after 14 live runs, the ledger shows the v1 pathology (″>90% untouched
 output″), this ADR's Status moves to `Needs-revision` and the routine is
 paused pending a redesign — the ledger is the tripwire.
 
-## 6. References
+## References
 
 - Ruflo Dream Cycle v3 tutorial + prompt: gist `ruvnet/889ffa92dab49d508e70b123c940e1b9`
   (`dream-machine-tutorial.md`, `x-claude-prompt.md`)
