@@ -1,4 +1,4 @@
-# ADR-272: Consolidating three unmerged flywheel-replay trust-boundary fixes, and closing a 4th (chain-shape binding)
+# ADR-273: Consolidating three unmerged flywheel-replay trust-boundary fixes, and closing a 4th (chain-shape binding)
 
 - **Status**: Accepted — consolidated, extended, regression-tested, verified against every real committed
   `ReplayBundle` in the repo.
