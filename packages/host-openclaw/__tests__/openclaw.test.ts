@@ -212,5 +212,32 @@ describe('@metaharness/host-openclaw — config generation', () => {
       for (const l of codeLines) expect(l).not.toContain('x`touch /tmp/pwned`');
       expect(s).toContain('x\\`touch /tmp/pwned\\`');
     });
+
+    // shellDq() stops command execution but NOT path traversal: `../../x` is an
+    // ordinary double-quoted bash string, so mkdir -p/cp would write outside the
+    // skills directory. pathSegmentSafe() keeps the name a direct child.
+    it('a ../ name cannot escape the skills directory in the mkdir/cp lines', () => {
+      const s = installScript({ name: '../../../../tmp/evil' } as Parameters<typeof installScript>[0]);
+      const pathLines = s.split('\n').filter((l) => l.startsWith('mkdir') || l.startsWith('cp'));
+      expect(pathLines).toHaveLength(2);
+      for (const l of pathLines) {
+        expect(l).not.toContain('../');
+        expect(l).toContain('skills/..-..-..-..-tmp-evil');
+      }
+    });
+
+    it('a name that is only dots cannot resolve to the skills dir or its parent', () => {
+      for (const name of ['.', '..']) {
+        const s = installScript({ name } as Parameters<typeof installScript>[0]);
+        const pathLines = s.split('\n').filter((l) => l.startsWith('mkdir') || l.startsWith('cp'));
+        for (const l of pathLines) expect(l).toContain(`skills/_${name}`);
+      }
+    });
+
+    it('a conventional name is byte-identical through pathSegmentSafe (no behavior change)', () => {
+      const s = installScript({ name: 'my-bot' } as Parameters<typeof installScript>[0]);
+      expect(s).toContain('mkdir -p "$HOME/.openclaw/workspace/skills/my-bot"');
+      expect(s).toContain('cp ./SKILL.md "$HOME/.openclaw/workspace/skills/my-bot/SKILL.md"');
+    });
   });
 });

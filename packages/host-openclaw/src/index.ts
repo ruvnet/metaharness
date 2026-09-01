@@ -171,6 +171,23 @@ function commentSafe(s: string): string {
 }
 
 /**
+ * Reduce a string to a single path segment for the generated `mkdir`/`cp`
+ * lines. `shellDq()` stops command *execution*, not path *traversal*: a name
+ * of `../../../x` is a perfectly ordinary double-quoted bash string, so
+ * `mkdir -p` happily creates it outside the skills directory and `cp` writes
+ * SKILL.md there. Collapse every path separator to `-` and prefix a
+ * pure-dots segment, so the result can only ever name a direct child of the
+ * skills directory. Byte-identical for any name without a separator.
+ *
+ * MUST be applied BEFORE `shellDq()` — running it after would rewrite the
+ * backslashes `shellDq()` just added and undo the escaping.
+ */
+function pathSegmentSafe(s: string): string {
+  const flat = s.replace(/[\\/]+/g, '-');
+  return /^\.+$/.test(flat) ? `_${flat}` : flat;
+}
+
+/**
  * Render the install runbook. Users run this once after generating to
  * register the MCP servers + drop the skill in their workspace.
  */
@@ -192,8 +209,8 @@ export function installScript(spec: HarnessSpec): string {
   lines.push('echo "Merge openclaw.json into ~/.openclaw/openclaw.json (manual step)."');
   lines.push('');
   lines.push('# 4. Drop the skill into the workspace');
-  lines.push(`mkdir -p "$HOME/.openclaw/workspace/skills/${shellDq(spec.name)}"`);
-  lines.push(`cp ./SKILL.md "$HOME/.openclaw/workspace/skills/${shellDq(spec.name)}/SKILL.md"`);
+  lines.push(`mkdir -p "$HOME/.openclaw/workspace/skills/${shellDq(pathSegmentSafe(spec.name))}"`);
+  lines.push(`cp ./SKILL.md "$HOME/.openclaw/workspace/skills/${shellDq(pathSegmentSafe(spec.name))}/SKILL.md"`);
   lines.push('');
   lines.push('echo "Done. Try: openclaw agent --message \\"' + shellDq(spec.name) + ': ping\\""');
   return lines.join('\n') + '\n';
