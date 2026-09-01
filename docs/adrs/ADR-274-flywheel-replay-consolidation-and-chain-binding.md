@@ -1,7 +1,12 @@
-# ADR-273: Consolidating three unmerged flywheel-replay trust-boundary fixes, and closing a 4th (chain-shape binding)
+# ADR-274: Consolidating three unmerged flywheel-replay trust-boundary fixes, and closing a 4th (chain-shape binding)
 
 - **Status**: Accepted — consolidated, extended, regression-tested, verified against every real committed
   `ReplayBundle` in the repo.
+- **Note**: originally drafted as ADR-272, renumbered to ADR-273 on 2026-09-01 after PR #260 independently
+  claimed ADR-272 first, then renumbered again to ADR-274 the same night after a second independent
+  collision — PR #179 (merged to `main` as commit `c441174`, "The MetaHarness Dream Machine") also claims
+  ADR-273 for an unrelated topic (the nightly scheduler routine itself). ADR-274 is confirmed free as of
+  this renumber (see `docs/adrs/INDEX.md`).
 - **Date**: 2026-09-01
 - **Deciders**: MetaHarness Dream Cycle (autonomous nightly research), slot 1 (flywheel-promotion)
 - **Tags**: flywheel, replay, verifier, receipts, provenance, chain-integrity, metaharness, process
