@@ -28,7 +28,7 @@ import {
 import { homedir } from 'node:os';
 import { basename, join } from 'node:path';
 
-export const META_PROXY_VERSION = '0.7.4';
+export const META_PROXY_VERSION = '0.7.5';
 export const META_PROXY_RELEASE_BASE = 'https://github.com/cognitum-one/meta-proxy-dist/releases/download';
 
 /** The release signing key, pinned in the client rather than fetched from GitHub. */

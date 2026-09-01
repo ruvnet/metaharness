@@ -29,3 +29,24 @@ describe('Meta-Proxy native lifecycle gate', () => {
     expect(workflow).toMatch(/ci-pass:\n[\s\S]*needs:.*meta-proxy-scheduled-task/);
   });
 });
+
+describe('Meta-Proxy pin-drift watcher', () => {
+  const read = (name: string) =>
+    readFileSync(fileURLToPath(new URL(`../../../.github/workflows/${name}`, import.meta.url)), 'utf8')
+      .replace(/\r\n/g, '\n');
+
+  // #174 — the watcher's decisions used to be inline shell in the cron workflow, where nothing
+  // exercised them. Keeping the logic in a script is what makes it testable at all, so guard it.
+  it('runs its comparison through the tested script rather than inline shell', () => {
+    const workflow = read('proxy-pin-drift.yml');
+
+    expect(workflow).toContain('node scripts/proxy-pin-drift.mjs');
+    expect(workflow).toMatch(/permissions:\n[\s\S]*issues: write/);
+    expect(workflow).toMatch(/GITHUB_REPOSITORY: \$\{\{ github\.repository \}\}/);
+    expect(workflow).not.toContain('gh release list');
+  });
+
+  it('keeps the watcher gate in CI so its branches cannot silently rot again', () => {
+    expect(read('ci.yml')).toContain('node scripts/proxy-pin-drift.test.mjs');
+  });
+});
