@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
-import { loadConfigFromString, parseYaml, defaultConfig, buildConfig } from '../src/config/loader.js';
+import { loadConfigFromString, parseYaml, defaultConfig, buildConfig, ALL_FAMILIES } from '../src/config/loader.js';
 import {
   SafetyViolationError,
   enforceSafetyLimits,
@@ -104,6 +104,6 @@ describe('parseYaml edge cases', () => {
   it('buildConfig fills defaults for missing blocks', () => {
     const cfg = buildConfig({});
     expect(cfg.gates.min_patch_reduction_rate).toBe(0.5);
-    expect(cfg.families?.length).toBe(5);
+    expect(cfg.families?.length).toBe(ALL_FAMILIES.length);
   });
 });

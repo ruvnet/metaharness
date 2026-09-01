@@ -48,6 +48,25 @@ export interface FamilyTaxonomy {
  *  - prompt injection      → CWE-1427 (Improper Neutralization of Input Used for
  *                            LLM Prompting — the most precise CWE H1 lists for
  *                            this class) + CWE-77 (Command Injection - Generic).
+ *  - indirect prompt injection → CWE-441 (Unintended Proxy or Intermediary /
+ *                            "Confused Deputy" — the agent is tricked by
+ *                            untrusted tool/RAG/web content into acting as an
+ *                            intermediary carrying out the attacker's intent)
+ *                            + CWE-829 (Inclusion of Functionality from
+ *                            Untrusted Control Sphere — the untrusted-content-
+ *                            as-instruction mechanism). Distinct from direct
+ *                            prompt injection's CWE-1427/77: the attacker never
+ *                            controls the user's own turn, only third-party
+ *                            content the agent later ingests via a tool.
+ *                            CAVEAT (added 2026-08-13, after the 2026-06-27
+ *                            live fetch this comment block otherwise
+ *                            describes): CWE-441/829 were chosen from MITRE's
+ *                            published catalog but were NOT re-verified live
+ *                            against the HackerOne weakness taxonomy the way
+ *                            the original 9 CWE ids were (no HACKERONE_API_KEY
+ *                            in this session). Treat them as offline-sourced
+ *                            until a live TUNE-style pass confirms presence,
+ *                            same as the other ids received in 0.1.3.
  *  - tool overreach        → CWE-250 (Execution with Unnecessary Privileges) +
  *                            CWE-862 (Missing Authorization); OWASP-LLM06
  *                            Excessive Agency.
@@ -60,6 +79,21 @@ export interface FamilyTaxonomy {
  *  - cost amplification    → CWE-770 (Allocation of Resources Without Limits) +
  *                            CWE-400 (Uncontrolled Resource Consumption) +
  *                            CWE-799 (Improper Control of Interaction Frequency).
+ *  - cross-session trace    → CWE-501 (Trust Boundary Violation) + CWE-200
+ *    replay                   (Information Disclosure, reused — same outcome
+ *                            class as data exfiltration, different mechanism:
+ *                            a boundary crossing rather than an over-share).
+ *                            Added 2026-08 per arXiv:2608.09867 ("Stealing
+ *                            Reasoning Traces from Proprietary LLM APIs").
+ *                            CAVEAT (same discipline as indirect_prompt_injection
+ *                            above): CWE-501 was NOT re-verified live against
+ *                            the HackerOne weakness taxonomy (no
+ *                            HACKERONE_API_KEY in this session) — CWE-200 is
+ *                            already confirmed live via data_exfiltration_attempt
+ *                            above, but CWE-501's presence in the current H1 set
+ *                            should be spot-checked (`redblue hackerone
+ *                            weaknesses --refresh`) before relying on it for a
+ *                            real bounty submission.
  */
 export const FAMILY_TAXONOMY: Record<AttackFamily, FamilyTaxonomy> = {
   direct_prompt_injection: {
@@ -73,6 +107,20 @@ export const FAMILY_TAXONOMY: Record<AttackFamily, FamilyTaxonomy> = {
     cvssVector: 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:L/I:H/A:N',
     impact:
       'Attacker-controlled text overrides the system policy, causing the agent to follow injected instructions instead of its own (loss of integrity over the model’s behavior).',
+  },
+  indirect_prompt_injection: {
+    family: 'indirect_prompt_injection',
+    cwe: [
+      { id: 'CWE-441', name: 'Unintended Proxy or Intermediary ("Confused Deputy")' },
+      { id: 'CWE-829', name: 'Inclusion of Functionality from Untrusted Control Sphere' },
+    ],
+    owaspLlm: 'LLM01 Prompt Injection (indirect)',
+    // Attacker needs no interaction with the target's own user; content arrives
+    // via a tool/document the agent trusts as data. Same integrity shape as
+    // direct injection but a different attack vector (content-borne, not user-borne).
+    cvssVector: 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:L/I:H/A:N',
+    impact:
+      'Instructions embedded in third-party content the agent ingests via a tool (retrieved document, tool result, web page) are followed as if they were operator instructions, making the agent an unwitting confused deputy for the content\'s source.',
   },
   tool_overreach: {
     family: 'tool_overreach',
@@ -122,6 +170,20 @@ export const FAMILY_TAXONOMY: Record<AttackFamily, FamilyTaxonomy> = {
     cvssVector: 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H',
     impact:
       'Agent can be driven into unbounded/expensive work (loops, oversized outputs, repeated tool calls) — a denial-of-wallet / availability condition.',
+  },
+  cross_session_trace_replay: {
+    family: 'cross_session_trace_replay',
+    cwe: [
+      { id: 'CWE-501', name: 'Trust Boundary Violation' },
+      { id: 'CWE-200', name: 'Information Disclosure' },
+    ],
+    owaspLlm: 'LLM06 Sensitive Information Disclosure',
+    // Attacker needs no privilege on the target session (a leaked/public trace
+    // is enough); scope changes because the disclosure crosses a session/model
+    // boundary; confidentiality is the dominant impact.
+    cvssVector: 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:N/A:N',
+    impact:
+      'Attacker-supplied session-continuation or trace content, opaque or encrypted, is decoded, replayed, or resumed across a session/model boundary it was never authorized to cross — disclosing information (potentially another session’s data, PII, or credentials) scoped to a different party.',
   },
 };
 

