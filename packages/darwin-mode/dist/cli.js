@@ -226,7 +226,7 @@ async function main() {
     const fdrQ = fdrArg === '' ? undefined : num('--fdr', 0.05);
     const curriculum = process.argv.includes('--curriculum');
     const sbRaw = flag('--sandbox', 'real');
-    const sandboxMode = sbRaw === 'mock' || sbRaw === 'agent' ? sbRaw : 'real';
+    const sandboxMode = sbRaw === 'mock' || sbRaw === 'agent' || sbRaw === 'llm-agent' ? sbRaw : 'real';
     // ADR-099/102: 'real' (the default — no --sandbox flag passed) scores every
     // variant by the target repo's own test command, which none of the mutated
     // harness surfaces are wired into. That makes the trace surface-independent:
@@ -239,8 +239,29 @@ async function main() {
             'command, which cannot distinguish between mutated harness surfaces — every\n' +
             'variant will score identically and evolution will not converge on anything\n' +
             '(see README "The evaluation substrate", ADR-099/102). Pass --sandbox mock\n' +
-            '(fast, deterministic) or --sandbox agent (executes the real surface code)\n' +
-            'for genuine evolutionary signal.\n');
+            '(fast, deterministic), --sandbox agent (executes the real surface code,\n' +
+            'still offline), or --sandbox llm-agent (genuine real-LLM signal, real API\n' +
+            'spend, ADR-273) for genuine evolutionary signal.\n');
+    }
+    // ADR-273: 'llm-agent' invokes a real LLM per task per variant — real API
+    // spend, unlike every other sandbox mode. Hard-cap the invocation count
+    // (generations * children + 1 baseline, times the task-suite size) unless
+    // the caller explicitly opts into a larger real search.
+    if (sandboxMode === 'llm-agent') {
+        const generationsArg = num('--generations', 3);
+        const childrenArg = num('--children', 4);
+        const llmTaskCount = 1; // DEFAULT_LLM_AGENT_TASKS.length; kept in sync manually, see llm-agent-sandbox.ts
+        const estimatedInvocations = (generationsArg * childrenArg + 1) * llmTaskCount;
+        const cap = num('--llm-agent-cap', 15);
+        const allowLarge = process.argv.includes('--llm-agent-confirm-large-spend');
+        if (estimatedInvocations > cap && !allowLarge) {
+            process.stderr.write(`error: --sandbox llm-agent would make an estimated ${estimatedInvocations} real LLM calls ` +
+                `(generations ${generationsArg} * children ${childrenArg} + 1 baseline, * ${llmTaskCount} task(s)),\n` +
+                `over the default cap of ${cap}. This is real API spend. Pass a smaller --generations/--children,\n` +
+                'raise the cap explicitly with --llm-agent-cap <n>, or confirm the larger spend with\n' +
+                '--llm-agent-confirm-large-spend.\n');
+            process.exit(2);
+        }
     }
     // ADR-259: pluggable mutator backend. Default = deterministic (no network, no key).
     // --mutator ruvllm routes mutations to a local `ruvllm serve` endpoint (fully local,
