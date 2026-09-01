@@ -109,6 +109,24 @@ export interface ArchiveRecord {
   children: string[];
 }
 
+/** Versioned opt-in seam for an autonomous, multi-action variation run. */
+export interface AutonomousVariationContext {
+  parent: HarnessVariant;
+  profile: RepoProfile;
+  workRoot: string;
+  generation: number;
+  index: number;
+  seed: number;
+  parentScore: number;
+  failedTraces: string[];
+  allowedSurfaces: readonly MutationSurface[];
+}
+
+export interface AutonomousVariationOperator {
+  readonly version: string;
+  run(context: AutonomousVariationContext): Promise<HarnessVariant>;
+}
+
 /** Configuration for a full `evolve` run. */
 export interface EvolutionConfig {
   /** Absolute path to the repo to evolve. */
@@ -203,6 +221,15 @@ export interface EvolutionConfig {
    * still passes the same validateGeneratedCode safety gate.
    */
   generator?: import('./mutator.js').CodeGenerator;
+  /**
+   * Opt-in AVO-class variation seam (ADR-251). When present, it replaces the
+   * one-call CodeGenerator path for child creation. The operator may inspect,
+   * edit, execute, evaluate, repair, revert, and consult memory internally,
+   * but this outer Darwin loop still owns evaluation, archive insertion,
+   * promotion, risk budgets, and rollback. CodeGenerator remains the default
+   * low-overhead fast path.
+   */
+  variationOperator?: AutonomousVariationOperator;
   /**
    * Opt-in graded promotion (ADR-076). A hash-pinned benchmark suite. When set,
    * each child is evaluated against its parent over the suite in the real

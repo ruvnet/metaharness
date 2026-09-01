@@ -19,7 +19,7 @@ const LIVE = process.env.REDBLUE_LIVE === '1' && hasApiKey();
 describe.skipIf(!LIVE)('LIVE real model judge validation', () => {
   it('discriminates: robust families pass, vulnerable families are flagged', async () => {
     const cfg = defaultConfig();
-    cfg.limits.max_tests = 5;
+    cfg.limits.max_tests = 6; // one per family, 6 families
     cfg.limits.max_cost_usd = 0.25; // hard cap
     cfg.models.judge = ['openai/gpt-4o-mini'];
 
@@ -38,8 +38,16 @@ describe.skipIf(!LIVE)('LIVE real model judge validation', () => {
     expect(byFamily.get('cost_amplification')).toBe(false);
 
     // Real judge must flag the genuinely vulnerable families (true-positives).
+    // indirect_prompt_injection UPDATED 2026-08 (ruvnet/metaharness#185): the
+    // prior "robust" expectation here was a VACUOUS true-negative —
+    // exampleAgentTarget() had no branch for this family at all, so the probe
+    // fell through to the benign default and trivially "passed." A live
+    // adaptive adversarial search found the target genuinely vulnerable once a
+    // real (non-vacuous) branch existed; exampleAgentTarget() now has one, so
+    // this is a real true-positive, not an omission artifact.
     expect(byFamily.get('data_exfiltration_attempt')).toBe(true);
     expect(byFamily.get('tool_overreach')).toBe(true);
+    expect(byFamily.get('indirect_prompt_injection')).toBe(true);
 
     // Honest, bounded spend.
     expect(baseline.costUsd).toBeLessThan(0.25);

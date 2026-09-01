@@ -55,6 +55,73 @@ describe('buildRepoScorecard', () => {
   });
 });
 
+describe('taskCoverage measures the repo, not the template (#171)', () => {
+  let empty: string;
+  let real: string;
+  let bare: string;
+  let withTests: string;
+  beforeAll(() => {
+    empty = mkdtempSync(join(tmpdir(), 'sc-empty-'));
+
+    // a real project: source + tests + CI + README + manifest
+    real = mkdtempSync(join(tmpdir(), 'sc-real-'));
+    mkdirSync(join(real, 'src'), { recursive: true });
+    mkdirSync(join(real, 'tests'), { recursive: true });
+    mkdirSync(join(real, '.github', 'workflows'), { recursive: true });
+    for (let i = 0; i < 20; i++) writeFileSync(join(real, 'src', `mod${i}.py`), `def f${i}(x):\n    return x * ${i}\n`);
+    for (let i = 0; i < 10; i++) writeFileSync(join(real, 'tests', `test_${i}.py`), `def test_${i}():\n    assert True\n`);
+    writeFileSync(join(real, '.github', 'workflows', 'ci.yml'), 'name: ci\non: [push]\njobs:\n  t:\n    runs-on: ubuntu-latest\n    steps:\n      - run: pytest\n');
+    writeFileSync(join(real, 'README.md'), '# real\nA Python data-processing service with a REST API and a worker queue.\n');
+    writeFileSync(join(real, 'package.json'), JSON.stringify({ name: 'real-proj', scripts: { test: 'pytest', build: 'python -m build' } }));
+
+    // the same repo WITHOUT tests + CI — adding them must not lower coverage
+    bare = mkdtempSync(join(tmpdir(), 'sc-bare-'));
+    mkdirSync(join(bare, 'src'), { recursive: true });
+    for (let i = 0; i < 20; i++) writeFileSync(join(bare, 'src', `mod${i}.py`), `def f${i}(x):\n    return x * ${i}\n`);
+    writeFileSync(join(bare, 'README.md'), '# bare\nA Python data-processing service with a REST API and a worker queue.\n');
+    writeFileSync(join(bare, 'package.json'), JSON.stringify({ name: 'bare-proj' }));
+
+    withTests = mkdtempSync(join(tmpdir(), 'sc-tests-'));
+    mkdirSync(join(withTests, 'src'), { recursive: true });
+    mkdirSync(join(withTests, 'tests'), { recursive: true });
+    mkdirSync(join(withTests, '.github', 'workflows'), { recursive: true });
+    for (let i = 0; i < 20; i++) writeFileSync(join(withTests, 'src', `mod${i}.py`), `def f${i}(x):\n    return x * ${i}\n`);
+    for (let i = 0; i < 10; i++) writeFileSync(join(withTests, 'tests', `test_${i}.py`), `def test_${i}():\n    assert True\n`);
+    writeFileSync(join(withTests, '.github', 'workflows', 'ci.yml'), 'name: ci\non: [push]\njobs:\n  t:\n    runs-on: ubuntu-latest\n    steps:\n      - run: pytest\n');
+    writeFileSync(join(withTests, 'README.md'), '# bare\nA Python data-processing service with a REST API and a worker queue.\n');
+    writeFileSync(join(withTests, 'package.json'), JSON.stringify({ name: 'bare-proj', scripts: { test: 'pytest' } }));
+  });
+  afterAll(() => {
+    for (const d of [empty, real, bare, withTests]) rmSync(d, { recursive: true, force: true });
+  });
+
+  it('a real project with source/tests/CI outscores an empty dir on task coverage', () => {
+    const realCov = buildRepoScorecard(real, 'x').taskCoverage;
+    // empty is refused by the CLI, but the pure function still scores it — it must be ~0
+    const emptyCov = buildRepoScorecard(empty, 'x').taskCoverage;
+    expect(emptyCov).toBeLessThan(realCov);
+    expect(emptyCov).toBeLessThanOrEqual(5);
+  });
+
+  it('adding tests + CI never LOWERS task coverage', () => {
+    const before = buildRepoScorecard(bare, 'x').taskCoverage;
+    const after = buildRepoScorecard(withTests, 'x').taskCoverage;
+    expect(after).toBeGreaterThanOrEqual(before);
+  });
+
+  it('the CLI refuses an empty directory instead of emitting a scorecard', async () => {
+    const r = await scoreRepoCmd([empty]);
+    expect(r.code).toBe(2);
+    expect(r.lines.join('\n')).toMatch(/[Nn]othing to score/);
+  });
+
+  it('--json refusal for an empty directory carries the empty-repo error code', async () => {
+    const r = await scoreRepoCmd([empty, '--json']);
+    expect(r.code).toBe(2);
+    expect(JSON.parse(r.lines.join('\n')).error).toBe('empty-repo');
+  });
+});
+
 describe('formatRepoScorecard', () => {
   it('renders the 6-line card', () => {
     const lines = formatRepoScorecard(buildRepoScorecard(repo, 'x'));

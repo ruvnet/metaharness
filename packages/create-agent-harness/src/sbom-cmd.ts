@@ -35,12 +35,15 @@ function spdxId(prefix: string, name: string, version: string): string {
   return `SPDXRef-${prefix}-${(name + '-' + version).replace(/[^a-zA-Z0-9-]/g, '-')}`;
 }
 
-function packagesFromLock(lock: any, includeDev: boolean): SpdxPkg[] {
-  if (!lock?.packages) return [];
+function packagesFromLock(lock: any, includeDev: boolean): { packages: SpdxPkg[]; excludedDevCount: number } {
+  if (!lock?.packages) return { packages: [], excludedDevCount: 0 };
   const out: SpdxPkg[] = [];
+  let excludedDevCount = 0;
   for (const [path, pkg] of Object.entries<any>(lock.packages)) {
     if (!path || path === '') continue;
-    if (!includeDev && pkg.dev === true) continue;
+    if (pkg.dev === true) {
+      if (!includeDev) { excludedDevCount++; continue; }
+    }
     if (pkg.peer === true || pkg.optional === true) continue;
     const name = pkg.name ?? path.split('node_modules/').pop();
     if (!name || !pkg.version) continue;
@@ -59,7 +62,7 @@ function packagesFromLock(lock: any, includeDev: boolean): SpdxPkg[] {
       }],
     });
   }
-  return out;
+  return { packages: out, excludedDevCount };
 }
 
 function packagesFromManifest(pkg: any): SpdxPkg[] {
@@ -103,16 +106,34 @@ export async function sbomCmd(args: string[]): Promise<SubcommandResult> {
   const lockPath = join(dir, 'package-lock.json');
   let packages: SpdxPkg[];
   let source: string;
+  let excludedDevCount = 0;
   if (existsSync(lockPath)) {
     const lock = JSON.parse(await readFile(lockPath, 'utf-8'));
-    packages = packagesFromLock(lock, includeDev);
+    const fromLock = packagesFromLock(lock, includeDev);
+    packages = fromLock.packages;
+    excludedDevCount = fromLock.excludedDevCount;
     source = 'package-lock.json';
   } else {
     packages = packagesFromManifest(pkg);
+    // No lockfile to introspect per-package `dev` flags — approximate the
+    // excluded count from the manifest's own devDependencies block so the
+    // disclosure below still fires instead of silently under-reporting.
+    if (!includeDev) excludedDevCount = Object.keys(pkg.devDependencies ?? {}).length;
     source = 'package.json dependencies (no lockfile — versions are range strings)';
   }
   lines.push(`  source: ${source}`);
   lines.push(`  packages: ${packages.length}`);
+  // iter: a reader of the default (no --include-dev) SBOM had no way to tell
+  // whether the harness simply has no dev dependencies, or whether some were
+  // silently dropped — unlike CycloneDX, which tags dev-scope components
+  // `scope: excluded` instead of omitting them outright. devDependencies run
+  // during npm ci/test/build (CI/build-time attack surface — e.g. the 2026
+  // node-ipc and Shai-Hulud npm supply-chain incidents exfiltrated CI
+  // credentials via compromised build-time packages) even though they never
+  // ship to production, so their exclusion is worth surfacing, not hiding.
+  if (!includeDev && excludedDevCount > 0) {
+    lines.push(`  dev-scope excluded: ${excludedDevCount} package(s) — re-run with --include-dev for a build/CI-time-complete SBOM`);
+  }
 
   if (validateOnly) {
     lines.push('  --validate-only — shape OK, not writing output');
@@ -129,6 +150,9 @@ export async function sbomCmd(args: string[]): Promise<SubcommandResult> {
       created: new Date(0).toISOString(),
       creators: [`Tool: harness sbom (iter 51)`],
       licenseListVersion: '3.20',
+      ...(!includeDev && excludedDevCount > 0 ? {
+        comment: `${excludedDevCount} devDependency package(s) excluded from this SBOM (scope: dev). Re-run with --include-dev for a build/CI-time-complete SBOM.`,
+      } : {}),
     },
     packages,
   };

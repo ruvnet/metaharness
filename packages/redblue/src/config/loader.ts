@@ -21,10 +21,12 @@ import { enforceSafetyLimits, validateTarget } from './safety.js';
 
 const ALL_FAMILIES: AttackFamily[] = [
   'direct_prompt_injection',
+  'indirect_prompt_injection',
   'tool_overreach',
   'data_exfiltration_attempt',
   'role_confusion',
   'cost_amplification',
+  'cross_session_trace_replay',
 ];
 
 /** Default config — fully safe, mock target, sensible budgets. */
@@ -32,7 +34,7 @@ export function defaultConfig(): RedBlueConfig {
   return {
     target: { kind: 'none' },
     models: {
-      red: ['cognitivecomputations/dolphin-mixtral-8x22b'],
+      red: ['cognitivecomputations/dolphin-mistral-24b-venice-edition'],
       blue: ['anthropic/claude-3.5-sonnet'],
       judge: ['openai/gpt-4o-mini'],
       mutate: ['google/gemini-2.5-flash'],

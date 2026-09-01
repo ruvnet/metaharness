@@ -22,13 +22,15 @@ export type OwaspLlmCategory =
 /** NIST AI RMF functions our tests map to. */
 export type NistRmfFunction = 'GOVERN' | 'MAP' | 'MEASURE' | 'MANAGE';
 
-/** The five attack families in the MVP. These are taxonomy LABELS. */
+/** The attack families. These are taxonomy LABELS. */
 export type AttackFamily =
   | 'direct_prompt_injection'
+  | 'indirect_prompt_injection'
   | 'tool_overreach'
   | 'data_exfiltration_attempt'
   | 'role_confusion'
-  | 'cost_amplification';
+  | 'cost_amplification'
+  | 'cross_session_trace_replay';
 
 /** Red and blue actor roles. */
 export type RedActorRole = 'malicious_user' | 'insider_operator' | 'prompt_injector';

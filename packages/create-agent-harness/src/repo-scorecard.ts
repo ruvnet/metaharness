@@ -74,10 +74,22 @@ export function buildRepoScorecard(dir: string, generatedAt: string = new Date()
       (profile.hasCi ? 10 : 0),
   );
 
-  // Task coverage — how much inferred work the recommended agents/skills/commands
-  // span, tempered by how much repo signal (tokens) we actually observed.
-  const surface = plan.agents.length + plan.skills.length + plan.commands.length;
-  const taskCoverage = clamp100(Math.min(surface, 10) * 7 + Math.min(profile.tokens.length, 20) * 1.5);
+  // Task coverage — how much observable work surface THIS REPO presents for a
+  // harness to cover. Derived from real repo signals only (#171): the previous
+  // formula multiplied the chosen archetype's plan size (a constant per
+  // template), so an empty dir that fell through to a larger fallback plan
+  // outscored a real project mapped to a smaller one, and adding tests/CI could
+  // LOWER the score by switching templates. Grounding it in repo signals makes
+  // it monotonic in the repo — more code, tests, CI, and docs never lower it.
+  const hasDocs = Object.keys(files).some((f) => /(^|\/)readme|\.md$/i.test(f));
+  const taskCoverage = clamp100(
+    Math.min(profile.tokens.length, 30) * 2 + // repo work-vocabulary breadth (0-60)
+      (profile.languages.length ? 12 : 0) + // a detected implementation language
+      (profile.testCommands.length ? 12 : 0) + // tests define coverable work
+      (profile.buildCommands.length ? 8 : 0) + // a build step to wire around
+      (profile.hasCi ? 8 : 0) + // CI to hook into
+      (hasDocs ? 6 : 0), // docs describing the work
+  );
 
   // Tool safety — the default-deny policy posture, minus MCP exposure.
   const p = plan.policy;
@@ -240,6 +252,13 @@ export async function scoreRepoCmd(args: string[]): Promise<SubcommandResult> {
   const dir = resolve(positional[0]!);
   const showConstraints = args.includes('--constraints');
   try {
+    // #171 — a directory with no inventoried signal is not scoreable. Refuse
+    // rather than emit a full scorecard, recommended archetype, and cost
+    // estimate for a repo that isn't there.
+    if (Object.keys(inventory(dir)).length === 0) {
+      const err = { schema: 1 as const, error: 'empty-repo', detail: 'no scoreable files found in target directory', exitCode: 2 };
+      return { code: 2, lines: [json ? JSON.stringify(err, null, 2) : `Nothing to score: no scoreable files found in ${dir}`] };
+    }
     if (showConstraints) {
       const { repo, results } = repoConstraints(dir);
       const s = summarise(results);
