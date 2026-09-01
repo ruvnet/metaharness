@@ -2,6 +2,40 @@
 
 All notable changes to this package. Dates UTC.
 
+## 0.10.1 — 2026-09-01
+
+- **Fix: `ShellEvaluator` crashed the whole run instead of demoting one candidate when the
+  evaluator exited without reading its stdin.** The genome is written to `child.stdin` after
+  spawn, so a bad argv, an immediate `process.exit`, or a startup crash leaves the pipe closed
+  and the write raises `EPIPE` — with no `error` listener on the stdin socket that is an
+  unhandled error event. The race is platform-dependent (Linux usually completes the write
+  first, macOS often does not), so it surfaced as an intermittent CI failure rather than a
+  reliable one. `close`/`error` already resolve with a demoting `errorCard` carrying the
+  child's real exit code, so the EPIPE is now swallowed. Regression test included.
+
+## 0.10.0 — 2026-09-01
+
+- **NEW numeric genome kind (ADR-272)** — a second, fully parallel genome representation
+  alongside the seven-surface prompt kind (ADR-071), for evolving bounded **numeric**
+  parameter vectors (e.g. ML training hyperparameters) against an external metric:
+  - `numeric-types` — `NumericGenomeSpec` (`name -> {min, max, scale, type, default?}`),
+    `NumericVariant`, `NumericScoreCard`, `NumericEvaluator`;
+  - `numeric-mutator` — deterministic seeded Gaussian perturbation + uniform crossover in
+    unit-genome space, so `log`-scale parameters perturb multiplicatively; `int`/`float`
+    respected, always clamped to `[min, max]`, never a silent full no-op;
+  - `numeric-archive` / `numeric-evolve` — the generation loop, reusing the genuinely
+    generic `mapLimit`/`paretoFront` with an ADR-073-style stall fallback;
+  - `numeric-evaluator` — `ShellEvaluator`: caller-supplied command (never a shell), genome
+    JSON in on stdin, `NumericScoreCard` JSON out on stdout. Darwin never trains or scores
+    anything itself for this kind — fitness is always external, one call per candidate;
+    evaluator failure/timeout/non-JSON demotes the candidate instead of crashing the run.
+- **NEW CLI verb** `metaharness-darwin evolve-numeric <repo> --genome <spec.json>
+  --evaluator "<cmd> [args...]"` `[--generations N] [--children N] [--concurrency N]
+  [--seed N] [--sigma F] [--crossover] [--evaluator-timeout-ms N]`.
+- The existing prompt-kind path is **untouched** — no changes to `evolve.ts`, `mutator.ts`,
+  `types.ts`, `archive.ts`, `scorer.ts` or `sandbox.ts`, so the ADR-071 mutation-surface
+  safety allowlist is not widened to a domain it was never meant to bound.
+
 ## 0.8.2 — 2026-08-08
 
 - **Clade selection 1.5–2.7× faster** (`bench:clade`: 443 → 1178 calls/s at n=3000 branching,

@@ -81,24 +81,46 @@ export function configJson(spec: HarnessSpec): string {
 }
 
 /**
+ * Escape a string for use as a double-quoted YAML flow scalar (frontmatter
+ * value position). Sibling of #188 (hermes) and #224 (host-rvm): `spec.name`
+ * reaches this function unescaped via any caller that bypasses the CLI's
+ * kebab-case `validateHarnessName` gate (a direct SDK/adapter call, the
+ * web-UI) — a name containing `:`, a raw newline, or leading YAML indicator
+ * characters silently corrupts the frontmatter or smuggles in a sibling key.
+ * Escape the backslash FIRST, then the quote, then flatten raw newlines
+ * (illegal in a single-line double-quoted YAML scalar).
+ */
+function yamlDq(s: string): string {
+  return s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/[\r\n]+/g, ' ');
+}
+
+// YAML 1.1 core-schema bare scalars a loader would resolve to bool/null/number
+// instead of a string. Mirrors host-hermes's `YAML_RESERVED_BARE` (#188).
+const YAML_RESERVED_BARE = /^(?:null|~|true|false|yes|no|on|off|[+-]?\d+(?:\.\d+)?)$/i;
+
+/**
+ * Render a string as a YAML frontmatter *value*: bare (unquoted, the
+ * existing byte-identical output) when it's already a conventional safe
+ * identifier and not a reserved bare scalar; quoted + escaped via `yamlDq`
+ * otherwise. Bare-when-safe mirrors host-hermes's `yamlKey()` (#188).
+ */
+function yamlValueSafe(s: string): string {
+  const isSafeIdentifier = /^[A-Za-z0-9_][A-Za-z0-9_.-]*$/.test(s);
+  return isSafeIdentifier && !YAML_RESERVED_BARE.test(s) ? s : `"${yamlDq(s)}"`;
+}
+
+/**
  * Render the SKILL.md content for the harness as an OpenClaw workspace
  * skill. OpenClaw skills follow the same YAML-frontmatter + markdown
  * convention as Claude Code skills.
  */
+
 export function skillMarkdown(spec: HarnessSpec): string {
   const lines: string[] = [];
   lines.push('---');
-  lines.push(`name: ${spec.name}`);
+  lines.push(`name: ${yamlValueSafe(spec.name)}`);
   if (spec.description) {
-    // CodeQL js/incomplete-sanitization: escaping only `"` is incomplete —
-    // a backslash in the input mis-escapes, and a TRAILING backslash would
-    // escape our own closing quote and break the YAML document. Escape the
-    // backslash FIRST, then the quote, then flatten raw newlines (illegal in
-    // a single-line double-quoted YAML scalar) so no input can break out.
-    const desc = spec.description
-      .replace(/\\/g, '\\\\')
-      .replace(/"/g, '\\"')
-      .replace(/[\r\n]+/g, ' ');
+    const desc = yamlDq(spec.description);
     lines.push(`description: "${desc}"`);
   }
   lines.push('---');
@@ -124,13 +146,55 @@ export function skillMarkdown(spec: HarnessSpec): string {
 }
 
 /**
+ * Escape a string for safe interpolation inside a double-quoted POSIX/bash
+ * string. Plain double-quoting does NOT stop command substitution
+ * (`$(...)`, backticks) or variable expansion (`$var`) — an attacker-
+ * controlled `spec.name` reaching `installScript()` unescaped can run
+ * arbitrary shell commands when the generated `install-openclaw.sh` is
+ * executed. Escapes the 4 characters meaningful inside a bash
+ * double-quoted string: backslash, double-quote, dollar-sign, backtick.
+ * Byte-identical output for any name without those characters. Mirrors
+ * host-rvm's `shellDq()` (#224) for the same class of finding.
+ */
+function shellDq(s: string): string {
+  return s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\$/g, '\\$').replace(/`/g, '\\`');
+}
+
+/**
+ * Strip CR/LF from a string destined for a raw `#`-comment line. A comment
+ * line has no quoting to escape *into*; a literal newline in the source
+ * string is the only character that can break out of it and turn the
+ * remainder into a live statement. Mirrors host-rvm's `commentSafe()` (#224).
+ */
+function commentSafe(s: string): string {
+  return s.replace(/[\r\n]+/g, ' ');
+}
+
+/**
+ * Reduce a string to a single path segment for the generated `mkdir`/`cp`
+ * lines. `shellDq()` stops command *execution*, not path *traversal*: a name
+ * of `../../../x` is a perfectly ordinary double-quoted bash string, so
+ * `mkdir -p` happily creates it outside the skills directory and `cp` writes
+ * SKILL.md there. Collapse every path separator to `-` and prefix a
+ * pure-dots segment, so the result can only ever name a direct child of the
+ * skills directory. Byte-identical for any name without a separator.
+ *
+ * MUST be applied BEFORE `shellDq()` — running it after would rewrite the
+ * backslashes `shellDq()` just added and undo the escaping.
+ */
+function pathSegmentSafe(s: string): string {
+  const flat = s.replace(/[\\/]+/g, '-');
+  return /^\.+$/.test(flat) ? `_${flat}` : flat;
+}
+
+/**
  * Render the install runbook. Users run this once after generating to
  * register the MCP servers + drop the skill in their workspace.
  */
 export function installScript(spec: HarnessSpec): string {
   const lines: string[] = [];
   lines.push('#!/usr/bin/env bash');
-  lines.push('# OpenClaw install runbook for harness: ' + spec.name);
+  lines.push('# OpenClaw install runbook for harness: ' + commentSafe(spec.name));
   lines.push('set -euo pipefail');
   lines.push('');
   lines.push('# 1. Install OpenClaw if missing');
@@ -145,10 +209,10 @@ export function installScript(spec: HarnessSpec): string {
   lines.push('echo "Merge openclaw.json into ~/.openclaw/openclaw.json (manual step)."');
   lines.push('');
   lines.push('# 4. Drop the skill into the workspace');
-  lines.push(`mkdir -p "$HOME/.openclaw/workspace/skills/${spec.name}"`);
-  lines.push(`cp ./SKILL.md "$HOME/.openclaw/workspace/skills/${spec.name}/SKILL.md"`);
+  lines.push(`mkdir -p "$HOME/.openclaw/workspace/skills/${shellDq(pathSegmentSafe(spec.name))}"`);
+  lines.push(`cp ./SKILL.md "$HOME/.openclaw/workspace/skills/${shellDq(pathSegmentSafe(spec.name))}/SKILL.md"`);
   lines.push('');
-  lines.push('echo "Done. Try: openclaw agent --message \\"' + spec.name + ': ping\\""');
+  lines.push('echo "Done. Try: openclaw agent --message \\"' + shellDq(spec.name) + ': ping\\""');
   return lines.join('\n') + '\n';
 }
 
