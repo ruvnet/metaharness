@@ -2,6 +2,17 @@
 
 All notable changes to this package. Dates UTC.
 
+## 0.10.1 — 2026-09-01
+
+- **Fix: `ShellEvaluator` crashed the whole run instead of demoting one candidate when the
+  evaluator exited without reading its stdin.** The genome is written to `child.stdin` after
+  spawn, so a bad argv, an immediate `process.exit`, or a startup crash leaves the pipe closed
+  and the write raises `EPIPE` — with no `error` listener on the stdin socket that is an
+  unhandled error event. The race is platform-dependent (Linux usually completes the write
+  first, macOS often does not), so it surfaced as an intermittent CI failure rather than a
+  reliable one. `close`/`error` already resolve with a demoting `errorCard` carrying the
+  child's real exit code, so the EPIPE is now swallowed. Regression test included.
+
 ## 0.10.0 — 2026-09-01
 
 - **NEW numeric genome kind (ADR-272)** — a second, fully parallel genome representation
