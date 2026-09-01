@@ -104,8 +104,8 @@ export function mutateGenome(
   }
   // Every candidate must differ from its parent by at least one parameter, or
   // the archive fills with indistinguishable duplicates. If bounded rounding
-  // happened to produce a no-op genome, force the single most-perturbed
-  // parameter to its post-noise value even past the clamp's rounding.
+  // happened to produce a no-op genome, force one deterministically-chosen
+  // parameter a full sigma (min 0.05 of its unit span) away from the parent.
   if (mutatedParams.length === 0) {
     const names = Object.keys(genomeSpec);
     if (names.length > 0) {

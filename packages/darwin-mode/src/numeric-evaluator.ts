@@ -17,7 +17,7 @@ export interface ShellEvaluatorOptions {
   readonly command: readonly string[];
   readonly cwd?: string;
   readonly timeoutMs?: number;
-  /** Extra env vars merged over a minimal scrubbed base (PATH/HOME/USERPROFILE/SystemRoot only). */
+  /** Extra env vars layered over the inherited parent environment (see `evaluate` for why it is not scrubbed). */
   readonly env?: Readonly<Record<string, string>>;
 }
 

@@ -47,7 +47,7 @@ describe('ShellEvaluator', () => {
     expect(score.evaluatorError).toContain('timed out');
   }, 5000);
 
-  it('tolerates non-JSON noise before the JSON payload on stdout (takes the last `{`)', async () => {
+  it('tolerates non-JSON noise before the JSON payload on stdout (takes the first `{`)', async () => {
     const evaluator = new ShellEvaluator({
       command: nodeEval("console.log('some log line'); process.stdout.write(JSON.stringify({primary:1,regressed:false,noopRate:0,costPerWin:1}))"),
     });
