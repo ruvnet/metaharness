@@ -43,6 +43,22 @@ function controllerFor(
 }
 
 describe('ArcEpisodeStore isolation and lifecycle', () => {
+  it('rejects a valid checkpoint from a different episode before persistence', async () => {
+    const stateRoot = await temporaryStateRoot();
+    const fixture = createFactoryFixture();
+    const store = new ArcEpisodeStore(fixture.factory, stateRoot);
+    try {
+      const first = await store.create('checkpoint-owner');
+      const second = await store.create('checkpoint-owner');
+      const foreign = await first.record.controller.checkpoint();
+      await expect(store.saveCheckpoint(second.record, foreign))
+        .rejects.toThrow(/does not belong/);
+    } finally {
+      await store.closeAll();
+      await rm(stateRoot, { recursive: true, force: true });
+    }
+  });
+
   it('isolates principals and exposes a frozen boss authority without action methods', async () => {
     const stateRoot = await temporaryStateRoot();
     const fixture = createFactoryFixture();
@@ -165,6 +181,13 @@ describe('ArcEpisodeStore isolation and lifecycle', () => {
     expect(fixture.calls).toBe(2);
     expect(store.get('resume-principal', created.record.episodeId).controller).not.toBe(oldController);
     expect(fixture.environments[0]?.closeCalls).toBe(1);
+    await expect(store.resumePersisted(
+      'resume-principal',
+      created.record.episodeId,
+      checkpointId,
+      '0'.repeat(64),
+    )).rejects.toThrow(/externally anchored hash/);
+    expect(fixture.calls).toBe(2);
     await store.closeAll();
     expect(fixture.environments[1]?.closeCalls).toBe(1);
     await rm(stateRoot, { recursive: true, force: true });

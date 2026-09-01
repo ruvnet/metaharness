@@ -12,9 +12,14 @@ import {
   hashArcValue,
   normalizeArcRunBudget,
   normalizeArcRunManifest,
+  resolveArcAvoConfig,
   snapshotArcJson,
 } from '@metaharness/arc-agi-3';
 import type {
+  ArcAblationArm,
+  ArcAvoConfig,
+  ArcAvoConfigInput,
+  ArcAvoLoopApi,
   ArcController,
   ArcEnvironment,
   ArcRunBudget,
@@ -32,6 +37,11 @@ import type {
   ArcControllerFactory,
   ArcControllerFactoryContext,
 } from './types.js';
+import { toolNamesForLane } from './tools.js';
+import {
+  OFFICIAL_AVO_RUNTIME_HOOKS,
+  type OfficialAvoRuntimeHooks,
+} from './official-avo-runtime.js';
 
 const SHA256 = /^[a-f0-9]{64}$/;
 const MAX_SCORECARD_CONFIG_BYTES = 64 * 1024;
@@ -61,6 +71,11 @@ export interface OfficialArcControllerFactoryOptions {
   readonly assignments: readonly OfficialArcAssignment[];
   readonly runManifest: ArcRunManifest;
   readonly budget?: Partial<ArcRunBudget>;
+  /**
+   * Exact actor profile exposed by the MCP server. Omit only for the legacy
+   * actor surface; otherwise pass the same AVO input used to start the server.
+   */
+  readonly avo?: ArcAvoConfig | ArcAvoConfigInput;
   /** Frozen before any scorecard or environment work begins. Defaults to the public set gate. */
   readonly acceptanceGate?: OfficialArcRunGate;
   readonly scorecard?: ScorecardOptions;
@@ -122,13 +137,43 @@ export interface OfficialEpisodeEvidence {
   readonly scorecardRunMatched: boolean;
   readonly externalAnchorMatched: boolean;
   readonly externalAnchorReferenceHash?: string;
+  readonly avoExecution?: OfficialAvoExecutionEvidence;
   readonly accepted: boolean;
+}
+
+/** Public proof that the store-owned AVO loop covered the final receipt chain. */
+export interface OfficialAvoExecutionEvidence {
+  readonly schema: 'metaharness.arc_agi_3.avo_execution.v1';
+  readonly actorProfileHash: string;
+  readonly avoConfigHash: string;
+  readonly checkpointHash: string;
+  readonly observationHash: string;
+  readonly coreReceiptBaselineCount: number;
+  readonly coreReceiptBaselineHeadHash: string;
+  readonly coreReceiptCount: number;
+  readonly coreReceiptHeadHash: string;
+  readonly coveredPostBaselineReceiptCount: number;
+  readonly candidateCount: number;
+  readonly selectionCount: number;
+  readonly outcomeCount: number;
+  readonly archiveHash: string;
+  readonly outcomeHeadHash: string;
+  readonly worldModelSnapshotHash: string;
+}
+
+/** Public, non-secret attestation of the actor capability surface for a run. */
+export interface OfficialActorProfileEvidence {
+  readonly mode: 'legacy' | 'avo';
+  readonly toolNames: readonly string[];
+  readonly avoArm?: ArcAblationArm;
+  readonly avoConfigHash?: string;
 }
 
 export interface OfficialArcRunEvidence {
   readonly schema: 'metaharness.arc_agi_3.official_run.v1';
   readonly accepted: boolean;
   readonly acceptanceGate: OfficialArcRunGate;
+  readonly actorProfile: OfficialActorProfileEvidence;
   readonly configurationHash: string;
   readonly scorecardHash: string;
   readonly evidenceHash: string;
@@ -163,16 +208,22 @@ export interface OfficialArcControllerFactory extends ArcControllerFactory {
   close(): Promise<void>;
   readonly assignedCount: number;
   readonly acceptanceGate: OfficialArcRunGate;
+  /** Frozen public profile used by final evidence and server/profile binding. */
+  readonly actorProfile: OfficialActorProfileEvidence;
 }
 
 interface OfficialEpisodeRun {
   readonly episodeId: string;
   readonly principalId: string;
+  readonly runId: string;
   readonly assignmentIndex: number;
   readonly assignment: OfficialArcAssignment;
   readonly sessionLog: SessionLog;
   readonly sessionPath: string;
   controller?: ArcController;
+  avoLoop?: ArcAvoLoopApi;
+  avoExecution?: OfficialAvoExecutionEvidence;
+  avoExecutionFailure?: 'PROFILE_UNBOUND' | 'ATTESTATION_INVALID';
   guid?: string;
   state: 'STARTING' | 'ACTIVE' | 'FAILED' | 'FINALIZED';
 }
@@ -336,6 +387,9 @@ function preflightController(
     environment: PREFLIGHT_ENVIRONMENT,
     runManifest: manifest,
     budget,
+    ...(context.requestedSupervisionGate === undefined
+      ? {}
+      : { supervisionGate: context.requestedSupervisionGate }),
   });
 }
 
@@ -597,6 +651,15 @@ export function createOfficialArcControllerFactory(
   // the controller version and defaults omitted from partial operator input.
   const runManifest = normalizeArcRunManifest(options.runManifest);
   const budget = normalizeArcRunBudget(options.budget);
+  const avoConfig = options.avo === undefined ? undefined : resolveArcAvoConfig(options.avo);
+  const actorMode = avoConfig === undefined ? 'legacy' : 'avo';
+  const actorProfile: Readonly<OfficialActorProfileEvidence> = Object.freeze({
+    mode: actorMode,
+    toolNames: Object.freeze([...toolNamesForLane('actor', actorMode)]),
+    ...(avoConfig === undefined
+      ? {}
+      : { avoArm: avoConfig.arm, avoConfigHash: avoConfig.configHash }),
+  });
   const evidenceAnchor: OfficialEvidenceAnchor | undefined = options.evidenceAnchor
     ? Object.freeze({
         append: options.evidenceAnchor.append.bind(options.evidenceAnchor),
@@ -610,7 +673,14 @@ export function createOfficialArcControllerFactory(
   }
   // Validate manifest and budget before spawning Python or touching a scorecard.
   preflightController(
-    { principalId: 'preflight', episodeId: 'preflight', runId: 'preflight' },
+    {
+      principalId: 'preflight',
+      episodeId: 'preflight',
+      runId: 'preflight',
+      ...(avoConfig === undefined
+        ? {}
+        : { requestedSupervisionGate: avoConfig.features.supervisorGate }),
+    },
     assignments[0]!,
     runManifest,
     budget,
@@ -658,6 +728,91 @@ export function createOfficialArcControllerFactory(
     return scorecardIdPromise;
   };
 
+  const captureAvoExecution = async (run: OfficialEpisodeRun): Promise<void> => {
+    if (!avoConfig) return;
+    if (!run.controller || !run.avoLoop) {
+      run.avoExecution = undefined;
+      run.avoExecutionFailure = 'PROFILE_UNBOUND';
+      return;
+    }
+    if (run.avoExecution) {
+      const status = run.controller.status();
+      const verification = run.controller.verifyReceipts();
+      if (
+        verification.ok
+        && verification.count === run.avoExecution.coreReceiptCount
+        && verification.headHash === run.avoExecution.coreReceiptHeadHash
+        && status.observationHash === run.avoExecution.observationHash
+      ) return;
+    }
+    try {
+      const checkpoint = await run.avoLoop.checkpoint();
+      const status = run.controller.status();
+      const verification = run.controller.verifyReceipts();
+      const commitments = run.controller.orderedReceiptCommitments();
+      const receipts = checkpoint.coreCheckpoint.receipts;
+      const baselineCount = checkpoint.coreReceiptBaselineCount;
+      const covered = checkpoint.archive.outcomes.flatMap(
+        (outcome) => [...outcome.coreReceiptHashes],
+      );
+      const baselineIsControllerStart = baselineCount === 0
+        && checkpoint.coreReceiptBaselineHeadHash === TRANSITION_RECEIPT_GENESIS;
+      const receiptCoverageMatches = covered.length === receipts.length - baselineCount
+        && new Set(covered).size === covered.length
+        && covered.every((hash, index) => (
+          hash === receipts[baselineCount + index]?.receiptHash
+        ));
+      const commitmentsMatch = commitments.length === receipts.length
+        && commitments.every((item, index) => (
+          item.receiptHash === receipts[index]?.receiptHash
+        ));
+      if (
+        checkpoint.config.configHash !== avoConfig.configHash
+        || checkpoint.coreCheckpoint.runId !== status.runId
+        || checkpoint.coreCheckpoint.principalScope !== status.principalScope
+        || checkpoint.coreCheckpoint.opaqueGameScope !== status.opaqueGameScope
+        || checkpoint.observationHash !== status.observationHash
+        || !verification.ok
+        || verification.count !== receipts.length
+        || verification.headHash !== (
+          receipts.at(-1)?.receiptHash ?? TRANSITION_RECEIPT_GENESIS
+        )
+        || !baselineIsControllerStart
+        || !receiptCoverageMatches
+        || !commitmentsMatch
+      ) {
+        throw new Error('AVO execution does not cover the final controller receipt chain');
+      }
+      run.avoExecution = Object.freeze({
+        schema: 'metaharness.arc_agi_3.avo_execution.v1' as const,
+        actorProfileHash: hashArcValue(actorProfile),
+        avoConfigHash: checkpoint.config.configHash,
+        checkpointHash: checkpoint.checkpointHash,
+        observationHash: checkpoint.observationHash,
+        coreReceiptBaselineCount: baselineCount,
+        coreReceiptBaselineHeadHash: checkpoint.coreReceiptBaselineHeadHash,
+        coreReceiptCount: receipts.length,
+        coreReceiptHeadHash: verification.headHash,
+        coveredPostBaselineReceiptCount: covered.length,
+        candidateCount: checkpoint.archive.candidates.length,
+        selectionCount: checkpoint.archive.selections.length,
+        outcomeCount: checkpoint.archive.outcomes.length,
+        archiveHash: checkpoint.archive.archiveHash,
+        outcomeHeadHash: checkpoint.archive.outcomeHeadHash,
+        worldModelSnapshotHash: checkpoint.worldModel.snapshotHash,
+      });
+      run.avoExecutionFailure = undefined;
+    } catch {
+      run.avoExecution = undefined;
+      run.avoExecutionFailure = 'ATTESTATION_INVALID';
+    }
+  };
+
+  const captureAllAvoExecutions = async (): Promise<void> => {
+    if (!avoConfig) return;
+    for (const run of runs.values()) await captureAvoExecution(run);
+  };
+
   const finishCurrent = async (): Promise<void> => {
     if (!currentEpisodeId) return;
     const current = runs.get(currentEpisodeId);
@@ -672,6 +827,7 @@ export function createOfficialArcControllerFactory(
     if (phase !== 'WON' && !approvedAdvance.delete(current.episodeId)) {
       throw new Error('official ARC assignment is still active');
     }
+    await captureAvoExecution(current);
     await current.controller?.close();
     current.state = 'FINALIZED';
     currentEpisodeId = undefined;
@@ -680,6 +836,13 @@ export function createOfficialArcControllerFactory(
   const callable = (async (context: ArcControllerFactoryContext): Promise<ArcController> => (
     withFactoryLock(async () => {
       if (lifecycle !== 'RUNNING') throw new Error('official ARC run is closing');
+      if (avoConfig === undefined) {
+        if (context.requestedSupervisionGate !== undefined) {
+          throw new Error('legacy official ARC factory does not accept an AVO supervision gate');
+        }
+      } else if (context.requestedSupervisionGate !== avoConfig.features.supervisorGate) {
+        throw new Error('official ARC AVO supervision gate does not match the frozen profile');
+      }
       if (runs.has(context.episodeId)) throw new Error('official ARC episode is already bound');
       if (boundPrincipal !== undefined && boundPrincipal !== context.principalId) {
         throw new Error('official ARC assignment is unavailable');
@@ -693,6 +856,7 @@ export function createOfficialArcControllerFactory(
       const run: OfficialEpisodeRun = {
         episodeId: context.episodeId,
         principalId: context.principalId,
+        runId: context.runId,
         assignmentIndex: nextAssignment,
         assignment,
         sessionLog: evidence.log,
@@ -722,6 +886,9 @@ export function createOfficialArcControllerFactory(
           runManifest,
           budget,
           sessionLog: evidence.controllerLog,
+          ...(context.requestedSupervisionGate === undefined
+            ? {}
+            : { supervisionGate: context.requestedSupervisionGate }),
         });
         run.controller = controller;
         const guid = started.initialObservation.metadata?.guid;
@@ -744,6 +911,38 @@ export function createOfficialArcControllerFactory(
   Object.defineProperty(callable, 'acceptanceGate', {
     enumerable: true,
     value: acceptanceGate,
+  });
+  Object.defineProperty(callable, 'actorProfile', {
+    enumerable: true,
+    value: actorProfile,
+  });
+  const avoRuntimeHooks: OfficialAvoRuntimeHooks = Object.freeze({
+    bind(context: ArcControllerFactoryContext, loop: ArcAvoLoopApi): void {
+      if (!avoConfig) throw new Error('official factory is not configured for AVO');
+      const run = runs.get(context.episodeId);
+      const controllerStatus = run?.controller?.status();
+      const loopStatus = loop.status();
+      if (
+        !run
+        || run.state !== 'ACTIVE'
+        || run.principalId !== context.principalId
+        || run.runId !== context.runId
+        || context.requestedSupervisionGate !== avoConfig.features.supervisorGate
+        || !controllerStatus
+        || loopStatus.runId !== controllerStatus.runId
+        || loopStatus.principalScope !== controllerStatus.principalScope
+        || loopStatus.opaqueGameScope !== controllerStatus.opaqueGameScope
+        || (run.avoLoop !== undefined && run.avoLoop !== loop)
+      ) {
+        throw new Error('official ARC AVO runtime binding is invalid');
+      }
+      run.avoLoop = loop;
+    },
+    captureAll: () => withFactoryLock(captureAllAvoExecutions),
+  });
+  Object.defineProperty(callable, OFFICIAL_AVO_RUNTIME_HOOKS, {
+    enumerable: false,
+    value: avoRuntimeHooks,
   });
   callable.supportsResume = false;
 
@@ -799,6 +998,7 @@ export function createOfficialArcControllerFactory(
     if (closeScorecardPromise) return closeScorecardPromise;
     lifecycle = 'FINALIZING';
     closeScorecardPromise = withFactoryLock(async () => {
+      await captureAllAvoExecutions();
       const controllerResults = await Promise.allSettled(
         [...runs.values()].map(async (run) => {
           await run.controller?.close();
@@ -889,6 +1089,22 @@ export function createOfficialArcControllerFactory(
               expectedReceiptHeadHash: matchedAnchorProof.receiptHeadHash,
             })
           : null;
+        const finalStatus = run.controller.status();
+        const avoExecutionAccepted = avoConfig === undefined || (
+          run.avoExecution !== undefined
+          && run.avoExecutionFailure === undefined
+          && run.avoExecution.actorProfileHash === hashArcValue(actorProfile)
+          && run.avoExecution.avoConfigHash === avoConfig.configHash
+          && run.avoExecution.observationHash === finalStatus.observationHash
+          && run.avoExecution.coreReceiptBaselineCount === 0
+          && run.avoExecution.coreReceiptBaselineHeadHash === TRANSITION_RECEIPT_GENESIS
+          && verification.ok
+          && run.avoExecution.coreReceiptCount === verification.count
+          && run.avoExecution.coreReceiptHeadHash === verification.headHash
+          && run.avoExecution.coveredPostBaselineReceiptCount === verification.count
+          && run.avoExecution.selectionCount === run.avoExecution.outcomeCount
+          && run.avoExecution.candidateCount >= run.avoExecution.outcomeCount
+        );
         const accepted = journal.valid
           && journal.dangling === 0
           && verification.ok
@@ -896,7 +1112,8 @@ export function createOfficialArcControllerFactory(
           && journalReceiptsMatch
           && anchorMatched
           && reconciliation?.ok === true
-          && run.controller.status().uncertainMutationCount === 0;
+          && finalStatus.uncertainMutationCount === 0
+          && avoExecutionAccepted;
         if (!journal.valid) failures.add('INVALID_DURABLE_JOURNAL');
         if (journal.dangling > 0) failures.add('DANGLING_ACTION_INTENT');
         if (!verification.ok) failures.add('INVALID_RECEIPT_CHAIN');
@@ -905,7 +1122,18 @@ export function createOfficialArcControllerFactory(
         else if (!anchorMatched) failures.add('EXTERNAL_ANCHOR_MISMATCH');
         if (!official) failures.add('UNMATCHED_SCORECARD_RUN');
         if (reconciliation && !reconciliation.ok) failures.add('RECEIPT_SCORECARD_MISMATCH');
-        if (run.controller.status().uncertainMutationCount > 0) failures.add('UNCERTAIN_MUTATION');
+        if (finalStatus.uncertainMutationCount > 0) failures.add('UNCERTAIN_MUTATION');
+        if (avoConfig !== undefined) {
+          if (run.avoExecutionFailure === 'PROFILE_UNBOUND') {
+            failures.add('AVO_RUNTIME_PROFILE_UNBOUND');
+          } else if (
+            run.avoExecutionFailure === 'ATTESTATION_INVALID'
+            || !run.avoExecution
+            || !avoExecutionAccepted
+          ) {
+            failures.add('AVO_EXECUTION_ATTESTATION_INVALID');
+          }
+        }
         episodeEvidence.push(Object.freeze({
           episodeId: run.episodeId,
           receiptVerification: verification,
@@ -920,6 +1148,7 @@ export function createOfficialArcControllerFactory(
           ...(anchorMatched
             ? { externalAnchorReferenceHash: hashArcValue(matchedAnchorProof.anchorReference) }
             : {}),
+          ...(run.avoExecution === undefined ? {} : { avoExecution: run.avoExecution }),
           accepted,
         }));
       }
@@ -966,12 +1195,14 @@ export function createOfficialArcControllerFactory(
         schema: 'metaharness.arc_agi_3.official_run.v1' as const,
         accepted: failures.size === 0,
         acceptanceGate,
+        actorProfile,
         configurationHash: hashArcValue({
           assignments,
           runManifest,
           budget,
           scorecard: scorecardOptions,
           acceptanceGate,
+          actorProfile,
         }),
         scorecardHash: hashArcValue(scorecard),
         summary: {

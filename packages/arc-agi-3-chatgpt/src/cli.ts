@@ -6,6 +6,7 @@ import { pathToFileURL } from 'node:url';
 import type { ArcControllerFactory, AuthConfig, OAuthResourceConfig } from './types.js';
 import { authConfigFromEnvironment } from './auth.js';
 import { startArcMcpServer } from './server.js';
+import type { ArcAblationArm } from '@metaharness/arc-agi-3';
 
 async function loadFactory(specifier: string | undefined): Promise<ArcControllerFactory> {
   if (!specifier) {
@@ -52,6 +53,7 @@ async function main(): Promise<void> {
     ?.split(',')
     .map((value) => value.trim())
     .filter(Boolean);
+  const avoArm = process.env.ARC_MCP_AVO_ARM?.trim();
   const started = await startArcMcpServer({
     controllerFactory,
     host,
@@ -59,6 +61,7 @@ async function main(): Promise<void> {
     stateRoot,
     auth,
     allowedHosts,
+    ...(avoArm ? { avo: { arm: avoArm as ArcAblationArm } } : {}),
   });
   process.stderr.write(`ARC ChatGPT MCP actor: ${started.actorUrl.toString()}\n`);
   process.stderr.write(`ARC ChatGPT MCP boss:  ${started.bossUrl.toString()}\n`);

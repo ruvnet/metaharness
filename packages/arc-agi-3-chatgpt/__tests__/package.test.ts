@@ -37,6 +37,7 @@ describe('private package artifact', () => {
       'dist/tools.js',
       'public/arc-widget.html',
       'prompts/actor.md',
+      'prompts/actor-avo.md',
       'prompts/supervisor.md',
       '.harness/mcp-policy.json',
       '.harness/mcp-capabilities.json',
@@ -62,7 +63,11 @@ describe('private package artifact', () => {
   it('states only the authentication, file, and approval controls it implements', async () => {
     const capabilities = JSON.parse(
       await readFile(join(packageRoot, '.harness/mcp-capabilities.json'), 'utf8'),
-    ) as { auth?: string; privilegedCapabilities?: { fileWrite?: { roots?: string[] } } };
+    ) as {
+      auth?: string;
+      tools?: { actorAvo?: string[] };
+      privilegedCapabilities?: { fileWrite?: { roots?: string[] } };
+    };
     const policy = JSON.parse(
       await readFile(join(packageRoot, '.harness/mcp-policy.json'), 'utf8'),
     ) as { fileWriteAllowlist?: string[]; requireApprovalForDangerous?: boolean };
@@ -70,15 +75,27 @@ describe('private package artifact', () => {
     expect(capabilities.auth).toContain('oauth-2.1-scoped');
     expect(capabilities.privilegedCapabilities?.fileWrite?.roots)
       .toContain('configured-evidence-root');
+    expect(capabilities.tools?.actorAvo).toEqual(expect.arrayContaining([
+      'arc_avo_context',
+      'arc_avo_step',
+    ]));
+    expect(capabilities.tools?.actorAvo).not.toContain('arc_act');
+    expect(capabilities.tools?.actorAvo).not.toContain('arc_execute_guarded_plan');
     expect(policy.fileWriteAllowlist).toContain('configured-evidence-root');
     expect(policy.requireApprovalForDangerous).toBe(false);
   });
 
   it('freezes actor and supervisor operating constraints', async () => {
     const actor = await readFile(join(packageRoot, 'prompts/actor.md'), 'utf8');
+    const avoActor = await readFile(join(packageRoot, 'prompts/actor-avo.md'), 'utf8');
     const supervisor = await readFile(join(packageRoot, 'prompts/supervisor.md'), 'utf8');
     expect(actor).toMatch(/arc_observe/);
     expect(actor).toMatch(/arc_memory_query/);
+    expect(avoActor).toMatch(/arc_avo_context/);
+    expect(avoActor).toMatch(/arc_avo_step/);
+    expect(avoActor).toMatch(/Do not add a numeric utility/i);
+    expect(avoActor).toMatch(/strongest evidence-backed candidate first/i);
+    expect(avoActor).toMatch(/propose a rule only for a genuinely new reusable mechanic/i);
     expect(supervisor).toMatch(/exactly three/i);
     expect(supervisor).toMatch(/forbidden.*act|must not.*act/i);
   });
