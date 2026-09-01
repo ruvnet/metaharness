@@ -12,6 +12,31 @@ import {
 } from '../src/model-driver.js';
 import type { ModelDriver, ModelTurnRequest } from '../src/types.js';
 
+/**
+ * Wait for the broker's request file to appear under its SETTLED name.
+ *
+ * FileBrokerModelDriver writes `<id>.json.partial` and then renames it, so a
+ * poll that only checks "is the directory non-empty" can observe the temporary
+ * name and exit early. Filter `.partial` out. Shared by every poll in this file
+ * so a second copy cannot drift out of sync with the first — the original fix
+ * patched one call site and missed this one, which then failed on CI.
+ */
+async function waitForSettledRequests(directory: string): Promise<string[]> {
+  let names: string[] = [];
+  for (let attempt = 0; attempt < 100 && names.length === 0; attempt += 1) {
+    try {
+      names = (await readdir(join(directory, 'requests'))).filter(
+        name => !name.endsWith('.partial'),
+      );
+    } catch {
+      // The broker creates the directory asynchronously.
+    }
+    if (names.length === 0) await new Promise(resolve => setTimeout(resolve, 10));
+  }
+  return names;
+}
+
+
 const PLAN_REQUEST: ModelTurnRequest = Object.freeze({
   schema: 'metaharness.arc_agi_3.model_turn.v1',
   requestId: 'turn_00000000000000000000000000000000',
@@ -103,21 +128,7 @@ describe('model response boundary', () => {
         pollIntervalMs: 10,
       });
       const pending = broker.turn(PLAN_REQUEST);
-      let names: string[] = [];
-      for (let attempt = 0; attempt < 100 && names.length === 0; attempt += 1) {
-        try {
-          // The broker writes `<id>.json.partial` and then renames it, so a bare
-          // "directory is non-empty" poll can observe the temporary name and exit
-          // early. Wait for the settled file, or this races on slower filesystems
-          // (seen failing on ubuntu/windows CI while passing locally and on macOS).
-          names = (await readdir(join(directory, 'requests'))).filter(
-            name => !name.endsWith('.partial'),
-          );
-        } catch {
-          // The broker creates the directory asynchronously.
-        }
-        if (names.length === 0) await new Promise(resolve => setTimeout(resolve, 10));
-      }
+      const names = await waitForSettledRequests(directory);
       expect(names).toEqual([`${PLAN_REQUEST.requestId}.json`]);
       const serialized = await readFile(join(directory, 'requests', names[0]!), 'utf8');
       expect(serialized).toContain(PLAN_REQUEST.opaqueTaskHandle);
@@ -143,15 +154,7 @@ describe('model response boundary', () => {
         pollIntervalMs: 10,
       });
       const pending = broker.turn(PLAN_REQUEST);
-      let names: string[] = [];
-      for (let attempt = 0; attempt < 100 && names.length === 0; attempt += 1) {
-        try {
-          names = await readdir(join(directory, 'requests'));
-        } catch {
-          // The broker creates the directory asynchronously.
-        }
-        if (names.length === 0) await new Promise(resolve => setTimeout(resolve, 10));
-      }
+      const names = await waitForSettledRequests(directory);
       expect(names).toEqual([`${PLAN_REQUEST.requestId}.json`]);
       const finalPath = join(directory, 'responses', names[0]!);
       const partialPath = `${finalPath}.partial`;
