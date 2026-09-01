@@ -73,6 +73,15 @@ export class ShellEvaluator {
                 }
                 resolvePromise(parseScoreCard(variantId, stdout, stderr));
             });
+            // An evaluator that exits before (or without) reading its stdin — a bad
+            // argv, an immediate `process.exit`, a crash on startup — leaves this
+            // pipe closed by the time we write, and an unhandled EPIPE on the stdin
+            // socket takes down the whole run instead of demoting one candidate.
+            // The race is platform-dependent (Linux usually completes the write
+            // first; macOS often does not), so this must be handled, not hoped
+            // past. Swallow it here: `close`/`error` above already resolve with a
+            // demoting errorCard carrying the child's real exit code.
+            child.stdin?.on('error', () => { });
             child.stdin?.write(JSON.stringify({ variantId, genome }));
             child.stdin?.end();
         });
