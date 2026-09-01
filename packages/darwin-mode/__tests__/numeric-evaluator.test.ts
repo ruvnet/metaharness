@@ -47,6 +47,22 @@ describe('ShellEvaluator', () => {
     expect(score.evaluatorError).toContain('timed out');
   }, 5000);
 
+  // Regression: the genome is written to child.stdin AFTER spawn, so an
+  // evaluator that exits without reading stdin leaves the pipe closed and the
+  // write raises EPIPE. With no 'error' listener on the stdin socket that is
+  // an unhandled error event, which kills the whole evolve run instead of
+  // demoting one candidate. A large genome makes the write span multiple
+  // chunks so the race resolves the same way on every platform.
+  it('demotes, not crashes, when the evaluator exits without reading stdin (EPIPE)', async () => {
+    const evaluator = new ShellEvaluator({ command: nodeEval('process.exit(3)') });
+    const big: Record<string, number> = {};
+    for (let i = 0; i < 200_000; i++) big[`p${i}`] = i;
+    const score = await evaluator.evaluate(big, 'epipe');
+    expect(score.regressed).toBe(true);
+    expect(score.primary).toBe(-Infinity);
+    expect(score.evaluatorError).toContain('exited 3');
+  }, 20000);
+
   it('tolerates non-JSON noise before the JSON payload on stdout (takes the first `{`)', async () => {
     const evaluator = new ShellEvaluator({
       command: nodeEval("console.log('some log line'); process.stdout.write(JSON.stringify({primary:1,regressed:false,noopRate:0,costPerWin:1}))"),
