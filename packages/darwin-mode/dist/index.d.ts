@@ -19,6 +19,11 @@ export * from './sandbox.js';
 export * from './scorer.js';
 export * from './archive.js';
 export * from './evolve.js';
+export * from './numeric-types.js';
+export * from './numeric-mutator.js';
+export * from './numeric-archive.js';
+export * from './numeric-evaluator.js';
+export * from './numeric-evolve.js';
 export * as bench from './bench/index.js';
 export * as security from './security/index.js';
 //# sourceMappingURL=index.d.ts.map
