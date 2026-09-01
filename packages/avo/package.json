@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/avo",
-  "version": "0.1.2",
+  "version": "0.1.4",
   "description": "Governed autonomous variation runtime: evidence-driven repository engineering loops with bounded authority, replayable receipts, semantic supervision, and RVF working memory.",
   "type": "module",
   "main": "./dist/index.js",
@@ -9,6 +9,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./cli": {
+      "types": "./dist/cli.d.ts",
+      "import": "./dist/cli.js"
     }
   },
   "files": [
