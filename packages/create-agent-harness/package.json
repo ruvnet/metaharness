@@ -103,7 +103,8 @@
     "@metaharness/weight-eft": "^0.1.0",
     "@metaharness/redblue": "^0.1.6",
     "@metaharness/flywheel": "^0.1.1",
-    "@metaharness/turn-credit": "^0.1.0"
+    "@metaharness/turn-credit": "^0.1.0",
+    "@metaharness/avo": "^0.1.4"
   },
   "peerDependencies": {
     "@metaharness/kernel": "^0.1.0"
