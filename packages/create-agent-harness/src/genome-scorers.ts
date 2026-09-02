@@ -80,14 +80,31 @@ export function scoreMcpRisk(profile: RepoProfile, plan: HarnessPlan): McpRisk {
 
 /**
  * Test confidence is a soft heuristic — we can't actually run the tests
- * (the analyze-repo invariant forbids code execution), so we score based on:
- *  - presence of declared test commands (the repo can run tests at all)
- *  - presence of CI (someone has wired the tests to run on push)
- *  - heuristic: more test commands = more diverse tests
+ * (the analyze-repo invariant forbids code execution), so we score based on
+ * REAL filesystem evidence a test directory exists (profile.hasVerifiedTestFiles,
+ * populated in analyze-repo.ts from a tests/__tests__/test dir scan), not just
+ * that a language/manifest was detected.
+ *
+ * Before Dream Cycle 2026-08-25, this credited `testCommands.length > 0`
+ * directly — but testCommands is inferred purely from language/manifest
+ * presence (e.g. a `pyproject.toml` unconditionally pushes 'pytest'), so a
+ * repo with a test-capable manifest and zero actual test files still scored
+ * 0.5-0.8. External research (arXiv:2606.18168, arXiv:2607.18057; SWE-bench's
+ * real-execution harness; the kodustech/agent-readiness OSS scorer) confirms
+ * this "manifest implies tests" shortcut is a known, actively-flagged failure
+ * mode. This package's own sibling `score.ts::scoreTestCoverage` already
+ * weights real directory evidence as its largest single component (50/100,
+ * vs. 25 each for a declared npm-test script and CI, which still apply
+ * independently) — narrower parity than "requires" it outright, but this
+ * candidate moves genome-scorers.ts's weaker, purely-inferred version toward
+ * that same real-evidence-first shape rather than claiming full agreement.
+ *
+ * Without verified test files, CI alone earns only a small "infra exists but
+ * unconfirmed" credit rather than the prior full test-command credit.
  */
 export function scoreTestConfidence(profile: RepoProfile): number {
-  let s = 0;
-  if (profile.testCommands.length > 0) s += 0.5;
+  if (!profile.hasVerifiedTestFiles) return profile.hasCi ? 0.1 : 0;
+  let s = 0.5;
   if (profile.testCommands.length >= 2) s += 0.2;
   if (profile.hasCi) s += 0.3;
   return Math.min(1, s);
@@ -101,8 +118,15 @@ export function scoreTestConfidence(profile: RepoProfile): number {
  */
 export function scorePublishReadiness(profile: RepoProfile, plan: HarnessPlan): number {
   let s = 0;
-  if (profile.languages.includes('typescript')) s += 0.3; // has package.json
-  if (profile.languages.includes('rust')) s += 0.15; // has Cargo.toml
+  // A detected implementation language, regardless of which one. Previously
+  // this only credited 'typescript' (+0.3) and 'rust' (+0.15); python/go got
+  // +0, and analyze-repo.ts never generated a build command for either, so
+  // their `buildCommands.length > 0` bonus below was structurally
+  // unreachable too — a fully mature python/go repo capped at 0.40 and could
+  // never hit genome.ts's 0.75 'ready' threshold (Dream Cycle 2026-08-15).
+  // Generalized so any current or future detected language is credited the
+  // same way, instead of re-litigating a per-language allow-list.
+  if (profile.languages.length > 0) s += 0.3;
   if (profile.buildCommands.length > 0) s += 0.2; // can build
   if (profile.testCommands.length > 0) s += 0.15; // can test
   if (profile.hasCi) s += 0.2; // ci will gate it

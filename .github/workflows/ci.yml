@@ -143,6 +143,14 @@ jobs:
       - name: Path-handling guard (the /tmp Windows bug regression test)
         shell: bash
         run: node scripts/path-guard.mjs
+      - name: Runner-coverage guard (#194)
+        # Fails when a test file or a crate is reachable by NO runner and is not
+        # recorded as a deliberate exclusion. `npm test` is `-ws --if-present`,
+        # so a missing test script and a passing one look identical; `cargo test
+        # --workspace` covers members only. Both report green while skipping.
+        # Static, <1s, no network. Allowlist: scripts/runner-coverage-allowlist.json
+        shell: bash
+        run: node scripts/check-runner-coverage.mjs
       - name: SOTA integrity-attestation gate (ADR-231)
         # Pure-logic unit tests for scripts/sota-attest.mjs (patch_touches_tests,
         # Ed25519 sign→verify + tamper detection, fail-closed gate) plus the
@@ -154,6 +162,13 @@ jobs:
           node scripts/nightly-sota-gate.test.mjs
           node packages/darwin-mode/bench/swebench/solver-trajectory.test.mjs
           node packages/darwin-mode/bench/swebench/test-critic.test.mjs
+          node scripts/avo-claim-gate.mjs
+      - name: Meta-Proxy pin-drift watcher gate (#174)
+        # The watcher decides whether to open, retitle, or close a drift issue and
+        # whether the pinned signing key still verifies the pinned release. Its `gh`
+        # and network calls are injected, so this is $0 and offline.
+        shell: bash
+        run: node scripts/proxy-pin-drift.test.mjs
       - name: Native-router interop guard (ADR-043 — CJS default-unwrap regression)
         # tiny-dancer is CJS; vitest's interop masks the ESM `.default` unwrap, so
         # this runs under plain `node` (the real install condition) and fails if a

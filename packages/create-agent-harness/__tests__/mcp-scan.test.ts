@@ -93,6 +93,64 @@ describe('scanMcp', () => {
     const r = scanMcp(dir);
     expect(r.mcpEnabled).toBe(false);
   });
+
+  // GH #209: neither wildcard-tool-perm (checks literal '*', not 'Bash(*)') nor risky-bash-allow
+  // (regex alternation was rm|curl|wget|sudo|chmod|ssh — no '*') ever matched a fully unscoped Bash
+  // allow-rule. No shipped generator currently writes exactly 'Bash(*)'/'Bash' into .claude/settings
+  // .json (verified: web-ui's claudeSettings() hardcodes a scoped Bash(npx <name>*); host-config.ts's
+  // 'Bash(*)' push reaches only non-claude-code config shapes mcp-scan doesn't read) — this closes
+  // the config-shape blind spot as defense-in-depth, not as a report of a live generator bug.
+  it("flags 'Bash(*)' as unrestricted-bash-allow HIGH even when mcp-policy.json's allowShell is false", async () => {
+    const dir = await makeHarness({
+      policy: SAFE, // allowShell: false — this finding must come from the allow-rule itself
+      allow: ['Bash(*)'],
+      deps: { '@metaharness/kernel': '0.1.0' },
+    });
+    const r = scanMcp(dir);
+    const ids = r.findings.map((f) => f.id);
+    expect(ids).toContain('unrestricted-bash-allow');
+    expect(r.findings.find((f) => f.id === 'unrestricted-bash-allow')?.severity).toBe('high');
+    expect(r.worst).toBe('high');
+    expect(mcpScanCmd([dir]).code).toBe(1);
+  });
+
+  it("flags bare 'Bash' (no matcher) as unrestricted-bash-allow HIGH", async () => {
+    const dir = await makeHarness({
+      policy: SAFE,
+      allow: ['Bash'],
+      deps: { '@metaharness/kernel': '0.1.0' },
+    });
+    const r = scanMcp(dir);
+    expect(r.findings.map((f) => f.id)).toContain('unrestricted-bash-allow');
+    expect(r.worst).toBe('high');
+  });
+
+  it("does not conflate 'Bash(*)' with the narrower risky-bash-allow rule", async () => {
+    const dir = await makeHarness({ policy: SAFE, allow: ['Bash(*)'], deps: { '@metaharness/kernel': '0.1.0' } });
+    const r = scanMcp(dir);
+    expect(r.findings.map((f) => f.id)).not.toContain('risky-bash-allow');
+  });
+
+  // GH #209: unlike 'Bash(*)' above, this one IS live today — a real `metaharness --template
+  // vertical:ai` scaffold ships 'Bash(python *)' in its .claude/settings.json (see templates/
+  // vertical_ai/.claude/settings.json.tmpl). python/node/ruby/perl/bash/sh are arbitrary-code-
+  // execution interpreters, same risk class as the rm/curl/sudo list, but were absent from the
+  // regex's binary alternation, so the shipped pattern was previously unflagged by any check.
+  it("flags 'Bash(python *)' (the exact pattern vertical:ai's own template ships) as risky-bash-allow", async () => {
+    const dir = await makeHarness({ policy: SAFE, allow: ['Bash(python *)'], deps: { '@metaharness/kernel': '0.1.0' } });
+    const r = scanMcp(dir);
+    const ids = r.findings.map((f) => f.id);
+    expect(ids).toContain('risky-bash-allow');
+    expect(r.findings.find((f) => f.id === 'risky-bash-allow')?.severity).toBe('medium');
+  });
+
+  it("flags unscoped 'Bash(node -e *)' and 'Bash(ruby *)' as risky-bash-allow too", async () => {
+    for (const rule of ['Bash(node -e *)', 'Bash(ruby *)', 'Bash(perl *)', 'Bash(sh *)']) {
+      const dir = await makeHarness({ policy: SAFE, allow: [rule], deps: { '@metaharness/kernel': '0.1.0' } });
+      const r = scanMcp(dir);
+      expect(r.findings.map((f) => f.id), `expected ${rule} to be flagged`).toContain('risky-bash-allow');
+    }
+  });
 });
 
 // GH #4 (mutation finding): the CI security gate blocks (exit 1) iff a HIGH finding is present, so a

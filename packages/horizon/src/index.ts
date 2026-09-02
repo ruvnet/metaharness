@@ -46,3 +46,25 @@ export type {
   DriverConfig,
   TurnOutcome,
 } from './driver.js';
+
+export { verifyCompletionCertificate } from './completion.js';
+export type {
+  CompletionEvidenceEvent,
+  CompletionEvidenceRef,
+  CompletionClaim,
+  CompletionCertificate,
+  CompletionConfig,
+  CompletionReplay,
+  CompletionVerification,
+} from './completion.js';
+
+export { NodeToolExecutor, UnavailableToolExecutor, digestWorkspace } from './executor.js';
+export type {
+  ToolExecutor,
+  ToolExecutionRequest,
+  ToolExecutionResult,
+  PolicyReceipt,
+  NodeToolExecutorOptions,
+} from './executor.js';
+export { hashCheckpoint, verifyCheckpoint } from './checkpoint.js';
+export type { HorizonCheckpoint, HorizonContinuity } from './checkpoint.js';

@@ -1,6 +1,7 @@
 # ADR-157: Darwin Checkpoints — durable, resumable mutation runs
 
-**Status**: Proposed — reference implementation in `@metaharness/projects`
+**Status**: Superseded in generalized runtime scope by ADR-251 (`@metaharness/avo`); the security-loop-specific call-cache proposal remains unimplemented
+**Updated**: 2026-08-21
 **Date**: 2026-06-20
 **Project**: `ruvnet/agent-harness-generator`
 **Codename**: `DARWIN-CHECKPOINT`

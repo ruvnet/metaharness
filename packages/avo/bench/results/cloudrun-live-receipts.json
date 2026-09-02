@@ -1,0 +1,146 @@
+{
+  "generatedAt": "2026-08-21T21:25:44.972Z",
+  "model": "cognitum-low",
+  "baseUrl": "https://api.cognitum.one/v1",
+  "keySource": "gcp-secret-manager:COGNITUM_API_KEY",
+  "totalCostUsd": 0,
+  "repaired": true,
+  "actionReceipts": [
+    {
+      "kind": "inspect",
+      "verdict": "allow",
+      "exitCode": 0,
+      "costUsd": 0
+    },
+    {
+      "kind": "edit",
+      "verdict": "allow",
+      "exitCode": 0,
+      "costUsd": 0
+    },
+    {
+      "kind": "execute",
+      "verdict": "require-approval",
+      "exitCode": 0,
+      "costUsd": 0
+    },
+    {
+      "kind": "evaluate",
+      "verdict": "allow",
+      "costUsd": 0
+    },
+    {
+      "kind": "commit",
+      "verdict": "require-approval",
+      "exitCode": 0,
+      "costUsd": 0
+    },
+    {
+      "kind": "evaluate",
+      "verdict": "allow",
+      "costUsd": 0
+    },
+    {
+      "kind": "evaluate",
+      "verdict": "allow",
+      "costUsd": 0
+    },
+    {
+      "kind": "evaluate",
+      "verdict": "allow",
+      "costUsd": 0
+    },
+    {
+      "kind": "evaluate",
+      "verdict": "allow",
+      "costUsd": 0
+    },
+    {
+      "kind": "evaluate",
+      "verdict": "allow",
+      "costUsd": 0
+    }
+  ],
+  "usage": [
+    {
+      "generationId": "chatcmpl-fd307668-deee-44cb-9aea-0ab9431601f2",
+      "model": "cognitum-low",
+      "promptTokens": 181,
+      "completionTokens": 21,
+      "costUsd": 0,
+      "actionKind": "inspect"
+    },
+    {
+      "generationId": "chatcmpl-a2b06328-c6c4-477d-91e1-2e4ac594ec5c",
+      "model": "cognitum-low",
+      "promptTokens": 209,
+      "completionTokens": 45,
+      "costUsd": 0,
+      "actionKind": "edit"
+    },
+    {
+      "generationId": "chatcmpl-aa057cd6-6e81-446e-af99-9cb051dbebba",
+      "model": "cognitum-low",
+      "promptTokens": 221,
+      "completionTokens": 19,
+      "costUsd": 0,
+      "actionKind": "execute"
+    },
+    {
+      "generationId": "chatcmpl-4334f201-6d11-4f5f-8b66-2331d43c18ec",
+      "model": "cognitum-low",
+      "promptTokens": 230,
+      "completionTokens": 53,
+      "costUsd": 0,
+      "actionKind": "evaluate"
+    },
+    {
+      "generationId": "chatcmpl-a6742957-a8f0-4362-ba72-3ed82b0a58b0",
+      "model": "cognitum-low",
+      "promptTokens": 236,
+      "completionTokens": 139,
+      "costUsd": 0,
+      "actionKind": "commit"
+    },
+    {
+      "generationId": "chatcmpl-231fff7c-9383-4934-9d16-faa4289347ff",
+      "model": "cognitum-low",
+      "promptTokens": 250,
+      "completionTokens": 901,
+      "costUsd": 0,
+      "actionKind": "evaluate"
+    },
+    {
+      "generationId": "chatcmpl-35b692c9-d033-4b3f-ac16-8a9d8270190d",
+      "model": "cognitum-low",
+      "promptTokens": 256,
+      "completionTokens": 24,
+      "costUsd": 0,
+      "actionKind": "evaluate"
+    },
+    {
+      "generationId": "chatcmpl-8452867d-ba8f-4795-8e9c-8741908558d3",
+      "model": "cognitum-low",
+      "promptTokens": 262,
+      "completionTokens": 160,
+      "costUsd": 0,
+      "actionKind": "evaluate"
+    },
+    {
+      "generationId": "chatcmpl-4eedd706-4224-427d-91c8-d1c8dd15bbcc",
+      "model": "cognitum-low",
+      "promptTokens": 268,
+      "completionTokens": 136,
+      "costUsd": 0,
+      "actionKind": "evaluate"
+    },
+    {
+      "generationId": "chatcmpl-6d4d3186-4c99-47e3-b68a-1a7d4d8d6d67",
+      "model": "cognitum-low",
+      "promptTokens": 274,
+      "completionTokens": 150,
+      "costUsd": 0,
+      "actionKind": "evaluate"
+    }
+  ]
+}

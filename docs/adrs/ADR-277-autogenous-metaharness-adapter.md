@@ -1,4 +1,4 @@
-# ADR-251: Autogenous as a governed MetaHarness flywheel adapter
+# ADR-277: Autogenous as a governed MetaHarness flywheel adapter
 
 **Status**: Accepted (implemented)
 **Date**: 2026-08-17
