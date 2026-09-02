@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: MIT
-//
-// Dream Cycle 2026-08-15 (generator-genome). `genome-scorers.ts` is pure and
-// I/O-free by design ("unit-testable without fixtures" — its own header) but
-// had zero dedicated tests before this file: none of its 5 exported scorers
-// were exercised in isolation anywhere in this package. That gap hid a real
-// correctness bug (see the 'scorePublishReadiness' describe block below).
+// Dream Cycle 2026-08-30 (generator-genome) — genome-scorers.ts had ZERO unit
+// coverage on main despite feeding `harness genome`'s user-visible
+// ready/needs-work/blocked verdict and process exit code (see genome.ts).
+// This suite characterizes the 5 pure, deterministic, exported scorers.
+// It intentionally makes NO production behavior change of its own — see the
+// Dream Cycle gist/issue for #200 (open, touches scorePublishReadiness) and
+// #229 (merged 2026-09-02, touches scoreTestConfidence). The
+// scoreTestConfidence assertions below were updated post-#229 to match its
+// landed behavior (hasVerifiedTestFiles-gated credit); scorePublishReadiness's
+// assertions still characterize #200's pre-fix behavior since #200 remains
+// unmerged.
 
 import { describe, it, expect } from 'vitest';
-import { analyzeFiles, recommendPlan } from '../src/analyze-repo.js';
 import {
   classifyRepoType,
   resolveAgentTopology,
@@ -15,190 +19,252 @@ import {
   scoreTestConfidence,
   scorePublishReadiness,
 } from '../src/genome-scorers.js';
+import type { RepoProfile, HarnessPlan, PolicyProfile } from '../src/analyze-repo.js';
 
-// A "fully mature" fixture for a given language: source manifest + CI +
-// default-deny policy — the same shape the removed zz-scratch probe used to
-// demonstrate the bug. `withCi` lets the test-confidence assertions turn CI
-// on/off independently of the manifest.
-function maturedProfile(manifestPath: string, manifestBody: string, withCi = true) {
-  const files: Record<string, string> = {
-    [manifestPath]: manifestBody,
-    'README.md': '# demo\n',
+function profile(overrides: Partial<RepoProfile> = {}): RepoProfile {
+  return {
+    name: 'acme',
+    languages: [],
+    hasMcp: false,
+    hasClaude: false,
+    hasCodex: false,
+    hasCi: false,
+    buildCommands: [],
+    testCommands: [],
+    tokens: [],
+    ...overrides,
   };
-  const profile = analyzeFiles('demo', files);
-  profile.hasCi = withCi;
-  const plan = recommendPlan(profile);
-  return { profile, plan };
 }
 
+const SAFE_POLICY: PolicyProfile = {
+  defaultDeny: true,
+  allowNetwork: false,
+  allowShell: false,
+  allowFileWrite: false,
+  requireApprovalForDangerous: true,
+  toolTimeoutMs: 30_000,
+  maxToolCallsPerTurn: 8,
+  auditLog: true,
+};
+
+function plan(overrides: Partial<HarnessPlan> = {}): HarnessPlan {
+  return {
+    name: 'acme',
+    hosts: ['claude-code'],
+    template: 'minimal',
+    archetypeId: 'typescript-sdk-harness',
+    confidence: 0.5,
+    engine: 'lexical',
+    agents: [],
+    skills: [],
+    commands: [],
+    mcp: 'off',
+    policy: SAFE_POLICY,
+    riskProfile: 'default-deny',
+    suggestedCommands: [],
+    ...overrides,
+  };
+}
+
+// --- classifyRepoType -------------------------------------------------------
+
 describe('classifyRepoType', () => {
-  it('tags a lone-language repo with just that language', () => {
-    const { profile } = maturedProfile('go.mod', 'module demo\n\ngo 1.21\n');
-    expect(classifyRepoType(profile)).toBe('go_ci');
+  it('returns "unknown" when no known language is detected', () => {
+    expect(classifyRepoType(profile())).toBe('unknown');
   });
 
-  it('tags rust+typescript as polyglot, sorted, deduplicated', () => {
-    const files = { 'Cargo.toml': '[package]\nname="x"', 'package.json': '{"name":"x"}' };
-    const profile = analyzeFiles('demo', files);
-    expect(classifyRepoType(profile)).toBe('rust_node_polyglot');
+  it('tags a single language directly', () => {
+    expect(classifyRepoType(profile({ languages: ['python'] }))).toBe('python');
+    expect(classifyRepoType(profile({ languages: ['go'] }))).toBe('go');
   });
 
-  it('falls back to "unknown" when no language is detected', () => {
-    const profile = analyzeFiles('demo', { 'README.md': '# demo' });
-    expect(classifyRepoType(profile)).toBe('unknown');
+  it('is order-independent (sorts languages before mapping)', () => {
+    const a = classifyRepoType(profile({ languages: ['typescript', 'rust'] }));
+    const b = classifyRepoType(profile({ languages: ['rust', 'typescript'] }));
+    expect(a).toBe(b);
+  });
+
+  it('adds "polyglot" only for the rust+typescript combination', () => {
+    expect(classifyRepoType(profile({ languages: ['rust', 'typescript'] }))).toBe('rust_node_polyglot');
+    // rust+python is NOT flagged polyglot by current logic — locking in today's behavior.
+    expect(classifyRepoType(profile({ languages: ['rust', 'python'] }))).toBe('rust_python');
+  });
+
+  it('appends mcp and ci tags independently of language', () => {
+    expect(classifyRepoType(profile({ languages: ['go'], hasMcp: true }))).toBe('go_mcp');
+    expect(classifyRepoType(profile({ languages: ['go'], hasCi: true }))).toBe('go_ci');
+    expect(classifyRepoType(profile({ languages: ['go'], hasMcp: true, hasCi: true }))).toBe('go_mcp_ci');
+  });
+
+  it('is deterministic for the same input', () => {
+    const p = profile({ languages: ['rust', 'typescript'], hasMcp: true, hasCi: true });
+    expect(classifyRepoType(p)).toBe(classifyRepoType(p));
   });
 });
+
+// --- resolveAgentTopology ----------------------------------------------------
 
 describe('resolveAgentTopology', () => {
-  it('always includes maintainer, even for a signal-free repo', () => {
-    const { profile, plan } = maturedProfile('README.md', '# demo', false);
-    const topo = resolveAgentTopology(profile, plan);
-    expect(topo).toContain('maintainer');
+  it('always includes "maintainer", even for a bare repo', () => {
+    expect(resolveAgentTopology(profile(), plan())).toEqual(['maintainer']);
   });
 
-  it('adds tester when test commands or CI are present', () => {
-    const { profile, plan } = maturedProfile('go.mod', 'module demo\n\ngo 1.21\n', true);
-    expect(resolveAgentTopology(profile, plan)).toContain('tester');
+  it('adds "tester" when testCommands are present', () => {
+    const t = resolveAgentTopology(profile({ testCommands: ['npm test'] }), plan());
+    expect(t).toContain('tester');
   });
 
-  it('returns a stable, deduplicated subset of the 4 canonical roles', () => {
-    const { profile, plan } = maturedProfile('Cargo.toml', '[package]\nname="x"', true);
-    const topo = resolveAgentTopology(profile, plan);
-    expect(new Set(topo).size).toBe(topo.length);
-    for (const role of topo) expect(['maintainer', 'tester', 'security', 'release']).toContain(role);
+  it('adds "tester" from hasCi alone, with zero test commands', () => {
+    const t = resolveAgentTopology(profile({ hasCi: true }), plan());
+    expect(t).toContain('tester');
+  });
+
+  it('adds "security" when the profile has MCP signals', () => {
+    const t = resolveAgentTopology(profile({ hasMcp: true }), plan());
+    expect(t).toContain('security');
+  });
+
+  it('adds "security" from plan.mcp local/remote even without a profile MCP signal', () => {
+    expect(resolveAgentTopology(profile(), plan({ mcp: 'local' }))).toContain('security');
+    expect(resolveAgentTopology(profile(), plan({ mcp: 'remote' }))).toContain('security');
+    expect(resolveAgentTopology(profile(), plan({ mcp: 'off' }))).not.toContain('security');
+  });
+
+  it('adds "release" only when hasCi is true', () => {
+    expect(resolveAgentTopology(profile({ hasCi: true }), plan())).toContain('release');
+    expect(resolveAgentTopology(profile({ hasCi: false }), plan())).not.toContain('release');
+  });
+
+  it('returns a deduplicated, stable set for a fully-signaled repo', () => {
+    const t = resolveAgentTopology(
+      profile({ testCommands: ['npm test'], hasCi: true, hasMcp: true }),
+      plan({ mcp: 'local' }),
+    );
+    expect(new Set(t).size).toBe(t.length);
+    expect(t.sort()).toEqual(['maintainer', 'release', 'security', 'tester']);
   });
 });
+
+// --- scoreMcpRisk -------------------------------------------------------------
 
 describe('scoreMcpRisk', () => {
-  it('orders numeric risk: local_default_deny < local_permissive < remote', () => {
-    const { profile } = maturedProfile('go.mod', 'module demo\n\ngo 1.21\n');
-    const denyPlan = recommendPlan(profile);
-    denyPlan.mcp = 'local';
-    denyPlan.policy = { ...denyPlan.policy, defaultDeny: true, allowShell: false, allowNetwork: false, allowFileWrite: false };
-    const permissivePlan = { ...denyPlan, policy: { ...denyPlan.policy, defaultDeny: false, allowShell: true } };
-    const remotePlan = { ...denyPlan, mcp: 'remote' as const };
-
-    const deny = scoreMcpRisk(profile, denyPlan);
-    const permissive = scoreMcpRisk(profile, permissivePlan);
-    const remote = scoreMcpRisk(profile, remotePlan);
-
-    expect(deny.surface).toBe('local_default_deny');
-    expect(permissive.surface).toBe('local_permissive');
-    expect(remote.surface).toBe('remote');
-    expect(deny.numeric).toBeLessThan(permissive.numeric);
-    expect(permissive.numeric).toBeLessThan(remote.numeric);
+  it('scores plan.mcp "off" as zero risk regardless of policy', () => {
+    expect(scoreMcpRisk(profile(), plan({ mcp: 'off' }))).toEqual({ surface: 'off', numeric: 0 });
   });
 
-  it('mcp:"off" scores zero risk', () => {
-    const { profile } = maturedProfile('go.mod', 'module demo\n\ngo 1.21\n');
-    const plan = recommendPlan(profile);
-    plan.mcp = 'off';
-    expect(scoreMcpRisk(profile, plan)).toEqual({ surface: 'off', numeric: 0 });
+  it('scores plan.mcp "remote" at a fixed 0.6 regardless of policy', () => {
+    const risk = scoreMcpRisk(profile(), plan({ mcp: 'remote', policy: { ...SAFE_POLICY, allowShell: true } }));
+    expect(risk).toEqual({ surface: 'remote', numeric: 0.6 });
+  });
+
+  it('scores local + default-deny (no permissive flags) as low risk', () => {
+    const risk = scoreMcpRisk(profile(), plan({ mcp: 'local', policy: SAFE_POLICY }));
+    expect(risk).toEqual({ surface: 'local_default_deny', numeric: 0.15 });
+  });
+
+  it.each([
+    ['allowShell', { allowShell: true }],
+    ['allowNetwork', { allowNetwork: true }],
+    ['allowFileWrite', { allowFileWrite: true }],
+    ['defaultDeny=false', { defaultDeny: false }],
+  ])('scores local + %s as local_permissive (0.45)', (_label, override) => {
+    const risk = scoreMcpRisk(profile(), plan({ mcp: 'local', policy: { ...SAFE_POLICY, ...override } }));
+    expect(risk).toEqual({ surface: 'local_permissive', numeric: 0.45 });
+  });
+
+  it('the local_permissive branch is exercisable here only via a hand-built plan.policy — recommendPlan() always assigns the hardcoded SAFE policy in production, so this branch is currently unreachable through the real genome CLI path (dead code / latent gap, not exercised by any existing caller)', () => {
+    const risk = scoreMcpRisk(profile(), plan({ mcp: 'local', policy: { ...SAFE_POLICY, allowShell: true } }));
+    expect(risk.surface).toBe('local_permissive');
   });
 });
+
+// --- scoreTestConfidence -------------------------------------------------------
 
 describe('scoreTestConfidence', () => {
-  it('is 0 with no test commands and no CI', () => {
-    const { profile } = maturedProfile('README.md', '# demo', false);
-    expect(scoreTestConfidence(profile)).toBe(0);
+  it('scores 0 for a repo with no test commands and no CI', () => {
+    expect(scoreTestConfidence(profile())).toBe(0);
   });
 
-  // Post-#229: inferred testCommands never earn confidence on their own, however
-  // many of them a manifest implies. This repo has Cargo.toml + go.mod and so
-  // infers 2 test commands, but has no test files at all — CI presence alone is
-  // worth the small "infra exists but unconfirmed" credit, nothing more.
-  it('>=2 inferred test commands AND CI still score only the unconfirmed credit without real test files', () => {
-    const files = { 'Cargo.toml': '[package]\nname="x"', 'go.mod': 'module x\n\ngo 1.21\n' };
-    const profile = analyzeFiles('demo', files);
-    profile.hasCi = true;
-    // cargo test + go test ./... => 2 distinct test commands
-    expect(profile.testCommands.length).toBeGreaterThanOrEqual(2);
-    expect(profile.hasVerifiedTestFiles).toBeFalsy();
-    expect(scoreTestConfidence(profile)).toBe(0.1);
+  it('a single declared test command with no verified test files earns no credit (post-#229: declared-only is no longer trusted)', () => {
+    expect(scoreTestConfidence(profile({ testCommands: ['npm test'] }))).toBe(0);
   });
 
-  // Post-#229: no CI and no verified test files => zero, not the old 0.5 that a
-  // single manifest-inferred command used to buy.
-  it('a single inferred test command without CI or real test files scores 0', () => {
-    const { profile } = maturedProfile('go.mod', 'module demo\n\ngo 1.21\n', false);
-    expect(profile.testCommands.length).toBe(1);
-    expect(profile.hasVerifiedTestFiles).toBeFalsy();
-    expect(scoreTestConfidence(profile)).toBe(0);
+  it('a second declared test command still earns no credit without verified test files (post-#229)', () => {
+    expect(scoreTestConfidence(profile({ testCommands: ['npm test', 'cargo test'] }))).toBe(0);
+  });
+
+  it('CI presence alone earns a small 0.1 "unconfirmed" credit, not additive with declared-only test commands (post-#229)', () => {
+    expect(scoreTestConfidence(profile({ hasCi: true }))).toBeCloseTo(0.1);
+    expect(scoreTestConfidence(profile({ testCommands: ['npm test'], hasCi: true }))).toBeCloseTo(0.1);
+  });
+
+  it('maximal declared-only signals (multiple test commands + CI) without verified test files still cap at 0.1, not 1 (post-#229)', () => {
+    const p = profile({ testCommands: ['npm test', 'cargo test', 'pytest'], hasCi: true });
+    expect(scoreTestConfidence(p)).toBe(0.1);
+  });
+
+  it('#229 closed the gap: declared test commands with no real test files now score 0, not the same as real coverage', () => {
+    // Previously this scored identically to a repo with real test files
+    // (0.5) — #229 gated the base credit on `hasVerifiedTestFiles`, a real
+    // tests/__tests__/test directory scan. This pins the fix from the other
+    // side: the "documented gap" this test used to characterize is closed.
+    const claimedOnly = profile({ testCommands: ['npm test'] });
+    expect(scoreTestConfidence(claimedOnly)).toBe(0);
   });
 });
 
-describe('scorePublishReadiness — Dream Cycle 2026-08-15 fix', () => {
-  // Before tonight's fix, this function credited language detection only for
-  // 'typescript' (+0.3) and 'rust' (+0.15); every other language in
-  // RepoProfile['languages'] (python, go) got +0, and analyze-repo.ts never
-  // generated a build command for python/go either, so their `+0.2`
-  // buildable bonus was structurally unreachable too. A fully mature
-  // (CI-wired, tested, buildable, locked-down) python or go repo capped at
-  // 0.40 — genome.ts's 'ready' verdict requires >=0.75, so no pure-python or
-  // pure-go repo could ever reach 'ready', independent of actual quality.
+// --- scorePublishReadiness -----------------------------------------------------
 
-  it('a fully mature typescript repo reaches ready-threshold readiness (regression guard)', () => {
-    const { profile, plan } = maturedProfile('package.json', JSON.stringify({ name: 'x', scripts: { build: 'tsc', test: 'vitest run' } }));
-    expect(scorePublishReadiness(profile, plan)).toBeGreaterThanOrEqual(0.75);
+describe('scorePublishReadiness', () => {
+  it('scores 0 for an empty profile with a default-deny=false policy', () => {
+    const p = plan({ policy: { ...SAFE_POLICY, defaultDeny: false } });
+    expect(scorePublishReadiness(profile(), p)).toBe(0);
   });
 
-  it('a fully mature python repo now reaches ready-threshold readiness (was capped at 0.40)', () => {
-    const { profile, plan } = maturedProfile('pyproject.toml', '[project]\nname = "demo-py"\n');
-    expect(profile.buildCommands.length).toBeGreaterThan(0); // build command now inferred for python
-    expect(scorePublishReadiness(profile, plan)).toBeGreaterThanOrEqual(0.75);
+  // #200 replaced the typescript(0.3)/rust(0.15) allow-list with a flat +0.3 for
+  // ANY detected language, so the credit no longer varies by which one it is.
+  it('#200: any detected language earns the same flat credit, not a per-language amount', () => {
+    const ts = scorePublishReadiness(profile({ languages: ['typescript'] }), plan());
+    const rs = scorePublishReadiness(profile({ languages: ['rust'] }), plan());
+    expect(ts).toBeCloseTo(0.3 + 0.05); // language 0.3 + policy.defaultDeny 0.05
+    expect(rs).toBeCloseTo(0.3 + 0.05); // rust is no longer discounted to 0.15
+    expect(rs).toBeCloseTo(ts);
   });
 
-  it('a fully mature go repo now reaches ready-threshold readiness (was capped at 0.40)', () => {
-    const { profile, plan } = maturedProfile('go.mod', 'module demo-go\n\ngo 1.21\n');
-    expect(profile.buildCommands.length).toBeGreaterThan(0); // build command now inferred for go
-    expect(scorePublishReadiness(profile, plan)).toBeGreaterThanOrEqual(0.75);
+  // #200 CLOSED this gap. Inverted rather than deleted, so the fix stays pinned
+  // from the other side: a python repo now earns the same language credit as any
+  // other, which is what let it clear genome.ts's 0.75 'ready' threshold.
+  it('#200 closed the gap: python/go now earn language credit like any other language', () => {
+    const p = profile({ languages: ['python'], buildCommands: ['pytest --collect-only'], testCommands: ['pytest'], hasCi: true });
+    const score = scorePublishReadiness(p, plan());
+    // language(0.3) + build(0.2) + test(0.15) + ci(0.2) + policy.defaultDeny(0.05) = 0.9
+    expect(score).toBeCloseTo(0.9);
+    expect(score).toBeGreaterThanOrEqual(0.75); // clears the 'ready' threshold
   });
 
-  it('a fully mature rust repo does not regress (still >= its pre-fix score)', () => {
-    const { profile, plan } = maturedProfile('Cargo.toml', '[package]\nname = "demo-rs"\n');
-    // pre-fix rust score with build+test+ci+defaultDeny was 0.75 exactly
-    expect(scorePublishReadiness(profile, plan)).toBeGreaterThanOrEqual(0.75);
+  it('credits buildCommands, testCommands, hasCi, and policy.defaultDeny independently', () => {
+    expect(scorePublishReadiness(profile({ buildCommands: ['tsc'] }), plan())).toBeCloseTo(0.2 + 0.05);
+    expect(scorePublishReadiness(profile({ testCommands: ['npm test'] }), plan())).toBeCloseTo(0.15 + 0.05);
+    expect(scorePublishReadiness(profile({ hasCi: true }), plan())).toBeCloseTo(0.2 + 0.05);
   });
 
-  it('an immature repo (no CI, no build, no tests) still scores low regardless of language', () => {
-    const profile = analyzeFiles('demo', { 'pyproject.toml': '[project]\nname = "x"\n' });
-    profile.hasCi = false;
-    const plan = recommendPlan(profile);
-    // Only language credit (0.3) + whatever defaultDeny contributes; testCommands
-    // is non-empty for python (pytest is inferred from language alone), so this
-    // is intentionally a partial-maturity case, not a zero case.
-    expect(scorePublishReadiness(profile, plan)).toBeLessThan(0.75);
+  it('policy.defaultDeny contributes only 0.05', () => {
+    const denyOff = plan({ policy: { ...SAFE_POLICY, defaultDeny: false } });
+    const denyOn = plan({ policy: { ...SAFE_POLICY, defaultDeny: true } });
+    expect(scorePublishReadiness(profile(), denyOn) - scorePublishReadiness(profile(), denyOff)).toBeCloseTo(0.05);
   });
 
-  it('is monotonic: adding CI never lowers the score', () => {
-    const { profile: withoutCi, plan: planA } = maturedProfile('go.mod', 'module demo\n\ngo 1.21\n', false);
-    const { profile: withCi, plan: planB } = maturedProfile('go.mod', 'module demo\n\ngo 1.21\n', true);
-    expect(scorePublishReadiness(withCi, planB)).toBeGreaterThanOrEqual(scorePublishReadiness(withoutCi, planA));
-  });
-
-  it('never exceeds 1 regardless of input', () => {
-    const { profile, plan } = maturedProfile('package.json', JSON.stringify({ name: 'x', scripts: { build: 'tsc', test: 'vitest run' } }));
-    expect(scorePublishReadiness(profile, plan)).toBeLessThanOrEqual(1);
-  });
-
-  it('generalizes to a language analyze-repo.ts does not detect today (closes the allow-list class of bug, not just today\'s 2 languages)', () => {
-    // analyzeFiles() only ever populates 'rust'|'typescript'|'python'|'go', so
-    // this constructs a RepoProfile by hand to prove the fix is a genuine
-    // generalization ("any detected language") and not a 4-language
-    // allow-list wearing a generalization's clothing — the adversarial
-    // critic flagged that the other tests here can't distinguish the two.
-    const { plan } = maturedProfile('go.mod', 'module demo\n\ngo 1.21\n');
-    const hypotheticalProfile = {
-      name: 'demo',
-      languages: ['zig'], // a language this codebase has never heard of
-      hasMcp: false,
-      hasClaude: false,
-      hasCodex: false,
+  it('caps the total at 1 for a maximally-signaled repo', () => {
+    const p = profile({
+      languages: ['typescript', 'rust'],
+      buildCommands: ['tsc', 'cargo build'],
+      testCommands: ['npm test', 'cargo test'],
       hasCi: true,
-      buildCommands: ['zig build'],
-      testCommands: ['zig test'],
-      tokens: [],
-    };
-    expect(scorePublishReadiness(hypotheticalProfile, plan)).toBeGreaterThanOrEqual(0.75);
+    });
+    // Post-#200 the language credit is flat 0.3 rather than 0.3+0.15 additive, so
+    // the maximal repo now totals 0.9: language(0.3) + build(0.2) + test(0.15) +
+    // ci(0.2) + policy(0.05). The Math.min(1, ...) cap is still in place; this
+    // input simply no longer reaches it.
+    expect(scorePublishReadiness(p, plan())).toBeCloseTo(0.9);
   });
 });
