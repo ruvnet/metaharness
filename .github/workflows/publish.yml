@@ -55,6 +55,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
       - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4
         with:
           targets: ${{ matrix.target }}
@@ -83,6 +85,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
       - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4
         with:
           targets: wasm32-unknown-unknown
@@ -113,6 +117,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+          fetch-depth: 0
+      - name: Bind release to the exact tag SHA
+        id: release-sha
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::release tag is not an explicit vMAJOR.MINOR.PATCH tag"
+            exit 1
+          fi
+          tag_sha="$(git rev-list -n 1 "refs/tags/$RELEASE_TAG")"
+          head_sha="$(git rev-parse HEAD)"
+          if [[ -z "$tag_sha" || "$tag_sha" != "$head_sha" ]]; then
+            echo "::error::checked-out commit $head_sha does not equal tag $RELEASE_TAG commit $tag_sha"
+            exit 1
+          fi
+          echo "sha=$head_sha" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '20'
@@ -148,6 +173,20 @@ jobs:
           npm run test
           node scripts/smoke.mjs
 
+      - name: Pack the exact AVO release artifact
+        id: avo-artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist-release
+          package_file="$(npm pack --silent --workspace @metaharness/avo --pack-destination dist-release)"
+          artifact_path="dist-release/$package_file"
+          if [[ "$package_file" == *$'\n'* || ! -f "$artifact_path" ]]; then
+            echo "::error::npm pack did not produce exactly one AVO tarball"
+            exit 1
+          fi
+          echo "path=$artifact_path" >> "$GITHUB_OUTPUT"
+
       # ─────────────────────────────────────────────────────────────────
       # PRE-PUBLISH GATES (iter 18 + 20)
       # ─────────────────────────────────────────────────────────────────
@@ -163,7 +202,16 @@ jobs:
           # REQUIRED_SECRETS: PINATA_JWT
         run: node scripts/validate-gcp-secrets.mjs
 
-      - name: Gate 2 — npm publish dry-run on every package
+      - name: Gate 2 — exact-SHA AVO release claims
+        env:
+          AVO_RELEASE_SHA: ${{ steps.release-sha.outputs.sha }}
+          AVO_RELEASE_TARBALL: ${{ steps.avo-artifact.outputs.path }}
+          # Required for performance/frontier claims. This protected repository
+          # or environment variable pins the complete authority/grader policy.
+          AVO_CLAIM_TRUST_POLICY_HASH: ${{ vars.AVO_CLAIM_TRUST_POLICY_HASH }}
+        run: node scripts/avo-claim-gate.mjs
+
+      - name: Gate 3 — npm publish dry-run on every package
         run: node scripts/publish-dryrun.mjs
 
       # ─────────────────────────────────────────────────────────────────
@@ -185,6 +233,8 @@ jobs:
         # publishes versions that aren't there yet.
         env:
           NODE_AUTH_TOKEN: ${{ steps.secrets.outputs.npm_token }}
+          # publish-workspace consumes the same tarball hashed by Gate 2.
+          AVO_RELEASE_TARBALL: ${{ steps.avo-artifact.outputs.path }}
         run: node scripts/publish-workspace.mjs
 
       # ─────────────────────────────────────────────────────────────────

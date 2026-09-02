@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+      --surface: var(--color-background-primary, #101216);
+      --surface-2: var(--color-background-secondary, #191d24);
+      --text: var(--color-text-primary, #f4f7fb);
+      --muted: var(--color-text-secondary, #aeb7c4);
+      --border: var(--color-border-secondary, #343b47);
+      --accent: #67d5ff;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-width: 220px; background: var(--surface); color: var(--text); }
+    body { padding: 10px; }
+    main { display: grid; gap: 9px; min-height: 180px; }
+    header, nav, .facts { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+    header { justify-content: space-between; }
+    h1 { margin: 0; font-size: 14px; letter-spacing: .02em; }
+    button {
+      border: 1px solid var(--border); border-radius: 7px; padding: 5px 8px;
+      background: var(--surface-2); color: var(--text); cursor: pointer;
+    }
+    button:disabled { cursor: default; opacity: .45; }
+    .stage {
+      display: grid; place-items: center; overflow: hidden; min-height: 112px;
+      border: 1px solid var(--border); border-radius: 9px; background: #0a0b0d;
+      padding: 8px;
+    }
+    canvas {
+      display: block; image-rendering: pixelated; image-rendering: crisp-edges;
+      max-width: 100%; max-height: min(66vh, 640px); width: auto; height: auto;
+      aspect-ratio: var(--frame-aspect, 1);
+    }
+    .fact {
+      font: 11px/1.3 var(--font-mono, ui-monospace, monospace);
+      border: 1px solid var(--border); border-radius: 999px; padding: 3px 7px;
+      background: var(--surface-2); white-space: nowrap;
+    }
+    .hash { overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .status { min-height: 18px; color: var(--muted); font-size: 11px; }
+    @media (max-width: 340px) {
+      body { padding: 6px; }
+      .optional { display: none; }
+      .stage { padding: 4px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Exact ARC canvas</h1>
+      <nav aria-label="Display controls">
+        <button id="previous" type="button" aria-label="Previous exact frame">◀</button>
+        <span id="frame-counter" class="fact">0 / 0</span>
+        <button id="next" type="button" aria-label="Next exact frame">▶</button>
+        <button id="pip" type="button" class="optional">PIP</button>
+        <button id="fullscreen" type="button" class="optional">Full</button>
+      </nav>
+    </header>
+    <section class="stage" aria-label="Authoritative exact grid frame">
+      <canvas id="grid" width="1" height="1"></canvas>
+    </section>
+    <section class="facts" aria-label="Exact episode facts">
+      <span id="state" class="fact">state unavailable</span>
+      <span id="levels" class="fact">levels unavailable</span>
+      <span id="actions" class="fact">actions unavailable</span>
+    </section>
+    <div id="hash" class="fact hash">observation unavailable</div>
+    <div id="status" class="status" role="status">Waiting for an authoritative arc_render result.</div>
+  </main>
+  <script>
+    (() => {
+      'use strict';
+      const PROTOCOL_VERSION = '2026-01-26';
+      const COLORS = [
+        '#000000', '#0074D9', '#FF4136', '#2ECC40',
+        '#FFDC00', '#AAAAAA', '#F012BE', '#FF851B',
+        '#7FDBFF', '#870C25', '#5B5B5B', '#B10DC9',
+        '#3D9970', '#01FF70', '#FFB700', '#FFFFFF',
+      ];
+      const canvas = document.getElementById('grid');
+      const context = canvas.getContext('2d', { alpha: false });
+      context.imageSmoothingEnabled = false;
+      const pending = new Map();
+      let nextRequestId = 1;
+      let frames = [];
+      let selected = 0;
+      let observation = null;
+
+      function send(message) {
+        window.parent.postMessage(message, '*');
+      }
+
+      function request(method, params) {
+        const id = nextRequestId++;
+        send({ jsonrpc: '2.0', id, method, params });
+        return new Promise((resolve, reject) => pending.set(id, { resolve, reject }));
+      }
+
+      function notify(method, params = {}) {
+        send({ jsonrpc: '2.0', method, params });
+      }
+
+      function setTheme(theme) {
+        if (theme === 'light' || theme === 'dark') {
+          document.documentElement.dataset.theme = theme;
+          document.documentElement.style.colorScheme = theme;
+        }
+      }
+
+      function exactFrame(candidate) {
+        if (!candidate || candidate.encoding !== 'hex_rows_v1') return null;
+        if (!Number.isInteger(candidate.width) || !Number.isInteger(candidate.height)) return null;
+        if (candidate.width < 1 || candidate.height < 1 || !Array.isArray(candidate.rows)) return null;
+        if (candidate.rows.length !== candidate.height) return null;
+        if (candidate.rows.some((row) => typeof row !== 'string' || row.length !== candidate.width || !/^[0-9a-f]+$/i.test(row))) return null;
+        return candidate;
+      }
+
+      function draw() {
+        const frame = exactFrame(frames[selected]);
+        if (!frame) {
+          canvas.width = 1;
+          canvas.height = 1;
+          context.fillStyle = '#000';
+          context.fillRect(0, 0, 1, 1);
+          document.getElementById('status').textContent = 'No valid exact hex_rows_v1 frame was supplied.';
+          return;
+        }
+        canvas.width = frame.width;
+        canvas.height = frame.height;
+        canvas.style.setProperty('--frame-aspect', `${frame.width} / ${frame.height}`);
+        context.imageSmoothingEnabled = false;
+        for (let y = 0; y < frame.height; y += 1) {
+          const row = frame.rows[y];
+          for (let x = 0; x < frame.width; x += 1) {
+            context.fillStyle = COLORS[Number.parseInt(row[x], 16)];
+            context.fillRect(x, y, 1, 1);
+          }
+        }
+        document.getElementById('frame-counter').textContent = `${selected + 1} / ${frames.length}`;
+        document.getElementById('previous').disabled = selected === 0;
+        document.getElementById('next').disabled = selected >= frames.length - 1;
+        document.getElementById('status').textContent = `Exact frame ${frame.frameIndex}; no interpolation or inferred cells.`;
+      }
+
+      function render(structuredContent) {
+        const candidate = structuredContent && structuredContent.observation;
+        if (!candidate || typeof candidate !== 'object') return;
+        observation = candidate;
+        frames = Array.isArray(candidate.frames) ? candidate.frames.filter(exactFrame) : [];
+        const current = exactFrame(candidate.currentFrame);
+        if (current && !frames.some((frame) => frame.frameHash === current.frameHash)) frames.push(current);
+        selected = Math.max(0, frames.findIndex((frame) => current && frame.frameHash === current.frameHash));
+        document.getElementById('state').textContent = `state ${String(candidate.state)}`;
+        document.getElementById('levels').textContent = `levels ${String(candidate.levelsCompleted)} / ${String(candidate.winLevels)}`;
+        document.getElementById('actions').textContent = `actions ${Array.isArray(candidate.availableActions) ? candidate.availableActions.join(', ') : 'unavailable'}`;
+        document.getElementById('hash').textContent = `observation ${String(candidate.observationHash)}`;
+        draw();
+      }
+
+      window.addEventListener('message', (event) => {
+        if (event.source !== window.parent) return;
+        const message = event.data;
+        if (!message || message.jsonrpc !== '2.0') return;
+        if (Object.prototype.hasOwnProperty.call(message, 'id') && (message.result !== undefined || message.error)) {
+          const waiter = pending.get(message.id);
+          if (!waiter) return;
+          pending.delete(message.id);
+          if (message.error) waiter.reject(new Error('host request failed'));
+          else waiter.resolve(message.result);
+          return;
+        }
+        if (message.method === 'ui/notifications/tool-result') {
+          render(message.params && message.params.structuredContent);
+        } else if (message.method === 'ui/notifications/host-context-changed') {
+          setTheme(message.params && message.params.theme);
+        } else if (message.method === 'ui/resource-teardown' && message.id !== undefined) {
+          send({ jsonrpc: '2.0', id: message.id, result: {} });
+        }
+      });
+
+      document.getElementById('previous').addEventListener('click', () => {
+        if (selected > 0) { selected -= 1; draw(); }
+      });
+      document.getElementById('next').addEventListener('click', () => {
+        if (selected + 1 < frames.length) { selected += 1; draw(); }
+      });
+      document.getElementById('pip').addEventListener('click', () => {
+        request('ui/request-display-mode', { mode: 'pip' }).catch(() => {});
+      });
+      document.getElementById('fullscreen').addEventListener('click', () => {
+        request('ui/request-display-mode', { mode: 'fullscreen' }).catch(() => {});
+      });
+
+      if ('ResizeObserver' in window) {
+        let lastWidth = 0;
+        let lastHeight = 0;
+        new ResizeObserver(() => {
+          const width = Math.ceil(document.documentElement.scrollWidth);
+          const height = Math.ceil(document.documentElement.scrollHeight);
+          if (width !== lastWidth || height !== lastHeight) {
+            lastWidth = width;
+            lastHeight = height;
+            notify('ui/notifications/size-changed', { width, height });
+          }
+        }).observe(document.body);
+      }
+
+      request('ui/initialize', {
+        appInfo: { name: 'metaharness-arc-exact-canvas', version: '0.1.0' },
+        appCapabilities: { availableDisplayModes: ['inline', 'fullscreen', 'pip'] },
+        protocolVersion: PROTOCOL_VERSION,
+      }).then((result) => {
+        setTheme(result && result.hostContext && result.hostContext.theme);
+        notify('ui/notifications/initialized');
+      }).catch(() => {
+        document.getElementById('status').textContent = 'MCP Apps host bridge unavailable.';
+      });
+    })();
+  </script>
+</body>
+</html>

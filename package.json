@@ -23,13 +23,16 @@
   "scripts": {
     "build": "node scripts/build-ordered.mjs",
     "test": "npm run -ws --if-present test",
+    "check:coverage": "node scripts/check-runner-coverage.mjs",
     "lint": "npm run -ws --if-present lint",
     "build:wasm": "npm run build:wasm --workspace @metaharness/kernel",
     "build:napi": "cd crates/kernel-napi && napi build --platform --release --output-dir ../../packages/kernel-js/native",
     "test:rust": "cargo test --workspace",
     "fmt:rust": "cargo fmt --all",
     "clippy": "cargo clippy --workspace --all-targets -- -D warnings",
+    "claims:avo": "node scripts/avo-claim-gate.mjs",
     "smoke": "node scripts/smoke.mjs",
+    "benchmark:arc-avo-long-horizon": "npm run build && node scripts/benchmark-arc-avo-long-horizon.mjs",
     "pretest": "npm run build"
   },
   "devDependencies": {

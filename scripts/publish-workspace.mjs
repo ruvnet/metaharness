@@ -15,9 +15,9 @@
 // Run as: node scripts/publish-workspace.mjs [--dry-run]
 // Used as: publish.yml's single publish step (NODE_AUTH_TOKEN in env).
 
-import { readFile } from 'node:fs/promises';
+import { readFile, realpath, stat } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import { execFile as execFileCb } from 'node:child_process';
 import { promisify } from 'node:util';
 
@@ -43,6 +43,7 @@ export const RELEASE_ORDER = [
   'vertical-trading',
   'field-memory',
   'create-agent-harness',
+  'avo',
 ];
 
 function log(tag, msg) { process.stderr.write(`[publish-workspace] ${tag}: ${msg}\n`); }
@@ -78,8 +79,10 @@ async function viewVersion(name, version) {
   }
 }
 
-async function publishOne(dir) {
-  const args = ['publish', '--provenance', '--access', 'public'];
+async function publishOne(dir, releaseTarball) {
+  const args = ['publish'];
+  if (releaseTarball) args.push(releaseTarball);
+  args.push('--provenance', '--access', 'public');
   if (DRY) args.push('--dry-run');
   const [bin, finalArgs] = process.platform === 'win32'
     ? ['cmd.exe', ['/d', '/s', '/c', 'npm', ...args]]
@@ -87,10 +90,26 @@ async function publishOne(dir) {
   await execFile(bin, finalArgs, { cwd: dir });
 }
 
+async function exactAvoReleaseTarball() {
+  const requested = process.env.AVO_RELEASE_TARBALL;
+  if (!requested) return undefined;
+  const resolved = await realpath(resolve(ROOT, requested));
+  const repositoryRelative = relative(ROOT, resolved);
+  const details = await stat(resolved);
+  if (repositoryRelative === '..'
+    || repositoryRelative.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`)
+    || !details.isFile()
+    || !resolved.endsWith('.tgz')) {
+    throw new Error('AVO_RELEASE_TARBALL must be a repository-confined .tgz file');
+  }
+  return resolved;
+}
+
 async function main() {
   const published = [];
   const skipped = [];
   const failed = [];
+  const avoReleaseTarball = await exactAvoReleaseTarball();
 
   for (const dirName of RELEASE_ORDER) {
     const dir = join(ROOT, 'packages', dirName);
@@ -115,7 +134,7 @@ async function main() {
     }
     log('PUBLISH', `${spec}${DRY ? ' (dry-run)' : ''}`);
     try {
-      await publishOne(dir);
+      await publishOne(dir, dirName === 'avo' ? avoReleaseTarball : undefined);
       published.push(spec);
     } catch (err) {
       // A concurrent publish of the same version loses the race with E403;

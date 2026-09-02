@@ -27,6 +27,49 @@ npx metaharness my-legal-bot \
   --description "Contract redline + risk rating"
 ```
 
+Add the forthcoming field-memory package only when the harness needs shared,
+history-dependent routing:
+
+```bash
+npx metaharness my-bot --field-memory
+```
+
+`--field-memory` is opt-in and currently depends on the upstream
+`@metaharness/field-memory@^0.1.0` package PR. It adds
+`src/field-memory.ts`, the runtime dependency, and a machine-readable
+`manifest.field_memory` block. The generated bootstrap uses packed storage,
+requires three distinct verifier-derived principals, disables hysteresis,
+enables a bounded drift window, and fails closed until the deployment supplies an
+absolute storage path, storage adapter, and principal verifier backed by
+deployment authentication. It also requires a deployment-secret
+`identityHashKey` of at least 32 bytes, reused after state restore. No database
+path, identity, secret, credential, or principal proof is generated.
+For RuVector-backed storage, the package adapter requires a
+configuration-verified FlatIndex with in-place mutation and cosine distance;
+HNSW and unverified legacy stores are rejected.
+
+Principal independence is only as strong as the verifier's identity and trust
+domain controls. Also inspect `storage.writerScope`: `process` requires one
+writer service per field, while multi-process or fleet-wide writers require a
+`distributed` adapter.
+
+The package influence caps are centroid-local. Fleet-wide admission,
+revocation, and rate limits belong in the deployment-owned verifier.
+`minimumSupport` is routing quarantine, not confidentiality: authorized state
+exports and registry storage can include singleton aggregate embeddings and
+rewards, so protect both as sensitive deployment data.
+
+The draft accepts only the exact runtime dependency range `^0.1.0`. A missing
+or malformed generated `package.json`, another dependency range or section, or
+an existing `src/field-memory.ts` causes scaffolding to stop before any write.
+`harness upgrade` validates every manifest field against the exact current
+contract, then reapplies the same manifest-selected overlay so it cannot
+orphan the module or silently remove its dependency and documentation.
+The block carries `contract_schema: 1`; unsupported schemas fail closed and
+require an explicit migration instead of being reinterpreted.
+
+Use `--no-field-memory` to force the default off state in shared scripts.
+
 ## Templates
 
 | Template | Best for |

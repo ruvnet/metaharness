@@ -1,0 +1,41 @@
+{
+  "name": "@metaharness/arc-agi-3-bench",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Private, reproducible paired benchmark harness for ARC-AGI-3 AVO ablations.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "arc-agi-3-bench": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist/**",
+    "fixtures/**",
+    "results/**",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "lint": "tsc --noEmit",
+    "benchmark": "npm run build && node dist/cli.js run --driver scripted"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@metaharness/arc-agi-3": "^0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  }
+}

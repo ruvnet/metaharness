@@ -1,0 +1,63 @@
+{
+  "name": "@metaharness/arc-agi-3-chatgpt",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Experimental ARC-AGI-3 remote MCP harness for ChatGPT Developer Mode, with durable memory, guarded plans, supervision, and an exact canvas view.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js"
+    }
+  },
+  "bin": {
+    "metaharness-arc-chatgpt": "./dist/cli.js"
+  },
+  "files": [
+    "dist/**",
+    "public/**",
+    "prompts/**",
+    ".harness/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "pretest": "npm run build",
+    "test": "vitest run",
+    "lint": "tsc --noEmit",
+    "start": "node ./dist/cli.js",
+    "pack:verify": "npm pack --dry-run"
+  },
+  "keywords": [
+    "arc-agi-3",
+    "chatgpt",
+    "mcp",
+    "mcp-apps",
+    "interactive-reasoning",
+    "metaharness"
+  ],
+  "author": "rUv <ruv@ruv.net>",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@metaharness/arc-agi-3": "^0.1.0",
+    "@metaharness/kernel": "0.1.3",
+    "@modelcontextprotocol/ext-apps": "^1.0.1",
+    "@modelcontextprotocol/sdk": "1.26.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  }
+}

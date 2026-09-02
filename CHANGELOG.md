@@ -20,6 +20,38 @@ All notable changes to this project are documented here. Format follows [Keep a 
   lock links, package README/SECURITY/LICENSE, hostile-import regressions, and
   held-out replay gates that keep the feature experimental.
 
+### Added — opt-in field memory scaffold (draft)
+
+- **`--field-memory`** adds a configuration-only integration for the forthcoming
+  `@metaharness/field-memory@^0.1.0` package. Opted-in harnesses receive
+  `src/field-memory.ts`, a runtime dependency, generated README guidance, and a
+  typed `manifest.field_memory` record. Existing scaffolds remain unchanged.
+- Generated defaults are intentionally conservative: packed layout, three
+  distinct verifier-derived principals for `minimumSupport: 3` (their actual
+  independence depends on the verifier), hysteresis disabled, a 30-day drift window, an explicit
+  absolute storage path, and a required deployment-authenticated principal
+  verifier for shared updates. Package influence caps are centroid-local;
+  fleet-wide admission and rate limits belong in that verifier. The generator
+  also requires a deployment-secret identity hash key of at least 32 bytes and
+  does not emit credentials, secrets, identities, proofs, or an implicit
+  database path.
+- Field-memory scaffolding now rejects missing or malformed package manifests,
+  dependency declarations outside the exact runtime range `^0.1.0`, and any
+  pre-existing `src/field-memory.ts`. `harness upgrade` reapplies the optional
+  manifest overlay only after validating every contract field, preserving the
+  dependency, module, and generated guidance. The overlay records
+  `contract_schema: 1`; unsupported schemas fail closed pending an explicit
+  migration. Generated docs require a single
+  writer service for `storage.writerScope: process`; multi-process or fleet-wide
+  writers require `distributed` scope.
+- RuVector-backed generated integrations use the package adapter's verified
+  FlatIndex contract; mutable HNSW and unverified legacy stores are rejected.
+- Generated guidance states that minimum support is a routing quarantine, not
+  confidentiality: authorized exports and registry storage can retain
+  singleton aggregate embeddings and rewards and must be protected.
+- This draft generator change depends on the upstream field-memory package PR;
+  it does not duplicate that package's aggregation or storage implementation.
+
 ### Added — Prime Agent integration, ADR-246/242 (2026-08-06)
 
 - **`@metaharness/host-prime-agent`** (`packages/host-prime-agent/`) — the

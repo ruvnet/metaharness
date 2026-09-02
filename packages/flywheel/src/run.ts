@@ -175,16 +175,32 @@ export async function runFlywheelGenerations(cfg: FlywheelConfig): Promise<Flywh
       const isWinner = c === promotedWinner;
       const id = `${parentId}__${c.target}_gen${gen}`;
       const primaryDelta = c.score.primary - score.primary;
+      const anchorScore = isWinner ? winnerAnchor : c === winner ? winnerAnchor : null;
+      const verdict: 'PROMOTED' | 'REJECTED' = isWinner ? 'PROMOTED' : 'REJECTED';
+      const failureReasons = isWinner ? [] : c === winner && !anchorSurvives ? ['anchor_regressed'] : c.reasons;
       const commit: LineageCommit = {
         id, generation: gen, parents: [parentId],
         // ADR-246 §2.1: an object-form proposer's summary (and rollback inverse) reaches the lineage
         // commit; a legacy string-form proposer keeps the exact `adapt <target>` summary, unchanged.
         mutation: { target: c.target, summary: c.summary ?? `adapt ${c.target}`, ...(c.inverse ? { inverse: c.inverse } : {}) },
         primaryDelta,
-        anchorScore: isWinner ? winnerAnchor : c === winner ? winnerAnchor : null,
-        verdict: isWinner ? 'PROMOTED' : 'REJECTED',
-        failureReasons: isWinner ? [] : c === winner && !anchorSurvives ? ['anchor_regressed'] : c.reasons,
-        receipt: cfg.signer.sign({ kind: 'candidate', id, target: c.target, verdict: isWinner ? 'PROMOTED' : 'REJECTED', primaryDelta }),
+        anchorScore,
+        verdict,
+        failureReasons,
+        // Sealed-field binding (ADR-254 addendum): baseline/candidate/anchor scores + failureReasons
+        // enter the SIGNED payload too, not just the commit's unsigned fields below — otherwise a bundle
+        // editor with no signing key can splice favorable scores onto a PROMOTED commit and
+        // gateReExecutes (replay.ts, ADR-235) would re-run the frozen rule on forged input and still
+        // pass. `parents`/`generation` are sealed too: without them, an editor with no signing key could
+        // reattach two genuinely-signed, self-consistent commits into a fabricated multi-generation chain
+        // by rewriting only their unsigned `parents`/`generation` — every per-commit check (id binding,
+        // score re-gate) still passes because each commit is still bound to itself, but the CHAIN
+        // structure itself is undefended. See replay.ts's `sealedFieldsAuthentic` check.
+        receipt: cfg.signer.sign({
+          kind: 'candidate', id, target: c.target, verdict, primaryDelta,
+          baselineScore: score, candidateScore: c.score, anchorScore, failureReasons,
+          parents: [parentId], generation: gen,
+        }),
         createdAt: now(gen),
         baselineScore: score,       // ADR-235 — sealed so the gate can be re-run in replay
         candidateScore: c.score,

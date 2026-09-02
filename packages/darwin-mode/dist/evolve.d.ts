@@ -1,6 +1,16 @@
-import type { ArchiveRecord, EvolutionConfig, EvolutionResult, RunTrace } from './types.js';
+import type { ArchiveRecord, EvolutionConfig, EvolutionResult, HarnessVariant, RepoProfile, RunTrace, ScoreCard } from './types.js';
 /** Run async `fn` over `items` with at most `limit` in flight at once. Order-preserving. */
 export declare function mapLimit<T, R>(items: T[], limit: number, fn: (item: T, index: number) => Promise<R>): Promise<R[]>;
+interface Evaluation {
+    variant: HarnessVariant;
+    traces: RunTrace[];
+    score: ScoreCard;
+}
+/**
+ * Run + score one variant. Pure of archive mutation (caller commits results).
+ * Exported for direct testing of the ADR-249 cost-seam wiring below.
+ */
+export declare function evaluateVariant(variant: HarnessVariant, profile: RepoProfile, cfg: EvolutionConfig, parentScore: ScoreCard | null): Promise<Evaluation>;
 /**
  * Among scored records sharing the TOP finalScore, return the most efficient
  * (lowest mean trace wall-clock). Pure: caller supplies the per-variant traces.
@@ -16,4 +26,5 @@ export declare function pickEfficientWinner(records: ArchiveRecord[], tracesById
  * lineage.json).
  */
 export declare function evolve(config: EvolutionConfig): Promise<EvolutionResult>;
+export {};
 //# sourceMappingURL=evolve.d.ts.map

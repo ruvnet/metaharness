@@ -42,6 +42,33 @@ Output is an npm-publishable `.zip` with **your name on it, your branding, your 
 
 ### New
 
+- **Run an experimental ARC-AGI-3 harness from the ChatGPT UI.**
+  [`@metaharness/arc-agi-3`](packages/arc-agi-3/) owns exact observations,
+  persistent evidence-backed memory, belief-state exploration, guarded actions,
+  supervisor interventions, checkpoints, and hash-chained receipts.
+  [`@metaharness/arc-agi-3-chatgpt`](packages/arc-agi-3-chatgpt/) exposes that
+  controller as a remote MCP server and MCP Apps canvas for ChatGPT Developer
+  Mode. ChatGPT is the OpenAI reasoning host: neither package uses the OpenAI
+  API or an `OPENAI_API_KEY`. An opt-in ARC-specific AVO loop adds governed
+  candidate selection, lineage, memory, blocking supervision, and an explicitly
+  separate retrodiction arm. The frozen synthetic mechanism gate passes, and
+  one actor-declared-clean single-game smoke favored AVO 3.2676 to 0.3968, but that
+  non-competition result is not claim-eligible. All packages remain private and
+  experimental; no ARC performance claim is made until an official closed
+  scorecard satisfies the frozen controlled-ablation gate in
+  [ADR-254](docs/adrs/ADR-254-arc-avo-controlled-ablation.md).
+- **Governed autonomous variation for difficult engineering work.**
+  [`@metaharness/avo`](packages/avo/) lets an agent repeatedly inspect, edit,
+  execute real tools, evaluate, repair/revert, branch, consult structured RVF
+  memory, and commit—while MetaHarness retains immutable capabilities, budgets,
+  promotion, quarantine, rollback, and signed replay receipts. Simple work stays
+  on Darwin's fast path. The runtime has a deterministic 205-action RVF
+  interruption proof; the stronger “AVO-class” claim remains blocked on the
+  preregistered 100-task unseen SWE-bench gate in [ADR-251](docs/adrs/ADR-251-governed-autonomous-variation-runtime.md).
+  [ADR-253](docs/adrs/ADR-253-avo-release-claim-evidence-gate.md) now enforces
+  that boundary at publication against the exact tag SHA and npm tarball,
+  protected claim semantics, measured cost, lineage roots, and two independent
+  graders.
 - **Run your harness on Prime Agent — and borrow its best ideas.** The 10th host
   ([`@metaharness/host-prime-agent`](packages/host-prime-agent/), `--host prime-agent`) emits your
   tools as project-scoped, Python-backed Prime Agent skills (`.prime/agent/skills/` — the host has
@@ -75,6 +102,28 @@ Output is an npm-publishable `.zip` with **your name on it, your branding, your 
   sandbox, and keeps only what *measurably* improves. The model stays frozen; the harness
   evolves. Safe by default (no network, no API key; pure refactor/tuning behind a safety
   gate). Validated on real **SWE-bench Lite** bug-fixing. `--no-darwin` to skip.
+- **Opt into field memory without copying its implementation.** Add
+  `--field-memory` to scaffold a small bootstrap around the forthcoming
+  `@metaharness/field-memory@^0.1.0` package. The generated harness uses packed
+  attractors, three distinct verifier-derived principals for support, no
+  hysteresis, and a bounded drift window. Principal independence depends on the
+  verifier's identity system.
+  It will not open storage or accept shared updates until the deployment
+  supplies an absolute storage path, a compatible adapter, and a principal
+  verifier backed by deployment authentication. Package influence caps are
+  centroid-local; fleet-wide admission and rate limits belong in that verifier.
+  The RuVector adapter requires a configuration-verified, in-place FlatIndex
+  with cosine distance and rejects HNSW or unverified legacy stores.
+  Minimum support quarantines routing but does not make stored singleton
+  aggregates confidential; protect field snapshots and registry storage.
+  A deployment-secret identity hash key of at least 32 bytes is also required
+  and must survive state restore. Conflicting package declarations or an
+  existing field module fail before disk writes, and `harness upgrade` reapplies
+  the opted-in overlay only after validating its exact, versioned manifest
+  contract. Unsupported overlay schemas require an explicit migration.
+  `storage.writerScope: process` requires one writer service; multi-process or
+  fleet use requires `distributed`. The flag is off by default, so existing
+  scaffold output is unchanged.
 - **Distil the cheap tier instead of escalating to a frontier model.** **Weight-EFT**
   ([`@metaharness/weight-eft`](packages/weight-eft/), `metaharness weight-eft`) takes the
   *complementary* lever to Darwin's gradient-free evolution: it exports the harness's gold-resolved

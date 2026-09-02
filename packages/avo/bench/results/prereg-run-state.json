@@ -1,0 +1,40 @@
+{
+  "phase": "COMPLETE \u2014 cost-optimized re-run concluded: optimizations are no-ops, cost limitation FINAL",
+  "taskSetHash": "sha256:1da0fdf1ee3c9044705efd1874fc2b7b77ab0a04c33442700a6ec1760dc2a7ab",
+  "budgetUsd": 100.0,
+  "openrouterUsageBaseline": 4252.182356944,
+  "spentUsd": 8.134,
+  "next": "harvest both AVO eval reports \u2192 merge errored re-runs \u2192 assemble-three-arm.mjs \u2192 swebench-three-arm.mjs \u2192 evaluateShipGate \u2192 record verdict in ADR-251 + stop loop",
+  "armProgress": {
+    "darwin-fixed": "DONE 5/100",
+    "avo-no-supervisor": 68,
+    "avo-supervisor-memory": 68
+  },
+  "securityPR": "MERGED (992f119) + PUBLISHED @metaharness/avo 0.1.1 \u2014 agent-context isolation shipped",
+  "cleanupNeeded": "after arms finish: strip records with 'error' or empty model_patch-due-to-error from each arm-*.jsonl, re-run those instance ids with retry-enabled solve-avo (darwin-fixed had 14 transient fetch-failed). Only error records re-run; genuine empty patches (model produced none) stay.",
+  "note": "tail instances slow (cadence runs docker test per edit); alive. Verdict already conclusive at 68/100 (0 early-stops, cost=v1). Completing for full record.",
+  "evalNote": "swebench pinned to 3.0.17 (5.0.2 needs new image-key schema; 3.0.17 has --cache_level + matches pre-pulled sweb.eval images). SWE-bench_Verified split=test. Patch-apply-failures count as unresolved (correct). darwin-fixed 85/100 non-empty patches.",
+  "assembler": "assemble-three-arm.mjs built + committed \u2014 dedup, resolved-backfill from eval reports, identical-task-set enforced",
+  "criticalFinding": "darwin-fixed BLIND baseline scored 1/100 due to 68 patch-apply failures (hallucinated hunk context). Fixed: baseline now reads file content. Re-running. AVO arms unaffected (they produce real git diffs from inspected files).",
+  "baselineHistory": "v1 blind (1/100, 68 apply-fail) \u2192 v2 file-aware-but-model-diff (still apply-fail) \u2192 v3 full-file-rewrite+git-diff+density-ranked-localization (smoke: real applyable patch). v3 is the fair baseline: same edit mechanism as AVO, difference is one-call vs governed multi-action.",
+  "fairnessNote": "Both darwin-fixed and AVO use the SAME full-file edit primitive (can yield large diffs). AVO can evaluate+revert to catch regression noise; one-shot darwin-fixed cannot. That self-correction gap IS the measured mechanism difference \u2014 fair.",
+  "criticalFinding2": "Full-file edit primitive truncated large files (token limit) across ALL arms \u2014 ~half of patches were file-destroying deletions. Benchmark was invalid. Switched to search/replace (aider-style): model emits small exact snippet + replacement, harness applies against real file. Smoke: AVO +11/-4 clean fix vs prior +2/-4137. All prior arm data archived to results/invalid-fullfile/. Re-running.",
+  "validation": "CONFIRMED clean: all 3 arms produce targeted bug-fix diffs (+3/-0 .. +19/-9), 0 truncations. Benchmark sound.",
+  "baselineResolved": "darwin-fixed: 5/100 resolved (39 non-empty patches, 0 eval errors). Gate needs AVO >= 6/100 (20% rel lift) AND 0 policy violations AND <50% cost/accepted increase AND 100% replay.",
+  "mechanismSignal": "AVO arms 89% non-empty patch rate vs darwin-fixed 39% (iteration localizes); 0 policy violations both arms. Resolve-rate pending eval.",
+  "nonEmptyRates": "darwin-fixed 39/100, avo-no-supervisor 71/100, avo-supervisor-memory 72/100 (iteration nearly doubles patch production)",
+  "note2": "A few AVO instances hit a wrapper ENOENT deterministically \u2192 counted unresolved (penalizes AVO, conservative). If final gate is borderline, debug ENOENT.",
+  "RESULTS": {
+    "darwin-fixed": "5/100 resolved (39 patches)",
+    "avo-no-supervisor": "14/100 resolved (71 patches) \u2014 +180% rel lift, 0 violations",
+    "avo-supervisor-memory": "13/100 resolved (72 patches) \u2014 +160% rel lift, 0 violations",
+    "note": "AVO nearly TRIPLES the one-shot baseline on unseen SWE-bench_Verified. 4 recovered extras (2/arm) still evaluating; can only raise AVO. 3+1 deterministic-error instances stay unresolved (conservative)."
+  },
+  "VERDICT": "ship=false on cost. darwin-fixed 5/100, avo-no-supervisor 14/100 (+180%), avo-supervisor-memory 13/100 (+160%). Resolution/violations/replay PASS; cost/accepted +97.7% FAIL (<50% req). AVO triples resolution + perfect governance but not cost-competitive per fix. Claim blocked on COST not efficacy.",
+  "pr": "https://github.com/ruvnet/metaharness/pull/217",
+  "costOptimizationFinding": "Shipped avo 0.1.2 (opt-in stopOnVerifiedWinner) + benchmark auto-cadence (test-after-edit/commit-on-green). Cost gate NOT passable: in-loop conformant test rarely passes green even for officially-resolved patches, winning edits scattered late (action 18-20), so early-stop rarely fires and budget reduction would forfeit resolution. AVO +160% resolution and +97.7% cost are two sides of the same exploration. ship=false-on-cost stands, now mechanistically understood. Loop stopped.",
+  "costRerun": "v1 (20-action) archived to results/v1-20action/. Re-running same preregistered 100 with stopOnVerifiedWinner + forced test-after-edit/commit-on-green + 3-consecutive-search cap. Empirically confirming whether cost gate can pass or is fundamentally limited (leak-free in-loop oracle rarely signals green).",
+  "costRerunSignal": "AIRTIGHT at 26/100: avg 20.0 actions, 0 early-stops. Cost-optimizations never fire (leak-free oracle never green). Fundamental limitation confirmed; completing run for the full gate number.",
+  "costConfirm": "per-instance cost $0.010-0.014 = identical to v1 (~$0.012). Zero cost reduction, as 0-early-stop predicted. Cadence just makes instances slower (docker test per edit).",
+  "finalVerdict": "ship=false-on-cost is FINAL. Cost-optimized config (early-stop+cadence+search-cap) produced 0 early-stops and identical per-instance cost ($0.011 vs v1 $0.0119). Leak-free oracle never signals green so optimizations never fire. v1 gate (13/100, +97.7%) stands as the cost-optimized result. Cost fundamental to leak-free autonomous repair."
+}
