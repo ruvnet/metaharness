@@ -356,15 +356,25 @@ function parseManifest(value: unknown): ReleaseClaimManifest | null {
 
 function normalizeProse(value: string): string {
   return value
-    // The inner class excludes '[' as well as ']'. With only ']' excluded this is
-    // a polynomial-ReDoS shape (CodeQL js/polynomial-redos): input starting with
-    // '[' and repeating '[\\' backtracks quadratically — measured 2.8ms at 2k
-    // chars, 720ms at 32k. normalizeProse() runs on claim statements and surface
-    // text, i.e. exactly the untrusted release-claim prose this gate exists to
-    // validate, so the slow path is reachable by a malformed claim. Excluding '['
-    // makes it linear (0.2ms at 32k) and leaves well-formed markdown links
-    // matching identically — nested '[' inside a link label was never valid here.
-    .replace(/\[([^[\]]+)]\([^)]+\)/g, '$1')
+    // BOTH character classes exclude '[' — the label AND the URL. This is a
+    // polynomial-ReDoS shape otherwise (CodeQL js/polynomial-redos), and it has
+    // TWO independent backtracking paths, so excluding '[' from only the label
+    // is not enough:
+    //
+    //   payload                     original   label-only fix   both fixed
+    //   '[' + N×'[\\'              457 ms     0.2 ms           0.1 ms
+    //   '[Z](' + N×'[(]('          1081 ms    734 ms  <-- !     0.1 ms
+    //
+    // The second path is the URL scan: at every '[' the engine consumes to
+    // end-of-string looking for ')', which is O(n) per start position and so
+    // O(n^2) overall. Stopping that scan at the next '[' makes it linear.
+    // normalizeProse() runs on claim statements and surface text — the untrusted
+    // release-claim prose this gate exists to validate — so the slow path is
+    // reachable by a malformed claim, i.e. a DoS on the gate itself.
+    // Output is unchanged on well-formed markdown (verified identical across
+    // labels with spaces, query strings, fragments, and nested-bracket labels);
+    // a '[' inside a link target was never matched by this pattern.
+    .replace(/\[([^[\]]+)]\(([^)[]+)\)/g, '$1')
     .replace(/[`*_“”"']/g, '')
     .replace(/\s+/g, ' ')
     .trim();
