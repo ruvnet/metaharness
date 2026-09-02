@@ -221,19 +221,25 @@ describe('scorePublishReadiness', () => {
     expect(scorePublishReadiness(profile(), p)).toBe(0);
   });
 
-  it('credits typescript (0.3) and rust (0.15) independently and additively', () => {
-    expect(scorePublishReadiness(profile({ languages: ['typescript'] }), plan())).toBeCloseTo(0.3 + 0.05); // + policy.defaultDeny 0.05
-    expect(scorePublishReadiness(profile({ languages: ['rust'] }), plan())).toBeCloseTo(0.15 + 0.05);
+  // #200 replaced the typescript(0.3)/rust(0.15) allow-list with a flat +0.3 for
+  // ANY detected language, so the credit no longer varies by which one it is.
+  it('#200: any detected language earns the same flat credit, not a per-language amount', () => {
+    const ts = scorePublishReadiness(profile({ languages: ['typescript'] }), plan());
+    const rs = scorePublishReadiness(profile({ languages: ['rust'] }), plan());
+    expect(ts).toBeCloseTo(0.3 + 0.05); // language 0.3 + policy.defaultDeny 0.05
+    expect(rs).toBeCloseTo(0.3 + 0.05); // rust is no longer discounted to 0.15
+    expect(rs).toBeCloseTo(ts);
   });
 
-  it('does NOT credit python or go language presence at all (documented gap — see #200)', () => {
-    // Locking in current, known behavior: only typescript/rust move this
-    // score via the language checks. A python-only repo gets no language
-    // credit even with a full build+test+CI setup.
+  // #200 CLOSED this gap. Inverted rather than deleted, so the fix stays pinned
+  // from the other side: a python repo now earns the same language credit as any
+  // other, which is what let it clear genome.ts's 0.75 'ready' threshold.
+  it('#200 closed the gap: python/go now earn language credit like any other language', () => {
     const p = profile({ languages: ['python'], buildCommands: ['pytest --collect-only'], testCommands: ['pytest'], hasCi: true });
     const score = scorePublishReadiness(p, plan());
-    // build(0.2) + test(0.15) + ci(0.2) + policy.defaultDeny(0.05) = 0.6, no language credit
-    expect(score).toBeCloseTo(0.6);
+    // language(0.3) + build(0.2) + test(0.15) + ci(0.2) + policy.defaultDeny(0.05) = 0.9
+    expect(score).toBeCloseTo(0.9);
+    expect(score).toBeGreaterThanOrEqual(0.75); // clears the 'ready' threshold
   });
 
   it('credits buildCommands, testCommands, hasCi, and policy.defaultDeny independently', () => {
@@ -255,6 +261,10 @@ describe('scorePublishReadiness', () => {
       testCommands: ['npm test', 'cargo test'],
       hasCi: true,
     });
-    expect(scorePublishReadiness(p, plan())).toBe(1);
+    // Post-#200 the language credit is flat 0.3 rather than 0.3+0.15 additive, so
+    // the maximal repo now totals 0.9: language(0.3) + build(0.2) + test(0.15) +
+    // ci(0.2) + policy(0.05). The Math.min(1, ...) cap is still in place; this
+    // input simply no longer reaches it.
+    expect(scorePublishReadiness(p, plan())).toBeCloseTo(0.9);
   });
 });
