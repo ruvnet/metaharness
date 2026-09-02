@@ -329,6 +329,11 @@ ADR-006 (memory + learning) and ADR-008 (drift detection) cut across all phases.
 | [ADR-274](./ADR-274-flywheel-replay-consolidation-and-chain-binding.md) | Consolidating three unmerged flywheel-replay trust-boundary fixes, and closing a 4th (chain-shape binding) | Accepted | Hand-merges 3 conflicting-but-compatible unmerged Dream Cycle PRs (#205, #231, #255) into one clean diff on `verifyReplayBundle`/`gateReExecutes`/`sealedFieldsAuthentic`, and closes a 4th gap an independent critic found in review: `parents`/`generation` were unbound, letting two genuinely-signed commits be spliced into a fabricated chain via unsigned fields. 72/72 tests, all 7 real committed ReplayBundles re-verify unchanged. Written to reduce the Dream Cycle PR review backlog, not add to it. Renumbered twice on 2026-09-01: ADR-272 → ADR-273 after #260 independently claimed ADR-272, then ADR-273 → ADR-274 after PR #179's merge (`c441174`) independently claimed ADR-273 for the unrelated "Dream Machine" scheduler ADR. |
 | [ADR-275](./ADR-275-evidence-carrying-termination.md) | Evidence-carrying termination — gate the `COMPLETE` boundary on a typed certificate binding required claims to in-scope trace evidence, with deterministic replay | Proposed | Renumbered from ADR-272 (taken by the darwin numeric genome kind, #260) — see #267. |
 | [ADR-276](./ADR-276-avo-release-claim-evidence-gate.md) | AVO exact-SHA release claim evidence gate | Accepted — verifier, governed-surface scan, CI, and mandatory publish gate implemented; restricted evidence pending | Blocks performance/frontier publication unless exact protected claim semantics bind to a preregistered unseen 100-task benchmark, exact tag SHA, measured costs, lineage roots, trusted signatures, and two independent official graders. |
+## Autogenous integration
+
+| ADR | Title | Status | Summary |
+|-----|-------|--------|---------|
+| [ADR-277](./ADR-277-autogenous-metaharness-adapter.md) | Autogenous governed MetaHarness adapter | Accepted (implemented) | Ships `@metaharness/autogenous`: a flywheel adapter for Autogenous radio-moe that exposes only five bounded policy levers, freezes security gates and `sameAccuracyBand`, injects the real benchmark, and promotes only `Better AND Safe AND Authorized AND Reversible`. |
 
 ## Conventions used across the series
 

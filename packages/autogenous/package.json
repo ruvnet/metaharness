@@ -1,0 +1,46 @@
+{
+  "name": "@metaharness/autogenous",
+  "version": "0.1.0",
+  "description": "Autogenous radio-moe policy-evolution adapter for @metaharness/flywheel — bounded independence weights, frozen safety gates, and governed promotion.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "autogenous",
+    "metaharness",
+    "flywheel",
+    "policy-evolution",
+    "radio-moe",
+    "governed-evolution",
+    "agent-harness"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@metaharness/flywheel": "^0.1.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

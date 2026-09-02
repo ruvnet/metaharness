@@ -31,7 +31,7 @@ const PHASES = [
   // oo-agents (ADR-242) depends on @metaharness/radio's dist → phase 2.
   // avo (ADR-251) depends on @metaharness/horizon's dist → phase 2.
   // arc-agi-3 (ADR-253) depends on kernel, harness, and horizon → phase 2.
-  ['vertical-base', 'evals-hle', 'evals-toolcall', 'evals-extract', 'evals-math', 'evals-sql', 'evals-servedmodel', 'workspace-probe', 'oo-agents', 'avo', 'arc-agi-3'],
+  ['vertical-base', 'autogenous', 'evals-hle', 'evals-toolcall', 'evals-extract', 'evals-math', 'evals-sql', 'evals-servedmodel', 'workspace-probe', 'oo-agents', 'avo', 'arc-agi-3'],
   // Phase 3: hosts + sdk + cli — all depend on kernel-js
   [
     'host-claude-code',
