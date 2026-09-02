@@ -1,8 +1,8 @@
-# ADR-272: Evidence-Carrying Termination
+# ADR-275: Evidence-Carrying Termination
 
-## Status
-
-Proposed
+- **Status**: Proposed
+- **Note**: originally drafted as ADR-272; renumbered to ADR-275 on 2026-09-02 because
+  `ADR-272-darwin-numeric-genome-kind` claimed 272 first (landed with #260). See #267.
 
 ## Context
 
