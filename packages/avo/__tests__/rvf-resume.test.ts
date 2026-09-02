@@ -36,13 +36,16 @@ function evaluation(branchId: string): EvaluationResult {
 class ReplayEnvironment implements EnvironmentAdapter {
   readonly version = 'replay-env-v1';
   async fork(parent: Candidate) {
-    return { branchId: `${parent.id}-work`, workspaceDigest: `sha256:fork-${parent.id}` };
+    return { branchId: `${parent.id}-work`, workspaceDigest: parent.workspaceDigest };
   }
   async execute(action: VariationAction, state: Readonly<VariationState>): Promise<ActionObservation> {
+    const priorDigest = state.receipts.at(-1)?.workspaceDigest ?? 'sha256:seed';
     return {
       ok: true, stdout: `${action.kind}:${state.budget.actionsUsed + 1}`, exitCode: 0,
       durationMs: 1, costUsd: 0,
-      workspaceDigest: `sha256:action-${state.budget.actionsUsed + 1}-${action.kind}`,
+      workspaceDigest: action.kind === 'edit'
+        ? `sha256:action-${state.budget.actionsUsed + 1}-edit`
+        : priorDigest,
     };
   }
   async quarantine(): Promise<void> {}
