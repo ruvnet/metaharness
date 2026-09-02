@@ -219,7 +219,7 @@ describe('real Streamable HTTP MCP clients', () => {
       requiredEvidence: [receipt.receiptHash],
       prohibitedEdges: [],
       actionBudget: 3,
-      expiresAfterActions: 0,
+      expiresAfterActions: 3,
       hypotheses: [hypothesis(1), hypothesis(2), hypothesis(3)],
       recommendedStrategy: 'probe the least tested legal edge',
       constraints: ['stop on the first mismatch'],
@@ -258,6 +258,7 @@ describe('real Streamable HTTP MCP clients', () => {
       },
     });
     const directive = toolPayload(committed).directive as {
+      id: string;
       expectedObservationHash: string;
       hypotheses: unknown[];
       recommendedStrategy: string;
@@ -268,14 +269,18 @@ describe('real Streamable HTTP MCP clients', () => {
     expect(directive.recommendedStrategy).toContain('least tested');
     expect(directive.constraints).toEqual(['stop on the first mismatch']);
     expect(fixture.environments[0]?.stepCalls).toBe(1);
-    const renderedAfterExpiry = toolPayload(await actor.callTool({
+    const renderedWithAuthority = toolPayload(await actor.callTool({
       name: 'arc_render', arguments: { episodeId },
     }));
-    expect(renderedAfterExpiry.activeSupervisorDirective).toBeNull();
-    const bossAfterExpiry = toolPayload(await boss.callTool({
+    expect(renderedWithAuthority.activeSupervisorDirective).toEqual(
+      expect.objectContaining({ id: directive.id }),
+    );
+    const bossWithAuthority = toolPayload(await boss.callTool({
       name: 'arc_supervisor_case', arguments: { episodeId },
     }));
-    expect(bossAfterExpiry.priorDirective).toBeNull();
+    expect(bossWithAuthority.priorDirective).toEqual(
+      expect.objectContaining({ id: directive.id }),
+    );
 
     await Promise.allSettled([actor.close(), boss.close()]);
   });

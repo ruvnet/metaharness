@@ -48,10 +48,10 @@ const PHASES = [
     'create-agent-harness',
     'arc-agi-3-chatgpt', // ADR-253; depends on @metaharness/arc-agi-3
   ],
-  // Phase 4: vertical-trading (depends on vertical-base) + bench
-  // (depends on EVERY host adapter for the cross-host benchmark in
-  // iter 39's host-bench.ts).
-  ['vertical-trading', 'bench'],
+  // Phase 4: vertical-trading (depends on vertical-base), the ARC AVO
+  // controlled-ablation runner (depends on arc-agi-3), and bench (depends on
+  // EVERY host adapter for the cross-host benchmark in iter 39's host-bench.ts).
+  ['vertical-trading', 'arc-agi-3-bench', 'bench'],
 ];
 
 const ROOT = process.cwd();

@@ -8,3 +8,8 @@ export * from './supervisor.js';
 export * from './checkpoint.js';
 export * from './controller.js';
 export * from './python-bridge.js';
+export * from './avo-types.js';
+export * from './avo-config.js';
+export * from './plan-archive.js';
+export * from './world-model.js';
+export * from './avo-loop.js';

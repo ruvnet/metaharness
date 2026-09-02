@@ -213,9 +213,17 @@ function availableForObservation(observation: ExactArcObservation): readonly Arc
   return observation.availableActions.filter(action => action !== 'RESET');
 }
 
+function observableActionCountKey(
+  observationHash: string,
+  actionName: ArcActionName,
+): string {
+  return `${observationHash}\0${actionName}`;
+}
+
 export class BeliefGraph {
   private readonly nodes = new Map<string, BeliefNode>();
   private readonly edges = new Map<string, BeliefEdge>();
+  private readonly observableActionCounts = new Map<string, number>();
   private currentKey?: string;
 
   constructor(private readonly options: BeliefGraphOptions) {}
@@ -306,6 +314,11 @@ export class BeliefGraph {
       noEffectCount: (prior?.noEffectCount ?? 0) + (input.noEffect ? 1 : 0),
     });
     this.edges.set(key, edge);
+    const observableKey = observableActionCountKey(from.observationHash, input.action.name);
+    this.observableActionCounts.set(
+      observableKey,
+      (this.observableActionCounts.get(observableKey) ?? 0) + 1,
+    );
     this.currentKey = to.key;
     return to;
   }
@@ -332,13 +345,8 @@ export class BeliefGraph {
   }
 
   observableTestedCount(observationHash: string, actionName: ArcActionName): number {
-    let count = 0;
-    for (const edge of this.edges.values()) {
-      if (edge.observationHash === observationHash && edge.action.name === actionName) {
-        count += edge.testedCount;
-      }
-    }
-    return count;
+    return this.observableActionCounts.get(observableActionCountKey(observationHash, actionName))
+      ?? 0;
   }
 
   current(): BeliefNode {
@@ -364,6 +372,7 @@ export class BeliefGraph {
     validateBeliefGraphSnapshot(snapshot, this.options);
     this.nodes.clear();
     this.edges.clear();
+    this.observableActionCounts.clear();
     for (const node of snapshot.nodes) {
       this.nodes.set(node.key, Object.freeze({
         ...node,
@@ -371,14 +380,20 @@ export class BeliefGraph {
       }));
     }
     for (const edge of snapshot.edges) {
-      this.edges.set(edge.key, Object.freeze({
+      const stableEdge = Object.freeze({
         ...edge,
         action: Object.freeze({ ...edge.action }),
         outcomes: Object.freeze(edge.outcomes.map(outcome => Object.freeze({
           ...outcome,
           receiptHashes: Object.freeze([...outcome.receiptHashes]),
         }))),
-      }));
+      });
+      this.edges.set(edge.key, stableEdge);
+      const observableKey = observableActionCountKey(edge.observationHash, edge.action.name);
+      this.observableActionCounts.set(
+        observableKey,
+        (this.observableActionCounts.get(observableKey) ?? 0) + edge.testedCount,
+      );
     }
     this.currentKey = snapshot.currentBeliefKey;
   }

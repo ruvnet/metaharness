@@ -6,6 +6,9 @@ import { registerAppTool } from '@modelcontextprotocol/ext-apps/server';
 import { z } from 'zod/v3';
 import type {
   ActRequest,
+  ArcAvoContext,
+  ArcAvoStepResult,
+  ArcCandidatePlanDraft,
   ExplicitSupervisorCaseRequest,
   GuardedPlanRequest,
   MemoryQuery,
@@ -167,6 +170,22 @@ const directiveCommit = z.object({
   recommendedStrategy: z.string().min(1).max(4000),
   constraints: z.array(z.string().min(1).max(1000)).max(64),
 }).strict();
+const avoRuleHypothesis = z.object({
+  id: z.string().min(1).max(256).optional(),
+  scope: memoryScope,
+  kind: memoryKind,
+  statement: z.string().min(1).max(4096),
+  preconditions: z.array(z.string().min(1).max(1024)).max(128),
+  predictedEffect: z.string().min(1).max(4096),
+}).strict();
+const avoCandidatePlan = z.object({
+  parentCandidateId: z.string().regex(/^arc_plan_[0-9a-f]{40}$/).nullable(),
+  baseObservationHash: sha256,
+  hypothesis: z.string().min(1).max(4096),
+  citedRuleIds: z.array(z.string().min(1).max(256)).max(64),
+  ruleHypotheses: z.array(avoRuleHypothesis).max(16),
+  steps: z.array(guardedStep).min(1).max(32),
+}).strict();
 
 const READ_ONLY: ToolAnnotations = {
   readOnlyHint: true,
@@ -221,6 +240,7 @@ export interface ArcToolContext {
   principalId: string;
   store: ArcEpisodeStore;
   policy: ToolPolicyGate;
+  avoMode?: boolean;
 }
 
 async function invoke(
@@ -278,6 +298,25 @@ function activeDirective(session: EpisodeRecord): EpisodeRecord['lastDirective']
   return session.lastDirective;
 }
 
+function requireAvo(session: EpisodeRecord): NonNullable<EpisodeRecord['avoLoop']> {
+  if (!session.avoLoop) throw new Error('AVO episode capability is unavailable');
+  return session.avoLoop;
+}
+
+function publicAvoContext(value: ArcAvoContext): Record<string, unknown> {
+  return {
+    ...value,
+    status: statusWithoutRawError(value.status),
+  };
+}
+
+function publicAvoStep(value: ArcAvoStepResult): Record<string, unknown> {
+  return {
+    ...value,
+    context: publicAvoContext(value.context),
+  };
+}
+
 export function registerActorTools(server: McpServer, context: ArcToolContext): void {
   server.registerTool('arc_start', {
     title: 'Start isolated ARC episode',
@@ -292,28 +331,34 @@ export function registerActorTools(server: McpServer, context: ArcToolContext): 
         opaqueGameScope: created.observation.opaqueGameScope,
         observation: created.observation,
         status: statusWithoutRawError(created.record.controller.status()),
+        ...(created.record.avoLoop === undefined
+          ? {}
+          : { avoContext: publicAvoContext(created.record.avoLoop.context()) }),
       };
     })
   )));
 
-  server.registerTool('arc_observe', {
-    title: 'Observe exact ARC state',
-    description: 'Read the authoritative current observation. Call this first when entering an existing actor conversation.',
-    inputSchema: { episodeId },
-    annotations: GUARDED_ENV_ACCESS,
-  }, async ({ episodeId: id }) => invoke(context, 'arc_observe', { episodeId: id, readOnly: false }, async () => {
-    const session = record(context, id);
-    const observation = await session.controller.observe();
-    context.store.updateObservation(session, observation);
-    return {
-      episodeId: id,
-      observation,
-      status: statusWithoutRawError(session.controller.status()),
-      activeSupervisorDirective: activeDirective(session),
-    };
-  }));
+  if (!context.avoMode) {
+    server.registerTool('arc_observe', {
+      title: 'Observe exact ARC state',
+      description: 'Read the authoritative current observation. Call this first when entering an existing actor conversation.',
+      inputSchema: { episodeId },
+      annotations: GUARDED_ENV_ACCESS,
+    }, async ({ episodeId: id }) => invoke(context, 'arc_observe', { episodeId: id, readOnly: false }, async () => {
+      const session = record(context, id);
+      const observation = await session.controller.observe();
+      context.store.updateObservation(session, observation);
+      return {
+        episodeId: id,
+        observation,
+        status: statusWithoutRawError(session.controller.status()),
+        activeSupervisorDirective: activeDirective(session),
+      };
+    }));
+  }
 
-  server.registerTool('arc_act', {
+  if (!context.avoMode) {
+    server.registerTool('arc_act', {
     title: 'Apply one guarded ARC action',
     description: 'Apply exactly one legal action using compare-and-set observation hash and an idempotency key. RESET is accepted only when no live progress can be discarded.',
     inputSchema: { episodeId, request: actRequest },
@@ -327,7 +372,7 @@ export function registerActorTools(server: McpServer, context: ArcToolContext): 
     });
   }));
 
-  server.registerTool('arc_supervise', {
+    server.registerTool('arc_supervise', {
     title: 'Open deterministic supervisor case',
     description: 'Persist a deterministic supervisor case after a plateau, loop, contradiction, or repeated failure. This does not act in the environment.',
     inputSchema: { episodeId, idempotencyKey, contradiction: explicitSupervisorCase.optional() },
@@ -345,7 +390,8 @@ export function registerActorTools(server: McpServer, context: ArcToolContext): 
         status: statusWithoutRawError(session.controller.status()),
       };
     })
-  )));
+    )));
+  }
 
   server.registerTool('arc_checkpoint', {
     title: 'Persist ARC checkpoint',
@@ -355,13 +401,28 @@ export function registerActorTools(server: McpServer, context: ArcToolContext): 
   }, async ({ episodeId: id, idempotencyKey: key }) => invoke(context, 'arc_checkpoint', { episodeId: id, readOnly: false }, async () => (
     idempotent(context, 'arc_checkpoint', key, { episodeId: id }, async () => {
       const session = record(context, id);
-      const checkpoint = await session.controller.checkpoint();
-      const idForCheckpoint = await context.store.saveCheckpoint(session, checkpoint);
+      const persisted = session.avoLoop
+        ? await (async () => {
+            const checkpoint = await session.avoLoop!.checkpoint();
+            return {
+              checkpoint,
+              checkpointId: await context.store.saveAvoCheckpoint(session, checkpoint),
+              observationHash: checkpoint.observationHash,
+            };
+          })()
+        : await (async () => {
+            const checkpoint = await session.controller.checkpoint();
+            return {
+              checkpoint,
+              checkpointId: await context.store.saveCheckpoint(session, checkpoint),
+              observationHash: checkpoint.observation.observationHash,
+            };
+          })();
       return {
         episodeId: id,
-        checkpointId: idForCheckpoint,
-        checkpointHash: checkpoint.checkpointHash,
-        observationHash: session.lastObservation.observationHash,
+        checkpointId: persisted.checkpointId,
+        checkpointHash: persisted.checkpoint.checkpointHash,
+        observationHash: persisted.observationHash,
       };
     })
   )));
@@ -384,6 +445,9 @@ export function registerActorTools(server: McpServer, context: ArcToolContext): 
         checkpointId: checkpoint,
         observation: resumed.observation,
         status: statusWithoutRawError(resumed.record.controller.status()),
+        ...(resumed.record.avoLoop === undefined
+          ? {}
+          : { avoContext: publicAvoContext(resumed.record.avoLoop.context()) }),
       };
     })
   )));
@@ -408,7 +472,59 @@ export function registerActorTools(server: McpServer, context: ArcToolContext): 
     verification: record(context, id).controller.verifyReceipts(),
   })));
 
-  server.registerTool('arc_memory_query', {
+  if (context.avoMode) {
+    server.registerTool('arc_avo_context', {
+      title: 'Read governed ARC AVO context',
+      description: 'Read the exact observation plus bounded plan lineage, evidence-backed memory, belief frontier, and retrodiction context. This never acts.',
+      inputSchema: { episodeId },
+      annotations: READ_ONLY,
+    }, async ({ episodeId: id }) => invoke(context, 'arc_avo_context', { episodeId: id, readOnly: true }, async () => {
+      const session = record(context, id);
+      return {
+        episodeId: id,
+        context: publicAvoContext(requireAvo(session).context()),
+        activeSupervisorDirective: activeDirective(session),
+      };
+    }));
+
+    server.registerTool('arc_avo_step', {
+      title: 'Select and execute an ARC AVO candidate',
+      description: 'Submit 1..8 strict public candidate plans. The harness snapshots the batch, scores it from evidence, selects one plan itself, enforces the configured supervisor gate, and dispatches only selected actions.',
+      inputSchema: {
+        episodeId,
+        idempotencyKey,
+        candidates: z.array(avoCandidatePlan).min(1).max(8),
+      },
+      annotations: GUARDED_ENV_WRITE,
+    }, async ({ episodeId: id, idempotencyKey: key, candidates }) => invoke(context, 'arc_avo_step', { episodeId: id, readOnly: false }, async () => (
+      idempotent(context, 'arc_avo_step', key, { episodeId: id, candidates }, async () => {
+        const session = record(context, id);
+        const beforeActionCount = session.controller.status().actionCount;
+        try {
+          const result = await requireAvo(session).stepWithCandidates(
+            candidates as readonly ArcCandidatePlanDraft[],
+          );
+          context.store.updateObservation(session, result.context.observation);
+          return { episodeId: id, result: publicAvoStep(result) };
+        } catch (error) {
+          if (session.controller.status().actionCount > beforeActionCount) {
+            try {
+              context.store.updateObservation(session, await session.controller.observe());
+            } catch {
+              // The non-retryable ledger below remains the authoritative guard.
+            }
+            throw new NonRetryableMutationError(
+              'AVO step partially mutated the environment before failing',
+            );
+          }
+          throw error;
+        }
+      })
+    )));
+  }
+
+  if (!context.avoMode) {
+    server.registerTool('arc_memory_query', {
     title: 'Query durable ARC memory',
     description: 'Retrieve evidence-backed rules and episodes from durable controller memory. Use this after ChatGPT context rotation or compaction.',
     inputSchema: { episodeId, query: memoryQuery.optional() },
@@ -418,7 +534,7 @@ export function registerActorTools(server: McpServer, context: ArcToolContext): 
     memory: record(context, id).controller.queryMemory(query as MemoryQuery | undefined),
   })));
 
-  server.registerTool('arc_memory_commit', {
+    server.registerTool('arc_memory_commit', {
     title: 'Commit evidence-backed ARC rule',
     description: 'Version and persist a semantic rule with supporting and contradicting receipt hashes. This mutates durable memory, not the environment.',
     inputSchema: { episodeId, idempotencyKey, rule: memoryCommit },
@@ -430,7 +546,7 @@ export function registerActorTools(server: McpServer, context: ArcToolContext): 
     }))
   )));
 
-  server.registerTool('arc_graph_frontier', {
+    server.registerTool('arc_graph_frontier', {
     title: 'Inspect belief graph frontier',
     description: 'Read the highest-novelty untested action edges from the episode belief graph.',
     inputSchema: { episodeId, limit: z.number().int().min(1).max(100).optional() },
@@ -440,7 +556,7 @@ export function registerActorTools(server: McpServer, context: ArcToolContext): 
     frontier: record(context, id).controller.graphFrontier(limit),
   })));
 
-  server.registerTool('arc_execute_guarded_plan', {
+    server.registerTool('arc_execute_guarded_plan', {
     title: 'Execute guarded ARC plan',
     description: 'Execute bounded idempotent steps and stop immediately on the first observation postcondition mismatch.',
     inputSchema: {
@@ -464,7 +580,8 @@ export function registerActorTools(server: McpServer, context: ArcToolContext): 
       }
       return { episodeId: id, plan: result };
     })
-  )));
+    )));
+  }
 
   registerAppTool(server, 'arc_render', {
     title: 'Render exact ARC canvas',
@@ -564,9 +681,25 @@ export function registerBossTools(server: McpServer, context: ArcToolContext): v
   )));
 }
 
-export function toolNamesForLane(lane: McpLane): readonly string[] {
-  return lane === 'actor'
+export function toolNamesForLane(
+  lane: McpLane,
+  mode: 'legacy' | 'avo' = 'legacy',
+): readonly string[] {
+  if (lane === 'boss') {
+    return ['arc_supervisor_case', 'arc_supervisor_directive_commit'];
+  }
+  return mode === 'avo'
     ? [
+        'arc_start',
+        'arc_avo_context',
+        'arc_avo_step',
+        'arc_checkpoint',
+        'arc_resume',
+        'arc_status',
+        'arc_receipts_verify',
+        'arc_render',
+      ]
+    : [
         'arc_start',
         'arc_observe',
         'arc_act',
@@ -580,8 +713,7 @@ export function toolNamesForLane(lane: McpLane): readonly string[] {
         'arc_graph_frontier',
         'arc_execute_guarded_plan',
         'arc_render',
-      ]
-    : ['arc_supervisor_case', 'arc_supervisor_directive_commit'];
+      ];
 }
 
 export const ARC_ACTION_NAMES = actionName.options;

@@ -16,7 +16,7 @@ import type {
   StartedArcEnvironment,
   StartGameOptions,
 } from '@metaharness/arc-agi-3';
-import { hashArcValue } from '@metaharness/arc-agi-3';
+import { hashArcValue, resolveArcAvoConfig } from '@metaharness/arc-agi-3';
 import {
   ARC_AGI_3_PUBLIC_ACCEPTANCE_GATE,
   createOfficialArcControllerFactory as createOfficialArcControllerFactoryImplementation,
@@ -78,6 +78,13 @@ afterEach(async () => {
 
 function context(episodeId: string, principalId = 'operator') {
   return { principalId, episodeId, runId: episodeId };
+}
+
+function avoContext(episodeId: string, principalId = 'operator') {
+  return {
+    ...context(episodeId, principalId),
+    requestedSupervisionGate: 'BLOCKING' as const,
+  };
 }
 
 function canonicalJournalValue(value: unknown): string {
@@ -293,6 +300,35 @@ async function recordOneAction(controller: ArcController, key: string): Promise<
     action: { name: 'ACTION1' },
     expectation: { confidence: 0.5, expectedState: 'NOT_FINISHED' },
   });
+}
+
+async function recordOneAvoAction(
+  created: Awaited<ReturnType<ArcEpisodeStore['create']>>,
+  key: string,
+): Promise<void> {
+  const loop = created.record.avoLoop;
+  if (!loop) throw new Error('test requires an AVO loop');
+  const current = loop.context();
+  await loop.stepWithCandidates([{
+    parentCandidateId: current.lineageHeadId ?? null,
+    baseObservationHash: current.observation.observationHash,
+    hypothesis: 'ACTION1 should produce an observable transition.',
+    citedRuleIds: [],
+    ruleHypotheses: [{
+      scope: 'LEVEL',
+      kind: 'ACTION_MAP',
+      statement: 'ACTION1 changes the visible frame in this level.',
+      preconditions: ['The current observation lists ACTION1 as available.'],
+      predictedEffect: 'The visible frame changes while the level remains active.',
+    }],
+    steps: [{
+      expectedObservationHash: current.observation.observationHash,
+      idempotencyKey: key,
+      action: { name: 'ACTION1' },
+      expectation: { confidence: 0.5, expectedState: 'NOT_FINISHED' },
+      postcondition: { levelsCompleted: 0 },
+    }],
+  }]);
 }
 
 describe('official hidden-assignment factory', () => {
@@ -554,6 +590,29 @@ describe('official hidden-assignment factory', () => {
 
     expect(evidence.accepted).toBe(true);
     expect(evidence.acceptanceGate).toEqual(TEST_GATE);
+    expect(evidence.actorProfile).toEqual({
+      mode: 'legacy',
+      toolNames: [
+        'arc_start',
+        'arc_observe',
+        'arc_act',
+        'arc_supervise',
+        'arc_checkpoint',
+        'arc_resume',
+        'arc_status',
+        'arc_receipts_verify',
+        'arc_memory_query',
+        'arc_memory_commit',
+        'arc_graph_frontier',
+        'arc_execute_guarded_plan',
+        'arc_render',
+      ],
+    });
+    expect(evidence.actorProfile).toEqual(factory.actorProfile);
+    expect(Object.isFrozen(evidence.actorProfile)).toBe(true);
+    expect(Object.isFrozen(factory.actorProfile)).toBe(true);
+    expect(Object.isFrozen(evidence.actorProfile.toolNames)).toBe(true);
+    expect(JSON.stringify(evidence.actorProfile)).not.toContain('private-game-a');
     expect(evidence.failures).toEqual([]);
     expect(evidence.summary).toMatchObject({
       totalActions: 1,
@@ -745,6 +804,10 @@ describe('official hidden-assignment factory', () => {
       environmentAdapterVersion: `  ${String(MANIFEST.environmentAdapterVersion)}  `,
     };
     const mutableBudget: Partial<ArcRunBudget> = { maxActions: 2 };
+    const mutableAvo: { arm: 'AVO_FULL'; maxCandidatesPerDecision: number } = {
+      arm: 'AVO_FULL',
+      maxCandidatesPerDecision: 6,
+    };
     const factory = track(createOfficialArcControllerFactory({
       assignments: [{ gameId: 'private-game-snapshot' }],
       bridge,
@@ -752,6 +815,7 @@ describe('official hidden-assignment factory', () => {
       evidenceAnchor: anchor,
       runManifest: mutableManifest,
       budget: mutableBudget,
+      avo: mutableAvo,
     }));
 
     mutableManifest.visibleModelLabel = 'mutated model label';
@@ -760,31 +824,243 @@ describe('official hidden-assignment factory', () => {
     mutableManifest.environmentAdapterVersion = 'mutated-adapter';
     mutableBudget.maxActions = 1;
     mutableBudget.maxWallTimeMs = 1_000;
+    mutableAvo.maxCandidatesPerDecision = 8;
 
-    const controller = await factory(context('episode-snapshot'));
-    const observation = await controller.start();
-    const transition = await controller.act({
-      expectedObservationHash: observation.observationHash,
-      idempotencyKey: 'snapshot-action-0001',
-      action: { name: 'ACTION1' },
-      expectation: { confidence: 0.5, expectedState: 'NOT_FINISHED' },
-    });
+    await expect(factory(context('episode-profile-drift'))).rejects.toThrow(
+      /AVO supervision gate does not match/,
+    );
+    expect(bridge.starts).toHaveLength(0);
+
+    const stateRoot = await temporaryEvidenceRoot();
+    const store = new ArcEpisodeStore(
+      factory,
+      stateRoot,
+      () => new Date(),
+      4,
+      64,
+      { arm: 'AVO_FULL', maxCandidatesPerDecision: 6 },
+    );
+    const created = await store.create('operator');
+    const controller = created.record.controller;
+    const step = await created.record.avoLoop!.stepWithCandidates([{
+      parentCandidateId: null,
+      baseObservationHash: created.observation.observationHash,
+      hypothesis: 'ACTION1 should produce an observable transition.',
+      citedRuleIds: [],
+      ruleHypotheses: [{
+        scope: 'LEVEL',
+        kind: 'ACTION_MAP',
+        statement: 'ACTION1 changes the visible frame in this level.',
+        preconditions: ['The current observation lists ACTION1 as available.'],
+        predictedEffect: 'The visible frame changes while the level remains active.',
+      }],
+      steps: [{
+        expectedObservationHash: created.observation.observationHash,
+        idempotencyKey: 'snapshot-action-0001',
+        action: { name: 'ACTION1' },
+        expectation: { confidence: 0.5, expectedState: 'NOT_FINISHED' },
+        postcondition: { levelsCompleted: 0 },
+      }],
+    }]);
+    const transition = step.completed[0]!;
     expect(transition.receipt.visibleModelLabel).toBe(MANIFEST.visibleModelLabel);
     expect(transition.receipt.promptSnapshotHash).toBe(MANIFEST.promptSnapshotHash);
     expect(transition.receipt.toolSchemaHash).toBe(MANIFEST.toolSchemaHash);
     expect(transition.receipt.environmentAdapterVersion).toBe(MANIFEST.environmentAdapterVersion);
     expect(controller.status()).toMatchObject({ maxActions: 2, maxWallTimeMs: 14_400_000 });
-    await controller.close();
-
+    const diagnosticCheckpoint = await created.record.avoLoop!.checkpoint();
+    const diagnosticVerification = controller.verifyReceipts();
+    // Keep the assertion object compact so a failure identifies any binding
+    // that would make official AVO evidence ineligible.
+    expect({
+      config: diagnosticCheckpoint.config.configHash,
+      runId: diagnosticCheckpoint.coreCheckpoint.runId,
+      statusRunId: controller.status().runId,
+      observation: diagnosticCheckpoint.observationHash,
+      statusObservation: controller.status().observationHash,
+      baseline: diagnosticCheckpoint.coreReceiptBaselineCount,
+      receipts: diagnosticCheckpoint.coreCheckpoint.receipts.length,
+      verified: diagnosticVerification.count,
+      covered: diagnosticCheckpoint.archive.outcomes.flatMap(
+        outcome => outcome.coreReceiptHashes,
+      ).length,
+    }).toEqual({
+      config: resolveArcAvoConfig({
+        arm: 'AVO_FULL',
+        maxCandidatesPerDecision: 6,
+      }).configHash,
+      runId: controller.status().runId,
+      statusRunId: controller.status().runId,
+      observation: controller.status().observationHash,
+      statusObservation: controller.status().observationHash,
+      baseline: 0,
+      receipts: 1,
+      verified: 1,
+      covered: 1,
+    });
+    await store.closeAll();
     const evidence = await factory.finalizeEvidence();
+    expect(evidence.failures).toEqual([]);
     expect(evidence.accepted).toBe(true);
+    expect(evidence.episodes[0]?.avoExecution).toMatchObject({
+      schema: 'metaharness.arc_agi_3.avo_execution.v1',
+      avoConfigHash: resolveArcAvoConfig({
+        arm: 'AVO_FULL',
+        maxCandidatesPerDecision: 6,
+      }).configHash,
+      coreReceiptCount: 1,
+      coveredPostBaselineReceiptCount: 1,
+      selectionCount: 1,
+      outcomeCount: 1,
+    });
+    const resolvedAvo = resolveArcAvoConfig({
+      arm: 'AVO_FULL',
+      maxCandidatesPerDecision: 6,
+    });
+    const actorProfile = {
+      mode: 'avo',
+      toolNames: [
+        'arc_start',
+        'arc_avo_context',
+        'arc_avo_step',
+        'arc_checkpoint',
+        'arc_resume',
+        'arc_status',
+        'arc_receipts_verify',
+        'arc_render',
+      ],
+      avoArm: 'AVO_FULL',
+      avoConfigHash: resolvedAvo.configHash,
+    } as const;
+    expect(evidence.actorProfile).toEqual(actorProfile);
+    expect(factory.actorProfile).toEqual(actorProfile);
+    expect(Object.keys(evidence.actorProfile).sort()).toEqual([
+      'avoArm',
+      'avoConfigHash',
+      'mode',
+      'toolNames',
+    ]);
     expect(evidence.configurationHash).toBe(hashArcValue({
       assignments: [{ gameId: 'private-game-snapshot' }],
       runManifest: { ...MANIFEST, controllerVersion: '0.1.0' },
       budget: { maxActions: 2, maxWallTimeMs: 14_400_000 },
       scorecard: {},
       acceptanceGate: TEST_GATE,
+      actorProfile,
     }));
+  });
+
+  it('makes correctly gated raw-controller AVO execution ineligible for accepted evidence', async () => {
+    const bridge = new FakeOfficialBridge();
+    const anchor = new MockExternalAnchor();
+    bridge.scorecard = officialScorecard({ guid: 'opaque-guid-1', actions: 1 });
+    const factory = track(createOfficialArcControllerFactory({
+      assignments: [{ gameId: 'private-avo-bypass' }],
+      bridge,
+      evidenceRoot: await temporaryEvidenceRoot(),
+      evidenceAnchor: anchor,
+      runManifest: MANIFEST,
+      avo: { arm: 'AVO_FULL' },
+    }));
+
+    const controller = await factory(avoContext('episode-avo-bypass'));
+    await recordOneAction(controller, 'avo-bypass-action-0001');
+    const evidence = await factory.finalizeEvidence();
+
+    expect(evidence.accepted).toBe(false);
+    expect(evidence.failures).toContain('AVO_RUNTIME_PROFILE_UNBOUND');
+    expect(evidence.episodes[0]).toMatchObject({ accepted: false });
+    expect(evidence.episodes[0]?.avoExecution).toBeUndefined();
+  });
+
+  it('invalidates AVO evidence when a raw action bypasses an already-bound loop', async () => {
+    const bridge = new FakeOfficialBridge();
+    const anchor = new MockExternalAnchor();
+    bridge.scorecard = officialScorecard({ guid: 'opaque-guid-1', actions: 2 });
+    const factory = track(createOfficialArcControllerFactory({
+      assignments: [{ gameId: 'private-avo-late-bypass' }],
+      bridge,
+      evidenceRoot: await temporaryEvidenceRoot(),
+      evidenceAnchor: anchor,
+      runManifest: MANIFEST,
+      avo: { arm: 'AVO_FULL' },
+    }));
+    const store = new ArcEpisodeStore(
+      factory,
+      await temporaryEvidenceRoot(),
+      () => new Date(),
+      4,
+      64,
+      { arm: 'AVO_FULL' },
+    );
+    const created = await store.create('operator');
+    await recordOneAvoAction(created, 'late-bypass-avo-action');
+    const current = created.record.avoLoop!.context().observation;
+    await created.record.controller.act({
+      expectedObservationHash: current.observationHash,
+      idempotencyKey: 'late-bypass-raw-action',
+      action: { name: 'ACTION1' },
+      expectation: { confidence: 0.5, expectedState: 'NOT_FINISHED' },
+    });
+
+    const evidence = await factory.finalizeEvidence();
+    expect(evidence.accepted).toBe(false);
+    expect(evidence.failures).toContain('AVO_EXECUTION_ATTESTATION_INVALID');
+    expect(evidence.episodes[0]?.avoExecution).toBeUndefined();
+    await store.closeAll();
+  });
+
+  it('captures every AVO episode before advancing a multi-game official queue', async () => {
+    const bridge = new FakeOfficialBridge();
+    const anchor = new MockExternalAnchor();
+    bridge.scorecard = {
+      score: 100,
+      competition_mode: true,
+      total_environments: 2,
+      total_environments_completed: 2,
+      total_levels: 2,
+      total_levels_completed: 2,
+      total_actions: 2,
+      environments: [1, 2].map(index => ({
+        runs: [{ guid: `opaque-guid-${index}`, actions: 1, resets: 0 }],
+      })),
+    };
+    const factory = track(createOfficialArcControllerFactoryImplementation({
+      assignments: [{ gameId: 'private-avo-a' }, { gameId: 'private-avo-b' }],
+      bridge,
+      evidenceRoot: await temporaryEvidenceRoot(),
+      evidenceAnchor: anchor,
+      runManifest: MANIFEST,
+      avo: { arm: 'AVO_FULL' },
+      acceptanceGate: { expectedGames: 2, expectedLevels: 2, requiredScore: 100 },
+    }));
+    const store = new ArcEpisodeStore(
+      factory,
+      await temporaryEvidenceRoot(),
+      () => new Date(),
+      4,
+      64,
+      { arm: 'AVO_FULL' },
+    );
+
+    const first = await store.create('operator');
+    await recordOneAvoAction(first, 'multi-game-avo-action-1');
+    factory.approveAdvance(first.record.episodeId);
+    const second = await store.create('operator');
+    await recordOneAvoAction(second, 'multi-game-avo-action-2');
+    factory.approveAdvance(second.record.episodeId);
+    await store.closeAll();
+
+    const evidence = await factory.finalizeEvidence();
+    expect(evidence.failures).toEqual([]);
+    expect(evidence.accepted).toBe(true);
+    expect(evidence.episodes).toHaveLength(2);
+    expect(evidence.episodes.every(item => (
+      item.accepted
+      && item.avoExecution?.coreReceiptCount === 1
+      && item.avoExecution.coveredPostBaselineReceiptCount === 1
+    ))).toBe(true);
+    expect(first.record.controller.status().closed).toBe(true);
   });
 
   it('reconciles RESET separately when official run actions include resets', async () => {

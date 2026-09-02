@@ -49,9 +49,14 @@ Output is an npm-publishable `.zip` with **your name on it, your branding, your 
   [`@metaharness/arc-agi-3-chatgpt`](packages/arc-agi-3-chatgpt/) exposes that
   controller as a remote MCP server and MCP Apps canvas for ChatGPT Developer
   Mode. ChatGPT is the OpenAI reasoning host: neither package uses the OpenAI
-  API or an `OPENAI_API_KEY`. Both packages remain private and experimental;
-  no benchmark result is claimed until an official closed scorecard satisfies
-  the frozen acceptance gate in [ADR-253](docs/adrs/ADR-253-arc-agi-3-chatgpt-harness.md).
+  API or an `OPENAI_API_KEY`. An opt-in ARC-specific AVO loop adds governed
+  candidate selection, lineage, memory, blocking supervision, and an explicitly
+  separate retrodiction arm. The frozen synthetic mechanism gate passes, and
+  one actor-declared-clean single-game smoke favored AVO 3.2676 to 0.3968, but that
+  non-competition result is not claim-eligible. All packages remain private and
+  experimental; no ARC performance claim is made until an official closed
+  scorecard satisfies the frozen controlled-ablation gate in
+  [ADR-254](docs/adrs/ADR-254-arc-avo-controlled-ablation.md).
 - **Governed autonomous variation for difficult engineering work.**
   [`@metaharness/avo`](packages/avo/) lets an agent repeatedly inspect, edit,
   execute real tools, evaluate, repair/revert, branch, consult structured RVF

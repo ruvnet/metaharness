@@ -34,6 +34,16 @@
       "arc_graph_frontier",
       "arc_execute_guarded_plan"
     ],
+    "actorAvo": [
+      "arc_start",
+      "arc_avo_context",
+      "arc_avo_step",
+      "arc_checkpoint",
+      "arc_resume",
+      "arc_status",
+      "arc_receipts_verify",
+      "arc_render"
+    ],
     "boss": [
       "arc_supervisor_case",
       "arc_supervisor_directive_commit"

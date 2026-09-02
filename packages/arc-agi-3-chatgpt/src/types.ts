@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 
-import type { ArcController } from '@metaharness/arc-agi-3';
+import type {
+  ArcAvoConfig,
+  ArcAvoConfigInput,
+  ArcController,
+} from '@metaharness/arc-agi-3';
 
 export type McpLane = 'actor' | 'boss';
 
@@ -10,6 +14,8 @@ export interface ArcControllerFactoryContext {
   /** Public, unpredictable episode handle and the controller run id. */
   episodeId: string;
   runId: string;
+  /** Requested immutable core gate for the selected MCP/AVO profile. */
+  requestedSupervisionGate?: 'OFF' | 'BLOCKING';
 }
 
 /**
@@ -88,6 +94,12 @@ export interface ServerLimits {
 
 export interface ArcMcpServerOptions {
   controllerFactory: ArcControllerFactory;
+  /**
+   * Opt in to the ARC-specific AVO surface. When present, the actor route
+   * exposes candidate/context tools and does not register raw action, guarded
+   * plan, or direct memory mutation tools.
+   */
+  avo?: ArcAvoConfig | ArcAvoConfigInput;
   auth?: AuthConfig;
   audit?: AuditSink;
   policy?: Partial<ToolPolicyConfig>;

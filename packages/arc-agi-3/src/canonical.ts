@@ -171,12 +171,15 @@ export function hashArcValue(value: unknown): string {
 }
 
 /** Strictly clone and freeze an adapter value before it enters a hash boundary. */
-export function snapshotArcJson(value: unknown): JsonValue {
+export function snapshotArcJson(value: unknown, maxNodes = 1_000_000): JsonValue {
+  if (!Number.isSafeInteger(maxNodes) || maxNodes < 1 || maxNodes > 4_000_000) {
+    throw new TypeError('JSON snapshot node limit is invalid');
+  }
   const seen = new WeakSet<object>();
   const counter = { count: 0 };
   const clone = (candidate: unknown, depth: number): JsonValue => {
     counter.count += 1;
-    if (depth > 64 || counter.count > 1_000_000) {
+    if (depth > 64 || counter.count > maxNodes) {
       throw new TypeError('JSON value exceeds depth or size limits');
     }
     if (candidate === null || typeof candidate === 'string' || typeof candidate === 'boolean') {
