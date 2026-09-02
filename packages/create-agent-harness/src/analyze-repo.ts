@@ -30,6 +30,12 @@ export interface RepoProfile {
   buildCommands: string[];
   testCommands: string[];
   tokens: string[];
+  // Real filesystem evidence a tests/__tests__/test directory exists — set by
+  // gatherFiles() via the '__test_dir__' marker (Dream Cycle 2026-08-25).
+  // Optional: analyzeFiles() stays pure/fixture-driven; callers that build a
+  // RepoProfile by hand (tests, the web-UI importer) simply omit it, and
+  // scoreTestConfidence() treats a missing value as "unverified".
+  hasVerifiedTestFiles?: boolean;
 }
 
 export interface PolicyProfile {
@@ -103,6 +109,14 @@ export const ARCHETYPES: Archetype[] = [
 const HIGH_SIGNAL = ['README.md', 'package.json', 'Cargo.toml', 'pyproject.toml', 'requirements.txt', 'go.mod', 'CONTRIBUTING.md', '.mcp.json'];
 const IGNORE_DIRS = new Set(['node_modules', '.git', 'dist', 'target', 'build', 'coverage', '.next', '.cache', 'vendor']);
 
+function dirExists(root: string, sub: string): boolean {
+  try {
+    return existsSync(join(root, sub)) && statSync(join(root, sub)).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
 /** Read high-signal files + cheap structural probes. Never reads arbitrary source. */
 export function inventory(dir: string): Record<string, string> {
   const root = resolve(dir);
@@ -120,6 +134,11 @@ export function inventory(dir: string): Record<string, string> {
   if (existsSync(join(root, '.github', 'workflows'))) files['.github/workflows/ci.yml'] = '# present';
   if (existsSync(join(root, '.claude'))) files['.claude/settings.json'] = '{}';
   if (existsSync(join(root, '.codex'))) files['.codex/config.toml'] = '';
+  // Real fs evidence a test directory exists (mirrors score.ts's dirExists
+  // check) — read by analyzeFiles() into hasVerifiedTestFiles, since language
+  // detection alone (a pyproject.toml/go.mod) doesn't mean any test file
+  // actually exists (Dream Cycle 2026-08-25).
+  if (['__tests__', 'tests', 'test'].some((d) => dirExists(root, d))) files['__test_dir__'] = 'present';
   // Cheap top-level dir scan so structure signals work without deep walks.
   try {
     for (const e of readdirSync(root)) {
@@ -148,6 +167,12 @@ export function analyzeFiles(name: string, files: Record<string, string>): RepoP
   if (get('pyproject.toml') || get('requirements.txt')) languages.push('python');
   if (get('go.mod')) languages.push('go');
 
+  // KNOWN SIBLING GAP (Dream Cycle 2026-08-15, disclosed not fixed): this
+  // exact language-detection + buildCommands block is duplicated in
+  // apps/web-ui/src/generator/repo.ts (the browser-side Studio importer,
+  // ADR-023/026) and was NOT updated in lockstep here — that copy still has
+  // no python/go build-command inference. Not in scope tonight (different
+  // package/deployment surface); see docs/dream-cycle/2026-08-15-gist.md.
   const buildCommands: string[] = [];
   const testCommands: string[] = [];
   try {
@@ -161,8 +186,17 @@ export function analyzeFiles(name: string, files: Record<string, string>): RepoP
     buildCommands.push('cargo build');
     testCommands.push('cargo test');
   }
-  if (languages.includes('python')) testCommands.push('pytest');
-  if (languages.includes('go')) testCommands.push('go test ./...');
+  if (languages.includes('python')) {
+    // pyproject.toml signals a packageable project (editable install is the
+    // build step); requirements.txt-only repos are app-shaped, not a
+    // package, so their build step is installing the pinned deps.
+    buildCommands.push(get('pyproject.toml') ? 'pip install -e .' : 'pip install -r requirements.txt');
+    testCommands.push('pytest');
+  }
+  if (languages.includes('go')) {
+    buildCommands.push('go build ./...');
+    testCommands.push('go test ./...');
+  }
 
   const text = [get('README.md'), get('package.json'), get('Cargo.toml'), get('pyproject.toml'), get('CONTRIBUTING.md')].join('\n');
   return {
@@ -175,6 +209,7 @@ export function analyzeFiles(name: string, files: Record<string, string>): RepoP
     buildCommands,
     testCommands,
     tokens: tokenize(text),
+    hasVerifiedTestFiles: !!files['__test_dir__'],
   };
 }
 

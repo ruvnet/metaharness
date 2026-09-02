@@ -105,8 +105,20 @@ export function scanMcp(dir: string): ScanReport {
     if (a === '*' || a === 'mcp__*' || a === 'mcp__*__*') {
       add({ id: 'wildcard-tool-perm', severity: 'high', title: `Over-broad tool permission: ${a}`, detail: 'Wildcard MCP permissions grant every tool on every server. Scope to mcp__<server>__*.' });
     }
-    if (/^Bash\((rm|curl|wget|sudo|chmod|ssh)\b/i.test(a) && !a.includes('status') && !a.includes('--dry-run')) {
-      add({ id: 'risky-bash-allow', severity: 'medium', title: `Risky shell allow-rule: ${a}`, detail: 'Allowing rm/curl/wget/sudo/ssh broadly is dangerous; narrow the glob.' });
+    if (a === 'Bash' || a === 'Bash(*)') {
+      // Fully unscoped — no command restriction at all, strictly more dangerous than the interpreter
+      // list below. No current generator wires exactly this string into .claude/settings.json (the
+      // web-ui's claudeSettings() hardcodes a scoped Bash(npx <name>*), and host-config.ts's own
+      // 'Bash(*)' push only reaches non-claude-code config shapes mcp-scan doesn't read) — this is
+      // defense-in-depth against the config shape itself, not a report of a live generator bug.
+      add({ id: 'unrestricted-bash-allow', severity: 'high', title: `Unrestricted shell allow-rule: ${a}`, detail: 'This allow-rule places no restriction on which commands Bash may run — equivalent to allowShell=true regardless of what .harness/mcp-policy.json says. Scope to specific commands.' });
+    } else if (/^Bash\((rm|curl|wget|sudo|chmod|ssh|python3?|node|ruby|perl|bash|sh)\b/i.test(a) && !a.includes('status') && !a.includes('--dry-run')) {
+      // python/node/ruby/perl/bash/sh are arbitrary-code-execution interpreters, not narrow file
+      // operations like rm/curl — an unscoped allow-rule for one is a live gap today: the vertical:ai
+      // template's .claude/settings.json.tmpl ships 'Bash(python *)' in its allow list as shown by a
+      // real `metaharness --template vertical:ai` scaffold, and it was previously unflagged by any
+      // check in this loop (not the exact-wildcard check above, not this regex before this fix).
+      add({ id: 'risky-bash-allow', severity: 'medium', title: `Risky shell allow-rule: ${a}`, detail: 'Allowing rm/curl/wget/sudo/ssh, or an unscoped script interpreter, broadly is dangerous; narrow the glob.' });
     }
   }
   const guardsEnv = deny.some((d) => /\.env/.test(d));

@@ -17,6 +17,8 @@ cleanly to a frozen, deterministic core. Those are what this package clones:
 | `command_classify.py` | classify the WHOLE shell command, not just its first token, so a gated op can't be smuggled inside a benign one | **`CommandGuard`** — quote-aware segment/substitution classifier in Rust/WASM |
 | context compaction | flush durable facts to memory **before** a lossy summary replaces the history | **`CompactionPolicy`** — the flush-before-summarize ordering as an enforced invariant |
 | the Runner loop | drive the model, guard tools, observe, compact, until final or halt | **`LongHorizonDriver`** — the three, composed |
+| tool execution | return observed stdout/stderr/exit/timing/artifact state | **`NodeToolExecutor`** — bounded execution with a policy receipt and post-action workspace digest |
+| durable continuity | resume transcript, evidence, budget, approvals, archive, and memory cursor | **`HorizonCheckpoint`** — canonical state hash over the full driver state |
 
 ## Why Rust/WASM for two of them
 
@@ -116,12 +118,17 @@ model and the gate-approval as pluggable seams. See `scripts/demo.mjs` for a
 full run where a scripted model attempts an exfiltration command, the guard
 blocks it, and the identical repeated failure trips the halt controller.
 
+The driver never marks a command as executed by assumption. Its injected
+`ToolExecutor` returns actual stdout, stderr, exit code, duration, artifact
+digest, and policy receipt; the complete transcript and continuity state are
+included in `snapshot()` and verified by `verifyCheckpoint()` on restore.
+
 ## Build & test
 
 ```bash
 npm run build:wasm   # cargo build --release --target wasm32-unknown-unknown → wasm/horizon_core.wasm
 npm run build        # tsc
-npm test             # 19 TS tests
+npm test             # 22 TS tests
 npm run test:rust    # 14 Rust tests incl. a 20k-iteration never-panics fuzz
 npm run demo         # end-to-end walkthrough
 ```

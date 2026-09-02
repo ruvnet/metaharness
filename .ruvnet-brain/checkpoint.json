@@ -1,0 +1,9 @@
+{
+  "iteration": 6,
+  "phase": "completion",
+  "doneCriteria": "npm run build && npm test --workspace @metaharness/horizon -- --run && npm test --workspace @metaharness/avo -- --run && npm run benchmark:swebench --workspace @metaharness/avo && npm pack --dry-run --workspace @metaharness/avo",
+  "next": "Run the preregistered 100-task unseen SWE-bench benchmark, then obtain exact-SHA protected CI, non-skipped QE, two independent graders, and a release-proof candidate receipt before merge/publication.",
+  "blockers": "Implementation, local monorepo tests, lint, deterministic three-arm accounting, real 205-action RVF interruption proof, and packed-artifact smoke are complete. Product ship gate remains false because the bundled benchmark is synthetic, Agentic QE is unavailable, some baseline tests skip optional/live substrates, the repository has no protected-release candidate receipt, and the live 100-task unseen SWE-bench run was not performed. OpenRouter attempts were authorized but produced no auditable response/usage receipt, so no further paid calls were issued. Publication is human/protected-workflow only.",
+  "branch": "feat/avo-class-autonomous-variation",
+  "base": "5453c8c990824b54e05f289774e5a8b2cea0a32e"
+}

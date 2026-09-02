@@ -944,6 +944,18 @@ async function runMetaHarnessSubcommand(sub: string, rest: string[]): Promise<nu
       for (const line of r.lines) console.log(line);
       return r.code;
     }
+    case 'avo': {
+      // `metaharness avo <trusted-key|gate-build|gate-submit>` — delegates to @metaharness/avo
+      // (ADR-251 governed autonomous variation runtime + ADR-271 flywheel-gate receipt contract).
+      // Turns an AVO run summary into the five Ed25519-signed gate receipts and submits them to
+      // POST /v1/flywheel/gate for a governed promotion verdict; `trusted-key` prints the SPKI-DER
+      // public key to register in the gateway's FLYWHEEL_TRUSTED_PUBLIC_KEYS_JSON allowlist. The
+      // GovernedVariationOperator itself stays a library import — the gateway is never a runtime dep.
+      const { dispatch } = await import('@metaharness/avo/cli');
+      const r = await dispatch(rest[0], rest.slice(1));
+      for (const line of r.lines) console.log(line);
+      return r.code;
+    }
     case 'proxy': {
       // Optional Meta-Proxy integration. The signed Rust sidecar is downloaded
       // only through its explicit `install --yes` command, never while scaffolding.
@@ -1035,6 +1047,7 @@ export async function main(argv: string[]): Promise<number> {
     console.log('       npx metaharness analyze <repo>           (recommend a harness plan, no-exec)');
     console.log('       npx metaharness genome <repo>            (7-section repo readiness)');
     console.log('       npx metaharness learn --host <h> --model <m> --slice <manifest>   (ADR-235 GEPA learning run — $0 dry-run by default, --run to spend; needs a repo checkout)');
+    console.log('       npx metaharness avo <trusted-key|gate-build|gate-submit>  (ADR-271 flywheel-gate receipts from an AVO run summary)');
     console.log('       npx metaharness proxy <install|status|start|stop|enable|disable|path|login|logout>  (optional signed Cognitum Meta-Proxy sidecar)');
     console.log('       npx metaharness --from-existing [./path]');
     console.log('       npx metaharness --wizard          (iter 100 — interactive picker)');
