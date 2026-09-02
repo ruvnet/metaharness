@@ -20,6 +20,13 @@ import {
 } from './compaction.js';
 import { UnavailableToolExecutor, type ToolExecutionResult, type ToolExecutor } from './executor.js';
 import {
+  verifyCompletionCertificate,
+  type CompletionCertificate,
+  type CompletionConfig,
+  type CompletionReplay,
+  type CompletionVerification,
+} from './completion.js';
+import {
   hashCheckpoint,
   verifyCheckpoint,
   type HorizonCheckpoint,
@@ -27,6 +34,8 @@ import {
 } from './checkpoint.js';
 
 export interface HorizonEvent {
+  /** Stable identity for evidence references. Tool events use `tool:<actionCount>`. */
+  id?: string;
   role: 'model' | 'tool' | 'summary';
   text: string;
   receipt?: ToolExecutionResult;
@@ -34,7 +43,7 @@ export interface HorizonEvent {
 
 /** What one model step decides to do. */
 export type StepResult =
-  | { kind: 'final'; output: string }
+  | { kind: 'final'; output: string; certificate?: CompletionCertificate }
   | {
       kind: 'tool';
       /** A shell command to run; it is classified by the guard first. */
@@ -54,6 +63,8 @@ export interface DriverSeams {
   approve?(command: string, c: Classification): Promise<boolean>;
   /** Real execution seam. Absence is an observed exit-127 failure, never assumed success. */
   executor?: ToolExecutor;
+  /** Deterministically reconstruct a completion claim from referenced evidence. */
+  replayCompletion?: CompletionReplay;
   /** Context compaction seams (token estimate, flush, summarize). */
   compaction: CompactionSeams<HorizonEvent>;
 }
@@ -62,10 +73,18 @@ export interface DriverConfig {
   halt: HaltConfig;
   policy: CommandPolicy;
   compaction: CompactionConfig;
+  /** Optional evidence gate for final completion. Absent preserves legacy behavior. */
+  completion?: CompletionConfig;
 }
 
 export type TurnOutcome =
-  | { kind: 'final'; output: string; iterations: number; events: HorizonEvent[] }
+  | {
+      kind: 'final';
+      output: string;
+      iterations: number;
+      events: HorizonEvent[];
+      completion?: CompletionVerification;
+    }
   | { kind: 'halted'; reason: HaltReason; iterations: number; events: HorizonEvent[] };
 
 export class LongHorizonDriver {
@@ -73,6 +92,7 @@ export class LongHorizonDriver {
   private readonly guard: CommandGuard;
   private readonly compaction: CompactionPolicy<HorizonEvent>;
   private readonly executor: ToolExecutor;
+  private readonly completion?: CompletionConfig;
   private events: HorizonEvent[] = [];
   private actionCount = 0;
   private continuity: HorizonContinuity = {
@@ -99,6 +119,7 @@ export class LongHorizonDriver {
     this.guard = new CommandGuard(core, config.policy);
     this.compaction = new CompactionPolicy(seams.compaction, config.compaction);
     this.executor = seams.executor ?? new UnavailableToolExecutor();
+    this.completion = config.completion;
     if (checkpoint) {
       this.events = structuredClone(checkpoint.transcript);
       this.actionCount = checkpoint.actionCount;
@@ -142,8 +163,29 @@ export class LongHorizonDriver {
       const step = await this.seams.step({ events: this.events, iteration: this.halt.snapshot().iteration });
 
       if (step.kind === 'final') {
+        let completion: CompletionVerification | undefined;
+        if (this.completion) {
+          completion = await verifyCompletionCertificate(
+            step.certificate,
+            this.events,
+            this.completion,
+            this.seams.replayCompletion,
+          );
+          if (!completion.ok) {
+            const detail = completion.errors.slice(0, 4).join('; ').slice(0, 600);
+            this.events.push({ role: 'summary', text: `[completion rejected] ${detail}` });
+            this.halt.observe({ failure: `completion:${detail}` });
+            continue;
+          }
+        }
         this.events.push({ role: 'model', text: step.output });
-        return { kind: 'final', output: step.output, iterations: this.halt.snapshot().iteration, events: this.events };
+        return {
+          kind: 'final',
+          output: step.output,
+          iterations: this.halt.snapshot().iteration,
+          events: this.events,
+          ...(completion ? { completion } : {}),
+        };
       }
 
       // Classify, authorize, then execute. Every action yields observed evidence.
@@ -161,6 +203,7 @@ export class LongHorizonDriver {
       this.actionCount += 1;
       const label = observed.policyReceipt.authorized ? 'executed' : 'blocked';
       this.events.push({
+        id: `tool:${this.actionCount}`,
         role: 'tool',
         text: `[${label} exit=${observed.exitCode} duration=${observed.durationMs}ms digest=${observed.artifactDigest}] ${step.command}\nstdout:\n${observed.stdout}\nstderr:\n${observed.stderr}${step.note ? `\nnote: ${step.note}` : ''}`,
         receipt: observed,
