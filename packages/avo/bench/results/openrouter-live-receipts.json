@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-08-21T21:24:24.299Z",
+  "generatedAt": "2026-09-01T21:06:17.683Z",
   "model": "qwen/qwen3-8b",
   "baseUrl": "https://openrouter.ai/api/v1",
   "keySource": "gcp-secret-manager:OPENROUTER_API_KEY",
-  "totalCostUsd": 0.00466290396,
+  "totalCostUsd": 0.005106146760000001,
   "repaired": true,
   "actionReceipts": [
     {
@@ -22,7 +22,7 @@
       "kind": "execute",
       "verdict": "require-approval",
       "exitCode": 0,
-      "costUsd": 0.00013956228
+      "costUsd": 0.00013821093
     },
     {
       "kind": "evaluate",
@@ -33,37 +33,37 @@
       "kind": "commit",
       "verdict": "require-approval",
       "exitCode": 0,
-      "costUsd": 0.00020841678
+      "costUsd": 0.00017418258
     },
     {
       "kind": "evaluate",
       "verdict": "allow",
-      "costUsd": 0.00088290774
+      "costUsd": 0.00095002479
     },
     {
       "kind": "evaluate",
       "verdict": "allow",
-      "costUsd": 0.00088044957
+      "costUsd": 0.00118990872
     },
     {
       "kind": "evaluate",
       "verdict": "allow",
-      "costUsd": 0.00069375735
+      "costUsd": 0.0008104239
     },
     {
       "kind": "evaluate",
       "verdict": "allow",
-      "costUsd": 0.00071967753
+      "costUsd": 0.00050211018
     },
     {
       "kind": "evaluate",
       "verdict": "allow",
-      "costUsd": 0.00060685911
+      "costUsd": 0.00081001206
     }
   ],
   "usage": [
     {
-      "generationId": "gen-1787347323-8fwOZsbKg02K4ObSG6Pw",
+      "generationId": "gen-1788296627-TlxsoWOifh5HMb5Qul7A",
       "model": "qwen/qwen3-8b",
       "promptTokens": 181,
       "completionTokens": 337,
@@ -71,7 +71,7 @@
       "actionKind": "inspect"
     },
     {
-      "generationId": "gen-1787347327-emrdJigqPGkcALIDNhsc",
+      "generationId": "gen-1788296632-j0y4RLvB3hv4DOpThFUm",
       "model": "qwen/qwen3-8b",
       "promptTokens": 209,
       "completionTokens": 412,
@@ -79,15 +79,15 @@
       "actionKind": "edit"
     },
     {
-      "generationId": "gen-1787347333-9SiTluXy3xlooy9iKRCG",
+      "generationId": "gen-1788296638-TV3WaMb4nAdxSvAhc8E5",
       "model": "qwen/qwen3-8b",
       "promptTokens": 221,
-      "completionTokens": 253,
-      "costUsd": 0.00013956228,
+      "completionTokens": 250,
+      "costUsd": 0.00013821093,
       "actionKind": "execute"
     },
     {
-      "generationId": "gen-1787347337-Ktt23V3nhXG1HdHcFwYx",
+      "generationId": "gen-1788296643-WXoEYK7dCl3LuormnAWO",
       "model": "qwen/qwen3-8b",
       "promptTokens": 230,
       "completionTokens": 271,
@@ -95,51 +95,51 @@
       "actionKind": "evaluate"
     },
     {
-      "generationId": "gen-1787347342-7bbyuq3THptl0S0MTxcz",
+      "generationId": "gen-1788296648-COBFbWuREn8Y66pC4YAr",
       "model": "qwen/qwen3-8b",
       "promptTokens": 236,
-      "completionTokens": 402,
-      "costUsd": 0.00020841678,
+      "completionTokens": 326,
+      "costUsd": 0.00017418258,
       "actionKind": "commit"
     },
     {
-      "generationId": "gen-1787347348-GHOge4eGSVoXiDFfkR5a",
+      "generationId": "gen-1788296652-CbL9nGB9ZSIbwBazQXhW",
       "model": "qwen/qwen3-8b",
       "promptTokens": 253,
-      "completionTokens": 1895,
-      "costUsd": 0.00088290774,
+      "completionTokens": 2044,
+      "costUsd": 0.00095002479,
       "actionKind": "evaluate"
     },
     {
-      "generationId": "gen-1787347375-rUAmc3KZwjq2tY8riwRI",
+      "generationId": "gen-1788296680-D7LNG2dUwwAXTqs7ERug",
       "model": "qwen/qwen3-8b",
       "promptTokens": 259,
-      "completionTokens": 1888,
-      "costUsd": 0.00088044957,
+      "completionTokens": 2575,
+      "costUsd": 0.00118990872,
       "actionKind": "evaluate"
     },
     {
-      "generationId": "gen-1787347401-RhAGccP5rwlu2E8wO8ra",
+      "generationId": "gen-1788296716-A1bTRxpbGGlA34NuJTCl",
       "model": "qwen/qwen3-8b",
       "promptTokens": 265,
-      "completionTokens": 1472,
-      "costUsd": 0.00069375735,
+      "completionTokens": 1731,
+      "costUsd": 0.0008104239,
       "actionKind": "evaluate"
     },
     {
-      "generationId": "gen-1787347423-Lh7mznftDBGA8iQN3K5o",
+      "generationId": "gen-1788296740-qPbcgz3b5eEl8ezHSRNz",
       "model": "qwen/qwen3-8b",
       "promptTokens": 271,
-      "completionTokens": 1528,
-      "costUsd": 0.00071967753,
+      "completionTokens": 1045,
+      "costUsd": 0.00050211018,
       "actionKind": "evaluate"
     },
     {
-      "generationId": "gen-1787347444-uWfyR1vGT808btPa6zO2",
+      "generationId": "gen-1788296754-Ta91uPMh63nWsC8rorPq",
       "model": "qwen/qwen3-8b",
       "promptTokens": 277,
-      "completionTokens": 1276,
-      "costUsd": 0.00060685911,
+      "completionTokens": 1727,
+      "costUsd": 0.00081001206,
       "actionKind": "evaluate"
     }
   ]
