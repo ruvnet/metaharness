@@ -106,12 +106,12 @@ jobs:
           # --help is the cheapest smoke; just verifies bin + dist resolved.
           # If this is non-zero, the published tarball is broken (bin path,
           # missing dist, etc.) — exactly what iter 124's 0.1.0 hit.
-          npx --yes metaharness@${{ steps.resolve.outputs.version }} --help
+          npx --yes --package=metaharness@${{ steps.resolve.outputs.version }} -- metaharness --help
 
       - name: '`npx metaharness --version` reports the resolved version'
         shell: bash
         run: |
-          OUT=$(npx --yes metaharness@${{ steps.resolve.outputs.version }} --version 2>&1)
+          OUT=$(npx --yes --package=metaharness@${{ steps.resolve.outputs.version }} -- metaharness --version 2>&1)
           echo "stdout: $OUT"
           # Just verify the command ran; the version-string format is
           # owned by the CLI, not by this guard.
@@ -121,7 +121,7 @@ jobs:
         run: |
           mkdir -p /tmp/smoke-harness
           cd /tmp/smoke-harness
-          npx --yes metaharness@${{ steps.resolve.outputs.version }} my-bot \
+          npx --yes --package=metaharness@${{ steps.resolve.outputs.version }} -- metaharness my-bot \
             --template minimal \
             --host claude-code \
             --force
@@ -140,13 +140,13 @@ jobs:
           cd /tmp/smoke-score
           printf '{"name":"smoke-sdk","scripts":{"build":"tsc","test":"vitest"},"devDependencies":{"typescript":"^5"}}' > package.json
           printf '# smoke-sdk\nA TypeScript SDK / npm client library.\n' > README.md
-          OUT=$(npx --yes metaharness@${{ steps.resolve.outputs.version }} score . 2>&1)
+          OUT=$(npx --yes --package=metaharness@${{ steps.resolve.outputs.version }} -- metaharness score . 2>&1)
           echo "$OUT"
           echo "$OUT" | grep -q "Harness fit:"
           echo "$OUT" | grep -q "Recommended mode:"
-          npx --yes metaharness@${{ steps.resolve.outputs.version }} score . --top 2 | grep -q "harness designs"
+          npx --yes --package=metaharness@${{ steps.resolve.outputs.version }} -- metaharness score . --top 2 | grep -q "harness designs"
           # --constraints exits 0 for a healthy repo (hard gate satisfied)
-          npx --yes metaharness@${{ steps.resolve.outputs.version }} score . --constraints | grep -q "scaffold-ready"
+          npx --yes --package=metaharness@${{ steps.resolve.outputs.version }} -- metaharness score . --constraints | grep -q "scaffold-ready"
           echo "score command smoke OK"
 
       - name: '`harness doctor` on the scaffolded harness exits 0'
@@ -241,7 +241,7 @@ jobs:
             echo ""
             echo "=== HOST: $host ==="
             rm -rf "bot-$host"
-            npx --yes metaharness@latest "bot-$host" \
+            npx --yes --package=metaharness@latest -- metaharness "bot-$host" \
               --template minimal --host "$host" --force
           done
 
