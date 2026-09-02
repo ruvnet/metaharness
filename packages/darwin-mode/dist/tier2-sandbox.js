@@ -5,8 +5,10 @@
 // process (so the child can import the variant's `.ts` surfaces). Shell-free
 // (`execFile`, argv split — no command injection), env-scrubbed (only PATH +
 // identifiers leak), and timeout-bounded — the same safety posture as the real
-// sandbox (ADR-071). The gate (`inspectVariant`) has already cleared the variant
-// before any execution.
+// sandbox (ADR-071). The gate (`inspectVariant`) runs FIRST, exactly like the
+// 'real' sandbox (`sandbox.ts`) and the LLM-agent sandbox
+// (`llm-agent-sandbox.ts`): a disqualified variant's surface files are never
+// imported/executed by `tier2-driver.js`.
 //
 // Requires Node ≥ 22 (`--experimental-strip-types`). On older Node or any child
 // error, the variant gets a clean "unsolved" trace rather than crashing the loop.
@@ -14,7 +16,9 @@ import { execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
+import { inspectVariant } from './safety.js';
 const execFileAsync = promisify(execFile);
+const DISQUALIFIED_EXIT_CODE = 99;
 /**
  * Resolve the compiled driver. From `dist/tier2-sandbox.js` the sibling
  * `./tier2-driver.js` exists; when this module runs from `src/` (tests/dev via a
@@ -50,8 +54,31 @@ export const DEFAULT_AGENT_TASKS = [
     { id: 'a-mid', ...buggyAfter('cache', 'key', 35), classification: 'transient', failAttempts: 1, backoffMs: 30, difficulty: 3 },
     { id: 'a-hard', ...buggyAfter('retry', 'budget', 60), classification: 'transient', failAttempts: 2, backoffMs: 40, difficulty: 5 },
 ];
-/** Run ONE agent task against a variant by executing its real surface code. */
+/**
+ * Run ONE agent task against a variant by executing its real surface code.
+ *
+ * The ADR-071 safety gate runs first: if `inspectVariant` reports any
+ * findings, `tier2-driver.js` never imports/executes the variant's surface
+ * files, and a disqualified trace (exitCode 99, mirroring `sandbox.ts` and
+ * `llm-agent-sandbox.ts`) is returned instead.
+ */
 export async function runVariantTaskAgent(variant, task, timeoutMs = 10_000) {
+    // ── Gate first: a disqualified variant never has its surface code run. ──
+    const findings = await inspectVariant(variant.dir);
+    if (findings.length > 0) {
+        return {
+            variantId: variant.id,
+            taskId: task.id,
+            startedAt: '1970-01-01T00:00:00.000Z',
+            finishedAt: '1970-01-01T00:00:00.000Z',
+            exitCode: DISQUALIFIED_EXIT_CODE,
+            stdout: '',
+            stderr: findings.join('\n'),
+            durationMs: 0,
+            timedOut: false,
+            blockedActions: findings,
+        };
+    }
     const scrubbedEnv = {
         PATH: process.env.PATH,
         METAHARNESS_VARIANT: variant.id,
