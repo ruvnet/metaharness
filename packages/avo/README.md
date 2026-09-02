@@ -2,6 +2,8 @@
 
 Governed autonomous variation for real repositories and evaluator suites.
 
+The AVO package exports an autonomous variation API and versioned evidence schemas.
+
 The model chooses repeated inspect, search, hypothesis, edit, execute, evaluate,
 repair/revert, branch, memory, and commit actions. MetaHarness retains immutable
 authority over capabilities, budgets, protected invariants, promotion,
@@ -47,4 +49,12 @@ lineage, and winner. The default benchmark data is a synthetic mechanism fixture
 and cannot authorize an AVO-class product claim. Supply preregistered observations
 with `SWE_BENCH_RESULTS=/path/results.json` for the 100-task ship gate.
 
-See [ADR-251](../../docs/adrs/ADR-251-governed-autonomous-variation-runtime.md).
+`npm run claims:avo` verifies the governed release surfaces. Performance and
+frontier claims fail closed unless an exact-tag-SHA evidence bundle binds the
+exact npm tarball, preregistered predicate, measured costs, complete lineage
+roots, and two official grader receipts from distinct pinned organizations. The trust policy
+digest must come from the protected `AVO_CLAIM_TRUST_POLICY_HASH` release
+variable; a key embedded only in the bundle is never trusted.
+
+See [ADR-251](../../docs/adrs/ADR-251-governed-autonomous-variation-runtime.md)
+and [ADR-276](../../docs/adrs/ADR-276-avo-release-claim-evidence-gate.md).

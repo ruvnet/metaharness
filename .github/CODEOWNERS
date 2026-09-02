@@ -1,0 +1,7 @@
+# Claim authority is a release-security boundary. Branch protection must
+# require Code Owner review for these paths; CODEOWNERS alone is not enforcement.
+/packages/avo/release-claims.json @ruvnet
+/packages/avo/src/claim-gate.ts @ruvnet
+/scripts/avo-claim-gate.mjs @ruvnet
+/scripts/publish-workspace.mjs @ruvnet
+/.github/workflows/publish.yml @ruvnet

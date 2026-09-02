@@ -65,6 +65,10 @@ Output is an npm-publishable `.zip` with **your name on it, your branding, your 
   on Darwin's fast path. The runtime has a deterministic 205-action RVF
   interruption proof; the stronger “AVO-class” claim remains blocked on the
   preregistered 100-task unseen SWE-bench gate in [ADR-251](docs/adrs/ADR-251-governed-autonomous-variation-runtime.md).
+  [ADR-253](docs/adrs/ADR-253-avo-release-claim-evidence-gate.md) now enforces
+  that boundary at publication against the exact tag SHA and npm tarball,
+  protected claim semantics, measured cost, lineage roots, and two independent
+  graders.
 - **Run your harness on Prime Agent — and borrow its best ideas.** The 10th host
   ([`@metaharness/host-prime-agent`](packages/host-prime-agent/), `--host prime-agent`) emits your
   tools as project-scoped, Python-backed Prime Agent skills (`.prime/agent/skills/` — the host has

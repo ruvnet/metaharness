@@ -162,6 +162,7 @@ jobs:
           node scripts/nightly-sota-gate.test.mjs
           node packages/darwin-mode/bench/swebench/solver-trajectory.test.mjs
           node packages/darwin-mode/bench/swebench/test-critic.test.mjs
+          node scripts/avo-claim-gate.mjs
       - name: Meta-Proxy pin-drift watcher gate (#174)
         # The watcher decides whether to open, retitle, or close a drift issue and
         # whether the pinned signing key still verifies the pinned release. Its `gh`
