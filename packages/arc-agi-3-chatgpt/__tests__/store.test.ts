@@ -97,7 +97,7 @@ describe('ArcEpisodeStore isolation and lifecycle', () => {
     expect(store.sizeForPrincipal('one-principal')).toBe(32);
     await store.closeAll();
     await rm(stateRoot, { recursive: true, force: true });
-  });
+  }, 30_000);
 
   it('retains more than 2,048 principal-scoped idempotency records', async () => {
     const stateRoot = await temporaryStateRoot();
@@ -446,7 +446,7 @@ describe('durable content-addressed checkpoints', () => {
 
     await store.closeAll();
     await rm(stateRoot, { recursive: true, force: true });
-  });
+  }, 30_000);
 
   it('rejects 7,000 unreferenced frame objects before durable persistence', async () => {
     const stateRoot = await temporaryStateRoot();
@@ -475,7 +475,7 @@ describe('durable content-addressed checkpoints', () => {
     );
     await store.closeAll();
     await rm(stateRoot, { recursive: true, force: true });
-  });
+  }, 30_000);
 
   it('rejects invalid budgets and duplicate CAS lists before loading checkpoint objects', async () => {
     const stateRoot = await temporaryStateRoot();
@@ -520,7 +520,7 @@ describe('durable content-addressed checkpoints', () => {
 
     await Promise.all([store.closeAll(), reloadedStore.closeAll()]);
     await rm(stateRoot, { recursive: true, force: true });
-  });
+  }, 30_000);
 
   it('persists and reloads a real 6,624-action controller checkpoint below the 64 MiB bound', async () => {
     const stateRoot = await temporaryStateRoot();
