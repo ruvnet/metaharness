@@ -1,0 +1,66 @@
+{
+  "generatedAt": "2026-08-21T23:55:00Z",
+  "comparison": {
+    "schema": 1,
+    "datasetKind": "swe-bench-unseen-preregistered",
+    "model": "deepseek/deepseek-chat",
+    "reasoningConfiguration": "none",
+    "tokenBudget": 0,
+    "evaluatorVersion": "swebench-3.0.17 official docker (SWE-bench_Verified test split)",
+    "taskSetHash": "sha256:1da0fdf1ee3c9044705efd1874fc2b7b77ab0a04c33442700a6ec1760dc2a7ab",
+    "arms": {
+      "darwin-fixed": {
+        "arm": "darwin-fixed",
+        "tasks": 100,
+        "resolved": 5,
+        "resolveRate": 0.05,
+        "totalCostUsd": 0.23012700000000003,
+        "costPerAcceptedUsd": 0.04602540000000001,
+        "wallTimeMs": 2305883,
+        "policyViolations": 0,
+        "replayIntegrity": 1,
+        "rollbackRate": 0,
+        "coherenceRetention": 0.7000000000000013
+      },
+      "avo-no-supervisor": {
+        "arm": "avo-no-supervisor",
+        "tasks": 100,
+        "resolved": 14,
+        "resolveRate": 0.14,
+        "totalCostUsd": 1.158123,
+        "costPerAcceptedUsd": 0.08272307142857142,
+        "wallTimeMs": 8121523,
+        "policyViolations": 0,
+        "replayIntegrity": 1,
+        "rollbackRate": 0,
+        "coherenceRetention": 0.8730000000000007
+      },
+      "avo-supervisor-memory": {
+        "arm": "avo-supervisor-memory",
+        "tasks": 100,
+        "resolved": 13,
+        "resolveRate": 0.13,
+        "totalCostUsd": 1.1828110000000003,
+        "costPerAcceptedUsd": 0.09098546153846156,
+        "wallTimeMs": 8340817,
+        "policyViolations": 0,
+        "replayIntegrity": 1,
+        "rollbackRate": 0,
+        "coherenceRetention": 0.8910000000000008
+      }
+    }
+  },
+  "gate": {
+    "eligibleEvidence": true,
+    "resolutionRelativeLift": 1.5999999999999999,
+    "resolutionGatePassed": true,
+    "zeroViolationGatePassed": true,
+    "costIncrease": 0.9768532492593555,
+    "costGatePassed": false,
+    "replayGatePassed": true,
+    "ship": false,
+    "reasons": [
+      "cost per accepted result increased by 50% or more"
+    ]
+  }
+}

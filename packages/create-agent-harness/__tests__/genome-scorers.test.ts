@@ -103,19 +103,27 @@ describe('scoreTestConfidence', () => {
     expect(scoreTestConfidence(profile)).toBe(0);
   });
 
-  it('saturates at 1 only with >=2 test commands AND CI', () => {
+  // Post-#229: inferred testCommands never earn confidence on their own, however
+  // many of them a manifest implies. This repo has Cargo.toml + go.mod and so
+  // infers 2 test commands, but has no test files at all — CI presence alone is
+  // worth the small "infra exists but unconfirmed" credit, nothing more.
+  it('>=2 inferred test commands AND CI still score only the unconfirmed credit without real test files', () => {
     const files = { 'Cargo.toml': '[package]\nname="x"', 'go.mod': 'module x\n\ngo 1.21\n' };
     const profile = analyzeFiles('demo', files);
     profile.hasCi = true;
     // cargo test + go test ./... => 2 distinct test commands
     expect(profile.testCommands.length).toBeGreaterThanOrEqual(2);
-    expect(scoreTestConfidence(profile)).toBe(1);
+    expect(profile.hasVerifiedTestFiles).toBeFalsy();
+    expect(scoreTestConfidence(profile)).toBe(0.1);
   });
 
-  it('a single test command without CI scores 0.5, not 1', () => {
+  // Post-#229: no CI and no verified test files => zero, not the old 0.5 that a
+  // single manifest-inferred command used to buy.
+  it('a single inferred test command without CI or real test files scores 0', () => {
     const { profile } = maturedProfile('go.mod', 'module demo\n\ngo 1.21\n', false);
     expect(profile.testCommands.length).toBe(1);
-    expect(scoreTestConfidence(profile)).toBe(0.5);
+    expect(profile.hasVerifiedTestFiles).toBeFalsy();
+    expect(scoreTestConfidence(profile)).toBe(0);
   });
 });
 

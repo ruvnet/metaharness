@@ -1,7 +1,7 @@
 {
   "name": "@metaharness/horizon",
-  "version": "0.1.0",
-  "description": "The portable core of Google ADK's long-horizon-harness, re-implemented as Rust/WASM + TypeScript: a halt controller (halt_reason), a whole-command anti-smuggling shell guard (command_classify), and a context-compaction policy that flushes durable facts before any lossy summary.",
+  "version": "0.2.0",
+  "description": "Deterministic long-horizon control with Rust/WASM halt and command guards, real tool execution receipts, full checkpoints, and flush-before-compaction.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

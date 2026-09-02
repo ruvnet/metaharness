@@ -10,7 +10,7 @@
 // (ADR-073) rather than dead-ending — a weak ancestor can still seed a branch.
 
 import { mkdir, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import { Archive } from './archive.js';
 import { generateBaselineHarness } from './generator.js';
 import {
@@ -37,10 +37,33 @@ import { evaluateChildAgainstParent, evaluateWithRunner } from './bench/runner.j
 import { benjaminiHochberg } from './bench/stats.js';
 import { curriculumSuite, maxDifficulty, nextCurriculumLevel } from './curriculum.js';
 import { paretoFront } from './pareto.js';
-import { statSync, readdirSync } from 'node:fs';
+import { statSync, readdirSync, realpathSync } from 'node:fs';
 import { admitWithStatisticalGate, makeRiskBudget } from './bench/risk.js';
 import type { RiskBudget } from './bench/risk.js';
 import type { BenchmarkResult, PromotionDecision } from './bench/types.js';
+
+const AUTONOMOUS_SURFACES = new Set<MutationSurface>([
+  'planner', 'contextBuilder', 'reviewer', 'retryPolicy', 'toolPolicy', 'memoryPolicy', 'scorePolicy',
+]);
+
+function validateAutonomousChild(
+  child: HarnessVariant,
+  parent: HarnessVariant,
+  workRoot: string,
+  generation: number,
+): HarnessVariant {
+  if (child.parentId !== parent.id) throw new Error('darwin: autonomous child must preserve the selected parent lineage');
+  if (child.generation !== generation) throw new Error('darwin: autonomous child generation mismatch');
+  if (!AUTONOMOUS_SURFACES.has(child.mutationSurface)) throw new Error('darwin: autonomous child returned an unknown mutation surface');
+  const variantsRoot = resolve(workRoot, 'variants');
+  const rel = relative(variantsRoot, resolve(child.dir));
+  if (rel.startsWith('..') || resolve(child.dir) === variantsRoot) throw new Error('darwin: autonomous child escaped the variants workspace');
+  const realRoot = realpathSync(variantsRoot);
+  const realChild = realpathSync(child.dir);
+  const realRel = relative(realRoot, realChild);
+  if (realRel.startsWith('..') || realChild === realRoot) throw new Error('darwin: autonomous child escaped the real variants workspace');
+  return child;
+}
 
 /** Hidden-test pass rate over a variant's per-task results (SGM SOTA clause). */
 function hiddenRate(results: BenchmarkResult[]): number {
@@ -296,8 +319,24 @@ export async function evolve(config: EvolutionConfig): Promise<EvolutionResult> 
         // with the next parent's surfaces; the rest are ordinary mutations. With
         // epistasis (ADR-093) the inherited subset is the next parent's linked block.
         const other = parents[(pIdx + 1) % parents.length];
-        const child =
-          canCross && localIndex === 0
+        const child = config.variationOperator
+          ? validateAutonomousChild(
+              await config.variationOperator.run({
+                parent: structuredClone(parent),
+                profile: structuredClone(profile),
+                workRoot: config.workRoot,
+                generation,
+                index,
+                seed,
+                parentScore: scoreById.get(parent.id)?.finalScore ?? 0,
+                failedTraces: summarizeFailedTraces(tracesById.get(parent.id) ?? []),
+                allowedSurfaces: [...AUTONOMOUS_SURFACES],
+              }),
+              parent,
+              config.workRoot,
+              generation,
+            )
+          : canCross && localIndex === 0
             ? await createCrossoverVariant(
                 parent,
                 other,
@@ -320,6 +359,7 @@ export async function evolve(config: EvolutionConfig): Promise<EvolutionResult> 
                   failedTraces: summarizeFailedTraces(tracesById.get(parent.id) ?? []),
                 },
               );
+        if (archive.get(child.id)) throw new Error(`darwin: autonomous or generated child id already exists: ${child.id}`);
         archive.addVariant(child);
         children.push({ child, parent });
       }

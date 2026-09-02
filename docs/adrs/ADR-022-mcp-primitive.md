@@ -90,6 +90,22 @@ The policy is emitted **twice** — enforced TS and inert JSON. The JSON is what
 
 **Acceptance test (manual):** generate a harness with `mcp: local`, install it into Claude Code, call the `ping` tool, and verify the witness manifest records the tool schema, version, policy, and generated-file hashes.
 
+## 2026-08-18 addendum — mcp-scan coverage fix (Dream Cycle)
+
+`mcp-scan`'s host-permission checks had two coverage gaps in the `Bash(...)` allow-rule analysis
+described above: (1) a fully unscoped grant (`Bash(*)` or bare `Bash`) matched neither the exact-string
+wildcard check nor the risky-bash-allow regex (`*` was not in its binary alternation), so it scanned
+"clean"; (2) the risky-bash-allow binary list (`rm|curl|wget|sudo|chmod|ssh`) omitted arbitrary-code
+interpreters (`python`/`node`/`ruby`/`perl`/`bash`/`sh`) — concretely, the `vertical:ai` template's own
+`.claude/settings.json.tmpl` ships `Bash(python *)`, which a real `metaharness --template vertical:ai`
+scaffold carried, unflagged, until this fix. Both closed in the same small diff (`unrestricted-bash-allow`,
+new HIGH finding id; the risky-bash-allow regex's binary alternation extended). `Bash(*)` itself is not
+currently reachable through any shipped generator's `.claude/settings.json` output (verified against
+`host-config.ts` and `apps/web-ui/src/generator/scaffold.ts`'s `claudeSettings()`) — that half of the fix
+is disclosed defense-in-depth against the config shape, not a report of a second live generator bug.
+Test contract above gains: an unscoped `Bash`/`Bash(*)` allow-rule is HIGH; an unscoped interpreter
+allow-rule (`Bash(python *)` etc.) is MEDIUM, matching the existing rm/curl/sudo class.
+
 ## References
 
 - MCP — open standard, JSON-RPC, stdio + Streamable HTTP transports (modelcontextprotocol.io)

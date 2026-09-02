@@ -1,10 +1,15 @@
 import { describe, it, expect, beforeAll } from 'vitest';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   HorizonCore,
   HaltController,
   CommandGuard,
   CompactionPolicy,
   LongHorizonDriver,
+  NodeToolExecutor,
+  verifyCheckpoint,
   type CompactionSeams,
   type HorizonEvent,
   type StepResult,
@@ -186,11 +191,27 @@ describe.skipIf(!wasmOk)('LongHorizonDriver (the composed loop)', () => {
     compaction: { thresholdTokens: 1e9, keepRecent: 6 },
   };
   const compaction = makeSeams([]);
+  const executor = {
+    execute: async (request: any) => {
+      const authorized = request.classification.verdict === 'allow' || request.approved;
+      return {
+      stdout: authorized ? 'observed' : '', stderr: authorized ? '' : 'denied', exitCode: authorized ? 0 : 126, durationMs: 1,
+      artifactDigest: 'sha256:test',
+      policyReceipt: {
+        verdict: request.classification.verdict,
+        reasons: request.classification.reasons,
+        authorized,
+        approvalRequired: request.classification.verdict === 'gate',
+        approved: request.approved,
+      },
+    }},
+  };
 
   it('reaches a final answer', async () => {
     let n = 0;
     const seams = {
       compaction,
+      executor,
       step: async (): Promise<StepResult> => {
         n++;
         if (n < 3) return { kind: 'tool', command: 'ls', progress: `step-${n}` };
@@ -206,6 +227,7 @@ describe.skipIf(!wasmOk)('LongHorizonDriver (the composed loop)', () => {
   it('halts on repeated-failure when a gated command is never approved', async () => {
     const seams = {
       compaction,
+      executor,
       // model keeps trying the same gated command; approve() defaults to deny
       step: async (): Promise<StepResult> => ({ kind: 'tool', command: 'sudo rm x', progress: 'trying' }),
     };
@@ -218,11 +240,83 @@ describe.skipIf(!wasmOk)('LongHorizonDriver (the composed loop)', () => {
   it('halts on no-progress when the model spins without moving', async () => {
     const seams = {
       compaction,
+      executor,
       step: async (): Promise<StepResult> => ({ kind: 'tool', command: 'ls', progress: 'same-forever' }),
     };
     const d = new LongHorizonDriver(core, seams, config);
     const out = await d.runTurn('spin');
     expect(out.kind).toBe('halted');
     if (out.kind === 'halted') expect(out.reason).toBe('no-progress');
+  });
+
+  it('snapshots the full transcript and tool receipt under a verified hash', async () => {
+    let n = 0;
+    const d = new LongHorizonDriver(core, {
+      compaction,
+      executor,
+      step: async () => ++n === 1
+        ? { kind: 'tool', command: 'ls', progress: 'listed' } as StepResult
+        : { kind: 'final', output: 'done' } as StepResult,
+    }, config);
+    await d.runTurn('inspect');
+    d.updateContinuity({ workspaceCommit: 'abc123', archiveBranch: 'candidate/1', memoryCursor: 'rvf:9' });
+    const checkpoint = d.snapshot();
+    expect(verifyCheckpoint(checkpoint)).toBe(true);
+    expect(checkpoint.transcript.some((event) => event.receipt?.stdout === 'observed')).toBe(true);
+    expect(checkpoint.workspaceCommit).toBe('abc123');
+    expect(verifyCheckpoint(JSON.parse(JSON.stringify(checkpoint)))).toBe(true);
+    expect(() => new LongHorizonDriver(core, { compaction, executor, step: async () => ({ kind: 'final', output: 'x' }) }, config, {
+      ...checkpoint,
+      workspaceCommit: 'tampered',
+    })).toThrow('state hash mismatch');
+  });
+});
+
+describe('NodeToolExecutor', () => {
+  it('returns real stdout, exit, duration, digest, and policy evidence', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'horizon-exec-'));
+    try {
+      await writeFile(join(dir, 'before.txt'), 'before');
+      const executor = new NodeToolExecutor({ cwd: dir, env: {} });
+      const result = await executor.execute({
+        command: 'node -e "process.stdout.write(\'real-output\')"',
+        classification: {
+          verdict: 'allow', reasons: ['test'],
+          segments: [{ text: 'node', exe: 'node', verdict: 'allow', reason: 'test' }],
+        },
+        approved: true,
+      });
+      expect(result.exitCode).toBe(0);
+      expect(result.stdout).toBe('real-output');
+      expect(result.artifactDigest).toMatch(/^sha256:[0-9a-f]{64}$/);
+      expect(result.policyReceipt.authorized).toBe(true);
+      expect(result.durationMs).toBeGreaterThanOrEqual(0);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  // 30s budget: Windows runners take >5s (vitest default) for real subprocess
+  // spawn + process-group teardown; the executor's own 30ms timeout is what's
+  // under test, not wall-clock.
+  it('does not spawn denied commands and terminates timed-out process groups', { timeout: 30_000 }, async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'horizon-timeout-'));
+    try {
+      const executor = new NodeToolExecutor({ cwd: dir, timeoutMs: 30 });
+      const denied = await executor.execute({
+        command: 'node -e "process.exit(0)"', approved: false,
+        classification: { verdict: 'gate', reasons: ['approval'], segments: [] },
+      });
+      expect(denied.exitCode).toBe(126);
+      expect(denied.policyReceipt.authorized).toBe(false);
+      const timed = await executor.execute({
+        command: 'node -e "setTimeout(() => {}, 10000)"', approved: true,
+        classification: { verdict: 'allow', reasons: ['test'], segments: [] },
+      });
+      expect(timed.exitCode).toBe(124);
+      expect(timed.stderr).toContain('timed out');
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 });
