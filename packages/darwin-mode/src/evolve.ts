@@ -23,6 +23,7 @@ import { profileRepo } from './repo_profiler.js';
 import { runVariantTasks } from './sandbox.js';
 import { runBenchmarkTaskMock, runVariantTasksMock } from './mock-sandbox.js';
 import { runVariantTasksAgent } from './tier2-sandbox.js';
+import { runVariantTasksLlmAgent } from './llm-agent-sandbox.js';
 import { scoreVariant } from './scorer.js';
 import type { ScoreSignals } from './scorer.js';
 import {
@@ -138,11 +139,13 @@ export async function evaluateVariant(
   // loop, so the trace depends on surface content (manifold becomes live). The
   // default 'real' mode runs the repo test command (surface-independent).
   const traces =
-    cfg.sandboxMode === 'agent'
-      ? await runVariantTasksAgent(variant, cfg.agentTasks) // Tier 2: execute the variant's real surface code (ADR-106)
-      : cfg.sandboxMode === 'mock'
-        ? await runVariantTasksMock(variant, cfg.mockTasks)
-        : await runVariantTasks(variant, profile, cfg.tasks, { taskTimeoutMs: timeout });
+    cfg.sandboxMode === 'llm-agent'
+      ? await runVariantTasksLlmAgent(variant, cfg.llmAgentTasks, timeout) // real LLM call per task (ADR-273)
+      : cfg.sandboxMode === 'agent'
+        ? await runVariantTasksAgent(variant, cfg.agentTasks) // Tier 2: execute the variant's real surface code (ADR-106)
+        : cfg.sandboxMode === 'mock'
+          ? await runVariantTasksMock(variant, cfg.mockTasks)
+          : await runVariantTasks(variant, profile, cfg.tasks, { taskTimeoutMs: timeout });
   // ADR-249 cost seam, wired here: when a byte budget is configured, feed the
   // same deterministic `variantBytes` parsimony signal already used by
   // 'pareto' selection into `scoreVariant`'s opt-in `signals.cost`. Omitted

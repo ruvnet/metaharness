@@ -135,8 +135,10 @@ export interface EvolutionConfig {
      * command — surface-independent, so the behavioural manifold is degenerate.
      * 'mock' runs the deterministic surface-driven agent loop so traces depend on
      * the harness surfaces (activating ADR-091/092/094/097/100). Reproducible.
+     * 'llm-agent' (ADR-273) genuinely invokes a real LLM per task — real API
+     * spend; the CLI enforces an invocation cap for this mode.
      */
-    sandboxMode?: 'real' | 'mock' | 'agent';
+    sandboxMode?: 'real' | 'mock' | 'agent' | 'llm-agent';
     /** Custom scripted suite for 'mock' mode (ADR-102); defaults to DEFAULT_MOCK_TASKS. */
     mockTasks?: import('./mock-sandbox.js').MockTask[];
     /**
@@ -145,6 +147,8 @@ export interface EvolutionConfig {
      */
     /** Custom agent-task suite for 'agent' mode (ADR-106); defaults to DEFAULT_AGENT_TASKS. */
     agentTasks?: import('./tier2-sandbox.js').AgentTask[];
+    /** Custom task suite for 'llm-agent' mode (ADR-273); defaults to DEFAULT_LLM_AGENT_TASKS. */
+    llmAgentTasks?: import('./llm-agent-sandbox.js').LlmAgentTask[];
     /**
      * Parent pool (ADR-115). 'archive' (default) retains the whole archive
      * (ADR-073). 'generation' is memoryless (μ,λ): parents come only from the
