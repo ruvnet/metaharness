@@ -91,12 +91,39 @@ Output is an npm-publishable `.zip` with **your name on it, your branding, your 
   data** for a sharper fit (`npm i @metaharness/router`). Add the optional
   [`@ruvector/tiny-dancer`](https://www.npmjs.com/package/@ruvector/tiny-dancer)
   to train a fast native model instead — same training data, no API change.
+- **Route through a learned field without replaying predecessor context.**
+  [`@metaharness/field-memory`](packages/field-memory/) is an experimental,
+  single-process-by-default packed-attractor layer with verified outcome caps,
+  support quarantine, decay, cost-aware choice, and no raw-episode API. Its
+  RuVector adapter fails closed unless a corrected flat-index wrapper is used.
 - **Let your harness improve itself.** Every scaffold now ships with **Darwin Mode**
   ([`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin)) wired in —
   run `npm run evolve` and the harness mutates its own config, tests each change in a
   sandbox, and keeps only what *measurably* improves. The model stays frozen; the harness
   evolves. Safe by default (no network, no API key; pure refactor/tuning behind a safety
   gate). Validated on real **SWE-bench Lite** bug-fixing. `--no-darwin` to skip.
+- **Opt into field memory without copying its implementation.** Add
+  `--field-memory` to scaffold a small bootstrap around the forthcoming
+  `@metaharness/field-memory@^0.1.0` package. The generated harness uses packed
+  attractors, three distinct verifier-derived principals for support, no
+  hysteresis, and a bounded drift window. Principal independence depends on the
+  verifier's identity system.
+  It will not open storage or accept shared updates until the deployment
+  supplies an absolute storage path, a compatible adapter, and a principal
+  verifier backed by deployment authentication. Package influence caps are
+  centroid-local; fleet-wide admission and rate limits belong in that verifier.
+  The RuVector adapter requires a configuration-verified, in-place FlatIndex
+  with cosine distance and rejects HNSW or unverified legacy stores.
+  Minimum support quarantines routing but does not make stored singleton
+  aggregates confidential; protect field snapshots and registry storage.
+  A deployment-secret identity hash key of at least 32 bytes is also required
+  and must survive state restore. Conflicting package declarations or an
+  existing field module fail before disk writes, and `harness upgrade` reapplies
+  the opted-in overlay only after validating its exact, versioned manifest
+  contract. Unsupported overlay schemas require an explicit migration.
+  `storage.writerScope: process` requires one writer service; multi-process or
+  fleet use requires `distributed`. The flag is off by default, so existing
+  scaffold output is unchanged.
 - **Distil the cheap tier instead of escalating to a frontier model.** **Weight-EFT**
   ([`@metaharness/weight-eft`](packages/weight-eft/), `metaharness weight-eft`) takes the
   *complementary* lever to Darwin's gradient-free evolution: it exports the harness's gold-resolved
