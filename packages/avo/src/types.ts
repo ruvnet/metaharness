@@ -39,6 +39,20 @@ export interface Hypothesis {
   surface: EvolvableSurface;
 }
 
+/**
+ * Harness-owned proof of the exact artifact and authority state evaluated.
+ * Evaluator implementations may omit this field; the operator overwrites any
+ * caller-supplied value before the result enters authoritative state.
+ */
+export interface EvaluationBinding {
+  readonly branchId: string;
+  readonly workspaceDigest: string;
+  /** State immediately before the receipted evaluate action. */
+  readonly stateHash: string;
+  /** One-based receipt sequence of the evaluate action. Zero is the seed. */
+  readonly sequence: number;
+}
+
 export interface EvaluationResult {
   evaluatorVersion: string;
   correct: boolean;
@@ -56,6 +70,8 @@ export interface EvaluationResult {
   lowerConfidenceBound?: number;
   evidence: Record<string, unknown>;
   failureSignature?: string;
+  /** Operator-authored binding; optional for evaluator source compatibility. */
+  binding?: EvaluationBinding;
 }
 
 export interface Candidate {

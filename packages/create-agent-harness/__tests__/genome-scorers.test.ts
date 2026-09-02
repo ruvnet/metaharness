@@ -2,12 +2,14 @@
 // Dream Cycle 2026-08-30 (generator-genome) — genome-scorers.ts had ZERO unit
 // coverage on main despite feeding `harness genome`'s user-visible
 // ready/needs-work/blocked verdict and process exit code (see genome.ts).
-// This suite characterizes the 5 pure, deterministic, exported scorers as
-// they exist today. It intentionally makes NO behavior change — see the
-// Dream Cycle gist/issue for two already-open, unreviewed fix PRs (#200,
-// #229) that touch scoreTestConfidence/scorePublishReadiness; this suite is
-// additive regression coverage, not a competing fix, so it does not
-// duplicate or conflict with either.
+// This suite characterizes the 5 pure, deterministic, exported scorers.
+// It intentionally makes NO production behavior change of its own — see the
+// Dream Cycle gist/issue for #200 (open, touches scorePublishReadiness) and
+// #229 (merged 2026-09-02, touches scoreTestConfidence). The
+// scoreTestConfidence assertions below were updated post-#229 to match its
+// landed behavior (hasVerifiedTestFiles-gated credit); scorePublishReadiness's
+// assertions still characterize #200's pre-fix behavior since #200 remains
+// unmerged.
 
 import { describe, it, expect } from 'vitest';
 import {
@@ -183,30 +185,31 @@ describe('scoreTestConfidence', () => {
     expect(scoreTestConfidence(profile())).toBe(0);
   });
 
-  it('credits 0.5 for exactly one test command (current heuristic: declared, not verified)', () => {
-    expect(scoreTestConfidence(profile({ testCommands: ['npm test'] }))).toBe(0.5);
+  it('a single declared test command with no verified test files earns no credit (post-#229: declared-only is no longer trusted)', () => {
+    expect(scoreTestConfidence(profile({ testCommands: ['npm test'] }))).toBe(0);
   });
 
-  it('credits an extra 0.2 for a second declared test command (0.7 total)', () => {
-    expect(scoreTestConfidence(profile({ testCommands: ['npm test', 'cargo test'] }))).toBeCloseTo(0.7);
+  it('a second declared test command still earns no credit without verified test files (post-#229)', () => {
+    expect(scoreTestConfidence(profile({ testCommands: ['npm test', 'cargo test'] }))).toBe(0);
   });
 
-  it('credits 0.3 for CI presence, additively with test commands', () => {
-    expect(scoreTestConfidence(profile({ hasCi: true }))).toBeCloseTo(0.3);
-    expect(scoreTestConfidence(profile({ testCommands: ['npm test'], hasCi: true }))).toBeCloseTo(0.8);
+  it('CI presence alone earns a small 0.1 "unconfirmed" credit, not additive with declared-only test commands (post-#229)', () => {
+    expect(scoreTestConfidence(profile({ hasCi: true }))).toBeCloseTo(0.1);
+    expect(scoreTestConfidence(profile({ testCommands: ['npm test'], hasCi: true }))).toBeCloseTo(0.1);
   });
 
-  it('caps the total at 1', () => {
+  it('maximal declared-only signals (multiple test commands + CI) without verified test files still cap at 0.1, not 1 (post-#229)', () => {
     const p = profile({ testCommands: ['npm test', 'cargo test', 'pytest'], hasCi: true });
-    expect(scoreTestConfidence(p)).toBe(1);
+    expect(scoreTestConfidence(p)).toBe(0.1);
   });
 
-  it('does not verify that declared test commands correspond to real test files (documented gap — see #229)', () => {
-    // A repo that only CLAIMS a test command, with no evidence files at all,
-    // scores identically to one with real coverage. Locking this in as the
-    // current, known behavior so a future fix (#229) has a red baseline.
+  it('#229 closed the gap: declared test commands with no real test files now score 0, not the same as real coverage', () => {
+    // Previously this scored identically to a repo with real test files
+    // (0.5) — #229 gated the base credit on `hasVerifiedTestFiles`, a real
+    // tests/__tests__/test directory scan. This pins the fix from the other
+    // side: the "documented gap" this test used to characterize is closed.
     const claimedOnly = profile({ testCommands: ['npm test'] });
-    expect(scoreTestConfidence(claimedOnly)).toBe(0.5);
+    expect(scoreTestConfidence(claimedOnly)).toBe(0);
   });
 });
 

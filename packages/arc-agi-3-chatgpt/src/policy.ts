@@ -12,6 +12,8 @@ export const ACTOR_TOOLS = [
   'arc_resume',
   'arc_status',
   'arc_receipts_verify',
+  'arc_avo_context',
+  'arc_avo_step',
   'arc_render',
   'arc_memory_query',
   'arc_memory_commit',

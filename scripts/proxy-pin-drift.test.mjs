@@ -40,7 +40,12 @@ t('reads META_PROXY_VERSION out of the real meta-proxy.ts', () => {
 });
 
 t('reads the pinned Ed25519 key out of the real meta-proxy.ts', () => {
-  assert.match(readPinnedPublicKey(REAL_SOURCE), /^-----BEGIN PUBLIC KEY-----\n/);
+  // \r?\n, not \n: meta-proxy.ts is not pinned to eol=lf in .gitattributes, so a
+  // Windows checkout hands us a CRLF PEM. crypto.createPublicKey() accepts both
+  // (verified), and the PEM only ever reaches createPublicKey -- it is never
+  // string-compared or hashed -- so this is a test portability fix, not a
+  // production one. Caught by CI on windows-latest after #178 merged.
+  assert.match(readPinnedPublicKey(REAL_SOURCE), /^-----BEGIN PUBLIC KEY-----\r?\n/);
 });
 
 t('reads the release base out of the real meta-proxy.ts', () => {

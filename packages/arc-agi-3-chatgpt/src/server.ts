@@ -19,14 +19,42 @@ import { FileAuditSink } from './audit.js';
 import { ToolPolicyGate } from './policy.js';
 import { registerArcWidgetResource, loadWidgetHtml } from './resource.js';
 import { ArcEpisodeStore } from './store.js';
-import { registerActorTools, registerBossTools } from './tools.js';
+import { registerActorTools, registerBossTools, toolNamesForLane } from './tools.js';
+import { hashArcValue, resolveArcAvoConfig, type ArcAvoConfig } from '@metaharness/arc-agi-3';
 import type {
+  ArcControllerFactory,
   ArcMcpServerOptions,
   AuthConfig,
   McpLane,
   ServerLimits,
   StartedArcMcpServer,
 } from './types.js';
+
+function assertFactoryActorProfile(
+  factory: ArcControllerFactory,
+  avoConfig: ArcAvoConfig | undefined,
+): void {
+  const descriptor = Object.getOwnPropertyDescriptor(factory, 'actorProfile');
+  if (descriptor === undefined) return;
+  if (!('value' in descriptor) || descriptor.value === undefined) {
+    throw new Error('controller factory actor profile must be immutable data');
+  }
+  const mode = avoConfig === undefined ? 'legacy' : 'avo';
+  const expected = {
+    mode,
+    toolNames: [...toolNamesForLane('actor', mode)],
+    ...(avoConfig === undefined
+      ? {}
+      : { avoArm: avoConfig.arm, avoConfigHash: avoConfig.configHash }),
+  };
+  try {
+    if (hashArcValue(descriptor.value) !== hashArcValue(expected)) {
+      throw new Error('profile mismatch');
+    }
+  } catch {
+    throw new Error('controller factory actor profile does not match the MCP actor surface');
+  }
+}
 
 export const DEFAULT_SERVER_LIMITS: ServerLimits = {
   maxRequestBytes: 256 * 1024,
@@ -50,6 +78,16 @@ const ACTOR_INSTRUCTIONS = [
   'Persist evidence with arc_memory_commit and recover it with arc_memory_query.',
   'Guarded plans stop on their first postcondition mismatch.',
   'No hidden game id or title is available.',
+].join(' ');
+
+const AVO_ACTOR_INSTRUCTIONS = [
+  'ChatGPT is the reasoning host; this server never calls an LLM.',
+  'For a new episode call arc_start with a fresh idempotency key; for an existing episode call arc_avo_context.',
+  'Use only the returned exact structured observation, memory, frontier, and lineage evidence.',
+  'Submit 1 to context.config.maxCandidatesPerDecision concise public candidate plans with arc_avo_step, never more than the tool maximum of 8; never include private chain of thought or a model-supplied utility score.',
+  'The harness snapshots, validates, scores, and selects the candidate, then enforces the selected guarded-execution and supervisor profile.',
+  'When the context reports an open supervisor case, use the separate boss conversation before submitting another step.',
+  'No raw action or guarded-plan bypass is registered in this mode. No hidden game id or title is available.',
 ].join(' ');
 
 const BOSS_INSTRUCTIONS = [
@@ -290,10 +328,15 @@ function createProtocolServer(
   policy: ToolPolicyGate,
   widgetHtml: string,
   auth: AuthConfig,
+  avoMode: boolean,
 ): McpServer {
   const server = new McpServer(
     { name: `metaharness-arc-agi-3-${lane}`, version: '0.1.0' },
-    { instructions: lane === 'actor' ? ACTOR_INSTRUCTIONS : BOSS_INSTRUCTIONS },
+    {
+      instructions: lane === 'actor'
+        ? (avoMode ? AVO_ACTOR_INSTRUCTIONS : ACTOR_INSTRUCTIONS)
+        : BOSS_INSTRUCTIONS,
+    },
   );
   const securitySchemes: readonly ToolSecurityScheme[] = auth.oauth
     ? [{ type: 'oauth2', scopes: [oauthScopeForLane(auth.oauth, lane)] }]
@@ -301,7 +344,7 @@ function createProtocolServer(
       ? []
       : [{ type: 'noauth' }];
   if (securitySchemes.length > 0) installToolSecurityMetadata(server, securitySchemes);
-  const context = { lane, principalId, store, policy };
+  const context = { lane, principalId, store, policy, avoMode };
   if (lane === 'actor') {
     registerActorTools(server, context);
     registerArcWidgetResource(server, widgetHtml);
@@ -332,12 +375,15 @@ export async function createArcMcpRuntime(options: ArcMcpServerOptions): Promise
   );
   const widgetHtml = options.widgetHtml ?? await loadWidgetHtml();
   const stateRoot = await validateStateRoot(options.stateRoot);
+  const avoConfig = options.avo === undefined ? undefined : resolveArcAvoConfig(options.avo);
+  assertFactoryActorProfile(options.controllerFactory, avoConfig);
   const store = new ArcEpisodeStore(
     options.controllerFactory,
     stateRoot,
     now,
     options.maxEpisodesPerPrincipal ?? 32,
     options.maxIdempotencyEntriesPerPrincipal ?? 50_000,
+    avoConfig,
   );
   const allowedHosts = options.allowedHosts?.length
     ? [...options.allowedHosts]
@@ -446,6 +492,7 @@ export async function createArcMcpRuntime(options: ArcMcpServerOptions): Promise
       policy,
       widgetHtml,
       auth,
+      avoConfig !== undefined,
     );
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,

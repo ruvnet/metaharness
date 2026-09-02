@@ -1,6 +1,6 @@
 # ADR-253: Experimental ARC-AGI-3 controller and ChatGPT Developer Mode adapter
 
-**Status**: Implemented experimentally (deterministic mechanism tests required; official public scorecard pending)
+**Status**: Implemented experimentally (deterministic mechanism gate passed; official public scorecard pending)
 **Date**: 2026-08-21
 **Project**: `ruvnet/metaharness`
 **Related**: ADR-022 (MCP boundary), ADR-245 (Horizon), ADR-250 (proof ladder), ADR-251 (`@metaharness/avo`)
@@ -14,11 +14,14 @@ reasoning calls. Long-lived exact state, falsifiable experiments, and recovery
 from a wrong model are therefore harness concerns rather than prompt decoration.
 
 NVIDIA reports a 100.00 RHAE result on the 25-game public set using Claude Opus
-5, persistent memory, a supervisor, and an executable world model. The same
-article reports 30% for a direct model condition but explicitly says this was
-not a controlled ablation. It does not establish a result on the semi-private
-or private sets. Separately, Tycho reports 100.00 public RHAE with GPT-5.6 Sol,
-showing that an OpenAI model is sufficient when paired with a strong controller.
+5, exact 64 by 64 text grids, persistent memory, supervision, and its AVO agent
+loop. NVIDIA explicitly describes this ARC configuration as direct interaction
+rather than an ARC-specific executable world model. The same article reports
+30% for a direct model condition but explicitly says this was not a controlled
+ablation. It does not establish a result on the semi-private or private sets.
+Separately, Tycho reports 100.00 public RHAE with GPT-5.6 Sol using an explicit
+programmatic world model, showing that an OpenAI model is sufficient when paired
+with a strong controller.
 
 The requested transport is ChatGPT itself, not the OpenAI API. ChatGPT Developer
 Mode can connect to a remote MCP server and render MCP Apps resources. This lets
