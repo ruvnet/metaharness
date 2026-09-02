@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/host-openclaw",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "OpenClaw (personal AI assistant) host adapter for agent-harness-generator (MCP via ~/.openclaw/openclaw.json + workspace skills)",
   "homepage": "https://github.com/ruvnet/agent-harness-generator",
   "repository": {
