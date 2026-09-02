@@ -99,6 +99,26 @@ jobs:
           echo "That is longer than CDN propagation — treat it as a genuinely broken publish, not a race." >&2
           exit 1
 
+      # Install the published package ONCE into a temp prefix and invoke its bin
+      # FILE directly with `node`. Deliberately avoids `npx`: npx bin resolution
+      # proved non-deterministic across runner images (the same command 127'd on
+      # ubuntu/windows while passing on macOS with identical npm 10.9.8), and the
+      # point of this job is to test the ARTIFACT, not npm's shim machinery.
+      # dist/bin.js is the `metaharness` bin per package.json; if it is missing or
+      # broken, node fails here exactly as a user would experience it.
+      - name: Install the published tarball into a temp prefix
+        id: install
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/mh"
+          cd "$RUNNER_TEMP/mh"
+          npm init -y >/dev/null 2>&1
+          npm install --no-save --no-audit --no-fund "metaharness@${{ steps.resolve.outputs.version }}"
+          BIN="$RUNNER_TEMP/mh/node_modules/metaharness/dist/bin.js"
+          test -f "$BIN" || { echo "FAIL: metaharness bin missing from the published tarball: $BIN" >&2; exit 1; }
+          echo "bin=$BIN" >> $GITHUB_OUTPUT
+          echo "installed metaharness@${{ steps.resolve.outputs.version }} -> $BIN"
+
       - name: '`npx metaharness --help` exits 0 (verifies bin entry + dist intact)'
         shell: bash
         run: |
@@ -106,12 +126,12 @@ jobs:
           # --help is the cheapest smoke; just verifies bin + dist resolved.
           # If this is non-zero, the published tarball is broken (bin path,
           # missing dist, etc.) — exactly what iter 124's 0.1.0 hit.
-          npx --yes --package=metaharness@${{ steps.resolve.outputs.version }} -- metaharness --help
+          node "${{ steps.install.outputs.bin }}" --help
 
       - name: '`npx metaharness --version` reports the resolved version'
         shell: bash
         run: |
-          OUT=$(npx --yes --package=metaharness@${{ steps.resolve.outputs.version }} -- metaharness --version 2>&1)
+          OUT=$(node "${{ steps.install.outputs.bin }}" --version 2>&1)
           echo "stdout: $OUT"
           # Just verify the command ran; the version-string format is
           # owned by the CLI, not by this guard.
@@ -121,7 +141,7 @@ jobs:
         run: |
           mkdir -p /tmp/smoke-harness
           cd /tmp/smoke-harness
-          npx --yes --package=metaharness@${{ steps.resolve.outputs.version }} -- metaharness my-bot \
+          node "${{ steps.install.outputs.bin }}" my-bot \
             --template minimal \
             --host claude-code \
             --force
@@ -140,20 +160,20 @@ jobs:
           cd /tmp/smoke-score
           printf '{"name":"smoke-sdk","scripts":{"build":"tsc","test":"vitest"},"devDependencies":{"typescript":"^5"}}' > package.json
           printf '# smoke-sdk\nA TypeScript SDK / npm client library.\n' > README.md
-          OUT=$(npx --yes --package=metaharness@${{ steps.resolve.outputs.version }} -- metaharness score . 2>&1)
+          OUT=$(node "${{ steps.install.outputs.bin }}" score . 2>&1)
           echo "$OUT"
           echo "$OUT" | grep -q "Harness fit:"
           echo "$OUT" | grep -q "Recommended mode:"
-          npx --yes --package=metaharness@${{ steps.resolve.outputs.version }} -- metaharness score . --top 2 | grep -q "harness designs"
+          node "${{ steps.install.outputs.bin }}" score . --top 2 | grep -q "harness designs"
           # --constraints exits 0 for a healthy repo (hard gate satisfied)
-          npx --yes --package=metaharness@${{ steps.resolve.outputs.version }} -- metaharness score . --constraints | grep -q "scaffold-ready"
+          node "${{ steps.install.outputs.bin }}" score . --constraints | grep -q "scaffold-ready"
           echo "score command smoke OK"
 
       - name: '`harness doctor` on the scaffolded harness exits 0'
         shell: bash
         run: |
           cd /tmp/smoke-harness/my-bot
-          npx --yes --package=metaharness@${{ steps.resolve.outputs.version }} -- harness doctor .
+          node "$RUNNER_TEMP/mh/node_modules/metaharness/dist/harness-bin.js" doctor .
           # If doctor exits non-zero here, the published tarball generates
           # a non-healthy scaffold — a pre-release regression we want to
           # catch BEFORE users complain.
@@ -236,12 +256,20 @@ jobs:
       - name: Scaffold a harness for every host from `npx metaharness@latest`
         shell: bash
         run: |
+          # Install once and call the bin FILE directly — same reason as
+          # smoke-published-cli: npx bin resolution is not deterministic across
+          # runner images, and this job is testing the artifact, not npm's shims.
+          mkdir -p "$RUNNER_TEMP/mh-hosts" && cd "$RUNNER_TEMP/mh-hosts"
+          npm init -y >/dev/null 2>&1
+          npm install --no-save --no-audit --no-fund metaharness@latest
+          BIN="$RUNNER_TEMP/mh-hosts/node_modules/metaharness/dist/bin.js"
+          test -f "$BIN" || { echo "FAIL: metaharness bin missing from the published tarball" >&2; exit 1; }
           mkdir -p /tmp/all-hosts && cd /tmp/all-hosts
           for host in claude-code codex pi-dev hermes openclaw rvm copilot opencode github-actions prime-agent; do
             echo ""
             echo "=== HOST: $host ==="
             rm -rf "bot-$host"
-            npx --yes --package=metaharness@latest -- metaharness "bot-$host" \
+            node "$BIN" "bot-$host" \
               --template minimal --host "$host" --force
           done
 
