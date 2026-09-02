@@ -28,7 +28,18 @@ export function autogenousPromotionRule(evidence: PromotionEvidence): PromotionD
     reasons.push('independent_quality_regressed');
   }
   if (candidate.costPerWin > baseline.costPerWin) reasons.push('cost_worsened');
-  if (candidate.regressed && reasons.length === 0) reasons.push('safety_regressed');
+  // Unconditional, like every other check above. The previous
+  // `&& reasons.length === 0` guard meant a safety regression was recorded ONLY
+  // when nothing else had failed, so it vanished from `reasons` whenever any
+  // other condition also tripped:
+  //
+  //   regressed alone            -> ['safety_regressed']
+  //   regressed + cost worsened  -> ['cost_worsened']        <- safety lost
+  //
+  // The promote decision was correct either way (any reason blocks), but
+  // `reasons` is the audit trail this gate exists to produce, and dropping the
+  // most severe reason behind an incidental one misleads the operator reading it.
+  if (candidate.regressed) reasons.push('safety_regressed');
   if (evidence.anchor && evidence.anchor.candidate < evidence.anchor.baseline) {
     reasons.push('anchor_regressed');
   }
