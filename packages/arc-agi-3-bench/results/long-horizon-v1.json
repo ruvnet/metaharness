@@ -1,0 +1,62 @@
+{
+  "schema": "metaharness.arc_agi_3.avo_long_horizon_benchmark.v1",
+  "generatedAt": "2026-08-22T21:43:11.121Z",
+  "benchmarkKind": "offline-deterministic-infrastructure",
+  "claimEligible": false,
+  "claimBoundary": "Long-horizon durability and runtime only; not an ARC score or intelligence result.",
+  "environment": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "arch": "x64"
+  },
+  "actions": 6624,
+  "avoConfigHash": "de0911df3c328d86b75336e273399848be92464fe82db579fcc85b6e9a2166f4",
+  "checkpointHashes": {
+    "source": "ac9a863a1e9ccfabe2f8de09daf2233305613ea79b63a7fd829296070a5521a0",
+    "loaded": "ac9a863a1e9ccfabe2f8de09daf2233305613ea79b63a7fd829296070a5521a0"
+  },
+  "storage": {
+    "logicalCheckpointBytes": 42376880,
+    "descriptorBytes": 17994644,
+    "contentAddressedObjectCount": 26497
+  },
+  "loaded": {
+    "receipts": 6624,
+    "candidates": 6624,
+    "selections": 6624,
+    "outcomes": 6624
+  },
+  "receiptVerification": {
+    "ok": true,
+    "count": 6624,
+    "headHash": "dadd34f583e17a3d41795236ae831946d089184764c54255820e16f802b8977e"
+  },
+  "checks": {
+    "actionCount": true,
+    "archiveCoverage": true,
+    "durableHashMatch": true,
+    "logicalCheckpointBound": true,
+    "descriptorBound": true
+  },
+  "accepted": true,
+  "hashScope": {
+    "deterministicEvidenceHashExcludes": [
+      "generatedAt",
+      "timingsMs",
+      "checkpointHashes",
+      "receiptVerification.headHash"
+    ]
+  },
+  "limitations": [
+    "Wall-clock values are a single local measurement and are not a statistical latency claim.",
+    "The stable no-effect fixture validates infrastructure scaling, not planning quality."
+  ],
+  "timingsMs": {
+    "actionLoop": 40166.292036000006,
+    "checkpoint": 2891.394078999998,
+    "save": 6498.244476,
+    "load": 5441.8947899999985
+  },
+  "deterministicEvidenceHash": "332d1cfd8633ae69e0b5c32663ee4c4eef4cef3f162f4c80761f017108765d09",
+  "reportHash": "29f7a6104afc35120bd7235a3ab779b8380b64df5312d528703da07803fd51cb"
+}

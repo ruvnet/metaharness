@@ -1,0 +1,100 @@
+{
+  "schema": "metaharness.arc_agi_3.live_smoke_pair.v1",
+  "generatedAt": "2026-08-22T21:20:05.747Z",
+  "benchmarkKind": "online-public-single-game-actor-declared-clean-smoke",
+  "claimEligible": false,
+  "claimBoundary": "One public game and one seed in non-competition mode with separate actors that declared clean-room behavior; this is exploratory online evidence, not an official ARC result, a replicated statistical benchmark, or proof of increased intrinsic model intelligence.",
+  "pair": {
+    "opaqueEnvironmentHash": "0f2fcf4235f9bb70f587878aee671c329115a406cf871d5ddbd50f55c076e76e",
+    "seed": 0,
+    "actionBudgetPerArm": 80,
+    "competitionMode": false,
+    "execution": "concurrent separate online sessions",
+    "actorCondition": "separate Codex Work Mode reasoning actors with the same inherited model configuration",
+    "protocolClarification": "Both actors received only the strict candidate JSON schema after validation errors at zero environment actions; no game or trajectory information was supplied.",
+    "arms": [
+      {
+        "arm": "direct",
+        "profile": "DIRECT_ACTOR",
+        "profileConfigHash": "c11bd84f32fab0302929ece5ba98d53235234cf14321b6a117f16b10bf61eb7f",
+        "score": 0.3968253968253968,
+        "levelsCompleted": 1,
+        "winLevels": 7,
+        "actionCount": 80,
+        "levelActionCounts": [66, 14, 0, 0, 0, 0, 0],
+        "decisionCount": 80,
+        "committedSupervisorCalls": 0,
+        "ruleCount": 0,
+        "elapsedMs": 1704153,
+        "receiptVerification": {
+          "ok": true,
+          "count": 80,
+          "headHash": "9dec4bd62ef8b5e5270d06af84613d6b5054c38d8d48a8aeff7fec800c981abc"
+        },
+        "hygieneDeclaration": {
+          "webSearch": false,
+          "repositoryOrSourceInspection": false,
+          "otherRunInspection": false,
+          "priorTrajectoryOrSolutionKnowledge": false,
+          "subagents": false
+        }
+      },
+      {
+        "arm": "avo",
+        "profile": "AVO_FULL",
+        "profileConfigHash": "08eaa13332af6d2eda369bee1ea0e998bb12bcb719b4afcb60cb19e7170e2add",
+        "score": 3.267620847961113,
+        "levelsCompleted": 1,
+        "winLevels": 7,
+        "actionCount": 80,
+        "levelActionCounts": [23, 57, 0, 0, 0, 0, 0],
+        "decisionCount": 80,
+        "supervisorProbeCalls": 1,
+        "committedSupervisorCalls": 0,
+        "ruleCount": 4,
+        "elapsedMs": 1537190,
+        "receiptVerification": {
+          "ok": true,
+          "count": 80,
+          "headHash": "97b136cf3955cefa94877178597598eac5010508f9b15e35ccf47d6de29b7c15"
+        },
+        "hygieneDeclaration": {
+          "webSearch": false,
+          "repositoryOrSourceInspection": false,
+          "otherRunInspection": false,
+          "priorTrajectoryOrSolutionKnowledge": false,
+          "subagents": false
+        }
+      }
+    ],
+    "comparison": {
+      "outcome": "AVO_HIGHER_SCORE",
+      "avoMinusDirectScore": 2.870795451135716,
+      "avoToDirectScoreRatio": 8.234404536862005,
+      "avoMinusDirectLevels": 0,
+      "avoMinusDirectTotalActions": 0,
+      "avoMinusDirectFirstLevelActions": -43,
+      "avoFirstLevelActionReductionPercent": 65.15151515151516,
+      "avoMinusDirectElapsedMs": -166963,
+      "avoElapsedPercentChange": -9.797418424284675
+    }
+  },
+  "acceptance": {
+    "passed": false,
+    "observedExploratoryImprovement": true,
+    "reason": "AVO scored higher in this pair, but the +2.8708 point delta is below the frozen +10 point gate and one game cannot provide the required clustered confidence interval or permutation test."
+  },
+  "hashScope": {
+    "deterministicEvidenceHashExcludes": ["generatedAt"]
+  },
+  "limitations": [
+    "Separate actors are not a deterministic replay and model token/reasoning usage was unavailable, so exact compute matching cannot be verified.",
+    "The no-prior-knowledge fields are actor declarations; they cannot exclude latent knowledge in pretrained model weights.",
+    "Both arms exhausted the total budget and completed the same number of levels; the score gain came from using 23 rather than 66 actions to reach level one.",
+    "Concurrent wall time includes actor reasoning and transient local broker latency and is not a harness-only performance estimate.",
+    "The run bound each resolved cognitive profile by config hash, but an immutable source-tree revision was not captured because the implementation was still an uncommitted development worktree.",
+    "Raw scorecard identifiers and environment identity are intentionally omitted from this public compact artifact."
+  ],
+  "deterministicEvidenceHash": "4e43824162520b0d5696aa0dafe367f8aed35876d846ab0138061a613542b7c1",
+  "reportHash": "1819d6b89543373f33c393b26e5f8f6d9e5038c1b5ab722a63c0d101033f6df6"
+}

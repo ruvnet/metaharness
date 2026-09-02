@@ -18,10 +18,18 @@ import {
   type CompactionSeams,
   type CompactionConfig,
 } from './compaction.js';
+import { UnavailableToolExecutor, type ToolExecutionResult, type ToolExecutor } from './executor.js';
+import {
+  hashCheckpoint,
+  verifyCheckpoint,
+  type HorizonCheckpoint,
+  type HorizonContinuity,
+} from './checkpoint.js';
 
 export interface HorizonEvent {
   role: 'model' | 'tool' | 'summary';
   text: string;
+  receipt?: ToolExecutionResult;
 }
 
 /** What one model step decides to do. */
@@ -44,6 +52,8 @@ export interface DriverSeams {
   step(ctx: { events: HorizonEvent[]; iteration: number }): Promise<StepResult>;
   /** Approve a GATE-classified command. Default: deny (safe). */
   approve?(command: string, c: Classification): Promise<boolean>;
+  /** Real execution seam. Absence is an observed exit-127 failure, never assumed success. */
+  executor?: ToolExecutor;
   /** Context compaction seams (token estimate, flush, summarize). */
   compaction: CompactionSeams<HorizonEvent>;
 }
@@ -62,21 +72,60 @@ export class LongHorizonDriver {
   private readonly halt: HaltController;
   private readonly guard: CommandGuard;
   private readonly compaction: CompactionPolicy<HorizonEvent>;
+  private readonly executor: ToolExecutor;
+  private events: HorizonEvent[] = [];
+  private actionCount = 0;
+  private continuity: HorizonContinuity = {
+    workspaceCommit: null,
+    evaluationHistory: [],
+    budget: {},
+    pendingApprovals: [],
+    archiveBranch: null,
+    memoryCursor: null,
+  };
 
   constructor(
     private readonly core: HorizonCore,
     private readonly seams: DriverSeams,
     config: DriverConfig,
+    checkpoint?: HorizonCheckpoint,
   ) {
-    this.halt = new HaltController(core, config.halt);
+    if (checkpoint && !verifyCheckpoint(checkpoint)) {
+      throw new Error('horizon: checkpoint state hash mismatch');
+    }
+    this.halt = checkpoint
+      ? HaltController.restore(core, config.halt, checkpoint.halt)
+      : new HaltController(core, config.halt);
     this.guard = new CommandGuard(core, config.policy);
     this.compaction = new CompactionPolicy(seams.compaction, config.compaction);
+    this.executor = seams.executor ?? new UnavailableToolExecutor();
+    if (checkpoint) {
+      this.events = structuredClone(checkpoint.transcript);
+      this.actionCount = checkpoint.actionCount;
+      this.continuity = {
+        workspaceCommit: checkpoint.workspaceCommit,
+        evaluationHistory: structuredClone(checkpoint.evaluationHistory),
+        budget: { ...checkpoint.budget },
+        pendingApprovals: [...checkpoint.pendingApprovals],
+        archiveBranch: checkpoint.archiveBranch,
+        memoryCursor: checkpoint.memoryCursor,
+      };
+    }
   }
 
   /** Run one user turn to a final answer or a halt. */
   async runTurn(input: string): Promise<TurnOutcome> {
-    let events: HorizonEvent[] = [{ role: 'model', text: `user: ${input}` }];
+    this.events.push({ role: 'model', text: `user: ${input}` });
     this.halt.turnBoundary();
+    return this.runLoop();
+  }
+
+  /** Continue an interrupted turn from a verified full-state checkpoint. */
+  async resumeTurn(): Promise<TurnOutcome> {
+    return this.runLoop();
+  }
+
+  private async runLoop(): Promise<TurnOutcome> {
 
     // A generous absolute ceiling; the HaltController is the real limiter.
     for (let guardIter = 0; guardIter < 10_000; guardIter++) {
@@ -86,55 +135,73 @@ export class LongHorizonDriver {
           kind: 'halted',
           reason: decision.reason!,
           iterations: this.halt.snapshot().iteration,
-          events,
+          events: this.events,
         };
       }
 
-      const step = await this.seams.step({ events, iteration: this.halt.snapshot().iteration });
+      const step = await this.seams.step({ events: this.events, iteration: this.halt.snapshot().iteration });
 
       if (step.kind === 'final') {
-        events.push({ role: 'model', text: step.output });
-        return { kind: 'final', output: step.output, iterations: this.halt.snapshot().iteration, events };
+        this.events.push({ role: 'model', text: step.output });
+        return { kind: 'final', output: step.output, iterations: this.halt.snapshot().iteration, events: this.events };
       }
 
-      // Classify the command; enforce the guard before "running" it.
+      // Classify, authorize, then execute. Every action yields observed evidence.
       const c = this.guard.classify(step.command);
-      let failure = step.failure ?? null;
-      let ran = false;
-      if (c.verdict === 'deny') {
-        events.push({ role: 'tool', text: `[blocked: ${c.reasons[0] ?? 'denied'}] ${step.command}` });
-        failure = failure ?? `blocked:${step.command}`;
-      } else if (c.verdict === 'gate') {
-        const ok = this.seams.approve ? await this.seams.approve(step.command, c) : false;
-        if (!ok) {
-          events.push({ role: 'tool', text: `[gated, not approved] ${step.command}` });
-          failure = failure ?? `gated:${step.command}`;
-        } else {
-          events.push({ role: 'tool', text: `[approved] ${step.command}${step.note ? ` — ${step.note}` : ''}` });
-          ran = true;
-        }
-      } else {
-        events.push({ role: 'tool', text: `${step.command}${step.note ? ` — ${step.note}` : ''}` });
-        ran = true;
-      }
+      const approved = c.verdict === 'allow'
+        ? true
+        : c.verdict === 'gate' && this.seams.approve
+          ? await this.seams.approve(step.command, c)
+          : false;
+      const observed = await this.executor.execute({
+        command: step.command,
+        classification: c,
+        approved,
+      });
+      this.actionCount += 1;
+      const label = observed.policyReceipt.authorized ? 'executed' : 'blocked';
+      this.events.push({
+        role: 'tool',
+        text: `[${label} exit=${observed.exitCode} duration=${observed.durationMs}ms digest=${observed.artifactDigest}] ${step.command}\nstdout:\n${observed.stdout}\nstderr:\n${observed.stderr}${step.note ? `\nnote: ${step.note}` : ''}`,
+        receipt: observed,
+      });
+      const failure = step.failure ?? (observed.exitCode === 0
+        ? null
+        : `exit:${observed.exitCode}:${observed.stderr.trim().slice(-160)}`);
 
       // Record progress/failure for the halt guards.
       this.halt.observe({
-        progress: step.progress,
-        failure: ran ? null : failure,
+        progress: observed.exitCode === 0 ? (step.progress ?? observed.artifactDigest) : undefined,
+        failure,
       });
 
       // Compact if the transcript has grown past the threshold.
-      const res = await this.compaction.compact(events);
-      events = res.events;
+      const res = await this.compaction.compact(this.events);
+      this.events = res.events;
     }
 
     // Unreachable in practice (halt controller stops far sooner).
-    return { kind: 'halted', reason: 'iteration-budget', iterations: this.halt.snapshot().iteration, events };
+    return { kind: 'halted', reason: 'iteration-budget', iterations: this.halt.snapshot().iteration, events: this.events };
   }
 
   /** Persist the halt state to resume this driver's turn later. */
   snapshotHalt() {
     return this.halt.snapshot();
+  }
+
+  updateContinuity(patch: Partial<HorizonContinuity>): void {
+    this.continuity = { ...this.continuity, ...structuredClone(patch) };
+  }
+
+  /** Persist transcript + receipts + semantic continuity, not only halt counters. */
+  snapshot(): HorizonCheckpoint {
+    const body: Omit<HorizonCheckpoint, 'stateHash'> = {
+      schema: 1,
+      transcript: structuredClone(this.events),
+      halt: this.halt.snapshot(),
+      actionCount: this.actionCount,
+      ...structuredClone(this.continuity),
+    };
+    return { ...body, stateHash: hashCheckpoint(body) };
   }
 }

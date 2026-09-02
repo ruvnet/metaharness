@@ -77,6 +77,28 @@ jobs:
             exit 1
           fi
 
+      # `npm view` reads registry METADATA, which is updated before the tarball
+      # is fetchable from every CDN edge. A publish concurrent with a push to
+      # main (i.e. every release) therefore made the steps below fail with an
+      # install error 10-15s later, on some matrix legs and not others — a red
+      # that says nothing about the artifact. Gate on the tarball actually
+      # being downloadable, not on the metadata existing. See #263.
+      - name: Wait for the tarball to be fetchable (npm CDN propagation)
+        shell: bash
+        run: |
+          VERSION='${{ steps.resolve.outputs.version }}'
+          for i in $(seq 1 10); do
+            if npm pack "metaharness@$VERSION" --pack-destination "$RUNNER_TEMP" >/dev/null 2>&1; then
+              echo "metaharness@$VERSION tarball is fetchable (attempt $i)"
+              exit 0
+            fi
+            echo "attempt $i: metaharness@$VERSION not fetchable yet; retrying in 15s"
+            sleep 15
+          done
+          echo "FAIL: metaharness@$VERSION metadata is published but its tarball was not fetchable after 150s." >&2
+          echo "That is longer than CDN propagation — treat it as a genuinely broken publish, not a race." >&2
+          exit 1
+
       - name: '`npx metaharness --help` exits 0 (verifies bin entry + dist intact)'
         shell: bash
         run: |
@@ -84,12 +106,12 @@ jobs:
           # --help is the cheapest smoke; just verifies bin + dist resolved.
           # If this is non-zero, the published tarball is broken (bin path,
           # missing dist, etc.) — exactly what iter 124's 0.1.0 hit.
-          npx --yes metaharness@latest --help
+          npx --yes metaharness@${{ steps.resolve.outputs.version }} --help
 
       - name: '`npx metaharness --version` reports the resolved version'
         shell: bash
         run: |
-          OUT=$(npx --yes metaharness@latest --version 2>&1)
+          OUT=$(npx --yes metaharness@${{ steps.resolve.outputs.version }} --version 2>&1)
           echo "stdout: $OUT"
           # Just verify the command ran; the version-string format is
           # owned by the CLI, not by this guard.
@@ -99,7 +121,7 @@ jobs:
         run: |
           mkdir -p /tmp/smoke-harness
           cd /tmp/smoke-harness
-          npx --yes metaharness@latest my-bot \
+          npx --yes metaharness@${{ steps.resolve.outputs.version }} my-bot \
             --template minimal \
             --host claude-code \
             --force
@@ -118,20 +140,20 @@ jobs:
           cd /tmp/smoke-score
           printf '{"name":"smoke-sdk","scripts":{"build":"tsc","test":"vitest"},"devDependencies":{"typescript":"^5"}}' > package.json
           printf '# smoke-sdk\nA TypeScript SDK / npm client library.\n' > README.md
-          OUT=$(npx --yes metaharness@latest score . 2>&1)
+          OUT=$(npx --yes metaharness@${{ steps.resolve.outputs.version }} score . 2>&1)
           echo "$OUT"
           echo "$OUT" | grep -q "Harness fit:"
           echo "$OUT" | grep -q "Recommended mode:"
-          npx --yes metaharness@latest score . --top 2 | grep -q "harness designs"
+          npx --yes metaharness@${{ steps.resolve.outputs.version }} score . --top 2 | grep -q "harness designs"
           # --constraints exits 0 for a healthy repo (hard gate satisfied)
-          npx --yes metaharness@latest score . --constraints | grep -q "scaffold-ready"
+          npx --yes metaharness@${{ steps.resolve.outputs.version }} score . --constraints | grep -q "scaffold-ready"
           echo "score command smoke OK"
 
       - name: '`harness doctor` on the scaffolded harness exits 0'
         shell: bash
         run: |
           cd /tmp/smoke-harness/my-bot
-          npx --yes --package=metaharness@latest -- harness doctor .
+          npx --yes --package=metaharness@${{ steps.resolve.outputs.version }} -- harness doctor .
           # If doctor exits non-zero here, the published tarball generates
           # a non-healthy scaffold — a pre-release regression we want to
           # catch BEFORE users complain.
@@ -194,6 +216,23 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with: { node-version: '20' }
 
+      # See #263 / the gate in smoke-published-cli: registry metadata lands
+      # before the tarball is fetchable from every CDN edge, so a publish
+      # concurrent with a push to main produced spurious install failures.
+      - name: Wait for metaharness@latest to be fetchable (npm CDN propagation)
+        shell: bash
+        run: |
+          for i in $(seq 1 10); do
+            if npm pack metaharness@latest --pack-destination "$RUNNER_TEMP" >/dev/null 2>&1; then
+              echo "metaharness@latest tarball is fetchable (attempt $i)"
+              exit 0
+            fi
+            echo "attempt $i: not fetchable yet; retrying in 15s"
+            sleep 15
+          done
+          echo "FAIL: metaharness@latest tarball not fetchable after 150s — longer than CDN propagation." >&2
+          exit 1
+
       - name: Scaffold a harness for every host from `npx metaharness@latest`
         shell: bash
         run: |
@@ -226,6 +265,23 @@ jobs:
     steps:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with: { node-version: '20' }
+
+      # See #263 / the gate in smoke-published-cli: registry metadata lands
+      # before the tarball is fetchable from every CDN edge, so a publish
+      # concurrent with a push to main produced spurious install failures.
+      - name: Wait for metaharness@latest to be fetchable (npm CDN propagation)
+        shell: bash
+        run: |
+          for i in $(seq 1 10); do
+            if npm pack metaharness@latest --pack-destination "$RUNNER_TEMP" >/dev/null 2>&1; then
+              echo "metaharness@latest tarball is fetchable (attempt $i)"
+              exit 0
+            fi
+            echo "attempt $i: not fetchable yet; retrying in 15s"
+            sleep 15
+          done
+          echo "FAIL: metaharness@latest tarball not fetchable after 150s — longer than CDN propagation." >&2
+          exit 1
 
       - name: Scaffold from a sample of published @metaharness/* wrappers
         shell: bash
