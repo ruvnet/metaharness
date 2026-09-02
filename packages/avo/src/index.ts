@@ -14,3 +14,4 @@ export * from './operator.js';
 export * from './swebench.js';
 export * from './claim-gate.js';
 export * from './darwin-adapter.js';
+export * from './flywheelGate.js';

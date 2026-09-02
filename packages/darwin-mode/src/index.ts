@@ -47,6 +47,16 @@ export * from './scorer.js';
 export * from './archive.js';
 export * from './evolve.js';
 
+// Numeric genome kind (ADR-272) — a second, parallel genome representation
+// (bounded numeric parameter vectors, e.g. ML hyperparameters) scored by a
+// caller-supplied external evaluator instead of the built-in sandbox. Fully
+// independent of the seven-surface prompt kind above.
+export * from './numeric-types.js';
+export * from './numeric-mutator.js';
+export * from './numeric-archive.js';
+export * from './numeric-evaluator.js';
+export * from './numeric-evolve.js';
+
 // The benchmark + SOTA "Darwin Plus" layer (ADR-076…081) is namespaced to avoid
 // name collisions (e.g. scoreWeights) with the lightweight ADR-072 scorer.
 export * as bench from './bench/index.js';

@@ -1,4 +1,4 @@
-# ADR-253: AVO exact-SHA release claim evidence gate
+# ADR-276: AVO exact-SHA release claim evidence gate
 
 **Status**: Accepted (library verifier, governed-surface scanner, CI check, and mandatory publish gate implemented; no performance or frontier evidence accepted yet)
 **Date**: 2026-08-21

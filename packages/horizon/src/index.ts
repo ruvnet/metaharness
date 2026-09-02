@@ -47,6 +47,17 @@ export type {
   TurnOutcome,
 } from './driver.js';
 
+export { verifyCompletionCertificate } from './completion.js';
+export type {
+  CompletionEvidenceEvent,
+  CompletionEvidenceRef,
+  CompletionClaim,
+  CompletionCertificate,
+  CompletionConfig,
+  CompletionReplay,
+  CompletionVerification,
+} from './completion.js';
+
 export { NodeToolExecutor, UnavailableToolExecutor, digestWorkspace } from './executor.js';
 export type {
   ToolExecutor,

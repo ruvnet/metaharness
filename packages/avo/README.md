@@ -57,4 +57,4 @@ digest must come from the protected `AVO_CLAIM_TRUST_POLICY_HASH` release
 variable; a key embedded only in the bundle is never trusted.
 
 See [ADR-251](../../docs/adrs/ADR-251-governed-autonomous-variation-runtime.md)
-and [ADR-253](../../docs/adrs/ADR-253-avo-release-claim-evidence-gate.md).
+and [ADR-276](../../docs/adrs/ADR-276-avo-release-claim-evidence-gate.md).

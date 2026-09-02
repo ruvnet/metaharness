@@ -1,0 +1,50 @@
+{
+  "schema": "metaharness.arc_agi_3.mechanism_fixture.v1",
+  "suiteId": "causal-escape-v1",
+  "description": "Hidden terminal action behind two visually inert alternatives; constructed to test whether governed variation explores an untried edge.",
+  "actionLatencyMs": 4,
+  "tasks": [
+    {
+      "id": "escape-1-2-3",
+      "availableActions": ["ACTION1", "ACTION2", "ACTION3"],
+      "goalAction": "ACTION3",
+      "frameSalt": 1,
+      "referenceActions": 3
+    },
+    {
+      "id": "escape-1-3-4",
+      "availableActions": ["ACTION1", "ACTION3", "ACTION4"],
+      "goalAction": "ACTION3",
+      "frameSalt": 2,
+      "referenceActions": 3
+    },
+    {
+      "id": "escape-2-4-5",
+      "availableActions": ["ACTION2", "ACTION4", "ACTION5"],
+      "goalAction": "ACTION4",
+      "frameSalt": 3,
+      "referenceActions": 3
+    },
+    {
+      "id": "escape-3-5-7",
+      "availableActions": ["ACTION3", "ACTION5", "ACTION7"],
+      "goalAction": "ACTION5",
+      "frameSalt": 4,
+      "referenceActions": 3
+    },
+    {
+      "id": "escape-1-4-7",
+      "availableActions": ["ACTION1", "ACTION4", "ACTION7"],
+      "goalAction": "ACTION4",
+      "frameSalt": 5,
+      "referenceActions": 3
+    },
+    {
+      "id": "escape-2-3-7",
+      "availableActions": ["ACTION2", "ACTION3", "ACTION7"],
+      "goalAction": "ACTION7",
+      "frameSalt": 6,
+      "referenceActions": 3
+    }
+  ]
+}
