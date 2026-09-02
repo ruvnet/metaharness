@@ -47,5 +47,16 @@ naming coincidence with the Dream Cycle's own ADR-251, unmerged as of
 2026-08-24). Reported as a real gap per direct evidence, not inferred from
 ledger sparseness alone.
 
+<<<<<<< HEAD
+**Note on 2026-08-25 PR #229 (added 2026-09-01 during merge-conflict
+resolution):** #229's ledger row above was drafted against a stale `main`
+and conflicted with the 08-15→08-19 backfill plus 08-29's row landing in
+the interim; resolved by chronological re-ordering, content otherwise
+unchanged. Separately: #224 (host-rvm RCE fix) merged during this PR's
+review wait — the 08-25 row's "still OPEN" list for #224 is now stale as
+of the date it was written; see #246's row above, which independently
+confirmed #224 as merged.
+=======
 
 **Ledger-integrity note (added 2026-08-27):** Rows for 2026-08-15 through 2026-08-26 above were backfilled tonight from GitHub PR/issue state, not written on their original nights. STEP 25 ("update the ledger") silently failed for 8 consecutive Dream Cycle runs even though every one of those runs otherwise completed its full pipeline (research → hypothesis → candidate → evaluation → critique → draft PR) — the PRs and issues existed and are the source for this backfill, but the durable-memory row never landed. This means STEP 1's ledger-based learning signals (duplicate-direction detection, the zero-merge bias rule, the review-bottleneck rule) were operating on a table that looked like only 2 nights had ever run, for two weeks, even as 8 real nights of evidence accumulated on GitHub. The individual nightly PRs partially self-corrected by reading GitHub state directly instead of the ledger (see e.g. #229, #231's own bodies), which is why the pipeline's actual output stayed sound — but the intended durable-memory mechanism itself was silently broken this whole time. Root cause not diagnosed (could be a `gh`/tool-availability difference across sessions, a step ordered after something that then aborted, or the step simply being skipped) — flagging for the human rather than guessing further.
+>>>>>>> origin/main
