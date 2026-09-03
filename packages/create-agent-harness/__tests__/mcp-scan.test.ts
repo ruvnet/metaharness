@@ -220,3 +220,31 @@ describe('mcpScanCmd', () => {
     expect(parsed.dir).toBe(good);
   });
 });
+
+// Regression: a directory registering MCP only via a top-level `.mcp.json`
+// (no .harness/mcp-policy.json, no .claude/settings.json mcpServers) must
+// still be detected as MCP-in-use. `.mcp.json` is a primary, actively-read
+// MCP signal elsewhere in this codebase (score.ts's hasMcp, eject.ts,
+// analyze-repo.ts) — scanMcp() previously ignored it entirely, which
+// threat-model.ts's own fix (reusing scanMcp's mcpEnabled as its single
+// source of truth) would otherwise have silently inherited as a new
+// false-negative for this config surface. Uses raw fs calls rather than
+// makeHarness() because that helper always writes .claude/settings.json.
+describe('scanMcp — .mcp.json as an independent MCP-in-use signal', () => {
+  it('detects MCP as enabled from .mcp.json alone', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'mcp-scan-mcpjson-'));
+    await writeFile(join(dir, '.mcp.json'), JSON.stringify({ mcpServers: { bot: { command: 'npx' } } }), 'utf-8');
+    const r = scanMcp(dir);
+    expect(r.mcpEnabled).toBe(true);
+    expect(r.findings.some((f) => f.id === 'mcp-disabled')).toBe(false);
+  });
+
+  it('stays disabled when no policy, no .mcp.json, and empty mcpServers', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'mcp-scan-mcpjson-'));
+    await mkdir(join(dir, '.claude'), { recursive: true });
+    await writeFile(join(dir, '.claude', 'settings.json'), JSON.stringify({ mcpServers: {} }), 'utf-8');
+    const r = scanMcp(dir);
+    expect(r.mcpEnabled).toBe(false);
+    expect(r.findings.some((f) => f.id === 'mcp-disabled')).toBe(true);
+  });
+});
