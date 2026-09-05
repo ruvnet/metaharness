@@ -247,4 +247,47 @@ describe('scanMcp — .mcp.json as an independent MCP-in-use signal', () => {
     expect(r.mcpEnabled).toBe(false);
     expect(r.findings.some((f) => f.id === 'mcp-disabled')).toBe(true);
   });
+
+  it('duplicate/conflicting registration across all 3 surfaces at once: findings are additive, neither surface suppresses the other, and the result is deterministic', async () => {
+    // A harness that registers MCP three times over (policy file + .mcp.json
+    // + settings.mcpServers — redundant but not invalid) with directly
+    // conflicting governance signals: .harness/mcp-policy.json is fully
+    // compliant (SAFE-shaped), while .claude/settings.json separately grants
+    // an unrestricted 'Bash(*)' allow-rule and denies nothing for .env. There
+    // is no "which surface wins" question here by design (see mcp-scan.ts's
+    // comment above `mcpEnabled`) — both the policy's cleanliness and the
+    // settings' real risk must be visible in the same report.
+    const dir = await mkdtemp(join(tmpdir(), 'mcp-scan-conflict-'));
+    await mkdir(join(dir, '.harness'), { recursive: true });
+    await mkdir(join(dir, '.claude'), { recursive: true });
+    await writeFile(join(dir, '.harness', 'mcp-policy.json'), JSON.stringify(SAFE), 'utf-8');
+    await writeFile(join(dir, '.mcp.json'), JSON.stringify({ mcpServers: { other: { command: 'npx' } } }), 'utf-8');
+    await writeFile(
+      join(dir, '.claude', 'settings.json'),
+      JSON.stringify({
+        permissions: { allow: ['Bash(*)'], deny: [] },
+        mcpServers: { bot: { command: 'npx' } },
+      }),
+      'utf-8',
+    );
+    await writeFile(join(dir, 'package.json'), JSON.stringify({ name: 'bot', dependencies: {} }), 'utf-8');
+
+    const r = scanMcp(dir);
+    expect(r.mcpEnabled).toBe(true);
+    // The compliant policy must NOT suppress the real settings-derived risk.
+    expect(r.findings.some((f) => f.id === 'unrestricted-bash-allow')).toBe(true);
+    // The risky settings must NOT make the tool claim there's no policy —
+    // a compliant policy file is genuinely present.
+    expect(r.findings.some((f) => f.id === 'no-policy')).toBe(false);
+    expect(r.findings.some((f) => f.id === 'no-default-deny')).toBe(false);
+    // The settings.deny=[] (no .env guard) finding must also independently
+    // surface — none of the 3 registration surfaces masks another's checks.
+    expect(r.findings.some((f) => f.id === 'no-secret-guard')).toBe(true);
+    expect(r.worst).toBe('high');
+
+    // Deterministic: re-scanning the identical fixture is order-stable and
+    // produces the exact same finding set, not just the same count.
+    const r2 = scanMcp(dir);
+    expect(r2.findings.map((f) => f.id)).toEqual(r.findings.map((f) => f.id));
+  });
 });

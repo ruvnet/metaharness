@@ -128,4 +128,26 @@ describe('buildThreatModel — mcpInUse / scanMcp detection-surface consistency'
     const tm = buildThreatModel(dir);
     expect(tm.mcpInUse).toBe(false);
   });
+
+  it('duplicate/conflicting registration across all 3 surfaces: mcpInUse stays true and scanMcp\'s findings pass through unfiltered — no surface\'s presence masks another\'s', async () => {
+    // Same conflicting fixture as mcp-scan.test.ts's "duplicate/conflicting
+    // registration" case: a compliant policy file coexists with a risky
+    // unrestricted 'Bash(*)' settings allow-rule, plus a redundant .mcp.json.
+    // There's no precedence to pick a "winning" surface (see mcp-scan.ts) —
+    // threat-model.ts must surface the real finding either way.
+    const dir = await makeHarness({
+      policy: { defaultDeny: true, auditLog: true, requireApprovalForDangerous: true, toolTimeoutMs: 30000, maxToolCallsPerTurn: 8 },
+      mcpJson: { servers: { other: { command: 'npx' } } },
+      allow: ['Bash(*)'],
+      deny: [],
+      servers: { bot: { command: 'npx' } },
+    });
+    const tm = buildThreatModel(dir);
+    const scan = scanMcp(dir);
+    expect(tm.mcpInUse).toBe(true);
+    expect(tm.mcpInUse).toBe(scan.mcpEnabled);
+    expect(tm.findings.some((f) => f.id === 'unrestricted-bash-allow')).toBe(true);
+    expect(tm.findings.some((f) => f.id === 'no-policy')).toBe(false);
+    expect(tm.worst).toBe('high');
+  });
 });
