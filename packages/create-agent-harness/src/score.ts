@@ -113,9 +113,9 @@ function scoreRepoUnderstanding(dir: string, manifest: any): DimensionScore {
       s += 25;
       signals.push(`kernel=${manifest.meta.kernel_version}`);
     }
-    if (manifest.host || manifest.hosts) {
+    if (Array.isArray(manifest.hosts) && manifest.hosts.length > 0) {
       s += 20;
-      signals.push(`host(s)=${manifest.hosts ?? manifest.host}`);
+      signals.push(`host(s)=${manifest.hosts.join(', ')}`);
     }
   } else {
     signals.push('no manifest — cannot identify what this harness is');
@@ -243,7 +243,7 @@ function scorePublishReadiness(dir: string, manifest: any): PublishScore {
     s += 20;
     signals.push(`pkg=${pkg.name}@${pkg.version}`);
   }
-  if (manifest?.host && pkg?.bin) {
+  if (Array.isArray(manifest?.hosts) && manifest.hosts.length > 0 && pkg?.bin) {
     s += 20;
     signals.push('bin entry present (npx-runnable)');
   } else if (pkg?.bin) {
