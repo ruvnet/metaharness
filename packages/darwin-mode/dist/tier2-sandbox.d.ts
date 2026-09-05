@@ -11,7 +11,14 @@ export interface AgentTask {
     difficulty: 1 | 2 | 3 | 4 | 5;
 }
 export declare const DEFAULT_AGENT_TASKS: readonly AgentTask[];
-/** Run ONE agent task against a variant by executing its real surface code. */
+/**
+ * Run ONE agent task against a variant by executing its real surface code.
+ *
+ * The ADR-071 safety gate runs first: if `inspectVariant` reports any
+ * findings, `tier2-driver.js` never imports/executes the variant's surface
+ * files, and a disqualified trace (exitCode 99, mirroring `sandbox.ts` and
+ * `llm-agent-sandbox.ts`) is returned instead.
+ */
 export declare function runVariantTaskAgent(variant: HarnessVariant, task: AgentTask, timeoutMs?: number): Promise<RunTrace>;
 /** Run a variant against the agent suite (defaults to DEFAULT_AGENT_TASKS). */
 export declare function runVariantTasksAgent(variant: HarnessVariant, tasks?: readonly AgentTask[], timeoutMs?: number): Promise<RunTrace[]>;
