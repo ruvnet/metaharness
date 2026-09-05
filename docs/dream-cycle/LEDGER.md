@@ -77,3 +77,24 @@ check `.harness/mcp-policy.json`/`.mcp.json`, missing
 fixture scores `mcpRisk: "None"` and `mcp.mode: "off"`, both false
 negatives). Filed as #280 rather than expanding #276's scope; good candidate
 for a near-future `security-adversarial` night.
+
+**Note on 2026-09-03 PR #276 (added 2026-09-05, human review round):** the
+PR's author (`ruvnet`) left a "Dream exact-head review — INCONCLUSIVE" at
+commit `52e75237` with a 4-item acceptance gate: (1) triage the then-red
+Security workflow's locked dependency signals, (2) get that workflow green,
+(3) add a conflicting-duplicate MCP-registration test with deterministic
+precedence, (4) keep sibling gaps in #275/#280 rather than widening this PR.
+Items 1-2 resolved themselves: the branch was rebased onto `main` twice in
+the interim (by the review process, not this session) and each rebase
+picked up whatever upstream fix closed the previously-flagged
+`fast-uri`/`qs` production advisories — verified directly on the rebased
+head (`npm audit --omit=dev --audit-level=high --json` → all-zero) rather
+than assumed. Item 3 was real outstanding work: added a fixture registering
+MCP through all 3 surfaces at once with conflicting signals (compliant
+policy + unrestricted `Bash(*)` settings allow-rule), asserting findings
+are additive and neither surface masks the other, plus scan determinism —
+mirrored in both `mcp-scan.test.ts` and `threat-model.test.ts` to keep
+cross-file consistency. 565/565 tests (+2), `tsc --noEmit` clean, no
+behavior change. Posted as a PR comment distinguishing "the base branch
+moving fixed this" from "this session fixed this" rather than claiming
+credit for the former.
