@@ -54,12 +54,27 @@ export function scanMcp(dir: string): ScanReport {
   const settings = readJson(join(root, '.claude', 'settings.json')) as
     | { permissions?: { allow?: string[]; deny?: string[] }; mcpServers?: Record<string, unknown> }
     | undefined;
+  const mcpJson = readJson(join(root, '.mcp.json'));
   const pkg = readJson(join(root, 'package.json')) as
     | { dependencies?: Record<string, string> }
     | undefined;
 
+  // Three independent, valid ways a harness can register MCP: a policy file,
+  // a top-level .mcp.json, or .claude/settings.json's mcpServers key. All
+  // three must be checked here — this is the one place downstream callers
+  // (e.g. threat-model.ts's mcpInUse) rely on as the authoritative answer.
+  //
+  // Deterministic precedence when more than one surface is present at once
+  // (duplicate/conflicting registration): there is none, by design — the
+  // three are OR'd for `mcpEnabled`, and every check below is additive and
+  // keyed to its own source file, not to "is MCP in use" generally. A
+  // compliant `.harness/mcp-policy.json` does not suppress a risky
+  // `.claude/settings.json` permission (or vice versa): each surface's
+  // findings surface independently and are never merged, deduped, or
+  // shadowed by another surface's presence. See mcp-scan.test.ts's
+  // "duplicate/conflicting registration" case.
   const mcpEnabled =
-    !!policy || !!(settings && settings.mcpServers && Object.keys(settings.mcpServers).length > 0);
+    !!policy || !!mcpJson || !!(settings && settings.mcpServers && Object.keys(settings.mcpServers).length > 0);
 
   if (!mcpEnabled) {
     add({ id: 'mcp-disabled', severity: 'info', title: 'No MCP surface', detail: 'No MCP policy or server registered — nothing to scan.' });

@@ -62,3 +62,39 @@ confirmed #224 as merged.
 | 2026-09-05 | generator-genome | `score.ts`'s `scorePublishReadiness` gated its 20-pt npx-runnable bonus on a nonexistent `manifest.host` field (only `hosts: string[]` exists) — unreachable in production; sibling `scoreRepoUnderstanding` credited "host(s) declared" for `hosts: []` too (empty array is truthy in JS). Both fixed to require a non-empty `hosts` array. Independent critic re-derived the bug and all numbers from scratch, ACCEPT | #283 | #284 | yes | ACCEPT | 554→561/561 tests (+7, 0 regressions), 4/7 new tests fail non-vacuously pre-fix; live CLI smoke test 30→40 publish-readiness, 65→66 overall on a real scaffold | `b247d764...` | #272 (09-02) and #276 (09-03) both OPEN, <4 days old, not stale; 2026-09-04 confirmed as a real gap (no dream/* branch or dream-cycle issue that date — PR #282 is unrelated human-authored research, not this routine) |
 
 **Note on 2026-09-05 (added same night):** the scheduler's stored authoritative prompt still says "ADR-251 traceability" in its Authority Note; the correct reference is ADR-273 (renumbered from ADR-251 on 2026-09-01 after a collision with PR #260) — the repo's own `docs/dream-cycle/PROMPT.md` mirror already has ADR-273. `update_trigger` refused to fix the scheduler copy directly ("this routine was created via http_api, not by an agent") — flagged in issue #283 for a human to correct by hand.
+| 2026-09-03 | security-adversarial | `threat-model.ts`'s `mcpInUse` missed `.claude/settings.json`'s `mcpServers` (only `mcp-scan.ts` checked it), silently discarding real findings via an early "MCP not in use" return; flagged not fixed 2026-08-28 (#243). Independent critic REJECTed round-1 fix (dropped `.mcp.json` coverage — same bug class, different surface); round-2 fix made `scanMcp()`'s `mcpEnabled` the single source of truth for all 3 surfaces. Also fixes a live downstream bug in `@metaharness/agntcy`'s AGNTCY badge derivation | #275 | #276 | yes | ACCEPT-WITH-CAVEATS | 563/563 create-agent-harness tests (was 560, +3), 0 regressions; downstream agntcy 82/82 unaffected; 3 root-integration suites 31/31; tsc clean; live CLI smoke test confirmed | `9db1b1d7...` | #272 (09-02) still OPEN, 1 day old, not stale, `ACCEPT` pending human review; #224/#229/#240/#246/#249/#258/#260 confirmed MERGED since 09-01's #257 backlog-triage escalation; #231/#255 confirmed CLOSED-NOT-MERGED, subsumed by #258's consolidation |
+
+**Note on 2026-09-03 PR #276 (added same day, post-open):** the PR's own text
+disclosed the round-2 critic's re-verification as still pending when opened
+(container restart lost the first attempt mid-run). Re-dispatched fresh;
+it returned **ACCEPT-WITH-CAVEATS**, independently confirming the fix
+against 5 live fixtures via the rebuilt CLI and the full test/tsc/downstream
+evidence above, posted as a PR comment. It also found a real, not-yet-fixed
+sibling gap: `score.ts`'s `scoreMcpSafety()` and `oia-manifest.ts`'s
+`readHarnessProfile()` share the identical narrow MCP-detection bug (only
+check `.harness/mcp-policy.json`/`.mcp.json`, missing
+`.claude/settings.json`'s `mcpServers`) — reproduced live (settings.json-only
+fixture scores `mcpRisk: "None"` and `mcp.mode: "off"`, both false
+negatives). Filed as #280 rather than expanding #276's scope; good candidate
+for a near-future `security-adversarial` night.
+
+**Note on 2026-09-03 PR #276 (added 2026-09-05, human review round):** the
+PR's author (`ruvnet`) left a "Dream exact-head review — INCONCLUSIVE" at
+commit `52e75237` with a 4-item acceptance gate: (1) triage the then-red
+Security workflow's locked dependency signals, (2) get that workflow green,
+(3) add a conflicting-duplicate MCP-registration test with deterministic
+precedence, (4) keep sibling gaps in #275/#280 rather than widening this PR.
+Items 1-2 resolved themselves: the branch was rebased onto `main` twice in
+the interim (by the review process, not this session) and each rebase
+picked up whatever upstream fix closed the previously-flagged
+`fast-uri`/`qs` production advisories — verified directly on the rebased
+head (`npm audit --omit=dev --audit-level=high --json` → all-zero) rather
+than assumed. Item 3 was real outstanding work: added a fixture registering
+MCP through all 3 surfaces at once with conflicting signals (compliant
+policy + unrestricted `Bash(*)` settings allow-rule), asserting findings
+are additive and neither surface masks the other, plus scan determinism —
+mirrored in both `mcp-scan.test.ts` and `threat-model.test.ts` to keep
+cross-file consistency. 565/565 tests (+2), `tsc --noEmit` clean, no
+behavior change. Posted as a PR comment distinguishing "the base branch
+moving fixed this" from "this session fixed this" rather than claiming
+credit for the former.

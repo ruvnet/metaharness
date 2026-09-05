@@ -63,10 +63,17 @@ export function buildThreatModel(dir: string, generatedAt: string = new Date().t
   const root = resolve(dir);
   const policy = safeReadJson(join(root, '.harness', 'mcp-policy.json'));
   const settings = safeReadJson(join(root, '.claude', 'settings.json'));
-  const mcpInUse = policy != null || safeReadJson(join(root, '.mcp.json')) != null;
 
-  // mcp-scan returns the structured findings; we collapse to counters.
+  // mcp-scan returns the structured findings; we collapse to counters. Its
+  // own `mcpEnabled` check is the authoritative "is MCP in use" answer (it
+  // additionally checks `.claude/settings.json`'s `mcpServers` key, which a
+  // policy-file-or-`.mcp.json`-only check here would miss) — reuse it
+  // directly instead of keeping a second, independently-drifting detection
+  // surface. Previously this file's own narrower check could report
+  // `mcpInUse: false` and silently discard the findings `scan` had already
+  // computed via `formatThreatModel`'s early return below.
   const scan = scanMcp(root);
+  const mcpInUse = scan.mcpEnabled;
 
   const allow: string[] = settings?.permissions?.allow ?? [];
   const deny: string[] = settings?.permissions?.deny ?? [];
