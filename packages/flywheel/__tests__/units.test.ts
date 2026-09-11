@@ -34,6 +34,38 @@ describe('meetsPromotionRule — the frozen conjunctive gate', () => {
   });
 });
 
+describe('meetsPromotionRule — noopRate floor (ceiling-lockout regression)', () => {
+  it('a baseline with noopRate > 0 still requires STRICT improvement (unchanged behavior)', () => {
+    const d = meetsPromotionRule({ baseline: S({ noopRate: 0.2 }), candidate: S({ primary: 9, noopRate: 0.2 }) });
+    expect(d.promote).toBe(false);
+    expect(d.reasons).toContain('noop_rate_not_improved');
+  });
+  it('a candidate tying the baseline AT the noopRate floor (0) now satisfies the clause', () => {
+    const d = meetsPromotionRule({ baseline: S({ noopRate: 0 }), candidate: S({ primary: 9, noopRate: 0, costPerWin: 0.5 }) });
+    expect(d.reasons).not.toContain('noop_rate_not_improved');
+    expect(d.promote).toBe(true);
+  });
+  it('a candidate that regresses noopRate off the floor is still rejected', () => {
+    const d = meetsPromotionRule({ baseline: S({ noopRate: 0 }), candidate: S({ primary: 9, noopRate: 0.1 }) });
+    expect(d.reasons).toContain('noop_rate_not_improved');
+  });
+  it('a negative baseline.noopRate (defensive: upstream Evaluator bug) still demands the candidate be ≤ 0', () => {
+    const d = meetsPromotionRule({ baseline: S({ noopRate: -0.01 }), candidate: S({ primary: 9, noopRate: 0.01 }) });
+    expect(d.reasons).toContain('noop_rate_not_improved');
+  });
+  it('REAL DATA — experiments/signal-flywheel/bundle.json gen-4 retryLimit candidate was silently rejected 6 generations running by this exact clause, though strictly better on every other axis', () => {
+    // Promoted gen-2 head (bundle.json all_commits, generation:2 contextDepth) vs. the gen-4/6/8
+    // retryLimit candidate (bundle.json all_commits, generation:4/6/8) — both real, committed numbers.
+    const promotedHead = S({ primary: 0.897456, noopRate: 0, costPerWin: 7.636364 });
+    const rejectedCandidate = S({ primary: 0.950695, noopRate: 0, costPerWin: 7 });
+    const preFix = !(rejectedCandidate.noopRate < promotedHead.noopRate); // the exact original clause
+    expect(preFix).toBe(true); // confirms it WAS rejected pre-fix, non-vacuously
+    const d = meetsPromotionRule({ baseline: promotedHead, candidate: rejectedCandidate });
+    expect(d.reasons).not.toContain('noop_rate_not_improved');
+    expect(d.promote).toBe(true); // primary +6%, cost -8%, noopRate tied at the floor — now correctly promotable
+  });
+});
+
 describe('receipts — trust the signature, not the producer', () => {
   it('sign/verify round-trips; tampering fails; canon is deterministic', () => {
     const signer = makeSigner();

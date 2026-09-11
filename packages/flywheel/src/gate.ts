@@ -11,7 +11,12 @@ import type { PromotionEvidence, PromotionDecision, PromotionRule } from './type
  * The default frozen gate. Conjunctive — a candidate is promoted iff EVERY clause holds:
  *   1. primary does not regress   (candidate.primary ≥ baseline.primary)
  *   2. no-op rate strictly improves (candidate.noopRate < baseline.noopRate) — the load-bearing signal;
- *      a policy earns a promotion by making the executor COMMIT more, not just score higher
+ *      a policy earns a promotion by making the executor COMMIT more, not just score higher.
+ *      noopRate is a floor-0 rate: once baseline.noopRate is already at (or below) the floor, "strictly
+ *      improves" is unsatisfiable by construction, so a tie AT the floor satisfies this clause instead —
+ *      otherwise a policy that reaches 0 no-ops can never be promoted again on any other axis (a
+ *      ceiling-lockout that silently blocked real, otherwise-qualifying candidates in
+ *      experiments/signal-flywheel's own committed lineage).
  *   3. cost/win does not worsen   (candidate.costPerWin ≤ baseline.costPerWin)
  *   4. no hard safety/security regression
  *   5. if an anchor is supplied, it must not regress (candidate ≥ baseline) — the anti-Goodhart guard
@@ -19,7 +24,9 @@ import type { PromotionEvidence, PromotionDecision, PromotionRule } from './type
 export function meetsPromotionRule(e: PromotionEvidence): PromotionDecision {
   const reasons: string[] = [];
   if (e.candidate.primary < e.baseline.primary) reasons.push('primary_regressed');
-  if (!(e.candidate.noopRate < e.baseline.noopRate)) reasons.push('noop_rate_not_improved');
+  const baselineAtFloor = e.baseline.noopRate <= 0;
+  const noopImproved = baselineAtFloor ? e.candidate.noopRate <= 0 : e.candidate.noopRate < e.baseline.noopRate;
+  if (!noopImproved) reasons.push('noop_rate_not_improved');
   if (e.candidate.costPerWin > e.baseline.costPerWin) reasons.push('cost_per_win_worsened');
   if (e.candidate.regressed) reasons.push('safety_regressed');
   if (e.anchor && e.anchor.candidate < e.anchor.baseline) reasons.push('anchor_regressed');
