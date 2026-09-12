@@ -34,6 +34,87 @@ describe('meetsPromotionRule — the frozen conjunctive gate', () => {
   });
 });
 
+describe('meetsPromotionRule — noopRate floor (ceiling-lockout regression)', () => {
+  it('a baseline with noopRate > 0 still requires STRICT improvement (unchanged behavior)', () => {
+    const d = meetsPromotionRule({ baseline: S({ noopRate: 0.2 }), candidate: S({ primary: 9, noopRate: 0.2 }) });
+    expect(d.promote).toBe(false);
+    expect(d.reasons).toContain('noop_rate_not_improved');
+  });
+  it('a candidate tying the baseline AT the noopRate floor (0) now satisfies the clause', () => {
+    const d = meetsPromotionRule({ baseline: S({ noopRate: 0 }), candidate: S({ primary: 9, noopRate: 0, costPerWin: 0.5 }) });
+    expect(d.reasons).not.toContain('noop_rate_not_improved');
+    expect(d.promote).toBe(true);
+  });
+  it('a candidate that regresses noopRate off the floor is still rejected', () => {
+    const d = meetsPromotionRule({ baseline: S({ noopRate: 0 }), candidate: S({ primary: 9, noopRate: 0.1 }) });
+    expect(d.reasons).toContain('noop_rate_not_improved');
+  });
+  it('a negative baseline.noopRate is invalid evidence, not a lower floor — REJECT outright, regardless of the candidate', () => {
+    const d = meetsPromotionRule({ baseline: S({ noopRate: -0.01 }), candidate: S({ primary: 9, noopRate: 0.01 }) });
+    expect(d.promote).toBe(false);
+    expect(d.reasons).toEqual(['invalid_score_evidence']);
+  });
+  it('REGRESSION (adversarial review, PR #307): negative/negative — a negative baseline.noopRate no longer lets an equally-negative candidate.noopRate tie "at the floor" and promote', () => {
+    const d = meetsPromotionRule({ baseline: S({ noopRate: -0.01 }), candidate: S({ primary: 9, noopRate: -0.01 }) });
+    expect(d.promote).toBe(false);
+    expect(d.reasons).toEqual(['invalid_score_evidence']);
+  });
+  it('REAL DATA — experiments/signal-flywheel/bundle.json gen-4 retryLimit candidate was silently rejected 6 generations running by this exact clause, though strictly better on every other axis', () => {
+    // Promoted gen-2 head (bundle.json all_commits, generation:2 contextDepth) vs. the gen-4/6/8
+    // retryLimit candidate (bundle.json all_commits, generation:4/6/8) — both real, committed numbers.
+    const promotedHead = S({ primary: 0.897456, noopRate: 0, costPerWin: 7.636364 });
+    const rejectedCandidate = S({ primary: 0.950695, noopRate: 0, costPerWin: 7 });
+    const preFix = !(rejectedCandidate.noopRate < promotedHead.noopRate); // the exact original clause
+    expect(preFix).toBe(true); // confirms it WAS rejected pre-fix, non-vacuously
+    const d = meetsPromotionRule({ baseline: promotedHead, candidate: rejectedCandidate });
+    expect(d.reasons).not.toContain('noop_rate_not_improved');
+    expect(d.promote).toBe(true); // primary +6%, cost -8%, noopRate tied at the floor — now correctly promotable
+  });
+});
+
+describe('meetsPromotionRule — invalid_score_evidence (adversarial review, PR #307): reject non-finite/out-of-domain evidence before evaluating any clause', () => {
+  it('NaN on any field of either side is invalid, not a silently-false comparison', () => {
+    expect(meetsPromotionRule({ baseline: S({ primary: NaN }), candidate: S({ primary: 9, noopRate: 0.1 }) }).reasons).toEqual(['invalid_score_evidence']);
+    expect(meetsPromotionRule({ baseline: S(), candidate: S({ primary: 9, noopRate: NaN }) }).reasons).toEqual(['invalid_score_evidence']);
+    expect(meetsPromotionRule({ baseline: S(), candidate: S({ primary: 9, noopRate: 0.1, costPerWin: NaN }) }).reasons).toEqual(['invalid_score_evidence']);
+  });
+  it('±Infinity on any field of either side is invalid', () => {
+    expect(meetsPromotionRule({ baseline: S({ primary: -Infinity }), candidate: S({ primary: 9, noopRate: 0.1 }) }).reasons).toEqual(['invalid_score_evidence']);
+    expect(meetsPromotionRule({ baseline: S(), candidate: S({ primary: Infinity, noopRate: 0.1 }) }).reasons).toEqual(['invalid_score_evidence']);
+    expect(meetsPromotionRule({ baseline: S(), candidate: S({ primary: 9, noopRate: 0.1, costPerWin: Infinity }) }).reasons).toEqual(['invalid_score_evidence']);
+  });
+  it('a noopRate above the [0,1] domain (e.g. 1.5) is invalid even though it is finite and non-negative', () => {
+    expect(meetsPromotionRule({ baseline: S(), candidate: S({ primary: 9, noopRate: 1.5 }) }).reasons).toEqual(['invalid_score_evidence']);
+  });
+  it('a negative costPerWin is invalid even though it is finite', () => {
+    expect(meetsPromotionRule({ baseline: S(), candidate: S({ primary: 9, noopRate: 0.1, costPerWin: -1 }) }).reasons).toEqual(['invalid_score_evidence']);
+  });
+  it('a missing/mistyped required field (undefined) on either side is invalid, matching isCompleteScore\'s replay-path guarantee at the direct-call gate too', () => {
+    const missingPrimary = { ...S(), primary: undefined } as unknown as Score;
+    expect(meetsPromotionRule({ baseline: missingPrimary, candidate: S({ primary: 9, noopRate: 0.1 }) }).reasons).toEqual(['invalid_score_evidence']);
+    const missingNoopRate = { ...S(), noopRate: undefined } as unknown as Score;
+    expect(meetsPromotionRule({ baseline: S(), candidate: missingNoopRate }).reasons).toEqual(['invalid_score_evidence']);
+  });
+  it('a non-finite anchor value (either side) is invalid even when baseline/candidate are both clean', () => {
+    const clean = { baseline: S(), candidate: S({ primary: 6, noopRate: 0.2 }) };
+    expect(meetsPromotionRule({ ...clean, anchor: { baseline: NaN, candidate: 5 } }).reasons).toEqual(['invalid_score_evidence']);
+    expect(meetsPromotionRule({ ...clean, anchor: { baseline: 5, candidate: Infinity } }).reasons).toEqual(['invalid_score_evidence']);
+  });
+  it('CLEAN CONTROL — finite, in-domain evidence at the exact domain edges (noopRate 0 or 1, costPerWin 0) is never flagged invalid', () => {
+    const atFloor = meetsPromotionRule({
+      baseline: S({ noopRate: 0, costPerWin: 0 }),
+      candidate: S({ primary: 9, noopRate: 0, costPerWin: 0 }),
+    });
+    expect(atFloor.reasons).not.toContain('invalid_score_evidence');
+    expect(atFloor.promote).toBe(true); // both edges valid + tied at the floor ⇒ still promotable
+    const atCeiling = meetsPromotionRule({ baseline: S({ noopRate: 1 }), candidate: S({ primary: 9, noopRate: 1 }) });
+    expect(atCeiling.reasons).not.toContain('invalid_score_evidence'); // noopRate:1 is in-domain, just not "at floor"
+    const ordinary = meetsPromotionRule({ baseline: S(), candidate: S({ primary: 6, noopRate: 0.2 }) });
+    expect(ordinary.reasons).not.toContain('invalid_score_evidence');
+    expect(ordinary.promote).toBe(true);
+  });
+});
+
 describe('receipts — trust the signature, not the producer', () => {
   it('sign/verify round-trips; tampering fails; canon is deterministic', () => {
     const signer = makeSigner();
