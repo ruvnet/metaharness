@@ -34,8 +34,8 @@ jobs:
           cache: npm
       - name: Install exact dependencies
         run: npm ci
-      - name: Build package
-        run: npm run build --workspace=metaharness
+      - name: Build workspace dependencies and package
+        run: npm run build
       - name: Run focused adversarial tests
         run: npx vitest run packages/create-agent-harness/__tests__/task-harness-candidate.test.ts
       - name: Run deterministic structural benchmark
