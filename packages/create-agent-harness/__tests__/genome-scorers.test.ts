@@ -109,13 +109,40 @@ describe('resolveAgentTopology', () => {
     expect(resolveAgentTopology(profile(), plan())).toEqual(['maintainer']);
   });
 
-  it('adds "tester" when testCommands are present', () => {
-    const t = resolveAgentTopology(profile({ testCommands: ['npm test'] }), plan());
+  it('adds "tester" when a declared test command is backed by verified test files', () => {
+    const t = resolveAgentTopology(profile({ testCommands: ['npm test'], hasVerifiedTestFiles: true }), plan());
     expect(t).toContain('tester');
   });
 
   it('adds "tester" from hasCi alone, with zero test commands', () => {
     const t = resolveAgentTopology(profile({ hasCi: true }), plan());
+    expect(t).toContain('tester');
+  });
+
+  // Dream Cycle 2026-09-15 (generator-genome): sibling of #229's
+  // scoreTestConfidence fix. `testCommands` is populated by analyze-repo.ts
+  // from LANGUAGE DETECTION ALONE for rust ('cargo test') and python
+  // ('pytest') — unconditionally, regardless of whether any test file
+  // actually exists on disk. Before this fix, `resolveAgentTopology`
+  // recommended the 'tester' agent role for ANY rust or python repo, even
+  // one with zero test files and no CI, because it trusted
+  // `testCommands.length > 0` instead of the real filesystem evidence
+  // (`hasVerifiedTestFiles`) that #229 already established as the correct
+  // signal for the sibling `scoreTestConfidence` scorer.
+  it('does NOT add "tester" for language-inferred testCommands with no verified test files and no CI', () => {
+    const t = resolveAgentTopology(
+      profile({ languages: ['python'], testCommands: ['pytest'], hasVerifiedTestFiles: false, hasCi: false }),
+      plan(),
+    );
+    expect(t).not.toContain('tester');
+    expect(t).toEqual(['maintainer']);
+  });
+
+  it('DOES add "tester" for the same language-inferred testCommands once test files are verified', () => {
+    const t = resolveAgentTopology(
+      profile({ languages: ['python'], testCommands: ['pytest'], hasVerifiedTestFiles: true, hasCi: false }),
+      plan(),
+    );
     expect(t).toContain('tester');
   });
 
