@@ -1,0 +1,42 @@
+name: Task Harness Candidate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'packages/create-agent-harness/src/task-harness-candidate.ts'
+      - 'packages/create-agent-harness/src/task-harness-candidate-benchmark.ts'
+      - 'packages/create-agent-harness/__tests__/task-harness-candidate.test.ts'
+      - 'packages/create-agent-harness/package.json'
+      - '.github/workflows/task-harness-candidate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: task-harness-candidate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20', '22']
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - name: Install exact dependencies
+        run: npm ci
+      - name: Build package
+        run: npm run build --workspace=metaharness
+      - name: Run focused adversarial tests
+        run: npx vitest run packages/create-agent-harness/__tests__/task-harness-candidate.test.ts
+      - name: Run deterministic structural benchmark
+        run: npm run benchmark:task-harness-candidate --workspace=metaharness
