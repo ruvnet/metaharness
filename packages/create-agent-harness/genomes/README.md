@@ -2,7 +2,7 @@
 
 Promoted cheap-tier executor operating policies, shipped with the `metaharness` CLI so
 `metaharness learn --seed cand6` can seed a learning run from the current promoted base
-(ADR-235 — cheap-tier optimization is a managed learning service).
+(ADR-228 — cheap-tier optimization is a managed learning service).
 
 ## genome-promoted-cand6-edit-by-midpoint.json
 
