@@ -136,7 +136,7 @@ export function scanMcp(dir: string): ScanReport {
       add({ id: 'risky-bash-allow', severity: 'medium', title: `Risky shell allow-rule: ${a}`, detail: 'Allowing rm/curl/wget/sudo/ssh, or an unscoped script interpreter, broadly is dangerous; narrow the glob.' });
     }
   }
-  const guardsEnv = deny.some((d) => /\.env/.test(d));
+  const guardsEnv = envSecretGuarded(deny);
   if (!guardsEnv) {
     add({ id: 'no-secret-guard', severity: 'medium', title: 'Secrets not denied', detail: 'permissions.deny should block Read(./.env*) so tools cannot read credentials.' });
   }
@@ -158,6 +158,39 @@ export function scanMcp(dir: string): ScanReport {
   }
 
   return { dir: root, mcpEnabled: true, findings, worst: worstOf(findings) };
+}
+
+// A deny rule guards the real secrets file only if it actually covers a bare
+// `.env` (or a `.env.*` wildcard) — not merely if some deny entry contains
+// the substring ".env" anywhere. `Read(./.env.example)` denies only the
+// harmless, commonly-committed template file; it does nothing to block the
+// real `.env`/`.env.local` a tool could still read via a broad `Read(*)`
+// grant. The unanchored `/\.env/` substring test used to treat any such
+// entry as sufficient, producing a false "guarded" verdict — checked here
+// against the two shapes the generator actually emits (`Read(./.env)`,
+// `Read(./.env.*)`) plus bare `.env`/`.env.*` for hand-edited configs.
+//
+// Deliberately conservative on the other side too: a deny rule scoped to
+// exactly one suffixed variant (e.g. `Read(./.env.local)` alone, with no
+// `.env` or `.env.*`) does NOT count as guarded either. This scanner has no
+// way to know which `.env*` variant a given harness actually keeps secrets
+// in, so a narrower, unverifiable guard is treated the same as no guard —
+// matching this checker's existing bias elsewhere (e.g. `no-audit-log`,
+// `no-call-budget`) toward flagging an unproven-safe posture rather than
+// assuming the best case.
+//
+// Left-anchored on purpose (independent-critic-caught gap): checking only
+// what follows ".env" let an unrelated file that merely *ends* in ".env" —
+// `Read(./secrets.env)`, `Read(./myapp.env)` — count as guarding the real
+// harness `.env`, reproducing a narrower version of the same false-"guarded"
+// bug this fix closes. Requiring `.env` to start at a path/string boundary
+// (start-of-string, `/`, or `(`) rules those out while still matching every
+// real shape: `.env`, `Read(.env)`, `Read(./.env)`, `**/.env`.
+const ENV_GUARD_RE = /(?:^|[(/])\.env(?:$|[)/*]|\.\*)/;
+
+/** True if `deny` contains a rule that would actually block reading `.env`. */
+export function envSecretGuarded(deny: string[]): boolean {
+  return deny.some((d) => ENV_GUARD_RE.test(d));
 }
 
 function worstOf(findings: Finding[]): Severity {
