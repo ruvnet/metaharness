@@ -150,4 +150,24 @@ describe('buildThreatModel — mcpInUse / scanMcp detection-surface consistency'
     expect(tm.findings.some((f) => f.id === 'no-policy')).toBe(false);
     expect(tm.worst).toBe('high');
   });
+
+  it('BUG REPRO: secretsReachable is false and verdict is "clean" when the only deny rule targets .env.example, not the real .env', async () => {
+    // Read(./.env.example) denies only the harmless, commonly-committed
+    // template file. A tool with a broad Read(*) allow-rule can still read
+    // the real .env/.env.local. Pre-fix, the unanchored /\.env/ substring
+    // test in both mcp-scan.ts and (independently, duplicated) threat-model.ts
+    // treated this deny entry as sufficient, so secretsReachable came back
+    // false and the whole threat model read "clean" for a harness with
+    // fully exposed credentials.
+    const dir = await makeHarness({
+      policy: { defaultDeny: true, auditLog: true, requireApprovalForDangerous: true, toolTimeoutMs: 30000, maxToolCallsPerTurn: 8 },
+      allow: ['Read(*)'],
+      deny: ['Read(./.env.example)'],
+      servers: { bot: { command: 'npx' } },
+    });
+    const tm = buildThreatModel(dir);
+    expect(tm.secretsReachable).toBe(true);
+    expect(tm.verdict).toBe('high');
+    expect(tm.exitCode).toBe(2);
+  });
 });
