@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import { buildScaffold } from '../scaffold';
+// ADR-027 parity: the CLI's host-config.ts is dependency-free, so the web UI
+// test can import it directly and compare bytes (ADR-280 grok arm).
+import { hostConfigFiles } from '../../../../../packages/create-agent-harness/src/host-config';
 import { totalBytes } from '../zip';
+import { verifyFileMap } from '../verify';
 import { DEFAULT_PRIMITIVES, SAFE_MCP_POLICY, DEFAULT_MODELS, DEFAULT_DARWIN } from '../types';
 import type { HarnessConfig } from '../types';
 
@@ -189,6 +193,59 @@ describe('buildScaffold', () => {
         '.opencode/opencode.json',
       ));
       expect(json.permission.bash['*']).toBe('allow');
+    });
+  });
+
+  // ADR-280 — Grok Build CLI host.
+  describe('grok (ADR-280)', () => {
+    const fileFor = (cfg: HarnessConfig, path: string) =>
+      buildScaffold(cfg).find((f) => f.path === path)?.content ?? '';
+
+    it('emits .grok/config.toml with [mcp_servers] + [permission], AGENTS.md and install-grok.md', () => {
+      const p = paths({ ...base, hosts: ['grok'] });
+      for (const f of ['.grok/config.toml', 'AGENTS.md', 'install-grok.md']) expect(p).toContain(f);
+      const toml = fileFor({ ...base, hosts: ['grok'] }, '.grok/config.toml');
+      expect(toml).toContain('[mcp_servers.legal-redline]\ncommand = "npx"\nargs = ["-y", "legal-redline@latest", "mcp", "start"]\nenabled = true');
+      expect(toml).toContain('[permission]\nallow = [\n  "mcp__legal-redline__*",\n]\ndeny = [\n  "Read(./.env)",');
+      expect(toml).not.toMatch(/^type =/m); // unlike codex, Grok infers http from url
+    });
+
+    it('remote MCP emits url + headers and no type key; mcp off emits no server table', () => {
+      const remote = fileFor({ ...base, hosts: ['grok'], primitives: { ...DEFAULT_PRIMITIVES, mcp: 'remote' } }, '.grok/config.toml');
+      expect(remote).toContain('url = "https://localhost:8787/mcp"\nenabled = true\n\n[mcp_servers.legal-redline.headers]\nAuthorization = "Bearer ${HARNESS_MCP_TOKEN}"');
+      expect(remote).not.toMatch(/^type =/m);
+      const off = fileFor({ ...base, hosts: ['grok'], primitives: { ...DEFAULT_PRIMITIVES, mcp: 'off' } }, '.grok/config.toml');
+      expect(off).not.toContain('[mcp_servers');
+      expect(off).toContain('[permission]');
+    });
+
+    it('the runbook opens with the trust step and repeats every deny rule as a --deny flag', () => {
+      const md = fileFor({ ...base, hosts: ['grok'] }, 'install-grok.md');
+      expect(md.indexOf('ACTION REQUIRED')).toBeLessThan(md.indexOf('1. Install'));
+      expect(md).toContain('grok --trust inspect');
+      for (const d of ['Read(./.env)', 'Read(./.env.*)', 'Bash(rm:*)', 'Bash(git push:*)', 'Write(*)', 'Edit(*)']) {
+        expect(md).toContain(`--deny '${d}'`);
+      }
+    });
+
+    it('verify reports the host wired and permissions present from the TOML', () => {
+      const r = verifyFileMap(buildScaffold({ ...base, hosts: ['grok'] }));
+      expect(r.checks.find((c) => c.id === 'host')?.severity).toBe('pass');
+      expect(r.checks.find((c) => c.id === 'capability-coverage')?.title).toBe('host capability coverage: 4/4');
+    });
+
+    // ADR-027: the CLI (host-config.ts) and web UI must emit identical bytes.
+    it('is byte-identical with the CLI scaffold for every MCP mode and policy combination', () => {
+      for (const mcp of ['off', 'local', 'remote'] as const) {
+        for (const allowShell of [false, true]) {
+          for (const allowFileWrite of [false, true]) {
+            const cfg = { ...base, hosts: ['grok' as const], primitives: { ...DEFAULT_PRIMITIVES, mcp }, mcpPolicy: { ...SAFE_MCP_POLICY, allowShell, allowFileWrite } };
+            const cli = hostConfigFiles('grok', { name: cfg.name, description: cfg.description, mcp, allowShell, allowFileWrite });
+            expect(cli.map((f) => f.path).sort()).toEqual(['.grok/config.toml', 'AGENTS.md', 'install-grok.md']);
+            for (const f of cli) expect(fileFor(cfg, f.path), `${mcp}/${allowShell}/${allowFileWrite} ${f.path}`).toBe(f.content);
+          }
+        }
+      }
     });
   });
 });

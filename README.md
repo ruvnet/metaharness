@@ -69,6 +69,15 @@ Output is an npm-publishable `.zip` with **your name on it, your branding, your 
   that boundary at publication against the exact tag SHA and npm tarball,
   protected claim semantics, measured cost, lineage roots, and two independent
   graders.
+- **Run your harness on Grok Build.** The 11th host
+  ([`@metaharness/host-grok`](packages/host-grok/), `--host grok`) writes xAI's
+  project config, `.grok/config.toml`, with your MCP server and your allow/deny
+  rules in Grok's native `[permission]` table, plus `AGENTS.md`, subagents,
+  skills and hooks. Grok ignores a project's config until the folder is
+  trusted, so the generated `install-grok.md` leads with that step
+  (`grok --trust inspect`) and repeats your deny rules as `--deny` flags that
+  Grok enforces either way. Verified against the real `grok` binary; see
+  [ADR-280](docs/adrs/ADR-280-host-grok.md). ($0)
 - **Run your harness on Prime Agent — and borrow its best ideas.** The 10th host
   ([`@metaharness/host-prime-agent`](packages/host-prime-agent/), `--host prime-agent`) emits your
   tools as project-scoped, Python-backed Prime Agent skills (`.prime/agent/skills/` — the host has
@@ -196,7 +205,7 @@ No repository code is executed. Inferred build/test commands are emitted as `tru
 
 ## Hosts
 
-The same harness output runs on **ten** agent hosts — nine interactive, plus GitHub Actions (CI/CD):
+The same harness output runs on **eleven** agent hosts — ten interactive, plus GitHub Actions (CI/CD):
 
 | Host | What ships | Notes |
 |---|---|---|
@@ -209,6 +218,7 @@ The same harness output runs on **ten** agent hosts — nine interactive, plus G
 | [**GitHub Copilot**](https://code.visualstudio.com/docs/copilot/mcp) | MCP via `.vscode/mcp.json` | VSCode 1.99+ (ADR-032) |
 | [**OpenCode**](https://opencode.ai/) | MCP via `.opencode/opencode.json` | sst/opencode TUI (ADR-036) |
 | [**Prime Agent**](packages/host-prime-agent/) | `.prime/agent/` skills (Python-backed, no MCP) + `install-prime-agent.md` | Fail-closed sandbox posture (ADR-247) |
+| [**Grok Build**](packages/host-grok/) | MCP + `[permission]` via `.grok/config.toml`, `AGENTS.md`, `install-grok.md` | Project config is trust-gated; fail-closed runbook (ADR-280) |
 | [**GitHub Actions**](https://docs.github.com/actions) | `.github/workflows/` + composite `action.yml` | **Non-interactive** CI/CD; default-deny via `permissions:` (ADR-033) |
 
 See [ADR-004 — Host integration model](docs/adrs/ADR-004-host-integration-model.md) and [ADR-033 — GitHub Actions host](docs/adrs/ADR-033-host-github-actions.md).
@@ -329,7 +339,7 @@ across Rust × 3 OS + WASM × 3 OS + Node 20+22 × 3 OS + Bench + pack+install �
 | Layer | Status |
 |---|---|
 | Rust kernel (WASM + NAPI-RS) | Shipped — 7 subsystems |
-| 10 host adapters | claude-code · codex · pi-dev · hermes · openclaw · rvm · copilot · opencode · github-actions · prime-agent |
+| 11 host adapters | claude-code · codex · pi-dev · hermes · openclaw · rvm · copilot · opencode · github-actions · prime-agent · grok |
 | 17 `harness` subcommands | Shipped |
 | 7 Codex skills | Shipped |
 | Claude marketplace plugin | Shipped + schema-validated |
@@ -442,9 +452,9 @@ MIT — see [LICENSE](LICENSE).
 MetaHarness is a CLI and browser Studio that turns any GitHub repo (or a
 blank slate) into a custom AI agent harness. The output is a branded,
 npm-publishable package with its own `npx <name>` CLI, MCP server, memory,
-governance policy, and Ed25519 witness-signed releases. Runs on ten hosts:
+governance policy, and Ed25519 witness-signed releases. Runs on eleven hosts:
 Claude Code, Codex, pi.dev, Hermes, OpenClaw, RVM, Copilot, OpenCode,
-GitHub Actions, and Prime Agent.
+GitHub Actions, Prime Agent, and Grok Build.
 
 ### How is MetaHarness different from an agent framework?
 

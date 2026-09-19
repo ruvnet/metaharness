@@ -38,6 +38,8 @@
     "openclaw",
     "rvm",
     "prime-agent",
+    "grok",
+    "grok-build",
     "rust",
     "wasm",
     "napi-rs",

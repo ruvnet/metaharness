@@ -94,6 +94,7 @@ Use `--no-field-memory` to force the default off state in shared scripts.
 | `openclaw` | `~/.openclaw/openclaw.json` + workspace SKILL.md + install runbook |
 | `rvm` | RVM partition manifest + capability table + wasm-guest + install runbook (hardware-isolated) |
 | `prime-agent` | `.prime/agent/skills/` Python-backed skill per tool (no MCP by design) + `install-prime-agent.md` runbook; deny-lists emit `SANDBOX-REQUIRED.md` (ADR-247) |
+| `grok` | `.grok/config.toml` with `[mcp_servers.*]` + `[permission]`, `AGENTS.md`, `install-grok.md` runbook; Grok loads it only in a trusted folder (ADR-280) |
 
 Multi-host: pass `--host` multiple times.
 

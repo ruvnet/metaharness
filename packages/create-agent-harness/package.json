@@ -1,7 +1,7 @@
 {
   "name": "metaharness",
   "version": "0.4.16",
-  "description": "MetaHarness — mint a custom AI agent harness from any repo. Browser Studio + `npx metaharness` CLI. Runs on Claude Code, Codex, pi.dev, Hermes, OpenClaw, RVM, Prime Agent.",
+  "description": "MetaHarness — mint a custom AI agent harness from any repo. Browser Studio + `npx metaharness` CLI. Runs on Claude Code, Codex, pi.dev, Hermes, OpenClaw, RVM, Prime Agent, Grok Build.",
   "homepage": "https://github.com/ruvnet/agent-harness-generator",
   "repository": {
     "type": "git",
@@ -74,6 +74,9 @@
     "openclaw",
     "rvm",
     "prime-agent",
+    "grok",
+    "grok-build",
+    "xai",
     "rust",
     "wasm",
     "wasm-bindgen",

@@ -26,6 +26,8 @@ export const HOSTS: HostInfo[] = [
   { id: 'github-actions', name: 'GitHub Actions', shape: 'CI/CD — .github/workflows + composite action.yml', color: '#2088ff' },
   // ADR-247 — Prime Agent (PrimeIntellect-ai), IPython + skills + HTTP MCP
   { id: 'prime-agent', name: 'Prime Agent', shape: '.prime/agent skills + remote HTTP MCP', color: '#10b981' },
+  // ADR-280 — xAI Grok Build CLI; project config is trust-gated
+  { id: 'grok', name: 'Grok Build', shape: 'MCP + [permission] via .grok/config.toml (trust-gated)', color: '#71717a' },
 ];
 
 export const TEMPLATES: TemplateInfo[] = GEN_TEMPLATES;

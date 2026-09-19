@@ -4,6 +4,25 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Added — Grok Build host (ADR-280, 2026-09-19)
+
+- **`@metaharness/host-grok`** (`packages/host-grok/`) — the 11th implemented
+  host adapter, for xAI's Grok Build CLI (`grok`), verified against grok 1.0.34.
+  Emits `.grok/config.toml` (`[mcp_servers]` in the shape `grok mcp add --scope
+  project` writes, and the harness allow/deny rules in Grok's native
+  `[permission]` table), `AGENTS.md`, `.grok/agents/`, instruction-only
+  `.grok/skills/`, Claude-shaped `.grok/hooks/`, and `install-grok.md`.
+- **Fail-closed on folder trust** — Grok loads none of a project's
+  instructions, skills, hooks or rules until the folder is trusted, so the
+  runbook opens with a banner naming every deny rule and repeats them as
+  always-enforced `--deny` flags. Permission rules outside Grok's vocabulary,
+  which Grok drops without reporting, are named too.
+- **`--host grok`** in the CLI (`HOSTS`, `host-config.ts`) and the web UI,
+  with CLI/web-UI/adapter parity tested byte for byte; `verify-all-hosts.mjs`
+  gains a schema check and a zero-cost `--real` check (`grok inspect --json`
+  under a throwaway home); the adapter suite runs the real binary when one is
+  installed; bench baseline row measured.
+
 ### Added — Experimental field memory (2026-08-15)
 
 - **`@metaharness/field-memory`** (`packages/field-memory/`) — experimental

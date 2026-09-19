@@ -39,11 +39,12 @@ describe('HostGuide × HOSTS catalog parity (iter 106)', () => {
     }
   });
 
-  it('guide IDs are exhaustively the 10 supported hosts (iter 127 + 128 + 147 + ADR-247)', () => {
+  it('guide IDs are exhaustively the 11 supported hosts (iter 127 + 128 + 147 + ADR-247 + ADR-280)', () => {
     // iter 127 added 'copilot' (ADR-032); iter 128 added 'opencode' (ADR-036);
     // iter 147 added 'github-actions' (ADR-033, first non-interactive host);
-    // 'prime-agent' added per ADR-247 (skills-only host, no MCP).
-    const expected = ['claude-code', 'codex', 'pi-dev', 'hermes', 'openclaw', 'rvm', 'copilot', 'opencode', 'github-actions', 'prime-agent'];
+    // 'prime-agent' added per ADR-247 (skills-only host, no MCP);
+    // 'grok' added per ADR-280 (Grok Build CLI, trust-gated project config).
+    const expected = ['claude-code', 'codex', 'pi-dev', 'hermes', 'openclaw', 'rvm', 'copilot', 'opencode', 'github-actions', 'prime-agent', 'grok'];
     const actual = GUIDES.map((g) => g.id).sort();
     expect(actual).toEqual(expected.sort());
   });

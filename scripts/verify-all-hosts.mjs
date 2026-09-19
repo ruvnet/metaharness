@@ -2,12 +2,12 @@
 // Per user directive: "use things like -p and plugin dir to confirm harnesses
 // work as expected for each host."
 import { execSync } from 'node:child_process';
-import { existsSync, readFileSync, mkdtempSync } from 'node:fs';
+import { existsSync, readFileSync, mkdtempSync, mkdirSync, realpathSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const HOSTS = ['claude-code', 'codex', 'pi-dev', 'hermes', 'openclaw', 'rvm', 'copilot', 'opencode', 'github-actions', 'prime-agent'];
+const HOSTS = ['claude-code', 'codex', 'pi-dev', 'hermes', 'openclaw', 'rvm', 'copilot', 'opencode', 'github-actions', 'prime-agent', 'grok'];
 const results = [];
 
 // ADR-045: scaffold each host through the REAL `metaharness --host <X>` path so
@@ -105,6 +105,9 @@ for (const host of HOSTS) {
         // ADR-247 — Prime Agent uses project skills and supports remote HTTP
         // MCP integrations; the CLI always emits the host runbook.
         'prime-agent':{ path: 'install-prime-agent.md', test: (s) => s.includes('Prime Agent'), tool: 'prime-agent' },
+        // ADR-280 — Grok reads [mcp_servers] + [permission] from the project
+        // .grok/config.toml; HTTP servers carry no `type` key.
+        grok:    { path: '.grok/config.toml',     test: (s) => /^\[mcp_servers\.[^\]]+\]$/m.test(s) && /^\[permission\]$/m.test(s) && !/^type\s*=/m.test(s), tool: 'TOML [mcp_servers] + [permission] (grok spec)' },
       };
       const c = checks[host];
       const fp = `${dir}/${c.path}`;
@@ -254,6 +257,23 @@ if (REAL) {
       // in CWD; prove the binary boots against the scaffold.
       const out = run(`cd ${JSON.stringify(dir)} && prime-agent --version`).toString();
       return { ok: out.trim().length > 0, proof: `prime-agent --version → ${out.trim().slice(0, 30)}` };
+    },
+    grok: (dir) => {
+      if (!onPath('grok')) return { skip: true, proof: 'grok not installed' };
+      // ADR-280 — zero model cost: `grok inspect --json` under a throwaway
+      // HOME/GROK_HOME (the user's ~/.grok is never read or written) whose
+      // trust store trusts only this scaffold. Project config, instructions
+      // and permissions load only in a trusted folder, so this proves the
+      // emitted files load, not just that they parse.
+      const home = mkdtempSync(join(tmpdir(), 'verify-grok-home-'));
+      mkdirSync(join(home, '.grok'), { recursive: true });
+      const real = realpathSync(dir);
+      writeFileSync(join(home, '.grok', 'trusted_folders.toml'), `[folders.${JSON.stringify(real)}]\ntrusted = true\n`);
+      const r = JSON.parse(run('grok inspect --json', { cwd: real, env: { ...process.env, HOME: home, GROK_HOME: join(home, '.grok') } }).toString());
+      const server = (r.mcpServers || []).some((s) => s.name === 'bot-grok' && s.transport === 'stdio');
+      const agentsMd = (r.projectInstructions || []).some((i) => /[\\/]agents\.md$/i.test(i.path));
+      const perms = r.permissions?.loaded ?? 0;
+      return { ok: r.projectTrusted === true && server && agentsMd && perms > 0, proof: `grok ${r.grokVersion} inspect: trusted=${r.projectTrusted}, server=${server}, AGENTS.md=${agentsMd}, ${perms} permission rules loaded` };
     },
   };
 

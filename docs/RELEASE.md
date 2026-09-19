@@ -17,6 +17,7 @@ Every release publishes these packages **at the same version**:
 | `@metaharness/host-openclaw` | OpenClaw adapter |
 | `@metaharness/host-rvm` | RVM adapter (hardware-isolated) |
 | `@metaharness/host-prime-agent` | Prime Agent adapter (Python-backed skills, fail-closed sandbox posture) |
+| `@metaharness/host-grok` | Grok Build adapter (`.grok/config.toml`, trust-gated, fail-closed runbook) |
 | `create-agent-harness` | The scaffolder CLI (also ships `harness` binary) |
 
 | `@metaharness/vertical-base` | Shared contract for vertical packs |
@@ -83,8 +84,9 @@ The push of `v*.*.*` triggers `.github/workflows/publish.yml`. The workflow:
 8. Publishes all 12 packages with `npm publish --provenance`:
    - `@metaharness/kernel` (umbrella)
    - `@metaharness/sdk`
-   - 7 host adapters (`host-claude-code`, `host-codex`, `host-pi-dev`,
-     `host-hermes`, `host-openclaw`, `host-rvm`, `host-prime-agent`)
+   - 8 host adapters (`host-claude-code`, `host-codex`, `host-pi-dev`,
+     `host-hermes`, `host-openclaw`, `host-rvm`, `host-prime-agent`,
+     `host-grok`)
    - 2 vertical packs (`vertical-base`, `vertical-trading`)
    - `create-agent-harness`
 
@@ -99,16 +101,16 @@ If your GCP variables aren't set, see [`setup/gcp-secrets.md`](setup/gcp-secrets
 ### 5. Post-publish verification
 
 ```bash
-# Each of the 10 packages should report the new version on @latest
+# Each of the 11 packages should report the new version on @latest
 for pkg in @metaharness/kernel @metaharness/sdk @metaharness/host-claude-code \
            @metaharness/host-codex @metaharness/host-pi-dev @metaharness/host-hermes \
            @metaharness/host-openclaw @metaharness/host-rvm \
-           @metaharness/host-prime-agent create-agent-harness; do
+           @metaharness/host-prime-agent @metaharness/host-grok create-agent-harness; do
   npm view "$pkg@latest" version
 done
 ```
 
-All 10 should report the version you just published.
+All 11 should report the version you just published.
 
 ### 6. Create the GitHub release
 

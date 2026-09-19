@@ -265,7 +265,7 @@ jobs:
           BIN="$RUNNER_TEMP/mh-hosts/node_modules/metaharness/dist/bin.js"
           test -f "$BIN" || { echo "FAIL: metaharness bin missing from the published tarball" >&2; exit 1; }
           mkdir -p /tmp/all-hosts && cd /tmp/all-hosts
-          for host in claude-code codex pi-dev hermes openclaw rvm copilot opencode github-actions prime-agent; do
+          for host in claude-code codex pi-dev hermes openclaw rvm copilot opencode github-actions prime-agent grok; do
             echo ""
             echo "=== HOST: $host ==="
             rm -rf "bot-$host"

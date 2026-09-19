@@ -30,7 +30,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 const MODEL = process.env.METAHARNESS_VERIFY_MODEL || 'anthropic/claude-haiku-4.5';
 const BASE_URL = process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1';
 
-const HOSTS = ['claude-code', 'codex', 'copilot', 'github-actions', 'hermes', 'openclaw', 'opencode', 'pi-dev', 'prime-agent', 'rvm'];
+const HOSTS = ['claude-code', 'codex', 'copilot', 'github-actions', 'grok', 'hermes', 'openclaw', 'opencode', 'pi-dev', 'prime-agent', 'rvm'];
 
 function resolveKey() {
   if (process.env.OPENROUTER_API_KEY) return process.env.OPENROUTER_API_KEY.trim();
@@ -61,6 +61,12 @@ function extractCapabilities(dir) {
     if (!j) continue;
     const srv = j.servers || j.mcpServers || j.mcp_servers || j.mcp?.servers;
     if (srv) cap.mcpServers.push(...Object.keys(srv));
+  }
+  // ADR-280 — Grok registers MCP servers as `[mcp_servers.<name>]` tables in
+  // the project .grok/config.toml (TOML, not JSON).
+  const grokToml = read('.grok/config.toml');
+  if (grokToml) {
+    for (const m of grokToml.matchAll(/^\[mcp_servers\.(?:"([^"]+)"|([A-Za-z0-9_-]+))\]$/gm)) cap.mcpServers.push(m[1] ?? m[2]);
   }
   // Agents — Claude Code / opencode markdown dirs, openclaw SKILL.md headings.
   const skill = read('SKILL.md');

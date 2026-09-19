@@ -23,6 +23,7 @@ import adapterCopilot from '@metaharness/host-copilot';
 import adapterOpencode from '@metaharness/host-opencode';
 import adapterGithubActions from '@metaharness/host-github-actions';
 import adapterPrimeAgent from '@metaharness/host-prime-agent';
+import adapterGrok from '@metaharness/host-grok';
 
 interface HostAdapter {
   name: string;
@@ -40,6 +41,7 @@ export const HOST_ADAPTERS: HostAdapter[] = [
   adapterOpencode as HostAdapter,  // iter 128 (ADR-036)
   adapterGithubActions as HostAdapter, // iter 147 (ADR-033, non-interactive)
   adapterPrimeAgent as HostAdapter, // ADR-247
+  adapterGrok as HostAdapter, // ADR-280
 ];
 
 export interface HostBenchResult {

@@ -31,6 +31,7 @@ real schema bugs** that the schema-shape + OpenRouter live-content checks missed
 | pi-dev | `@mariozechner/pi-coding-agent` `pi -p` (OpenRouter) | ✅ discovers AGENTS.md + runs (`PI_REAL_OK`) |
 | hermes | `hermes 0.16.0` `config show`/`check` | 🐛→✅ schema FIXED + real hermes loads it |
 | github-actions | `act` (Docker, real runner image) | ✅ workflow ran |
+| grok | `grok 1.0.34` `inspect --json` (throwaway home, trusted scaffold; no model call) | ✅ server + 7 rules + AGENTS.md load (ADR-280) |
 | rvm | — | ⚠ AArch64 bare-metal, can't run on x86 |
 | copilot | — | ⚠ interactive VSCode only |
 

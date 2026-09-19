@@ -65,9 +65,10 @@ const KERNEL_VERSION = resolveKernelVersion();
 
 // iter 127 added copilot (ADR-032); iter 128 added opencode (ADR-036);
 // iter 147 added github-actions (ADR-033, the first non-interactive host);
-// prime-agent added per ADR-247 (skills-based, no MCP).
-// HOSTS is the canonical 10-host catalog.
-export const HOSTS = ['claude-code', 'codex', 'pi-dev', 'hermes', 'openclaw', 'rvm', 'copilot', 'opencode', 'github-actions', 'prime-agent'] as const;
+// prime-agent added per ADR-247 (skills-based, no MCP); grok added per
+// ADR-280 (xAI Grok Build CLI, .grok/config.toml, trust-gated).
+// HOSTS is the canonical 11-host catalog.
+export const HOSTS = ['claude-code', 'codex', 'pi-dev', 'hermes', 'openclaw', 'rvm', 'copilot', 'opencode', 'github-actions', 'prime-agent', 'grok'] as const;
 export type Host = (typeof HOSTS)[number];
 
 export const TEMPLATES = [

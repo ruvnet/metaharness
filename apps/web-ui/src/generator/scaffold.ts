@@ -263,6 +263,75 @@ function yamlCommentSafe(s: string): string {
   return s.replace(/[\r\n]+/g, ' ');
 }
 
+// ADR-280 — Grok Build helpers, kept byte-for-byte in lockstep with
+// `@metaharness/host-grok` (tomlString/tomlKey/normalizeServerName/
+// configHeader/permissionToml) and packages/create-agent-harness/src/host-config.ts
+// (ADR-027 parity; duplicated rather than imported, like yamlKey above).
+
+/** TOML 1.0 basic string: escapes `"`, `\`, control chars, DEL; lone surrogate → U+FFFD. */
+function grokTomlString(s: string): string {
+  let out = '"';
+  for (const ch of s) {
+    const cp = ch.codePointAt(0)!;
+    if (ch === '"') out += '\\"';
+    else if (ch === '\\') out += '\\\\';
+    else if (ch === '\b') out += '\\b';
+    else if (ch === '\t') out += '\\t';
+    else if (ch === '\n') out += '\\n';
+    else if (ch === '\f') out += '\\f';
+    else if (ch === '\r') out += '\\r';
+    else if (cp < 0x20 || cp === 0x7f) out += `\\u${cp.toString(16).toUpperCase().padStart(4, '0')}`;
+    else if (cp >= 0xd800 && cp <= 0xdfff) out += '\\uFFFD';
+    else out += ch;
+  }
+  return `${out}"`;
+}
+
+function grokTomlKey(s: string): string {
+  return /^[A-Za-z0-9_-]+$/.test(s) ? s : grokTomlString(s);
+}
+
+/** A server name Grok admits into its tool catalog (identity for kebab-case names). */
+function grokServerName(raw: string): string {
+  let s = raw.replace(/[^A-Za-z0-9_-]+/g, '-').replace(/_{2,}/g, '_').replace(/-{2,}/g, '-').replace(/^-+/, '');
+  if (/^[0-9]/.test(s)) s = `mcp-${s}`;
+  s = s.slice(0, 64).replace(/[-_]+$/, '');
+  return s || 'mcp';
+}
+
+/** `.grok/config.toml`: header comment, the harness MCP server, `[permission]`. */
+function grokConfigToml(name: string, server: Record<string, unknown> | null, allow: string[], deny: string[]): string {
+  const blocks = [[
+    `# ${name.replace(/[\u0000-\u0008\u000a-\u001f\u007f]+/g, ' ')} — Grok Build project config (metaharness host: grok, ADR-280).`,
+    '# Grok starts these servers and applies these rules only in a trusted folder; see install-grok.md.',
+  ].join('\n')];
+  if (server) {
+    const key = `mcp_servers.${grokTomlKey(grokServerName(name))}`;
+    const lines = [`[${key}]`];
+    if (typeof server.url === 'string') {
+      // Grok infers HTTP from `url`; no `type` key (unlike the codex arm).
+      lines.push(`url = ${grokTomlString(server.url)}`, 'enabled = true');
+      const headers = server.headers as Record<string, string> | undefined;
+      if (headers && Object.keys(headers).length > 0) {
+        lines.push('', `[${key}.headers]`, ...Object.entries(headers).map(([k, v]) => `${grokTomlKey(k)} = ${grokTomlString(v)}`));
+      }
+    } else {
+      const args = (server.args as string[] | undefined) ?? [];
+      lines.push(`command = ${grokTomlString(String(server.command))}`);
+      if (args.length > 0) lines.push(`args = [${args.map(grokTomlString).join(', ')}]`);
+      lines.push('enabled = true');
+    }
+    blocks.push(lines.join('\n'));
+  }
+  if (allow.length + deny.length > 0) {
+    const lines = ['[permission]'];
+    if (allow.length > 0) lines.push('allow = [', ...allow.map((r) => `  ${grokTomlString(r)},`), ']');
+    if (deny.length > 0) lines.push('deny = [', ...deny.map((r) => `  ${grokTomlString(r)},`), ']');
+    blocks.push(lines.join('\n'));
+  }
+  return `${blocks.join('\n\n')}\n`;
+}
+
 /** The MCP server entry a host config registers, or null when MCP is off. */
 function mcpServerEntry(cfg: HarnessConfig): Record<string, unknown> | null {
   if (cfg.primitives.mcp === 'off') return null;
@@ -424,6 +493,32 @@ function hostFiles(host: HostId, cfg: HarnessConfig): GenFile[] {
       return [
         { path: 'install-prime-agent.md', content: runbook },
         { path: '.prime/agent/skills/README.md', content: `# ${cfg.name} skills\n\nGenerated skill directories land here (one per tool).\n` },
+      ];
+    }
+    case 'grok': {
+      // ADR-280 — Grok Build CLI, verified against grok 1.0.34: project
+      // `.grok/config.toml` carries `[mcp_servers]` + `[permission]`, loaded
+      // only in a trusted folder, so the runbook leads with the trust step and
+      // repeats the deny rules as always-enforced `--deny` flags.
+      // ADR-027 parity contract: byte-identical with
+      // packages/create-agent-harness/src/host-config.ts.
+      const server = mcpServerEntry(cfg);
+      const { allow, deny } = policyLists(cfg);
+      const tools = `${grokServerName(cfg.name)}__*`;
+      const quote = (r: string) => `'${r.replace(/'/g, `'"'"'`)}'`;
+      return [
+        { path: '.grok/config.toml', content: grokConfigToml(cfg.name, server, allow, deny) },
+        { path: 'AGENTS.md', content: `# ${cfg.name}\n\n${cfg.description}\n\n## Behavioral rules\n\n${server ? `- Use the harness's MCP tools (\`${tools}\` in Grok; find them with \`search_tool\`, call them with \`use_tool\`) for orchestration.\n` : ''}- Defer destructive operations to the user.\n` },
+        { path: 'install-grok.md', content: [
+          `# Installing ${cfg.name} into Grok Build`,
+          '',
+          '> **ACTION REQUIRED: trust this folder.** Grok Build ignores `AGENTS.md`, `.grok/config.toml` (`[mcp_servers]` and `[permission]`) and project skills and hooks until the folder is trusted, so the deny rules below are not enforced until then.',
+          '',
+          '1. Install: `curl -fsSL https://x.ai/cli/install.sh | bash`, then `grok login`.',
+          `2. Review \`.grok/config.toml\` and \`AGENTS.md\`, then from this folder run \`grok --trust inspect\`. It records trust in \`~/.grok/trusted_folders.toml\` and lists what loaded${server ? `: expect the MCP server \`${grokServerName(cfg.name)}\` and` : ': expect'} \`${allow.length + deny.length} loaded\` permissions.`,
+          `3. Run \`grok\`. Headless: \`grok -p '<task>'${deny.map((d) => ` --deny ${quote(d)}`).join('')}\`; \`--deny\` flags are enforced even without folder trust. For CI, \`GROK_FOLDER_TRUST=0\` turns the trust gate off for one process.`,
+          '',
+        ].join('\n') },
       ];
     }
   }
