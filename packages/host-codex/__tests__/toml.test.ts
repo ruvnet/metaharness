@@ -106,5 +106,17 @@ describe('@metaharness/host-codex — TOML generation', () => {
       const out = adapter.generateConfig!({ name: 'bare', mcpServers: [] } as any);
       expect(Object.keys(out)).not.toContain('AGENTS.md');
     });
+
+    it('discloses ADR-246 autonomous block as an explicit no-op, never silently drops it', () => {
+      const withAutonomous = agentsMarkdown({
+        name: 'demo',
+        autonomous: { goal: { text: 'ship it' }, gateCommand: 'npm test' },
+      } as any);
+      expect(withAutonomous).toContain('ADR-246');
+      expect(withAutonomous).toContain('not projected');
+
+      const withoutAutonomous = agentsMarkdown({ name: 'demo' } as any);
+      expect(withoutAutonomous).not.toContain('ADR-246');
+    });
   });
 });

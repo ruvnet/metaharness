@@ -74,6 +74,18 @@ describe('@metaharness/host-copilot (iter 127, ADR-032)', () => {
     expect(md).toContain('workspace trust');
   });
 
+  it('installRunbook discloses ADR-246 autonomous block as an explicit no-op, never silently drops it', () => {
+    const withAutonomous = installRunbook({
+      ...baseSpec,
+      autonomous: { goal: { text: 'ship it' }, gateCommand: 'npm test' },
+    } as any);
+    expect(withAutonomous).toContain('ADR-246');
+    expect(withAutonomous).toContain('not projected');
+
+    const withoutAutonomous = installRunbook(baseSpec as any);
+    expect(withoutAutonomous).not.toContain('ADR-246');
+  });
+
   it('adapter.generateConfig emits both .vscode/mcp.json and install.md', () => {
     const out = adapter.generateConfig!(baseSpec as any);
     const keys = Object.keys(out);

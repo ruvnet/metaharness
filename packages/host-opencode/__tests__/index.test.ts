@@ -91,6 +91,18 @@ describe('@metaharness/host-opencode (iter 128, ADR-036)', () => {
     expect(md).toContain('deny');
   });
 
+  it('installRunbook discloses ADR-246 autonomous block as an explicit no-op, never silently drops it', () => {
+    const withAutonomous = installRunbook({
+      ...baseSpec,
+      autonomous: { goal: { text: 'ship it' }, gateCommand: 'npm test' },
+    } as any);
+    expect(withAutonomous).toContain('ADR-246');
+    expect(withAutonomous).toContain('not projected');
+
+    const withoutAutonomous = installRunbook(baseSpec as any);
+    expect(withoutAutonomous).not.toContain('ADR-246');
+  });
+
   it('adapter.generateConfig emits both .opencode/opencode.json and install.md', () => {
     const out = adapter.generateConfig!(baseSpec as any);
     expect(Object.keys(out)).toContain('.opencode/opencode.json');

@@ -93,6 +93,17 @@ export function claudeMd(spec: HarnessSpec): string {
   const lines: string[] = [`# ${spec.name}`, ''];
   if (spec.description) lines.push(spec.description, '');
   if (spec.systemPrompt) lines.push(spec.systemPrompt, '');
+  if (spec.autonomous) {
+    lines.push(
+      '## Autonomous mode (ADR-246 §2.2)',
+      '',
+      'Claude Code has no native `goal`/`heartbeat`/`gateCommand`/`maxTurns` ' +
+        'autonomous-loop surface. This harness spec declares an `autonomous` ' +
+        'block that is **not projected** on this host (documented no-op — ' +
+        'kernel-js `HarnessSpec.autonomous` must never be silently dropped).',
+      '',
+    );
+  }
   return lines.join('\n');
 }
 
