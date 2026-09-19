@@ -111,6 +111,18 @@ describe('@metaharness/host-openclaw — config generation', () => {
     it('starts with the shebang', () => {
       expect(installScript({ name: 'x' }).startsWith('#!/usr/bin/env bash')).toBe(true);
     });
+
+    it('discloses ADR-246 autonomous block as an explicit no-op, never silently drops it', () => {
+      const withAutonomous = installScript({
+        name: 'x',
+        autonomous: { goal: { text: 'ship it' }, gateCommand: 'npm test' },
+      } as any);
+      expect(withAutonomous).toContain('ADR-246');
+      expect(withAutonomous).toMatch(/NOT projected/);
+
+      const withoutAutonomous = installScript({ name: 'x' });
+      expect(withoutAutonomous).not.toContain('ADR-246');
+    });
   });
 
   describe('adapter export', () => {

@@ -9,6 +9,7 @@ import {
   actionYaml,
   installRunbook,
   adapter,
+  looksLikeCron,
 } from '../src/index.js';
 import type { HarnessSpec } from '@metaharness/kernel';
 
@@ -102,6 +103,58 @@ describe('@metaharness/host-github-actions (ADR-033)', () => {
       expect(stepLine).toBe('      - name: "Run evil-harness\\nrun-name: pwned-by-attacker\\n#"');
       expect(y).not.toMatch(/^run-name:/m);
     });
+
+    it('projects a cron-shaped autonomous.heartbeat.cadence onto a real schedule trigger', () => {
+      const y = workflowYaml({
+        ...base,
+        autonomous: { heartbeat: { cadence: '0 9 * * 1', instruction: 'check in' } },
+      } as HarnessSpec);
+      expect(y).toContain('schedule:');
+      expect(y).toContain("- cron: \"0 9 * * 1\"");
+      expect(y).not.toContain('  # schedule:');
+    });
+
+    it('falls back to the commented schedule example for a non-cron cadence (never emits an invalid trigger)', () => {
+      const y = workflowYaml({
+        ...base,
+        autonomous: { heartbeat: { cadence: 'every 5 minutes', instruction: 'check in' } },
+      } as HarnessSpec);
+      expect(y).not.toMatch(/^ {2}schedule:/m);
+      expect(y).toContain('  # schedule:');
+    });
+
+    it('projects autonomous.gateCommand onto a real pre-flight gating step before checkout', () => {
+      const y = workflowYaml({ ...base, autonomous: { gateCommand: 'npm test' } } as HarnessSpec);
+      expect(y).toContain('ADR-246 autonomous gate');
+      expect(y).toContain('run: "npm test"');
+      const lines = y.split('\n');
+      const checkoutIdx = lines.findIndex((l) => l.includes('actions/checkout@v4'));
+      const gateIdx = lines.findIndex((l) => l.includes('ADR-246 autonomous gate'));
+      expect(gateIdx).toBeGreaterThan(checkoutIdx);
+    });
+
+    it('JSON-escapes gateCommand so a quote/newline cannot break the run: scalar', () => {
+      const evil = 'npm test"\nrun: rm -rf /';
+      const y = workflowYaml({ ...base, autonomous: { gateCommand: evil } } as HarnessSpec);
+      expect(y).toContain(`run: ${JSON.stringify(evil)}`);
+      expect(y).not.toMatch(/^run: rm -rf/m);
+    });
+
+    it('omits both the gate step and a real schedule trigger when autonomous is absent', () => {
+      expect(yml).not.toContain('ADR-246 autonomous gate');
+      expect(yml).not.toMatch(/^ {2}schedule:/m);
+    });
+  });
+
+  describe('looksLikeCron', () => {
+    it('accepts a 5-field cron expression', () => {
+      expect(looksLikeCron('0 9 * * 1')).toBe(true);
+      expect(looksLikeCron('*/5 * * * *')).toBe(true);
+    });
+    it('rejects a plain-English cadence', () => {
+      expect(looksLikeCron('every 5 minutes')).toBe(false);
+      expect(looksLikeCron('daily')).toBe(false);
+    });
   });
 
   describe('actionYaml', () => {
@@ -157,6 +210,36 @@ describe('@metaharness/host-github-actions (ADR-033)', () => {
       expect(md).toContain('.github/actions/my-bot/action.yml');
       expect(md).toContain('default-deny');
       expect(md).toContain('Environment');
+    });
+
+    it('never silently drops ADR-246 autonomous: projects gateCommand + cron heartbeat for real, discloses goal/maxTurns as a no-op', () => {
+      const withAutonomous = installRunbook({
+        ...base,
+        autonomous: {
+          goal: { text: 'ship it' },
+          heartbeat: { cadence: '0 9 * * 1', instruction: 'check in' },
+          gateCommand: 'npm test',
+          maxTurns: 5,
+        },
+      } as HarnessSpec);
+      expect(withAutonomous).toContain('ADR-246');
+      expect(withAutonomous).toContain('Projected onto this host');
+      expect(withAutonomous).toContain('gateCommand');
+      expect(withAutonomous).toContain('heartbeat.cadence');
+      expect(withAutonomous).toContain('Not projected');
+      expect(withAutonomous).toContain('goal');
+      expect(withAutonomous).toContain('maxTurns');
+      expect(md).not.toContain('ADR-246');
+    });
+
+    it('discloses a non-cron heartbeat cadence as not projected instead of emitting an invalid trigger', () => {
+      const withAutonomous = installRunbook({
+        ...base,
+        autonomous: { heartbeat: { cadence: 'every 5 minutes', instruction: 'check in' } },
+      } as HarnessSpec);
+      expect(withAutonomous).toContain('Not projected');
+      expect(withAutonomous).toContain('heartbeat');
+      expect(withAutonomous).not.toContain('Projected onto this host');
     });
   });
 

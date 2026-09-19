@@ -280,6 +280,16 @@ export function installScript(spec: HarnessSpec): string {
     `rvm-loader guest boot --partition "${shellDq(spec.name)}" --wasm-ref ./wasm-guest.json`,
     '',
     `echo "RVM partition '${shellDq(spec.name)}' is up. Hash-chained witness logs at ~/.rvm/witness/."`,
+    ...(spec.autonomous
+      ? [
+          '',
+          '# Autonomous mode (ADR-246 §2.2): RVM has no native',
+          '# goal/heartbeat/gateCommand/maxTurns autonomous-loop surface. This',
+          '# harness spec declares an autonomous block that is NOT projected on',
+          '# this host (documented no-op -- kernel-js HarnessSpec.autonomous must',
+          '# never be silently dropped).',
+        ]
+      : []),
   ].join('\n') + '\n';
 }
 

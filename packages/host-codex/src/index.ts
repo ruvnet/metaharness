@@ -36,6 +36,17 @@ export function agentsMarkdown(spec: HarnessSpec): string {
     lines.push('## Agents', '');
     for (const a of spec.agents) lines.push(`### ${a.name}`, '', a.systemPrompt ?? '', '');
   }
+  if (spec.autonomous) {
+    lines.push(
+      '## Autonomous mode (ADR-246 §2.2)',
+      '',
+      'Codex has no native `goal`/`heartbeat`/`gateCommand`/`maxTurns` ' +
+        'autonomous-loop surface. This harness spec declares an `autonomous` ' +
+        'block that is **not projected** on this host (documented no-op — ' +
+        'kernel-js `HarnessSpec.autonomous` must never be silently dropped).',
+      '',
+    );
+  }
   return lines.join('\n');
 }
 

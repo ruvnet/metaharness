@@ -98,3 +98,18 @@ cross-file consistency. 565/565 tests (+2), `tsc --noEmit` clean, no
 behavior change. Posted as a PR comment distinguishing "the base branch
 moving fixed this" from "this session fixed this" rather than claiming
 credit for the former.
+
+**Note on `main`'s ledger gap, 2026-09-06 through 2026-09-18:** `main`'s
+table has had no new rows since 2026-09-05 not because the pipeline
+stopped, but because 0 of the last 10 Dream Cycle PRs (#288, #293, #298,
+#300, #304, #307, #314, #320, #324, #327) have merged (verified directly
+via `git ls-remote --heads origin "dream/*"` + `search_pull_requests`, per
+STEP 1's caution against inferring failure from ledger sparseness alone —
+real branches/draft PRs exist for every night in that window except a
+genuine 3-night gap, 09-12 through 09-14). This exact backlog was already
+escalated on 2026-09-15 (#313) and 2026-09-16 (#319); 2026-09-17 and
+2026-09-18 correctly applied STEP 1.1's duplicate-rejection rule rather
+than re-escalating a 3rd/4th time. Tonight follows that same precedent —
+noted here for continuity, not re-escalated — and proceeded with the
+normal rotation instead.
+| 2026-09-19 | host-adapters | `HarnessSpec.autonomous` (ADR-246 §2.2) was silently dropped by 9/10 host adapters, violating that field's own documented contract ("must project per host or emit an explicit documented no-op — never silently drop"); only `host-prime-agent` complied. Added a tested no-op disclosure to the other 8, and (round-2, after an independent critic flagged the bare disclosure as under-serving GitHub Actions, which already had a commented-out native `schedule:` example) real projection of `heartbeat.cadence`→cron trigger and `gateCommand`→pre-flight gating step for `host-github-actions`. Scan (kernel,sdk): disclosed-not-fixed — `SessionLog.append()` TOCTOU race (concurrent appends corrupt the log) and `TrajectoryStore.readAll()` uncaught-throw-on-corrupt-line (loses all history), both reproduced, both untested today, good candidates for a near-future `flywheel-promotion`/kernel-focused night | #331 | #332 | yes | ACCEPT | 192/192 tests across 9 patched packages (+17 net new, 0 regressions); round-1 red proof: 8 packages each 1 new assertion fails pre-fix; round-2 red proof (github-actions): 7/33 fail pre-fix; `create-agent-harness` full suite 572/574 unaffected; `tsc` clean; `npm audit` 0 high/critical | `b5c2f831...` | 10 PRs open/unreviewed since 09-06 (#288/#293/#298/#300/#304/#307/#314/#320/#324/#327), 0 merged — see note above; not re-escalated tonight per STEP 1.1 precedent set 09-17/09-18 |
