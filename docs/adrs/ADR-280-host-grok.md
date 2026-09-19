@@ -113,23 +113,31 @@ load time.)
 - Handlers: `http(s)://…` → `{type: "http", url}`. A plain helper name →
   `node "$GROK_WORKSPACE_ROOT/.claude/helpers/<name>.cjs"`, the same
   user-supplied file host-claude-code references, anchored at the workspace
-  root because Grok does not document how it resolves a relative path inside
-  an inline command. `mcp:`/`prompt:`/`agent:` handlers (no Grok type) and
+  root because a relative hook `command` resolves against the JSON file's
+  directory (`.grok/hooks/`), not the repo root. `mcp:`/`prompt:`/`agent:` handlers (no Grok type) and
   helper names outside `[A-Za-z0-9._-]` (not spliced into a shell line) are
   named in the runbook.
 - Matchers: Grok compiles `matcher` as a regex over the tool name; empty or
   omitted matches everything. So `*` is omitted, never emitted, and a
   permission-style `Tool(args)` matcher keeps `Tool` and is reported as
-  widened (the helper must filter).
+  widened (the helper must filter). A Claude-style `mcp__<server>__<tool>`
+  matcher loses its `mcp__` prefix, because Grok's MCP tool names are
+  `server__tool`; otherwise the hook would load and never fire.
 - No `timeout` is emitted: `HookSpec` has none, and Grok's per-event defaults
   (5 s, 30 s for `UserPromptSubmit`, 600 s for `Stop`/`SubagentStop`/
   `PostToolUse`) are better than a fabricated constant.
 
 ### 2.5 Server names
 
-Normalized to what Grok's tool catalog admits (§Context), with deterministic
-`-2`/`-3` suffixes on collision; every rename is listed in the runbook.
-Kebab-case harness names, the only kind the CLI accepts, are unchanged.
+Normalized to what Grok's tool catalog admits (§Context, 07-mcp-servers.md
+§What Grok admits), with deterministic `-2`/`-3` suffixes on collision; every
+rename is listed in the runbook, together with any `mcp__<old>` or
+`MCPTool(<old>…)` rule that can no longer match. Kebab-case harness names, the
+only kind the CLI accepts, are unchanged. Names are **not** length-capped: the
+64-character budget applies to the `search_tool`/`use_tool` function names, not
+to catalog keys (up to 256), and the guide says not to shorten a `server__tool`
+key — truncating would also desynchronize a harness's own `mcp__<name>__*`
+allow rule from the emitted table name.
 
 ### 2.6 `autonomous.gateCommand`
 
@@ -137,6 +145,14 @@ Not projected. A `Stop` hook can keep a turn running, but only exit code 2 or
 a `{"decision": "block"}` answer blocks; any other failure fails open, so
 wiring an arbitrary gate command as a hook would silently not gate. Named in
 the runbook as a documented no-op.
+
+### 2.6a Multi-host dependency ranges (pre-existing defect)
+
+`scaffold()` pinned every *extra* host to `^0.1.1`, which no published
+`host-prime-agent` (0.1.0) satisfies, so a multi-host scaffold's `npm install`
+failed with ETARGET before this host existed. It now emits `^0.1.0`, matching
+the template's primary-host pin, and the multi-host test asserts the range
+admits the version in the repo.
 
 ### 2.7 Where this departs from the #279 proposal
 
@@ -150,7 +166,9 @@ the runbook as a documented no-op.
    disclosed.
 5. `AGENTS.md` is byte-identical between the CLI and web UI; the adapter's
    `AGENTS.md` renders the fuller `HarnessSpec` and is not byte-identical with
-   the CLI's (`.grok/config.toml` is, in all three paths).
+   the CLI's. `.grok/config.toml` is byte-identical in all three paths for
+   local and off MCP; for remote the CLI and web UI additionally carry the
+   `Authorization` header that `McpServerSpec` cannot express (§2.3).
 
 ## Consequences
 
@@ -159,10 +177,15 @@ the runbook as a documented no-op.
   the server and `AGENTS.md` load after `grok --trust inspect`).
 - The generated harness depends on `@metaharness/host-grok`, which must be
   published before `npm install` works in a `--host grok` scaffold (same as
-  every new host). `published-smoke.yml` scaffolds from the published CLI, so
-  its all-hosts job fails between merge and the first release that knows
-  `--host grok` (#169 added prime-agent to the same loop in the PR that
-  introduced it, together with its release bumps).
+  every new host).
+- `published-smoke.yml`'s all-hosts job scaffolds from the *published* CLI, so
+  a hard-coded host list turns it red on the merge push and on every daily cron
+  until the release ships — that is what happened when prime-agent landed
+  (run 31285811635, "Unknown host: prime-agent"). Its loop therefore now reads
+  the `Hosts:` line from the published artifact's `--help` (failing if that
+  line is missing or has no `claude-code`) and passes the same set to
+  `verify-all-hosts.mjs` through `VERIFY_HOSTS`. The repo's own lists still
+  name every host, including grok.
 - One more adapter to keep propagated (ADR-033 checklist) and verified
   (ADR-046): `verify-all-hosts.mjs --real` gains a zero-cost grok check, and
   the adapter suite runs the real binary when one is installed.
@@ -215,14 +238,19 @@ the runbook as a documented no-op.
 12. Real binary (skipped without `grok`): untrusted → nothing loads; trusted
     via the trust store and via `GROK_FOLDER_TRUST=0` → 5/5 rules, 3 hooks,
     2 skills, 1 agent, both servers, `AGENTS.md`.
+13. Multi-host: every emitted host dependency range admits the version in this
+    repo (guards the `^0.1.1` defect in §2.6a).
 
 ## Implementation notes (2026-09-19)
 
-- `packages/host-grok`: 44 tests (41 contract + 3 real-binary). Mutation
-  check: removing newline escaping, adding `type = "http"`, dropping the
-  banner, dropping the `--deny` flags, emitting `*`, or renaming the table to
-  `[permissions]` each turns tests red (the last one only the real-binary
-  suite catches: Grok loads 0 rules without complaint).
+- `packages/host-grok`: 47 tests (44 contract + 3 real-binary). Mutation
+  check: removing newline escaping (2 fail), adding `type = "http"` (4),
+  dropping the banner (3), dropping the `--deny` flags (3), emitting `*` (1),
+  keeping a Claude `mcp__` matcher prefix (1), and renaming the table to
+  `[permissions]` (14: 12 contract tests, which hard-code the spelling, plus
+  both trusted real-binary tests). The real-binary tier is the one that does
+  not share the spelling assumption: it asks Grok, which loads 0 rules from
+  `[permissions]` without reporting anything.
 - Propagation: CLI `HOSTS` + `host-config.ts`, web UI (type, catalog,
   generator, verify, HostGuide), `verify-all-hosts.mjs` (schema + `--real`),
   `verify-harness-live.mjs`, bench (adapter + measured baseline row), build/

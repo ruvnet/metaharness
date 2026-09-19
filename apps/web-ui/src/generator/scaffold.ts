@@ -291,11 +291,14 @@ function grokTomlKey(s: string): string {
   return /^[A-Za-z0-9_-]+$/.test(s) ? s : grokTomlString(s);
 }
 
-/** A server name Grok admits into its tool catalog (identity for kebab-case names). */
+/** A server name Grok admits into its tool catalog (identity for kebab-case
+ * names; not length-capped — the 64-char budget is for `search_tool`/`use_tool`
+ * function names, not catalog keys, and truncating would desynchronize the
+ * harness's own `mcp__<name>__*` allow rule from the table name). */
 function grokServerName(raw: string): string {
   let s = raw.replace(/[^A-Za-z0-9_-]+/g, '-').replace(/_{2,}/g, '_').replace(/-{2,}/g, '-').replace(/^-+/, '');
   if (/^[0-9]/.test(s)) s = `mcp-${s}`;
-  s = s.slice(0, 64).replace(/[-_]+$/, '');
+  s = s.replace(/[-_]+$/, '');
   return s || 'mcp';
 }
 
@@ -515,8 +518,8 @@ function hostFiles(host: HostId, cfg: HarnessConfig): GenFile[] {
           '> **ACTION REQUIRED: trust this folder.** Grok Build ignores `AGENTS.md`, `.grok/config.toml` (`[mcp_servers]` and `[permission]`) and project skills and hooks until the folder is trusted, so the deny rules below are not enforced until then.',
           '',
           '1. Install: `curl -fsSL https://x.ai/cli/install.sh | bash`, then `grok login`.',
-          `2. Review \`.grok/config.toml\` and \`AGENTS.md\`, then from this folder run \`grok --trust inspect\`. It records trust in \`~/.grok/trusted_folders.toml\` and lists what loaded${server ? `: expect the MCP server \`${grokServerName(cfg.name)}\` and` : ': expect'} \`${allow.length + deny.length} loaded\` permissions.`,
-          `3. Run \`grok\`. Headless: \`grok -p '<task>'${deny.map((d) => ` --deny ${quote(d)}`).join('')}\`; \`--deny\` flags are enforced even without folder trust. For CI, \`GROK_FOLDER_TRUST=0\` turns the trust gate off for one process.`,
+          `2. Review \`.grok/config.toml\` and \`AGENTS.md\`, then from this folder run \`grok --trust inspect\`. It records trust in \`~/.grok/trusted_folders.toml\` and lists what loaded${server ? `: expect the MCP server \`${grokServerName(cfg.name)}\` and` : ': expect'} \`Source: .grok/config.toml\` with \`${allow.length + deny.length} loaded\` rules (more if a \`.claude/settings.json\` is present — Grok loads its permissions too).`,
+          `3. Run \`grok\`. Headless: \`grok -p '<task>'${deny.map((d) => ` --deny ${quote(d)}`).join('')}\`; \`--deny\` flags are enforced even without folder trust (that quoting is for bash/zsh/PowerShell; \`cmd.exe\` needs double quotes). For CI, \`GROK_FOLDER_TRUST=0\` turns the trust gate off for one process — only on a checkout you trust, never a fork PR.`,
           '',
         ].join('\n') },
       ];

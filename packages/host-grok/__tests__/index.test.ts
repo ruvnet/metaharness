@@ -169,7 +169,10 @@ describe('@metaharness/host-grok (ADR-280)', () => {
       expect(normalizeServerName('-lead')).toBe('lead');
       expect(normalizeServerName('_under')).toBe('_under');
       expect(normalizeServerName('!!!')).toBe('mcp');
-      expect(normalizeServerName('a'.repeat(100))).toBe('a'.repeat(64));
+      // Not length-capped: the 64-char budget is the search_tool/use_tool
+      // function-name limit, not the catalog key (07-mcp-servers.md), and a
+      // truncated name would stop matching the harness's mcp__<name>__* rule.
+      expect(normalizeServerName('a'.repeat(100))).toBe('a'.repeat(100));
       for (const n of ['x]\n[evil]', 'a..b', '../../etc']) {
         expect(normalizeServerName(n)).toMatch(/^[A-Za-z_][A-Za-z0-9_-]*$/);
         expect(normalizeServerName(n)).not.toMatch(/__|_$/);
@@ -273,6 +276,16 @@ describe('@metaharness/host-grok (ADR-280)', () => {
       expect(gen(defaultSpec)[INSTALL_MD]).toMatch(/matcher `Bash\(rm \*\)` is emitted as `Bash`/);
     });
 
+    it('a Claude `mcp__server__tool` matcher loses the mcp__ prefix (Grok tool names have none) and says so', () => {
+      expect(grokMatcher('mcp__codeindex__.*')).toEqual({ matcher: 'codeindex__.*', rewrittenFrom: 'mcp__codeindex__.*' });
+      expect(grokMatcher('mcp__a__x|mcp__b__y')).toEqual({ matcher: 'a__x|b__y', rewrittenFrom: 'mcp__a__x|mcp__b__y' });
+      // A tool whose own name contains mcp__ mid-token is left alone.
+      expect(grokMatcher('Toolmcp__x')).toEqual({ matcher: 'Toolmcp__x' });
+      const out = gen({ name: 'h', hooks: [{ event: 'PreToolUse', matcher: 'mcp__codeindex__.*', handler: 'guard' }] });
+      expect(JSON.parse(out['.grok/hooks/h.json']!).hooks.PreToolUse[0].matcher).toBe('codeindex__.*');
+      expect(out[INSTALL_MD]).toMatch(/is emitted as `codeindex__\.\*`[\s\S]*never match/);
+    });
+
     it('no supported hooks → no hooks file and no Hooks section', () => {
       const out = gen({ name: 'h' });
       expect(Object.keys(out).some((k) => k.startsWith('.grok/hooks/'))).toBe(false);
@@ -324,6 +337,22 @@ describe('@metaharness/host-grok (ADR-280)', () => {
   });
 
   describe('fail-closed trust posture (ADR-280 §2.2)', () => {
+    it('a rule naming a renamed server is named as unable to match (it still loads)', () => {
+      const md = gen({
+        name: 'h',
+        mcpServers: [{ name: 'my.server', command: ['x'] }],
+        permissions: { allow: ['mcp__my.server__*'], deny: ['MCPTool(my.server__write)'] },
+      })[INSTALL_MD]!;
+      expect(md).toContain('`my.server` → `my-server`');
+      expect(md).toMatch(/name a server by its \*\*old\*\* name[\s\S]*`mcp__my\.server__\*`[\s\S]*`MCPTool\(my\.server__write\)`/);
+    });
+
+    it('the CI trust switch carries its blast-radius caveat', () => {
+      const md = gen({ name: 'h', systemPrompt: 'x' })[INSTALL_MD]!;
+      expect(md).toContain('GROK_FOLDER_TRUST=0');
+      expect(md).toMatch(/never on a fork PR/);
+    });
+
     it('the runbook OPENS with the trust banner naming every deny rule', () => {
       const md = gen(defaultSpec)[INSTALL_MD]!;
       const banner = md.indexOf('ACTION REQUIRED');

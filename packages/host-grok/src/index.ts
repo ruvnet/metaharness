@@ -173,11 +173,17 @@ function shellQuote(value: string): string {
 
 /**
  * Normalize a HarnessSpec MCP server name to one Grok admits into its tool
- * catalog (07-mcp-servers.md): characters outside [A-Za-z0-9_-] become `-`,
- * `__` collapses to `_` (it is the `server__tool` delimiter), a leading `-` is
- * dropped, a leading digit gets an `mcp-` prefix, trailing `-`/`_` are
- * trimmed (a trailing `_` would form `___`), and the result is capped at 64
- * characters. Identity for ordinary names (`demo-bot`, `code_index`).
+ * catalog (07-mcp-servers.md §What Grok admits): characters outside
+ * [A-Za-z0-9_-] become `-`, `__` collapses to `_` (it is the `server__tool`
+ * delimiter), a leading `-` is dropped, a leading digit gets an `mcp-` prefix,
+ * and trailing `-`/`_` are trimmed (a trailing `_` would form `___`).
+ * Identity for ordinary names (`demo-bot`, `code_index`).
+ *
+ * Deliberately NOT length-capped: the 64-character budget applies to the
+ * `search_tool`/`use_tool` function names, not to catalog keys (which may be
+ * 256), and the guide says "Do not shorten a `server__tool` key to 64
+ * characters". Truncating here would also desynchronize a harness's own
+ * `mcp__<name>__*` allow rule from the emitted table name.
  */
 export function normalizeServerName(raw: string): string {
   let s = raw
@@ -186,7 +192,7 @@ export function normalizeServerName(raw: string): string {
     .replace(/-{2,}/g, '-')
     .replace(/^-+/, '');
   if (/^[0-9]/.test(s)) s = `mcp-${s}`;
-  s = s.slice(0, 64).replace(/[-_]+$/, '');
+  s = s.replace(/[-_]+$/, '');
   return s || 'mcp';
 }
 
@@ -206,12 +212,15 @@ export function normalizeSkillName(raw: string, fallback = 'tool'): string {
 }
 
 /** Collision-safe naming in spec order: the first keeps the base, later
- * collisions get `-2`, `-3`, … (a flat file map would otherwise overwrite). */
-function uniqueName(base: string, used: Set<string>): string {
+ * collisions get `-2`, `-3`, … (a flat file map would otherwise overwrite).
+ * `maxLen` bounds the result for skill/agent names (Grok caps those at 64);
+ * server names are unbounded (see normalizeServerName). */
+function uniqueName(base: string, used: Set<string>, maxLen = 64): string {
   let name = base;
   for (let n = 2; used.has(name); n++) {
     const suffix = `-${n}`;
-    name = `${base.slice(0, 64 - suffix.length).replace(/[-_]+$/, '')}${suffix}`;
+    const room = Number.isFinite(maxLen) ? maxLen - suffix.length : base.length;
+    name = `${base.slice(0, room).replace(/[-_]+$/, '')}${suffix}`;
   }
   used.add(name);
   return name;
@@ -285,7 +294,7 @@ interface ServerPlan {
 function planServers(spec: HarnessSpec): ServerPlan[] {
   const used = new Set<string>();
   return (spec.mcpServers ?? []).map((s) => {
-    const name = uniqueName(normalizeServerName(s.name), used);
+    const name = uniqueName(normalizeServerName(s.name), used, Infinity);
     return { spec: s, name, toml: serverToToml(s, name) };
   });
 }
@@ -315,10 +324,11 @@ const SAFE_HELPER = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
  * `command` and `http` only (10-hooks.md), so the ADR-044 prefix handlers
  * host-claude-code maps (`mcp:`, `prompt:`, `agent:`) have no Grok analogue.
  * A plain helper name resolves to the SAME user-supplied file host-claude-code
- * references (`.claude/helpers/<name>.cjs`), so one helper serves both hosts;
- * the path is anchored at `$GROK_WORKSPACE_ROOT` (injected into every hook
- * process) because how Grok resolves a relative path inside an inline command
- * is undocumented. Returns `{ unsupported }` with the reason otherwise.
+ * references (`.claude/helpers/<name>.cjs`), so one helper serves both hosts.
+ * The path is anchored at `$GROK_WORKSPACE_ROOT` (injected into every hook
+ * process) because a relative hook `command` resolves against the JSON file's
+ * directory, `.grok/hooks/` (10-hooks.md), not the repo root. Returns
+ * `{ unsupported }` with the reason otherwise.
  */
 export function hookHandlerFor(handler: string): GrokHookHandler | { unsupported: string } {
   if (/^https?:\/\//i.test(handler)) return { type: 'http', url: handler };
@@ -338,13 +348,23 @@ export function hookHandlerFor(handler: string): GrokHookHandler | { unsupported
  * empty or omitted matcher matches everything. So `*`/empty are omitted, and a
  * permission-rule-style `Tool(args)` keeps only `Tool` — the argument
  * predicate cannot be expressed and is reported as widened.
+ *
+ * A Claude-style `mcp__<server>__<tool>` matcher loses its `mcp__` prefix:
+ * Grok's MCP tool names are `server__tool` (07-mcp-servers.md §Tool Naming),
+ * and its matcher aliases cover built-in tools only, so the prefixed form would
+ * load without complaint and never match — a hook that silently never fires.
+ * The rewrite is reported so the runbook can name it.
  */
-export function grokMatcher(matcher: string | undefined): { matcher?: string; droppedPredicate?: string } {
+export function grokMatcher(matcher: string | undefined): { matcher?: string; droppedPredicate?: string; rewrittenFrom?: string } {
   if (matcher === undefined) return {};
   const t = matcher.trim();
   if (t === '' || t === '*') return {};
   const call = /^([A-Za-z_][A-Za-z0-9_]*)\(([\s\S]*)\)$/.exec(t);
   if (call) return { matcher: call[1]!, droppedPredicate: call[2]! };
+  if (t.includes('mcp__')) {
+    const stripped = t.replace(/(^|[^A-Za-z0-9_])mcp__/g, '$1');
+    if (stripped !== t) return { matcher: stripped, rewrittenFrom: t };
+  }
   return { matcher: t };
 }
 
@@ -373,6 +393,9 @@ function planHooks(hooks: HookSpec[]): HookPlan {
       continue;
     }
     const m = grokMatcher(h.matcher);
+    if (m.rewrittenFrom !== undefined) {
+      widened.push(`${label}: matcher ${mdCode(m.rewrittenFrom)} is emitted as ${mdCode(m.matcher!)}; Grok names MCP tools ${mdCode('server__tool')} with no ${mdCode('mcp__')} prefix, so the original would never match.`);
+    }
     if (m.droppedPredicate !== undefined) {
       widened.push(`${label}: matcher ${mdCode(h.matcher!)} is emitted as ${mdCode(m.matcher!)}; the argument predicate ${mdCode(m.droppedPredicate)} cannot be expressed in a Grok matcher, so the hook runs for every ${mdCode(m.matcher!)} call and the helper must filter.`);
     }
@@ -488,9 +511,11 @@ function trustBanner(spec: HarnessSpec, ctx: RunbookContext): string[] {
   const lines = [
     '> **ACTION REQUIRED: trust this folder before relying on it.** Grok Build',
     '> loads a project\'s instructions, skills, hooks and `[permission]` rules,',
-    '> and starts its MCP servers, only after the folder is trusted. Verified',
-    `> on grok ${VERIFIED_GROK_VERSION}: on a fresh checkout \`grok inspect\` reports`,
-    '> `projectTrusted: false` and loads none of them. Inert until trusted:',
+    '> and starts its MCP servers, only in a trusted folder. Verified on grok',
+    `> ${VERIFIED_GROK_VERSION}: on a fresh checkout \`grok inspect\` reports`,
+    '> `projectTrusted: false` and loads none of the first four. (It still',
+    '> *lists* project MCP servers; per the guide the same trust gate decides',
+    '> whether they start.) Inert until trusted:',
     ...inert.map((i) => `> - ${i}`),
   ];
   if (deny.length > 0) {
@@ -547,7 +572,9 @@ function renderInstallMd(spec: HarnessSpec, ctx: RunbookContext): string {
     '`--trust` records the folder in `~/.grok/trusted_folders.toml`; `inspect`',
     'then lists what Grok loaded without starting a session. You can also',
     'grant trust inside the TUI with `/hooks-trust`. For CI, `GROK_FOLDER_TRUST=0`',
-    'turns the folder-trust gate off for that one process.',
+    'turns the folder-trust gate off for that one process — use it only on a',
+    'checkout you trust, never on a fork PR, since it also un-gates any',
+    '`.grok/hooks` and MCP commands the checkout carries.',
     '',
     'Expected in the `grok inspect` output:',
     '',
@@ -587,6 +614,21 @@ function renderInstallMd(spec: HarnessSpec, ctx: RunbookContext): string {
         ...renamed.map((p) => `- ${mdCode(p.spec.name)} → ${mdCode(p.name)}`),
         '',
       );
+      // A rule naming the OLD server still loads (Grok counts it), but can
+      // never match a tool, so it would be an inert deny rule — the ADR-046
+      // class this adapter is fail-closed about. Name them explicitly.
+      const stale = [...allow, ...deny].filter((r) =>
+        renamed.some((p) => r.includes(`mcp__${p.spec.name}`) || r.includes(`MCPTool(${p.spec.name}__`)));
+      if (stale.length > 0) {
+        lines.push(
+          'These rules name a server by its **old** name. Grok loads them and',
+          'counts them, but they can never match a tool — rewrite them to the new',
+          'name (a `deny` rule here is not protecting anything):',
+          '',
+          ...stale.map((r) => `- ${mdCode(r)}`),
+          '',
+        );
+      }
     }
     const skipped = ctx.servers.filter((p) => !p.toml);
     if (skipped.length > 0) {
@@ -637,7 +679,9 @@ function renderInstallMd(spec: HarnessSpec, ctx: RunbookContext): string {
   }
   lines.push(
     '`--deny` flags are enforced whether or not the folder is trusted, so a',
-    'headless run should repeat the deny rules:',
+    'headless run should repeat the deny rules (the quoting below is for bash,',
+    'zsh or PowerShell; `cmd.exe` needs double quotes, and Grok drops a rule it',
+    'cannot parse without reporting it):',
     '',
     '```bash',
     `grok -p '<task>'${denyFlags(spec)}`,

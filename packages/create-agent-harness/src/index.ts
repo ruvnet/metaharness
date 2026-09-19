@@ -640,7 +640,12 @@ export async function scaffold(opts: ScaffoldOptions): Promise<ScaffoldResult> {
         pkg.dependencies = pkg.dependencies || {};
         for (const h of hostSet) {
           const dep = `@metaharness/host-${h}`;
-          if (!pkg.dependencies[dep]) pkg.dependencies[dep] = '^0.1.1';
+          // ^0.1.0, matching the template's primary-host pin
+          // (templates/*/package.json.tmpl). The previous '^0.1.1' could not be
+          // satisfied by a host package whose only published version is 0.1.0
+          // (host-prime-agent today, host-grok on first publish), so a
+          // multi-host scaffold's `npm install` failed with ETARGET.
+          if (!pkg.dependencies[dep]) pkg.dependencies[dep] = '^0.1.0';
         }
         rendered[pkgIdx]!.content = JSON.stringify(pkg, null, 2) + '\n';
       } catch { /* leave package.json untouched if it doesn't parse */ }

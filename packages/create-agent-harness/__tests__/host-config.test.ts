@@ -5,12 +5,33 @@
 import { describe, it, expect } from 'vitest';
 import { mkdtempSync, readFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { hostConfigFiles } from '../src/host-config.js';
 import { scaffold } from '../src/index.js';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
 const base = { name: 'demo-bot', description: 'A demo harness.', mcp: 'local' as const };
+
+/**
+ * Minimal caret-range check (no `semver` dependency in this package): for a
+ * 0.y.z range, `^0.y.z` admits >=0.y.z and <0.(y+1).0; otherwise `^x.y.z`
+ * admits >=x.y.z and <(x+1).0.0.
+ */
+function satisfiesCaret(version: string, range: string): boolean {
+  const m = /^\^(\d+)\.(\d+)\.(\d+)$/.exec(range);
+  const v = /^(\d+)\.(\d+)\.(\d+)/.exec(version);
+  if (!m || !v) return false;
+  const [rMaj, rMin, rPat] = m.slice(1).map(Number) as [number, number, number];
+  const [vMaj, vMin, vPat] = v.slice(1).map(Number) as [number, number, number];
+  if (vMaj !== rMaj) return false;
+  const upperMinor = rMaj === 0 ? rMin + 1 : Infinity;
+  if (vMin >= upperMinor) return false;
+  if (vMin !== rMin) return vMin > rMin;
+  return vPat >= rPat;
+}
 
 describe('hostConfigFiles (ADR-045)', () => {
   it('claude-code emits nothing (templates own the .claude/ tree)', () => {
@@ -163,7 +184,8 @@ describe('hostConfigFiles (ADR-045)', () => {
     expect(md.indexOf('ACTION REQUIRED')).toBeLessThan(md.indexOf('1. Install'));
     expect(md).toContain('grok --trust inspect');
     expect(md).toContain("--deny 'Read(./.env)' --deny 'Read(./.env.*)' --deny 'Bash(rm:*)' --deny 'Bash(git push:*)' --deny 'Write(*)' --deny 'Edit(*)'");
-    expect(md).toContain('`7 loaded` permissions');
+    expect(md).toContain('`Source: .grok/config.toml` with `7 loaded` rules (more if a `.claude/settings.json` is present');
+    expect(md).toMatch(/never a fork PR/);
   });
 
   // Same bug class as the hermes/github-actions regressions above: `cfg.name`
@@ -254,7 +276,7 @@ describe('scaffold wires host config (ADR-045 end-to-end)', () => {
     expect(deps['@metaharness/host-grok']).toBeDefined();
   });
 
-  it('claude-code + grok multi-host keeps both trees and both host deps', async () => {
+  it('claude-code + grok multi-host keeps both trees, and every host dep range is satisfiable', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'mh-grok-multi-'));
     await scaffold({
       name: 'both', template: 'minimal', host: 'claude-code' as never, hosts: ['claude-code', 'grok'] as never,
@@ -265,6 +287,15 @@ describe('scaffold wires host config (ADR-045 end-to-end)', () => {
     const deps = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf-8')).dependencies;
     expect(deps['@metaharness/host-claude-code']).toBeDefined();
     expect(deps['@metaharness/host-grok']).toBeDefined();
+
+    // A `toBeDefined()` range can still be unsatisfiable: the multi-host loop
+    // used to pin '^0.1.1', which no published host-grok/host-prime-agent
+    // version satisfies, so `npm install` failed with ETARGET. Assert the
+    // emitted range actually admits the version in this repo.
+    const version = JSON.parse(
+      readFileSync(join(__dirname, '..', '..', 'host-grok', 'package.json'), 'utf-8'),
+    ).version as string;
+    expect(satisfiesCaret(version, deps['@metaharness/host-grok'])).toBe(true);
   });
 
   it('keeps .claude/settings.json when claude-code IS among the hosts', async () => {

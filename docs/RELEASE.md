@@ -81,7 +81,7 @@ The push of `v*.*.*` triggers `.github/workflows/publish.yml`. The workflow:
    on every workspace package, exits non-zero if any package would fail
    the real publish (broken `files`, missing `bin`, unresolvable
    workspace ref, etc.)
-8. Publishes all 12 packages with `npm publish --provenance`:
+8. Publishes all 13 packages with `npm publish --provenance`:
    - `@metaharness/kernel` (umbrella)
    - `@metaharness/sdk`
    - 8 host adapters (`host-claude-code`, `host-codex`, `host-pi-dev`,
