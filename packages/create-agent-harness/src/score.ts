@@ -284,6 +284,16 @@ export function buildScorecard(dir: string, generatedAt: string = new Date().toI
     exitCode = 2;
   }
 
+  // MCP safety is only 20% of the weighted composite, so a harness that
+  // scores well on the other 4 dimensions can average its way to Grade A/B
+  // while `mcpRisk` is 'High' (e.g. unrestricted shell execution allowed).
+  // A "Grade A, MCP Risk: High" badge pair is a contradiction a reviewer or
+  // CI gate could miss — never let the composite mask a High MCP risk.
+  if (mcpSafety.mcpRisk === 'High' && (grade === 'A' || grade === 'B')) {
+    grade = 'C';
+    exitCode = 1;
+  }
+
   // Detect tests: any of __tests__/ tests/ test/.
   const testsDetected = testCoverage.score > 0;
 
