@@ -69,7 +69,12 @@ function graph(args: string[]): CliResult {
   const max = Math.max(1, ...bundle.lift_curve.map((p) => p.primary));
   const lines = [`Lineage + lift curve — ${args[0]}  [root=${bundle.root_id}]`, ''];
   for (const p of bundle.lift_curve) {
-    const bar = '█'.repeat(Math.round((p.primary / max) * 32));
+    // `primary` is only documented as "higher is better" (types.ts) — nothing constrains it to be
+    // non-negative (e.g. a PnL-style benchmark, or a root-only honest-null run below zero). `max` floors
+    // at 1 but the ratio itself can still go negative, and `String.prototype.repeat` throws RangeError on
+    // a negative count — clamp the bar to [0, 32] so a legitimately negative point renders as an empty bar
+    // instead of crashing the one human-facing verb for inspecting an otherwise fully receipt-verified bundle.
+    const bar = '█'.repeat(Math.max(0, Math.min(32, Math.round((p.primary / max) * 32))));
     lines.push(`  gen${String(p.generation).padStart(2)}  ${String(p.primary).padStart(4)}  ${bar} ${p.delta > 0 ? `(+${p.delta})` : ''}${p.anchor !== null ? `  anchor=${p.anchor}` : ''}`);
   }
   lines.push('', `  promoted chain: ${bundle.chain.map((c) => `gen${c.generation}${c.mutation ? `(${c.mutation.target})` : '(root)'}`).join(' → ')}`);
