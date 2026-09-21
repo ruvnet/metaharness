@@ -149,11 +149,40 @@ interface McpScore extends DimensionScore {
   mcpRisk: 'None' | 'Low' | 'Medium' | 'High';
 }
 
+// Distinguishes "no policy file" (safe — MCP not in use) from "policy file
+// present but unreadable/malformed/JSON-null/not-an-object" (unsafe — the
+// declared policy cannot be verified, so it must NOT be collapsed into the
+// same safe state as no policy at all). `safeReadJson` alone cannot tell
+// these apart: it returns `null` for both a missing file AND a present file
+// containing malformed JSON or the literal JSON value `null`.
+function readMcpPolicyFile(dir: string): { present: boolean; valid: boolean; policy: Record<string, unknown> | null } {
+  if (!fileExists(dir, '.harness/mcp-policy.json')) {
+    return { present: false, valid: true, policy: null };
+  }
+  try {
+    const parsed = JSON.parse(readFileSync(join(dir, '.harness', 'mcp-policy.json'), 'utf-8'));
+    if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      return { present: true, valid: true, policy: parsed };
+    }
+    return { present: true, valid: false, policy: null }; // valid JSON, but null/array/primitive
+  } catch {
+    return { present: true, valid: false, policy: null }; // malformed JSON
+  }
+}
+
 function scoreMcpSafety(dir: string): McpScore {
   const signals: string[] = [];
-  const policy = safeReadJson(join(dir, '.harness', 'mcp-policy.json'));
+  const { present: policyPresent, valid: policyValid, policy } = readMcpPolicyFile(dir);
+
+  if (policyPresent && !policyValid) {
+    // Fail closed: a present-but-unverifiable policy is the OPPOSITE of "not
+    // in use" — it means MCP governance was attempted but cannot be trusted.
+    signals.push('MCP policy file present but invalid (null, non-object, or malformed JSON) — cannot verify safety, treated as High risk');
+    return { name: 'MCP safety', weight: 0.2, score: 0, signals, mcpRisk: 'High' };
+  }
+
   // No policy + no .mcp.json at all = MCP not in use, which is the safest possible.
-  const hasMcp = policy != null || fileExists(dir, '.mcp.json');
+  const hasMcp = policyPresent || fileExists(dir, '.mcp.json');
   if (!hasMcp) {
     signals.push('MCP not in use (mode=off — safest)');
     return { name: 'MCP safety', weight: 0.2, score: 100, signals, mcpRisk: 'None' };
@@ -294,6 +323,13 @@ export function buildScorecard(dir: string, generatedAt: string = new Date().toI
     exitCode = 1;
   }
 
+  // Same masking failure mode as the grade cap above, but for the
+  // `releaseReady` badge specifically: `scorePublishReadiness` computes it
+  // from its own dimension alone, so a High MCP risk could otherwise ship a
+  // "Grade C, Release Ready: true" badge pair — still a contradiction, just
+  // one dimension over. `releaseReady` can never be true when MCP risk is High.
+  const releaseReady = publishReadiness.releaseReady && mcpSafety.mcpRisk !== 'High';
+
   // Detect tests: any of __tests__/ tests/ test/.
   const testsDetected = testCoverage.score > 0;
 
@@ -307,7 +343,7 @@ export function buildScorecard(dir: string, generatedAt: string = new Date().toI
     badges: {
       score: overall,
       mcpRisk: mcpSafety.mcpRisk,
-      releaseReady: publishReadiness.releaseReady,
+      releaseReady,
       testsDetected,
       sbom: publishReadiness.sbom,
       witnessSigned: publishReadiness.witnessSigned,
@@ -420,7 +456,13 @@ export async function scoreCmd(args: string[]): Promise<SubcommandResult> {
   // JSON shapes; an unmarked badge blob was silently mis-parsed as the `metaharness score` scorecard
   // (every field defaulting to 0). The metaharness scorecard uses numeric `schema: 1`; this string id
   // is unambiguously distinct so downstream code can refuse the wrong shape instead of guessing.
-  const badgeOutput = { schema: HARNESS_SCORE_SCHEMA, ...sc.badges };
+  //
+  // `grade`/`exitCode` are included alongside the badges (not just implied by the process exit code)
+  // because the badge JSON is a packed artifact a downstream consumer may store or forward on its own
+  // — without these, a High-mcpRisk-but-capped-grade harness has no authoritative field in this shape
+  // distinguishing it from an uncapped one; a consumer reading only the badge blob would have to
+  // re-derive the promotion verdict itself, or miss the cap entirely.
+  const badgeOutput = { schema: HARNESS_SCORE_SCHEMA, grade: sc.grade, exitCode: sc.exitCode, ...sc.badges };
 
   if (outPath) {
     try {
