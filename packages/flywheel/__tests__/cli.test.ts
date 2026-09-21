@@ -6,6 +6,9 @@
 // produces via `Math.round((p.primary / max) * 32)`. This is the one human-facing verb for inspecting an
 // otherwise fully receipt-verified, replay-checked bundle — it should degrade gracefully, not crash.
 import { describe, it, expect } from 'vitest';
+import { writeFileSync, unlinkSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { dispatch } from '../src/cli.js';
 import type { ReplayBundle } from '../src/index.js';
 
@@ -37,14 +40,14 @@ describe('flywheel graph — negative-primary lift points', () => {
         { generation: 1, primary: -8, delta: 8, anchor: null },
       ],
     });
-    const path = `/tmp/dream-cli-test-negative-${process.pid}.json`;
-    await import('node:fs').then((fs) => fs.writeFileSync(path, JSON.stringify(b)));
+    const path = join(tmpdir(), `dream-cli-test-negative-${process.pid}.json`);
+    writeFileSync(path, JSON.stringify(b));
     const r = await dispatch('graph', [path]);
     expect(r.code).toBe(0);
     expect(r.lines.some((l) => l.includes('-16'))).toBe(true);
     // Every rendered bar is empty (0-width) since every point is negative relative to the floor.
     expect(r.lines.some((l) => l.includes('█'))).toBe(false);
-    await import('node:fs').then((fs) => fs.unlinkSync(path));
+    unlinkSync(path);
   });
 
   it('a bundle mixing negative and positive primaries clamps each bar to [0, 32] without crashing', async () => {
@@ -54,8 +57,8 @@ describe('flywheel graph — negative-primary lift points', () => {
         { generation: 1, primary: 20, delta: 24, anchor: null },
       ],
     });
-    const path = `/tmp/dream-cli-test-mixed-${process.pid}.json`;
-    await import('node:fs').then((fs) => fs.writeFileSync(path, JSON.stringify(b)));
+    const path = join(tmpdir(), `dream-cli-test-mixed-${process.pid}.json`);
+    writeFileSync(path, JSON.stringify(b));
     const r = await dispatch('graph', [path]);
     expect(r.code).toBe(0);
     // The negative point renders with no bar; the positive point (== max) renders a full 32-wide bar.
@@ -63,7 +66,7 @@ describe('flywheel graph — negative-primary lift points', () => {
     const posLine = r.lines.find((l) => / 20 /.test(l))!;
     expect(negLine.includes('█')).toBe(false);
     expect((posLine.match(/█/g) ?? []).length).toBe(32);
-    await import('node:fs').then((fs) => fs.unlinkSync(path));
+    unlinkSync(path);
   });
 
   it('unchanged behavior for an all-non-negative bundle (no regression)', async () => {
@@ -73,12 +76,12 @@ describe('flywheel graph — negative-primary lift points', () => {
         { generation: 1, primary: 10, delta: 5, anchor: null },
       ],
     });
-    const path = `/tmp/dream-cli-test-positive-${process.pid}.json`;
-    await import('node:fs').then((fs) => fs.writeFileSync(path, JSON.stringify(b)));
+    const path = join(tmpdir(), `dream-cli-test-positive-${process.pid}.json`);
+    writeFileSync(path, JSON.stringify(b));
     const r = await dispatch('graph', [path]);
     expect(r.code).toBe(0);
     const fullLine = r.lines.find((l) => / 10 /.test(l))!;
     expect((fullLine.match(/█/g) ?? []).length).toBe(32);
-    await import('node:fs').then((fs) => fs.unlinkSync(path));
+    unlinkSync(path);
   });
 });
