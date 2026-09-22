@@ -12,6 +12,22 @@ interface Evaluation {
  */
 export declare function evaluateVariant(variant: HarnessVariant, profile: RepoProfile, cfg: EvolutionConfig, parentScore: ScoreCard | null): Promise<Evaluation>;
 /**
+ * Total bytes of a variant's surface files — a DETERMINISTIC parsimony signal
+ * (mutations change code size). Unlike trace-derived behaviour (which is
+ * surface-independent in the current sandbox), code size genuinely differs
+ * across variants, so it is a non-degenerate secondary objective for Pareto
+ * selection (ADR-100). Returns Infinity if the directory is unreadable.
+ */
+/**
+ * Fraction of `traces` whose combined stdout+stderr is non-empty — the
+ * deterministic ADR-249 traceQuality seam's signal, finally wired to a real
+ * call site. A crashing or silent variant scores lower than one that
+ * produces normal output; unlike
+ * `variantBytes` (which reads a variant's on-disk surface), this reads
+ * already-collected trace data, so it costs nothing extra to compute.
+ */
+export declare function substantiveTraceRatio(traces: RunTrace[]): number;
+/**
  * Among scored records sharing the TOP finalScore, return the most efficient
  * (lowest mean trace wall-clock). Pure: caller supplies the per-variant traces.
  * Returns `null` only when no record is scored. This is the 'faster' tie-break
