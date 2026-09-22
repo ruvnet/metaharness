@@ -85,3 +85,40 @@ describe('flywheel graph — negative-primary lift points', () => {
     unlinkSync(path);
   });
 });
+
+describe('flywheel graph/analyze/replay — shared fail-closed bundle validation (review on #341)', () => {
+  const writeTemp = (name: string, data: unknown): string => {
+    const path = join(tmpdir(), `dream-cli-test-${name}-${process.pid}.json`);
+    writeFileSync(path, JSON.stringify(data));
+    return path;
+  };
+
+  it('graph rejects a bundle with NaN in lift_curve.primary — throws, does not silently render', async () => {
+    const b = bundle({ lift_curve: [{ generation: 0, primary: NaN, delta: 0, anchor: null }] });
+    const path = writeTemp('nan-graph', b);
+    await expect(dispatch('graph', [path])).rejects.toThrow(/invalid ReplayBundle/);
+    unlinkSync(path);
+  });
+
+  it('analyze rejects a bundle with Infinity in verified_improvements — throws, does not report promoted evidence built from it', async () => {
+    const b = bundle({ verified_improvements: Infinity });
+    const path = writeTemp('inf-analyze', b);
+    await expect(dispatch('analyze', [path])).rejects.toThrow(/invalid ReplayBundle/);
+    unlinkSync(path);
+  });
+
+  it('replay rejects a bundle with a string in place of anchor_surviving_improvements', async () => {
+    const path = writeTemp('badtype-replay', { ...bundle(), anchor_surviving_improvements: 'not-a-number' });
+    await expect(dispatch('replay', [path])).rejects.toThrow(/invalid ReplayBundle/);
+    unlinkSync(path);
+  });
+
+  it('all three verbs still accept the same well-formed bundle unchanged (no regression)', async () => {
+    const path = writeTemp('valid-all', bundle());
+    await expect(dispatch('graph', [path])).resolves.toMatchObject({ code: 0 });
+    await expect(dispatch('analyze', [path])).resolves.toMatchObject({ code: 0 });
+    const r = await dispatch('replay', [path]);
+    expect(r.code === 0 || r.code === 1).toBe(true); // replay's ACCEPTANCE can legitimately fail on this minimal fixture; it must not throw
+    unlinkSync(path);
+  });
+});

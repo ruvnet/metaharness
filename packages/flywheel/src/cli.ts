@@ -10,6 +10,7 @@ import { runFlywheelGenerations, type FlywheelConfig } from './run.js';
 import { verifyReplayBundle } from './replay.js';
 import { makeSigner } from './receipts.js';
 import { analyzeBundle, formatAnalysis } from './analyze.js';
+import { validateReplayBundle } from './validate-bundle.js';
 import type { ReplayBundle } from './types.js';
 
 export interface CliResult {
@@ -32,7 +33,15 @@ const USAGE = [
 
 function loadBundle(path?: string): ReplayBundle {
   if (!path) throw new Error('a proof-bundle.json path is required');
-  return JSON.parse(readFileSync(path, 'utf-8')) as ReplayBundle;
+  const raw: unknown = JSON.parse(readFileSync(path, 'utf-8'));
+  // Fail-closed schema/numeric-domain boundary shared by graph/analyze/replay (the only three consumers
+  // of untrusted bundle JSON) — see validate-bundle.ts. A thrown Error here is caught by bin.ts's
+  // existing convention (clean message, process.exitCode = 1), matching the "path is required" check above.
+  const result = validateReplayBundle(raw);
+  if (!result.valid) {
+    throw new Error(`invalid ReplayBundle at ${path}:\n  ${result.errors.join('\n  ')}`);
+  }
+  return raw as ReplayBundle;
 }
 function flag(args: string[], name: string): string | undefined {
   const i = args.indexOf(name);
