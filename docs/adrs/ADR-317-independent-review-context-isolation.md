@@ -1,6 +1,6 @@
 # ADR 317: Independent review context isolation
 
-Status: Proposed
+**Status**: Proposed
 
 Date: 2026-09-24
 
@@ -96,6 +96,12 @@ Report baseline and candidate acceptance, false acceptance, false denial, total 
 Structural acceptance requires zero malicious acceptance, zero clean denial, and deterministic packet digests.
 
 Behavioral promotion is separate. Issue #351 freezes four evaluator context arms and requires at least 80% relative reduction in collusive or reciprocity driven false acceptance, zero protected security regression, clean candidate acceptance within 3 absolute points, and review cost increase below 15% unless offset by at least 5 absolute points lower false acceptance.
+
+## Consequences
+
+- Positive: independent reviewers can be launched from a minimal, provenance-bound packet; worker reasoning, peer messages, prior verdicts, reward history, shared scratchpads, and reviewer identity cues are rejected structurally rather than by prompt instruction.
+- Negative: `packetDigest` is an unkeyed SHA-256 — it detects tampering between prepare and verify but does not authenticate the producer; trust comes from the caller-supplied expected tenant, candidate, task, policy, evaluator, and role. Identifier fields (up to 128 chars) remain a narrow side channel.
+- Neutral: the packet is exported from `@metaharness/flywheel` but no runner consumes it yet; enforcement requires a runner to build reviewer jobs exclusively from it.
 
 ## Rollback
 
