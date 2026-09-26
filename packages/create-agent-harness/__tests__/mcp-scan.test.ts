@@ -109,7 +109,10 @@ describe('scanMcp', () => {
     expect(envSecretGuarded(['Read(./.env.local)'])).toBe(false);
     expect(envSecretGuarded([])).toBe(false);
     expect(envSecretGuarded(['Read(./.env)'])).toBe(true);
-    expect(envSecretGuarded(['Read(./.env.*)'])).toBe(true);
+    // `.env.*` is a glob that requires a dot after "env" — it cannot match the
+    // bare `.env`, so on its own it does not guard the real secrets file.
+    expect(envSecretGuarded(['Read(./.env.*)'])).toBe(false);
+    expect(envSecretGuarded(['Read(./.env)', 'Read(./.env.*)'])).toBe(true);
     expect(envSecretGuarded(['.env'])).toBe(true);
     expect(envSecretGuarded(['**/.env'])).toBe(true);
     // Independent-critic-caught gap: an unrelated file that merely *ends* in
@@ -119,6 +122,48 @@ describe('scanMcp', () => {
     expect(envSecretGuarded(['Read(./secrets.env)'])).toBe(false);
     expect(envSecretGuarded(['Read(./myapp.env)'])).toBe(false);
     expect(envSecretGuarded(['Read(.env)'])).toBe(true);
+  });
+
+  it('evaluates deny rules as Read globs against the root .env, not as substrings', () => {
+    // Shapes that DO block a read of the root .env.
+    for (const rule of ['Read(./.env)', 'Read(.env)', 'Read(**/.env)', 'Read(./.env*)', 'Read(/.env)', 'Read( ./.env )', 'Read(*)', 'Read(**)', 'Read']) {
+      expect(envSecretGuarded([rule]), rule).toBe(true);
+    }
+    // Shapes that mention .env but leave the root .env readable.
+    for (const rule of [
+      'Read(./.env.*)',
+      'Read(**/.env.*)',
+      'Read(./.envrc)',
+      'Read(./.env/**)',
+      'Read(./sub/.env)',
+      'Read(./.ENV)',
+      'Read(./foo.env.bak)',
+      'Edit(./.env)',
+      'Write(./.env)',
+      'Bash(cat ./.env)',
+      'WebFetch(domain:example.com/.env)',
+    ]) {
+      expect(envSecretGuarded([rule]), rule).toBe(false);
+    }
+    expect(envSecretGuarded(undefined)).toBe(false);
+    expect(envSecretGuarded([42, null])).toBe(false);
+  });
+
+  it('every generator template deny list still counts as guarding .env (zero regression)', async () => {
+    const { readdir, readFile } = await import('node:fs/promises');
+    const tdir = join(__dirname, '..', 'templates');
+    const found: string[] = [];
+    for (const t of await readdir(tdir)) {
+      const p = join(tdir, t, '.claude', 'settings.json.tmpl');
+      let raw: string;
+      try { raw = await readFile(p, 'utf8'); } catch { continue; }
+      const deny = (raw.match(/"deny"\s*:\s*\[[^\]]*\]/)?.[0] ?? '').match(/"[^"]*"/g)?.slice(1).map((s) => JSON.parse(s)) ?? [];
+      if (deny.some((d: string) => d.includes('.env'))) {
+        found.push(t);
+        expect(envSecretGuarded(deny), t).toBe(true);
+      }
+    }
+    expect(found.length).toBeGreaterThan(5);
   });
 
   it('reports nothing to scan when MCP is absent', async () => {

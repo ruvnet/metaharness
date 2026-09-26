@@ -170,4 +170,16 @@ describe('buildThreatModel — mcpInUse / scanMcp detection-surface consistency'
     expect(tm.verdict).toBe('high');
     expect(tm.exitCode).toBe(2);
   });
+
+  it('secretsReachable stays true when .env is only covered by non-Read rules or a .env.*-only glob', async () => {
+    const dir = await makeHarness({
+      policy: { defaultDeny: true, auditLog: true, requireApprovalForDangerous: true, toolTimeoutMs: 30000, maxToolCallsPerTurn: 8 },
+      allow: ['Read(*)'],
+      deny: ['Read(./.env.*)', 'Edit(./.env)', 'Bash(cat ./.env)', 'Read(./config/.env)'],
+      servers: { bot: { command: 'npx' } },
+    });
+    const tm = buildThreatModel(dir);
+    expect(tm.secretsReachable).toBe(true);
+    expect(tm.exitCode).toBe(2);
+  });
 });

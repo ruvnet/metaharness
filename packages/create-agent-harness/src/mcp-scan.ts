@@ -160,37 +160,81 @@ export function scanMcp(dir: string): ScanReport {
   return { dir: root, mcpEnabled: true, findings, worst: worstOf(findings) };
 }
 
-// A deny rule guards the real secrets file only if it actually covers a bare
-// `.env` (or a `.env.*` wildcard) — not merely if some deny entry contains
+// A deny rule guards the real secrets file only if it actually covers the
+// bare root `.env` — not merely if some deny entry contains
 // the substring ".env" anywhere. `Read(./.env.example)` denies only the
 // harmless, commonly-committed template file; it does nothing to block the
 // real `.env`/`.env.local` a tool could still read via a broad `Read(*)`
 // grant. The unanchored `/\.env/` substring test used to treat any such
-// entry as sufficient, producing a false "guarded" verdict — checked here
-// against the two shapes the generator actually emits (`Read(./.env)`,
-// `Read(./.env.*)`) plus bare `.env`/`.env.*` for hand-edited configs.
+// entry as sufficient, producing a false "guarded" verdict.
 //
 // Deliberately conservative on the other side too: a deny rule scoped to
 // exactly one suffixed variant (e.g. `Read(./.env.local)` alone, with no
-// `.env` or `.env.*`) does NOT count as guarded either. This scanner has no
+// rule covering the bare `.env`) does NOT count as guarded either. This scanner has no
 // way to know which `.env*` variant a given harness actually keeps secrets
 // in, so a narrower, unverifiable guard is treated the same as no guard —
 // matching this checker's existing bias elsewhere (e.g. `no-audit-log`,
 // `no-call-budget`) toward flagging an unproven-safe posture rather than
 // assuming the best case.
 //
-// Left-anchored on purpose (independent-critic-caught gap): checking only
-// what follows ".env" let an unrelated file that merely *ends* in ".env" —
-// `Read(./secrets.env)`, `Read(./myapp.env)` — count as guarding the real
-// harness `.env`, reproducing a narrower version of the same false-"guarded"
-// bug this fix closes. Requiring `.env` to start at a path/string boundary
-// (start-of-string, `/`, or `(`) rules those out while still matching every
-// real shape: `.env`, `Read(.env)`, `Read(./.env)`, `**/.env`.
-const ENV_GUARD_RE = /(?:^|[(/])\.env(?:$|[)/*]|\.\*)/;
+// Evaluated as a rule, not as a substring (a boundary-anchored regex still
+// accepted `Read(./sub/.env)`, `Read(./.env/**)`, `Edit(./.env)`,
+// `Bash(cat ./.env)` and a `Read(./.env.*)`-only list — none of which stops a
+// read of the root `.env`):
+//   * Only `Read` rules count (plus a bare path or a bare `Read`, which denies
+//     every read). Claude Code applies Read deny rules to its file-reading
+//     tools; Edit/Write/Bash/WebFetch deny rules do not stop a Read of `.env`.
+//   * The rule's specifier is a gitignore-style glob, matched against `.env`
+//     after stripping a leading `./` (or one project-relative `/`). `.env`,
+//     `**/.env`, `.env*`, `*` and `**` match; `.env.*` does NOT (the glob
+//     requires a dot after "env"), nor do `.env.example`, `secrets.env`,
+//     `.envrc`, `sub/.env` or `.env/**`.
+// The generator always emits `Read(./.env)` next to `Read(./.env.*)`, so
+// requiring coverage of the bare file changes no generated harness's verdict.
+// Case-sensitive and whitespace-tolerant inside the parentheses; an
+// unrecognised rule shape counts as no guard (fail toward flagging).
+const READ_RULE_RE = /^\s*(?:(Read)\s*(?:\((.*)\))?|([^()]*))\s*$/s;
+
+function globToRegExp(glob: string): RegExp {
+  let re = '';
+  for (let i = 0; i < glob.length; i++) {
+    const c = glob[i];
+    if (c === '*' && glob[i + 1] === '*') {
+      if (glob[i + 2] === '/') {
+        re += '(?:.*/)?';
+        i += 2;
+      } else {
+        re += '.*';
+        i += 1;
+      }
+    } else if (c === '*') {
+      re += '[^/]*';
+    } else if (c === '?') {
+      re += '[^/]';
+    } else {
+      re += c.replace(/[.+^${}()|[\]\\]/g, '\\$&');
+    }
+  }
+  return new RegExp(`^${re}$`);
+}
+
+/** True if this single `permissions.deny` rule would block reading the root `.env`. */
+export function denyRuleBlocksEnvRead(rule: unknown): boolean {
+  if (typeof rule !== 'string') return false;
+  const m = READ_RULE_RE.exec(rule);
+  if (!m) return false;
+  const [, readTool, readSpec, barePath] = m;
+  if (readTool && readSpec === undefined) return true; // bare `Read` denies all reads
+  let path = (readTool ? readSpec : barePath ?? '').trim();
+  if (!path) return false;
+  if (path.startsWith('./')) path = path.slice(2);
+  else if (path.startsWith('/') && !path.startsWith('//')) path = path.slice(1);
+  return globToRegExp(path).test('.env');
+}
 
 /** True if `deny` contains a rule that would actually block reading `.env`. */
-export function envSecretGuarded(deny: string[]): boolean {
-  return deny.some((d) => ENV_GUARD_RE.test(d));
+export function envSecretGuarded(deny: unknown): boolean {
+  return Array.isArray(deny) && deny.some(denyRuleBlocksEnvRead);
 }
 
 function worstOf(findings: Finding[]): Severity {
