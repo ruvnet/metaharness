@@ -191,4 +191,33 @@ describe('@metaharness/host-codex — TOML generation', () => {
       expect(Object.keys(out)).not.toContain('AGENTS.md');
     });
   });
+
+  // #300 follow-up: quoted values must survive verbatim; control chars must not break TOML.
+  describe('quoting fidelity + control characters', () => {
+    it('mcpAddCommands preserves whitespace inside quoted values (no post-hoc collapse)', () => {
+      const [line] = mcpAddCommands({
+        name: 'x',
+        mcpServers: [{ name: 'demo', command: ['sh', '-c', 'echo  two  spaces'], env: [['K', 'a\tb  c']] }],
+      } as any);
+      expect(line).toContain("'echo  two  spaces'");
+      expect(line).toContain("'K=a\tb  c'");
+      expect(line).toBe("codex mcp add --env 'K=a\tb  c' 'demo' -- 'sh' '-c' 'echo  two  spaces'");
+    });
+
+    it('mcpAddCommands without env has no double spaces', () => {
+      const [line] = mcpAddCommands({ name: 'x', mcpServers: [{ name: 'r', url: 'https://x' }] } as any);
+      expect(line).toBe("codex mcp add 'r' --url 'https://x'");
+    });
+
+    it('tomlEscape encodes remaining C0 controls and DEL as \\uXXXX', () => {
+      expect(tomlEscape('a\u0000b\u0008c\u001bd\u007fe')).toBe('a\\u0000b\\u0008c\\u001Bd\\u007Fe');
+      // eslint-disable-next-line no-control-regex
+      expect(/[\u0000-\u0008\u000B-\u001F\u007F]/.test(serverToToml({ name: 'n\u0001', url: 'https://x\u0002', env: [['K\u0003', 'v\u0004']] } as any))).toBe(false);
+    });
+
+    it('a triple-quote / newline payload stays inside one basic string', () => {
+      const toml = serverToToml({ name: 'demo', url: 'https://x"""\n[evil]\nk = 1' } as any);
+      expect(toml.split('\n').some(l => l.trim() === '[evil]')).toBe(false);
+    });
+  });
 });

@@ -5,7 +5,7 @@ import { execSync } from 'node:child_process';
 import { existsSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { settingsFor, mcpAddCommands, hookHandlerFor, claudeMd, agentMarkdown, adapter } from '../src/index.js';
+import { settingsFor, mcpAddCommands, hookHandlerFor, claudeMd, agentMarkdown, agentFileName, adapter } from '../src/index.js';
 
 describe('@metaharness/host-claude-code', () => {
   describe('settingsFor', () => {
@@ -197,6 +197,53 @@ describe('@metaharness/host-claude-code', () => {
       const out = adapter.generateConfig!({ name: 'bare' } as any);
       expect(Object.keys(out)).not.toContain('CLAUDE.md');
       expect(Object.keys(out).some(k => k.startsWith('.claude/agents/'))).toBe(false);
+    });
+  });
+
+  // #300 follow-up: two remaining interpolation sinks in this adapter.
+  describe('command-hook helper name + agent file name hardening', () => {
+    it.each([
+      'x; touch /tmp/pwned',
+      'x$(id)',
+      'x`id`',
+      'a b',
+      'x\ntouch /tmp/pwned',
+      '../../../tmp/evil',
+      'sub/dir',
+      '..',
+    ])('hookHandlerFor refuses unsafe helper name %j', bad => {
+      expect(() => hookHandlerFor(bad)).toThrow(/Invalid hook helper name/);
+    });
+
+    it('hookHandlerFor keeps ordinary helper names unchanged', () => {
+      expect(hookHandlerFor('pre-bash')).toEqual({ type: 'command', command: 'node .claude/helpers/pre-bash.cjs' });
+      expect(hookHandlerFor('block_rm.v2')).toEqual({ type: 'command', command: 'node .claude/helpers/block_rm.v2.cjs' });
+    });
+
+    it('settingsFor fails closed on an injectable hook handler', () => {
+      expect(() => settingsFor({ name: 'x', hooks: [{ event: 'PreToolUse', handler: 'a;rm -rf ~' }] } as any)).toThrow();
+    });
+
+    it('agentFileName neutralises separators and dot-dot', () => {
+      expect(agentFileName('reviewer')).toBe('reviewer');
+      expect(agentFileName('code-review')).toBe('code-review');
+      expect(agentFileName('../../etc/evil')).not.toMatch(/[\\/]|^\./);
+      expect(agentFileName('..')).toBe('_');
+      expect(agentFileName('a\\b')).toBe('a-b');
+      expect(agentFileName('')).toBe('agent');
+    });
+
+    it('generateConfig never emits an agent path outside .claude/agents/', () => {
+      const out = adapter.generateConfig!({
+        name: 'demo',
+        agents: [{ name: '../../../evil' }, { name: 'a/b' }, { name: '..' }],
+      } as any);
+      for (const k of Object.keys(out).filter(k => k.startsWith('.claude/agents/'))) {
+        const rest = k.slice('.claude/agents/'.length);
+        expect(rest).not.toMatch(/[\\/]/);
+        expect(rest.startsWith('.')).toBe(false);
+      }
+      expect(Object.keys(out).some(k => k.split('/').includes('..'))).toBe(false);
     });
   });
 });

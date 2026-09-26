@@ -49,7 +49,11 @@ export function tomlEscape(s: string): string {
     .replace(/"/g, '\\"')
     .replace(/\n/g, '\\n')
     .replace(/\r/g, '\\r')
-    .replace(/\t/g, '\\t');
+    .replace(/\t/g, '\\t')
+    // Every other control char (U+0000-U+001F, U+007F) is illegal raw inside a
+    // TOML basic string — emit it as a \uXXXX escape so the document still parses.
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, c => `\\u${c.charCodeAt(0).toString(16).toUpperCase().padStart(4, '0')}`);
 }
 
 /** TOML bare-key charset per the TOML spec: `[A-Za-z0-9_-]+`. */
@@ -123,13 +127,14 @@ function commentSafe(s: string): string {
  */
 export function mcpAddCommands(spec: HarnessSpec): string[] {
   return (spec.mcpServers ?? []).map(s => {
-    const env = (s.env ?? []).map(([k, v]) => `--env ${shellQuote(`${k}=${v}`)}`).join(' ');
+    // Build as an argv list and join once: a whitespace-collapsing regex over
+    // the finished line would also rewrite whitespace *inside* quoted values.
+    const env = (s.env ?? []).flatMap(([k, v]) => ['--env', shellQuote(`${k}=${v}`)]);
     if (s.command) {
-      const cmd = s.command.map(shellQuote).join(' ');
-      return `codex mcp add ${env} ${shellQuote(s.name)} -- ${cmd}`.replace(/\s+/g, ' ').trim();
+      return ['codex', 'mcp', 'add', ...env, shellQuote(s.name), '--', ...s.command.map(shellQuote)].join(' ');
     }
     if (s.url) {
-      return `codex mcp add ${env} ${shellQuote(s.name)} --url ${shellQuote(s.url)}`.replace(/\s+/g, ' ').trim();
+      return ['codex', 'mcp', 'add', ...env, shellQuote(s.name), '--url', shellQuote(s.url)].join(' ');
     }
     return `# (skipped: ${commentSafe(s.name)} has neither command nor url)`;
   });

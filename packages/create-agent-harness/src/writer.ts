@@ -26,8 +26,31 @@ import type { RenderedFile } from './walker.js';
 function assertWithinRoot(root: string, dst: string, originalPath: string): void {
   const rel = relative(root, dst);
   const firstSegment = rel.split(/[\\/]/)[0];
-  if (firstSegment === '..' || isAbsolute(rel)) {
+  if (rel === '' || firstSegment === '..' || isAbsolute(rel)) {
     throw new Error(`Refusing to write outside the target directory: ${originalPath}`);
+  }
+}
+
+/**
+ * Lexical validation of a RenderedFile.path before it is joined. The
+ * containment check above is the backstop; this rejects every shape that is
+ * not a plain posix-relative path up front, so behaviour is identical on
+ * POSIX and Windows: empty paths, NUL bytes, backslashes (a separator on
+ * Windows, a literal filename char on POSIX), absolute paths (`/x`, `C:x`,
+ * `\\server\share`), and any `.`/`..` segment — even one that would
+ * normalize back inside the root (`a/../b`) — or empty segment (`a//b`).
+ */
+function assertSafeRelativePath(p: string): void {
+  const bad =
+    typeof p !== 'string' ||
+    p.length === 0 ||
+    p.includes('\0') ||
+    p.includes('\\') ||
+    p.startsWith('/') ||
+    /^[A-Za-z]:/.test(p) ||
+    p.split('/').some(seg => seg === '' || seg === '.' || seg === '..');
+  if (bad) {
+    throw new Error(`Refusing to write outside the target directory: ${JSON.stringify(p)} is not a safe relative path`);
   }
 }
 
@@ -62,6 +85,7 @@ export async function writeAtomic(
 
   try {
     for (const f of files) {
+      assertSafeRelativePath(f.path);
       const dst = join(staging, ...f.path.split('/'));
       assertWithinRoot(staging, dst, f.path);
       await mkdir(dirname(dst), { recursive: true });

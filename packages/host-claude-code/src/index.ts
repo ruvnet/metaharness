@@ -66,7 +66,28 @@ export function hookHandlerFor(handler: string): ClaudeHookHandler {
   if (handler.startsWith('agent:')) {
     return { type: 'agent', agentType: handler.slice(6) };
   }
+  // The helper name is interpolated into a shell command line Claude Code
+  // executes on every matching hook event, so it must be a plain file-name
+  // token: no shell metacharacters (`;`, `$(...)`, backticks, spaces,
+  // newlines) and no path separators / `..` that would run a script outside
+  // .claude/helpers/. Fail closed rather than emit an injectable command.
+  if (!HELPER_NAME.test(handler) || handler.includes('..')) {
+    throw new Error(`Invalid hook helper name ${JSON.stringify(handler)}: expected [A-Za-z0-9_.-]+`);
+  }
   return { type: 'command', command: `node .claude/helpers/${handler}.cjs` };
+}
+
+const HELPER_NAME = /^[A-Za-z0-9_][A-Za-z0-9_.-]*$/;
+
+/**
+ * File-name-safe form of an agent name for `.claude/agents/<name>.md`. The
+ * raw name previously became a path segment verbatim, so `../../x` (or a
+ * name containing `/` or `\\`) addressed a file outside `.claude/agents/`.
+ * Ordinary names (`reviewer`, `code-review`) are unchanged.
+ */
+export function agentFileName(name: string): string {
+  const cleaned = name.replace(/[^A-Za-z0-9_.-]/g, '-').replace(/^\.+/, '_');
+  return cleaned.length > 0 ? cleaned : 'agent';
 }
 
 /**
@@ -190,7 +211,7 @@ export const adapter: HostAdapter = {
     // ADR-044: emit CLAUDE.md (system prompt) + one subagent file per agent.
     if (spec.systemPrompt || spec.description) out['CLAUDE.md'] = claudeMd(spec);
     for (const a of spec.agents ?? []) {
-      out[`.claude/agents/${a.name}.md`] = agentMarkdown(a);
+      out[`.claude/agents/${agentFileName(a.name)}.md`] = agentMarkdown(a);
     }
     return out;
   },
