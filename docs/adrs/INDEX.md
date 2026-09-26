@@ -336,6 +336,12 @@ ADR-006 (memory + learning) and ADR-008 (drift detection) cut across all phases.
 | [ADR-277](./ADR-277-autogenous-metaharness-adapter.md) | Autogenous governed MetaHarness adapter | Accepted (implemented) | Ships `@metaharness/autogenous`: a flywheel adapter for Autogenous radio-moe that exposes only five bounded policy levers, freezes security gates and `sameAccuracyBand`, injects the real benchmark, and promotes only `Better AND Safe AND Authorized AND Reversible`. |
 | [ADR-278](./ADR-278-darwin-tier2-sandbox-gate-closure.md) | Closing the Tier-2 `agent` sandbox's missing ADR-071 safety gate | Accepted (implemented) | `tier2-sandbox.ts` never called `inspectVariant` before executing a variant's real surface code — disclosed but left open in ADR-273. Now gates first, matching `sandbox.ts`/`llm-agent-sandbox.ts`; non-vacuous proof (a real side-effect marker file) confirms the bypass was real and is now closed. |
 
+## Review independence
+
+| ADR | Title | Status | Summary |
+|-----|-------|--------|---------|
+| [ADR-317](./ADR-317-independent-review-context-isolation.md) | Independent review context isolation | Proposed | `@metaharness/flywheel` `review-context` builds provenance-bound reviewer packets that exclude worker reasoning, peer messages, prior verdicts, reward history, shared scratchpads, and reviewer identity cues; the packet digest detects tampering but is unkeyed, and no runner enforces it yet. |
+
 ## Conventions used across the series
 
 - **"Kernel"** = `@metaharness/kernel`, the package extracted from ruflo that contains primitives a harness needs regardless of identity or content (MCP wiring, hooks runtime, memory bridge, routing). Defined in ADR-002.
