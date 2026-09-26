@@ -158,6 +158,20 @@ export interface EvolutionConfig {
    * contract, honoured one level up).
    */
   costBudgetBytes?: number;
+  /**
+   * ADR-249 traceQuality seam, wired here. When true, `evaluateVariant`
+   * computes the fraction of this variant's traces with non-empty combined
+   * stdout+stderr and passes it through `scoreVariant`'s opt-in
+   * `signals.traceQuality` seam, so a silent (no-output) variant scores lower
+   * than one that runs normally. Without this, `traceQuality`'s 0.15-weight
+   * term falls back to the pre-seam byte-cap heuristic, which is a CONSTANT
+   * 0.9 in the default 'real' sandbox mode (real test-command traces are
+   * always far under the 4MB cap), so it never actually distinguishes
+   * variants. Omit for byte-identical pre-seam scoring (ADR-249's
+   * zero-cost-adoption contract, honoured one level up, same as
+   * `costBudgetBytes`).
+   */
+  traceQualityFromOutput?: boolean;
   /** Deterministic seed for mutation selection (reproducibility). Default 0. */
   seed?: number;
   /**

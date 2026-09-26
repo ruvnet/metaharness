@@ -103,10 +103,32 @@ export async function evaluateVariant(variant, profile, cfg, parentScore) {
     // ADR-249 cost seam, wired here: when a byte budget is configured, feed the
     // same deterministic `variantBytes` parsimony signal already used by
     // 'pareto' selection into `scoreVariant`'s opt-in `signals.cost`. Omitted
-    // `costBudgetBytes` ⇒ `signals` stays undefined ⇒ byte-identical scoring to
-    // before this change (verified in evolve.test.ts).
-    const signals = cfg.costBudgetBytes !== undefined
-        ? { cost: { units: variantBytes(variant.dir), budgetUnits: cfg.costBudgetBytes } }
+    // `costBudgetBytes` ⇒ that half of `signals` stays undefined ⇒ byte-identical
+    // scoring to before this change (verified in evolve.test.ts).
+    //
+    // ADR-249 traceQuality seam, wired here (previously defined in ScoreSignals
+    // and exhaustively unit-tested in scorer-signals.test.ts, but never fed by
+    // any real call site — the pre-seam byte-cap heuristic is a CONSTANT 0.9 in
+    // the default 'real' sandbox mode, since a repo test command's combined
+    // stdout+stderr is always far under the 4MB cap, so the 0.15-weight
+    // traceQuality term never actually distinguished variants). When opted in
+    // via `traceQualityFromOutput`, feed the fraction of this variant's traces
+    // with non-empty combined stdout+stderr — a variant whose runs produce
+    // nothing scores lower than one that runs normally. This is deliberately
+    // orthogonal to `safetyScore` (blockedActions) and the `toolLoop` penalty
+    // (timedOut/disqualified exit code): it measures output substantiveness,
+    // not safety or timeout, so it never double-penalizes the same trace
+    // property under a different name. Omitted `traceQualityFromOutput` ⇒ that
+    // half of `signals` stays undefined ⇒ byte-identical pre-seam heuristic
+    // (verified in evolve.test.ts).
+    const costSignal = cfg.costBudgetBytes !== undefined
+        ? { units: variantBytes(variant.dir), budgetUnits: cfg.costBudgetBytes }
+        : undefined;
+    const traceQualitySignal = cfg.traceQualityFromOutput
+        ? substantiveTraceRatio(traces)
+        : undefined;
+    const signals = costSignal !== undefined || traceQualitySignal !== undefined
+        ? { cost: costSignal, traceQuality: traceQualitySignal }
         : undefined;
     const score = scoreVariant(variant.id, traces, parentScore, cfg.promotionDelta, timeout, signals);
     return { variant, traces, score };
@@ -114,6 +136,20 @@ export async function evaluateVariant(variant, profile, cfg, parentScore) {
 /** Cost proxy for the breaker: cumulative variant-seconds in a generation. */
 function traceSeconds(traces) {
     return traces.reduce((s, t) => s + t.durationMs, 0) / 1000;
+}
+/**
+ * Fraction of `traces` whose combined stdout+stderr is non-empty — the
+ * deterministic ADR-249 traceQuality seam's signal, finally wired to a real
+ * call site. A variant whose runs produce no output at all scores lower than
+ * one that produces normal output (a crash that prints a stack trace still
+ * counts as output). Unlike `variantBytes` (which reads a variant's on-disk surface), this reads
+ * already-collected trace data, so it costs nothing extra to compute.
+ */
+export function substantiveTraceRatio(traces) {
+    if (traces.length === 0)
+        return 0;
+    const substantive = traces.filter((t) => t.stdout.length + t.stderr.length > 0).length;
+    return substantive / traces.length;
 }
 /**
  * Total bytes of a variant's surface files — a DETERMINISTIC parsimony signal
