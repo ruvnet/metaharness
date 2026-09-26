@@ -25,7 +25,7 @@
 
 import { existsSync, statSync, writeFileSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { scanMcp, type Severity } from './mcp-scan.js';
+import { scanMcp, envSecretGuarded, type Severity } from './mcp-scan.js';
 import { redactSecretsDeep } from './redact.js';
 
 export type SubcommandResult = { code: number; lines: string[] };
@@ -88,8 +88,12 @@ export function buildThreatModel(dir: string, generatedAt: string = new Date().t
   const fileWrite = policy?.allowFileWrite === true;
   // "Secrets reachable" = there is no .env-blocking deny rule AND tools have
   // some non-trivial read permission. Conservative: true if allow has any
-  // Read(*) rule and deny doesn't block .env.
-  const guardsEnv = deny.some((d) => /\.env/.test(d));
+  // Read(*) rule and deny doesn't block .env. `envSecretGuarded` (mcp-scan.ts)
+  // is the single source of truth for what actually counts as guarding —
+  // reused here rather than re-implemented so this file cannot drift back
+  // into the unanchored-substring false negative mcp-scan.ts itself once had
+  // (a `Read(./.env.example)`-only deny rule guards nothing real).
+  const guardsEnv = envSecretGuarded(deny);
   const hasReadAllow = allow.some((a) => /^Read/.test(a));
   const secretsReachable = mcpInUse && !guardsEnv && hasReadAllow;
 
