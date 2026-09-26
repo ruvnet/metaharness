@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/host-copilot",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "GitHub Copilot (VSCode) host adapter for agent-harness-generator. Emits .vscode/mcp.json for the Copilot MCP client (ADR-032).",
   "homepage": "https://github.com/ruvnet/agent-harness-generator",
   "repository": {

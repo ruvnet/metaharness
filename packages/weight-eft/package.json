@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/weight-eft",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Fine-tune cheap open-source LLMs (GLM, Qwen, DeepSeek) on your AI coding agent's successful runs with LoRA (SFT + DPO) so your model cascade escalates to expensive frontier models (GPT, Claude) less often — cutting cost-per-resolved. Turns run history into portable training data (OpenAI/TRL/axolotl JSONL) with a built-in contamination guard and reward-hacking filter.",
   "type": "module",
   "main": "./dist/index.js",
