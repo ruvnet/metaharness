@@ -32,15 +32,9 @@
 // a candidate win against a baseline loss multiplies the e-value up, the
 // reverse multiplies it down, and ties leave it unchanged.
 
-import type { PromotionDecision, PromotionEvidence, PromotionRule } from './types.js';
+import type { PairedOutcome, PromotionDecision, PromotionEvidence, PromotionRule, Score } from './types.js';
 
-/** Per-item paired outcome: did candidate and baseline each succeed? */
-export interface PairedOutcome {
-  /** Suite item id. Pairing is by item — comparing unpaired sets is a different, weaker test. */
-  itemId: string;
-  candidateWon: boolean;
-  baselineWon: boolean;
-}
+export type { PairedOutcome } from './types.js';
 
 export interface SequentialConfig {
   /**
@@ -68,6 +62,24 @@ export interface SequentialVerdict {
 
 const DEFAULT_ALPHA = 0.05;
 const DEFAULT_LAMBDA = 0.5;
+
+/** Reconstructs the per-item pairing `sequentialEvidence`/`withSequentialEvidence` need from two Scores
+ *  that each carry a same-length {@link Score.itemWins} vector evaluated over the SAME suite. Returns
+ *  `undefined` when either side omits it, the vectors are empty, or the lengths disagree — the caller then simply omits
+ *  `pairedOutcomes`, and any sequential-evidence rule degrades to its base rule (see
+ *  `withSequentialEvidence`'s own degrade-safe contract). Shared by the LIVE promotion loop (`run.ts`) and
+ *  independent replay's gate re-execution (`replay.ts`, ADR-235) so a sequential-gated promotion is
+ *  re-verified with the SAME evidence it was live-gated with, instead of replay silently re-running only
+ *  the wrapped base rule. */
+export function pairedOutcomesFromItemWins(baseline: Score, candidate: Score): PairedOutcome[] | undefined {
+  const bw = baseline.itemWins;
+  const cw = candidate.itemWins;
+  // An empty pairing (a zero-item suite, or `itemWins: []` on both sides) carries no per-item evidence;
+  // returning `[]` would make `withSequentialEvidence` evaluate zero pairs (eValue 1 < threshold) and
+  // reject every candidate. Treat it as "no pairing" so the rule degrades to its base rule.
+  if (!bw || !cw || bw.length === 0 || bw.length !== cw.length) return undefined;
+  return bw.map((baselineWon, i) => ({ itemId: String(i), candidateWon: cw[i]!, baselineWon }));
+}
 
 /**
  * Accumulate paired outcomes into an anytime-valid e-value.
@@ -115,10 +127,37 @@ export function sequentialEvidence(
  * clause of `baseRule`, and evidence strong enough to survive having been
  * looked at repeatedly.
  *
- * Paired outcomes are read from `evidence.pairedOutcomes` when present. When
- * absent the rule degrades to `baseRule` alone rather than silently blocking
- * every promotion — a caller that has not wired up per-item outcomes yet should
+ * Paired outcomes are read from `evidence.pairedOutcomes` when present AND
+ * non-empty (see {@link PromotionEvidence.pairedOutcomes} —
+ * `runFlywheelGenerations` populates it automatically when the Evaluator
+ * sets `Score.itemWins` on both sides). When absent OR an empty array, the
+ * rule degrades to `baseRule` alone rather than silently blocking every
+ * promotion — a caller that has not wired up per-item outcomes yet should
  * get the old behavior, not a permanently closed gate.
+ *
+ * This distinction matters because JS callers commonly default an optional
+ * array field with `?? []` rather than leaving it `undefined` — e.g. an
+ * `Evaluator` that does not (yet) populate per-item results, or one backed
+ * by a suite that happens to have zero items this run. `!outcomes` alone
+ * does not catch that: `![]` is `false` (an empty array is truthy in JS),
+ * so a caller supplying `pairedOutcomes: []` fell through to
+ * `sequentialEvidence([], …)`, which starts at `eValue = 1` with zero
+ * informative pairs and can never reach the significance threshold —
+ * permanently rejecting every candidate on that call site regardless of how
+ * strong the base rule's own evidence is, exactly the "permanently closed
+ * gate" this function's contract says it must not become. An empty array
+ * carries the same "no per-item evidence supplied" meaning as `undefined`
+ * here and is treated identically; it is NOT the same as a non-empty array
+ * whose pairs all happen to be concordant (real data was supplied and found
+ * uninformative) — that case is unchanged and still correctly rejects for
+ * insufficient evidence, since data WAS in fact provided and evaluated.
+ *
+ * `pairedOutcomesFromItemWins` (above) already guards the same empty-vector
+ * case at the point evidence is PRODUCED (both call sites: `run.ts`'s live
+ * loop and `replay.ts`'s gate re-execution), so a caller going through it
+ * never reaches this function with `pairedOutcomes: []` in the first place.
+ * This check stays here too, defense-in-depth, for any caller that builds
+ * `PromotionEvidence.pairedOutcomes` some other way.
  */
 export function withSequentialEvidence(
   baseRule: PromotionRule,
@@ -126,10 +165,9 @@ export function withSequentialEvidence(
 ): PromotionRule {
   return function sequentialPromotionRule(evidence: PromotionEvidence): PromotionDecision {
     const base = baseRule(evidence);
-    const outcomes = (evidence as PromotionEvidence & { pairedOutcomes?: PairedOutcome[] })
-      .pairedOutcomes;
+    const outcomes = evidence.pairedOutcomes;
 
-    if (!outcomes) return base;
+    if (!outcomes || outcomes.length === 0) return base;
 
     const verdict = sequentialEvidence(outcomes, config);
     if (verdict.significant) return base;

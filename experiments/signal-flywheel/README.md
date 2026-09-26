@@ -35,7 +35,7 @@ seeded; no `Date.now()`/`Math.random()` anywhere in a measured path).
 ## Result (committed `bundle.json`)
 
 - **Generations run:** 8 (32 candidates: 4 levers × 8 generations)
-- **Promotions:** 2, **both anchor-surviving** → `milestone_reached: true`
+- **Promotions:** 4, **all anchor-surviving** → `milestone_reached: true`
 - **Replay verification:** **PASS** (all six checks, including ADR-235 gate
   re-execution on the sealed scores through the library-default rule, and a
   gate-fingerprint match proving the DEFAULT gate decided every promotion)
@@ -48,35 +48,41 @@ suite the wheel never optimizes against):
 | 0   | (root: 0/scatter/shallow/off) | 0.330911 | —    | 0.330580 | 1.000000 | — (0 wins) |
 | 1   | `toolOrder → grounded`   | 0.330967 | +0.000056 | 0.332837 | 0.416667 | — (0 wins) |
 | 2   | `contextDepth → deep`    | 0.897456 | +0.566489 | 0.627526 | 0.000000 | 7.636364   |
+| 3   | `retryLimit → 1`         | 0.944356 | +0.046900 | 0.931884 | 0.000000 | 7.583333   |
+| 4   | `batchMode → on`         | 0.972386 | +0.028030 | 0.944352 | 0.000000 | 5.460000   |
 
-Root → final primary: **0.330911 → 0.897456 (×2.712077)**; final policy
-`{retryLimit: 0, toolOrder: grounded, contextDepth: deep, batchMode: off}`.
+Root → final primary: **0.330911 → 0.972386 (×2.938512)**; final policy
+`{retryLimit: 1, toolOrder: grounded, contextDepth: deep, batchMode: on}`.
 The gen-2 win **compounds on** gen-1 (deep context only pays off because the
-grounded tool order is already in place — `deep` under `scatter` was rejected
-at gen-3 with all three score clauses failing).
+grounded tool order is already in place).
 
 The gate's rejections are the other half of the demonstration:
 
 - **The cost seam produced a real rejection:** gen-1 `retryLimit → 1` doubled
   units (36 → 72, over the 66-unit budget) without buying a win, so the seam
-  dropped `costEfficiency` to 0.916667 and `primary` **fell** below baseline →
-  `primary_regressed`. Cost pressure flowed from the seam through the frozen
-  gate, exactly as ADR-249 intends.
+  dropped `costEfficiency` and `primary` **fell** below baseline →
+  `primary_regressed`.
 - **The no-op clause is load-bearing, both ways:** gen-1's promotion was earned
   almost entirely on `noopRate` (1.0 → 0.416667; the primary delta was
-  +0.000056). And once `noopRate` hit 0, the default gate's *strict* improvement
-  clause correctly refused **every** later candidate — including
-  `retryLimit → 1` at primary 0.950695 (gens 3–8, `noop_rate_not_improved`).
-  A higher score alone does not buy a promotion under this gate; that is the
-  documented design ("a policy earns a promotion by making the executor COMMIT
-  more"), reported here as-is rather than worked around with a custom rule.
-- 30 of 32 candidates were rejected (rejection-reason counts:
-  `noop_rate_not_improved` 28, `primary_regressed` 20, `cost_per_win_worsened`
-  12; conjunctive, so one candidate can carry several; one rejected candidate —
-  gen-2 `retryLimit → 2`, primary 0.667387 — actually passed every gate clause
-  but lost winner selection to the higher-primary `contextDepth → deep`).
-  `batchMode → on` never promoted: it cuts cost 28% but does not reduce
-  no-ops — a cost-only win is not a promotion under this gate.
+  +0.000056). Once `noopRate` hit its floor of 0 at gen-2, a candidate that
+  ties it at 0 may still be promoted, but only on a strict gain elsewhere
+  (higher `primary` or lower `costPerWin`) — gens 3 and 4 were promoted that
+  way, and 12 zero-lift ties at the floor were rejected
+  (`no_improvement_at_noop_floor`).
+- 28 of 32 candidates were rejected (rejection-reason counts:
+  `primary_regressed` 23, `cost_per_win_worsened` 19,
+  `no_improvement_at_noop_floor` 12, `noop_rate_not_improved` 11;
+  conjunctive, so one candidate can carry several; two rejected candidates
+  passed every gate clause but lost winner selection to a higher-primary
+  sibling).
+
+**History:** the first committed run (before #306/#307) showed only 2
+promotions: once `noopRate` reached 0, the old strict `candidate.noopRate <
+baseline.noopRate` clause could never be satisfied again, so every later
+candidate — including `retryLimit → 1` at a higher primary and lower cost —
+was rejected with `noop_rate_not_improved`. That lockout was the bug #306
+fixed; this bundle was regenerated under the fixed default gate (new
+`gate_fingerprint`).
 
 ## Reproduce
 
@@ -119,5 +125,6 @@ all numbers *reported* by the runner are rounded to 6 decimals.)
 - The gen-1 primary delta (+0.000056) is within what landscape noise could
   plausibly move on a different seed set; the promotion's load-bearing clause
   was the no-op improvement, and the frozen gate — not the author — made the
-  call. Equally, the post-gen-2 all-reject plateau is a *correct* outcome of
-  the default gate's strict no-op clause, reported as such.
+  call. The first committed run's post-gen-2 all-reject plateau was the
+  no-op-floor lockout fixed in #306/#307, not a property of the domain (see
+  History above).

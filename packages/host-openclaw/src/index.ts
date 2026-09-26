@@ -213,6 +213,14 @@ export function installScript(spec: HarnessSpec): string {
   lines.push(`cp ./SKILL.md "$HOME/.openclaw/workspace/skills/${shellDq(pathSegmentSafe(spec.name))}/SKILL.md"`);
   lines.push('');
   lines.push('echo "Done. Try: openclaw agent --message \\"' + shellDq(spec.name) + ': ping\\""');
+  if (spec.autonomous) {
+    lines.push('');
+    lines.push('# Autonomous mode (ADR-246 §2.2): OpenClaw has no native');
+    lines.push('# goal/heartbeat/gateCommand/maxTurns autonomous-loop surface. This');
+    lines.push('# harness spec declares an autonomous block that is NOT projected on');
+    lines.push('# this host (documented no-op -- kernel-js HarnessSpec.autonomous must');
+    lines.push('# never be silently dropped).');
+  }
   return lines.join('\n') + '\n';
 }
 

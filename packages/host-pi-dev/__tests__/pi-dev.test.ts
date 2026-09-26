@@ -42,6 +42,18 @@ describe('@metaharness/host-pi-dev', () => {
       expect(md).toContain('### reviewer');
       expect(md).toContain('Review code.');
     });
+
+    it('discloses ADR-246 autonomous block as an explicit no-op, never silently drops it', () => {
+      const withAutonomous = agentsMarkdown({
+        ...base,
+        autonomous: { goal: { text: 'ship it' }, gateCommand: 'npm test' },
+      });
+      expect(withAutonomous).toContain('ADR-246');
+      expect(withAutonomous).toContain('not projected');
+
+      const withoutAutonomous = agentsMarkdown(base);
+      expect(withoutAutonomous).not.toContain('ADR-246');
+    });
   });
 
   // ADR-044 — trust.json was missing entirely.

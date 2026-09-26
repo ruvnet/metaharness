@@ -66,7 +66,28 @@ export function hookHandlerFor(handler: string): ClaudeHookHandler {
   if (handler.startsWith('agent:')) {
     return { type: 'agent', agentType: handler.slice(6) };
   }
+  // The helper name is interpolated into a shell command line Claude Code
+  // executes on every matching hook event, so it must be a plain file-name
+  // token: no shell metacharacters (`;`, `$(...)`, backticks, spaces,
+  // newlines) and no path separators / `..` that would run a script outside
+  // .claude/helpers/. Fail closed rather than emit an injectable command.
+  if (!HELPER_NAME.test(handler) || handler.includes('..')) {
+    throw new Error(`Invalid hook helper name ${JSON.stringify(handler)}: expected [A-Za-z0-9_.-]+`);
+  }
   return { type: 'command', command: `node .claude/helpers/${handler}.cjs` };
+}
+
+const HELPER_NAME = /^[A-Za-z0-9_][A-Za-z0-9_.-]*$/;
+
+/**
+ * File-name-safe form of an agent name for `.claude/agents/<name>.md`. The
+ * raw name previously became a path segment verbatim, so `../../x` (or a
+ * name containing `/` or `\\`) addressed a file outside `.claude/agents/`.
+ * Ordinary names (`reviewer`, `code-review`) are unchanged.
+ */
+export function agentFileName(name: string): string {
+  const cleaned = name.replace(/[^A-Za-z0-9_.-]/g, '-').replace(/^\.+/, '_');
+  return cleaned.length > 0 ? cleaned : 'agent';
 }
 
 /**
@@ -93,7 +114,55 @@ export function claudeMd(spec: HarnessSpec): string {
   const lines: string[] = [`# ${spec.name}`, ''];
   if (spec.description) lines.push(spec.description, '');
   if (spec.systemPrompt) lines.push(spec.systemPrompt, '');
+  if (spec.autonomous) {
+    lines.push(
+      '## Autonomous mode (ADR-246 §2.2)',
+      '',
+      'Claude Code has no native `goal`/`heartbeat`/`gateCommand`/`maxTurns` ' +
+        'autonomous-loop surface. This harness spec declares an `autonomous` ' +
+        'block that is **not projected** on this host (documented no-op — ' +
+        'kernel-js `HarnessSpec.autonomous` must never be silently dropped).',
+      '',
+    );
+  }
   return lines.join('\n');
+}
+
+/** YAML 1.1 core-schema bare scalars that a loader resolves to bool/null
+ * instead of a string — a name literally `true`/`null`/`123` must not be
+ * left bare (mirrors host-hermes's YAML_RESERVED_BARE). */
+const YAML_RESERVED_BARE = /^(?:null|~|true|false|yes|no|on|off|[+-]?\d+(?:\.\d+)?)$/i;
+
+/** Quote a scalar for single-line YAML double-quoted context. */
+function yamlStr(s: string): string {
+  return `"${s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/[\r\n]+/g, ' ')}"`;
+}
+
+/**
+ * Emit a name as a bare YAML scalar when it's safe to do so, quoted
+ * otherwise (ADR-046 bug class: an unescaped name is a YAML/shell injection
+ * vector, not just cosmetic — mirrors host-hermes's `yamlKey`). Keeps
+ * ordinary names ("reviewer", "code-review") readable and unquoted while
+ * closing the injection gap for names with YAML-significant characters.
+ */
+function yamlKey(s: string): string {
+  const isSafeIdentifier = /^[A-Za-z0-9_][A-Za-z0-9_.-]*$/.test(s);
+  return isSafeIdentifier && !YAML_RESERVED_BARE.test(s) ? s : yamlStr(s);
+}
+
+/** Quote one shell argument (single-quote, escaping embedded single quotes). */
+function shellQuote(value: string): string {
+  return `'${value.replace(/'/g, `'"'"'`)}'`;
+}
+
+/**
+ * Strip CR/LF from a string destined for a raw `#`-comment line. A comment
+ * line has no quoting to escape *into*; a literal newline in the source
+ * string is the only character that can break out of it and turn the
+ * remainder into a live shell statement (mirrors host-rvm's `commentSafe`).
+ */
+function commentSafe(s: string): string {
+  return s.replace(/[\r\n]+/g, ' ');
 }
 
 /**
@@ -110,7 +179,10 @@ export function agentMarkdown(a: AgentSpec): string {
     .slice(0, 200);
   return [
     '---',
-    `name: ${a.name}`,
+    // ADR-046 bug class: `name` was interpolated bare — a name containing a
+    // colon, quote, or newline could inject a second YAML key or break the
+    // document. Same fix shape as #188 (hermes)/#212/#224/#246.
+    `name: ${yamlKey(a.name)}`,
     `description: "${desc}"`,
     '---',
     '',
@@ -122,16 +194,21 @@ export function agentMarkdown(a: AgentSpec): string {
 /**
  * Build the `claude mcp add` command lines for the harness's MCP servers.
  * These run as post-install steps in the harness's own init script.
+ * ADR-046 bug class: `s.name`/command args/`s.url` were interpolated into
+ * a shell line unescaped — a name or arg containing shell metacharacters
+ * (`;`, `$(...)`, backticks, spaces) could inject arbitrary commands into
+ * the generated install-mcp.sh.
  */
 export function mcpAddCommands(spec: HarnessSpec): string[] {
   return (spec.mcpServers ?? []).map(s => {
     if (s.command) {
-      return `claude mcp add ${s.name} -- ${s.command.join(' ')}`;
+      const cmd = s.command.map(shellQuote).join(' ');
+      return `claude mcp add ${shellQuote(s.name)} -- ${cmd}`;
     }
     if (s.url) {
-      return `claude mcp add --transport http ${s.name} ${s.url}`;
+      return `claude mcp add --transport http ${shellQuote(s.name)} ${shellQuote(s.url)}`;
     }
-    return `# (skipped: ${s.name} has neither command nor url)`;
+    return `# (skipped: ${commentSafe(s.name)} has neither command nor url)`;
   });
 }
 
@@ -145,7 +222,7 @@ export const adapter: HostAdapter = {
     // ADR-044: emit CLAUDE.md (system prompt) + one subagent file per agent.
     if (spec.systemPrompt || spec.description) out['CLAUDE.md'] = claudeMd(spec);
     for (const a of spec.agents ?? []) {
-      out[`.claude/agents/${a.name}.md`] = agentMarkdown(a);
+      out[`.claude/agents/${agentFileName(a.name)}.md`] = agentMarkdown(a);
     }
     return out;
   },

@@ -12,6 +12,15 @@ interface Evaluation {
  */
 export declare function evaluateVariant(variant: HarnessVariant, profile: RepoProfile, cfg: EvolutionConfig, parentScore: ScoreCard | null): Promise<Evaluation>;
 /**
+ * Fraction of `traces` whose combined stdout+stderr is non-empty — the
+ * deterministic ADR-249 traceQuality seam's signal, finally wired to a real
+ * call site. A variant whose runs produce no output at all scores lower than
+ * one that produces normal output (a crash that prints a stack trace still
+ * counts as output). Unlike `variantBytes` (which reads a variant's on-disk surface), this reads
+ * already-collected trace data, so it costs nothing extra to compute.
+ */
+export declare function substantiveTraceRatio(traces: RunTrace[]): number;
+/**
  * Among scored records sharing the TOP finalScore, return the most efficient
  * (lowest mean trace wall-clock). Pure: caller supplies the per-variant traces.
  * Returns `null` only when no record is scored. This is the 'faster' tie-break

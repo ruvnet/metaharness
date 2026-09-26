@@ -48,8 +48,20 @@ export function resolveAgentTopology(profile: RepoProfile, plan: HarnessPlan): s
   const out = new Set<string>();
   // Maintainer is the floor — every repo gets one.
   out.add('maintainer');
-  // Tester if the repo has any test signal (commands or pre-existing CI).
-  if (profile.testCommands.length > 0 || profile.hasCi) out.add('tester');
+  // Tester if the repo has REAL test-file evidence or pre-existing CI — not
+  // just `testCommands`, which analyze-repo.ts populates from language
+  // detection alone (any rust or python repo gets 'cargo test'/'pytest'
+  // pushed unconditionally, regardless of whether test files exist; see
+  // hasVerifiedTestFiles's doc comment on scoreTestConfidence below, fixed
+  // for that sibling scorer by Dream Cycle 2026-08-25 (#229) but left open
+  // here until tonight).
+  // `npm test` is the one testCommands entry that is NOT language-inferred: it is
+  // only pushed when package.json declares a `scripts.test`, i.e. an authored
+  // test entry point. Keep trusting it so JS/TS repos with colocated
+  // `*.test.ts` files (no top-level test dir, which hasVerifiedTestFiles cannot
+  // see) still get a tester.
+  const authoredTestScript = profile.testCommands.includes('npm test');
+  if (profile.hasVerifiedTestFiles || profile.hasCi || authoredTestScript) out.add('tester');
   // Security if MCP is enabled or the plan picks a default-deny MCP mode.
   if (profile.hasMcp || plan.mcp === 'local' || plan.mcp === 'remote') out.add('security');
   // Release if the repo has CI plumbing already (it can ship).
