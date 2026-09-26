@@ -93,6 +93,23 @@ describe('runFlywheelGenerations wires Evaluator.itemWins into PromotionEvidence
     // No pairedOutcomes ⇒ withSequentialEvidence degrades to meetsPromotionRule ⇒ this clean win promotes.
     expect(result.promotions.length).toBe(1);
   });
+
+  it('zero-item holdout with `itemWins: []` on both sides degrades to the base gate instead of rejecting every candidate', async () => {
+    // Without the empty-pairing guard, run.ts would pass `pairedOutcomes: []` (0 === suite length 0) and
+    // sequentialEvidence([]) never reaches significance ⇒ a permanent lockout on this call site.
+    const rootPolicy: Policy = { a: '' };
+    const holdout: Suite = { id: 'holdout', items: [] };
+    const proposer: Proposer = async (base) => `${base.policy.a ?? ''}#`;
+    const evaluator: Evaluator = async (policy: Policy): Promise<Score> => {
+      const quality = (policy.a ?? '').split('#').length - 1;
+      return { primary: quality, noopRate: quality > 0 ? 0 : 1, costPerWin: quality > 0 ? 1 : 999, regressed: false, itemWins: [] };
+    };
+    const result = await runFlywheelGenerations({
+      rootPolicy, proposer, evaluator, holdout, promotionRule: withSequentialEvidence(meetsPromotionRule),
+      maxGenerations: 1, signer: makeSigner(), dataSource: 'SYNTHETIC',
+    });
+    expect(result.promotions.length).toBe(1);
+  });
 });
 
 // An independent adversarial critic reviewing the wiring above found the SAME bug class at a sibling call

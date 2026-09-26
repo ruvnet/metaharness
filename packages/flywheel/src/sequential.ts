@@ -65,7 +65,7 @@ const DEFAULT_LAMBDA = 0.5;
 
 /** Reconstructs the per-item pairing `sequentialEvidence`/`withSequentialEvidence` need from two Scores
  *  that each carry a same-length {@link Score.itemWins} vector evaluated over the SAME suite. Returns
- *  `undefined` when either side omits it or the lengths disagree — the caller then simply omits
+ *  `undefined` when either side omits it, the vectors are empty, or the lengths disagree — the caller then simply omits
  *  `pairedOutcomes`, and any sequential-evidence rule degrades to its base rule (see
  *  `withSequentialEvidence`'s own degrade-safe contract). Shared by the LIVE promotion loop (`run.ts`) and
  *  independent replay's gate re-execution (`replay.ts`, ADR-235) so a sequential-gated promotion is
@@ -74,7 +74,10 @@ const DEFAULT_LAMBDA = 0.5;
 export function pairedOutcomesFromItemWins(baseline: Score, candidate: Score): PairedOutcome[] | undefined {
   const bw = baseline.itemWins;
   const cw = candidate.itemWins;
-  if (!bw || !cw || bw.length !== cw.length) return undefined;
+  // An empty pairing (a zero-item suite, or `itemWins: []` on both sides) carries no per-item evidence;
+  // returning `[]` would make `withSequentialEvidence` evaluate zero pairs (eValue 1 < threshold) and
+  // reject every candidate. Treat it as "no pairing" so the rule degrades to its base rule.
+  if (!bw || !cw || bw.length === 0 || bw.length !== cw.length) return undefined;
   return bw.map((baselineWon, i) => ({ itemId: String(i), candidateWon: cw[i]!, baselineWon }));
 }
 
