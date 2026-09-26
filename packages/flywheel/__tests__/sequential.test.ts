@@ -116,6 +116,38 @@ describe('withSequentialEvidence', () => {
     expect(rule(passingEvidence()).promote).toBe(true);
   });
 
+  it('degrades to the base rule when pairedOutcomes is an explicit empty array', () => {
+    // Regression: `pairedOutcomes: []` is a common JS shape for "no per-item
+    // data yet" (e.g. `?? []` defaulting, or a zero-item suite) — it must be
+    // treated the same as `undefined`, not silently and permanently reject
+    // every candidate via `sequentialEvidence([])`'s eValue=1 (< threshold).
+    const rule = withSequentialEvidence(meetsPromotionRule);
+    const evidence = passingEvidence([]);
+    expect(meetsPromotionRule(evidence).promote).toBe(true);
+    const decision = rule(evidence);
+    expect(decision.promote).toBe(true);
+    expect(decision.reasons.some((r) => r.startsWith('insufficient_sequential_evidence'))).toBe(
+      false,
+    );
+  });
+
+  it('still rejects a non-empty but entirely concordant pairedOutcomes (real data, no signal)', () => {
+    // Contrast with the empty-array case above: here per-item data WAS
+    // actually supplied and evaluated — it just carries no information
+    // (every pair ties). This must keep rejecting; only an EMPTY array
+    // (no data at all) degrades to the base rule.
+    const rule = withSequentialEvidence(meetsPromotionRule);
+    const concordantOnly: PairedOutcome[] = [
+      pair('a', true, true),
+      pair('b', false, false),
+    ];
+    const decision = rule(passingEvidence(concordantOnly));
+    expect(decision.promote).toBe(false);
+    expect(decision.reasons.some((r) => r.startsWith('insufficient_sequential_evidence'))).toBe(
+      true,
+    );
+  });
+
   it('blocks a candidate that clears the frozen gate on thin evidence', () => {
     const rule = withSequentialEvidence(meetsPromotionRule);
     const decision = rule(passingEvidence(candidateWins(3)));

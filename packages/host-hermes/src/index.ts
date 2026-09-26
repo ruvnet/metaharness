@@ -142,6 +142,16 @@ export function cliConfigYaml(spec: HarnessSpec): string {
   for (const a of spec.agents ?? []) {
     lines.push(`    ${yamlKey(a.name)}: ${yamlStr(a.systemPrompt ?? `You are the ${a.name} agent.`)}`);
   }
+  if (spec.autonomous) {
+    lines.push(
+      '',
+      '# Autonomous mode (ADR-246 §2.2): Hermes has no native',
+      '# goal/heartbeat/gateCommand/maxTurns autonomous-loop surface. This',
+      '# harness spec declares an autonomous block that is NOT projected on',
+      '# this host (documented no-op -- kernel-js HarnessSpec.autonomous must',
+      '# never be silently dropped).',
+    );
+  }
   return lines.join('\n') + '\n';
 }
 

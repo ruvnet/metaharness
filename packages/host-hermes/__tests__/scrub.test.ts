@@ -163,6 +163,18 @@ describe('@metaharness/host-hermes — Hermes-4 quirk handling', () => {
       expect(c).not.toMatch(/^ {4}null:/m);
       expect(c).not.toMatch(/^ {4}123:/m);
     });
+
+    it('discloses ADR-246 autonomous block as an explicit no-op, never silently drops it', () => {
+      const withAutonomous = cliConfigYaml({
+        name: 'h',
+        autonomous: { goal: { text: 'ship it' }, gateCommand: 'npm test' },
+      } as any);
+      expect(withAutonomous).toContain('ADR-246');
+      expect(withAutonomous).toMatch(/NOT projected/);
+
+      const withoutAutonomous = cliConfigYaml({ name: 'h' } as any);
+      expect(withoutAutonomous).not.toContain('ADR-246');
+    });
   });
 
   // CodeQL js/polynomial-redos regression (alert #1, fixed iter 138).

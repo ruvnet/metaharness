@@ -112,6 +112,18 @@ export function installRunbook(spec: HarnessSpec): string {
     '  tool does not appear, switch to the `@workspace` participant.',
     '- Environment variables in `mcp.json` are NOT interpolated against your',
     '  shell — you must paste literal values or use `${env:VAR}` syntax.',
+    ...(spec.autonomous
+      ? [
+          '',
+          '## Autonomous mode (ADR-246 §2.2)',
+          '',
+          'VSCode Copilot Chat has no native `goal`/`heartbeat`/`gateCommand`/' +
+            '`maxTurns` autonomous-loop surface. This harness spec declares an ' +
+            '`autonomous` block that is **not projected** on this host ' +
+            '(documented no-op — kernel-js `HarnessSpec.autonomous` must never ' +
+            'be silently dropped).',
+        ]
+      : []),
   ].join('\n') + '\n';
 }
 

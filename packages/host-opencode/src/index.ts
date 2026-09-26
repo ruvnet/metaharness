@@ -177,6 +177,18 @@ export function installRunbook(spec: HarnessSpec): string {
     '- The `mcp.permissions.deny` block is enforced BEFORE `allow`. Adding',
     '  `Bash(rm:*)` to deny will silently override any matching allow rule.',
     '- Provider-specific costs are tracked in `~/.opencode/usage.json`.',
+    ...(spec.autonomous
+      ? [
+          '',
+          '## Autonomous mode (ADR-246 §2.2)',
+          '',
+          'OpenCode has no native `goal`/`heartbeat`/`gateCommand`/`maxTurns` ' +
+            'autonomous-loop surface. This harness spec declares an ' +
+            '`autonomous` block that is **not projected** on this host ' +
+            '(documented no-op — kernel-js `HarnessSpec.autonomous` must ' +
+            'never be silently dropped).',
+        ]
+      : []),
   ].join('\n') + '\n';
 }
 
