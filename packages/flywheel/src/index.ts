@@ -16,6 +16,24 @@ export { verifyReplayBundle } from './replay.js';
 export type { ReplayVerdict } from './replay.js';
 export { analyzeBundle, formatAnalysis } from './analyze.js';
 export type { BundleAnalysis, TargetStat } from './analyze.js';
+export { validateReplayBundle } from './validate-bundle.js';
+export type { ValidationResult } from './validate-bundle.js';
+export {
+  REVIEW_CONTEXT_AUTHORITY,
+  REVIEW_CONTEXT_POLICY,
+  REVIEW_EVIDENCE_KINDS,
+  prepareIndependentReviewPacket,
+  verifyIndependentReviewPacket,
+} from './review-context.js';
+export type {
+  IndependentReviewInput,
+  IndependentReviewPacket,
+  ReviewEvidenceKind,
+  ReviewEvidenceRef,
+  ReviewPacketExpectation,
+  ReviewPacketVerdict,
+  ReviewRole,
+} from './review-context.js';
 
 export type {
   Policy,
