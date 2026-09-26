@@ -160,7 +160,10 @@ function scoreMcpSafety(dir: string): McpScore {
   // scored it as the safest possible posture (mcpRisk: 'None') even when a
   // server was actually registered and ungoverned — see issue #280 (the
   // same class of gap #276 closed in threat-model.ts on 2026-09-03).
-  const hasMcp = scanMcp(dir).mcpEnabled;
+  // Monotonic with the pre-#280 check: a present-but-unparseable .mcp.json
+  // (scanMcp()'s JSON read returns undefined for it) must still count as
+  // in-use, otherwise a malformed file would fail OPEN to mcpRisk:'None'.
+  const hasMcp = scanMcp(dir).mcpEnabled || policy != null || fileExists(dir, '.mcp.json');
   if (!hasMcp) {
     signals.push('MCP not in use (mode=off — safest)');
     return { name: 'MCP safety', weight: 0.2, score: 100, signals, mcpRisk: 'None' };

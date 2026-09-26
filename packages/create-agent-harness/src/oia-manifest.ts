@@ -86,7 +86,10 @@ function readHarnessProfile(dir: string): HarnessProfile {
   // policy-file-or-.mcp.json-only check here. A settings.json-only harness
   // was previously reported ADR-034 mcp.mode:"off" / security span "partial"
   // even with a live, ungoverned MCP server registered — see issue #280.
-  const hasMcp = scanMcp(root).mcpEnabled;
+  // OR the pre-#280 presence check back in so a present-but-unparseable
+  // .mcp.json cannot fail OPEN to mode:"off" (scanMcp() treats it as absent).
+  const hasMcp =
+    scanMcp(root).mcpEnabled || mcpPolicy != null || existsSync(join(root, '.mcp.json'));
   // mcpMode inference: presence of mcp-policy with `mode: remote` → remote;
   // policy present without remote signal → local; otherwise off.
   let mcpMode: 'off' | 'local' | 'remote' = 'off';

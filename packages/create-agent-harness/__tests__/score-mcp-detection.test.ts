@@ -98,4 +98,28 @@ describe('scoreMcpSafety — MCP-in-use detection covers all 3 registration surf
     expect(mcp.mcpRisk).toBe('Low');
     expect(mcp.score).toBe(100);
   });
+
+  it('fail-closed: a present-but-unparseable .mcp.json is still in-use (never mcpRisk:"None")', () => {
+    for (const body of ['{ not json', 'null', '']) {
+      const d = fixture({});
+      writeFileSync(join(d, '.mcp.json'), body);
+      const mcp = mcpDim(buildScorecard(d));
+      expect(mcp.mcpRisk).toBe('High');
+      expect(mcp.score).toBeLessThan(100);
+    }
+  });
+});
+
+describe('oia-manifest — MCP-in-use detection stays fail-closed', () => {
+  it('a malformed .mcp.json still yields mcp.mode !== "off"', async () => {
+    const { oiaManifestCmd } = await import('../src/oia-manifest.js');
+    const d = fixture({});
+    writeFileSync(join(d, '.mcp.json'), '{ not json');
+    const out = join(d, '.harness', 'oia-manifest.json');
+    const r = await oiaManifestCmd([d]);
+    expect(r.code).toBe(0);
+    const { readFileSync } = await import('node:fs');
+    const m = JSON.parse(readFileSync(out, 'utf-8'));
+    expect(m.adjacentStandards.mcp.mode).not.toBe('off');
+  });
 });
