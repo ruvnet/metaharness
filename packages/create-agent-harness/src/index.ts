@@ -900,7 +900,7 @@ async function runMetaHarnessSubcommand(sub: string, rest: string[]): Promise<nu
     }
     case 'learn': {
       // `metaharness learn --host <h> --model <m> --slice <manifest> [--seed cand6]
-      //  [--train-first N] [--max-cost $] [--via-gateway] [--run]` — ADR-235: cheap-tier
+      //  [--train-first N] [--max-cost $] [--via-gateway] [--run]` — ADR-228: cheap-tier
       // optimization as a managed learning service. Delegates to the repo's GEPA harness
       // (gepa/learn.mjs); REPO-CHECKOUT-GATED (the harness needs bench scripts + Docker +
       // SWE-bench and cannot ship in the tarball). $0 by default: --dry-run is always
@@ -1046,7 +1046,7 @@ export async function main(argv: string[]): Promise<number> {
     console.log('       npx metaharness score <repo> [--json]   (scorecard: fit/cost/safety for a repo — ADR-041)');
     console.log('       npx metaharness analyze <repo>           (recommend a harness plan, no-exec)');
     console.log('       npx metaharness genome <repo>            (7-section repo readiness)');
-    console.log('       npx metaharness learn --host <h> --model <m> --slice <manifest>   (ADR-235 GEPA learning run — $0 dry-run by default, --run to spend; needs a repo checkout)');
+    console.log('       npx metaharness learn --host <h> --model <m> --slice <manifest>   (ADR-228 GEPA learning run — $0 dry-run by default, --run to spend; needs a repo checkout)');
     console.log('       npx metaharness avo <trusted-key|gate-build|gate-submit>  (ADR-271 flywheel-gate receipts from an AVO run summary)');
     console.log('       npx metaharness proxy <install|status|start|stop|enable|disable|path|login|logout>  (optional signed Cognitum Meta-Proxy sidecar)');
     console.log('       npx metaharness --from-existing [./path]');

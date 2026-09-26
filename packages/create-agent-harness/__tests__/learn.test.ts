@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 //
-// $0 unit tests for the `metaharness learn` command surface (ADR-235): arg parsing,
-// arg assembly ($0-default rule), repo gating, and seed resolution — all pure functions,
-// no spawn, no network, no spend.
+// $0 unit tests for the `metaharness learn` command surface (ADR-228): arg parsing,
+// arg assembly ($0-default rule), repo gating, seed resolution, and slice/manifest
+// resolution — all pure functions, no spawn, no network, no spend.
 
 import { describe, it, expect } from 'vitest';
 import { dirname, join, resolve, sep } from 'node:path';
@@ -15,6 +15,8 @@ import {
   buildLearnArgs,
   findLearnHarness,
   resolveSeed,
+  resolveSlicePath,
+  DEFAULT_SLICE,
   repoRequiredMessage,
   LEARN_MJS_REL,
   GATEWAY_BASE_URL,
@@ -161,10 +163,36 @@ describe('resolveSeed', () => {
 });
 
 describe('repoRequiredMessage', () => {
-  it('is actionable: names the clone URL, METAHARNESS_REPO, and the ADR-235 follow-up', () => {
+  it('is actionable: names the clone URL, METAHARNESS_REPO, and the ADR-228 follow-up', () => {
     const msg = repoRequiredMessage().join('\n');
     expect(msg).toContain('git clone https://github.com/ruvnet/metaharness.git');
     expect(msg).toContain('METAHARNESS_REPO');
-    expect(msg).toContain('ADR-235');
+    expect(msg).toContain('ADR-228');
+  });
+});
+
+describe('resolveSlicePath', () => {
+  it('resolves an absent --slice to the default manifest under benchRoot', () => {
+    expect(resolveSlicePath(undefined, '/bench')).toBe(join('/bench', DEFAULT_SLICE));
+  });
+
+  it('resolves a relative --slice/--manifest against benchRoot', () => {
+    expect(resolveSlicePath('holdout-other-25.json', '/bench')).toBe(join('/bench', 'holdout-other-25.json'));
+  });
+
+  it('passes an absolute --slice/--manifest through unchanged', () => {
+    const abs = resolve(sep, 'tmp', 'my-slice.json');
+    expect(resolveSlicePath(abs, '/bench')).toBe(abs);
+  });
+
+  it('the real repo default slice exists at the resolved bench-root path (guards against manifest moves)', () => {
+    // learn.mjs's BENCH is one level above gepa/ (join(dirname(learn.mjs), '..')).
+    const benchRoot = resolve(here, '..', '..', 'darwin-mode', 'bench', 'swebench');
+    expect(existsSync(resolveSlicePath(undefined, benchRoot))).toBe(true);
+  });
+
+  it('a nonexistent slice/manifest does not silently resolve to an existing file', () => {
+    const benchRoot = resolve(here, '..', '..', 'darwin-mode', 'bench', 'swebench');
+    expect(existsSync(resolveSlicePath('typo-manifest-does-not-exist.json', benchRoot))).toBe(false);
   });
 });

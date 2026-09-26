@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// `metaharness learn` — the ADR-235 managed-learning command surface.
+// `metaharness learn` — the ADR-228 managed-learning command surface.
 //
 // This is a THIN, repo-checkout-gated delegate to the GEPA learning harness at
 // `packages/darwin-mode/bench/swebench/gepa/learn.mjs` (ADR-228). The harness needs the
@@ -19,7 +19,7 @@
 //     (genomes/genome-promoted-cand6-edit-by-midpoint.json — the first holdout-confirmed
 //     cheap-tier policy, see genomes/README.md). Absent --seed ⇒ learn.mjs's default seed.
 //
-// The managed-service path (gateway-side learn jobs, ADR-235 §9) is the follow-up; today
+// The managed-service path (gateway-side learn jobs, ADR-228 §9) is the follow-up; today
 // `--via-gateway` only routes the ROLLOUTS through the cognitum meta-llm Completions API.
 //
 // Everything except the final spawn is a pure function, unit-tested $0 in
@@ -48,6 +48,23 @@ export const GATEWAY_API_KEY_ENV = 'COGNITUM_DEV_KEY';
 export const PACKAGED_SEEDS: Record<string, string> = {
   cand6: 'genome-promoted-cand6-edit-by-midpoint.json',
 };
+
+/**
+ * Default slice/manifest filename, duplicated from learn.mjs's own default (line ~193:
+ * `argv('--slice', argv('--manifest', 'advisor-medium-25.json'))`). Duplicated rather than
+ * imported because learn.ts is a pure-function-tested, repo-checkout-independent wrapper —
+ * it must resolve and validate the slice BEFORE it knows a checkout exists to import from.
+ */
+export const DEFAULT_SLICE = 'advisor-medium-25.json';
+
+/**
+ * Resolve `--slice`/`--manifest` the same way learn.mjs/run-gepa.mjs do (`rel()`: absolute
+ * paths pass through, relative paths resolve against the GEPA bench dir). Pure.
+ */
+export function resolveSlicePath(slice: string | undefined, benchRoot: string): string {
+  const s = slice ?? DEFAULT_SLICE;
+  return isAbsolute(s) ? s : join(benchRoot, s);
+}
 
 export interface LearnArgs {
   host?: string;
@@ -184,7 +201,7 @@ export function repoRequiredMessage(): string[] {
     '  METAHARNESS_REPO=/path/to/metaharness npx metaharness learn ...',
     '',
     'The managed-service path — gateway-side learn jobs, no local checkout needed — is the',
-    'ADR-235 follow-up and is not available yet.',
+    'ADR-228 follow-up and is not available yet.',
   ];
 }
 
@@ -226,6 +243,20 @@ async function runLearn(
   const seedPath = resolveSeed(args.seed);
   if (seedPath !== undefined && isAbsolute(seedPath) && !existsSync(seedPath)) {
     console.error(`metaharness learn: seed genome not found at ${seedPath}`);
+    return 2;
+  }
+
+  // Validate the slice/manifest BEFORE spawning learn.mjs, in dry-run AND --run alike.
+  // learn.mjs's own --dry-run branch returns before ever reading the manifest file, so a
+  // typo'd --slice/--manifest previously produced a clean-looking "plan" for a file that
+  // does not exist — false confidence in the one mode whose entire purpose is a pre-spend
+  // sanity check. (--run did eventually fail on the first real eval, before any LLM spend,
+  // but only after mkdirSync + subprocess startup, and with no advance warning from --dry-run.)
+  const benchRoot = join(dirname(learnMjs), '..');
+  const slicePath = resolveSlicePath(args.slice, benchRoot);
+  if (!existsSync(slicePath)) {
+    console.error(`metaharness learn: slice/manifest not found at ${slicePath}`);
+    console.error('(--slice/--manifest resolves against the gepa bench dir unless given as an absolute path)');
     return 2;
   }
 
