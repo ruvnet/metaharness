@@ -114,6 +114,14 @@ describe('@metaharness/host-github-actions (ADR-033)', () => {
       expect(y).not.toContain('  # schedule:');
     });
 
+    it('emits the trimmed cadence (surrounding whitespace is not carried into the cron string)', () => {
+      const y = workflowYaml({
+        ...base,
+        autonomous: { heartbeat: { cadence: '  0 9 * * 1\n', instruction: 'check in' } },
+      } as HarnessSpec);
+      expect(y).toContain('- cron: "0 9 * * 1"');
+    });
+
     it('falls back to the commented schedule example for a non-cron cadence (never emits an invalid trigger)', () => {
       const y = workflowYaml({
         ...base,
@@ -123,7 +131,7 @@ describe('@metaharness/host-github-actions (ADR-033)', () => {
       expect(y).toContain('  # schedule:');
     });
 
-    it('projects autonomous.gateCommand onto a real pre-flight gating step before checkout', () => {
+    it('projects autonomous.gateCommand onto a real pre-flight gating step (after checkout, before the harness step)', () => {
       const y = workflowYaml({ ...base, autonomous: { gateCommand: 'npm test' } } as HarnessSpec);
       expect(y).toContain('ADR-246 autonomous gate');
       expect(y).toContain('run: "npm test"');
