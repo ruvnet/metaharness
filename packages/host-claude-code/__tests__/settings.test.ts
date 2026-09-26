@@ -198,6 +198,19 @@ describe('@metaharness/host-claude-code', () => {
       expect(Object.keys(out)).not.toContain('CLAUDE.md');
       expect(Object.keys(out).some(k => k.startsWith('.claude/agents/'))).toBe(false);
     });
+
+    it('claudeMd discloses ADR-246 autonomous block as an explicit no-op, never silently drops it', () => {
+      const withAutonomous = claudeMd({
+        name: 'demo',
+        systemPrompt: 'Be terse.',
+        autonomous: { goal: { text: 'ship it' }, gateCommand: 'npm test' },
+      } as any);
+      expect(withAutonomous).toContain('ADR-246');
+      expect(withAutonomous).toContain('not projected');
+
+      const withoutAutonomous = claudeMd({ name: 'demo', systemPrompt: 'Be terse.' } as any);
+      expect(withoutAutonomous).not.toContain('ADR-246');
+    });
   });
 
   // #300 follow-up: two remaining interpolation sinks in this adapter.

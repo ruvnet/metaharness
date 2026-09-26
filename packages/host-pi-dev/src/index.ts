@@ -66,6 +66,12 @@ ${registrations || '  // No tools declared in harness spec.'}
  * roster — Pi reads instructions from this file at session start.
  */
 export function agentsMarkdown(spec: HarnessSpec): string {
+  const autonomousNote = spec.autonomous
+    ? `\n## Autonomous mode (ADR-246 §2.2)\n\nPi has no native \`goal\`/\`heartbeat\`/\`gateCommand\`/\`maxTurns\` ` +
+      `autonomous-loop surface. This harness spec declares an \`autonomous\` ` +
+      `block that is **not projected** on this host (documented no-op — ` +
+      `kernel-js \`HarnessSpec.autonomous\` must never be silently dropped).\n`
+    : '';
   return `# ${spec.name}
 
 ${spec.description ?? ''}
@@ -73,7 +79,7 @@ ${spec.description ?? ''}
 ## Agents
 
 ${(spec.agents ?? []).map(a => `### ${a.name}\n\n${a.systemPrompt ?? ''}`).join('\n\n')}
-`;
+${autonomousNote}`;
 }
 
 /**
