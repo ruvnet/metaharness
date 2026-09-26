@@ -105,14 +105,50 @@ function fail(message: string): never {
   throw new Error(`independent review context: ${message}`);
 }
 
-function assertRecord(value: unknown, label: string): asserts value is Record<string, unknown> {
+/**
+ * Snapshot a plain record into a null-prototype copy, reading every field exactly once.
+ *
+ * Rejects non-plain prototypes (class instances, exotic objects), symbol keys, unknown keys,
+ * non-enumerable keys, and accessor properties. Reading each value once from its own data
+ * descriptor closes the time-of-check/time-of-use gap a getter or Proxy could otherwise use to
+ * swap a validated value (an allowed `kind` or `role`) for free text carrying worker reasoning,
+ * peer messages, or prior verdicts.
+ */
+function snapshotRecord(value: unknown, allowed: Set<string>, label: string): Record<string, unknown> {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) fail(`${label} must be an object`);
+  const proto = Object.getPrototypeOf(value);
+  if (proto !== Object.prototype && proto !== null) fail(`${label} must be a plain object`);
+  const out: Record<string, unknown> = Object.create(null);
+  for (const key of Reflect.ownKeys(value)) {
+    if (typeof key !== 'string' || !allowed.has(key)) {
+      fail(`${label} contains forbidden or unknown field ${String(key)}`);
+    }
+    const desc = Object.getOwnPropertyDescriptor(value, key);
+    if (!desc || !('value' in desc) || desc.enumerable !== true) {
+      fail(`${label}.${key} must be an enumerable data property`);
+    }
+    out[key] = desc.value;
+  }
+  return out;
 }
 
-function assertOnlyKeys(value: Record<string, unknown>, allowed: Set<string>, label: string): void {
-  for (const key of Object.keys(value)) {
-    if (!allowed.has(key)) fail(`${label} contains forbidden or unknown field ${key}`);
+/** Snapshot a plain dense array (no holes, no subclass, no extra own keys), reading each slot once. */
+function snapshotArray(value: unknown, maxItems: number, label: string): unknown[] {
+  if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype) fail(`${label} must be an array`);
+  const lengthDesc = Object.getOwnPropertyDescriptor(value, 'length');
+  const length: unknown = lengthDesc && 'value' in lengthDesc ? lengthDesc.value : Number.NaN;
+  if (typeof length !== 'number' || !Number.isSafeInteger(length) || length < 0) fail(`${label} must be an array`);
+  if (length > maxItems) fail(`${label} exceeds ${maxItems} items`);
+  if (Reflect.ownKeys(value).length !== length + 1) {
+    fail(`${label} must be a dense array without extra fields`);
   }
+  const out: unknown[] = [];
+  for (let i = 0; i < length; i += 1) {
+    const desc = Object.getOwnPropertyDescriptor(value, String(i));
+    if (!desc || !('value' in desc)) fail(`${label}[${i}] must be a data element`);
+    out.push(desc.value);
+  }
+  return out;
 }
 
 function requireToken(value: unknown, label: string): string {
@@ -126,8 +162,12 @@ function requireDigest(value: unknown, label: string): string {
   return raw.startsWith('sha256:') ? raw : `sha256:${raw}`;
 }
 
+const ISO_TIMESTAMP_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/;
+
 function requireTimestamp(value: unknown, label: string): string {
-  if (typeof value !== 'string' || !Number.isFinite(Date.parse(value))) fail(`${label} is not an ISO timestamp`);
+  if (typeof value !== 'string' || !ISO_TIMESTAMP_RE.test(value) || !Number.isFinite(Date.parse(value))) {
+    fail(`${label} is not an ISO timestamp`);
+  }
   return new Date(value).toISOString();
 }
 
@@ -138,21 +178,24 @@ function requireInteger(value: unknown, label: string, min: number, max: number)
   return value as number;
 }
 
+function cmp(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
 function normalizeEvidence(value: unknown, maxEvidenceBytes: number): ReviewEvidenceRef[] {
-  if (!Array.isArray(value)) fail('evidence must be an array');
-  if (value.length > MAX_EVIDENCE_ITEMS) fail(`evidence exceeds ${MAX_EVIDENCE_ITEMS} items`);
+  const items = snapshotArray(value, MAX_EVIDENCE_ITEMS, 'evidence');
 
   const seenIds = new Set<string>();
   let totalBytes = 0;
-  const out: ReviewEvidenceRef[] = value.map((raw, index) => {
-    assertRecord(raw, `evidence[${index}]`);
-    assertOnlyKeys(raw, EVIDENCE_KEYS, `evidence[${index}]`);
+  const out: ReviewEvidenceRef[] = items.map((item, index) => {
+    const raw = snapshotRecord(item, EVIDENCE_KEYS, `evidence[${index}]`);
 
     const id = requireToken(raw.id, `evidence[${index}].id`);
     if (seenIds.has(id)) fail(`duplicate evidence id ${id}`);
     seenIds.add(id);
 
-    if (typeof raw.kind !== 'string' || !ALLOWED_KINDS.has(raw.kind)) {
+    const kind = raw.kind;
+    if (typeof kind !== 'string' || !ALLOWED_KINDS.has(kind)) {
       fail(`evidence[${index}].kind is forbidden or unknown`);
     }
     const bytes = requireInteger(raw.bytes, `evidence[${index}].bytes`, 0, MAX_TOTAL_EVIDENCE_BYTES);
@@ -161,24 +204,21 @@ function normalizeEvidence(value: unknown, maxEvidenceBytes: number): ReviewEvid
 
     return {
       id,
-      kind: raw.kind as ReviewEvidenceKind,
+      kind: kind as ReviewEvidenceKind,
       digest: requireDigest(raw.digest, `evidence[${index}].digest`),
       sourceDigest: requireDigest(raw.sourceDigest, `evidence[${index}].sourceDigest`),
       bytes,
     };
   });
 
+  // Code-unit ordering, not localeCompare: the packet digest must not depend on the host ICU locale.
   return out.sort((a, b) =>
-    a.kind.localeCompare(b.kind) ||
-    a.id.localeCompare(b.id) ||
-    a.digest.localeCompare(b.digest) ||
-    a.sourceDigest.localeCompare(b.sourceDigest),
+    cmp(a.kind, b.kind) || cmp(a.id, b.id) || cmp(a.digest, b.digest) || cmp(a.sourceDigest, b.sourceDigest),
   );
 }
 
-function normalizeInput(raw: unknown): IndependentReviewInput {
-  assertRecord(raw, 'input');
-  assertOnlyKeys(raw, INPUT_KEYS, 'input');
+function normalizeInput(value: unknown): IndependentReviewInput {
+  const raw = snapshotRecord(value, INPUT_KEYS, 'input');
 
   const maxEvidenceBytes = requireInteger(
     raw.maxEvidenceBytes,
@@ -186,7 +226,8 @@ function normalizeInput(raw: unknown): IndependentReviewInput {
     0,
     MAX_TOTAL_EVIDENCE_BYTES,
   );
-  if (typeof raw.role !== 'string' || !ALLOWED_ROLES.has(raw.role as ReviewRole)) fail('role is unknown');
+  const role = raw.role;
+  if (typeof role !== 'string' || !ALLOWED_ROLES.has(role as ReviewRole)) fail('role is unknown');
 
   const createdAt = requireTimestamp(raw.createdAt, 'createdAt');
   const expiresAt = requireTimestamp(raw.expiresAt, 'expiresAt');
@@ -200,7 +241,7 @@ function normalizeInput(raw: unknown): IndependentReviewInput {
     taskDigest: requireDigest(raw.taskDigest, 'taskDigest'),
     policyDigest: requireDigest(raw.policyDigest, 'policyDigest'),
     evaluatorDigest: requireDigest(raw.evaluatorDigest, 'evaluatorDigest'),
-    role: raw.role as ReviewRole,
+    role: role as ReviewRole,
     createdAt,
     expiresAt,
     maxEvidenceBytes,
@@ -236,13 +277,12 @@ export function prepareIndependentReviewPacket(raw: unknown): IndependentReviewP
 
 /** Verify structural integrity, freshness, and expected review bindings. */
 export function verifyIndependentReviewPacket(
-  raw: unknown,
+  packet: unknown,
   expected: ReviewPacketExpectation,
   now: string | Date = new Date(),
 ): ReviewPacketVerdict {
   try {
-    assertRecord(raw, 'packet');
-    assertOnlyKeys(raw, PACKET_KEYS, 'packet');
+    const raw = snapshotRecord(packet, PACKET_KEYS, 'packet');
     if (raw.contextPolicy !== REVIEW_CONTEXT_POLICY) return { ok: false, reason: 'context policy mismatch' };
     if (raw.authority !== REVIEW_CONTEXT_AUTHORITY) return { ok: false, reason: 'authority must be none' };
     if (typeof raw.packetDigest !== 'string') return { ok: false, reason: 'packet digest missing' };

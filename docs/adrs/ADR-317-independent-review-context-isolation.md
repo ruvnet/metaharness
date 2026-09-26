@@ -37,6 +37,10 @@ The packet does not authorize promotion, execution, deployment, credential acces
 
 The packet proves only what was admitted into the packet. It does not prove that a host process withheld other state from the reviewer. A production review runner must create a fresh reviewer context, materialize only evidence references present in a verified packet, deny shared memory and peer message surfaces, and keep protected evaluator state outside model context.
 
+`packetDigest` is an unkeyed SHA-256 over the canonical packet. It detects mutation between prepare and verify; it does not authenticate who prepared the packet. Anyone can mint a packet that verifies, so authenticity comes only from the caller-supplied expectation (tenant, candidate, task, policy, evaluator, role) and from the runner that owns packet construction. Identifier fields are bounded tokens (`[A-Za-z0-9._:/]`, 128 chars), which limits but does not eliminate a low-bandwidth covert channel through `reviewId`, `runId`, and evidence `id`.
+
+Input is snapshotted before validation: only plain objects and dense plain arrays are accepted, every field is read once from an own enumerable data property, and symbol keys, accessors, subclasses, holes, and extra array fields fail closed. Evidence is ordered by code unit rather than `localeCompare`, so the digest does not vary with the host ICU locale.
+
 RVM remains the effect authority. Promotion remains a separate MetaHarness gate requiring human approval.
 
 ## Allowed evidence classes
