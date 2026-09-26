@@ -138,6 +138,14 @@ describe('resolveAgentTopology', () => {
     expect(t).toEqual(['maintainer']);
   });
 
+  it('still adds "tester" for an AUTHORED package.json test script (npm test) even without a top-level test dir or CI', () => {
+    const t = resolveAgentTopology(
+      profile({ languages: ['typescript'], testCommands: ['npm test'], hasVerifiedTestFiles: false, hasCi: false }),
+      plan(),
+    );
+    expect(t).toContain('tester');
+  });
+
   it('DOES add "tester" for the same language-inferred testCommands once test files are verified', () => {
     const t = resolveAgentTopology(
       profile({ languages: ['python'], testCommands: ['pytest'], hasVerifiedTestFiles: true, hasCi: false }),

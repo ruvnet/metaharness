@@ -55,7 +55,13 @@ export function resolveAgentTopology(profile: RepoProfile, plan: HarnessPlan): s
   // hasVerifiedTestFiles's doc comment on scoreTestConfidence below, fixed
   // for that sibling scorer by Dream Cycle 2026-08-25 (#229) but left open
   // here until tonight).
-  if (profile.hasVerifiedTestFiles || profile.hasCi) out.add('tester');
+  // `npm test` is the one testCommands entry that is NOT language-inferred: it is
+  // only pushed when package.json declares a `scripts.test`, i.e. an authored
+  // test entry point. Keep trusting it so JS/TS repos with colocated
+  // `*.test.ts` files (no top-level test dir, which hasVerifiedTestFiles cannot
+  // see) still get a tester.
+  const authoredTestScript = profile.testCommands.includes('npm test');
+  if (profile.hasVerifiedTestFiles || profile.hasCi || authoredTestScript) out.add('tester');
   // Security if MCP is enabled or the plan picks a default-deny MCP mode.
   if (profile.hasMcp || plan.mcp === 'local' || plan.mcp === 'remote') out.add('security');
   // Release if the repo has CI plumbing already (it can ship).
