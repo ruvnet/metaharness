@@ -45,6 +45,15 @@ describe('meetsPromotionRule — noopRate floor (ceiling-lockout regression)', (
     expect(d.reasons).not.toContain('noop_rate_not_improved');
     expect(d.promote).toBe(true);
   });
+  it('a NEUTRAL candidate at the floor (identical primary, noopRate 0, costPerWin) is rejected — a tie at the floor must buy a strict gain elsewhere, not zero-lift churn', () => {
+    const d = meetsPromotionRule({ baseline: S({ noopRate: 0 }), candidate: S({ noopRate: 0 }) });
+    expect(d.promote).toBe(false);
+    expect(d.reasons).toEqual(['no_improvement_at_noop_floor']);
+  });
+  it('at the floor, a strict cost-only gain (same primary) is enough', () => {
+    const d = meetsPromotionRule({ baseline: S({ noopRate: 0 }), candidate: S({ noopRate: 0, costPerWin: 0.5 }) });
+    expect(d.promote).toBe(true);
+  });
   it('a candidate that regresses noopRate off the floor is still rejected', () => {
     const d = meetsPromotionRule({ baseline: S({ noopRate: 0 }), candidate: S({ primary: 9, noopRate: 0.1 }) });
     expect(d.reasons).toContain('noop_rate_not_improved');

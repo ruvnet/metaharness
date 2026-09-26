@@ -38,7 +38,10 @@ function isValidScore(s: Score): boolean {
  *      improves" is unsatisfiable by construction, so a tie AT the floor satisfies this clause instead —
  *      otherwise a policy that reaches 0 no-ops can never be promoted again on any other axis (a
  *      ceiling-lockout that silently blocked real, otherwise-qualifying candidates in
- *      experiments/signal-flywheel's own committed lineage). Clause 0's `noopRate >= 0` means "at floor"
+ *      experiments/signal-flywheel's own committed lineage). A tie at the floor only counts when the
+ *      candidate STRICTLY improves another axis (primary > baseline.primary, or costPerWin <
+ *      baseline.costPerWin); a neutral, zero-lift mutation at the floor is rejected
+ *      (`no_improvement_at_noop_floor`) so it cannot grow the chain with no real improvement. Clause 0's `noopRate >= 0` means "at floor"
  *      now only ever means EXACTLY 0, not "0 or below" — a negative noopRate is invalid evidence, not a
  *      lower floor.
  *   3. cost/win does not worsen   (candidate.costPerWin ≤ baseline.costPerWin)
@@ -58,6 +61,12 @@ export function meetsPromotionRule(e: PromotionEvidence): PromotionDecision {
   const baselineAtFloor = e.baseline.noopRate <= 0;
   const noopImproved = baselineAtFloor ? e.candidate.noopRate <= 0 : e.candidate.noopRate < e.baseline.noopRate;
   if (!noopImproved) reasons.push('noop_rate_not_improved');
+  else if (
+    baselineAtFloor &&
+    !(e.candidate.primary > e.baseline.primary || e.candidate.costPerWin < e.baseline.costPerWin)
+  ) {
+    reasons.push('no_improvement_at_noop_floor');
+  }
   if (e.candidate.costPerWin > e.baseline.costPerWin) reasons.push('cost_per_win_worsened');
   if (e.candidate.regressed) reasons.push('safety_regressed');
   if (e.anchor && e.anchor.candidate < e.anchor.baseline) reasons.push('anchor_regressed');
