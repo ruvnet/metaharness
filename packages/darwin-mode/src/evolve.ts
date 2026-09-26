@@ -159,7 +159,7 @@ export async function evaluateVariant(
   // stdout+stderr is always far under the 4MB cap, so the 0.15-weight
   // traceQuality term never actually distinguished variants). When opted in
   // via `traceQualityFromOutput`, feed the fraction of this variant's traces
-  // with non-empty combined stdout+stderr — a variant that crashes/produces
+  // with non-empty combined stdout+stderr — a variant whose runs produce
   // nothing scores lower than one that runs normally. This is deliberately
   // orthogonal to `safetyScore` (blockedActions) and the `toolLoop` penalty
   // (timedOut/disqualified exit code): it measures output substantiveness,
@@ -195,18 +195,11 @@ function traceSeconds(traces: RunTrace[]): number {
 }
 
 /**
- * Total bytes of a variant's surface files — a DETERMINISTIC parsimony signal
- * (mutations change code size). Unlike trace-derived behaviour (which is
- * surface-independent in the current sandbox), code size genuinely differs
- * across variants, so it is a non-degenerate secondary objective for Pareto
- * selection (ADR-100). Returns Infinity if the directory is unreadable.
- */
-/**
  * Fraction of `traces` whose combined stdout+stderr is non-empty — the
  * deterministic ADR-249 traceQuality seam's signal, finally wired to a real
- * call site. A crashing or silent variant scores lower than one that
- * produces normal output; unlike
- * `variantBytes` (which reads a variant's on-disk surface), this reads
+ * call site. A variant whose runs produce no output at all scores lower than
+ * one that produces normal output (a crash that prints a stack trace still
+ * counts as output). Unlike `variantBytes` (which reads a variant's on-disk surface), this reads
  * already-collected trace data, so it costs nothing extra to compute.
  */
 export function substantiveTraceRatio(traces: RunTrace[]): number {
@@ -215,6 +208,13 @@ export function substantiveTraceRatio(traces: RunTrace[]): number {
   return substantive / traces.length;
 }
 
+/**
+ * Total bytes of a variant's surface files — a DETERMINISTIC parsimony signal
+ * (mutations change code size). Unlike trace-derived behaviour (which is
+ * surface-independent in the current sandbox), code size genuinely differs
+ * across variants, so it is a non-degenerate secondary objective for Pareto
+ * selection (ADR-100). Returns Infinity if the directory is unreadable.
+ */
 function variantBytes(dir: string): number {
   try {
     let total = 0;
