@@ -54,3 +54,51 @@ describe('reward-hack monitor — tool-response content scan', () => {
     expect(sft.some((r) => r.messages.some((m) => (m.content ?? '').includes('FAIL_TO_PASS')))).toBe(false);
   });
 });
+
+describe('reward-hack monitor — response shapes + false-positive guard', () => {
+  const t = (messages: unknown[]): DarwinTrajectory =>
+    ({ instance_id: 'x__x-1', model: 'm', tier: 'cheap', resolved: true, messages } as unknown as DarwinTrajectory);
+  const call = {
+    role: 'assistant',
+    content: null,
+    tool_calls: [{ id: 'c1', type: 'function', function: { name: 'read_file', arguments: '{"path":"src/a.py"}' } }],
+  };
+
+  it('scans OpenAI content-part arrays without throwing', () => {
+    const tr = t([call, { role: 'tool', tool_call_id: 'c1', content: [{ type: 'text', text: 'FAIL_TO_PASS: t' }] }]);
+    expect(() => detectRewardHack(tr)).not.toThrow();
+    expect(isRewardHacked(tr)).toBe(true);
+  });
+
+  it('resolves the tool name via tool_call_id when `name` is absent (agentic-loop shape)', () => {
+    const f = detectRewardHack(t([call, { role: 'tool', tool_call_id: 'c1', content: 'PASS_TO_PASS: [a]' }]));
+    expect(f).toEqual([{ kind: 'gold-read', detail: 'PASS_TO_PASS', tool: 'read_file' }]);
+  });
+
+  it('scans Anthropic tool_result blocks (string and block-array content)', () => {
+    expect(isRewardHacked(t([call, { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'c1', content: 'gold_patch' }] }]))).toBe(true);
+    expect(
+      isRewardHacked(
+        t([call, { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'c1', content: [{ type: 'text', text: '"test_patch": "diff"' }] }] }]),
+      ),
+    ).toBe(true);
+  });
+
+  it('scans Responses-API function_call_output items', () => {
+    expect(isRewardHacked(t([{ type: 'function_call_output', call_id: 'c1', output: 'run_evaluation.py' }]))).toBe(true);
+  });
+
+  it('does not scan the user problem statement (text or text blocks)', () => {
+    expect(detectRewardHack(t([{ role: 'user', content: 'The FAIL_TO_PASS test is test_x' }]))).toEqual([]);
+    expect(detectRewardHack(t([{ role: 'user', content: [{ type: 'text', text: 'gold_patch mentioned' }] }]))).toEqual([]);
+  });
+
+  it('does not flag routine repo source in responses (expected_output, def test_patch, .golden)', () => {
+    const src = '    expected_output = compute()\n    def test_patch(self):\n        load("x.golden")\n';
+    expect(detectRewardHack(t([call, { role: 'tool', tool_call_id: 'c1', content: src }]))).toEqual([]);
+  });
+
+  it('tolerates malformed messages (null entries, object content without text)', () => {
+    expect(() => detectRewardHack(t([null, { role: 'tool', content: { foo: 1 } }, call]))).not.toThrow();
+  });
+});
