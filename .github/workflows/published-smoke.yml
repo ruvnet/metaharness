@@ -253,7 +253,7 @@ jobs:
           echo "FAIL: metaharness@latest tarball not fetchable after 150s — longer than CDN propagation." >&2
           exit 1
 
-      - name: Scaffold a harness for every host from `npx metaharness@latest`
+      - name: Scaffold a harness for every host the published CLI supports
         shell: bash
         run: |
           # Install once and call the bin FILE directly — same reason as
@@ -264,8 +264,25 @@ jobs:
           npm install --no-save --no-audit --no-fund metaharness@latest
           BIN="$RUNNER_TEMP/mh-hosts/node_modules/metaharness/dist/bin.js"
           test -f "$BIN" || { echo "FAIL: metaharness bin missing from the published tarball" >&2; exit 1; }
+          # Read the host list from the PUBLISHED artifact instead of hard-coding
+          # it here. A host added in this repo is unknown to metaharness@latest
+          # until the next release, so a hard-coded list fails this job on the
+          # merge push and on every daily cron until then (that is what happened
+          # when prime-agent landed: run 31285811635, "Unknown host: prime-agent").
+          HOSTS="$(node "$BIN" --help | sed -n 's/^Hosts:[[:space:]]*//p' | tr -d '\r' | tr ',' ' ' | tr -s ' ')"
+          if [ -z "${HOSTS// /}" ]; then
+            echo "FAIL: could not read the 'Hosts:' line from the published CLI --help" >&2
+            exit 1
+          fi
+          case " $HOSTS " in
+            *" claude-code "*) ;;
+            *) echo "FAIL: published CLI's host list has no claude-code: $HOSTS" >&2; exit 1 ;;
+          esac
+          echo "Hosts supported by metaharness@latest: $HOSTS"
+          # Scope the next step to the same set.
+          echo "VERIFY_HOSTS=$HOSTS" >> "$GITHUB_ENV"
           mkdir -p /tmp/all-hosts && cd /tmp/all-hosts
-          for host in claude-code codex pi-dev hermes openclaw rvm copilot opencode github-actions prime-agent; do
+          for host in $HOSTS; do
             echo ""
             echo "=== HOST: $host ==="
             rm -rf "bot-$host"
@@ -276,6 +293,9 @@ jobs:
       - name: Run verify-all-hosts.mjs (schema + dep check; runtime where available)
         shell: bash
         working-directory: /tmp/all-hosts
+        # VERIFY_HOSTS (set above) scopes the gate to the hosts the published
+        # CLI actually scaffolded; without it the script would report
+        # `no-scaffold` for a host this repo knows but the release does not.
         run: |
           cp ${{ github.workspace }}/scripts/verify-all-hosts.mjs .
           node verify-all-hosts.mjs

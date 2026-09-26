@@ -128,6 +128,7 @@ const CHECKS = {
       '@metaharness/host-opencode',
       '@metaharness/host-pi-dev',
       '@metaharness/host-prime-agent',
+      '@metaharness/host-grok',
       '@metaharness/host-rvm',
     ]);
     for (const p of packages) {

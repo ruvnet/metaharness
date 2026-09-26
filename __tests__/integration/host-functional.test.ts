@@ -250,6 +250,26 @@ describe('host functional: rvm (partition manifest TOML) — iter 126', () => {
   });
 });
 
+describe('host functional: grok (.grok/config.toml, ADR-280)', () => {
+  it('emits TOML with the harness server in [mcp_servers] and the posture in [permission]', async () => {
+    const dir = await scaffoldFor('grok');
+    const raw = await readFile(join(dir, '.grok', 'config.toml'), 'utf-8');
+    expect(raw.trimStart().startsWith('{')).toBe(false);
+    const parsed = parseTomlSubset(raw);
+    for (const [name, srv] of Object.entries(parsed.mcp_servers as Record<string, any>)) {
+      expect(name).toMatch(/^[A-Za-z_][\w-]*$/); // Grok tool-catalog admission rule
+      expect('command' in srv || 'url' in srv).toBe(true);
+      expect(srv.enabled).toBe(true);
+      expect('type' in srv).toBe(false); // Grok infers http from url
+    }
+    expect(raw).toMatch(/^\[permission\]$/m);
+    expect(existsSync(join(dir, 'AGENTS.md'))).toBe(true);
+    expect(existsSync(join(dir, 'install-grok.md'))).toBe(true);
+    const pkg = JSON.parse(await readFile(join(dir, 'package.json'), 'utf-8'));
+    expect(pkg.dependencies['@metaharness/host-grok']).toBeDefined();
+  });
+});
+
 // ------------------------------------------------------------------ //
 // Cross-host invariants — properties EVERY host scaffold must satisfy
 // ------------------------------------------------------------------ //

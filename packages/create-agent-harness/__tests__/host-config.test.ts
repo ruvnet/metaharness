@@ -5,12 +5,33 @@
 import { describe, it, expect } from 'vitest';
 import { mkdtempSync, readFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { hostConfigFiles } from '../src/host-config.js';
 import { scaffold } from '../src/index.js';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
 const base = { name: 'demo-bot', description: 'A demo harness.', mcp: 'local' as const };
+
+/**
+ * Minimal caret-range check (no `semver` dependency in this package): for a
+ * 0.y.z range, `^0.y.z` admits >=0.y.z and <0.(y+1).0; otherwise `^x.y.z`
+ * admits >=x.y.z and <(x+1).0.0.
+ */
+function satisfiesCaret(version: string, range: string): boolean {
+  const m = /^\^(\d+)\.(\d+)\.(\d+)$/.exec(range);
+  const v = /^(\d+)\.(\d+)\.(\d+)/.exec(version);
+  if (!m || !v) return false;
+  const [rMaj, rMin, rPat] = m.slice(1).map(Number) as [number, number, number];
+  const [vMaj, vMin, vPat] = v.slice(1).map(Number) as [number, number, number];
+  if (vMaj !== rMaj) return false;
+  const upperMinor = rMaj === 0 ? rMin + 1 : Infinity;
+  if (vMin >= upperMinor) return false;
+  if (vMin !== rMin) return vMin > rMin;
+  return vPat >= rPat;
+}
 
 describe('hostConfigFiles (ADR-045)', () => {
   it('claude-code emits nothing (templates own the .claude/ tree)', () => {
@@ -120,6 +141,71 @@ describe('hostConfigFiles (ADR-045)', () => {
   it('unknown host id emits nothing (no throw)', () => {
     expect(hostConfigFiles('does-not-exist', base)).toEqual([]);
   });
+
+  // ADR-280 — Grok Build CLI.
+  it('grok emits .grok/config.toml ([mcp_servers] + [permission]), AGENTS.md and install-grok.md', () => {
+    const files = hostConfigFiles('grok', base);
+    expect(files.map((f) => f.path)).toEqual(['.grok/config.toml', 'AGENTS.md', 'install-grok.md']);
+    const toml = files[0]!.content;
+    expect(toml).toBe([
+      '# demo-bot — Grok Build project config (metaharness host: grok, ADR-280).',
+      '# Grok starts these servers and applies these rules only in a trusted folder; see install-grok.md.',
+      '',
+      '[mcp_servers.demo-bot]',
+      'command = "npx"',
+      'args = ["-y", "demo-bot@latest", "mcp", "start"]',
+      'enabled = true',
+      '',
+      '[permission]',
+      'allow = [',
+      '  "mcp__demo-bot__*",',
+      ']',
+      'deny = [',
+      '  "Read(./.env)",',
+      '  "Read(./.env.*)",',
+      '  "Bash(rm:*)",',
+      '  "Bash(git push:*)",',
+      '  "Write(*)",',
+      '  "Edit(*)",',
+      ']',
+      '',
+    ].join('\n'));
+    expect(files[1]!.content).toContain('`demo-bot__*` in Grok');
+  });
+
+  it('grok remote MCP is url + headers with no `type` key (unlike the codex arm)', () => {
+    const toml = hostConfigFiles('grok', { ...base, mcp: 'remote' })[0]!.content;
+    expect(toml).toContain('[mcp_servers.demo-bot]\nurl = "https://localhost:8787/mcp"\nenabled = true\n\n[mcp_servers.demo-bot.headers]\nAuthorization = "Bearer ${HARNESS_MCP_TOKEN}"');
+    expect(toml).not.toMatch(/^type =/m);
+  });
+
+  it('grok runbook leads with the trust step and repeats every deny rule as a --deny flag', () => {
+    const md = hostConfigFiles('grok', base).find((f) => f.path === 'install-grok.md')!.content;
+    expect(md.indexOf('ACTION REQUIRED')).toBeLessThan(md.indexOf('1. Install'));
+    expect(md).toContain('grok --trust inspect');
+    expect(md).toContain("--deny 'Read(./.env)' --deny 'Read(./.env.*)' --deny 'Bash(rm:*)' --deny 'Bash(git push:*)' --deny 'Write(*)' --deny 'Edit(*)'");
+    expect(md).toContain('`Source: .grok/config.toml` with `7 loaded` rules (more if a `.claude/settings.json` is present');
+    expect(md).toMatch(/never a fork PR/);
+  });
+
+  // Same bug class as the hermes/github-actions regressions above: `cfg.name`
+  // is unconstrained at this type's level and lands in a TOML table header
+  // and comment. It must not inject a table (validateHarnessName blocks it on
+  // the CLI path; this module must not rely on that).
+  it('grok: an adversarial harness name cannot inject TOML structure', () => {
+    const evil = 'evil]\n[permission]\nallow = ["Bash(*)"]\n#';
+    const toml = hostConfigFiles('grok', { ...base, name: evil })[0]!.content;
+    expect(toml.split('\n')[0]).toBe('# evil] [permission] allow = ["Bash(*)"] # — Grok Build project config (metaharness host: grok, ADR-280).');
+    expect(toml.match(/^\[permission\]$/gm)).toHaveLength(1);
+    expect(toml).toContain('[mcp_servers.evil-permission-allow-Bash]');
+    let hasTomllib = true;
+    try { execFileSync('python3', ['-c', 'import tomllib'], { stdio: 'ignore' }); } catch { hasTomllib = false; }
+    if (hasTomllib) {
+      const parsed = JSON.parse(execFileSync('python3', ['-c', 'import json,sys,tomllib; print(json.dumps(tomllib.loads(sys.stdin.read())))'], { input: toml, encoding: 'utf-8' }));
+      expect(Object.keys(parsed.mcp_servers)).toEqual(['evil-permission-allow-Bash']);
+      expect(parsed.permission.allow).toEqual([`mcp__${evil}__*`]);
+    }
+  });
 });
 
 describe('scaffold wires host config (ADR-045 end-to-end)', () => {
@@ -172,6 +258,44 @@ describe('scaffold wires host config (ADR-045 end-to-end)', () => {
     expect(existsSync(join(dir, '.claude/settings.json'))).toBe(false);
     expect(existsSync(join(dir, '.claude-plugin'))).toBe(false);
     expect(existsSync(join(dir, 'rvm.manifest.toml'))).toBe(true);
+  });
+
+  // ADR-280 — --host grok end to end, alone and alongside claude-code.
+  it('--host grok writes .grok/config.toml + AGENTS.md + install-grok.md, fingerprinted, no Claude runtime config', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'mh-grok-'));
+    await scaffold({
+      name: 'grok-bot', template: 'minimal', host: 'grok' as never, hosts: ['grok'] as never,
+      description: 'x', targetDir: dir, force: true, generatorVersion: '0.0.0-test',
+    });
+    for (const f of ['.grok/config.toml', 'AGENTS.md', 'install-grok.md']) expect(existsSync(join(dir, f)), f).toBe(true);
+    expect(existsSync(join(dir, '.claude/settings.json'))).toBe(false);
+    const manifest = JSON.parse(readFileSync(join(dir, '.harness/manifest.json'), 'utf-8'));
+    expect(manifest.hosts).toEqual(['grok']);
+    expect(Object.keys(manifest.files)).toEqual(expect.arrayContaining(['.grok/config.toml', 'AGENTS.md', 'install-grok.md']));
+    const deps = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf-8')).dependencies;
+    expect(deps['@metaharness/host-grok']).toBeDefined();
+  });
+
+  it('claude-code + grok multi-host keeps both trees, and every host dep range is satisfiable', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'mh-grok-multi-'));
+    await scaffold({
+      name: 'both', template: 'minimal', host: 'claude-code' as never, hosts: ['claude-code', 'grok'] as never,
+      description: 'x', targetDir: dir, force: true, generatorVersion: '0.0.0-test',
+    });
+    expect(existsSync(join(dir, '.claude/settings.json'))).toBe(true);
+    expect(existsSync(join(dir, '.grok/config.toml'))).toBe(true);
+    const deps = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf-8')).dependencies;
+    expect(deps['@metaharness/host-claude-code']).toBeDefined();
+    expect(deps['@metaharness/host-grok']).toBeDefined();
+
+    // A `toBeDefined()` range can still be unsatisfiable: the multi-host loop
+    // used to pin '^0.1.1', which no published host-grok/host-prime-agent
+    // version satisfies, so `npm install` failed with ETARGET. Assert the
+    // emitted range actually admits the version in this repo.
+    const version = JSON.parse(
+      readFileSync(join(__dirname, '..', '..', 'host-grok', 'package.json'), 'utf-8'),
+    ).version as string;
+    expect(satisfiesCaret(version, deps['@metaharness/host-grok'])).toBe(true);
   });
 
   it('keeps .claude/settings.json when claude-code IS among the hosts', async () => {

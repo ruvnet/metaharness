@@ -22,6 +22,7 @@ A bird's-eye view of how `agent-harness-generator` is wired. The detail lives in
 │   @metaharness/host-openclaw      @metaharness/host-rvm          │
 │   @metaharness/host-copilot       @metaharness/host-opencode     │
 │   @metaharness/host-github-actions  @metaharness/host-prime-agent│
+│   @metaharness/host-grok                                         │
 │                                                                  │
 │   @metaharness/sdk                @metaharness/vertical-base     │
 │                                   @metaharness/vertical-trading  │

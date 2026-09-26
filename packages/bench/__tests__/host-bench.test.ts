@@ -17,11 +17,11 @@ describe('host-bench', () => {
     }
   });
 
-  it('benchAllHosts covers all 10 adapters', () => {
+  it('benchAllHosts covers all 11 adapters', () => {
     const results = benchAllHosts(20);
-    expect(results).toHaveLength(10);
+    expect(results).toHaveLength(11);
     const hosts = new Set(results.map(r => r.host));
-    expect(hosts).toEqual(new Set(['claude-code', 'codex', 'pi-dev', 'hermes', 'openclaw', 'rvm', 'copilot', 'opencode', 'github-actions', 'prime-agent']));
+    expect(hosts).toEqual(new Set(['claude-code', 'codex', 'pi-dev', 'hermes', 'openclaw', 'rvm', 'copilot', 'opencode', 'github-actions', 'prime-agent', 'grok']));
   });
 
   it('formatResultsTable produces a valid markdown table', () => {
@@ -30,7 +30,7 @@ describe('host-bench', () => {
     expect(table.split('\n')[0]).toMatch(/^\| Host/);
     expect(table.split('\n')[1]).toMatch(/^\|---/);
     // One row per host plus 2 header rows
-    expect(table.split('\n')).toHaveLength(10 + 2);
+    expect(table.split('\n')).toHaveLength(11 + 2);
   });
 
   it('config-gen latency is reasonable (mean < 5ms per host)', () => {

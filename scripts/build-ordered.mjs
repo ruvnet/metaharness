@@ -45,6 +45,7 @@ const PHASES = [
     'host-opencode',        // iter 128 (ADR-036)
     'host-github-actions',  // iter 146 (ADR-033)
     'host-prime-agent',  // ADR-247
+    'host-grok',         // ADR-280
     'sdk',
     'create-agent-harness',
     'arc-agi-3-chatgpt', // ADR-253; depends on @metaharness/arc-agi-3

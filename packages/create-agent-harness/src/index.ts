@@ -65,9 +65,10 @@ const KERNEL_VERSION = resolveKernelVersion();
 
 // iter 127 added copilot (ADR-032); iter 128 added opencode (ADR-036);
 // iter 147 added github-actions (ADR-033, the first non-interactive host);
-// prime-agent added per ADR-247 (skills-based, no MCP).
-// HOSTS is the canonical 10-host catalog.
-export const HOSTS = ['claude-code', 'codex', 'pi-dev', 'hermes', 'openclaw', 'rvm', 'copilot', 'opencode', 'github-actions', 'prime-agent'] as const;
+// prime-agent added per ADR-247 (skills-based, no MCP); grok added per
+// ADR-280 (xAI Grok Build CLI, .grok/config.toml, trust-gated).
+// HOSTS is the canonical 11-host catalog.
+export const HOSTS = ['claude-code', 'codex', 'pi-dev', 'hermes', 'openclaw', 'rvm', 'copilot', 'opencode', 'github-actions', 'prime-agent', 'grok'] as const;
 export type Host = (typeof HOSTS)[number];
 
 export const TEMPLATES = [
@@ -639,7 +640,12 @@ export async function scaffold(opts: ScaffoldOptions): Promise<ScaffoldResult> {
         pkg.dependencies = pkg.dependencies || {};
         for (const h of hostSet) {
           const dep = `@metaharness/host-${h}`;
-          if (!pkg.dependencies[dep]) pkg.dependencies[dep] = '^0.1.1';
+          // ^0.1.0, matching the template's primary-host pin
+          // (templates/*/package.json.tmpl). The previous '^0.1.1' could not be
+          // satisfied by a host package whose only published version is 0.1.0
+          // (host-prime-agent today, host-grok on first publish), so a
+          // multi-host scaffold's `npm install` failed with ETARGET.
+          if (!pkg.dependencies[dep]) pkg.dependencies[dep] = '^0.1.0';
         }
         rendered[pkgIdx]!.content = JSON.stringify(pkg, null, 2) + '\n';
       } catch { /* leave package.json untouched if it doesn't parse */ }

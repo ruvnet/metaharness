@@ -343,6 +343,12 @@ ADR-006 (memory + learning) and ADR-008 (drift detection) cut across all phases.
 |-----|-------|--------|---------|
 | [ADR-317](./ADR-317-independent-review-context-isolation.md) | Independent review context isolation | Proposed | `@metaharness/flywheel` `review-context` builds provenance-bound reviewer packets that exclude worker reasoning, peer messages, prior verdicts, reward history, shared scratchpads, and reviewer identity cues; the packet digest detects tampering but is unkeyed, and no runner enforces it yet. |
 
+## Grok Build integration
+
+| ADR | Title | Status | Summary |
+|-----|-------|--------|---------|
+| [ADR-280](./ADR-280-host-grok.md) | host-grok — xAI Grok Build CLI as the 11th implemented harness host | Proposed (implementation included; GH #279) | Emission-only adapter (`@metaharness/host-grok`) verified against grok 1.0.34: `.grok/config.toml` with `[mcp_servers]` (the `grok mcp add --scope project` shape, no `type` key) and `[permission]` (Claude rule strings, verbatim; the CLI posture loads 7/7), `AGENTS.md`, `.grok/agents`, instruction-only `.grok/skills`, and Claude-shaped `.grok/hooks`. Fail-closed on folder trust: Grok loads none of a project's instructions, skills, hooks or rules until the folder is trusted, so `install-grok.md` opens with a banner naming every deny rule and repeats them as always-enforced `--deny` flags; `grok --trust inspect` is the zero-cost trust-and-check step. Rules outside Grok's vocabulary (which Grok drops without reporting) and every unprojected field are named. CLI/web-UI/adapter parity tested byte for byte; real-binary `inspect` tests and a `verify-all-hosts --real` check. |
+
 ## Conventions used across the series
 
 - **"Kernel"** = `@metaharness/kernel`, the package extracted from ruflo that contains primitives a harness needs regardless of identity or content (MCP wiring, hooks runtime, memory bridge, routing). Defined in ADR-002.

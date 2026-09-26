@@ -110,6 +110,7 @@ Then for each host:
 | OpenClaw | `openclaw run --harness .` |
 | RVM | `rvm launch --partition ./rvm-partition.toml` |
 | Prime Agent | `prime-agent` from inside the folder (skills auto-discovered from `.prime/agent/skills/`) |
+| Grok Build | `grok --trust inspect` once from inside the folder (trusts it and lists what loaded), then `grok` |
 
 The Studio shows these commands inline after you pick your hosts.
 
@@ -170,7 +171,7 @@ Run **Verify** on it first (tab 4 of the Studio). It scans for:
 If those pass, the harness is at least no riskier than any other npm
 package you'd `npm install`.
 
-### Q: Why are there 10 hosts?
+### Q: Why are there 11 hosts?
 
 Different teams use different agent runtimes. Claude Code is most common.
 Codex is OpenAI's. pi.dev is Mariozechner / Badlogic's monorepo agent.
@@ -181,6 +182,8 @@ Actions runs the harness non-interactively in CI. Prime Agent is Prime
 Intellect's open-source harness — it has no MCP, so your tools ship as
 Python-backed skills, and it has no sandbox, so a deny-list comes with a
 `SANDBOX-REQUIRED.md` warning instead of being silently dropped.
+Grok Build is xAI's terminal agent; it reads the harness's MCP server and
+permission rules from `.grok/config.toml`, but only once you trust the folder.
 The harness output works the same on all of them — the only differences
 are config-file shape and how you launch.
 

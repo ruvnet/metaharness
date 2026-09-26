@@ -8,7 +8,7 @@ interface HostStep {
 }
 
 interface HostGuide {
-  id: 'claude-code' | 'codex' | 'pi-dev' | 'hermes' | 'openclaw' | 'rvm' | 'copilot' | 'opencode' | 'github-actions' | 'prime-agent';
+  id: 'claude-code' | 'codex' | 'pi-dev' | 'hermes' | 'openclaw' | 'rvm' | 'copilot' | 'opencode' | 'github-actions' | 'prime-agent' | 'grok';
   name: string;
   blurb: string;
   steps: HostStep[];
@@ -191,6 +191,28 @@ export const GUIDES: HostGuide[] = [
       {
         title: '3. Heed the sandbox warning',
         body: 'Prime Agent is not sandboxed and cannot enforce a deny-list natively. If your scaffold contains SANDBOX-REQUIRED.md, run only inside an external sandbox (container / RVM) — details in install-prime-agent.md.',
+      },
+    ],
+  },
+  {
+    id: 'grok',
+    name: 'Grok Build',
+    blurb: 'xAI\'s terminal agent (ADR-280). The harness ships `.grok/config.toml` with its MCP server and `[permission]` rules, plus `AGENTS.md`. Grok loads none of it until the folder is trusted.',
+    steps: [
+      {
+        title: '1. Install Grok Build',
+        body: 'Install with the official script, then sign in.',
+        code: 'curl -fsSL https://x.ai/cli/install.sh | bash\ngrok login',
+      },
+      {
+        title: '2. Trust the folder and check what loaded',
+        body: 'Review .grok/config.toml and AGENTS.md first. `grok --trust inspect` records the trust decision and lists the MCP server, permission rules and instructions Grok loaded.',
+        code: 'cd my-harness\ngrok --trust inspect',
+      },
+      {
+        title: '3. Run it',
+        body: 'Start the TUI from the harness folder. For headless runs, repeat the deny rules as --deny flags (see install-grok.md); Grok enforces those even in an untrusted folder.',
+        code: 'grok',
       },
     ],
   },

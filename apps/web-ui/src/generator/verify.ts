@@ -50,6 +50,8 @@ function mcpServerPresent(files: GenFile[]): boolean {
 /** ADR-044: a permission/allow-deny posture is present in any host's config. */
 function permissionsPresent(files: GenFile[]): boolean {
   for (const f of files) {
+    // grok (ADR-280): allow/deny live in the `[permission]` table of .grok/config.toml.
+    if (f.path === '.grok/config.toml' && /^\[permission\]$/m.test(f.content)) return true;
     if (!f.path.endsWith('.json')) continue;
     try {
       const j = JSON.parse(f.content);
@@ -88,7 +90,7 @@ export function verifyFileMap(files: GenFile[]): VerifyReport {
     '.claude/settings.json', '.codex/config.toml', 'AGENTS.md', 'cli-config.yaml',
     '.openclaw/openclaw.json', 'rvm.manifest.toml', '.opencode/opencode.json',
     '.vscode/mcp.json', '.github/copilot-instructions.md', 'capability-table.json',
-    'install-prime-agent.md',
+    'install-prime-agent.md', '.grok/config.toml',
   ];
   if (hostArtifacts.some((p) => find(files, p)) || files.some((f) => f.path.startsWith('.github/workflows/'))) {
     pass('host', 'at least one host adapter wired');

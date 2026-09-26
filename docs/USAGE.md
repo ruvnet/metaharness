@@ -70,7 +70,7 @@ Or run interactively (no `--template` flag) to be prompted.
 
 ## 3. Pick host(s)
 
-Generated harnesses run on ten hosts. You can target one or more:
+Generated harnesses run on eleven hosts. You can target one or more:
 
 | Host | What it looks like in your harness |
 |---|---|
@@ -81,6 +81,7 @@ Generated harnesses run on ten hosts. You can target one or more:
 | `openclaw` | `~/.openclaw/openclaw.json` snippet + workspace SKILL.md + install runbook |
 | `rvm` | RVM partition manifest (TOML) + capability table (JSON) + wasm-guest descriptor + install runbook |
 | `prime-agent` | `.prime/agent/skills/` Python-backed skill per tool (no MCP by design) + `install-prime-agent.md` runbook; deny-lists emit `SANDBOX-REQUIRED.md` (ADR-247) |
+| `grok` | `.grok/config.toml` with `[mcp_servers.*]` + `[permission]`, `AGENTS.md`, `install-grok.md` runbook; Grok loads it only in a trusted folder (`grok --trust inspect`) (ADR-280) |
 
 Also available: `copilot`, `opencode`, and `github-actions` — see the
 Hosts table in the [README](../README.md#hosts).

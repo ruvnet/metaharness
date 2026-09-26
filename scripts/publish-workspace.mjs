@@ -39,6 +39,7 @@ export const RELEASE_ORDER = [
   'host-openclaw',
   'host-rvm',
   'host-prime-agent',
+  'host-grok',
   'vertical-base',
   'vertical-trading',
   'field-memory',
