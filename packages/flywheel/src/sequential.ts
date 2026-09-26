@@ -115,10 +115,28 @@ export function sequentialEvidence(
  * clause of `baseRule`, and evidence strong enough to survive having been
  * looked at repeatedly.
  *
- * Paired outcomes are read from `evidence.pairedOutcomes` when present. When
- * absent the rule degrades to `baseRule` alone rather than silently blocking
- * every promotion — a caller that has not wired up per-item outcomes yet should
- * get the old behavior, not a permanently closed gate.
+ * Paired outcomes are read from `evidence.pairedOutcomes` when present AND
+ * non-empty. When absent OR an empty array, the rule degrades to `baseRule`
+ * alone rather than silently blocking every promotion — a caller that has
+ * not wired up per-item outcomes yet should get the old behavior, not a
+ * permanently closed gate.
+ *
+ * This distinction matters because JS callers commonly default an optional
+ * array field with `?? []` rather than leaving it `undefined` — e.g. an
+ * `Evaluator` that does not (yet) populate per-item results, or one backed
+ * by a suite that happens to have zero items this run. `!outcomes` alone
+ * does not catch that: `![]` is `false` (an empty array is truthy in JS),
+ * so a caller supplying `pairedOutcomes: []` fell through to
+ * `sequentialEvidence([], …)`, which starts at `eValue = 1` with zero
+ * informative pairs and can never reach the significance threshold —
+ * permanently rejecting every candidate on that call site regardless of how
+ * strong the base rule's own evidence is, exactly the "permanently closed
+ * gate" this function's contract says it must not become. An empty array
+ * carries the same "no per-item evidence supplied" meaning as `undefined`
+ * here and is treated identically; it is NOT the same as a non-empty array
+ * whose pairs all happen to be concordant (real data was supplied and found
+ * uninformative) — that case is unchanged and still correctly rejects for
+ * insufficient evidence, since data WAS in fact provided and evaluated.
  */
 export function withSequentialEvidence(
   baseRule: PromotionRule,
@@ -129,7 +147,7 @@ export function withSequentialEvidence(
     const outcomes = (evidence as PromotionEvidence & { pairedOutcomes?: PairedOutcome[] })
       .pairedOutcomes;
 
-    if (!outcomes) return base;
+    if (!outcomes || outcomes.length === 0) return base;
 
     const verdict = sequentialEvidence(outcomes, config);
     if (verdict.significant) return base;
