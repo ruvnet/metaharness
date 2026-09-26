@@ -337,6 +337,12 @@ ADR-006 (memory + learning) and ADR-008 (drift detection) cut across all phases.
 | [ADR-278](./ADR-278-darwin-tier2-sandbox-gate-closure.md) | Closing the Tier-2 `agent` sandbox's missing ADR-071 safety gate | Accepted (implemented) | `tier2-sandbox.ts` never called `inspectVariant` before executing a variant's real surface code — disclosed but left open in ADR-273. Now gates first, matching `sandbox.ts`/`llm-agent-sandbox.ts`; non-vacuous proof (a real side-effect marker file) confirms the bypass was real and is now closed. |
 | [ADR-279](./ADR-279-flywheel-sequential-evidence-wiring.md) | Wiring `withSequentialEvidence` into the flywheel's live promotion path (and its replay) | Accepted (implemented) | `sequential.ts`'s anytime-valid e-process gate was fully built and unit-tested but had zero production call site: `runFlywheelGenerations` never populated `PromotionEvidence.pairedOutcomes` (the type didn't even have the field), so a caller wiring in `withSequentialEvidence` always silently degraded to the base gate. Adds `Score.itemWins` (optional, additive) and threads it through both the live run and `verifyReplayBundle`'s independent gate re-execution (the latter found by tonight's independent critic, same bug class, sibling call site). Same "documented-but-unreachable" class as ADR-278, different domain. |
 
+## Review independence
+
+| ADR | Title | Status | Summary |
+|-----|-------|--------|---------|
+| [ADR-317](./ADR-317-independent-review-context-isolation.md) | Independent review context isolation | Proposed | `@metaharness/flywheel` `review-context` builds provenance-bound reviewer packets that exclude worker reasoning, peer messages, prior verdicts, reward history, shared scratchpads, and reviewer identity cues; the packet digest detects tampering but is unkeyed, and no runner enforces it yet. |
+
 ## Conventions used across the series
 
 - **"Kernel"** = `@metaharness/kernel`, the package extracted from ruflo that contains primitives a harness needs regardless of identity or content (MCP wiring, hooks runtime, memory bridge, routing). Defined in ADR-002.
