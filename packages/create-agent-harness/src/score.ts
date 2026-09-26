@@ -22,6 +22,7 @@
 import { existsSync, statSync, writeFileSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { redactSecretsDeep } from './redact.js';
+import { scanMcp } from './mcp-scan.js';
 
 export type SubcommandResult = { code: number; lines: string[] };
 
@@ -181,8 +182,10 @@ function scoreMcpSafety(dir: string): McpScore {
     return { name: 'MCP safety', weight: 0.2, score: 0, signals, mcpRisk: 'High' };
   }
 
-  // No policy + no .mcp.json at all = MCP not in use, which is the safest possible.
-  const hasMcp = policyPresent || fileExists(dir, '.mcp.json');
+  // "In use" is decided by scanMcp()'s mcpEnabled, which also sees a server
+  // registered only in .claude/settings.json (#280). A present-but-unparseable
+  // .mcp.json must still count as in-use so it cannot fail open to 'None'.
+  const hasMcp = scanMcp(dir).mcpEnabled || policyPresent || fileExists(dir, '.mcp.json');
   if (!hasMcp) {
     signals.push('MCP not in use (mode=off — safest)');
     return { name: 'MCP safety', weight: 0.2, score: 100, signals, mcpRisk: 'None' };
