@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/host-opencode",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "OpenCode (sst/opencode) host adapter for agent-harness-generator. Emits .opencode/opencode.json (ADR-036).",
   "homepage": "https://github.com/ruvnet/agent-harness-generator",
   "repository": {

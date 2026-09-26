@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/host-pi-dev",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "pi.dev coding-agent host adapter for agent-harness-generator (Pi extension, no MCP by design)",
   "homepage": "https://github.com/ruvnet/agent-harness-generator",
   "repository": {
