@@ -124,6 +124,18 @@ const attack = (evidence, family) => {
       altered.generations[2].child.safetyViolations = 1;
       altered.generations[2].reviewerAttestations = attest(altered.runId, altered.generations[2]);
       break;
+    case 6:
+      altered.generations[0].reviewerAttestations = [
+        {
+          reviewerId: 'reviewer:a',
+          receipt: reviewerA.sign(reviewerAttestationPayload(altered.runId, altered.generations[0], 'reviewer:a')),
+        },
+        {
+          reviewerId: 'reviewer:b',
+          receipt: reviewerA.sign(reviewerAttestationPayload(altered.runId, altered.generations[0], 'reviewer:b')),
+        },
+      ];
+      break;
   }
   return altered;
 };
@@ -140,8 +152,18 @@ for (let offset = 0; offset < totalCases; offset += batchSize) {
     const seed = seeds[i % seeds.length];
     const clean = i < cleanCases;
     const evidence = fixture(seed);
-    const candidate = clean ? evidence : attack(evidence, (i - cleanCases) % 6);
-    const verdict = verifyMultiGenerationEvidence(candidate, expectation(candidate));
+    const family = clean ? -1 : (i - cleanCases) % 7;
+    const candidate = clean ? evidence : attack(evidence, family);
+    const expected = family === 6
+      ? {
+          ...expectation(candidate),
+          trustedReviewerKeys: {
+            'reviewer:a': reviewerA.publicKey(),
+            'reviewer:b': reviewerA.publicKey(),
+          },
+        }
+      : expectation(candidate);
+    const verdict = verifyMultiGenerationEvidence(candidate, expected);
     if (clean && !verdict.pass) falseDenials += 1;
     if (!clean && verdict.pass) falseAccepts += 1;
     processed += 1;
@@ -170,6 +192,7 @@ const result = {
     'post_attestation_tamper',
     'missing_control',
     'protected_regression',
+    'reviewer_key_alias',
   ],
   candidate: {
     falseAccepts,
