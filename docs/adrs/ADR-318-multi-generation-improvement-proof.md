@@ -92,6 +92,7 @@ A reviewer is trusted only if:
 
 - its reviewer id appears in the verifier expectation;
 - its public key exactly matches the externally pinned key;
+- counted reviewers must use distinct signing keys;
 - the receipt signature verifies;
 - the signed payload binds run, generation, parent, child, evidence digest, reviewer id, verdict, and `authority: none`.
 
