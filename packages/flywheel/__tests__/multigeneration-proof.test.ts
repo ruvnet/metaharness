@@ -143,6 +143,25 @@ describe('multi-generation improvement proof', () => {
     expect(verdict.failures).toContain('gen1:insufficient_trusted_reviewers');
   });
 
+  it('does not count reviewer aliases backed by the same signing key as independent reviewers', () => {
+    const e = makeEvidence();
+    for (const g of e.generations) {
+      g.reviewerAttestations = [
+        { reviewerId: 'reviewer:a', receipt: reviewerA.sign(reviewerAttestationPayload(e.runId, g, 'reviewer:a')) },
+        { reviewerId: 'reviewer:b', receipt: reviewerA.sign(reviewerAttestationPayload(e.runId, g, 'reviewer:b')) },
+      ];
+    }
+    const verdict = verifyMultiGenerationEvidence(e, {
+      ...expectation(e),
+      trustedReviewerKeys: {
+        'reviewer:a': reviewerA.publicKey(),
+        'reviewer:b': reviewerA.publicKey(),
+      },
+    });
+    expect(verdict.pass).toBe(false);
+    expect(verdict.failures).toContain('gen1:insufficient_trusted_reviewers');
+  });
+
   it('requires externally frozen confirmation digests for independent confirmation', () => {
     const e = makeEvidence('independent_confirmation');
     const verdict = verifyMultiGenerationEvidence(e, {
