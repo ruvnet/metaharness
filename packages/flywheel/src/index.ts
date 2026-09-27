@@ -34,6 +34,31 @@ export type {
   ReviewPacketVerdict,
   ReviewRole,
 } from './review-context.js';
+export {
+  DEFAULT_MULTIGEN_POLICY,
+  MULTIGEN_AUTHORITY,
+  MULTIGEN_PROOF_VERSION,
+  generationEvidenceDigest,
+  multiGenerationEvidenceDigest,
+  reviewerAttestationPayload,
+  verifyMultiGenerationEvidence,
+} from './multigeneration-proof.js';
+export type {
+  BudgetEnvelope,
+  ControlArm,
+  ControlObservation,
+  EvidenceClass,
+  GenerationDerived,
+  GenerationEvidence,
+  ImproverProbe,
+  MultiGenerationEvidence,
+  MultiGenerationProofExpectation,
+  MultiGenerationProofPolicy,
+  MultiGenerationProofVerdict,
+  Outcome,
+  ProofClass,
+  ReviewerAttestation,
+} from './multigeneration-proof.js';
 
 export type {
   Policy,
