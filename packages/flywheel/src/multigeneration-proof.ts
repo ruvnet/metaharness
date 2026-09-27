@@ -346,10 +346,15 @@ export function verifyMultiGenerationEvidence(
     if (g.controls.length && controlMargin < policy.minControlPrimaryMargin) failures.push(`${prefix}control_margin_too_small`);
 
     const validReviewerIds = new Set<string>();
+    const validReviewerKeys = new Set<string>();
     for (const a of g.reviewerAttestations) {
-      if (validAttestation(e.runId, g, a, expected.trustedReviewerKeys)) validReviewerIds.add(a.reviewerId);
+      if (validAttestation(e.runId, g, a, expected.trustedReviewerKeys)) {
+        validReviewerIds.add(a.reviewerId);
+        validReviewerKeys.add(a.receipt.publicKey);
+      }
     }
-    const trustedReviewers = validReviewerIds.size;
+    // Reviewer labels do not establish independence if they alias the same signing key.
+    const trustedReviewers = Math.min(validReviewerIds.size, validReviewerKeys.size);
     if (trustedReviewers < policy.minTrustedReviewersPerGeneration) {
       failures.push(`${prefix}insufficient_trusted_reviewers`);
       allIndependent = false;
