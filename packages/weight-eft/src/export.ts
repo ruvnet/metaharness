@@ -137,6 +137,16 @@ export function exportTrainingData(
   options: ExportOptions,
 ): ExportResult {
   const maxTokens = options.maxTokens ?? DEFAULT_MAX_TOKENS;
+  // `??` only substitutes on null/undefined — a NaN (e.g. from a malformed
+  // --max-tokens CLI flag) survives it untouched. `tokens <= NaN` is then always
+  // false, so every trajectory looks "over budget" and the export silently
+  // yields 0 SFT/DPO rows at exit code 0 instead of naming the bad flag.
+  if (!Number.isFinite(maxTokens) || maxTokens <= 0) {
+    throw new Error(
+      `weight-eft: maxTokens must be a finite positive number, got ${options.maxTokens} — refusing to export ` +
+        `(every trajectory would silently look over-budget and yield 0 SFT/DPO rows).`,
+    );
+  }
   const holdout = new Set(options.evalHoldout);
   const notes: string[] = [];
 
