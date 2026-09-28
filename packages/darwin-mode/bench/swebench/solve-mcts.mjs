@@ -16,6 +16,7 @@ import { generateBaselineHarness } from '../../dist/generator.js';
 import { profileRepo } from '../../dist/repo_profiler.js';
 import { buildReproTest, REPRO_PATH } from './test-critic.mjs';
 import { runConformantTests, startInstanceContainer, stopInstanceContainer } from './conformant-tests.mjs';
+import { numericFlag } from './lib/numeric-flags.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -33,7 +34,7 @@ const rel = (p) => (isAbsolute(p) ? p : join(HERE, p));
 const OUT = rel(argv('--out', 'predictions-mcts.jsonl'));
 const REPORT = rel(argv('--report', 'solve-mcts-report.json'));
 const CONCURRENCY = Math.max(1, +argv('--concurrency', 2));
-const MAX_COST = +argv('--max-cost', Infinity);
+const MAX_COST = numericFlag(argv, '--max-cost', Infinity);
 // ADR-175 #47 — human-in-the-loop test review (the "Conformant + review" middle mode).
 // Phase 1 (`--pause-for-test-review`): write each agent repro to REPRO_DIR for a human to read/edit,
 // and DO NOT patch/trust unreviewed instances. Phase 2 (add `--approved-repros <dir>`): only instances

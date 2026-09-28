@@ -34,6 +34,7 @@ import { execSync, execFileSync, spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve as presolve } from 'node:path';
+import { numericFlag } from './lib/numeric-flags.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = presolve(__dirname, '../../../..');           // .../agent-harness-generator
@@ -526,7 +527,7 @@ if (process.argv[1] && process.argv[1].endsWith('evolve-config.mjs')) {
   } else if (cmd === 'run') {
     await run({
       gens: +argv('--gens', 3), pop: +argv('--pop', 5), maxConc: +argv('--max-conc', 3),
-      costCap: +argv('--cost-cap', 400), pollMin: +argv('--poll-min', 8), maxPollTicks: +argv('--max-poll-ticks', 22),
+      costCap: numericFlag(argv, '--cost-cap', 400), pollMin: +argv('--poll-min', 8), maxPollTicks: +argv('--max-poll-ticks', 22),
       maxRuntimeMin: +argv('--max-runtime-min', 600), seed: +argv('--seed', 1), dry: args.includes('--dry'),
     });
   } else {
