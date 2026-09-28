@@ -55,6 +55,7 @@ import { execSync, execFileSync, spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve as presolve } from 'node:path';
+import { numericFlag } from './lib/numeric-flags.mjs';
 import {
   randomGenome, mutate, crossover, gkey, normalizeGenome, costPrior, fsModelString,
   CHEAP_MODELS, FRONTIER_MODELS, mkRng,
@@ -446,7 +447,7 @@ if (process.argv[1] && process.argv[1].endsWith('evolve-perinstance.mjs')) {
   } else if (cmd === 'run') {
     await run({
       gens: +argv('--gens', 2), pop: +argv('--pop', 6), k: +argv('--k', 2), maxConc: +argv('--max-conc', 4),
-      costCap: +argv('--cost-cap', 300), pollMin: +argv('--poll-min', 8), maxPollTicks: +argv('--max-poll-ticks', 30),
+      costCap: numericFlag(argv, '--cost-cap', 300), pollMin: +argv('--poll-min', 8), maxPollTicks: +argv('--max-poll-ticks', 30),
       maxRuntimeMin: +argv('--max-runtime-min', 720), instances: +argv('--instances', 25), seed: +argv('--seed', 1),
       dry: args.includes('--dry'),
     });

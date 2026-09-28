@@ -35,6 +35,7 @@ import { chooseFableMode, assertFableLoopMode, fableAuditLine, detectErosion, FA
 // is set), so a default run is byte-identical. Captures the audit-relevant signals sota-attest needs to
 // PROVE no_gold_in_loop / localization_no_gold / best_of_n_selector_conformant (see solver-trajectory.mjs).
 import { createTrajectoryRecorder } from './solver-trajectory.mjs';
+import { numericFlag } from './lib/numeric-flags.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -53,7 +54,7 @@ const key = (process.env[KEY_ENV] || (() => { try { return readFileSync('/tmp/.o
 const CONCURRENCY = Math.max(1, +argv('--concurrency', 1));
 // In-solver budget cap (see solve-repair.mjs). `--max-cost <usd>` stops pulling
 // new instances once cumulative LLM cost reaches it; in-flight finish + write.
-const MAX_COST = +argv('--max-cost', Infinity);
+const MAX_COST = numericFlag(argv, '--max-cost', Infinity);
 const TEMP = +argv('--temperature', 0); // Best-of-N diversity: run N trajectories at temp>0 to vary them
 const CHEB_TEMP = process.argv.includes('--cheb-temp'); // PR#49/ADR-188: Chebyshev step-depth temp (hot→greedy)
 const CHEB_HI = +argv('--cheb-hi', 0.8);                 // hot-end temperature for the schedule

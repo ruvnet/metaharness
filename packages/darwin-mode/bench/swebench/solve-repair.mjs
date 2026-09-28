@@ -18,6 +18,7 @@ import { generateBaselineHarness } from '../../dist/generator.js';
 import { profileRepo } from '../../dist/repo_profiler.js';
 import { selectFiles } from '../swe-bench-runner.mjs';
 import { buildIndex, retrieveHybrid, formatExemplars } from './patch-memory.mjs';
+import { numericFlag } from './lib/numeric-flags.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -150,7 +151,7 @@ const CONCURRENCY = Math.max(1, +argv('--concurrency', 1));
 // watchdog can be killed and miss the threshold). `--max-cost <usd>` stops
 // pulling NEW instances once cumulative LLM cost reaches the cap. In-flight
 // instances finish; their predictions are still written. Default: no cap.
-const MAX_COST = +argv('--max-cost', Infinity);
+const MAX_COST = numericFlag(argv, '--max-cost', Infinity);
 
 writeFileSync(OUT, ''); const report = []; let totalCost = 0;
 async function runInstance(inst) {

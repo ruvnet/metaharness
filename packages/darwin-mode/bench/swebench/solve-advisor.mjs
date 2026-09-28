@@ -24,6 +24,7 @@ import { chebTemp, buildAgenticSystem } from './agentic-loop.mjs';
 import { loadGenome, buildSystemFromGenome, buildAdvisorSystemFromGenome } from './gepa/genome.mjs';
 import { runConformantTests } from './conformant-tests.mjs';
 import { langProfile } from './lang-profile.mjs';
+import { numericFlag } from './lib/numeric-flags.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -42,7 +43,7 @@ const CHAT_URL = `${BASE_URL}/chat/completions`;
 const KEY_ENV = argv('--api-key-env', 'OPENROUTER_API_KEY');
 const key = (process.env[KEY_ENV] || (() => { try { return readFileSync('/tmp/.orkey', 'utf8'); } catch { return ''; } })()).trim();
 const CONCURRENCY = Math.max(1, +argv('--concurrency', 1));
-const MAX_COST = +argv('--max-cost', Infinity);      // HARD budget cap: stop pulling new instances at this cumulative $
+const MAX_COST = numericFlag(argv, '--max-cost', Infinity); // HARD budget cap: stop pulling new instances at this cumulative $
 const MAX_TOKENS = +argv('--max-tokens', 4096);
 const TEMP = +argv('--temperature', 0);
 const CHEB_TEMP = args.includes('--cheb-temp');
