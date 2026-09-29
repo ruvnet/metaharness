@@ -29,10 +29,57 @@ export class TrajectoryStore {
     await appendFile(this.path, JSON.stringify(record) + '\n', 'utf-8');
   }
 
+  /**
+   * A corrupted line (see `readAllWithDiagnostics`) is skipped silently: this
+   * method reports only the surviving records, with no way to tell "empty
+   * file" from "N records lost to corruption". Callers that need to know
+   * whether the read was complete should call `readAllWithDiagnostics()`
+   * instead and check `corruptLines`.
+   *
+   * Only a corrupted line's own JSON syntax is caught. A line that parses
+   * but has the wrong shape (e.g. `{}` or `42`) is NOT detected — it is
+   * pushed through as a `TrajectoryRecord` with `phase`/`outcome` `undefined`
+   * at runtime despite the type assertion.
+   *
+   * Only recovers a corrupted line that is its OWN line (terminated by a
+   * newline before the corruption, e.g. read some time after the crash with
+   * no further writes). If a crash tears a write mid-line and a *later*
+   * `append()` call lands directly after the torn bytes with no repair
+   * step in between, the torn tail and that next record merge into one
+   * unparseable line and BOTH are lost — see
+   * `__tests__/trajectory.test.ts`'s "torn write immediately followed by a
+   * same-session append" test for a documented reproduction of this
+   * residual gap.
+   */
   async readAll(): Promise<TrajectoryRecord[]> {
-    if (!existsSync(this.path)) return [];
+    return (await this.readAllWithDiagnostics()).records;
+  }
+
+  /**
+   * Like `readAll()`, but never throws on a corrupted line: a truncated or
+   * malformed record (e.g. from a crash mid-`append()`, or manual editing)
+   * is skipped and its 1-based line number reported instead, so one bad
+   * line doesn't discard the rest of the trajectory history. Byte-identical
+   * `records` to `readAll()` when every line parses; `corruptLines` is empty
+   * in that case too. See `readAll()`'s doc comment for this method's two
+   * known limits (shape validation, torn-write-then-immediate-append).
+   */
+  async readAllWithDiagnostics(): Promise<{ records: TrajectoryRecord[]; corruptLines: number[] }> {
+    if (!existsSync(this.path)) return { records: [], corruptLines: [] };
     const raw = await readFile(this.path, 'utf-8');
-    return raw.split('\n').filter(Boolean).map(l => JSON.parse(l) as TrajectoryRecord);
+    const records: TrajectoryRecord[] = [];
+    const corruptLines: number[] = [];
+    const lines = raw.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]!;
+      if (line.length === 0) continue;
+      try {
+        records.push(JSON.parse(line) as TrajectoryRecord);
+      } catch {
+        corruptLines.push(i + 1);
+      }
+    }
+    return { records, corruptLines };
   }
 
   /** Rotate the file if it exceeds maxBytes. Old data goes to `<path>.1`. */
