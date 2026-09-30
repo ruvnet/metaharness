@@ -113,6 +113,27 @@ describe('defineHarness', () => {
     expect(() => defineHarness({ name: 'h', skills: [s1, s2] })).toThrow(/skill name collision/);
   });
 
+  it('detects tool name collision', () => {
+    const t1 = defineTool({ name: 'dup', server: 's1', description: 'd', inputSchema: { type: 'object' } });
+    const t2 = defineTool({ name: 'dup', server: 's2', description: 'd2', inputSchema: { type: 'object' } });
+    expect(() => defineHarness({ name: 'h', tools: [t1, t2] })).toThrow(/tool name collision/);
+  });
+
+  it('detects mcp server name collision', () => {
+    const m1 = defineMcpServer({ name: 'dup', command: ['a'] });
+    const m2 = defineMcpServer({ name: 'dup', url: 'https://example.com/mcp' });
+    expect(() => defineHarness({ name: 'h', mcpServers: [m1, m2] })).toThrow(/mcp server name collision/);
+  });
+
+  it('accepts unique tools and mcp servers', () => {
+    const t1 = defineTool({ name: 't1', server: 's1', description: 'd', inputSchema: { type: 'object' } });
+    const t2 = defineTool({ name: 't2', server: 's1', description: 'd', inputSchema: { type: 'object' } });
+    const m1 = defineMcpServer({ name: 'm1', command: ['a'] });
+    const h = defineHarness({ name: 'h', tools: [t1, t2], mcpServers: [m1] });
+    expect(h.tools.length).toBe(2);
+    expect(h.mcpServers.length).toBe(1);
+  });
+
   it('rejects harness with bad name', () => {
     expect(() => defineHarness({ name: 'BadName' })).toThrow(/kebab-case/);
   });
