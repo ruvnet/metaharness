@@ -123,7 +123,7 @@ export function defineHarness(def: {
   mcpServers?: readonly McpServerDef[];
 }): HarnessDef {
   ensureKebab(def.name, 'harness');
-  // Detect name collisions across agents/skills/tools.
+  // Detect name collisions across agents/skills/tools/mcpServers.
   const agentNames = new Set<string>();
   for (const a of def.agents ?? []) {
     if (agentNames.has(a.name)) throw new Error(`agent name collision: ${a.name}`);
@@ -133,6 +133,16 @@ export function defineHarness(def: {
   for (const s of def.skills ?? []) {
     if (skillNames.has(s.name)) throw new Error(`skill name collision: ${s.name}`);
     skillNames.add(s.name);
+  }
+  const toolNames = new Set<string>();
+  for (const t of def.tools ?? []) {
+    if (toolNames.has(t.name)) throw new Error(`tool name collision: ${t.name}`);
+    toolNames.add(t.name);
+  }
+  const mcpServerNames = new Set<string>();
+  for (const m of def.mcpServers ?? []) {
+    if (mcpServerNames.has(m.name)) throw new Error(`mcp server name collision: ${m.name}`);
+    mcpServerNames.add(m.name);
   }
   return Object.freeze({
     name: def.name,
