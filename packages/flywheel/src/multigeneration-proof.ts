@@ -141,6 +141,24 @@ function finite(n: number): boolean {
   return Number.isFinite(n);
 }
 
+/**
+ * Float-safe "meets or exceeds a frozen threshold" comparator (CWE-697 guard). `value` is
+ * typically an IEEE-754 subtraction/division of two integer win/attempt ratios (see
+ * `yieldOf`), so a delta that is mathematically exactly at a policy threshold can land a few
+ * ULPs on either side of it depending only on which (wins, attempts) pair produced it — e.g.
+ * 3/20 - 2/20 === 0.04999999999999999, strictly short of a 0.05 threshold a mathematically
+ * identical 1/20 lift from different integers would clear. THRESHOLD_EPS is set to ~4500x the
+ * actual double-precision noise floor at these magnitudes (Number.EPSILON ~2.22e-16) — enough
+ * to absorb that noise — while staying 1e4x smaller than the smallest DEFAULT_MULTIGEN_POLICY
+ * threshold (minControlPrimaryMargin = 0.01), so it cannot mask a real shortfall. Outcome
+ * fields are arbitrary finite numbers, not restricted to win/attempt ratios (see validOutcome),
+ * so EPS is kept tight rather than generously rounded to avoid widening the window further.
+ */
+const THRESHOLD_EPS = 1e-12;
+function meetsThreshold(value: number, threshold: number): boolean {
+  return value - threshold >= -THRESHOLD_EPS;
+}
+
 function validOutcome(o: Outcome): boolean {
   return finite(o.primary) &&
     finite(o.costPerWin) && o.costPerWin >= 0 &&
@@ -249,9 +267,9 @@ function capabilityImproved(
     ? (baseline.costPerWin - child.costPerWin) / baseline.costPerWin
     : (child.costPerWin === 0 ? 0 : -Infinity);
 
-  const qualityWin = primaryDelta >= p.minPrimaryDelta && child.costPerWin <= baseline.costPerWin;
-  const costWin = primaryDelta >= -p.maxPrimaryRegressionForCostWin &&
-    relativeCostReduction >= p.minRelativeCostReduction;
+  const qualityWin = meetsThreshold(primaryDelta, p.minPrimaryDelta) && child.costPerWin <= baseline.costPerWin;
+  const costWin = meetsThreshold(primaryDelta, -p.maxPrimaryRegressionForCostWin) &&
+    meetsThreshold(relativeCostReduction, p.minRelativeCostReduction);
 
   return { improved: qualityWin || costWin, primaryDelta, relativeCostReduction };
 }
@@ -330,7 +348,7 @@ export function verifyMultiGenerationEvidence(
     const parentYield = validProbe(g.parentImprover) ? yieldOf(g.parentImprover) : 0;
     const childYield = validProbe(g.childImprover) ? yieldOf(g.childImprover) : 0;
     const improverDelta = childYield - parentYield;
-    if (improverDelta < policy.minImproverYieldDelta) {
+    if (!meetsThreshold(improverDelta, policy.minImproverYieldDelta)) {
       failures.push(`${prefix}improver_yield_not_improved`);
       allRecursive = false;
     }
@@ -343,7 +361,9 @@ export function verifyMultiGenerationEvidence(
       maxControlPrimary = Math.max(maxControlPrimary, c.outcome.primary);
     }
     const controlMargin = g.controls.length ? g.child.primary - maxControlPrimary : -Infinity;
-    if (g.controls.length && controlMargin < policy.minControlPrimaryMargin) failures.push(`${prefix}control_margin_too_small`);
+    if (g.controls.length && !meetsThreshold(controlMargin, policy.minControlPrimaryMargin)) {
+      failures.push(`${prefix}control_margin_too_small`);
+    }
 
     const validReviewerIds = new Set<string>();
     const validReviewerKeys = new Set<string>();
