@@ -2,6 +2,10 @@
 
 # MetaHarness
 
+<a href="https://ruvnet.github.io/metaharness/"><img src="docs/assets/metaharness-walkthrough.svg" alt="MetaHarness animated capability tour: generate, govern, evolve, verify and ship your own agent harness" width="100%"></a>
+
+<sub>Animated capability walkthrough · 19 chapters · 2 min 51 sec · Click to open the Studio</sub>
+
 ### Mint a custom AI agent harness from any repo.
 
 `npx metaharness` · [open the Studio →](https://ruvnet.github.io/metaharness/)
