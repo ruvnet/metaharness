@@ -4,7 +4,7 @@
 
 <a href="https://cognitum.one/metaharness"><img src="docs/assets/metaharness-walkthrough.svg" alt="MetaHarness animated capability tour: generate, govern, evolve, verify and ship your own agent harness" width="100%"></a>
 
-<sub>Animated capability walkthrough · 19 chapters · 2 min 51 sec · Click to explore MetaHarness</sub>
+<sub>Animated capability walkthrough · 20 chapters · 3 min 20 sec · Click to explore MetaHarness</sub>
 
 ### Mint a custom AI agent harness from any repo.
 
