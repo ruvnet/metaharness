@@ -2,9 +2,9 @@
 
 # MetaHarness
 
-<a href="https://ruvnet.github.io/metaharness/"><img src="docs/assets/metaharness-walkthrough.svg" alt="MetaHarness animated capability tour: generate, govern, evolve, verify and ship your own agent harness" width="100%"></a>
+<a href="https://cognitum.one/metaharness"><img src="docs/assets/metaharness-walkthrough.svg" alt="MetaHarness animated capability tour: generate, govern, evolve, verify and ship your own agent harness" width="100%"></a>
 
-<sub>Animated capability walkthrough · 19 chapters · 2 min 51 sec · Click to open the Studio</sub>
+<sub>Animated capability walkthrough · 19 chapters · 2 min 51 sec · Click to explore MetaHarness</sub>
 
 ### Mint a custom AI agent harness from any repo.
 
