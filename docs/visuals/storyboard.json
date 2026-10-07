@@ -1,0 +1,469 @@
+{
+  "product": "MetaHarness",
+  "tagline": "Your repo. Your agent. Your harness.",
+  "icon": "spark",
+  "hero_lines": [
+    "Your repo. Your agent.",
+    "Your harness."
+  ],
+  "hero_footer": "GENERATE / GOVERN / EVOLVE / SHIP",
+  "hero_description": "MetaHarness: your repo, your agent, your harness. A layered rotating torus and orange trajectory introduce a factory for custom agent harnesses.",
+  "intro": "Follow the complete MetaHarness workflow: analyze a repository, generate an owned harness, connect a host, enforce policy, use memory and routing, evaluate changes, and ship a package.",
+  "quickstart": "USERGUIDE.md",
+  "cta": "[Open the Studio](https://ruvnet.github.io/metaharness/) · [Read the user guide](USERGUIDE.md) · [Explore MetaHarness](https://cognitum.one/metaharness)\n\n```bash\nnpx metaharness --wizard\n```",
+  "trailer": [
+    0,
+    3,
+    7,
+    9
+  ],
+  "chapters": [
+    {
+      "slug": "analyze",
+      "title": "Begin with your repository",
+      "subtitle": "Read the shape of the project before generating tools.",
+      "kind": "sequence",
+      "footer": "DETERMINISTIC ANALYSIS · NO REPO CODE EXECUTED",
+      "summary": "Repository analysis produces a recommendation before scaffolding.",
+      "body": "`harness analyze-repo` reads repository structure and recommends a harness. Analysis does not execute repository code. Inferred build and test commands are emitted with execution disabled until explicitly trusted and enabled.",
+      "description": "Begin with your repository. Repository analysis produces a recommendation before scaffolding.",
+      "sources": [
+        [
+          "User guide",
+          "USERGUIDE.md"
+        ],
+        [
+          "Analyze-repo quick start",
+          "../README.md#try-it-in-30-seconds"
+        ]
+      ],
+      "labels": [
+        "Repository",
+        "Analysis",
+        "Plan"
+      ],
+      "subs": [
+        "Files / structure",
+        "Static inspection",
+        "Harness plan"
+      ],
+      "icons": [
+        "code",
+        "scan",
+        "layers"
+      ]
+    },
+    {
+      "slug": "compose",
+      "title": "Compose the agent you need",
+      "subtitle": "Choose identity, tools, skills, policy, and a host.",
+      "kind": "sequence",
+      "footer": "YOUR NAME · YOUR BRAND · YOUR CLI",
+      "summary": "The generator turns project choices into a harness you own.",
+      "body": "Use the Studio or CLI wizard to select a starting template and a host. The generated project contains agents, skills, commands, tool adapters, scoped memory configuration, governance, and provenance. Trim anything your repository does not need, then customize the package identity and behavior.",
+      "description": "Compose the agent you need. The generator turns project choices into a harness you own.",
+      "sources": [
+        [
+          "Studio",
+          "https://ruvnet.github.io/metaharness/"
+        ],
+        [
+          "User guide",
+          "USERGUIDE.md"
+        ]
+      ],
+      "labels": [
+        "Choose",
+        "Generate",
+        "Customize"
+      ],
+      "subs": [
+        "Template / host / tools",
+        "Owned project scaffold",
+        "Identity / policy"
+      ],
+      "icons": [
+        "spark",
+        "layers",
+        "code"
+      ]
+    },
+    {
+      "slug": "kernel",
+      "title": "One shared kernel",
+      "subtitle": "Host-specific adapters surround reusable primitives.",
+      "kind": "layers",
+      "footer": "THE HARNESS CHANGES. THE KERNEL IS SHARED.",
+      "summary": "Generated harnesses consume a shared Rust kernel through host adapters.",
+      "body": "The generator produces an owned harness. That harness consumes `@metaharness/kernel`, whose Rust implementation is distributed through WASM and native bindings. Host-specific behavior belongs in adapters; the kernel does not depend back on a host. The kernel supplies reusable governance, memory, routing, and witness primitives.",
+      "description": "One shared kernel. Generated harnesses consume a shared Rust kernel through host adapters.",
+      "sources": [
+        [
+          "Architecture",
+          "ARCHITECTURE.md"
+        ],
+        [
+          "Kernel boundary",
+          "adrs/ADR-002-kernel-boundary.md"
+        ]
+      ],
+      "labels": [
+        "Your repository",
+        "Generated harness",
+        "Host adapters",
+        "Shared Rust kernel",
+        "Bindings"
+      ],
+      "subs": [
+        "project context",
+        "tools / skills / policy",
+        "native integration",
+        "reusable primitives",
+        "WASM / NAPI"
+      ]
+    },
+    {
+      "slug": "hosts",
+      "title": "Bring your preferred host",
+      "subtitle": "Claude Code, Codex, RVM, and other host adapters.",
+      "kind": "hosts",
+      "footer": "HOST CAPABILITIES DETERMINE THE INTEGRATION",
+      "summary": "The same generated harness connects through distinct host adapters.",
+      "body": "Choose the host integration your workflow needs. Claude Code and Codex use MCP surfaces; other hosts can use native extensions, skills, or CI configuration. Not every host supports MCP or the same policy controls. Prime Agent emits a sandbox-required runbook when a non-empty deny-list cannot be enforced by the host itself.",
+      "description": "Bring your preferred host. The same generated harness connects through distinct host adapters.",
+      "sources": [
+        [
+          "Host matrix",
+          "../README.md#hosts"
+        ],
+        [
+          "Host integration design",
+          "adrs/ADR-004-host-integration-model.md"
+        ],
+        [
+          "RVM adapter",
+          "../packages/host-rvm/"
+        ]
+      ]
+    },
+    {
+      "slug": "policy",
+      "title": "Give tools a policy boundary",
+      "subtitle": "Select the adapter mode and review its permissions.",
+      "kind": "sequence",
+      "footer": "MCP IS MODULAR AND DEFAULT-DENY",
+      "summary": "Tool permissions, approval rules, timeouts, and audit belong to policy.",
+      "body": "The MCP adapter supports off, local stdio, and authenticated remote modes. Generated policy starts with restrictive defaults and exposes the permissions and limits for review. `harness mcp-scan` performs static checks for risky grants, missing audit or timeout settings, and other policy problems; it does not run the target tools.",
+      "description": "Give tools a policy boundary. Tool permissions, approval rules, timeouts, and audit belong to policy.",
+      "sources": [
+        [
+          "MCP policy",
+          "../README.md#mcp--modular-default-deny"
+        ],
+        [
+          "MCP design",
+          "adrs/ADR-022-mcp-primitive.md"
+        ]
+      ],
+      "labels": [
+        "Tool request",
+        "Policy",
+        "Allowed call"
+      ],
+      "subs": [
+        "Host adapter",
+        "Grants / approval",
+        "Audit / timeout"
+      ],
+      "icons": [
+        "code",
+        "shield",
+        "witness"
+      ]
+    },
+    {
+      "slug": "memory",
+      "title": "Keep context scoped",
+      "subtitle": "Project memory is part of the harness you configure.",
+      "kind": "memory",
+      "footer": "FIELD MEMORY IS OPTIONAL AND EXPERIMENTAL",
+      "summary": "Project memory and optional field memory have different setup requirements.",
+      "body": "The scaffold carries a memory namespace scoped to your harness. Experimental field memory is a separate, opt-in feature with deployment requirements for storage, a compatible adapter, and an authenticated principal verifier. It does not open storage or accept shared updates until those prerequisites are satisfied. Its illustrated vector geometry is a visual metaphor.",
+      "description": "Keep context scoped. Project memory and optional field memory have different setup requirements.",
+      "sources": [
+        [
+          "Memory and features",
+          "USERGUIDE.md"
+        ],
+        [
+          "Field-memory contract",
+          "../packages/field-memory/README.md"
+        ]
+      ]
+    },
+    {
+      "slug": "routing",
+      "title": "Route against your quality bar",
+      "subtitle": "Learn model choices from your own evaluation results.",
+      "kind": "routing",
+      "footer": "PREDICT QUALITY · COMPARE COST · SELECT",
+      "summary": "The router selects the cheapest candidate predicted to meet the quality bar.",
+      "body": "`@metaharness/router` consumes query vectors and labeled evaluation examples. It predicts candidate quality and selects the cheapest model predicted to clear your configured threshold; if none does, it returns the best predicted candidate and reports whether the bar was met. The picture is illustrative and makes no universal quality or savings guarantee.",
+      "description": "Route against your quality bar. The router selects the cheapest candidate predicted to meet the quality bar.",
+      "sources": [
+        [
+          "Router API and training",
+          "../packages/router/README.md"
+        ]
+      ]
+    },
+    {
+      "slug": "evolve",
+      "title": "Evolve the harness",
+      "subtitle": "Propose, test, evaluate, and retain measured improvements.",
+      "kind": "cycle",
+      "footer": "THE MODEL STAYS FROZEN; THE HARNESS EVOLVES",
+      "summary": "Darwin evaluates harness changes behind sandbox and safety gates.",
+      "body": "Darwin Mode proposes changes to the harness, tests them in a sandbox, and keeps improvements that pass its evaluation and safety gates. The model stays frozen. Generated projects expose `npm run evolve`; no-network, no-API-key defaults support bounded refactoring and tuning. Changes still need evidence; animation is not a benchmark.",
+      "description": "Evolve the harness. Darwin evaluates harness changes behind sandbox and safety gates.",
+      "sources": [
+        [
+          "Darwin source",
+          "../packages/darwin-mode/"
+        ],
+        [
+          "Darwin in the README",
+          "../README.md#new"
+        ]
+      ],
+      "labels": [
+        "Propose",
+        "Sandbox",
+        "Evaluate",
+        "Retain / reject"
+      ],
+      "subs": [
+        "Harness configuration",
+        "Bounded execution",
+        "Quality + safety gates",
+        "Measured outcomes"
+      ],
+      "command": "cd my-bot\nnpm run evolve"
+    },
+    {
+      "slug": "evidence",
+      "title": "Make releases reviewable",
+      "subtitle": "Checks and provenance travel with the generated harness.",
+      "kind": "sequence",
+      "footer": "TESTS · POLICY · PROVENANCE · RELEASE GATES",
+      "summary": "Validation and evidence connect generated files to a reviewable release.",
+      "body": "Generated provenance records what was produced. Doctor and validation commands help keep a customized harness healthy. The repository documents CI gates for kernel tests, generator checks, security, and deterministic signed witness manifests. Consult those gates and current CI for evidence rather than treating an animated status as a test result.",
+      "description": "Make releases reviewable. Validation and evidence connect generated files to a reviewable release.",
+      "sources": [
+        [
+          "Quality gates",
+          "../README.md#quality-gates"
+        ],
+        [
+          "Witness and provenance",
+          "adrs/ADR-011-witness-and-provenance.md"
+        ]
+      ],
+      "labels": [
+        "Validate",
+        "Provenance",
+        "Release gate"
+      ],
+      "subs": [
+        "Doctor / checks",
+        "Signed manifest",
+        "Review the evidence"
+      ],
+      "icons": [
+        "scan",
+        "witness",
+        "shield"
+      ]
+    },
+    {
+      "slug": "ship",
+      "title": "Ship it under your name",
+      "subtitle": "A generated project becomes your own npm package.",
+      "kind": "sequence",
+      "footer": "YOUR TEAM RUNS YOUR VERSIONED HARNESS",
+      "summary": "Customize, validate, then publish the package under your chosen scope.",
+      "body": "Rename and configure the generated project, keep the agents and tools your repository needs, validate it, and publish under your own package name or organization scope. Publishing is an explicit maintainer action. Consumers then use the versioned CLI you own; the generator does not silently publish a package for you.",
+      "description": "Ship it under your name. Customize, validate, then publish the package under your chosen scope.",
+      "sources": [
+        [
+          "Customize and publish",
+          "../README.md#tune-it-to-your-project--then-ship-it-as-your-own-npm"
+        ],
+        [
+          "User guide",
+          "USERGUIDE.md"
+        ]
+      ],
+      "labels": [
+        "Customize",
+        "Validate",
+        "Publish"
+      ],
+      "subs": [
+        "Name / scope / tools",
+        "Doctor / policy / tests",
+        "Your npm package"
+      ],
+      "icons": [
+        "code",
+        "shield",
+        "ship"
+      ]
+    },
+    {
+      "slug": "extensions",
+      "title": "Explore governed extensions",
+      "subtitle": "Advanced experiments keep explicit evidence boundaries.",
+      "kind": "sequence",
+      "footer": "EXPERIMENTAL PATHS REQUIRE THEIR OWN GATES",
+      "summary": "AVO, field memory, and ARC experiments have separate validation boundaries.",
+      "body": "AVO adds governed variation with budgets, rollback, quarantine, and replay receipts. ARC and field-memory packages remain experimental and have their own deployment and evidence requirements. The stronger AVO-class claim is gated on its preregistered unseen-task evaluation; ARC results are not claim-eligible until the documented controlled-ablation gate passes. Weight-EFT is a separate, optional model-tuning path, distinct from frozen-model Darwin evolution.",
+      "description": "Explore governed extensions. AVO, field memory, and ARC experiments have separate validation boundaries.",
+      "sources": [
+        [
+          "AVO runtime",
+          "../packages/avo/README.md"
+        ],
+        [
+          "AVO release claim gate",
+          "adrs/ADR-276-avo-release-claim-evidence-gate.md"
+        ],
+        [
+          "ARC evidence gate",
+          "adrs/ADR-254-arc-avo-controlled-ablation.md"
+        ]
+      ],
+      "labels": [
+        "Configure",
+        "Constrain",
+        "Evaluate"
+      ],
+      "subs": [
+        "Explicit opt-in",
+        "Budget / rollback",
+        "Evidence gate"
+      ],
+      "icons": [
+        "spark",
+        "shield",
+        "scan"
+      ],
+      "colors": [
+        "ice",
+        "orange",
+        "mint"
+      ]
+    },
+    {
+      "slug": "start",
+      "title": "Mint your first harness",
+      "subtitle": "Use the wizard, or generate a coding harness directly.",
+      "kind": "terminal",
+      "footer": "OPEN THE STUDIO OR START FROM YOUR TERMINAL",
+      "summary": "Create a named harness with the CLI and inspect the generated project.",
+      "body": "Run the wizard for guided choices, or use a template and host explicitly. The example below generates `my-bot` for Claude Code; select `--host codex` for Codex. The Studio provides a browser workflow, and the user guide explains the generated files and commands.",
+      "description": "Mint your first harness. Create a named harness with the CLI and inspect the generated project.",
+      "sources": [
+        [
+          "User guide",
+          "USERGUIDE.md"
+        ],
+        [
+          "Studio",
+          "https://ruvnet.github.io/metaharness/"
+        ]
+      ],
+      "lines": [
+        "$ npx metaharness --wizard",
+        "$ cd my-bot",
+        "$ npx . --help"
+      ],
+      "tag": "RUN IN YOUR TERMINAL",
+      "command": "npx metaharness my-bot --template vertical:coding --host claude-code\ncd my-bot\nnpx . --help"
+    }
+  ],
+  "headers": [
+    {
+      "slug": "create",
+      "icon": "spark",
+      "geometry": "hypercube",
+      "title": "Build the agent you own.",
+      "description": "MetaHarness generates an owned, customized agent harness."
+    },
+    {
+      "slug": "start",
+      "icon": "terminal",
+      "geometry": "surface",
+      "title": "From repository to ready.",
+      "description": "Start with the Studio, the wizard, or the CLI."
+    },
+    {
+      "slug": "hosts",
+      "icon": "route",
+      "geometry": "hyperbolic",
+      "title": "Your host. Your workflow.",
+      "description": "Connect your harness to Claude Code, Codex, RVM, and other hosts."
+    },
+    {
+      "slug": "policy",
+      "icon": "shield",
+      "geometry": "sphere",
+      "title": "Govern every tool boundary.",
+      "description": "Modular MCP, explicit policy, and restrictive defaults."
+    },
+    {
+      "slug": "architecture",
+      "icon": "layers",
+      "geometry": "hypercube",
+      "title": "A kernel. Many harnesses.",
+      "description": "Shared Rust primitives behind customized harnesses and host adapters."
+    },
+    {
+      "slug": "quality",
+      "icon": "witness",
+      "geometry": "torus",
+      "title": "Evidence before release.",
+      "description": "Quality gates, tests, provenance, and reviewable releases."
+    }
+  ],
+  "features": [
+    {
+      "slug": "generate",
+      "icon": "spark",
+      "title": "Generate",
+      "subtitle": "A harness for your repo",
+      "description": "Generate an owned harness from project choices."
+    },
+    {
+      "slug": "govern",
+      "icon": "shield",
+      "title": "Govern",
+      "subtitle": "Tools with explicit policy",
+      "description": "Govern tools with explicit policy and audit."
+    },
+    {
+      "slug": "evolve",
+      "icon": "loop",
+      "title": "Evolve",
+      "subtitle": "Evaluate harness changes",
+      "description": "Evaluate changes through Darwin Mode."
+    },
+    {
+      "slug": "ship",
+      "icon": "ship",
+      "title": "Ship",
+      "subtitle": "Your name. Your package.",
+      "description": "Publish your customized and validated package."
+    }
+  ]
+}

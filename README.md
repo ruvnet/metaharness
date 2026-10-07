@@ -2,9 +2,9 @@
 
 # MetaHarness
 
-<a href="https://cognitum.one/metaharness"><img src="docs/assets/metaharness-walkthrough.svg" alt="MetaHarness animated capability tour: generate, govern, evolve, verify and ship your own agent harness" width="100%"></a>
-
-<sub>Animated capability walkthrough · Logo intro + 20 chapters · 3 min 28 sec · Click to explore MetaHarness</sub>
+<!-- readme-motion: hero -->
+<a href="docs/visual-walkthrough.md"><img src="docs/assets/visuals/hero.svg" alt="MetaHarness: your repo, your agent, your harness. A layered rotating torus and orange trajectory introduce a factory for custom agent harnesses." width="100%"></a>
+<!-- /readme-motion: hero -->
 
 ### Mint a custom AI agent harness from any repo.
 
@@ -22,9 +22,24 @@
 
 </div>
 
+<!-- readme-motion: trailer -->
+<a href="docs/visual-walkthrough.md"><img src="docs/assets/visuals/trailer.svg" alt="MetaHarness in motion: four animated architecture and workflow chapters. Open the complete walkthrough." width="100%"></a>
+
+[**Explore the full animated walkthrough →**](docs/visual-walkthrough.md) · 12 chapters · 96-second full tour · 32-second preview
+
+[Earlier 20-chapter capability tour](docs/assets/metaharness-walkthrough.svg) · [Open the Studio](https://ruvnet.github.io/metaharness/)
+
+<table>
+<tr><td width="50%"><a href="docs/visual-walkthrough.md"><img src="docs/assets/visuals/icon-generate.svg" width="48" height="48" alt="Generate: Generate an owned harness from project choices."></a><br><strong>Generate</strong><br>A harness for your repo</td><td width="50%"><a href="docs/visual-walkthrough.md"><img src="docs/assets/visuals/icon-govern.svg" width="48" height="48" alt="Govern: Govern tools with explicit policy and audit."></a><br><strong>Govern</strong><br>Tools with explicit policy</td></tr>
+<tr><td width="50%"><a href="docs/visual-walkthrough.md"><img src="docs/assets/visuals/icon-evolve.svg" width="48" height="48" alt="Evolve: Evaluate changes through Darwin Mode."></a><br><strong>Evolve</strong><br>Evaluate harness changes</td><td width="50%"><a href="docs/visual-walkthrough.md"><img src="docs/assets/visuals/icon-ship.svg" width="48" height="48" alt="Ship: Publish your customized and validated package."></a><br><strong>Ship</strong><br>Your name. Your package.</td></tr>
+</table>
+<!-- /readme-motion: trailer -->
+
 ---
 
 ## What this is
+
+<a href="docs/visual-walkthrough.md"><img src="docs/assets/visuals/header-create.svg" alt="MetaHarness generates an owned, customized agent harness." width="100%"></a>
 
 **Every serious repo deserves its own agent.** A repo-aware CLI, a repo-aware coding agent, a local MCP server, memory scoped to the project, skills generated from the actual file layout, governance policy, release verification, witness-signed provenance.
 
@@ -45,6 +60,8 @@ In under 60 seconds, in your browser, with nothing leaving your machine:
 Output is an npm-publishable `.zip` with **your name on it, your branding, your `npx <your-name>` CLI**.
 
 ### New
+
+[Watch Darwin evolve a harness](docs/visual-walkthrough.md#evolve) · [Explore model routing](docs/visual-walkthrough.md#routing) · [Review experimental extensions](docs/visual-walkthrough.md#extensions)
 
 - **Run an experimental ARC-AGI-3 harness from the ChatGPT UI.**
   [`@metaharness/arc-agi-3`](packages/arc-agi-3/) owns exact observations,
@@ -69,7 +86,7 @@ Output is an npm-publishable `.zip` with **your name on it, your branding, your 
   on Darwin's fast path. The runtime has a deterministic 205-action RVF
   interruption proof; the stronger “AVO-class” claim remains blocked on the
   preregistered 100-task unseen SWE-bench gate in [ADR-251](docs/adrs/ADR-251-governed-autonomous-variation-runtime.md).
-  [ADR-253](docs/adrs/ADR-253-avo-release-claim-evidence-gate.md) now enforces
+  [ADR-276](docs/adrs/ADR-276-avo-release-claim-evidence-gate.md) now enforces
   that boundary at publication against the exact tag SHA and npm tarball,
   protected claim semantics, measured cost, lineage roots, and two independent
   graders.
@@ -170,6 +187,8 @@ learned from your own eval logs. `npm i @metaharness/router`.
 
 ## Try it in 30 seconds
 
+<a href="docs/visual-walkthrough.md"><img src="docs/assets/visuals/header-start.svg" alt="Start with the Studio, the wizard, or the CLI." width="100%"></a>
+
 ```bash
 # In the browser — zero install, nothing leaves the page
 open https://ruvnet.github.io/metaharness/
@@ -200,6 +219,10 @@ No repository code is executed. Inferred build/test commands are emitted as `tru
 
 ## Hosts
 
+<a href="docs/visual-walkthrough.md"><img src="docs/assets/visuals/header-hosts.svg" alt="Connect your harness to Claude Code, Codex, RVM, and other hosts." width="100%"></a>
+
+<a href="docs/visual-walkthrough.md#hosts"><img src="docs/assets/visuals/04-hosts.svg" alt="Bring your preferred host. The same generated harness connects through distinct host adapters." width="100%"></a>
+
 The same harness output runs on **ten** agent hosts — nine interactive, plus GitHub Actions (CI/CD):
 
 | Host | What ships | Notes |
@@ -220,6 +243,8 @@ See [ADR-004 — Host integration model](docs/adrs/ADR-004-host-integration-mode
 ---
 
 ## MCP — modular, default-deny
+
+<a href="docs/visual-walkthrough.md"><img src="docs/assets/visuals/header-policy.svg" alt="Modular MCP, explicit policy, and restrictive defaults." width="100%"></a>
 
 MCP is included as a first-class **adapter surface, not the identity**. It is gated and default-deny ([ADR-022](docs/adrs/ADR-022-mcp-primitive.md)):
 
@@ -349,6 +374,13 @@ across Rust × 3 OS + WASM × 3 OS + Node 20+22 × 3 OS + Bench + pack+install �
 
 ## Architecture in 30 seconds
 
+<a href="docs/visual-walkthrough.md"><img src="docs/assets/visuals/header-architecture.svg" alt="Shared Rust primitives behind customized harnesses and host adapters." width="100%"></a>
+
+<a href="docs/visual-walkthrough.md#kernel"><img src="docs/assets/visuals/03-kernel.svg" alt="One shared kernel. Generated harnesses consume a shared Rust kernel through host adapters." width="100%"></a>
+
+<details>
+<summary>Text architecture</summary>
+
 ```
 You (harness author)
    └→ agent-harness-generator    ← the factory
@@ -360,6 +392,8 @@ You (harness author)
                        └→ LLM providers
 ```
 
+</details>
+
 You operate the factory. The factory produces your harness. Your users never see the factory — only the brand and CLI you ship. The kernel ships as `@metaharness/kernel` (Rust → wasm-pack + NAPI-RS); your content stays yours.
 
 📖 Deeper: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/adrs/INDEX.md](docs/adrs/INDEX.md) (220 ADRs)
@@ -367,6 +401,8 @@ You operate the factory. The factory produces your harness. Your users never see
 ---
 
 ## Quality gates
+
+<a href="docs/visual-walkthrough.md"><img src="docs/assets/visuals/header-quality.svg" alt="Quality gates, tests, provenance, and reviewable releases." width="100%"></a>
 
 | Concern | Where |
 |---|---|
