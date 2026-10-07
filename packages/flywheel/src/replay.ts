@@ -69,6 +69,10 @@ export interface ReplayVerdict {
   pass: boolean;
   checks: {
     receipts: boolean;
+    /** Only checked when the caller supplies `opts.trustedPublicKeys` (otherwise `true`, unchecked —
+     *  additive, like `gateUnchanged`). Every receipt in the bundle (chain + all_commits) must be
+     *  signed by a key on the allowlist — see the option's own doc comment on `verifyReplayBundle`. */
+    trustedSigner: boolean;
     reachesRoot: boolean;
     contiguousParents: boolean;
     allPromoted: boolean;
@@ -92,13 +96,47 @@ export interface ReplayVerdict {
 
 export function verifyReplayBundle(
   bundle: ReplayBundle,
-  opts: { pinnedGateFingerprint?: string; promotionRule?: PromotionRule } = {},
+  opts: {
+    pinnedGateFingerprint?: string;
+    promotionRule?: PromotionRule;
+    /** Allowlist of base64 SPKI-DER Ed25519 public keys authorized to sign this bundle's receipts.
+     *  `verifyReceipt` only proves a receipt's signature matches its OWN embedded `publicKey` — it says
+     *  nothing about whether that key is one anyone trusts. Without this option, an attacker with no
+     *  access to the real producer's key can generate a fresh throwaway keypair, fabricate an entire
+     *  bundle (receipts, lineage, scores), self-sign it, and every other check here (receipts,
+     *  allCommitsReceipts, sealedFieldsAuthentic, gateReExecutes) still passes — a self-signed CLAIM, not
+     *  evidence, exactly what ADR-249 F-P4 and the avo↔gateway contract's `FLYWHEEL_TRUSTED_PUBLIC_KEYS`
+     *  allowlist (`packages/avo/src/flywheelGate.ts`) already guard against one package over. Supplying
+     *  this option is how an independent reviewer pins "signed by someone I trust", not just "internally
+     *  self-consistent". Omitted (the default): unchecked, byte-for-byte identical to prior behavior —
+     *  additive, like `pinnedGateFingerprint`. */
+    trustedPublicKeys?: readonly string[];
+  } = {},
 ): ReplayVerdict {
   const failures: string[] = [];
   const chain = bundle.chain;
 
   const receipts = chain.length > 0 && chain.every((c) => verifyReceipt(c.receipt) && receiptMatchesCommit(c));
   if (!receipts) failures.push('receipts');
+
+  // Signer trust is a SEPARATE axis from signature validity: `verifyReceipt` proves a receipt's bytes
+  // match ITS OWN embedded key, not that the key is authorized. Checked over every receipt in the
+  // bundle (chain + the full diagnostic ledger), not just the promoted chain, so a trusted-signer
+  // reviewer gets the same coverage `allCommitsReceipts` already gives signature validity.
+  // Guard on `Array.isArray(...) && .length > 0`, not bare truthiness: an empty array is truthy in
+  // JS, and this exact "caller passed [] meaning 'not supplied'" shape has bitten this package before
+  // (`withSequentialEvidence`'s `pairedOutcomes: []`, 2026-09-16, #319/#320) — an accidental `[]` (or a
+  // malformed non-array value from some future direct caller) must stay a no-op, not silently reject
+  // every receipt as untrusted. `c.receipt?.publicKey` (optional chaining, not `c.receipt.publicKey`):
+  // `chain`/`all_commits` are untrusted external JSON — a commit with no `receipt` field at all must
+  // fail THIS check closed (no match in `trustedKeys`), the same as every other check in this function,
+  // not throw an uncaught TypeError the moment a reviewer actually supplies an allowlist.
+  const trustedKeys = opts.trustedPublicKeys;
+  const hasTrustedKeys = Array.isArray(trustedKeys) && trustedKeys.length > 0;
+  const trustedSigner = !hasTrustedKeys
+    ? true
+    : [...chain, ...bundle.all_commits].every((c) => trustedKeys.includes(c.receipt?.publicKey as string));
+  if (!trustedSigner) failures.push('trustedSigner');
 
   // `chain` proves the WINNING lineage; `all_commits` is the "full diagnostic ledger" (every candidate
   // across every generation, promoted + rejected — see ReplayBundle) that analyzeBundle's
@@ -232,7 +270,7 @@ export function verifyReplayBundle(
 
   return {
     pass: failures.length === 0,
-    checks: { receipts, reachesRoot, contiguousParents, allPromoted, gateUnchanged, gateReExecutes, allCommitsReceipts, sealedFieldsAuthentic },
+    checks: { receipts, trustedSigner, reachesRoot, contiguousParents, allPromoted, gateUnchanged, gateReExecutes, allCommitsReceipts, sealedFieldsAuthentic },
     failures,
     chainSummary: chain.map((c) => `gen${c.generation}${c.mutation ? `(${c.mutation.target})` : '(root)'}`).join(' → '),
   };
