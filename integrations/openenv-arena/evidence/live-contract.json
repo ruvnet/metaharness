@@ -1,0 +1,1022 @@
+{
+  "retrieved_at": "2026-10-08T22:59:23.031798+00:00",
+  "sources": {
+    "guide": "https://openenvarena-arena.hf.space/AGENTS.md",
+    "status": "https://openenvarena-arena.hf.space/api/openenv",
+    "leaderboard": "https://openenvarena-arena.hf.space/api/leaderboard",
+    "messages": "https://openenvarena-arena.hf.space/api/openenv/messages",
+    "openenv": "https://github.com/meta-pytorch/OpenEnv/tree/86a180ede21e044f7929b9a7783ad83aa67d83a3"
+  },
+  "guide_sha256": "224f53ebd69a08c0c3b8192f2235e73ac494b03b49deb1779d4a4152eb219d91",
+  "contract": {
+    "model": "Qwen/Qwen3.8-27B",
+    "gpu": "H200",
+    "maximum_training_seconds": 14400,
+    "private_tasks": 40,
+    "domains": [
+      {
+        "id": "software-engineering",
+        "name": "Software engineering",
+        "short": "Software"
+      },
+      {
+        "id": "industrial-physical-systems",
+        "name": "Industrial & physical systems",
+        "short": "Industrial"
+      },
+      {
+        "id": "natural-science",
+        "name": "Natural science",
+        "short": "Science"
+      },
+      {
+        "id": "office-white-collar",
+        "name": "Office & white-collar",
+        "short": "Office"
+      },
+      {
+        "id": "finance-economics",
+        "name": "Finance & economics",
+        "short": "Finance"
+      },
+      {
+        "id": "mathematics-or-formal-reasoning",
+        "name": "Math & formal reasoning",
+        "short": "Math"
+      },
+      {
+        "id": "cybersecurity",
+        "name": "Cybersecurity",
+        "short": "Security"
+      },
+      {
+        "id": "media-content-production",
+        "name": "Media & content production",
+        "short": "Media"
+      }
+    ],
+    "tasks_per_domain": 5,
+    "submissions_per_rolling_24_hours": 1,
+    "maximum_tasks": 50,
+    "openenv_revision": "86a180ede21e044f7929b9a7783ad83aa67d83a3",
+    "rank_requires_public_dataset": true,
+    "scoring": "Equal mean of each user best result in each domain across completed private evaluations",
+    "training": "Each optimizer step takes one task in turn; five independent episodes run and first four with valid rewards train policy",
+    "image_platform": "linux/amd64",
+    "sandbox_cpu": 2,
+    "sandbox_memory_gib": 16,
+    "sandbox_gpu": false,
+    "validation_reward_range": [
+      0,
+      1
+    ]
+  },
+  "status": {
+    "connected": true,
+    "in_flight": 0,
+    "backend": "prod",
+    "connected_backends": {
+      "prod": true
+    }
+  },
+  "leaderboard": {
+    "tasks_per_domain": 5,
+    "domains": [
+      {
+        "id": "software-engineering",
+        "name": "Software engineering",
+        "short": "Software"
+      },
+      {
+        "id": "industrial-physical-systems",
+        "name": "Industrial & physical systems",
+        "short": "Industrial"
+      },
+      {
+        "id": "natural-science",
+        "name": "Natural science",
+        "short": "Science"
+      },
+      {
+        "id": "office-white-collar",
+        "name": "Office & white-collar",
+        "short": "Office"
+      },
+      {
+        "id": "finance-economics",
+        "name": "Finance & economics",
+        "short": "Finance"
+      },
+      {
+        "id": "mathematics-or-formal-reasoning",
+        "name": "Math & formal reasoning",
+        "short": "Math"
+      },
+      {
+        "id": "cybersecurity",
+        "name": "Cybersecurity",
+        "short": "Security"
+      },
+      {
+        "id": "media-content-production",
+        "name": "Media & content production",
+        "short": "Media"
+      }
+    ],
+    "entries": [
+      {
+        "user": "NoeFlandre",
+        "runs": 1,
+        "scores": {
+          "cybersecurity": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "0d0656dfbb4ff4e36b7e6f4f",
+            "submission_id": "log-triage-v1",
+            "dataset": {
+              "repo": "NoeFlandre/log-triage",
+              "revision": "80a70d50e7f424ee4c255305456d9b5b3c6f2104",
+              "url": "https://huggingface.co/datasets/NoeFlandre/log-triage/tree/80a70d50e7f424ee4c255305456d9b5b3c6f2104"
+            }
+          },
+          "finance-economics": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "0d0656dfbb4ff4e36b7e6f4f",
+            "submission_id": "log-triage-v1",
+            "dataset": {
+              "repo": "NoeFlandre/log-triage",
+              "revision": "80a70d50e7f424ee4c255305456d9b5b3c6f2104",
+              "url": "https://huggingface.co/datasets/NoeFlandre/log-triage/tree/80a70d50e7f424ee4c255305456d9b5b3c6f2104"
+            }
+          },
+          "industrial-physical-systems": {
+            "solved": 2,
+            "total": 5,
+            "score": 0.4,
+            "run_id": "0d0656dfbb4ff4e36b7e6f4f",
+            "submission_id": "log-triage-v1",
+            "dataset": {
+              "repo": "NoeFlandre/log-triage",
+              "revision": "80a70d50e7f424ee4c255305456d9b5b3c6f2104",
+              "url": "https://huggingface.co/datasets/NoeFlandre/log-triage/tree/80a70d50e7f424ee4c255305456d9b5b3c6f2104"
+            }
+          },
+          "mathematics-or-formal-reasoning": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "0d0656dfbb4ff4e36b7e6f4f",
+            "submission_id": "log-triage-v1",
+            "dataset": {
+              "repo": "NoeFlandre/log-triage",
+              "revision": "80a70d50e7f424ee4c255305456d9b5b3c6f2104",
+              "url": "https://huggingface.co/datasets/NoeFlandre/log-triage/tree/80a70d50e7f424ee4c255305456d9b5b3c6f2104"
+            }
+          },
+          "media-content-production": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "0d0656dfbb4ff4e36b7e6f4f",
+            "submission_id": "log-triage-v1",
+            "dataset": {
+              "repo": "NoeFlandre/log-triage",
+              "revision": "80a70d50e7f424ee4c255305456d9b5b3c6f2104",
+              "url": "https://huggingface.co/datasets/NoeFlandre/log-triage/tree/80a70d50e7f424ee4c255305456d9b5b3c6f2104"
+            }
+          },
+          "natural-science": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "0d0656dfbb4ff4e36b7e6f4f",
+            "submission_id": "log-triage-v1",
+            "dataset": {
+              "repo": "NoeFlandre/log-triage",
+              "revision": "80a70d50e7f424ee4c255305456d9b5b3c6f2104",
+              "url": "https://huggingface.co/datasets/NoeFlandre/log-triage/tree/80a70d50e7f424ee4c255305456d9b5b3c6f2104"
+            }
+          },
+          "office-white-collar": {
+            "solved": 2,
+            "total": 5,
+            "score": 0.4,
+            "run_id": "0d0656dfbb4ff4e36b7e6f4f",
+            "submission_id": "log-triage-v1",
+            "dataset": {
+              "repo": "NoeFlandre/log-triage",
+              "revision": "80a70d50e7f424ee4c255305456d9b5b3c6f2104",
+              "url": "https://huggingface.co/datasets/NoeFlandre/log-triage/tree/80a70d50e7f424ee4c255305456d9b5b3c6f2104"
+            }
+          },
+          "software-engineering": {
+            "solved": 1,
+            "total": 5,
+            "score": 0.2,
+            "run_id": "0d0656dfbb4ff4e36b7e6f4f",
+            "submission_id": "log-triage-v1",
+            "dataset": {
+              "repo": "NoeFlandre/log-triage",
+              "revision": "80a70d50e7f424ee4c255305456d9b5b3c6f2104",
+              "url": "https://huggingface.co/datasets/NoeFlandre/log-triage/tree/80a70d50e7f424ee4c255305456d9b5b3c6f2104"
+            }
+          }
+        },
+        "average": 0.125
+      },
+      {
+        "user": "akseljoonas",
+        "runs": 1,
+        "scores": {
+          "cybersecurity": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "03bfc81de59cf3e53b9e05d0",
+            "submission_id": "mimo-software-v2-20261008",
+            "dataset": {
+              "repo": "akseljoonas/mimo-openenv-software",
+              "revision": "4ce4fe143d71ca6365bd187e96efa15bd7ab2787",
+              "url": "https://huggingface.co/datasets/akseljoonas/mimo-openenv-software/tree/4ce4fe143d71ca6365bd187e96efa15bd7ab2787"
+            }
+          },
+          "finance-economics": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "03bfc81de59cf3e53b9e05d0",
+            "submission_id": "mimo-software-v2-20261008",
+            "dataset": {
+              "repo": "akseljoonas/mimo-openenv-software",
+              "revision": "4ce4fe143d71ca6365bd187e96efa15bd7ab2787",
+              "url": "https://huggingface.co/datasets/akseljoonas/mimo-openenv-software/tree/4ce4fe143d71ca6365bd187e96efa15bd7ab2787"
+            }
+          },
+          "industrial-physical-systems": {
+            "solved": 1,
+            "total": 5,
+            "score": 0.2,
+            "run_id": "03bfc81de59cf3e53b9e05d0",
+            "submission_id": "mimo-software-v2-20261008",
+            "dataset": {
+              "repo": "akseljoonas/mimo-openenv-software",
+              "revision": "4ce4fe143d71ca6365bd187e96efa15bd7ab2787",
+              "url": "https://huggingface.co/datasets/akseljoonas/mimo-openenv-software/tree/4ce4fe143d71ca6365bd187e96efa15bd7ab2787"
+            }
+          },
+          "mathematics-or-formal-reasoning": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "03bfc81de59cf3e53b9e05d0",
+            "submission_id": "mimo-software-v2-20261008",
+            "dataset": {
+              "repo": "akseljoonas/mimo-openenv-software",
+              "revision": "4ce4fe143d71ca6365bd187e96efa15bd7ab2787",
+              "url": "https://huggingface.co/datasets/akseljoonas/mimo-openenv-software/tree/4ce4fe143d71ca6365bd187e96efa15bd7ab2787"
+            }
+          },
+          "media-content-production": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "03bfc81de59cf3e53b9e05d0",
+            "submission_id": "mimo-software-v2-20261008",
+            "dataset": {
+              "repo": "akseljoonas/mimo-openenv-software",
+              "revision": "4ce4fe143d71ca6365bd187e96efa15bd7ab2787",
+              "url": "https://huggingface.co/datasets/akseljoonas/mimo-openenv-software/tree/4ce4fe143d71ca6365bd187e96efa15bd7ab2787"
+            }
+          },
+          "natural-science": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "03bfc81de59cf3e53b9e05d0",
+            "submission_id": "mimo-software-v2-20261008",
+            "dataset": {
+              "repo": "akseljoonas/mimo-openenv-software",
+              "revision": "4ce4fe143d71ca6365bd187e96efa15bd7ab2787",
+              "url": "https://huggingface.co/datasets/akseljoonas/mimo-openenv-software/tree/4ce4fe143d71ca6365bd187e96efa15bd7ab2787"
+            }
+          },
+          "office-white-collar": {
+            "solved": 2,
+            "total": 5,
+            "score": 0.4,
+            "run_id": "03bfc81de59cf3e53b9e05d0",
+            "submission_id": "mimo-software-v2-20261008",
+            "dataset": {
+              "repo": "akseljoonas/mimo-openenv-software",
+              "revision": "4ce4fe143d71ca6365bd187e96efa15bd7ab2787",
+              "url": "https://huggingface.co/datasets/akseljoonas/mimo-openenv-software/tree/4ce4fe143d71ca6365bd187e96efa15bd7ab2787"
+            }
+          },
+          "software-engineering": {
+            "solved": 1,
+            "total": 5,
+            "score": 0.2,
+            "run_id": "03bfc81de59cf3e53b9e05d0",
+            "submission_id": "mimo-software-v2-20261008",
+            "dataset": {
+              "repo": "akseljoonas/mimo-openenv-software",
+              "revision": "4ce4fe143d71ca6365bd187e96efa15bd7ab2787",
+              "url": "https://huggingface.co/datasets/akseljoonas/mimo-openenv-software/tree/4ce4fe143d71ca6365bd187e96efa15bd7ab2787"
+            }
+          }
+        },
+        "average": 0.1
+      },
+      {
+        "user": "burtenshaw",
+        "runs": 1,
+        "scores": {
+          "cybersecurity": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "16b837f08ba5e6d59b7c4779",
+            "submission_id": "sql-investigation-v5",
+            "dataset": {
+              "repo": "burtenshaw/openenv-sql-investigation",
+              "revision": "2ce79be32f693c42d90b8febf1bef5f485024096",
+              "url": "https://huggingface.co/datasets/burtenshaw/openenv-sql-investigation/tree/2ce79be32f693c42d90b8febf1bef5f485024096"
+            }
+          },
+          "finance-economics": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "16b837f08ba5e6d59b7c4779",
+            "submission_id": "sql-investigation-v5",
+            "dataset": {
+              "repo": "burtenshaw/openenv-sql-investigation",
+              "revision": "2ce79be32f693c42d90b8febf1bef5f485024096",
+              "url": "https://huggingface.co/datasets/burtenshaw/openenv-sql-investigation/tree/2ce79be32f693c42d90b8febf1bef5f485024096"
+            }
+          },
+          "industrial-physical-systems": {
+            "solved": 2,
+            "total": 5,
+            "score": 0.4,
+            "run_id": "16b837f08ba5e6d59b7c4779",
+            "submission_id": "sql-investigation-v5",
+            "dataset": {
+              "repo": "burtenshaw/openenv-sql-investigation",
+              "revision": "2ce79be32f693c42d90b8febf1bef5f485024096",
+              "url": "https://huggingface.co/datasets/burtenshaw/openenv-sql-investigation/tree/2ce79be32f693c42d90b8febf1bef5f485024096"
+            }
+          },
+          "mathematics-or-formal-reasoning": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "16b837f08ba5e6d59b7c4779",
+            "submission_id": "sql-investigation-v5",
+            "dataset": {
+              "repo": "burtenshaw/openenv-sql-investigation",
+              "revision": "2ce79be32f693c42d90b8febf1bef5f485024096",
+              "url": "https://huggingface.co/datasets/burtenshaw/openenv-sql-investigation/tree/2ce79be32f693c42d90b8febf1bef5f485024096"
+            }
+          },
+          "media-content-production": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "16b837f08ba5e6d59b7c4779",
+            "submission_id": "sql-investigation-v5",
+            "dataset": {
+              "repo": "burtenshaw/openenv-sql-investigation",
+              "revision": "2ce79be32f693c42d90b8febf1bef5f485024096",
+              "url": "https://huggingface.co/datasets/burtenshaw/openenv-sql-investigation/tree/2ce79be32f693c42d90b8febf1bef5f485024096"
+            }
+          },
+          "natural-science": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "16b837f08ba5e6d59b7c4779",
+            "submission_id": "sql-investigation-v5",
+            "dataset": {
+              "repo": "burtenshaw/openenv-sql-investigation",
+              "revision": "2ce79be32f693c42d90b8febf1bef5f485024096",
+              "url": "https://huggingface.co/datasets/burtenshaw/openenv-sql-investigation/tree/2ce79be32f693c42d90b8febf1bef5f485024096"
+            }
+          },
+          "office-white-collar": {
+            "solved": 2,
+            "total": 5,
+            "score": 0.4,
+            "run_id": "16b837f08ba5e6d59b7c4779",
+            "submission_id": "sql-investigation-v5",
+            "dataset": {
+              "repo": "burtenshaw/openenv-sql-investigation",
+              "revision": "2ce79be32f693c42d90b8febf1bef5f485024096",
+              "url": "https://huggingface.co/datasets/burtenshaw/openenv-sql-investigation/tree/2ce79be32f693c42d90b8febf1bef5f485024096"
+            }
+          },
+          "software-engineering": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "16b837f08ba5e6d59b7c4779",
+            "submission_id": "sql-investigation-v5",
+            "dataset": {
+              "repo": "burtenshaw/openenv-sql-investigation",
+              "revision": "2ce79be32f693c42d90b8febf1bef5f485024096",
+              "url": "https://huggingface.co/datasets/burtenshaw/openenv-sql-investigation/tree/2ce79be32f693c42d90b8febf1bef5f485024096"
+            }
+          }
+        },
+        "average": 0.1
+      },
+      {
+        "user": "Louistiti",
+        "runs": 1,
+        "scores": {
+          "cybersecurity": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "74662cd3429db06ca50c84c0",
+            "submission_id": "python-repair-lab-v2",
+            "dataset": {
+              "repo": "Louistiti/openenv-python-repair",
+              "revision": "7c7a19e027df4497aa35c13b350164a52723eeee",
+              "url": "https://huggingface.co/datasets/Louistiti/openenv-python-repair/tree/7c7a19e027df4497aa35c13b350164a52723eeee"
+            }
+          },
+          "finance-economics": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "74662cd3429db06ca50c84c0",
+            "submission_id": "python-repair-lab-v2",
+            "dataset": {
+              "repo": "Louistiti/openenv-python-repair",
+              "revision": "7c7a19e027df4497aa35c13b350164a52723eeee",
+              "url": "https://huggingface.co/datasets/Louistiti/openenv-python-repair/tree/7c7a19e027df4497aa35c13b350164a52723eeee"
+            }
+          },
+          "industrial-physical-systems": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "74662cd3429db06ca50c84c0",
+            "submission_id": "python-repair-lab-v2",
+            "dataset": {
+              "repo": "Louistiti/openenv-python-repair",
+              "revision": "7c7a19e027df4497aa35c13b350164a52723eeee",
+              "url": "https://huggingface.co/datasets/Louistiti/openenv-python-repair/tree/7c7a19e027df4497aa35c13b350164a52723eeee"
+            }
+          },
+          "mathematics-or-formal-reasoning": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "74662cd3429db06ca50c84c0",
+            "submission_id": "python-repair-lab-v2",
+            "dataset": {
+              "repo": "Louistiti/openenv-python-repair",
+              "revision": "7c7a19e027df4497aa35c13b350164a52723eeee",
+              "url": "https://huggingface.co/datasets/Louistiti/openenv-python-repair/tree/7c7a19e027df4497aa35c13b350164a52723eeee"
+            }
+          },
+          "media-content-production": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "74662cd3429db06ca50c84c0",
+            "submission_id": "python-repair-lab-v2",
+            "dataset": {
+              "repo": "Louistiti/openenv-python-repair",
+              "revision": "7c7a19e027df4497aa35c13b350164a52723eeee",
+              "url": "https://huggingface.co/datasets/Louistiti/openenv-python-repair/tree/7c7a19e027df4497aa35c13b350164a52723eeee"
+            }
+          },
+          "natural-science": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "74662cd3429db06ca50c84c0",
+            "submission_id": "python-repair-lab-v2",
+            "dataset": {
+              "repo": "Louistiti/openenv-python-repair",
+              "revision": "7c7a19e027df4497aa35c13b350164a52723eeee",
+              "url": "https://huggingface.co/datasets/Louistiti/openenv-python-repair/tree/7c7a19e027df4497aa35c13b350164a52723eeee"
+            }
+          },
+          "office-white-collar": {
+            "solved": 2,
+            "total": 5,
+            "score": 0.4,
+            "run_id": "74662cd3429db06ca50c84c0",
+            "submission_id": "python-repair-lab-v2",
+            "dataset": {
+              "repo": "Louistiti/openenv-python-repair",
+              "revision": "7c7a19e027df4497aa35c13b350164a52723eeee",
+              "url": "https://huggingface.co/datasets/Louistiti/openenv-python-repair/tree/7c7a19e027df4497aa35c13b350164a52723eeee"
+            }
+          },
+          "software-engineering": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "74662cd3429db06ca50c84c0",
+            "submission_id": "python-repair-lab-v2",
+            "dataset": {
+              "repo": "Louistiti/openenv-python-repair",
+              "revision": "7c7a19e027df4497aa35c13b350164a52723eeee",
+              "url": "https://huggingface.co/datasets/Louistiti/openenv-python-repair/tree/7c7a19e027df4497aa35c13b350164a52723eeee"
+            }
+          }
+        },
+        "average": 0.05
+      },
+      {
+        "user": "theykk",
+        "runs": 1,
+        "scores": {
+          "cybersecurity": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "8b516a5ee48fdecb227eb907",
+            "submission_id": "ledger-check-v1",
+            "dataset": {
+              "repo": "theykk/ledger-check",
+              "revision": "d9c0691d4cd6363cd8ae4f301e0820d85eab1002",
+              "url": "https://huggingface.co/datasets/theykk/ledger-check/tree/d9c0691d4cd6363cd8ae4f301e0820d85eab1002"
+            }
+          },
+          "finance-economics": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "8b516a5ee48fdecb227eb907",
+            "submission_id": "ledger-check-v1",
+            "dataset": {
+              "repo": "theykk/ledger-check",
+              "revision": "d9c0691d4cd6363cd8ae4f301e0820d85eab1002",
+              "url": "https://huggingface.co/datasets/theykk/ledger-check/tree/d9c0691d4cd6363cd8ae4f301e0820d85eab1002"
+            }
+          },
+          "industrial-physical-systems": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "8b516a5ee48fdecb227eb907",
+            "submission_id": "ledger-check-v1",
+            "dataset": {
+              "repo": "theykk/ledger-check",
+              "revision": "d9c0691d4cd6363cd8ae4f301e0820d85eab1002",
+              "url": "https://huggingface.co/datasets/theykk/ledger-check/tree/d9c0691d4cd6363cd8ae4f301e0820d85eab1002"
+            }
+          },
+          "mathematics-or-formal-reasoning": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "8b516a5ee48fdecb227eb907",
+            "submission_id": "ledger-check-v1",
+            "dataset": {
+              "repo": "theykk/ledger-check",
+              "revision": "d9c0691d4cd6363cd8ae4f301e0820d85eab1002",
+              "url": "https://huggingface.co/datasets/theykk/ledger-check/tree/d9c0691d4cd6363cd8ae4f301e0820d85eab1002"
+            }
+          },
+          "media-content-production": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "8b516a5ee48fdecb227eb907",
+            "submission_id": "ledger-check-v1",
+            "dataset": {
+              "repo": "theykk/ledger-check",
+              "revision": "d9c0691d4cd6363cd8ae4f301e0820d85eab1002",
+              "url": "https://huggingface.co/datasets/theykk/ledger-check/tree/d9c0691d4cd6363cd8ae4f301e0820d85eab1002"
+            }
+          },
+          "natural-science": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "8b516a5ee48fdecb227eb907",
+            "submission_id": "ledger-check-v1",
+            "dataset": {
+              "repo": "theykk/ledger-check",
+              "revision": "d9c0691d4cd6363cd8ae4f301e0820d85eab1002",
+              "url": "https://huggingface.co/datasets/theykk/ledger-check/tree/d9c0691d4cd6363cd8ae4f301e0820d85eab1002"
+            }
+          },
+          "office-white-collar": {
+            "solved": 2,
+            "total": 5,
+            "score": 0.4,
+            "run_id": "8b516a5ee48fdecb227eb907",
+            "submission_id": "ledger-check-v1",
+            "dataset": {
+              "repo": "theykk/ledger-check",
+              "revision": "d9c0691d4cd6363cd8ae4f301e0820d85eab1002",
+              "url": "https://huggingface.co/datasets/theykk/ledger-check/tree/d9c0691d4cd6363cd8ae4f301e0820d85eab1002"
+            }
+          },
+          "software-engineering": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0,
+            "run_id": "8b516a5ee48fdecb227eb907",
+            "submission_id": "ledger-check-v1",
+            "dataset": {
+              "repo": "theykk/ledger-check",
+              "revision": "d9c0691d4cd6363cd8ae4f301e0820d85eab1002",
+              "url": "https://huggingface.co/datasets/theykk/ledger-check/tree/d9c0691d4cd6363cd8ae4f301e0820d85eab1002"
+            }
+          }
+        },
+        "average": 0.05
+      }
+    ],
+    "baseline": {
+      "model": "Qwen3.8-27B",
+      "revision": "1d4bf0f",
+      "note": "base model, before any training",
+      "measured": "2026-10-07",
+      "attempts_per_task": 1,
+      "solved": 4,
+      "total": 40,
+      "tasks": 0,
+      "scores": {
+        "software-engineering": {
+          "solved": 0,
+          "total": 5
+        },
+        "industrial-physical-systems": {
+          "solved": 2,
+          "total": 5
+        },
+        "natural-science": {
+          "solved": 0,
+          "total": 5
+        },
+        "office-white-collar": {
+          "solved": 2,
+          "total": 5
+        },
+        "finance-economics": {
+          "solved": 0,
+          "total": 5
+        },
+        "mathematics-or-formal-reasoning": {
+          "solved": 0,
+          "total": 5
+        },
+        "cybersecurity": {
+          "solved": 0,
+          "total": 5
+        },
+        "media-content-production": {
+          "solved": 0,
+          "total": 5
+        }
+      }
+    },
+    "max_tasks": 50,
+    "benchmark": "heldout-v2",
+    "runs": [
+      {
+        "benchmark": "heldout-v2",
+        "dataset": {
+          "repo": "burtenshaw/openenv-sql-investigation",
+          "revision": "2ce79be32f693c42d90b8febf1bef5f485024096",
+          "url": "https://huggingface.co/datasets/burtenshaw/openenv-sql-investigation/tree/2ce79be32f693c42d90b8febf1bef5f485024096"
+        },
+        "evaluated_at": 1791464238.1075242,
+        "model_id": "Qwen/Qwen3.8-27B",
+        "model_revision": "1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0",
+        "name": "SQL Investigation Lab",
+        "owner": "space:burtenshaw",
+        "run_id": "16b837f08ba5e6d59b7c4779",
+        "scores": {
+          "cybersecurity": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          },
+          "finance-economics": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          },
+          "industrial-physical-systems": {
+            "solved": 2,
+            "total": 5,
+            "score": 0.4
+          },
+          "mathematics-or-formal-reasoning": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          },
+          "media-content-production": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          },
+          "natural-science": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          },
+          "office-white-collar": {
+            "solved": 2,
+            "total": 5,
+            "score": 0.4
+          },
+          "software-engineering": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          }
+        },
+        "solved": 4,
+        "source": "arena",
+        "steps": 10,
+        "submission_id": "sql-investigation-v5",
+        "tasks": 10,
+        "total": 40,
+        "user": "burtenshaw",
+        "delta": 0
+      },
+      {
+        "benchmark": "heldout-v2",
+        "dataset": {
+          "repo": "NoeFlandre/log-triage",
+          "revision": "80a70d50e7f424ee4c255305456d9b5b3c6f2104",
+          "url": "https://huggingface.co/datasets/NoeFlandre/log-triage/tree/80a70d50e7f424ee4c255305456d9b5b3c6f2104"
+        },
+        "evaluated_at": 1791487113.6368716,
+        "model_id": "Qwen/Qwen3.8-27B",
+        "model_revision": "1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0",
+        "name": "Log Triage",
+        "owner": "space:NoeFlandre",
+        "run_id": "0d0656dfbb4ff4e36b7e6f4f",
+        "scores": {
+          "cybersecurity": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          },
+          "finance-economics": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          },
+          "industrial-physical-systems": {
+            "solved": 2,
+            "total": 5,
+            "score": 0.4
+          },
+          "mathematics-or-formal-reasoning": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          },
+          "media-content-production": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          },
+          "natural-science": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          },
+          "office-white-collar": {
+            "solved": 2,
+            "total": 5,
+            "score": 0.4
+          },
+          "software-engineering": {
+            "solved": 1,
+            "total": 5,
+            "score": 0.2
+          }
+        },
+        "solved": 5,
+        "source": "arena",
+        "steps": 337,
+        "submission_id": "log-triage-v1",
+        "tasks": 12,
+        "total": 40,
+        "user": "NoeFlandre",
+        "delta": 1
+      },
+      {
+        "benchmark": "heldout-v2",
+        "dataset": {
+          "repo": "akseljoonas/mimo-openenv-software",
+          "revision": "4ce4fe143d71ca6365bd187e96efa15bd7ab2787",
+          "url": "https://huggingface.co/datasets/akseljoonas/mimo-openenv-software/tree/4ce4fe143d71ca6365bd187e96efa15bd7ab2787"
+        },
+        "evaluated_at": 1791487810.3278735,
+        "model_id": "Qwen/Qwen3.8-27B",
+        "model_revision": "1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0",
+        "name": "MiMo v2.6 software engineering (8 tasks)",
+        "owner": "space:akseljoonas",
+        "run_id": "03bfc81de59cf3e53b9e05d0",
+        "scores": {
+          "cybersecurity": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          },
+          "finance-economics": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          },
+          "industrial-physical-systems": {
+            "solved": 1,
+            "total": 5,
+            "score": 0.2
+          },
+          "mathematics-or-formal-reasoning": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          },
+          "media-content-production": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          },
+          "natural-science": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          },
+          "office-white-collar": {
+            "solved": 2,
+            "total": 5,
+            "score": 0.4
+          },
+          "software-engineering": {
+            "solved": 1,
+            "total": 5,
+            "score": 0.2
+          }
+        },
+        "solved": 4,
+        "source": "arena",
+        "steps": 77,
+        "submission_id": "mimo-software-v2-20261008",
+        "tasks": 8,
+        "total": 40,
+        "user": "akseljoonas",
+        "delta": 0
+      },
+      {
+        "benchmark": "heldout-v2",
+        "dataset": {
+          "repo": "theykk/ledger-check",
+          "revision": "d9c0691d4cd6363cd8ae4f301e0820d85eab1002",
+          "url": "https://huggingface.co/datasets/theykk/ledger-check/tree/d9c0691d4cd6363cd8ae4f301e0820d85eab1002"
+        },
+        "evaluated_at": 1791488714.1162622,
+        "model_id": "Qwen/Qwen3.8-27B",
+        "model_revision": "1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0",
+        "name": "Ledger Check",
+        "owner": "space:theykk",
+        "run_id": "8b516a5ee48fdecb227eb907",
+        "scores": {
+          "cybersecurity": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          },
+          "finance-economics": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          },
+          "industrial-physical-systems": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          },
+          "mathematics-or-formal-reasoning": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          },
+          "media-content-production": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          },
+          "natural-science": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          },
+          "office-white-collar": {
+            "solved": 2,
+            "total": 5,
+            "score": 0.4
+          },
+          "software-engineering": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          }
+        },
+        "solved": 2,
+        "source": "arena",
+        "steps": 319,
+        "submission_id": "ledger-check-v1",
+        "tasks": 50,
+        "total": 40,
+        "user": "theykk",
+        "delta": -2
+      },
+      {
+        "benchmark": "heldout-v2",
+        "dataset": {
+          "repo": "Louistiti/openenv-python-repair",
+          "revision": "7c7a19e027df4497aa35c13b350164a52723eeee",
+          "url": "https://huggingface.co/datasets/Louistiti/openenv-python-repair/tree/7c7a19e027df4497aa35c13b350164a52723eeee"
+        },
+        "evaluated_at": 1791494087.2200978,
+        "model_id": "Qwen/Qwen3.8-27B",
+        "model_revision": "1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0",
+        "name": "Python Repair Lab v2",
+        "owner": "space:Louistiti",
+        "run_id": "74662cd3429db06ca50c84c0",
+        "scores": {
+          "cybersecurity": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          },
+          "finance-economics": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          },
+          "industrial-physical-systems": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          },
+          "mathematics-or-formal-reasoning": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          },
+          "media-content-production": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          },
+          "natural-science": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          },
+          "office-white-collar": {
+            "solved": 2,
+            "total": 5,
+            "score": 0.4
+          },
+          "software-engineering": {
+            "solved": 0,
+            "total": 5,
+            "score": 0.0
+          }
+        },
+        "solved": 2,
+        "source": "arena",
+        "steps": 297,
+        "submission_id": "python-repair-lab-v2",
+        "tasks": 50,
+        "total": 40,
+        "user": "Louistiti",
+        "delta": -2
+      }
+    ],
+    "next_cursor": null
+  },
+  "messages_reviewed": {
+    "count": 52,
+    "note": "Read only. No post sent. Public board is community commentary, not authoritative contract."
+  },
+  "our_submission": {
+    "submitted": false,
+    "rank": null,
+    "score": null
+  }
+}
