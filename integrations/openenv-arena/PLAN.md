@@ -28,7 +28,7 @@ At 22:59 UTC on 8 October, five accounts were ranked. The leader was NoeFlandre 
 | rGi | Explicitly permitted local capabilities, action IDs, frozen plan | Durable journal, deduplicated local decisions, artifact reference | Actual pinned runtime; no registered submission or publishing capability. Source license must be resolved before redistributing rGi. |
 | Ruflo | Research questions, review tasks and bounded coordination | Findings, task ownership and evidence references | Live Ruflo AI Team/run/task records coordinate the work; they do not constitute provider execution. Coordination belongs outside the image and alone cannot improve Arena's private score. |
 | Native OpenEnv environment | Task ID, seed and typed read/list/submit actions | Observations and terminal reward in [0,1] | Original procedural tasks; independent deterministic verifiers; no shell, host file access or reward oracle exposed to the policy. |
-| Submission client | Live /schema, real image digest, real dataset and reviewed JSON | Dry-run request, later an atomic submission receipt | No submission without explicit execution, matching request digest and HF_TOKEN. Unknown outcomes reconcile the same ID. |
+| Submission client | Live /schema, real image digest, real dataset and reviewed JSON | Dry-run request, later an atomic submission receipt | No submission without explicit execution, matching request digest and the existing HF login (or HF_TOKEN). Unknown outcomes reconcile the same ID. |
 
 ## Phase 0: qualify the foundation
 
@@ -42,7 +42,7 @@ Produce all of the following before consuming a slot:
 4. An amd64 image from the final source revision, under 2 GiB compressed and 128 layers, nonroot, listening on `0.0.0.0`, exposing its one port and becoming healthy within 120 seconds.
 5. A fresh anonymous pull and validation of the exact public digest; a public dataset card with task generation, reward definition, source/license, exclusions, split construction and reproducibility commands.
 
-Gate: all protocol and control checks pass. This establishes eligibility and verifier behavior, not competitiveness. Current absence of a built public image, published dataset or actual model calibration remains an explicit release blocker.
+Gate: all protocol and control checks pass. This establishes eligibility and verifier behavior, not competitiveness. The public image and dataset are now verified; the [fresh anonymous replay](https://github.com/ruvnet/metaharness/actions/runs/37859352503) passed all six native protocol checks and 32 episodes. Actual model calibration and final request approval remain pending.
 
 ## Phase 1: establish actual learning signal
 
@@ -92,7 +92,7 @@ Promotion cannot use oracle reward, random actions, test fixtures, dummy/simulat
 4. Preserve the image until the run ends. Follow the returned `run.dashboard`, not a guessed Trackio project/run. Query actual metric names and distinguish absent values from zero. Record optimizer steps, reward mean/std, completion lengths, step wall time and retries.
 5. Archive official lifecycle and private evaluation. An admitted request, `completed` training, or positive training reward is not an evaluated leaderboard score. Exclude `simulated: true` and CPU dummy metrics from performance claims.
 
-The current session prepares implementation; it sends no Arena submission and posts no public board message. The user explicitly requires the exact final request to be shown and a go-ahead received before submission. That approval gate is mandatory; review the image digest, dataset, task list, limits and request hash together. No extra public board message is implied.
+The ruvultra session published the dataset and board introduction (message 54) using its existing HF login, and owns calibration and subsequent board updates. Credentials remain on that host. Public milestone and blocker posts are authorized. No Arena submission has been sent. The user explicitly requires the exact final request to be shown and a go-ahead received before submission. That approval gate is mandatory; review the image digest, dataset, task list, limits and request hash together. The present [candidate request](evidence/submission-candidate.json) may change after calibration; it is not approved.
 
 ## Phase 4: compete across daily runs
 
