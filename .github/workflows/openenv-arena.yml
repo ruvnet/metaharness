@@ -1,5 +1,10 @@
 name: OpenEnv Arena entry
 on:
+  push:
+    branches: [feat/openenv-arena-entry]
+    paths:
+      - 'integrations/openenv-arena/**'
+      - '.github/workflows/openenv-arena.yml'
   pull_request:
     paths:
       - 'integrations/openenv-arena/**'
@@ -49,7 +54,7 @@ jobs:
         if: always()
         run: docker rm -f arena-check || true
       - name: Publish tested image
-        if: github.event_name == 'workflow_dispatch' && inputs.publish
+        if: (github.event_name == 'workflow_dispatch' && inputs.publish) || (github.event_name == 'push' && github.ref == 'refs/heads/feat/openenv-arena-entry')
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GHCR_USER: ${{ github.actor }}
@@ -59,4 +64,16 @@ jobs:
           docker tag metaharness-arena:check "$IMAGE_TAG"
           docker push "$IMAGE_TAG"
           docker logout ghcr.io
-          echo 'Make the GHCR package public, verify an anonymous digest pull, and use that digest in submission.py render.'
+          IMAGE_DIGEST=$(docker image inspect "$IMAGE_TAG" --format '{{index .RepoDigests 0}}')
+          echo "Published reference: $IMAGE_DIGEST"
+          echo "Package: https://github.com/users/ruvnet/packages/container/package/metaharness-arena"
+          echo "image_digest=$IMAGE_DIGEST" >> "$GITHUB_OUTPUT"
+      - name: Verify anonymous registry access and replay published digest
+        if: (github.event_name == 'workflow_dispatch' && inputs.publish) || (github.event_name == 'push' && github.ref == 'refs/heads/feat/openenv-arena-entry')
+        env:
+          IMAGE_TAG: ghcr.io/ruvnet/metaharness-arena:${{ github.sha }}
+        run: |
+          IMAGE_DIGEST=$(docker image inspect "$IMAGE_TAG" --format '{{index .RepoDigests 0}}')
+          export DOCKER_CONFIG=$(mktemp -d)
+          docker pull "$IMAGE_DIGEST"
+          docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m -v "$PWD/integrations/openenv-arena/tests:/app/tests:ro" -v "$PWD/integrations/openenv-arena/submission.py:/app/submission.py:ro" -e PYTHONPATH=/app "$IMAGE_DIGEST" python -m pytest -q -p no:cacheprovider /app/tests

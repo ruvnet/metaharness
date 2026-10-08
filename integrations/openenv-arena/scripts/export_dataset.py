@@ -18,8 +18,8 @@ def main():
             for difficulty in (1, 2, 3):
                 for seed in range(args.seeds):
                     task = make_task(task_id, seed, difficulty)
-                    row = {k: task[k] for k in ("task_id", "domain", "prompt", "files")}
-                    row.update(seed=seed, difficulty=difficulty, origin="generated")
+                    row = {k: task[k] for k in ("task_id", "domain", "prompt")}
+                    row.update(seed=seed, difficulty=difficulty, origin="generated", files_json=json.dumps(task["files"], sort_keys=True))
                     stream.write(json.dumps(row, sort_keys=True) + "\n")
     card = '''---
 license: mit
@@ -27,11 +27,18 @@ task_categories:
   - reinforcement-learning
 language:
   - en
+configs:
+  - config_name: default
+    data_files:
+      - split: train
+        path: tasks.jsonl
 ---
 # MetaHarness Arena Tasks
 
 Original synthetic procedural tasks across eight domains, generated from
-https://github.com/ruvnet/metaharness/tree/main/integrations/openenv-arena.
+https://github.com/ruvnet/metaharness/pull/383.
+The files_json column preserves each virtual filename and content as lossless JSON.
+These public seeds are training fixtures; held-out evaluation uses fresh instances.
 Training runs the pinned container, not this JSONL. Explicit seeds replay inputs.
 The container generates fresh variants for unseeded resets. The reward is a
 deterministic semantic checker with bounded partial credit for correct sub-results.

@@ -132,7 +132,8 @@ Verification completed locally on 8 October 2026:
 | Pinned native OpenEnv validator against a real local server process | 6/6 criteria passed; [report](evidence/openenv-runtime.json) and [native schema](evidence/schema.json) |
 | Submission safety tests | 19/19 passed |
 | MetaHarness/rGi workflow tests | 16/16 passed, zero skipped |
-| Public container build and anonymous replay | Not completed in this session |
+| Linux amd64 container build, isolated controls and native runtime | Passed in [GitHub Actions](https://github.com/ruvnet/metaharness/actions/runs/37858042127): 61 tests and 6/6 protocol criteria |
+| Public registry and anonymous replay | Pending publication and package visibility |
 | Actual model calibration or transfer | Not run |
 | Arena submission and private evaluation | Not run |
 
