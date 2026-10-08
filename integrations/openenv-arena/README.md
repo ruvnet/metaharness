@@ -4,6 +4,8 @@ An original procedural training environment and bounded curriculum review workfl
 
 Arena trains **its fixed Qwen3.8-27B** with GRPO on one H200 for up to four hours, then evaluates 40 private tasks across eight domains. We supply the environment that teaches the model. MetaHarness, Autogenous, rGi and Ruflo belong around curriculum development, evaluation and governance. They are not an ensemble installed into the Arena evaluator.
 
+**Release hold:** the first real Qwen3.8 probe from the ruvultra executor reports that several v1 families are saturated while some failures come from reasoning truncation. Public v1 trajectories are available in the [calibration artifact](https://gist.github.com/ruvnet/00fb40aeabb35a893f140597e2695c1d); independent replay review is pending. Generator, verifier, calibration and dependency revisions are implemented; the v1 image and request below are historical qualified artifacts, not the final candidate. No Arena submission is approved.
+
 ## What is implemented
 
 | Part | Behavior | Limit |
@@ -65,7 +67,9 @@ PYTHONPATH=. .venv/bin/python scripts/calibrate.py \
   --output .arena/calibration.jsonl
 ```
 
-Use real provider values, configure the named API key environment variable, review its cost ceiling and add `--execute` only to run it. Defaults allow 32 episodes, at most 128 requests and 262,144 generated tokens; actual input token use and dollar cost depend on the provider. Four attempts identify obvious difficulty problems; they do not prove improvement. This runner is a proxy probe: max_tokens is per provider reply. Arena instead counts model output plus post-reset observations against one episode completion budget and the entire conversation against context_tokens. The runner labels arena_budget_matched=false and retains finish reasons and provider token counts. Match the actual tokenizer, thinking configuration and aggregate Arena budget in a separate release calibration before using results to choose final task budgets.
+Use real provider values and review the dry-run caps before execution. `--request-timeout` is configurable from 30 to 900 seconds (default 300), and `--max-tokens` from 128 to 32,768. Execution requires an explicit `--max-total-tokens` ceiling reserving prompt plus output units before each call; unused reservations are not refunded. This is not a provider dollar or billing guarantee. Four attempts identify obvious difficulty problems; they do not prove improvement.
+
+For local aggregate accounting use `--accounting arena`, a locally available `--tokenizer-json` plus its exact `--tokenizer-sha256`, and explicit `--episode-completion-tokens` and `--episode-context-tokens`, or `--task-budgets-json` in the native task-list format. The optional local `tokenizers` helper is not installed in the image. Generated completion includes reasoning once, and every observation after reset is charged. The runner retains separate reasoning, action text, finish reasons, reported token counts and failures. Context is counted using documented local JSON serialization; Arena's production chat wrapper and wall timing remain unverified, so `arena_budget_matched` and `arena_wall_matched` stay false. No provider call or tokenizer download happens in dry-run.
 
 An offline [observation token measurement](evidence/observation-tokens.json) uses the pinned Qwen tokenizer on the 32 calibration instances. Read-all plus terminal observations range up to 1,485 tokens for a family, leaving as few as 2,611 of the candidate 4,096 completion tokens for generation. This excludes chat-template overhead and does not establish the production serializer or model performance.
 
@@ -129,7 +133,7 @@ Verification completed locally on 8 October 2026:
 
 | Check | Observed result |
 | --- | --- |
-| Full Python suite | 61/61 passed |
+| Current v2 Python suite | 88/88 passed plus 782 subtests; v2 image validation pending |
 | Original generator/oracle coverage | 768 deterministic cases: 8 families × 3 difficulties × 32 seeds |
 | Pinned native OpenEnv validator against a real local server process | 6/6 criteria passed; [report](evidence/openenv-runtime.json) and [native schema](evidence/schema.json) |
 | Submission safety tests | 22/22 passed |
@@ -137,11 +141,11 @@ Verification completed locally on 8 October 2026:
 | Linux amd64 container build, isolated controls and native runtime | Passed in [GitHub Actions](https://github.com/ruvnet/metaharness/actions/runs/37858042127): 61 tests and 6/6 protocol criteria |
 | GHCR push, anonymous pull and 61 container controls | Passed in [publication CI](https://github.com/ruvnet/metaharness/actions/runs/37858361136) |
 | Native WebSocket controls | 32/32 episodes passed from the anonymously pulled release on a [fresh runner](https://github.com/ruvnet/metaharness/actions/runs/37859352503); reports archived |
-| Actual model calibration or transfer | Not run |
+| Actual model calibration or transfer | Public v1 target-model probe retained; independent review pending; no transfer result |
 | Arena submission and private evaluation | Not run |
 
 The native validator report uses the SDK label `mode: simulation` for its local protocol check. It contacted the running localhost HTTP/WebSocket server; it is not a GPU training or model performance result. These checks establish a local foundation. A built and anonymously verified public image, attributed public dataset, accepted submission and private evaluation must each be reported separately. No Arena submission or public board message is sent by the implementation tests.
 
 Acceptance: run the native validator and full local suite, replay every declared task from the exact anonymous image digest, then obtain an actual private evaluation whose public attributed score exceeds the contemporaneous leader. Until the final step, competitive performance remains unmeasured.
 
-Released image: `ghcr.io/ruvnet/metaharness-arena@sha256:730f64d25ff21431a0af9c5d4fea8da2d74257569e1d53a2295d90c2c9721252`. This is the candidate built from source commit `90a793a9f4f1a06a5b6422164951e9192c909daa`. Publication and anonymous registry access passed. The public HF dataset is [ruv/metaharness-arena-tasks](https://huggingface.co/datasets/ruv/metaharness-arena-tasks), revision `8323b7b221ea977d8fce4409973678a80e50fb77`, verified anonymously as 768 rows. Model evidence and final user approval remain separate gates.
+Released image: `ghcr.io/ruvnet/metaharness-arena@sha256:730f64d25ff21431a0af9c5d4fea8da2d74257569e1d53a2295d90c2c9721252`. This is the v1 baseline built from source commit `90a793a9f4f1a06a5b6422164951e9192c909daa`. Publication and anonymous registry access passed. The public HF dataset is [ruv/metaharness-arena-tasks](https://huggingface.co/datasets/ruv/metaharness-arena-tasks), revision `8323b7b221ea977d8fce4409973678a80e50fb77`, verified anonymously as 768 rows. Model evidence and final user approval remain separate gates.

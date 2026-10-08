@@ -6,6 +6,7 @@ on:
       - 'integrations/openenv-arena/arena_env/**'
       - 'integrations/openenv-arena/Dockerfile'
       - 'integrations/openenv-arena/requirements.lock'
+      - 'integrations/openenv-arena/requirements-dev.lock'
       - 'integrations/openenv-arena/openenv.yaml'
       - '.github/workflows/openenv-arena.yml'
   pull_request:
@@ -33,13 +34,27 @@ jobs:
           persist-credentials: false
       - name: Build arena image
         run: docker build --platform linux/amd64 -t metaharness-arena:check integrations/openenv-arena
+      - name: Prepare test dependencies outside the runtime image
+        shell: bash
+        run: |
+          docker run --rm --network none metaharness-arena:check python -c 'import importlib.util; assert importlib.util.find_spec("pytest") is None; assert importlib.util.find_spec("iniconfig") is None; assert importlib.util.find_spec("pluggy") is None'
+          mkdir -p "$RUNNER_TEMP/arena-test-deps"
+          docker run --rm --user 0 --cap-drop ALL --security-opt no-new-privileges \
+            -v "$RUNNER_TEMP/arena-test-deps:/test-deps" \
+            -v "$PWD/integrations/openenv-arena/requirements-dev.lock:/app/requirements-dev.lock:ro" \
+            metaharness-arena:check python -m pip install --no-cache-dir --no-deps --target /test-deps -r /app/requirements-dev.lock
+          docker run --rm --network none \
+            -v "$RUNNER_TEMP/arena-test-deps:/test-deps:ro" -e PYTHONPATH=/test-deps:/app \
+            metaharness-arena:check python -m pip check
       - name: Replay controls in a network isolated image
         run: >-
           docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges
           --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m
           -v "$PWD/integrations/openenv-arena/tests:/app/tests:ro"
+          -v "$PWD/integrations/openenv-arena/scripts:/app/scripts:ro"
           -v "$PWD/integrations/openenv-arena/submission.py:/app/submission.py:ro"
-          -e PYTHONPATH=/app metaharness-arena:check
+          -v "$RUNNER_TEMP/arena-test-deps:/test-deps:ro"
+          -e PYTHONPATH=/test-deps:/app metaharness-arena:check
           python -m pytest -q -p no:cacheprovider /app/tests
       - name: Start image and validate pinned OpenEnv protocol
         shell: bash
@@ -79,4 +94,5 @@ jobs:
           IMAGE_DIGEST=$(docker image inspect "$IMAGE_TAG" --format '{{index .RepoDigests 0}}')
           export DOCKER_CONFIG=$(mktemp -d)
           docker pull "$IMAGE_DIGEST"
-          docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m -v "$PWD/integrations/openenv-arena/tests:/app/tests:ro" -v "$PWD/integrations/openenv-arena/submission.py:/app/submission.py:ro" -e PYTHONPATH=/app "$IMAGE_DIGEST" python -m pytest -q -p no:cacheprovider /app/tests
+          docker run --rm --network none "$IMAGE_DIGEST" python -c 'import importlib.util; assert importlib.util.find_spec("pytest") is None; assert importlib.util.find_spec("iniconfig") is None; assert importlib.util.find_spec("pluggy") is None'
+          docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m -v "$PWD/integrations/openenv-arena/tests:/app/tests:ro" -v "$PWD/integrations/openenv-arena/scripts:/app/scripts:ro" -v "$PWD/integrations/openenv-arena/submission.py:/app/submission.py:ro" -v "$RUNNER_TEMP/arena-test-deps:/test-deps:ro" -e PYTHONPATH=/test-deps:/app "$IMAGE_DIGEST" python -m pytest -q -p no:cacheprovider /app/tests

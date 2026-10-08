@@ -37,7 +37,6 @@ httpx-sse==0.4.3
 httpx2==2.13.1
 huggingface-hub==2.2.0
 idna==3.20
-iniconfig==2.3.1
 jaraco-classes==3.4.0
 jaraco-context==6.1.2
 jaraco-functools==4.6.0
@@ -66,7 +65,6 @@ pandas==3.0.6
 pathable==0.6.0
 pillow==12.3.0
 platformdirs==4.12.4
-pluggy==1.6.0
 py-key-value-aio==0.4.6
 pycparser==3.1
 pydantic==2.14.0
@@ -76,7 +74,6 @@ pydub==0.25.1
 pygments==2.21.0
 pyjwt==2.15.1
 pyperclip==1.11.0
-pytest==8.4.1
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.4
 python-multipart==0.0.32

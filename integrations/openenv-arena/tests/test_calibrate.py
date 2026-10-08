@@ -1,0 +1,215 @@
+import contextlib
+import importlib.util
+import io
+import json
+import os
+from pathlib import Path
+import sys
+import tempfile
+from types import SimpleNamespace
+import unittest
+from unittest.mock import Mock, patch
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+SPEC = importlib.util.spec_from_file_location("arena_calibrate", ROOT / "scripts/calibrate.py")
+c = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(c)
+
+
+class CharacterTokenizer:
+    def encode(self, text, add_special_tokens=False):
+        return SimpleNamespace(ids=list(text))
+
+
+class Observation:
+    def __init__(self, text="OBS", done=False, reward=0):
+        self.text, self.done, self.reward = text, done, reward
+    def model_dump_json(self):
+        return self.text
+
+
+class Environment:
+    def __init__(self):
+        self.actions = []
+    def reset(self, **kwargs):
+        return Observation("RESET")
+    def step(self, action):
+        self.actions.append(action.model_dump())
+        return Observation("OBS", action.op == "submit", 1 if action.op == "submit" else 0)
+
+
+class Response:
+    def __init__(self, value):self.data = json.dumps(value).encode()
+    def __enter__(self):return self
+    def __exit__(self, *args):return False
+    def read(self, limit):return self.data[:limit]
+
+
+def reply(content='{"op":"submit","answer":{}}', reason="stop", completion=30, reasoning=None):
+    value = {"choices": [{"message": {"content": content}, "finish_reason": reason}]}
+    if reasoning is not None:value["choices"][0]["message"]["reasoning_content"] = reasoning
+    if completion is not None:
+        value["usage"] = {"prompt_tokens": 100, "completion_tokens": completion, "total_tokens": 100+completion,
+                          "completion_tokens_details": {"reasoning_tokens": 20}}
+    return value
+
+
+def args(**updates):
+    values = dict(seed=1, difficulty=2, max_steps=4, max_tokens=32768, accounting="arena", request_timeout=900,
+                  model="target", base_url="http://127.0.0.1:8001/v1")
+    values.update(updates)
+    return SimpleNamespace(**values)
+
+
+def run(responses, config=None, limits=None, budget=None):
+    opener = Mock()
+    opener.open.side_effect = [Response(r) if isinstance(r, dict) else r for r in responses]
+    env = Environment()
+    row = c.run_episode(config or args(), "science_calibration", 0, "TEST_SECRET_VALUE",
+                        c.TokenCounter(CharacterTokenizer(), "a"*64), budget or c.ReservationBudget(1_000_000),
+                        limits or {"completion_tokens": 4096, "context_tokens": 8192}, opener,
+                        env_factory=lambda: env)
+    return row, opener, env
+
+
+class CalibrationTests(unittest.TestCase):
+    def test_configurable_timeout_is_forwarded_and_timeout_preserves_trajectory(self):
+        row, opener, env = run([TimeoutError("TEST_SECRET_VALUE")])
+        self.assertEqual(opener.open.call_args.kwargs["timeout"], 900)
+        self.assertEqual(row["failure"], "request_timeout")
+        self.assertEqual(row["calls"], 1)
+        self.assertGreater(len(row["trajectory"]["messages"]), 0)
+        self.assertNotIn("TEST_SECRET_VALUE", json.dumps(row))
+        self.assertEqual(env.actions, [])
+
+    def test_length_failure_is_not_json_failure_and_preserves_reasoning(self):
+        row, _, env = run([reply('{"op":"sub', reason="length", reasoning="unfinished reasoning")])
+        self.assertEqual(row["failure"], "completion_truncated")
+        assistant = row["trajectory"]["messages"][-1]
+        self.assertEqual(assistant["content"], '{"op":"sub')
+        self.assertEqual(assistant["reasoning_content"], "unfinished reasoning")
+        self.assertEqual(env.actions, [])
+
+    def test_reasoning_is_not_double_counted_and_native_action_is_preserved(self):
+        row, _, env = run([reply(completion=30, reasoning="thinking")])
+        self.assertIsNone(row["failure"])
+        accounting = row["trajectory"]["accounting"]
+        self.assertEqual(accounting["generation_tokens"], 30)
+        self.assertEqual(accounting["post_reset_observation_tokens"], 3)
+        self.assertEqual(accounting["episode_completion_tokens"], 33)
+        self.assertEqual(env.actions[0]["op"], "submit")
+        self.assertTrue(row["solved"])
+        self.assertFalse(accounting["arena_budget_matched"])
+        self.assertFalse(accounting["arena_wall_matched"])
+
+    def test_aggregate_allowance_decrements_generation_and_observations(self):
+        row, opener, env = run([reply('{"op":"read","path":"*"}', completion=10), reply(completion=10)],
+                               limits={"completion_tokens": 50, "context_tokens": 8192})
+        bodies = [json.loads(call.args[0].data) for call in opener.open.call_args_list]
+        self.assertEqual([b["max_tokens"] for b in bodies], [50, 37])
+        self.assertEqual(row["trajectory"]["accounting"]["episode_completion_tokens"], 26)
+        self.assertEqual(len(env.actions), 2)
+        self.assertIsNone(row["failure"])
+
+    def test_context_exhaustion_prevents_provider_request(self):
+        row, opener, _ = run([], limits={"completion_tokens": 4096, "context_tokens": 1})
+        self.assertEqual(row["failure"], "episode_context_budget_exhausted")
+        self.assertEqual(row["calls"], 0)
+        opener.open.assert_not_called()
+
+    def test_observation_overflow_fails_without_claiming_solved(self):
+        row, _, _ = run([reply(completion=10)], limits={"completion_tokens": 11, "context_tokens": 8192})
+        self.assertEqual(row["failure"], "episode_completion_budget_exceeded")
+        self.assertFalse(row["solved"])
+
+    def test_absent_usage_is_explicit_estimate(self):
+        row, _, _ = run([reply(completion=None, reasoning="abc")])
+        metric = row["trajectory"]["provider_metrics"][0]
+        self.assertEqual(metric["generation_charged"], len('{"op":"submit","answer":{}}')+3)
+        self.assertIn("estimate", metric["generation_count_method"])
+        self.assertIsNone(metric["completion_tokens"])
+
+    def test_global_reservations_bound_calls_and_timeouts_are_not_refunded(self):
+        budget = c.ReservationBudget(10000)
+        row, _, _ = run([TimeoutError()], budget=budget)
+        reserved = budget.reserved
+        self.assertGreater(reserved, 0)
+        remaining = budget.remaining()
+        self.assertFalse(budget.reserve(remaining, 1))
+        self.assertEqual(budget.reserved, reserved)
+        row2, opener, _ = run([], budget=c.ReservationBudget(1))
+        self.assertEqual(row2["failure"], "global_token_budget_exhausted")
+        opener.open.assert_not_called()
+
+    def test_credential_echo_is_redacted_and_never_executed(self):
+        row, _, env = run([reply('{"op":"submit","answer":{"key":"TEST_SECRET_VALUE"}}', reasoning="TEST_SECRET_VALUE")])
+        self.assertEqual(row["failure"], "credential_redacted_from_provider_reply")
+        self.assertNotIn("TEST_SECRET_VALUE", json.dumps(row))
+        self.assertEqual(env.actions, [])
+
+    def test_invalid_json_is_distinct_and_preserved(self):
+        row, _, _ = run([reply("not json")])
+        self.assertEqual(row["failure"], "invalid_json_action")
+        self.assertEqual(row["trajectory"]["messages"][-1]["content"], "not json")
+
+    def test_per_task_budget_file_and_missing_coverage(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)/"budgets.json"
+            path.write_text(json.dumps({"tasks":[{"task_id":"math_route-d2","completion_tokens":32768,"context_tokens":32768}]}))
+            config = args(episode_completion_tokens=4096, episode_context_tokens=8192, task_budgets_json=path)
+            self.assertEqual(c.task_budgets(config,["math_route"])["math_route"]["completion_tokens"],32768)
+            with self.assertRaises(c.CalibrationError):c.task_budgets(config,["math_route","science_calibration"])
+
+    def test_tokenizer_pin_mismatch_fails_before_optional_import(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path=Path(directory)/"tokenizer.json";path.write_text('{}')
+            with self.assertRaisesRegex(c.CalibrationError,"differs"):
+                c.load_counter(args(tokenizer_json=path,tokenizer_sha256='a'*64))
+
+    def test_dryrun_documents_caps_without_credentials_or_dependencies(self):
+        with tempfile.TemporaryDirectory() as directory, patch.object(c,'load_counter',side_effect=AssertionError('no load')), patch.dict(os.environ,{},clear=True):
+            output=io.StringIO()
+            with contextlib.redirect_stdout(output):
+                result=c.main(['--base-url','http://127.0.0.1:8001/v1','--model','target','--model-revision','revision',
+                               '--output',str(Path(directory)/'result.jsonl'),'--max-tokens','32768','--request-timeout','900',
+                               '--max-total-tokens','500000','--accounting','arena','--tokenizer-json','local-tokenizer.json','--tokenizer-sha256','a'*64])
+            plan=json.loads(output.getvalue())['plan']
+            self.assertEqual(result,0)
+            self.assertEqual(plan['max_tokens_per_request'],32768)
+            self.assertEqual(plan['request_timeout_s'],900)
+            self.assertEqual(plan['global_prompt_generation_reservation_limit'],500000)
+            self.assertFalse(plan['arena_budget_matched'])
+            self.assertFalse((Path(directory)/'result.jsonl').exists())
+
+    def test_execute_requires_explicit_global_ceiling(self):
+        with tempfile.TemporaryDirectory() as directory, contextlib.redirect_stderr(io.StringIO()):
+            result=c.main(['--base-url','http://127.0.0.1:8001/v1','--model','target','--model-revision','revision',
+                           '--output',str(Path(directory)/'result.jsonl'),'--execute'])
+            self.assertEqual(result,2)
+            self.assertFalse((Path(directory)/'result.jsonl').exists())
+
+    def test_environment_failure_still_retains_action_trajectory(self):
+        opener=Mock();opener.open.return_value=Response(reply())
+        env=Environment();env.step=Mock(side_effect=RuntimeError("TEST_SECRET_VALUE"))
+        row=c.run_episode(args(),"science_calibration",0,"TEST_SECRET_VALUE",c.TokenCounter(CharacterTokenizer(),"a"*64),
+                          c.ReservationBudget(1_000_000),{"completion_tokens":4096,"context_tokens":8192},opener,lambda:env)
+        self.assertEqual(row["failure"],"environment_step_failed")
+        self.assertEqual(row["trajectory"]["messages"][-1]["content"],'{"op":"submit","answer":{}}')
+        self.assertNotIn("TEST_SECRET_VALUE",json.dumps(row))
+
+    def test_provider_generation_overrun_stops_future_spend(self):
+        budget=c.ReservationBudget(1_000_000)
+        row, _, _=run([reply(completion=100)],limits={"completion_tokens":50,"context_tokens":8192},budget=budget)
+        self.assertEqual(row["failure"],"provider_exceeded_generation_cap")
+        self.assertTrue(budget.overrun)
+        row2,opener,_=run([],budget=budget)
+        self.assertEqual(row2["failure"],"provider_exceeded_reservation")
+        opener.open.assert_not_called()
+
+    def test_redirect_is_refused(self):
+        with self.assertRaises(c.CalibrationError):c.NoRedirect().redirect_request(None,None,302,'',{},'https://evil.test')
+
+
+if __name__=='__main__':unittest.main()

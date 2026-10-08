@@ -53,14 +53,15 @@ def _task(task_id: str, prompt: str, files: dict, expected: dict) -> dict:
         "task_id": task_id,
         "domain": DOMAINS[task_id],
         "prompt": prompt + " Read all three files. Submit exactly the documented JSON object; "
-        "all numeric results must be integers, and ID lists must be lexicographically sorted "
+        "all numeric results must have integer values, and ID lists must be lexicographically sorted "
         "unless an execution order or route is requested. Do not include explanations or extra keys.",
         "files": {k: _json(v) for k, v in files.items()},
         "expected": copy.deepcopy(expected),
         "rubric": {
-            "version": 1,
+            "version": 2,
             "components": {k: 1 / len(expected) for k in expected},
-            "partial_credit": "Equal credit for wholly correct substantive output components; "
+            "partial_credit": "Equal credit for wholly correct output components; zero/empty components count once "
+            "another correct substantive component anchors the answer. "
             "incomplete answers are capped at 0.8. Empty/noop answers receive zero.",
             "max_partial": 0.8,
         },
@@ -75,9 +76,11 @@ def _software(rng: random.Random, d: int) -> dict:
         deps = rng.sample(names[:i], min(i, rng.randint(1, 3)))
         modules[name] = sorted(deps)
     changed = sorted(rng.sample(names[1:1 + len(names) // 2], d))
-    tests = {f"test_{i:02}": sorted(rng.sample(names, rng.randint(1, min(3, d + 1))))
-             for i in range(4 + d * 2)}
-    tests["test_smoke"] = [names[-1]]
+    tests = {f"test_{i:02}": {"targets": sorted(rng.sample(names, rng.randint(1, min(4, d + 2)))),
+                             "cost": rng.randint(2, 10)} for i in range(5 + d)}
+    # Two expensive fallback suites guarantee coverage without disclosing impact.
+    tests["test_full_a"] = {"targets": names[::2], "cost": 12 + d}
+    tests["test_full_b"] = {"targets": names[1::2], "cost": 12 + d}
     affected = set(changed)
     # Generation order is topological, independent of the shuffled public IDs.
     for name in names:
@@ -95,16 +98,26 @@ def _software(rng: random.Random, d: int) -> dict:
                 indegree[consumer] -= 1
                 if indegree[consumer] == 0:
                     heapq.heappush(ready, consumer)
+    covers = []
+    test_names = sorted(tests)
+    for count in range(1, len(tests) + 1):
+        for selected in itertools.combinations(test_names, count):
+            covered = set().union(*(tests[name]["targets"] for name in selected))
+            if affected <= covered:
+                covers.append((sum(tests[name]["cost"] for name in selected), count, selected))
+    test_cost, _, selected = min(covers)
     expected = {
         "affected": sorted(affected),
-        "tests": sorted(k for k, targets in tests.items() if affected.intersection(targets)),
+        "tests": list(selected), "test_cost": test_cost,
         "build_order": order,
     }
     return _task("software_change",
         "A release changes the modules in change.json. modules.json maps each module to its direct "
         "dependencies. Rebuild changed modules and every transitive consumer. Unaffected dependencies "
-        "are already built. Select every test in tests.json that targets any affected module. "
-        'Return {"affected":[module IDs],"tests":[test IDs],"build_order":[module IDs]}. '
+        "are already built. tests.json gives each regression suite's targets and cost. Select suites "
+        "whose target union covers EVERY affected module; minimize total cost, then suite count, "
+        "then the sorted suite ID list lexicographically. Covering extra unaffected modules is allowed. "
+        'Return {"affected":[module IDs],"tests":[selected suite IDs],"test_cost":integer,"build_order":[module IDs]}. '
         "build_order must be a topological ordering of affected modules, always choosing the "
         "lexicographically smallest currently eligible module.",
         {"modules.json": modules, "change.json": {"changed": changed}, "tests.json": tests}, expected)
@@ -150,40 +163,44 @@ def _industrial(rng: random.Random, d: int) -> dict:
 
 
 def _science(rng: random.Random, d: int) -> dict:
-    gain, offset = rng.randint(2, 7), rng.randint(-15, 15)
-    refs = [{"reference": v, "raw": v * gain + offset} for v in (5, 45)]
-    policy = {"acceptable_median": [15, 35], "max_replicate_span": 6}
+    gain, offset, drift = rng.randint(2, 7), rng.randint(-15, 15), rng.choice([-3, -2, -1, 1, 2, 3])
+    refs = [{"reference": v, "time": t, "raw": v * gain + offset + drift * t}
+            for v, t in ((5, 0), (45, 0), (5, 10))]
+    rng.shuffle(refs)
+    policy = {"acceptable_median": [15, 35], "max_replicate_span": rng.randint(6, 9)}
     raw, medians, quarantine, accepted = {}, {}, [], []
     sample_ids = _ids(rng, "sample", 4 + d * 2)
+    bad_positions = set(rng.sample(range(len(sample_ids)), rng.randint(1, len(sample_ids) - 2)))
     for i, name in enumerate(sample_ids):
         base = rng.randint(19, 31)
-        values = [base - 1, base, base + 1]
-        if i == 0:
-            values = [base, base + 1, base + 12]
-        elif i == 1:
-            values = [39, 40, 41]
-        elif i > 2 and rng.random() < .2 * d:
-            values[0] -= 10
-        medians[name] = sorted(values)[1]
-        bad = max(values) - min(values) > 6 or not 15 <= medians[name] <= 35
+        values = [base - 1, base, base + 1] if d == 1 else [base - 2, base - 1, base, base + 1, base + 2]
+        if i in bad_positions:
+            if rng.random() < .5:
+                values[0] -= policy["max_replicate_span"] + 3
+            else:
+                values = [v + 20 for v in values]
+        time, weight = rng.randint(1, 12), rng.randint(1, 2 + d)
+        medians[name] = sorted(values)[len(values) // 2]
+        bad = max(values) - min(values) > policy["max_replicate_span"] or not 15 <= medians[name] <= 35
         if bad:
             quarantine.append(name)
         else:
-            accepted.append(medians[name])
+            accepted.append((medians[name], weight))
         rng.shuffle(values)
-        raw[name] = [gain * v + offset for v in values]
-    mean = Fraction(sum(accepted), len(accepted))
+        raw[name] = {"time": time, "weight": weight, "raw": [gain * v + offset + drift * time for v in values]}
+    mean = Fraction(sum(value * weight for value, weight in accepted), sum(weight for _, weight in accepted))
     return _task("science_calibration",
-        "Audit a calibrated sensor batch. calibration.json gives two standards obeying "
-        "raw=gain*reference+offset with integer gain and offset. Correct every raw replicate in "
-        "samples.json, then calculate each sample's median. quarantine samples whose corrected "
-        "replicate span is greater than max_replicate_span or whose median is outside the inclusive "
-        "acceptable_median interval in policy.json. Compute the arithmetic mean of accepted sample "
-        "medians as a reduced fraction with positive denominator. "
-        'Return {"calibration":{"gain":integer,"offset":integer},"medians":{sample ID:integer},'
+        "Audit a sensor with linear time drift. calibration.json gives standards satisfying "
+        "raw=gain*reference+offset+drift*time. Infer all three integer parameters from the standards "
+        "regardless of their file order. Correct each sample's raw replicates at its recorded time. "
+        "Quarantine samples whose corrected replicate span exceeds max_replicate_span or whose "
+        "median is outside the inclusive acceptable_median interval in policy.json. Compute the "
+        "WEIGHTED mean of accepted sample medians using each sample's weight, as a reduced fraction "
+        "with positive denominator. "
+        '{"calibration":{"gain":integer,"offset":integer,"drift":integer},"medians":{sample ID:integer},'
         '"quarantine":[sample IDs],"accepted_mean":{"numerator":integer,"denominator":integer}}.',
         {"calibration.json": refs, "samples.json": raw, "policy.json": policy},
-        {"calibration": {"gain": gain, "offset": offset}, "medians": medians,
+        {"calibration": {"gain": gain, "offset": offset, "drift": drift}, "medians": medians,
          "quarantine": sorted(quarantine), "accepted_mean": {"numerator": mean.numerator, "denominator": mean.denominator}})
 
 
@@ -241,25 +258,35 @@ def _office(rng: random.Random, d: int) -> dict:
 
 def _finance(rng: random.Random, d: int) -> dict:
     opening = {f"acct_{i}": rng.randint(2000, 12000) for i in range(2 + d)}
-    entry_count = 5 + d * 2
-    event_ids = _ids(rng, "txn", entry_count + 6)
-    pending_index = rng.randrange(entry_count)
-    reverse_index = rng.choice([i for i in range(entry_count) if i != pending_index])
+    entry_count, reversal_count = 5 + d * 2, rng.randint(3, 4 + d)
+    event_ids = _ids(rng, "txn", entry_count + reversal_count)
+    pending = set(rng.sample(range(entry_count), rng.randint(0, d + 1)))
+    protected = rng.choice([i for i in range(entry_count) if i not in pending])
     events = []
     for i in range(entry_count):
-        events.append({"id": event_ids[i], "sequence": i, "kind": "entry",
+        events.append({"id": event_ids[i], "kind": "entry",
                        "account": rng.choice(list(opening)), "cents": rng.choice([-1, 1]) * rng.randint(50, 1900),
-                       "status": "pending" if i == pending_index else "posted"})
-    for target in [event_ids[reverse_index], event_ids[reverse_index], event_ids[pending_index], "absent", event_ids[entry_count]]:
-        i = len(events)
-        events.append({"id": event_ids[i], "sequence": i, "kind": "reversal", "target": target,
-                       "status": "posted"})
-    # A future entry cannot authorize an earlier reversal, even if it later posts.
-    events.insert(0, {"id": event_ids[-1], "sequence": -1, "kind": "reversal",
-                      "target": event_ids[reverse_index], "status": "posted"})
-    policy = {"currency": "USD", "unit": "integer cents", "reversal": "full, once, previously posted entry only"}
+                       "status": "pending" if i in pending else "posted"})
+    amount = abs(events[protected]["cents"])
+    first_amount = rng.randint(1, amount)
+    second_amount = rng.randint(1, amount)
+    for i in range(reversal_count):
+        target = event_ids[protected] if i < 2 else rng.choice([name for name in event_ids if name != event_ids[protected]] + ["absent"])
+        events.append({"id": event_ids[entry_count + i], "kind": "reversal", "target": target,
+                       "cents": [first_amount, second_amount][i] if i < 2 else rng.randint(1, 1600),
+                       "status": "posted" if i < 2 or rng.random() > .2 else "pending"})
+    # Interleave timestamps, then guarantee one real partial reversal. The second
+    # may succeed or exceed remaining principal; other events may refer forward.
+    forced = events[entry_count:entry_count + 2]
+    events = events[:entry_count] + events[entry_count + 2:]
+    rng.shuffle(events)
+    pos = next(i for i, event in enumerate(events) if event["id"] == event_ids[protected]) + 1
+    events[pos:pos] = forced
+    for sequence, event in enumerate(events):
+        event["sequence"] = sequence
+    policy = {"currency": "USD", "unit": "integer cents", "reversal": "positive partial amount, cumulative cap is original absolute cents"}
     closing = dict(opening)
-    applied, rejected, held, undone, posting = [], [], [], set(), {}
+    applied, rejected, held, used, posting = [], [], [], {}, {}
     for event in events:
         name = event["id"]
         if event["status"] != "posted":
@@ -268,21 +295,26 @@ def _finance(rng: random.Random, d: int) -> dict:
             closing[event["account"]] += event["cents"]
             posting[name] = event
             applied.append(name)
-        elif event["target"] not in posting or event["target"] in undone:
-            rejected.append(name)
         else:
-            target = posting[event["target"]]
-            closing[target["account"]] -= target["cents"]
-            undone.add(target["id"])
-            applied.append(name)
+            target = posting.get(event["target"])
+            cents = event["cents"]
+            if target is None or cents <= 0 or used.get(target["id"], 0) + cents > abs(target["cents"]):
+                rejected.append(name)
+            else:
+                closing[target["account"]] -= cents if target["cents"] > 0 else -cents
+                used[target["id"]] = used.get(target["id"], 0) + cents
+                applied.append(name)
     rng.shuffle(events)
     return _task("finance_ledger",
         "Close a synthetic cash ledger using accounts.json, events.json and policy.json. Process "
-        "events in ascending sequence, regardless of file order. Pending events are held and have "
-        "no balance effect. Posted entries add their signed integer cents to the account. A posted "
-        "reversal undoes one previously applied entry in full; a pending, unknown, future, reversal, "
-        "or already reversed target is invalid and the reversal is rejected. Original entries "
-        "remain in applied_ids even when reversed. "
+        "ascending sequence, not file order. Pending entries AND pending reversals are held with "
+        "no effect. Posted entries add signed cents. A posted reversal has POSITIVE cents and undoes "
+        "that amount against a previously applied entry, in the opposite direction to its sign. "
+        "Reject unknown, future, pending, or reversal targets, nonpositive amounts, and reversals "
+        "that would make cumulative accepted reversal cents exceed the original absolute cents. "
+        "Reject the entire over-limit event; never clip its amount. Partial reversals may repeat "
+        "until the principal is exhausted. applied_ids includes BOTH accepted entry events AND "
+        "accepted reversal events; original entries remain applied even when fully reversed. "
         'Return {"closing_cents":{account ID:integer},"applied_ids":[event IDs],'
         '"rejected_ids":[event IDs],"held_ids":[event IDs]}.',
         {"accounts.json": opening, "events.json": events, "policy.json": policy},
@@ -306,6 +338,13 @@ def _math(rng: random.Random, d: int) -> dict:
     budget = sum(edges[(a, b)]["exposure"] for a, b in zip(backbone, backbone[1:])) + rng.randint(0, 3)
     request = {"start": nodes[0], "goal": nodes[-1], "required": checkpoints}
     policy = {"forbidden": [blocked], "max_exposure": budget}
+    arrivals = {backbone[0]: 0}
+    for a, b in zip(backbone, backbone[1:]):
+        arrivals[b] = arrivals[a] + edges[(a, b)]["minutes"]
+    policy["node_windows"] = {node: [max(0, arrivals[node] - rng.randint(0, 5)), arrivals[node] + rng.randint(0, 4)]
+                              for node in rng.sample(backbone[2:], d + 1)}
+    policy["required_before"] = {node: [rng.choice(backbone[1:backbone.index(node)])]
+                                  for node in rng.sample(backbone[3:], d)}
     candidates = []
     def visit(path: list, minutes: int, exposure: int) -> None:
         if exposure > budget:
@@ -316,14 +355,23 @@ def _math(rng: random.Random, d: int) -> dict:
             return
         for (a, b), edge in edges.items():
             if a == path[-1] and b != blocked:
-                visit(path + [b], minutes + edge["minutes"], exposure + edge["exposure"])
+                if any(key not in path for key in policy["required_before"].get(b, [])):
+                    continue
+                arrival = minutes + edge["minutes"]
+                lo, hi = policy["node_windows"].get(b, [0, 10**9])
+                arrival = max(arrival, lo)
+                if arrival <= hi:
+                    visit(path + [b], arrival, exposure + edge["exposure"])
     visit([nodes[0]], 0, 0)
     minutes, exposure, route = min(candidates)
     return _task("math_route",
         "Find a constrained route in a directed acyclic network. Read graph.json, request.json "
         "and policy.json. Visit every required checkpoint, avoid forbidden nodes, and keep summed "
         "exposure at or below max_exposure. Among feasible routes minimize total minutes, then "
-        "total exposure, then the lexicographic node sequence. Edges are directed. "
+        "total exposure, then the lexicographic node sequence. Time starts at zero. On reaching a "
+        "node with [open,close] in node_windows, wait until open if early and reject arrival after "
+        "close. Waiting adds minutes but no exposure. Each required_before mapping requires those "
+        "nodes to have been visited BEFORE entering its key node. Edges are directed. "
         'Return {"route":[node IDs in travel order],"minutes":integer,"exposure":integer}.',
         {"graph.json": list(edges.values()), "request.json": request, "policy.json": policy},
         {"route": list(route), "minutes": minutes, "exposure": exposure})
@@ -378,26 +426,35 @@ def _security(rng: random.Random, d: int) -> dict:
 
 
 def _media(rng: random.Random, d: int) -> dict:
-    assets = {f"asset_{i}": {"frames": rng.randint(200, 600), "licensed": i != 1} for i in range(4 + d)}
+    names = [f"asset_{i}" for i in range(4 + d)]
+    unlicensed = set(rng.sample(names, rng.randint(1, 2)))
+    assets = {name: {"frames": rng.randint(350, 650), "licensed": name not in unlicensed,
+                     "fps": rng.choice([24, 25, 30])} for name in names}
+    policy = {"max_overlap": rng.randint(8, 18), "delivery_budget": 150 + d * 60,
+              "require_license": True, "fps": rng.choice([24, 25, 30])}
+    clip_ids = _ids(rng, "clip", 4 + d * 2)
+    faults = set(rng.sample(range(len(clip_ids)), rng.randint(1, len(clip_ids) - 2)))
     clips = []
-    for i, clip_id in enumerate(_ids(rng, "clip", 4 + d * 2)):
-        asset = rng.choice(list(assets))
-        if i in (0, 2):
-            asset = "asset_0"
-        if i == 1:
-            asset = "asset_1"
-        speed = rng.choice([(1, 1), (2, 1), (1, 2)])
-        start = rng.randint(0, 50)
-        length = rng.randint(20, 60) * 2
+    for i, clip_id in enumerate(clip_ids):
+        asset = rng.choice([name for name in names if name not in unlicensed])
+        speed = rng.choice([(1, 1), (2, 1), (1, 2), (3, 2)])
+        ratio = Fraction(speed[1] * policy["fps"], speed[0] * assets[asset]["fps"])
+        start = rng.randint(0, 40)
+        length = ratio.denominator * rng.randint(4, min(12, 250 // ratio.denominator))
         stop = start + length
-        if i == 3:
-            stop = assets[asset]["frames"] + 10
-        if i == 4:
-            stop += 1
-            speed = (2, 1)
+        if i in faults:
+            mode = rng.choice(["license", "bounds", "fraction", "combined"])
+            if mode in ("license", "combined"):
+                asset = rng.choice(sorted(unlicensed))
+            if mode in ("bounds", "combined"):
+                stop = assets[asset]["frames"] + rng.randint(1, 12)
+            if mode == "fraction":
+                # Rendering one source frame at this rational speed cannot be integral.
+                speed = (2 * policy["fps"], 1)
+                stop = start + 1
         clips.append({"id": clip_id, "asset": asset, "in": start, "out": stop,
-                      "speed_num": speed[0], "speed_den": speed[1], "overlap": rng.randint(0, 40)})
-    policy = {"max_overlap": rng.randint(8, 18), "delivery_budget": 200 + d * 70, "require_license": True}
+                      "speed_num": speed[0], "speed_den": speed[1], "overlap": rng.randint(0, 30),
+                      "gap_before": rng.randint(1, 12) if rng.random() < .25 else 0})
     rejected, timeline = {}, []
     previous_duration, end = 0, 0
     for clip in clips:
@@ -405,29 +462,33 @@ def _media(rng: random.Random, d: int) -> dict:
         reasons = []
         if not asset["licensed"]:
             reasons.append("unlicensed")
-        if clip["in"] < 0 or not clip["in"] < clip["out"] <= asset["frames"]:
+        if not 0 <= clip["in"] < clip["out"] <= asset["frames"]:
             reasons.append("source_bounds")
-        length = Fraction((clip["out"] - clip["in"]) * clip["speed_den"], clip["speed_num"])
+        length = Fraction((clip["out"] - clip["in"]) * clip["speed_den"] * policy["fps"],
+                          clip["speed_num"] * asset["fps"])
         if length.denominator != 1:
             reasons.append("fractional_frame")
         if reasons:
             rejected[clip["id"]] = sorted(reasons)
             continue
         duration = int(length)
-        overlap = 0 if not timeline else min(clip["overlap"], policy["max_overlap"], previous_duration - 1, duration - 1)
-        start = end - overlap
+        gap = clip["gap_before"]
+        overlap = 0 if not timeline or gap else min(clip["overlap"], policy["max_overlap"], previous_duration - 1, duration - 1)
+        start = end + gap - overlap
         end = start + duration
         timeline.append({"id": clip["id"], "start": start, "end": end})
         previous_duration = duration
     return _task("media_timeline",
-        "Repair a frame-exact edit decision list. Read assets.json, edits.json and delivery.json. "
-        "All frames use one shared timebase and [in,out) source intervals. Reject clips for ALL "
-        "applicable reasons: unlicensed when require_license is true and the asset lacks a license; "
-        "source_bounds unless 0<=in<out<=asset frames; fractional_frame if (out-in)*speed_den/speed_num "
-        "is not an integer. Skip rejected clips without consuming timeline time. Place retained clips "
-        "in edits order, first at frame 0. For each later clip, overlap the previous retained clip by "
-        "min(requested overlap,max_overlap,previous rendered duration-1,current rendered duration-1). "
-        "End is exclusive. Compute final total_frames and max(0,total_frames-delivery_budget). "
+        "Repair an edit list with mixed source frame rates. Read assets.json, edits.json and "
+        "delivery.json. Source [in,out) intervals use the asset fps; timeline uses delivery fps. "
+        "Rendered duration=(out-in)*speed_den*delivery.fps/(speed_num*asset.fps). Reject clips for ALL "
+        "applicable reasons: unlicensed when a required license is absent; source_bounds unless "
+        "0<=in<out<=asset frames; fractional_frame when rendered duration is not integral. Skip "
+        "rejected clips and their gaps. Timeline cursor begins at zero. Retained clips add "
+        "gap_before; a positive gap disables overlap. Otherwise overlap the previous retained clip "
+        "by min(requested overlap,max_overlap,previous rendered duration-1,current duration-1); "
+        "the first retained clip cannot overlap. End is exclusive. total_frames is the final end; "
+        "over_budget_frames=max(0,total_frames-delivery_budget). "
         'Return {"rejected":{clip ID:[sorted reason codes]},"timeline":[{"id":clip ID,"start":integer,"end":integer}],'
         '"total_frames":integer,"over_budget_frames":integer}.',
         {"assets.json": assets, "edits.json": clips, "delivery.json": policy},
@@ -446,15 +507,17 @@ def make_task(task_id: str, seed: int, difficulty: int = 2) -> dict:
         raise ValueError("seed must be an integer, not a boolean")
     if type(difficulty) is not int or difficulty not in (1, 2, 3):
         raise ValueError("difficulty must be 1, 2, or 3")
-    seed_bytes = f"arena-curriculum-v1|{task_id}|{seed}|{difficulty}".encode()
+    seed_bytes = f"arena-curriculum-v2|{task_id}|{seed}|{difficulty}".encode()
     rng = random.Random(int.from_bytes(hashlib.sha256(seed_bytes).digest(), "big"))
     result = _GENERATORS[task_id](rng, difficulty)
-    result.update(seed=seed, difficulty=difficulty, generator_version=1)
+    result.update(seed=seed, difficulty=difficulty, generator_version=2)
     return result
 
 
 def _strict_equal(a: Any, b: Any) -> bool:
     """JSON equality without Python's True==1 or nonfinite-number traps."""
+    if type(b) is int and type(a) in (int, float):
+        return type(a) is int and a == b or type(a) is float and math.isfinite(a) and a.is_integer() and a == b
     if type(a) is not type(b):
         return False
     if isinstance(a, dict):
@@ -471,7 +534,7 @@ def _substantive(value: Any) -> bool:
         return any(_substantive(v) for v in value.values())
     if isinstance(value, list):
         return any(_substantive(v) for v in value)
-    return type(value) is str and bool(value) or type(value) is int and value != 0
+    return type(value) is str and bool(value) or type(value) in (int, float) and value != 0
 
 
 def _valid_answer(value: Any) -> bool:
@@ -488,6 +551,9 @@ def _valid_answer(value: Any) -> bool:
             pending.extend((item, depth + 1) for item in node.values())
         elif type(node) is list:
             pending.extend((item, depth + 1) for item in node)
+        elif type(node) is float:
+            if not math.isfinite(node):
+                return False
         elif type(node) not in (int, str):
             return False
     return True
@@ -495,7 +561,7 @@ def _valid_answer(value: Any) -> bool:
 
 def grade(task: dict, answer: dict) -> float:
     """Grade only exact meaningful components; never mutate task or answer."""
-    if type(answer) is not dict or not answer or not _valid_answer(answer) or not _substantive(answer):
+    if type(answer) is not dict or not answer or not _valid_answer(answer):
         return 0.0
     expected = task["expected"]
     if any(type(key) is not str or key not in expected for key in answer):
@@ -503,8 +569,8 @@ def grade(task: dict, answer: dict) -> float:
     correct = [key for key in expected if key in answer and _strict_equal(answer[key], expected[key])]
     if len(correct) == len(expected):
         return 1.0
-    # An empty set by itself is not evidence of a solved subproblem.
-    correct = [key for key in correct if _substantive(answer[key])]
+    if not any(_substantive(answer[key]) for key in correct):
+        return 0.0
     return min(0.8, len(correct) / len(expected))
 
 
@@ -532,9 +598,18 @@ def oracle_answer(task: dict) -> dict:
             chosen = min(name for name in remaining if not remaining.intersection(modules[name]))
             order.append(chosen)
             remaining.remove(chosen)
-        return {"affected": sorted(affected),
-                "tests": sorted(name for name, targets in tests.items() if any(t in affected for t in targets)),
-                "build_order": order}
+        # Coverage-state dynamic programming, independent of subset enumeration.
+        bits = {name: 1 << i for i, name in enumerate(sorted(affected))}
+        states = {0: (0, 0, ())}
+        for name, suite in sorted(tests.items()):
+            mask = sum(bits.get(target, 0) for target in suite["targets"])
+            for covered, (cost, count, selected) in list(states.items()):
+                candidate = (cost + suite["cost"], count + 1, selected + (name,))
+                union = covered | mask
+                if union not in states or candidate < states[union]:
+                    states[union] = candidate
+        cost, _, selected = states[(1 << len(bits)) - 1]
+        return {"affected": sorted(affected), "tests": list(selected), "test_cost": cost, "build_order": order}
 
     if task_id == "industrial_schedule":
         jobs, precedences, calendar = (_load(task, x) for x in ("jobs.json", "precedences.json", "calendar.json"))
@@ -563,21 +638,31 @@ def oracle_answer(task: dict) -> dict:
 
     if task_id == "science_calibration":
         refs, samples, policy = (_load(task, x) for x in ("calibration.json", "samples.json", "policy.json"))
-        slope = Fraction(refs[1]["raw"] - refs[0]["raw"], refs[1]["reference"] - refs[0]["reference"])
-        intercept = refs[0]["raw"] - refs[0]["reference"] * slope
+        # Rational Gaussian elimination solves all standards without assuming order.
+        matrix = [[Fraction(r["reference"]), Fraction(1), Fraction(r["time"]), Fraction(r["raw"])] for r in refs]
+        for col in range(3):
+            pivot = next(row for row in range(col, 3) if matrix[row][col])
+            matrix[col], matrix[pivot] = matrix[pivot], matrix[col]
+            factor = matrix[col][col]
+            matrix[col] = [value / factor for value in matrix[col]]
+            for row in range(3):
+                if row != col:
+                    factor = matrix[row][col]
+                    matrix[row] = [x - factor * y for x, y in zip(matrix[row], matrix[col])]
+        slope, intercept, drift = [matrix[i][-1] for i in range(3)]
         medians, quarantine, total, count = {}, [], Fraction(0), 0
-        for name, values in samples.items():
-            corrected = sorted((Fraction(raw) - intercept) / slope for raw in values)
+        for name, sample in samples.items():
+            corrected = sorted((Fraction(raw) - intercept - drift * sample["time"]) / slope for raw in sample["raw"])
             middle = corrected[len(corrected) // 2]
             medians[name] = int(middle)
             lo, hi = policy["acceptable_median"]
             if corrected[-1] - corrected[0] > policy["max_replicate_span"] or middle < lo or middle > hi:
                 quarantine.append(name)
             else:
-                total += middle
-                count += 1
+                total += middle * sample["weight"]
+                count += sample["weight"]
         mean = total / count
-        return {"calibration": {"gain": int(slope), "offset": int(intercept)}, "medians": medians,
+        return {"calibration": {"gain": int(slope), "offset": int(intercept), "drift": int(drift)}, "medians": medians,
                 "quarantine": sorted(quarantine), "accepted_mean": {"numerator": mean.numerator, "denominator": mean.denominator}}
 
     if task_id == "office_reconciliation":
@@ -601,7 +686,7 @@ def oracle_answer(task: dict) -> dict:
     if task_id == "finance_ledger":
         opening, events = _load(task, "accounts.json"), _load(task, "events.json")
         ordered = sorted(events, key=lambda row: row["sequence"])
-        applied, held, rejected, reversed_ids = [], [], [], set()
+        applied, held, rejected = [], [], []
         contributions = {account: [] for account in opening}
         for position, event in enumerate(ordered):
             if event["status"] == "pending":
@@ -611,38 +696,51 @@ def oracle_answer(task: dict) -> dict:
                 contributions[event["account"]].append(event["cents"])
             else:
                 targets = [old for old in ordered[:position] if old["id"] == event["target"]
-                           and old["kind"] == "entry" and old["id"] in applied and old["id"] not in reversed_ids]
+                           and old["kind"] == "entry" and old["id"] in applied]
                 if not targets:
                     rejected.append(event["id"])
                     continue
                 target = targets[0]
-                contributions[target["account"]].append(-target["cents"])
-                reversed_ids.add(target["id"])
+                used = sum(old["cents"] for old in ordered[:position] if old["kind"] == "reversal"
+                           and old["id"] in applied and old["target"] == target["id"])
+                if event["cents"] <= 0 or used + event["cents"] > abs(target["cents"]):
+                    rejected.append(event["id"])
+                    continue
+                contributions[target["account"]].append(-event["cents"] if target["cents"] > 0 else event["cents"])
             applied.append(event["id"])
         return {"closing_cents": {account: opening[account] + sum(values) for account, values in contributions.items()},
                 "applied_ids": sorted(applied), "rejected_ids": sorted(rejected), "held_ids": sorted(held)}
 
     if task_id == "math_route":
         edges, request, policy = (_load(task, x) for x in ("graph.json", "request.json", "policy.json"))
-        bits = {node: 1 << i for i, node in enumerate(request["required"])}
-        goal_mask = (1 << len(bits)) - 1
+        keys = set(request["required"]).union(*(set(required) for required in policy["required_before"].values()))
+        bits = {node: 1 << i for i, node in enumerate(sorted(keys))}
+        goal_mask = sum(bits[node] for node in request["required"])
         heap = [(0, 0, (request["start"],), bits.get(request["start"], 0))]
         visited = set()
         while heap:
             minutes, exposure, route, mask = heapq.heappop(heap)
             node = route[-1]
-            state = (node, mask, exposure)
+            # Different arrival times can coalesce at a later opening window;
+            # retaining them preserves the route lexicographic tie breaker.
+            state = (node, mask, exposure, minutes)
             if state in visited:
                 continue
             visited.add(state)
-            if node == request["goal"] and mask == goal_mask:
+            if node == request["goal"] and mask & goal_mask == goal_mask:
                 return {"route": list(route), "minutes": minutes, "exposure": exposure}
             for edge in edges:
                 if edge["from"] != node or edge["to"] in policy["forbidden"]:
                     continue
+                if any(not mask & bits[key] for key in policy["required_before"].get(edge["to"], [])):
+                    continue
                 next_exposure = exposure + edge["exposure"]
+                lo, hi = policy["node_windows"].get(edge["to"], [0, 10**9])
+                arrival = max(minutes + edge["minutes"], lo)
+                if arrival > hi:
+                    continue
                 if next_exposure <= policy["max_exposure"]:
-                    heapq.heappush(heap, (minutes + edge["minutes"], next_exposure,
+                    heapq.heappush(heap, (arrival, next_exposure,
                                           route + (edge["to"],), mask | bits.get(edge["to"], 0)))
         raise ValueError("No feasible route in task")
 
@@ -678,8 +776,8 @@ def oracle_answer(task: dict) -> dict:
         retained, rejected = [], {}
         for clip in clips:
             asset = assets[clip["asset"]]
-            numerator = (clip["out"] - clip["in"]) * clip["speed_den"]
-            duration, remainder = divmod(numerator, clip["speed_num"])
+            numerator = (clip["out"] - clip["in"]) * clip["speed_den"] * policy["fps"]
+            duration, remainder = divmod(numerator, clip["speed_num"] * asset["fps"])
             reasons = []
             if policy["require_license"] and not asset["licensed"]:
                 reasons.append("unlicensed")
@@ -693,8 +791,9 @@ def oracle_answer(task: dict) -> dict:
                 retained.append((clip, duration))
         timeline, total = [], 0
         for i, (clip, duration) in enumerate(retained):
-            overlap = 0 if i == 0 else min(policy["max_overlap"], clip["overlap"], duration - 1, retained[i - 1][1] - 1)
-            total += duration - overlap
+            gap = clip["gap_before"]
+            overlap = 0 if i == 0 or gap else min(policy["max_overlap"], clip["overlap"], duration - 1, retained[i - 1][1] - 1)
+            total += duration + gap - overlap
             timeline.append({"id": clip["id"], "start": total - duration, "end": total})
         return {"rejected": rejected, "timeline": timeline, "total_frames": total,
                 "over_budget_frames": max(0, total - policy["delivery_budget"])}
