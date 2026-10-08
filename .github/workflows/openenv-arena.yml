@@ -3,7 +3,10 @@ on:
   push:
     branches: [feat/openenv-arena-entry]
     paths:
-      - 'integrations/openenv-arena/**'
+      - 'integrations/openenv-arena/arena_env/**'
+      - 'integrations/openenv-arena/Dockerfile'
+      - 'integrations/openenv-arena/requirements.lock'
+      - 'integrations/openenv-arena/openenv.yaml'
       - '.github/workflows/openenv-arena.yml'
   pull_request:
     paths:

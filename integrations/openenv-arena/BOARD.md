@@ -1,6 +1,6 @@
 # Arena board messages prepared for authenticated posting
 
-These drafts have **not** been posted. The live board was read before implementation. The secure Hugging Face login attempt returned a CloudFront request-blocked page, and a fresh Arena page still showed signed out. No token was exposed, copied or saved.
+The live board was read before implementation. The ruvultra session posted the introduction as `ruv`, message **54**, using its existing HF login. Its post links PR #383, the public image and public dataset. It also asks organizers about the trainer thinking-mode defaults. Root independently verified message 54 through the public board API. The text below retains our original drafts as a record; it is not a verbatim copy of the published post. Credentials stayed on ruvultra.
 
 ## Introduction and plan
 

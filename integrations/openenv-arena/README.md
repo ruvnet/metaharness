@@ -13,7 +13,7 @@ Arena trains **its fixed Qwen3.8-27B** with GRPO on one H200 for up to four hour
 | Local checks | Correct, incorrect and malformed answers; deterministic reset; bounded episodes and virtual files | Oracle controls are verifier tests, not model scores |
 | `scripts/calibrate.py` | Explicitly invoked four-attempt model probe, bounded calls, dry-run default | Requires a real endpoint and credential; does not train or establish official scores |
 | `orchestration` | Actual MetaHarness gates/receipts and pinned rGi journal; explicit Autogenous curriculum gate contract | No upstream Autogenous training runtime or Arena submission capability |
-| `submission.py` | Live schema request rendering; immutable image requirement; reviewed digest; atomic receipt and status reconciliation | Public image/dataset and HF_TOKEN must be supplied; no automatic retry |
+| `submission.py` | Live schema request rendering; immutable image requirement; reviewed digest; atomic receipt and status reconciliation | Public image/dataset and an existing Hugging Face login or HF_TOKEN must be available; no automatic retry |
 
 The implementation makes no host filesystem, shell, network or verifier endpoint available through the policy's actions. Reading `*` returns only the generated virtual files. Submission ends the episode once; later actions cannot amend the answer. The container does not need model credentials or rGi.
 
@@ -111,7 +111,7 @@ python submission.py submit \
   --receipt .arena/submission-receipt.json
 ```
 
-Only the explicit addition of `--execute`, with `HF_TOKEN` present, sends a POST. It first checks the caller's own submission ID, durably records intent, then records the resulting ID/status. An altered request fails the digest check. A preexisting receipt only triggers reconciliation and never a second POST. The client refuses authenticated redirects and never logs tokens or raw error bodies.
+Only the explicit addition of `--execute`, with existing HF authentication available, sends a POST. HF_TOKEN takes priority; otherwise the official Hugging Face cache lookup is used in memory without saving or exporting a token. It first checks the caller's own submission ID, durably records intent, then records the resulting ID/status. An altered request fails the digest check. A preexisting receipt only triggers reconciliation and never a second POST. The client refuses authenticated redirects and never logs tokens or raw error bodies.
 
 ```sh
 python submission.py status --receipt .arena/submission-receipt.json
@@ -130,7 +130,7 @@ Verification completed locally on 8 October 2026:
 | Full Python suite | 61/61 passed |
 | Original generator/oracle coverage | 768 deterministic cases: 8 families × 3 difficulties × 32 seeds |
 | Pinned native OpenEnv validator against a real local server process | 6/6 criteria passed; [report](evidence/openenv-runtime.json) and [native schema](evidence/schema.json) |
-| Submission safety tests | 19/19 passed |
+| Submission safety tests | 22/22 passed |
 | MetaHarness/rGi workflow tests | 16/16 passed, zero skipped |
 | Linux amd64 container build, isolated controls and native runtime | Passed in [GitHub Actions](https://github.com/ruvnet/metaharness/actions/runs/37858042127): 61 tests and 6/6 protocol criteria |
 | GHCR push, anonymous pull and 61 container controls | Passed in [publication CI](https://github.com/ruvnet/metaharness/actions/runs/37858361136) |
@@ -142,4 +142,4 @@ The native validator report uses the SDK label `mode: simulation` for its local 
 
 Acceptance: run the native validator and full local suite, replay every declared task from the exact anonymous image digest, then obtain an actual private evaluation whose public attributed score exceeds the contemporaneous leader. Until the final step, competitive performance remains unmeasured.
 
-Released image: `ghcr.io/ruvnet/metaharness-arena@sha256:730f64d25ff21431a0af9c5d4fea8da2d74257569e1d53a2295d90c2c9721252`. This is the candidate built from source commit `90a793a9f4f1a06a5b6422164951e9192c909daa`. Publication and anonymous registry access passed. HF dataset publication and model evidence remain separate gates.
+Released image: `ghcr.io/ruvnet/metaharness-arena@sha256:730f64d25ff21431a0af9c5d4fea8da2d74257569e1d53a2295d90c2c9721252`. This is the candidate built from source commit `90a793a9f4f1a06a5b6422164951e9192c909daa`. Publication and anonymous registry access passed. The public HF dataset is [ruv/metaharness-arena-tasks](https://huggingface.co/datasets/ruv/metaharness-arena-tasks), revision `8323b7b221ea977d8fce4409973678a80e50fb77`, verified anonymously as 768 rows. Model evidence and final user approval remain separate gates.

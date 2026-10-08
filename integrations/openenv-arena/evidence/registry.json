@@ -5,6 +5,12 @@
   "job_id": 113587902896,
   "anonymous_manifest_pull": true,
   "anonymous_digest_controls_passed": 61,
-  "fresh_runner_full_blob_pull": "pending",
-  "model_performance": "unmeasured"
+  "fresh_runner_full_blob_pull": true,
+  "model_performance": "unmeasured",
+  "compressed_layer_bytes": 210032512,
+  "layers": 10,
+  "native_replay_episodes_passed": 32,
+  "native_protocol_criteria_passed": 6,
+  "native_evidence_run": "https://github.com/ruvnet/metaharness/actions/runs/37859172024",
+  "artifact_collection": "docker archive does not expose tmpfs reports; capturing through exec next"
 }

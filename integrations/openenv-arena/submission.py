@@ -244,11 +244,21 @@ def render(args, transport=http_json) -> dict:
 
 
 def token_from_environment() -> str:
+    """Reuse the local environment or existing HF login; never create/store one."""
     token = os.environ.get("HF_TOKEN", "").strip()
     if not token:
-        raise ContractError("HF_TOKEN is absent; no authenticated request was sent")
+        try:
+            # Lazy import preserves stdlib-only render/dry-run and uses HF's
+            # official existing-login lookup without moving credentials.
+            from huggingface_hub import get_token
+            token = get_token()
+        except Exception:
+            raise ContractError("Existing HF authentication unavailable; no authenticated request was sent") from None
+    if not isinstance(token, str) or not token.strip():
+        raise ContractError("Existing HF authentication unavailable; no authenticated request was sent")
+    token = token.strip()
     if any(ch.isspace() for ch in token) or len(token) > 4096:
-        raise ContractError("HF_TOKEN has invalid format")
+        raise ContractError("Existing HF credential has invalid format")
     return token
 
 

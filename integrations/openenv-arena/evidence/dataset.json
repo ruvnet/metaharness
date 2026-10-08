@@ -1,0 +1,12 @@
+{
+  "dataset": "ruv/metaharness-arena-tasks",
+  "url": "https://huggingface.co/datasets/ruv/metaharness-arena-tasks",
+  "revision": "8323b7b221ea977d8fce4409973678a80e50fb77",
+  "public": true,
+  "gated": false,
+  "anonymous_rows": 768,
+  "jsonl_sha256": "fe1a49739c4dbc6cec1a72e6c2d1a1f38cdc68ebfe7e0612a5a09fcbb1a08ff1",
+  "source_commit": "90a793a9f4f1a06a5b6422164951e9192c909daa",
+  "board_introduction_id": 54,
+  "board_author": "ruv"
+}

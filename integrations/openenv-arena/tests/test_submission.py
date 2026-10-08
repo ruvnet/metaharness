@@ -3,8 +3,9 @@ import json
 import os
 from pathlib import Path
 import tempfile
+from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 SPEC = importlib.util.spec_from_file_location("arena_submission", Path(__file__).resolve().parents[1] / "submission.py")
 submission = importlib.util.module_from_spec(SPEC)
@@ -38,10 +39,30 @@ class SubmissionTests(unittest.TestCase):
         self.assertFalse(self.path.exists())
 
     def test_execution_fails_without_token(self):
-        with patch.dict(os.environ, {}, clear=True):
-            with self.assertRaisesRegex(submission.ContractError, "HF_TOKEN is absent"):
+        with patch.dict(os.environ, {}, clear=True), patch.dict("sys.modules", {"huggingface_hub": SimpleNamespace(get_token=lambda: None)}):
+            with self.assertRaisesRegex(submission.ContractError, "Existing HF authentication unavailable"):
                 submission.submit(request(), submission.digest(request()), self.path, True)
         self.assertFalse(self.path.exists())
+
+    def test_environment_credential_has_priority_over_existing_login(self):
+        cached = Mock(return_value="cached_test_secret")
+        with patch.dict(os.environ, {"HF_TOKEN": "environment_test_secret"}), patch.dict("sys.modules", {"huggingface_hub": SimpleNamespace(get_token=cached)}):
+            self.assertEqual(submission.token_from_environment(), "environment_test_secret")
+        cached.assert_not_called()
+
+    def test_existing_login_fallback_uses_official_get_token(self):
+        cached = Mock(return_value="cached_test_secret")
+        with patch.dict(os.environ, {}, clear=True), patch.dict("sys.modules", {"huggingface_hub": SimpleNamespace(get_token=cached)}):
+            self.assertEqual(submission.token_from_environment(), "cached_test_secret")
+        cached.assert_called_once_with()
+
+    def test_cache_lookup_failure_never_exposes_exception_or_secret(self):
+        cached = Mock(side_effect=RuntimeError("Authorization: Bearer sensitive_value"))
+        with patch.dict(os.environ, {}, clear=True), patch.dict("sys.modules", {"huggingface_hub": SimpleNamespace(get_token=cached)}):
+            with self.assertRaises(submission.ContractError) as caught:
+                submission.token_from_environment()
+        self.assertNotIn("sensitive_value", str(caught.exception))
+        self.assertNotIn("Authorization", str(caught.exception))
 
     def test_mutation_invalidates_review_digest(self):
         value = request()
