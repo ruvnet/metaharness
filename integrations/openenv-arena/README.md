@@ -133,10 +133,13 @@ Verification completed locally on 8 October 2026:
 | Submission safety tests | 19/19 passed |
 | MetaHarness/rGi workflow tests | 16/16 passed, zero skipped |
 | Linux amd64 container build, isolated controls and native runtime | Passed in [GitHub Actions](https://github.com/ruvnet/metaharness/actions/runs/37858042127): 61 tests and 6/6 protocol criteria |
-| Public registry and anonymous replay | Pending publication and package visibility |
+| GHCR push, anonymous pull and 61 container controls | Passed in [publication CI](https://github.com/ruvnet/metaharness/actions/runs/37858361136) |
+| Native WebSocket controls | 32/32 local episodes passed across every declared task; fresh runner release replay pending |
 | Actual model calibration or transfer | Not run |
 | Arena submission and private evaluation | Not run |
 
 The native validator report uses the SDK label `mode: simulation` for its local protocol check. It contacted the running localhost HTTP/WebSocket server; it is not a GPU training or model performance result. These checks establish a local foundation. A built and anonymously verified public image, attributed public dataset, accepted submission and private evaluation must each be reported separately. No Arena submission or public board message is sent by the implementation tests.
 
 Acceptance: run the native validator and full local suite, replay every declared task from the exact anonymous image digest, then obtain an actual private evaluation whose public attributed score exceeds the contemporaneous leader. Until the final step, competitive performance remains unmeasured.
+
+Released image: `ghcr.io/ruvnet/metaharness-arena@sha256:730f64d25ff21431a0af9c5d4fea8da2d74257569e1d53a2295d90c2c9721252`. This is the candidate built from source commit `90a793a9f4f1a06a5b6422164951e9192c909daa`. Publication and anonymous registry access passed. HF dataset publication and model evidence remain separate gates.
