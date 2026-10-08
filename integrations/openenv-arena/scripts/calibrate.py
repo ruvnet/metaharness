@@ -47,7 +47,7 @@ def main():
     tasks = list(dict.fromkeys(args.task_id or TASK_IDS))
     ceiling = len(tasks)*4*args.max_steps
     manifest = {"tasks": [{"task_id": f"{family}-d{args.difficulty}", "split": "train"} for family in tasks]}
-    plan = {"model": args.model, "revision": args.model_revision, "families": tasks, "attempts_per_family": 4, "max_calls": ceiling, "max_completion_tokens": ceiling*args.max_tokens, "difficulty": args.difficulty, "seed": args.seed, "manifest": manifest, "manifestDigest": canonical_digest(manifest)}
+    plan = {"model": args.model, "revision": args.model_revision, "families": tasks, "attempts_per_family": 4, "max_calls": ceiling, "max_completion_tokens": ceiling*args.max_tokens, "difficulty": args.difficulty, "seed": args.seed, "manifest": manifest, "manifestDigest": canonical_digest(manifest), "arena_budget_matched": False, "token_accounting": "Per-request generation cap only; no Arena aggregate observation or context accounting"}
     if not args.execute:
         print(json.dumps({"dry_run": True, "plan": plan, "note": "No provider calls. Pricing and actual tokens depend on the selected endpoint."}, indent=2))
         return
@@ -74,6 +74,7 @@ def main():
                     {"role": "user", "content": reset.model_dump_json()},
                 ]
                 start, usage, reward, failure = time.monotonic(), 0, 0.0, None
+                provider_metrics = []
                 for step in range(args.max_steps):
                     body = json.dumps({"model": args.model, "messages": messages, "temperature": 0.7, "max_tokens": args.max_tokens}).encode()
                     request = urllib.request.Request(args.base_url.rstrip("/")+"/chat/completions", body, {"Authorization": "Bearer "+token, "Content-Type": "application/json"})
@@ -84,20 +85,33 @@ def main():
                             raise ValueError("response too large")
                         reply = json.loads(raw)
                         content = reply["choices"][0]["message"]["content"]
-                        usage += int(reply.get("usage", {}).get("total_tokens", 0))
+                        reported_usage = reply.get("usage") or {}
+                        finish_reason = reply["choices"][0].get("finish_reason")
+                        metric = {"finish_reason": finish_reason if finish_reason in ("stop", "length", "tool_calls", "content_filter") else "unknown"}
+                        for field in ("prompt_tokens", "completion_tokens", "total_tokens"):
+                            value = reported_usage.get(field)
+                            metric[field] = value if type(value) is int and value >= 0 else None
+                        reasoning = (reported_usage.get("completion_tokens_details") or {}).get("reasoning_tokens")
+                        metric["reasoning_tokens"] = reasoning if type(reasoning) is int and reasoning >= 0 else None
+                        provider_metrics.append(metric)
+                        usage += metric["total_tokens"] or 0
+                        if not isinstance(content, str):
+                            raise ValueError("content is not text")
+                        # Preserve invalid/truncated model text for failure diagnosis.
+                        messages.append({"role": "assistant", "content": content})
                         action = ArenaAction.model_validate_json(content)
                         observation = env.step(action)
                     except Exception as error:
                         # Never include response bodies, headers or exception text containing secrets.
                         failure = type(error).__name__
                         break
-                    messages += [{"role": "assistant", "content": content}, {"role": "user", "content": observation.model_dump_json()}]
+                    messages.append({"role": "user", "content": observation.model_dump_json()})
                     if observation.done:
                         reward = float(observation.reward)
                         break
                 else:
                     failure = "step_budget_exhausted"
-                trajectory = {"seed": seed, "messages": messages, "failure": failure}
+                trajectory = {"seed": seed, "messages": messages, "failure": failure, "provider_metrics": provider_metrics}
                 row = {"type": "episode", "evidence_kind": "proxy_calibration", "task_id": family, "difficulty": args.difficulty, "seed": seed, "attempt": attempt, "reward": reward, "solved": reward == 1.0, "trajectory": trajectory, "trajectoryDigest": canonical_digest(trajectory), "calls": step+1, "total_tokens_reported": usage, "latency_s": round(time.monotonic()-start, 3), "failure": failure}
                 rows.append(row)
                 out.write(json.dumps(row)+"\n")
