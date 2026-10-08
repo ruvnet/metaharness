@@ -39,7 +39,7 @@ jobs:
         run: |
           docker run --rm --network none metaharness-arena:check python -c 'import importlib.util; assert importlib.util.find_spec("pytest") is None; assert importlib.util.find_spec("iniconfig") is None; assert importlib.util.find_spec("pluggy") is None'
           mkdir -p "$RUNNER_TEMP/arena-test-deps"
-          docker run --rm --user 0 --cap-drop ALL --security-opt no-new-privileges \
+          docker run --rm --user "$(id -u):$(id -g)" --cap-drop ALL --security-opt no-new-privileges \
             -v "$RUNNER_TEMP/arena-test-deps:/test-deps" \
             -v "$PWD/integrations/openenv-arena/requirements-dev.lock:/app/requirements-dev.lock:ro" \
             metaharness-arena:check python -m pip install --no-cache-dir --no-deps --target /test-deps -r /app/requirements-dev.lock
