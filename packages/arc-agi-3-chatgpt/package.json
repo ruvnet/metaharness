@@ -52,7 +52,7 @@
     "@metaharness/arc-agi-3": "^0.1.0",
     "@metaharness/kernel": "0.1.3",
     "@modelcontextprotocol/ext-apps": "^1.0.1",
-    "@modelcontextprotocol/sdk": "1.26.0",
+    "@modelcontextprotocol/sdk": "^1.32.1",
     "zod": "^3.25.76"
   },
   "devDependencies": {
