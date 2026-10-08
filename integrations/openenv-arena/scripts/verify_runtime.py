@@ -32,6 +32,8 @@ try:
     (root / "evidence/schema.json").write_text(json.dumps(schema, indent=2)+"\n")
     result = subprocess.run([str(Path(sys.executable).parent/"openenv"), "validate", "--url", base, "--json", "--output", str(root/"evidence/openenv-runtime.json")], cwd=root, text=True, capture_output=True, timeout=60)
     print(result.stdout)
+    report = json.loads(result.stdout)
+    (root / "evidence/openenv-runtime.json").write_text(json.dumps(report, indent=2)+"\n")
     if result.returncode:
         print(result.stderr, file=sys.stderr)
         raise SystemExit(result.returncode)

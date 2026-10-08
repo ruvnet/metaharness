@@ -1,5 +1,5 @@
 {
-  "target": "http://127.0.0.1:59179",
+  "target": "http://127.0.0.1:42981",
   "validation_type": "running_environment",
   "standard_version": "1.0.0",
   "standard_profile": "openenv-http/1.x",

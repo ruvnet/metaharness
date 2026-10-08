@@ -32,9 +32,8 @@ jobs:
             if docker exec arena-release python -c 'import urllib.request; urllib.request.urlopen("http://127.0.0.1:8000/health",timeout=1)' >/dev/null 2>&1; then break; fi
             sleep 1
           done
-          docker exec arena-release openenv validate --url http://127.0.0.1:8000 --json --output /tmp/native-protocol.json
+          docker exec arena-release openenv validate --url http://127.0.0.1:8000 --json > release-evidence/native-protocol.json
           docker exec arena-release python /replay/scripts/replay_native.py --url http://127.0.0.1:8000 --output /tmp/native-replay.json
-          docker cp arena-release:/tmp/native-protocol.json release-evidence/native-protocol.json
           docker cp arena-release:/tmp/native-replay.json release-evidence/native-replay.json
           printf '%s\n' "$ARENA_IMAGE" > release-evidence/image.txt
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
