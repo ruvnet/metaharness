@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/workflows/openenv-arena-replay.yml'
       - 'integrations/openenv-arena/scripts/replay_native.py'
+      - 'integrations/openenv-arena/tasks.json'
   workflow_dispatch:
 permissions:
   contents: read
@@ -13,7 +14,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     env:
-      ARENA_IMAGE: ghcr.io/ruvnet/metaharness-arena@sha256:730f64d25ff21431a0af9c5d4fea8da2d74257569e1d53a2295d90c2c9721252
+      ARENA_IMAGE: ghcr.io/ruvnet/metaharness-arena@sha256:228329c4928eef054d6e1d3021c9867df416539d4d5e656cc760f97c17c9e35a
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
