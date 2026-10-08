@@ -11,6 +11,8 @@
   "layers": 10,
   "native_replay_episodes_passed": 32,
   "native_protocol_criteria_passed": 6,
-  "native_evidence_run": "https://github.com/ruvnet/metaharness/actions/runs/37859172024",
-  "artifact_collection": "docker archive does not expose tmpfs reports; capturing through exec next"
+  "native_evidence_run": "https://github.com/ruvnet/metaharness/actions/runs/37859352503",
+  "artifact_collection": "passed",
+  "artifact_id": 11584934830,
+  "artifact_sha256": "871934c224481f859317ff3309fa9b8d1e0b8a93768eaee995933d9e82ba7c2c"
 }

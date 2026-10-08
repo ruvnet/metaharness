@@ -134,7 +134,7 @@ Verification completed locally on 8 October 2026:
 | MetaHarness/rGi workflow tests | 16/16 passed, zero skipped |
 | Linux amd64 container build, isolated controls and native runtime | Passed in [GitHub Actions](https://github.com/ruvnet/metaharness/actions/runs/37858042127): 61 tests and 6/6 protocol criteria |
 | GHCR push, anonymous pull and 61 container controls | Passed in [publication CI](https://github.com/ruvnet/metaharness/actions/runs/37858361136) |
-| Native WebSocket controls | 32/32 local episodes passed across every declared task; fresh runner release replay pending |
+| Native WebSocket controls | 32/32 episodes passed from the anonymously pulled release on a [fresh runner](https://github.com/ruvnet/metaharness/actions/runs/37859352503); reports archived |
 | Actual model calibration or transfer | Not run |
 | Arena submission and private evaluation | Not run |
 
