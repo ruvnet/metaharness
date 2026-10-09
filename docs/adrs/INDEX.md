@@ -343,6 +343,12 @@ ADR-006 (memory + learning) and ADR-008 (drift detection) cut across all phases.
 |-----|-------|--------|---------|
 | [ADR-317](./ADR-317-independent-review-context-isolation.md) | Independent review context isolation | Proposed | `@metaharness/flywheel` `review-context` builds provenance-bound reviewer packets that exclude worker reasoning, peer messages, prior verdicts, reward history, shared scratchpads, and reviewer identity cues; the packet digest detects tampering but is unkeyed, and no runner enforces it yet. |
 
+## OpenEnv Arena
+
+| ADR | Title | Status | Summary |
+|-----|-------|--------|---------|
+| [ADR-320](./ADR-320-openenv-arena-daily-submission-flywheel.md) | OpenEnv Arena daily submission flywheel and Darwin search lane | Proposed | `integrations/openenv-arena-darwin/flywheel`: gated daily submission (`gate-only` default, `daily-best` re-draws the stored arena-validated request body verbatim under a fresh id), every pre-submit check on the exact image digest, offline incumbent bootstrap, bank-first strategy under best-per-domain scoring, a single checked submission script run by local codex, and the codex review fixes (`978ab069`). Not installed or enabled by default. The environment lane's own ADR-319 (`openenv-arena-curriculum`) lives in PR #383. |
+
 ## Conventions used across the series
 
 - **"Kernel"** = `@metaharness/kernel`, the package extracted from ruflo that contains primitives a harness needs regardless of identity or content (MCP wiring, hooks runtime, memory bridge, routing). Defined in ADR-002.
