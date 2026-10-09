@@ -17,7 +17,23 @@
     "total": 6
   },
   "anonymous_digest_pull_and_container_tests": "passed",
-  "fresh_runner_websocket_replay": "pending",
+  "fresh_runner_websocket_replay": {
+    "status": "passed",
+    "run_url": "https://github.com/ruvnet/metaharness/actions/runs/37862215898",
+    "job_id": 113600363557,
+    "head_sha": "cd670b2ae9564fd823b591532c0ee3f586aecb2a",
+    "episodes_passed": 32,
+    "episodes_total": 32,
+    "native_protocol_passed": 6,
+    "native_protocol_total": 6,
+    "anonymous_exact_digest_pull": true,
+    "artifact": {
+      "name": "arena-anonymous-runtime-evidence",
+      "id": 11586249385,
+      "digest": "sha256:276eb97cd8f2dbb3836c951c933ce7c3f5cfebbbfc9cfb74ffe1dcbf09094396",
+      "expires_at": "2027-01-06"
+    }
+  },
   "model_calibration": "v2 pending; v1 independently replayed",
   "arena_submission": null
 }
