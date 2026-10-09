@@ -68,6 +68,14 @@ terminal answer is a task error. It is not proof of a particular internal reason
 cause. Report observed reasoning text/token evidence separately, without treating a
 thinking-mode flag, wrong answer or parsing failure as proof of genuine reasoning.
 
+Review the observable answer errors before labeling mixed success as reasoning
+difficulty. In the retained v2 probe, five science partials omit exactly quarantined
+samples from the medians map while returning correct remaining medians and weighted
+means. Clarify ambiguous completeness requirements and remeasure before accepting
+such a cell as reasoning signal. A specification clarification changes the source
+baseline and is not itself a measured fitness win. Keep completeness, arithmetic
+and constraint errors separate; do not optimize ambiguity to increase the metric.
+
 ## Review decision
 
 - Require strictly more valid mixed-success cells than the same incumbent on

@@ -16,7 +16,7 @@ def digest(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 
-def test_768_version2_baseline_tasks_are_byte_identical():
+def test_768_version2_baseline_tasks_only_change_documented_science_prompt():
     # Frozen before any knob implementation, over complete task objects rather
     # than only source files. Every original family, difficulty and 32 seeds.
     before = "69d6a24dc601ad5bb914d846b34b8d784a2d44b037530220c553975d901c4ffd"
@@ -25,7 +25,12 @@ def test_768_version2_baseline_tasks_are_byte_identical():
         for seed in range(32):
             for difficulty in (1, 2, 3):
                 task = make_task(family, seed, difficulty)
-                records[f"{family}/{seed}/{difficulty}"] = digest(task)
+                legacy = copy.deepcopy(task)
+                if family == "science_calibration":
+                    clarification = "The medians map must include every sample, including quarantined samples. "
+                    assert legacy["prompt"].count(clarification) == 1
+                    legacy["prompt"] = legacy["prompt"].replace(clarification, "", 1)
+                records[f"{family}/{seed}/{difficulty}"] = digest(legacy)
                 assert make_task(family, seed, difficulty, {}) == task
                 for knob, spec in KNOBS.get(family, {}).items():
                     assert make_task(family, seed, difficulty, {knob: spec["default"]}) == task

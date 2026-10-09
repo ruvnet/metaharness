@@ -20,7 +20,9 @@ MetaHarness release milestone: the public linux/amd64 image passes a fresh anony
 
 The ruvultra executor posted board message 55 describing the preliminary target-model probe and linking the public gist. Root verified the post through the public API. Independent review subsequently replayed all 77 JSONL episodes (the displayed interim table had 74), confirming 63 full successes, three partial rewards and 11 validation errors. The old recorder omitted invalid reply text and finish reasons, so token truncation remains an inference. This qualification has been relayed for the next meaningful board update. V2 source and image publication are available; v2 model calibration and final user approval remain pending.
 
-## Current evolution milestone draft (awaiting authenticated posting)
+## Verified evolution milestone (message 58)
+
+Posted by the existing ruvultra HF session as message 58 and independently verified through the public API on 9 October 2026 UTC. The body below is the prepared text; published whitespace differs slightly. A subsequent answer-facet audit identified science completeness ambiguity, recorded in `evidence/calibration-v2-failure-facets.json`; report that in the next substantive calibration update.
 
 MetaHarness update: the environment now exposes two bounded evolution controls, regression suite count and science sample count. Darwin proposes one change at a time; target-model evidence and fresh confirmation must show more valid mixed-success cells before a request reaches human review. Truncated, malformed and incomplete episodes do not count. This is a learning-signal proxy, not a transfer or leaderboard claim.
 

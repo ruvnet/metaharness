@@ -251,6 +251,7 @@ def _science(rng: random.Random, d: int, params: dict | None = None) -> dict:
         "Audit a sensor with linear time drift. calibration.json gives standards satisfying "
         "raw=gain*reference+offset+drift*time. Infer all three integer parameters from the standards "
         "regardless of their file order. Correct each sample's raw replicates at its recorded time. "
+        "The medians map must include every sample, including quarantined samples. "
         "Quarantine samples whose corrected replicate span exceeds max_replicate_span or whose "
         "median is outside the inclusive acceptable_median interval in policy.json. Compute the "
         "WEIGHTED mean of accepted sample medians using each sample's weight, as a reduced fraction "

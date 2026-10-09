@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-09T00:29:34.559954+00:00",
+  "checked_at": "2026-10-09T00:36:09.969219+00:00",
   "decision": "HOLD",
   "eligible_for_user_review": false,
   "measured_darwin_win": false,
@@ -18,6 +18,7 @@
     "independent full v2 replay:64 episodes,128 token-accounting checks,5 valid mixed cells"
   ],
   "pending": [
+    "qualify and recalibrate clarified science source before treating completeness omissions as reasoning signal",
     "external Darwin search and gate source review",
     "retained target model search and fresh confirmation evidence",
     "strict fitness gain over matched incumbent",
@@ -33,7 +34,7 @@
     "ruvllm": "deferred; inspected backend lacks Qwen GGUF support and honest inference must be verified",
     "ruvector": "deferred pending sufficient complete failures and verified native/embedding backend"
   },
-  "board_latest_confirmed_own_message": 55,
+  "board_latest_confirmed_own_message": 58,
   "new_milestone_draft_chars": 1806,
   "note": "Coordination status, not a signed Flywheel decision or provider execution attestation.",
   "calibration": {
@@ -49,5 +50,12 @@
     "prospectively_registered": false,
     "reasoning_history_retained": false,
     "knob_probe": "reported running by ruvultra; diagnostic only, no retained final evidence reviewed"
+  },
+  "science_clarification": {
+    "scope": "one explicit prompt sentence; all numeric data, answers, verifier and knobs unchanged",
+    "reason": "five v2 partials omit precisely quarantined median keys while means remain correct",
+    "validation": "140 tests,782 subtests; frozen768-instance comparison permits only documented prompt clause",
+    "fitness_win": false,
+    "new_image_and_calibration": "pending"
   }
 }
