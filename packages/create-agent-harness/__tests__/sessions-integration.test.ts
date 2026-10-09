@@ -84,6 +84,32 @@ describe('sessions scaffold (ADR-246 §2.3)', () => {
     await expect(SessionLog.open(badFile)).rejects.toThrow(/unpaired surrogate/);
   });
 
+  it('emitted SessionLog serializes concurrent unawaited appends (ADR-246 §2.3 TOCTOU fix)', async () => {
+    const root = await tmpRoot('sessions-concurrency-');
+    const target = join(root, 'bot');
+    await scaffold({ name: 'bot', template: 'minimal', host: 'claude-code', targetDir: target, sessions: true, generatorVersion: 'test' });
+    const moduleUrl = pathToFileURL(join(target, 'src/sessions/log.ts')).href
+      .replaceAll('%7E', '~')
+      .replaceAll('%7e', '~');
+    const mod = await import(moduleUrl);
+    const SessionLog = mod.SessionLog;
+
+    const file = join(root, 'log.jsonl');
+    const log = await SessionLog.open(file);
+    const N = 15;
+    const events = await Promise.all(Array.from({ length: N }, (_, i) => log.append('turn', { i })));
+    const indices = events.map((e: { index: number }) => e.index).sort((a: number, b: number) => a - b);
+    expect(indices).toEqual(Array.from({ length: N }, (_, i) => i)); // distinct, monotonic — no raced duplicate
+
+    const reopened = await SessionLog.open(file); // a raced write would make this throw
+    expect(reopened.replay().eventCount).toBe(N);
+
+    // concurrent fork() calls for the same new branch name: exactly one wins
+    const attempts = await Promise.allSettled([log.fork(0, 'side'), log.fork(0, 'side')]);
+    expect(attempts.filter((a: { status: string }) => a.status === 'fulfilled')).toHaveLength(1);
+    expect(attempts.filter((a: { status: string }) => a.status === 'rejected')).toHaveLength(1);
+  });
+
   it('parses --sessions / --no-sessions', () => {
     expect(parseArgs(['b', '--sessions']).sessions).toBe(true);
     expect(parseArgs(['b', '--no-sessions']).sessions).toBe(false);

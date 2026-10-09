@@ -118,6 +118,25 @@ interface LogState {
   branchParent: Map<string, { branch: string; index: number }>;
   /** The root branch (the one whose first event carries no parent). */
   rootBranch: string;
+  /** Serializes every append()/fork() against this state (and the file),
+   * so concurrent, unawaited calls on this instance or a fork() sibling can
+   * never read-check-write on the same stale nextIndex. Always resolves (an
+   * operation's own failure is delivered through the promise `enqueue`
+   * returns to its caller, never through this chain, so one failed append
+   * can't wedge the queue for the next). */
+  queue: Promise<unknown>;
+}
+
+/** Run `op` after every previously enqueued operation on `state` has
+ * settled (success or failure), and chain the queue forward the same way —
+ * this is the TOCTOU fix: the read-index→serialize→write→state-mutate
+ * sequence in `appendLocked` only ever runs for one caller at a time per
+ * `LogState`, in call order, closing the race `append()`/`fork()` had when
+ * two unawaited calls both read the same pre-increment index. */
+function enqueue<T>(state: LogState, op: () => Promise<T>): Promise<T> {
+  const result = state.queue.then(op, op);
+  state.queue = result.then(() => undefined, () => undefined);
+  return result;
 }
 
 /** Parse + validate a JSONL log; returns either the reconstructed state or
@@ -134,6 +153,7 @@ function parseLog(path: string, raw: string): { state: LogState; errors: string[
     nextIndex: new Map(),
     branchParent: new Map(),
     rootBranch: '',
+    queue: Promise.resolve(),
   };
   const errors: string[] = [];
   const seen = new Set<string>();
@@ -237,6 +257,7 @@ export class SessionLog {
       nextIndex: new Map(),
       branchParent: new Map(),
       rootBranch: branch,
+      queue: Promise.resolve(),
     };
     this.branch = branch;
   }
@@ -267,8 +288,22 @@ export class SessionLog {
   }
 
   /** Append an event on the active branch, assigning the next monotonic
-   * index. The first event of a forked branch carries the fork's parent ref. */
+   * index. The first event of a forked branch carries the fork's parent ref.
+   * Safe to call without awaiting the previous call: concurrent appends on
+   * this instance (or a fork() sibling sharing this state) are serialized
+   * via `enqueue` and assigned distinct, monotonic indices in call order. */
   async append(
+    kind: string,
+    payload: unknown,
+    opts?: { parent?: { branch: string; index: number } },
+  ): Promise<SessionEvent> {
+    return enqueue(this.state, () => this.appendLocked(kind, payload, opts));
+  }
+
+  /** The unserialized body of `append()` — only ever runs for one caller at
+   * a time per `LogState`, via `enqueue`. Not called directly outside this
+   * file; `fork()` also runs its own synthetic first event through this. */
+  private async appendLocked(
     kind: string,
     payload: unknown,
     opts?: { parent?: { branch: string; index: number } },
@@ -310,18 +345,25 @@ export class SessionLog {
    * atIndex}, kind 'fork', payload null.
    */
   async fork(atIndex: number, newBranch: string): Promise<SessionLog> {
-    const count = this.state.nextIndex.get(this.branch) ?? 0;
-    if (atIndex < 0 || atIndex >= count) {
-      throw new Error(
-        `session: cannot fork branch "${this.branch}" at index ${atIndex} (has ${count} events)`,
-      );
-    }
-    if ((this.state.nextIndex.get(newBranch) ?? 0) > 0 || newBranch === this.branch) {
-      throw new Error(`session: branch "${newBranch}" already exists`);
-    }
-    const forked = SessionLog.over(this.state, newBranch);
-    await forked.append('fork', null, { parent: { branch: this.branch, index: atIndex } });
-    return forked;
+    // Both the "does newBranch already exist" check and the synthetic first
+    // event run inside ONE enqueue()'d operation: otherwise two concurrent
+    // fork() calls for the same new branch name could both pass the check
+    // before either's append() lands (the same TOCTOU shape as append()
+    // itself, one level up).
+    return enqueue(this.state, async () => {
+      const count = this.state.nextIndex.get(this.branch) ?? 0;
+      if (atIndex < 0 || atIndex >= count) {
+        throw new Error(
+          `session: cannot fork branch "${this.branch}" at index ${atIndex} (has ${count} events)`,
+        );
+      }
+      if ((this.state.nextIndex.get(newBranch) ?? 0) > 0 || newBranch === this.branch) {
+        throw new Error(`session: branch "${newBranch}" already exists`);
+      }
+      const forked = SessionLog.over(this.state, newBranch);
+      await forked.appendLocked('fork', null, { parent: { branch: this.branch, index: atIndex } });
+      return forked;
+    });
   }
 
   /** The lineage of a branch, root → tip: the branch's own events preceded by

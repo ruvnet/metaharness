@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
 
 import { mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
@@ -506,5 +508,52 @@ describe('mandatory auditing and deadlines', () => {
     }
     expect(await readFile(path, 'utf8')).not.toContain('principalId');
     await rm(root, { recursive: true, force: true });
+  });
+});
+
+describe('dependency advisory floors', () => {
+  // `./package.json` subpath exports resolve to a dual-build stub (no
+  // `version` field) on some packages, so walk up from a real resolved
+  // entry file to the package.json that actually declares `version`.
+  const requireFromHere = createRequire(import.meta.url);
+
+  function resolvedVersion(specifier: string): string {
+    let dir = dirname(requireFromHere.resolve(specifier));
+    for (let i = 0; i < 8; i += 1) {
+      try {
+        const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')) as {
+          name?: string;
+          version?: string;
+        };
+        if (pkg.version && specifier.startsWith(pkg.name ?? '\0')) return pkg.version;
+      } catch { /* not a package root here; keep walking up */ }
+      const parent = dirname(dir);
+      if (parent === dir) throw new Error(`no package.json found above ${specifier}`);
+      dir = parent;
+    }
+    throw new Error(`no package.json found above ${specifier}`);
+  }
+
+  function atLeast(version: string, [minMajor, minMinor, minPatch]: [number, number, number]): boolean {
+    const [major, minor, patch] = version.split('.').map(Number);
+    if (major !== minMajor) return major > minMajor;
+    if (minor !== minMinor) return minor > minMinor;
+    return patch >= minPatch;
+  }
+
+  it('@modelcontextprotocol/sdk is at or above the GHSA-6qxp-vccf-f47h patched floor (1.31.0)', () => {
+    // OAuth client could send credentials to an authorization server chosen
+    // by the MCP server (confused-deputy); fixed upstream in sdk 1.31.0.
+    // This package pinned an exact "1.26.0" (no caret), which left it stuck
+    // in the vulnerable range even after the fix shipped upstream, because
+    // `npm audit fix` cannot widen an exact pin on its own.
+    const version = resolvedVersion('@modelcontextprotocol/sdk/client/index.js');
+    expect(atLeast(version, [1, 31, 0])).toBe(true);
+  });
+
+  it("proxy-addr (reached via @modelcontextprotocol/sdk's express dependency) is at or above the GHSA-jqcg-44mw-7w3h patched floor (2.0.8)", () => {
+    // IP spoofing via an IPv4-mapped IPv6 trust-subnet comparison bug.
+    const version = resolvedVersion('proxy-addr');
+    expect(atLeast(version, [2, 0, 8])).toBe(true);
   });
 });

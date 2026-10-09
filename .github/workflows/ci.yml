@@ -88,11 +88,10 @@ jobs:
       - name: Install wasm-pack (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        # Pin wasm-pack 0.13.1 — newer versions (0.15+) lock `cargo-platform`
-        # transitively at a level that needs rustc 1.91+, breaking our 1.88
-        # workspace toolchain pin. Drop --locked so cargo can pick compatible
-        # transitives if needed.
-        run: cargo install wasm-pack --version 0.13.1
+        # Pin wasm-pack 0.13.1 and use its own Cargo.lock (--locked). Unlocked,
+        # cargo resolves the newest transitives (e.g. uuid 1.27 needs rustc 1.89)
+        # which exceed our 1.88 workspace toolchain pin and fail the install.
+        run: cargo install wasm-pack --version 0.13.1 --locked
       - name: Install wasm-tools
         # Pin to a version compatible with workspace rust 1.88 — newer
         # wasm-tools rev their MSRV aggressively (1.252 needed 1.85,

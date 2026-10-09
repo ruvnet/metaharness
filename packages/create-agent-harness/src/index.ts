@@ -401,6 +401,11 @@ export class SessionLog {
   private nextIndex = new Map<string, number>();
   private branchParent = new Map<string, { branch: string; index: number }>();
   private rootBranch: string;
+  // Shared (by reference, like the collections above) across fork()
+  // siblings — serializes append()/fork() per LOG, not per instance, so
+  // concurrent unawaited calls on this instance or a sibling can never
+  // read-check-write on the same stale nextIndex (ADR-246 §2.3 TOCTOU fix).
+  private queue: { p: Promise<unknown> } = { p: Promise.resolve() };
 
   constructor(readonly path: string, readonly branch: string = 'main') {
     this.rootBranch = branch;
@@ -470,9 +475,29 @@ export class SessionLog {
     return errors;
   }
 
+  /** Run \`op\` after every previously enqueued operation on this log's shared
+   * queue has settled (success or failure), and chain forward the same way —
+   * serializes append()/fork() per LOG (not per instance) in call order. */
+  private enqueue<T>(op: () => Promise<T>): Promise<T> {
+    const result = this.queue.p.then(op, op);
+    this.queue.p = result.then(() => undefined, () => undefined);
+    return result;
+  }
+
   /** Append an event on the active branch (next monotonic index). The first
-   * event of a forked branch carries the fork's parent ref. */
+   * event of a forked branch carries the fork's parent ref. Safe to call
+   * without awaiting the previous call: concurrent appends on this instance
+   * (or a fork() sibling sharing this queue) are serialized via enqueue()
+   * and assigned distinct, monotonic indices in call order. */
   async append(kind: string, payload: unknown,
+      opts?: { parent?: { branch: string; index: number } }): Promise<SessionEvent> {
+    return this.enqueue(() => this.appendLocked(kind, payload, opts));
+  }
+
+  /** The unserialized body of append() — only ever runs for one caller at a
+   * time per shared queue, via enqueue(). fork() also runs its synthetic
+   * first event through this. */
+  private async appendLocked(kind: string, payload: unknown,
       opts?: { parent?: { branch: string; index: number } }): Promise<SessionEvent> {
     const index = this.nextIndex.get(this.branch) ?? 0;
     const parent = opts?.parent;
@@ -501,16 +526,22 @@ export class SessionLog {
    * Immediately appends the new branch's synthetic first event: index 0,
    * parent {branch: this.branch, index: atIndex}, kind 'fork', payload null. */
   async fork(atIndex: number, newBranch: string): Promise<SessionLog> {
-    const count = this.nextIndex.get(this.branch) ?? 0;
-    if (atIndex < 0 || atIndex >= count) throw new Error('session: cannot fork at index ' + atIndex);
-    if ((this.nextIndex.get(newBranch) ?? 0) > 0 || newBranch === this.branch) {
-      throw new Error('session: branch "' + newBranch + '" already exists');
-    }
-    const log = new SessionLog(this.path, newBranch);
-    log.events = this.events; log.nextIndex = this.nextIndex; log.branchParent = this.branchParent;
-    log.rootBranch = this.rootBranch;
-    await log.append('fork', null, { parent: { branch: this.branch, index: atIndex } });
-    return log;
+    // The "does newBranch already exist" check and the synthetic first event
+    // run inside ONE enqueue()'d operation: otherwise two concurrent fork()
+    // calls for the same new branch name could both pass the check before
+    // either's append() lands (the same TOCTOU shape as append(), one level up).
+    return this.enqueue(async () => {
+      const count = this.nextIndex.get(this.branch) ?? 0;
+      if (atIndex < 0 || atIndex >= count) throw new Error('session: cannot fork at index ' + atIndex);
+      if ((this.nextIndex.get(newBranch) ?? 0) > 0 || newBranch === this.branch) {
+        throw new Error('session: branch "' + newBranch + '" already exists');
+      }
+      const log = new SessionLog(this.path, newBranch);
+      log.events = this.events; log.nextIndex = this.nextIndex; log.branchParent = this.branchParent;
+      log.rootBranch = this.rootBranch; log.queue = this.queue;
+      await log.appendLocked('fork', null, { parent: { branch: this.branch, index: atIndex } });
+      return log;
+    });
   }
 
   private lineage(branch: string): SessionEvent[] {
