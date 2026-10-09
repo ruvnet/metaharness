@@ -1,0 +1,38 @@
+{
+  "checked_at": "2026-10-09T00:23:37.243077+00:00",
+  "decision": "HOLD",
+  "eligible_for_user_review": false,
+  "measured_darwin_win": false,
+  "submission_authorized": false,
+  "arena_submission": null,
+  "official_score": null,
+  "qualified_image": "ghcr.io/ruvnet/metaharness-arena@sha256:2f3f12b986574ac99ecae451f47408ea5c8cc12c4fa27bf1c5cafa6880676b37",
+  "source_commit": "0af81c55269be029dd64ccdc79e23654aa9dcaa4",
+  "completed": [
+    "measured search plan and independent readiness review contract",
+    "bounded native generator knobs and machine readable registry",
+    "source and exact variant bound calibration runner",
+    "140 Python tests and 782 subtests",
+    "fresh anonymous image replay: 32 base,16 knob,6 protocol",
+    "v2 public dataset bytes verified"
+  ],
+  "pending": [
+    "external Darwin search and gate source review",
+    "retained target model search and fresh confirmation evidence",
+    "strict fitness gain over matched incumbent",
+    "final variant dataset export and card",
+    "final exact request review and explicit user go ahead"
+  ],
+  "ownership": {
+    "environment": "integrations/openenv-arena via PR383",
+    "search_gate_gpu": "coordinating ruvultra lane integrations/openenv-arena-darwin",
+    "hf_login_and_board": "existing authenticated ruvultra executor"
+  },
+  "optional_accelerators": {
+    "ruvllm": "deferred; inspected backend lacks Qwen GGUF support and honest inference must be verified",
+    "ruvector": "deferred pending sufficient complete failures and verified native/embedding backend"
+  },
+  "board_latest_confirmed_own_message": 55,
+  "new_milestone_draft_chars": 1583,
+  "note": "Coordination status, not a signed Flywheel decision or provider execution attestation."
+}
