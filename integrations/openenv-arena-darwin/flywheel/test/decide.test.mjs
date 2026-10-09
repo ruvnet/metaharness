@@ -237,45 +237,68 @@ test('daily-best: dry-run (modeAuto not true) never submits either kind', () => 
   }
 });
 
-test('REDRAW_KEYS: the shared checks plus five re-draw-only conditions; no gate, plan or confirmation key', () => {
+test('REDRAW_KEYS: the shared checks plus seven re-draw-only conditions; no gate, plan or confirmation key', () => {
   assert.equal(new Set(REDRAW_KEYS).size, REDRAW_KEYS.length);
   const own = REDRAW_KEYS.filter(k => !DECISION_KEYS.includes(k));
-  assert.deepEqual(own, ['incumbentValidated', 'requestRenderedForIncumbent', 'redrawIsIncumbentRequest', 'incumbentBodyNotRejected', 'redrawCheckedToday']);
-  for (const k of ['modeAuto', 'leaderboardAgreesWithIncumbent', 'darwinEvidenceIsScorecards', 'requestDigestValid', 'checksForThisRequest',
+  assert.deepEqual(own, ['redrawNotRehearsal', 'incumbentValidated', 'storedRequestIntact', 'requestRenderedForIncumbent', 'redrawIsIncumbentRequest',
+    'incumbentBodyNotRejected', 'redrawCheckedToday']);
+  for (const k of ['modeAuto', 'leaderboardAgreesWithIncumbent', 'requestDigestValid', 'checksForThisRequest',
     'envLaneCommitPinned', 'imagePulledAnonymously', 'openenvValidatePassed', 'exampleReplayAllTasksPassed', 'schemaEqual', 'limitsOk',
     'runDateIsToday', 'slotFree', 'notAlreadySubmitted']) assert.ok(REDRAW_KEYS.includes(k), k);
+  // a body-only incumbent has no search, so darwinEvidenceIsScorecards is replaced (not dropped) by redrawNotRehearsal
+  assert.ok(!REDRAW_KEYS.includes('darwinEvidenceIsScorecards'));
+  assert.ok(REDRAW_REQUEST_KEYS.includes('storedRequestIntact'));
   for (const k of REDRAW_KEYS) assert.ok(!/^(gate|confirmation|candidate|plan)|requestDigestBoundInGateReceipt|imageEnvSourceMatchesPlan|pairedEvidenceUsed/.test(k), k);
   for (const k of REDRAW_REQUEST_KEYS) assert.ok(REDRAW_KEYS.includes(k), k);
   assert.match(KIND_LABELS['incumbent-redraw'], /selection on noise, not an improvement/);
   assert.match(KIND_LABELS.promoted, /promoted/);
 });
 
-// A consistent day-N re-draw: incumbent validated by the arena, re-rendered with a fresh id, every check passed today.
+// A consistent day-N re-draw: incumbent validated by the arena, its stored request intact and re-submitted with a fresh
+// id and the re-draw name, every check passed today.
 const IMG = 'ghcr.io/x/y@sha256:' + H('9');
 const INC_ID = 'metaharness-darwin-2026-10-09-0123456789';
+const INC_NAME = 'MetaHarness Darwin 2026-10-09';
 function goodRedrawFacts() {
   const sha = H('7'), body = H('8'), tasks = [{ task_id: 'math_route-d2' }, { task_id: 'finance_ledger-d3' }];
   return {
-    mode: 'auto', darwin: { evidence: 'evaluator_scorecards' }, incumbent: { genomeDigest: H('1'), day1: false, submissionId: INC_ID },
+    mode: 'auto', darwin: { evidence: 'evaluator_scorecards', skipped: null }, incumbent: { genomeDigest: H('1'), day1: false, submissionId: INC_ID },
     leaderboard: { hasIncumbent: true, latestValidatedId: INC_ID }, candidate: { genomeDigest: H('2') },
     gate: { promote: false, verified: true, publicKeyPinned: true },
-    incumbentRecord: { state: 'validated', genomeDigest: H('1'), submissionId: INC_ID, requestSha256: H('a'), requestBodySha256: body, lastRejected: null },
-    request: { sha256: sha, image: IMG, expectedImage: IMG, renderedFor: 'incumbent-redraw', tasks, tasksMatchIncumbent: true,
-      genomeDigest: H('1'), submissionId: 'metaharness-darwin-2026-10-10-redraw-0123456789', bodySha256: body, asValidatedSha256: H('a') },
+    incumbentRecord: { state: 'validated', hasGenome: true, genomeDigest: H('1'), submissionId: INC_ID, requestSha256: H('a'), requestBodySha256: body,
+      requestName: INC_NAME, lastRejected: null },
+    storedRequest: { fileOk: true, problem: null, recordedSha256: H('a'), fileSha256: H('a'), canonicalSha256: H('a'), canonical: true,
+      submissionId: INC_ID, name: INC_NAME, bodySha256: body, image: IMG },
+    request: { sha256: sha, image: IMG, expectedImage: IMG, renderedFor: 'incumbent-redraw', source: 'stored-request', tasks,
+      name: `${INC_NAME} (incumbent re-draw)`, expectedName: `${INC_NAME} (incumbent re-draw)`,
+      submissionId: 'metaharness-darwin-2026-10-10-redraw-0123456789', bodySha256: body, asValidatedSha256: H('a') },
     checks: { requestSha256: sha, image: IMG, envSourceSha: H('5'), envCommit: COMMIT, envDirty: false, checkedDate: '2026-10-10',
       checks: { anonymousPull: { ok: true }, openenvValidate: { ok: true }, exampleReplay: { ok: true, taskIds: ['finance_ledger-d3', 'math_route-d2'] },
         schemaEqual: { ok: true }, limits: { ok: true } } },
     expectEnvCommit: COMMIT, dates: { run: '2026-10-10', today: '2026-10-10' }, clockToday: '2026-10-10', slot: { free: true }, alreadySubmitted: false,
+    evaluatorDryRun: false,
   };
 }
+/** The same day for a body-only (bootstrapped, genome-less) incumbent: no search ran, nothing to promote. */
+function genomeLessRedrawFacts() {
+  const f = goodRedrawFacts();
+  f.darwin = { evidence: 'search_skipped_incumbent_has_no_genome', skipped: 'incumbent_has_no_genome' };
+  f.incumbent.genomeDigest = null;
+  Object.assign(f.incumbentRecord, { hasGenome: false, genomeDigest: null });
+  f.candidate = null;
+  f.gate = {};
+  return f;
+}
 
-test('buildDecisionFlags: gate-only emits exactly DECISION_KEYS; daily-best adds the five re-draw keys', () => {
+test('buildDecisionFlags: gate-only emits exactly DECISION_KEYS; daily-best adds the seven re-draw keys', () => {
   assert.deepEqual(Object.keys(buildDecisionFlags(goodRedrawFacts())), [...DECISION_KEYS]);
   assert.deepEqual(Object.keys(buildDecisionFlags(goodRedrawFacts(), 'gate-only')), [...DECISION_KEYS]);
   assert.deepEqual(Object.keys(buildDecisionFlags(goodFacts())), [...DECISION_KEYS]);
   const flags = buildDecisionFlags(goodRedrawFacts(), 'daily-best');
-  assert.deepEqual(Object.keys(flags), [...DECISION_KEYS, 'incumbentValidated', 'requestRenderedForIncumbent', 'redrawIsIncumbentRequest',
-    'incumbentBodyNotRejected', 'redrawCheckedToday']);
+  assert.deepEqual(Object.keys(flags), [...DECISION_KEYS, 'incumbentValidated', 'storedRequestIntact', 'requestRenderedForIncumbent',
+    'redrawIsIncumbentRequest', 'incumbentBodyNotRejected', 'redrawCheckedToday', 'redrawNotRehearsal']);
+  assert.deepEqual(decideSubmit(buildDecisionFlags(genomeLessRedrawFacts(), 'daily-best'), 'daily-best'), { submit: true, reasons: [], kind: 'incumbent-redraw' },
+    'a body-only incumbent re-draws without any search');
   assert.ok(REDRAW_KEYS.every(k => flags[k] === true), JSON.stringify(flags));
   assert.deepEqual(decideSubmit(flags, 'daily-best'), { submit: true, reasons: [], kind: 'incumbent-redraw' });
   // the candidate's facts under daily-best still decide the promoted kind exactly as gate-only does
@@ -289,25 +312,40 @@ test('buildDecisionFlags daily-best: each raw-fact defect of a re-draw maps to i
     ['modeAuto', f => { f.mode = 'dry-run'; }],
     ['leaderboardAgreesWithIncumbent', f => { f.leaderboard.latestValidatedId = 'someone-validated-later'; }],
     ['leaderboardAgreesWithIncumbent', f => { delete f.leaderboard.latestValidatedId; }],
-    ['darwinEvidenceIsScorecards', f => { f.darwin.evidence = 'evaluator_dry_run_fake_rows_not_model_rollouts'; }],
+    ['redrawNotRehearsal', f => { f.darwin.evidence = 'evaluator_dry_run_fake_rows_not_model_rollouts'; }],
+    ['redrawNotRehearsal', f => { f.darwin.skipped = 'incumbent_has_no_genome'; f.darwin.evidence = null; }], // skipped, but the incumbent HAS a genome
     // (a) the incumbent must itself have been accepted + validated by the arena, and still be on disk as such
     ['incumbentValidated', f => { f.incumbent.day1 = true; }],
     ['incumbentValidated', f => { f.incumbentRecord = null; }],
     ['incumbentValidated', f => { f.incumbentRecord.state = 'validating'; }],
     ['incumbentValidated', f => { f.incumbentRecord.genomeDigest = H('3'); }],
+    ['incumbentValidated', f => { f.incumbentRecord.genomeDigest = null; }], // a record whose genome no longer hashes to its digest
     ['incumbentValidated', f => { f.incumbentRecord.submissionId = 'moved-since-this-run-loaded-it'; }],
-    // the request is the incumbent's, for config.image, under a fresh id
+    // (b) the stored copy is the exact validated request: file facts, both digests, id, name and body all bound to the record
+    ['storedRequestIntact', f => { f.storedRequest = null; }], // no stored copy recorded
+    ['storedRequestIntact', f => { f.storedRequest.fileOk = false; }], // missing, moved, symlinked, perms or owner changed
+    ['storedRequestIntact', f => { f.storedRequest.canonical = false; }],
+    ['storedRequestIntact', f => { f.storedRequest.fileSha256 = H('6'); }], // tampered bytes
+    ['storedRequestIntact', f => { f.storedRequest.canonicalSha256 = H('6'); }],
+    ['storedRequestIntact', f => { f.storedRequest.recordedSha256 = H('6'); }], // the record points at another stored copy
+    ['storedRequestIntact', f => { f.storedRequest.submissionId = 'another-submission'; }], // a body of a different submission_id
+    ['storedRequestIntact', f => { f.storedRequest.name = 'another name'; }],
+    ['storedRequestIntact', f => { f.storedRequest.bodySha256 = H('6'); }],
+    ['storedRequestIntact', f => { f.incumbentRecord.requestName = null; }],
+    // the request is the stored one, for ITS image, under the re-draw name and a fresh id
     ['requestRenderedForIncumbent', f => { f.request.renderedFor = 'candidate'; }], // the wrong request fed for the kind
     ['requestRenderedForIncumbent', f => { f.request.renderedFor = 'needs-human'; }],
-    ['requestRenderedForIncumbent', f => { f.request.tasksMatchIncumbent = false; }],
+    ['requestRenderedForIncumbent', f => { f.request.source = null; }], // not built from the stored request
     ['requestRenderedForIncumbent', f => { f.request.expectedImage = 'ghcr.io/x/y@sha256:' + H('6'); }],
-    ['requestRenderedForIncumbent', f => { f.request.genomeDigest = H('2'); }], // the candidate genome
+    ['requestRenderedForIncumbent', f => { f.request.expectedImage = null; }], // stored request unreadable
+    ['requestRenderedForIncumbent', f => { f.request.name = INC_NAME; }], // the validated name, not the re-draw name
     ['requestRenderedForIncumbent', f => { f.request.submissionId = INC_ID; }], // not a fresh id
     ['requestRenderedForIncumbent', f => { f.request.submissionId = null; }],
     // re-draw = the validated request again, byte for byte apart from submission_id and name
     ['redrawIsIncumbentRequest', f => { f.request.bodySha256 = H('6'); }],
     ['redrawIsIncumbentRequest', f => { delete f.incumbentRecord.requestBodySha256; }], // a record without the body digest
     ['redrawIsIncumbentRequest', f => { f.request.bodySha256 = null; f.incumbentRecord.requestBodySha256 = null; }],
+    ['redrawIsIncumbentRequest', f => { f.storedRequest = null; }],
     // ... and the body digest is bound to the bytes the arena validated: body + validated id/name reproduce requestSha256
     ['redrawIsIncumbentRequest', f => { f.request.asValidatedSha256 = H('6'); }], // a hand-written body digest of another body
     ['redrawIsIncumbentRequest', f => { f.request.asValidatedSha256 = null; }], // a record without requestName
@@ -350,11 +388,30 @@ test('buildDecisionFlags daily-best: each raw-fact defect of a re-draw maps to i
   assert.deepEqual(decideSubmit(buildDecisionFlags(yesterday, 'daily-best'), 'daily-best').reasons, ['redrawCheckedToday', 'runDateIsToday']);
 });
 
+test('buildDecisionFlags daily-best, body-only incumbent: no genome is never mistaken for a genome; a dry-run evaluator never re-draws', () => {
+  const decide = mutate => { const f = genomeLessRedrawFacts(); mutate(f); return decideSubmit(buildDecisionFlags(f, 'daily-best'), 'daily-best'); };
+  const cases = [
+    [f => { f.evaluatorDryRun = true; }, ['redrawNotRehearsal']], // an evaluator.dryRun config never submits, search or not
+    [f => { f.evaluatorDryRun = null; }, ['redrawNotRehearsal']],
+    [f => { f.darwin.skipped = null; }, ['redrawNotRehearsal']],
+    [f => { f.incumbentRecord.hasGenome = true; }, ['redrawNotRehearsal', 'incumbentValidated']], // a genome appeared on disk since the run loaded it
+    [f => { f.incumbentRecord.genomeDigest = H('1'); }, ['incumbentValidated']],
+    [f => { f.incumbent.genomeDigest = H('1'); }, ['redrawNotRehearsal', 'incumbentValidated']], // run loaded a genome, record has none
+  ];
+  for (const [m, reasons] of cases) assert.deepEqual(decide(m), { submit: false, reasons, kind: 'incumbent-redraw' }, String(m));
+  // the promoted path can never be taken over a body-only incumbent: no candidate digest can differ from / match a missing genome
+  const promoted = { ...goodFacts(), incumbent: { ...goodFacts().incumbent, genomeDigest: null } };
+  const d = decideSubmit(buildDecisionFlags(promoted, 'daily-best'), 'daily-best');
+  assert.equal(d.kind, 'promoted');
+  for (const k of ['candidateDiffersFromIncumbent', 'candidateMatchesPlan']) assert.ok(d.reasons.includes(k), `${k}: ${d.reasons}`);
+});
+
 test('buildDecisionFlags daily-best: binding, rejection and clock conditions name exactly themselves; gate-only ignores their facts', () => {
   const decide = mutate => { const f = goodRedrawFacts(); mutate(f); return decideSubmit(buildDecisionFlags(f, 'daily-best'), 'daily-best'); };
   const exact = [
     [f => { f.request.asValidatedSha256 = H('6'); }, ['redrawIsIncumbentRequest']],
-    [f => { f.incumbentRecord.requestSha256 = 'not-hex'; }, ['redrawIsIncumbentRequest']],
+    [f => { f.incumbentRecord.requestSha256 = 'not-hex'; }, ['storedRequestIntact', 'redrawIsIncumbentRequest']],
+    [f => { f.storedRequest.fileOk = false; }, ['storedRequestIntact']],
     [f => { f.incumbentRecord.lastRejected = { submissionId: 'r', date: '2026-10-10', errorOrigin: null, requestBodySha256: H('8') }; }, ['incumbentBodyNotRejected']],
     [f => { f.incumbentRecord.lastRejected = { submissionId: 'r' }; }, ['incumbentBodyNotRejected']],
     [f => { f.clockToday = '2026-10-12'; }, ['redrawCheckedToday']],
@@ -368,7 +425,7 @@ test('buildDecisionFlags daily-best: binding, rejection and clock conditions nam
   // gate-only never reads them: the same defects leave its flags byte-identical
   const base = goodFacts();
   for (const [m] of exact) {
-    const f = { ...goodFacts(), incumbentRecord: goodRedrawFacts().incumbentRecord, clockToday: '2026-10-10' };
+    const f = { ...goodFacts(), incumbentRecord: goodRedrawFacts().incumbentRecord, storedRequest: goodRedrawFacts().storedRequest, clockToday: '2026-10-10' };
     m(f);
     assert.deepEqual(buildDecisionFlags(f), buildDecisionFlags(base));
     assert.deepEqual(buildDecisionFlags(f, 'gate-only'), buildDecisionFlags(base));

@@ -21,6 +21,23 @@ export const ENV_COMMIT = '0af81c55269be029dd64ccdc79e23654aa9dcaa4'; // checks.
 /** A start instant on `date` (10:17 Toronto), so a run's --date is the Toronto date of its --now. */
 export const startOf = date => `${date}T14:17:00.000Z`;
 
+export const MIX8_ID = 'metaharness-mix8-20261009';
+const MIX8_LIMITS = { split: 'train', completion_tokens: 12288, context_tokens: 16384, cpu_floor_vcpus: 1, memory_gib: 2, reset_wall_s: 120,
+  rollout_wall_s: 1200, tool_calls_per_minute: 60, tool_calls_total: 8, tool_wall_s: 20, verifier_wall_s: 30, workspace_gib: 2 };
+/** The shape of the real hand-curated, arena-validated mix8 request: two difficulties of one family, budgets no genome
+ *  cell produces (so no genome can express it). Schema and actions are placeholders (the fake checks accept them). */
+export const mix8Request = (over = {}) => ({
+  submission_id: MIX8_ID, name: 'MetaHarness Procedural Reasoning (mixed-signal cells)',
+  image: 'ghcr.io/ruvnet/metaharness-arena@sha256:2f3f12b986574ac99ecae451f47408ea5c8cc12c4fa27bf1c5cafa6880676b37',
+  dataset: 'ruv/metaharness-arena-tasks', source: 'https://github.com/ruvnet/metaharness/pull/383',
+  schema: { action: { type: 'object' }, observation: { type: 'object' } },
+  tasks: ['finance_ledger-d3', 'math_route-d3', 'math_route-d2', 'office_reconciliation-d3', 'science_calibration-d2', 'science_calibration-d3',
+    'software_change-d3', 'media_timeline-d3'].map(task_id => ({ task_id, ...MIX8_LIMITS })),
+  example_actions: [{ op: 'read', path: '*' }, { op: 'submit', answer: {} }], finish_action: { op: 'submit', answer: { done: true } }, ...over });
+/** The receipt written when `request` was POSTed (the env lane submission.py shape), on 2026-10-09 Toronto by default. */
+export const receiptFor = (request, { at = '2026-10-09T18:40:53.314134+00:00' } = {}) => ({ submission_id: request.submission_id,
+  request_sha256: canonicalDigest(request), post_attempted: true, state: 'recorded', created_at: at, accepted_at: at });
+
 export function candidateOf(genome) {
   return { ...genome, 'software_change.difficulty': genome['software_change.difficulty'] === 3 ? 1 : 3 };
 }
@@ -120,8 +137,10 @@ export function makeFakes(o = {}) {
       calls.render.push(opts);
       throwAt('render');
       const tasks = o.mutateTasks ? opts.tasks.map((t, i) => (i ? t : { ...t, completion_tokens: t.completion_tokens + 1 })) : opts.tasks;
-      const request = { submission_id: opts.submissionId, name: opts.name, image: o.renderImage ?? opts.image, dataset: opts.dataset,
-        schema: { action: {}, observation: {} }, tasks, example_actions: [{ op: 'read', path: '*' }, { op: 'submit', answer: {} }] };
+      // verbatim mode (a stored request re-drawn): written as given, apart from the same injected faults
+      const request = opts.request ? { ...opts.request, tasks, ...(o.renderImage ? { image: o.renderImage } : {}) }
+        : { submission_id: opts.submissionId, name: opts.name, image: o.renderImage ?? opts.image, dataset: opts.dataset,
+          schema: { action: {}, observation: {} }, tasks, example_actions: [{ op: 'read', path: '*' }, { op: 'submit', answer: {} }] };
       const sha = canonicalDigest(request);
       const requestPath = writeJson(join(opts.outDir, 'request.json'), request);
       const ids = tasks.map(t => t.task_id).slice(o.replayDropTask ? 1 : 0);
@@ -130,7 +149,7 @@ export function makeFakes(o = {}) {
         sweep: { ok: true }, pull: ok('pull'), inspect: { ok: true }, run: { ok: true }, health: { ok: true },
         // like the real image-source.mjs: the env source hash copied out of the image (fake prov envSourceSha = 'a' x 64)
         env_source: { ok: true, envSourceSha: o.imageEnvSourceSha ?? 'a'.repeat(64) },
-        render: { ok: true }, limits: ok('limits'), actions: { ok: true }, openenv_validate: ok('openenv_validate'), schema: ok('schema'),
+        render: { ok: true, ...(opts.request ? { verbatim: true } : {}) }, limits: ok('limits'), actions: { ok: true }, openenv_validate: ok('openenv_validate'), schema: ok('schema'),
         replay: { ...ok('replay'), taskIds: ids } };
       const allOk = !o.failCheck;
       const report = { kind: 'arena_flywheel_presubmit_check', ok: allOk, reasons: allOk ? [] : [`${o.failCheck}_failed`], image: request.image,

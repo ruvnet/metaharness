@@ -9,7 +9,8 @@
 // from the incumbent, its own confirmation off) -> PREREGISTERED paired confirmation (plan hash journaled before
 // any rollout; both genomes on one fresh date-derived seed block) -> gpu down -> render + checks -> gate.mjs v2
 // (--run search report + confirmation cards + Darwin-derived pairs; request digest bound when gate.mjs supports
-// it) -> [policy daily-best, no promoted candidate: re-render + re-check the validated incumbent's request] -> decide
+// it) -> [policy daily-best, no promoted candidate: the STORED validated incumbent request, fresh id, every check again
+// on its own image; a body-only incumbent, i.e. no genome, skips gpu/search/confirmation/gate] -> decide
 // (facts re-derived from disk by recheck.mjs; pure decideSubmit, no LLM) -> submit (auto only) -> incumbent update only
 // once `validated` (a re-draw never changes the incumbent genome) -> report. gpu down also runs in `finally`. Default mode is
 // dry-run, which never POSTs; --mode can only downgrade (auto needs config.json mode "auto" too).
@@ -29,8 +30,8 @@ import { parseArgs } from 'node:util';
 import { canonicalDigest } from './canonical-json.mjs';
 import { cardMatchesGenome, changedFamilies, confirmationPlan, confirmSeedBase, dayIndex, pairedOutcomes, pairedPower,
   preregistered, provenanceMatches } from './confirm.mjs';
-import { reportedKind } from './decide.mjs';
-import { decideAndSubmit, gatePhase, renderPhase } from './finish.mjs';
+import { reportedKind, SEARCH_SKIPPED_NO_GENOME } from './decide.mjs';
+import { decideAndSubmit, gatePhase, redrawPhase, renderPhase } from './finish.mjs';
 import { writeReport } from './flywheel-report.mjs';
 import { loadIncumbent } from './incumbent.mjs';
 import { acquireLock, LockedError, openJournal, readJson, redact, runStep, writeJsonAtomic } from './journal.mjs';
@@ -100,11 +101,15 @@ async function phases(x) {
     return;
   }
   if (st.incumbent.boardAgrees === null) st.notes.push('leaderboard standing unknown (unreachable or truncated): auto-submit is blocked for this run');
+  // A body-only incumbent (a stored validated request, no genome, e.g. a hand-curated bootstrap) has nothing to search from
+  // or to promote over: no rental, no search, no confirmation, no gate. Under daily-best the day is a stored-request re-draw.
+  const genomeLess = inc.genome === null;
   let search = j.done('search');
   if (gpuWorkPending(j)) {
-    await deps.darwin.ready(); // the evaluator and the pre-submit check tools must be runnable BEFORE anything is rented
+    if (!genomeLess) await deps.darwin.ready(); // the evaluator and the pre-submit check tools must be runnable BEFORE anything is rented
     await deps.renderCheck.ready?.();
-    if (!rentsGpu(config)) st.notes.push('evaluator.dryRun: fake rows, no GPU rented (rehearsal only; can never submit)');
+    if (genomeLess) st.notes.push('incumbent has no genome (stored validated request only): no GPU, no search; nothing can be promoted over it');
+    else if (!rentsGpu(config)) st.notes.push('evaluator.dryRun: fake rows, no GPU rented (rehearsal only; can never submit)');
     else {
       if (config.evaluator.dryRun) st.notes.push('evaluator.dryRun + rentGpuInDryRun: GPU lifecycle rehearsal with fake rows (can never submit)');
       await gpuUp(x);
@@ -112,9 +117,9 @@ async function phases(x) {
     }
     if (st.outcome) return;
   }
-  search ??= await runStep(j, 'search', () => searchPhase(x, inc));
+  search ??= await runStep(j, 'search', () => (genomeLess ? skippedSearch() : searchPhase(x, inc)));
   st.darwin = { evidence: search.evidence, improvedOverBaseline: search.improvedOverBaseline, winnerId: search.winnerId,
-    reportPath: search.reportPath, selection: search.selection ?? null };
+    reportPath: search.reportPath, selection: search.selection ?? null, ...(search.skipped ? { skipped: search.skipped } : {}) };
   const cand = search.candidate;
   let plan = null, conf = null;
   if (cand) {
@@ -140,16 +145,24 @@ async function phases(x) {
   if (inc.day1 && !promoted) {
     st.needsHuman = await renderPhase(x, 'needs-human', inc.genome, contextTokens);
   }
-  // daily-best: no promoted candidate -> re-render the arena-validated incumbent (fresh id) and re-run every check today.
-  // Day 1 has no validated incumbent request, so it stays needs-human. (A same-date rerun resumes the gate phase result
-  // too, so a re-draw rendered earlier this date is resumed here even if the receipt verifies at decision time now.)
+  // daily-best: no promoted candidate -> the STORED arena-validated incumbent request (fresh id, re-draw name) with every
+  // check re-run today on its own image. Day 1 has no validated incumbent request, so it stays needs-human. (A same-date
+  // rerun resumes the gate phase result too, so a re-draw built earlier this date is resumed here even if the receipt
+  // verifies at decision time now.)
   if (config.policy === 'daily-best' && !inc.day1 && !promoted) {
-    st.redraw = await renderPhase(x, 'incumbent-redraw', inc.genome, contextTokens);
+    st.redraw = await redrawPhase(x, inc);
+    if (st.redraw.configImageDiffers === true) {
+      st.notes.push(`re-draw uses the validated request's own image ${st.redraw.storedImage}; config.image is ${config.image} (not blocking: the validated body is the source of truth)`);
+    }
   }
   await decideAndSubmit(x, { inc, search, cand, plan, conf, req, gate });
 }
 
 const gpuWorkPending = j => { const s = j.done('search'); return !s || (Boolean(s.candidate) && !j.done('confirm')); };
+
+/** The search phase result of a body-only incumbent: nothing ran (decide.mjs redrawNotRehearsal reads `skipped`). */
+const skippedSearch = () => ({ evidence: 'search_skipped_incumbent_has_no_genome', skipped: SEARCH_SKIPPED_NO_GENOME, improvedOverBaseline: false,
+  winnerId: null, reportPath: null, selection: null, budget: null, baselineScore: null, candidate: null });
 
 async function gpuUp(x) {
   const { j, st, deps } = x;

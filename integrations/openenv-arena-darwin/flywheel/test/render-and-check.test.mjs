@@ -10,6 +10,7 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFil
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { canonicalDigest } from '../canonical-json.mjs';
 import { renderAndCheck, toDecisionFacts } from '../render-and-check.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -97,6 +98,69 @@ test('happy path: real server, real openenv validate, real submission.py render,
   assert.deepEqual([facts.envCommit, facts.envDirty], [h.opts.expectEnvCommit, false]);
   const cps = calls.filter(c => c.argv[0] === 'cp').map(c => c.argv[1]);
   assert.deepEqual(cps, ['arena-flywheel-check-t1:/app/arena_env/tasks.py', 'arena-flywheel-check-t1:/app/arena_env/environment.py']);
+});
+
+// Verbatim mode: a STORED, arena-validated request (here mix8-shaped: math_route at d2 AND d3, custom budgets) re-drawn
+// under a fresh id is checked exactly as stored. submission.py never runs; every other check runs on the request's own
+// image, tasks, schema and actions, which must still match the env lane and the live image (refused, never adjusted).
+const MIX8_TASKS = ['finance_ledger-d3', 'math_route-d3', 'math_route-d2', 'science_calibration-d2'].map(task_id => ({ task_id, split: 'train',
+  completion_tokens: 12288, context_tokens: 16384, cpu_floor_vcpus: 1, memory_gib: 2, reset_wall_s: 120, rollout_wall_s: 1200,
+  tool_calls_per_minute: 60, tool_calls_total: 8, tool_wall_s: 20, verifier_wall_s: 30, workspace_gib: 2 }));
+function storedRequest(over = {}) {
+  const live = JSON.parse(readFileSync(join(ENV_DIR, 'evidence', 'schema.json'), 'utf8'));
+  return { submission_id: 'metaharness-darwin-2026-10-10-redraw-0123456789', name: 'MetaHarness Procedural Reasoning (mixed-signal cells) (incumbent re-draw)',
+    image: IMAGE, dataset: 'ruv/metaharness-arena-tasks', source: 'https://github.com/ruvnet/metaharness/pull/383',
+    schema: { action: live.action, observation: live.observation }, tasks: MIX8_TASKS,
+    example_actions: JSON.parse(readFileSync(join(ENV_DIR, 'example-actions.json'), 'utf8')),
+    finish_action: JSON.parse(readFileSync(join(ENV_DIR, 'finish-action.json'), 'utf8')), ...over };
+}
+const verbatimOpts = (request, extra = {}) => ({ request, submissionId: request.submission_id, name: request.name, image: request.image,
+  dataset: request.dataset, tasks: request.tasks, ...extra });
+
+test('verbatim: a stored request is checked exactly as stored (no submission.py); every other check runs on it', async () => {
+  const request = storedRequest();
+  const h = harness('ok', verbatimOpts(request, { openenv: FAKE_TOOL, replayArgv: FAKE_TOOL, python: '/nonexistent/python' }));
+  const r = await renderAndCheck(h.opts);
+  assert.deepEqual(r.reasons, []);
+  assert.equal(r.ok, true);
+  assert.equal(r.checks.render.verbatim, true);
+  assert.equal(r.request_sha256, canonicalDigest(request), 'canonical digest of the stored body');
+  assert.deepEqual(JSON.parse(readFileSync(r.request_path, 'utf8')), request);
+  assert.ok(!existsSync(join(h.opts.outDir, 'tasks.json')), 'the env lane renderer never ran');
+  assert.deepEqual(r.checks.replay.taskIds.sort(), MIX8_TASKS.map(t => t.task_id).sort(), 'every task id replayed, both math_route difficulties');
+  for (const k of ['pull', 'inspect', 'env_source', 'limits', 'actions', 'openenv_validate', 'schema', 'replay']) assert.equal(r.checks[k].ok, true, k);
+  assert.equal(r.container.stopped, true);
+  const facts = toDecisionFacts(r);
+  assert.deepEqual([facts.requestSha256, facts.image], [r.request_sha256, IMAGE]);
+});
+
+test('verbatim: a stored request the env lane or live image no longer matches is refused, never adjusted', async () => {
+  const cases = [
+    [{ example_actions: [{ op: 'read', path: 'other' }] }, 'example_actions_differ_from_replayed_file'],
+    [{ finish_action: { op: 'finish-differently' } }, 'finish_action_differs_from_env_file'],
+    [{ schema: { action: { type: 'object' }, observation: { type: 'object' } } }, 'schema_mismatch'],
+    [{ tasks: [{ ...MIX8_TASKS[0], rollout_wall_s: 99999 }] }, 'task_0:rollout_wall_s_out_of_range'],
+  ];
+  for (const [over, reason] of cases) {
+    const request = storedRequest(over);
+    const h = harness('ok', verbatimOpts(request, { openenv: FAKE_TOOL, replayArgv: FAKE_TOOL }));
+    const r = await renderAndCheck(h.opts);
+    assert.equal(r.ok, false, reason);
+    assert.ok(r.reasons.includes(reason), `${reason}: ${r.reasons}`);
+    assert.deepEqual(JSON.parse(readFileSync(r.request_path, 'utf8')), request, 'the stored bytes, unchanged');
+    assert.equal(r.container.stopped, true);
+  }
+});
+
+test('verbatim, real env: the mix8-shaped stored request passes real openenv validate and a real replay of every task id', { skip: !HAVE_REAL, timeout: 180_000 }, async () => {
+  const request = storedRequest();
+  const h = harness('real-env', verbatimOpts(request));
+  const r = await renderAndCheck(h.opts);
+  assert.deepEqual(r.reasons, []);
+  assert.equal(r.ok, true);
+  assert.equal(r.checks.render.verbatim, true);
+  assert.deepEqual([r.checks.replay.episodesPassed, r.checks.replay.episodesExpected], [MIX8_TASKS.length * 4, MIX8_TASKS.length * 4]);
+  assert.deepEqual(r.checks.replay.taskIds.sort(), MIX8_TASKS.map(t => t.task_id).sort());
 });
 
 test('adv 3: an image whose env source cannot be read fails closed before render; the container is stopped', async () => {
@@ -233,4 +297,67 @@ test('CLI: SIGTERM mid-check removes the container before exiting; usage errors 
   const usage = spawnSync(process.execPath, [cli, '--out-dir', join(h.state, 'u')], { encoding: 'utf8' });
   assert.equal(usage.status, 2);
   assert.match(usage.stderr, /missing --submission-id/);
+});
+
+// ---- verbatim mode: what it never takes from config, what it refuses, and its CLI ----
+test('verbatim: a task carrying its own image is refused (only the top-level image is pulled, run and replayed)', async () => {
+  const other = 'ghcr.io/someone-else/unrelated@sha256:' + '9'.repeat(64);
+  const request = storedRequest({ tasks: MIX8_TASKS.map((t, i) => (i === 1 ? { ...t, image: other } : t)) });
+  const h = harness('ok', verbatimOpts(request, { openenv: FAKE_TOOL, replayArgv: FAKE_TOOL }));
+  const r = await renderAndCheck(h.opts);
+  assert.equal(r.ok, false);
+  assert.deepEqual(r.checks.limits.reasons, ['per_task_image_not_checked']);
+  assert.ok(!h.calls().some(c => c.argv.includes(other)), 'that image was never pulled or run');
+  assert.equal(r.checks.replay, undefined, 'nothing replayed');
+  assert.equal(r.container.stopped, true);
+});
+
+test('verbatim: the server port is the stored body\'s, never a configured one (wire.mjs spreads config.checks into every call)', async () => {
+  const published = h => h.calls().filter(c => c.argv[0] === 'run').map(c => c.argv[c.argv.indexOf('-p') + 1]);
+  const a = harness('ok', verbatimOpts(storedRequest({ server_port: 9000 }), { openenv: FAKE_TOOL, replayArgv: FAKE_TOOL, serverPort: 8000 }));
+  const ra = await renderAndCheck(a.opts);
+  assert.deepEqual([ra.ok, ra.checks.inspect.containerPort, published(a)], [true, 9000, ['127.0.0.1::9000']]);
+  const b = harness('ok', verbatimOpts(storedRequest(), { openenv: FAKE_TOOL, replayArgv: FAKE_TOOL, serverPort: 9100 }));
+  const rb = await renderAndCheck(b.opts);
+  assert.deepEqual([rb.ok, rb.checks.inspect.containerPort, published(b)], [true, 8000, ['127.0.0.1::8000']], 'none in the body: the image\'s one exposed port');
+});
+
+test('verbatim: tasks other than the request\'s, or a request that does not survive its JSON round trip, are refused', async () => {
+  const h = harness('ok', verbatimOpts(storedRequest(), { openenv: FAKE_TOOL, replayArgv: FAKE_TOOL, tasks: MIX8_TASKS.slice(1) }));
+  const r = await renderAndCheck(h.opts);
+  assert.deepEqual([r.ok, r.checks.render.reasons], [false, ['rendered_tasks_differ_from_input']]);
+  const sparse = storedRequest(); // in memory only (JSON.parse never makes one): a hole is written as null, so the digest changes
+  sparse.example_actions = Object.assign([...sparse.example_actions], { length: sparse.example_actions.length + 1 });
+  const h2 = harness('ok', verbatimOpts(sparse, { openenv: FAKE_TOOL, replayArgv: FAKE_TOOL }));
+  const r2 = await renderAndCheck(h2.opts);
+  assert.deepEqual([r2.ok, r2.checks.render.reasons], [false, ['verbatim_request_digest_changed_on_write']]);
+  assert.equal(r2.container.stopped, true);
+});
+
+test('CLI --request-json: id, name, image, dataset, tasks and port come from the request file; mixing flags exits 2', { timeout: 60_000 }, async () => {
+  const cli = resolve(HERE, '../render-and-check.mjs');
+  const request = storedRequest({ server_port: 8000 });
+  const h = harness('ok');
+  const reqPath = join(h.state, 'stored-request.json'), listPath = join(h.state, 'list.json');
+  writeFileSync(reqPath, JSON.stringify(request, null, 2));
+  writeFileSync(listPath, '[]');
+  const tool = join(FAKES, 'fake-tool.mjs'); // stands in for openenv and for python running replay_native.py
+  const args = ['--request-json', reqPath, '--out-dir', h.opts.outDir, '--env-dir', ENV_DIR, '--docker', join(FAKES, 'fake-docker.mjs'),
+    '--openenv', tool, '--python', tool, '--health-timeout-s', '30', '--now-ms', String(NOW)];
+  const cliRun = a => spawnSync(process.execPath, [cli, ...a], { encoding: 'utf8', env: h.opts.baseEnv, timeout: 50_000 });
+  for (const extra of [['--image', IMAGE], ['--submission-id', 'x'], ['--server-port', '9000'], ['--tasks-json', reqPath], ['--no-finish-action']]) {
+    const mixed = cliRun([...args, ...extra]);
+    assert.equal(mixed.status, 2, extra.join(' '));
+    assert.match(mixed.stderr, /--request-json takes these from the request/);
+  }
+  assert.equal(cliRun(args.map(a => (a === reqPath ? listPath : a))).status, 2, 'not a request object');
+  assert.ok(!existsSync(h.opts.outDir), 'usage errors write nothing');
+  const ok = cliRun(args);
+  assert.equal(ok.status, 0, ok.stderr);
+  const out = JSON.parse(ok.stdout);
+  assert.deepEqual([out.ok, out.reasons, out.request_sha256], [true, [], canonicalDigest(request)]);
+  const report = JSON.parse(readFileSync(out.report_path, 'utf8'));
+  assert.deepEqual([report.checks.render.verbatim, report.submission_id, report.image, report.checks.inspect.containerPort, report.container.stopped],
+    [true, request.submission_id, IMAGE, 8000, true]);
+  assert.deepEqual(JSON.parse(readFileSync(out.request_path, 'utf8')), request, 'the request file, unchanged');
 });

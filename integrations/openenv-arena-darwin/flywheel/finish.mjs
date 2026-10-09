@@ -4,16 +4,48 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { canonicalDigest } from './canonical-json.mjs';
 import { buildDecisionFlags, decideSubmit, decisionKind, REDRAW_REQUEST_KEYS } from './decide.mjs';
-import { clearPending, genomeToTasks, readPending, recordRedraw, recordRedrawRejected, requestBodyDigest, submissionIdFor, tasksMatch,
-  writeIncumbent, writePending } from './incumbent.mjs';
-import { readJson, redact, runStep, writeJsonAtomic } from './journal.mjs';
+import { clearPending, genomeToTasks, readPending, readStoredRequest, recordRedraw, recordRedrawRejected, redrawName, requestBodyDigest,
+  storeRequest, submissionIdFor, tasksMatch, writeIncumbent, writePending } from './incumbent.mjs';
+import { readJson, readJsonIfExists, redact, runStep, writeJsonAtomic } from './journal.mjs';
 import { recheckFacts, redrawFacts } from './recheck.mjs';
 
 export const QUOTA_FALLBACK_S = 24 * 3600; // a 429 without retry_after_s: the arena's own rolling window
 
-// submission_id tag and name suffix per rendered request. The id embeds the run date, so every re-draw gets a fresh one.
-const RENDERED = Object.freeze({ candidate: { tag: '', suffix: '' }, 'needs-human': { tag: 'v2', suffix: ' (v2 defaults)' },
-  'incumbent-redraw': { tag: 'redraw', suffix: ' (incumbent re-draw)' } });
+// submission_id tag and name suffix per genome-rendered request. The id embeds the run date, so every request is fresh.
+const RENDERED = Object.freeze({ candidate: { tag: '', suffix: '' }, 'needs-human': { tag: 'v2', suffix: ' (v2 defaults)' } });
+
+/**
+ * daily-best re-draw: the STORED copy of the arena-validated incumbent's exact request (incumbent.json storedRequest),
+ * unchanged apart from a fresh submission_id (`<prefix>-<date>-redraw-<hash>`) and the re-draw name, then every
+ * pre-submit check on it today against ITS image (render-and-check verbatim mode; never config.image, never re-rendered
+ * from a genome). A stored copy that is missing or not intact renders nothing (the decision then names
+ * storedRequestIntact). The decision re-reads and re-hashes everything again (recheck.mjs redrawFacts).
+ */
+export function redrawPhase(x, inc) {
+  const { config, deps, j, date, stateDir } = x;
+  return runStep(j, 'render-incumbent-redraw', async () => {
+    const rec = readJsonIfExists(join(stateDir, 'incumbent.json'));
+    const sr = readStoredRequest(stateDir, rec?.storedRequest);
+    const base = { renderedFor: 'incumbent-redraw', source: 'stored-request', genome: inc.genome ?? null, genomeDigest: inc.genomeDigest ?? null,
+      storedRequest: rec?.storedRequest ?? null, configImage: config.image };
+    if (!sr.ok) {
+      return { ...base, submissionId: null, name: null, image: null, tasks: null, requestPath: null, requestSha256: null, reportPath: null,
+        ok: false, reasons: [`stored_request_unusable:${sr.problem}`], checks: deps.renderCheck.toDecisionFacts(null), configImageDiffers: null };
+    }
+    const body = sr.request;
+    const submissionId = submissionIdFor({ prefix: config.submission.idPrefix, date, tasks: body.tasks, image: body.image, tag: 'redraw' });
+    const name = redrawName(body.name);
+    const request = { ...body, submission_id: submissionId, name };
+    const n = j.find('render-incumbent-redraw', 'start').length;
+    const report = await deps.renderCheck.run({ outDir: join(x.runDir, 'incumbent-redraw', `attempt-${n}`), submissionId, name, request,
+      image: body.image, dataset: body.dataset, tasks: body.tasks, runId: `${date}-incumbent-redraw-${n}`, nowMs: deps.nowMs(), checkedAt: deps.clock() });
+    const onDisk = report?.request_path ? readJson(report.request_path) : null;
+    return { ...base, submissionId, name, image: onDisk?.image ?? null, tasks: onDisk?.tasks ?? null, storedImage: body.image,
+      configImageDiffers: config.image !== body.image, requestPath: report?.request_path ?? null, requestSha256: report?.request_sha256 ?? null,
+      ok: report?.ok === true, reasons: report?.reasons ?? ['render_and_check_returned_nothing'], reportPath: report?.report_path ?? null,
+      checks: deps.renderCheck.toDecisionFacts(report) };
+  });
+}
 
 /** Render the request for `genome` with the env lane's renderer and run every pre-submit check on it. */
 export function renderPhase(x, renderedFor, genome, contextTokens) {
@@ -102,10 +134,17 @@ export async function follow(x, pending, polls) {
     st.submission = { ...(st.submission ?? {}), submissionId: pending.submissionId, forDate: pending.date, state,
       slotState: s?.slot_state ?? null, errorOrigin: s?.error_origin ?? null, runId: s?.run_id ?? null };
     if (state === 'validated') {
-      const rec = { genome: pending.genome, submissionId: pending.submissionId, requestSha256: pending.requestSha256,
-        requestBodySha256: pending.requestBodySha256 ?? null, requestName: pending.requestName ?? null, date: pending.date, state };
+      const rec = { genome: pending.genome ?? null, submissionId: pending.submissionId, requestSha256: pending.requestSha256,
+        requestBodySha256: pending.requestBodySha256 ?? null, requestName: pending.requestName ?? null, date: pending.date, state,
+        storedRequest: pending.storedRequest ?? null };
       if (pending.kind !== 'incumbent-redraw') {
-        writeIncumbent(stateDir, rec);
+        try { writeIncumbent(stateDir, rec); } catch (e) { // the stored copy is unusable: record the genome, re-draws stay blocked
+          if (!rec.storedRequest || rec.genome === null) throw e;
+          writeIncumbent(stateDir, { ...rec, storedRequest: null });
+          const why = redact(e?.message ?? e);
+          j.append('incumbent', 'stored-request-unusable', { submissionId: pending.submissionId, reason: why });
+          st.notes.push(`validated ${pending.submissionId} recorded without its stored request (${why}): re-draws stay blocked (needs-human) until a human bootstraps it`);
+        }
         clearPending(stateDir);
         j.append('incumbent', 'updated', { submissionId: pending.submissionId, requestSha256: pending.requestSha256 });
         return state;
@@ -144,18 +183,29 @@ export async function follow(x, pending, polls) {
 async function submit(x, req, kind) {
   const { deps, j, st, stateDir, date } = x;
   const receiptPath = join(x.runDir, 'submit', 'arena-receipt.json');
-  // The genome the POSTed request was rendered from (decide.mjs candidateMatchesPlan / requestRenderedForIncumbent
-  // proved it is the candidate / the incumbent), the body digest a later re-draw must reproduce exactly, and the name
-  // that (with submission_id) rebuilds the POSTed bytes from that body (decide.mjs redrawIsIncumbentRequest).
-  let requestBodySha256 = null, requestName = null;
-  try { const body = readJson(req.requestPath); requestBodySha256 = requestBodyDigest(body); requestName = typeof body.name === 'string' ? body.name : null; }
-  catch { /* the POST below fails on it too */ }
-  const pending = { date, submissionId: req.submissionId, requestSha256: req.requestSha256, genome: req.genome, receiptPath, state: 'sending',
-    requestBodySha256, requestName, ...(kind ? { kind } : {}) };
+  // The genome the POSTed request was rendered from (decide.mjs candidateMatchesPlan / incumbentValidated proved it is
+  // the candidate / the incumbent; null for a body-only incumbent), the body digest a later re-draw must reproduce
+  // exactly, the name that (with submission_id) rebuilds the POSTed bytes from that body, and the immutable stored copy
+  // of exactly the approved bytes (written BEFORE the POST; it becomes incumbent.json's storedRequest once validated).
+  // The copy is bookkeeping for later re-draws, never a condition of this POST (arena-api.mjs re-checks the exact bytes
+  // against the approved digest): a copy that cannot be stored is journaled and noted, and the request is POSTed without
+  // one, so it can never be re-drawn (storedRequestIntact) until a human bootstraps it. The decision is not re-opened.
+  let request = null, requestBodySha256 = null, requestName = null, storedRequest = null;
+  try { request = readJson(req.requestPath); requestBodySha256 = requestBodyDigest(request); requestName = typeof request.name === 'string' ? request.name : null; }
+  catch { request = null; /* the POST below fails on it too */ }
+  if (request) {
+    try { storedRequest = storeRequest(stateDir, request, req.requestSha256); } catch (e) {
+      const why = redact(e?.message ?? e);
+      j.append('submit', 'stored-request-failed', { submissionId: req.submissionId, reason: why });
+      st.notes.push(`the approved request was not stored (${why}): it is POSTed without a stored copy and can never be re-drawn until a human bootstraps it`);
+    }
+  }
+  const pending = { date, submissionId: req.submissionId, requestSha256: req.requestSha256, genome: req.genome ?? null, receiptPath, state: 'sending',
+    requestBodySha256, requestName, ...(storedRequest ? { storedRequest } : {}), ...(kind ? { kind } : {}) };
   writePending(stateDir, pending); // before the POST: a crash is reconciled by the next run, never re-POSTed
   j.append('submit', 'intent', { submissionId: req.submissionId, requestSha256: req.requestSha256, ...(kind ? { kind } : {}) });
   let r;
-  try { r = await deps.arena.submit({ request: readJson(req.requestPath), approvedSha256: req.requestSha256, receiptPath }); } catch (e) {
+  try { r = await deps.arena.submit({ request: request ?? readJson(req.requestPath), approvedSha256: req.requestSha256, receiptPath }); } catch (e) {
     st.submission = { submissionId: req.submissionId, posted: null, state: 'unknown', error: redact(e?.message), ...(kind ? { kind } : {}) };
     j.append('submit', 'error', { error: st.submission.error });
     st.outcome = 'submit-unknown';
@@ -196,8 +246,9 @@ export async function decideAndSubmit(x, { inc, search, cand, plan, conf, req, g
   let flags = buildDecisionFlags(base, policy), used = facts, chosen = req;
   if (policy === 'daily-best' && decisionKind(flags) === 'incumbent-redraw') {
     chosen = st.redraw ?? null;
-    used = { ...base, ...redrawFacts(x, { inc, plan, redraw: chosen }) };
+    used = { ...base, ...redrawFacts(x, { redraw: chosen }) };
     flags = buildDecisionFlags(used, policy);
+    if (used.storedRequest?.problem) st.notes.push(`stored validated request: ${used.storedRequest.problem}`);
   }
   st.flags = flags;
   st.decision = decideSubmit(flags, policy);

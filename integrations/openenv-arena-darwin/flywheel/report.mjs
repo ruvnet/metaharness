@@ -36,7 +36,8 @@ export const POLICY_GROUPS = [
 /** Policy daily-best, decision kind 'incumbent-redraw': the same four conditions over decide.mjs REDRAW_KEYS. */
 export const REDRAW_GROUPS = [
   ['1. Arena-validated incumbent, re-drawn unchanged (no gate: not an improvement)', ['leaderboardAgreesWithIncumbent',
-    'darwinEvidenceIsScorecards', 'incumbentValidated', 'requestRenderedForIncumbent', 'redrawIsIncumbentRequest', 'incumbentBodyNotRejected']],
+    'redrawNotRehearsal', 'incumbentValidated', 'storedRequestIntact', 'requestRenderedForIncumbent', 'redrawIsIncumbentRequest',
+    'incumbentBodyNotRejected']],
   ['2. Pre-submit checks on this request and digest, today', ['requestDigestValid', 'checksForThisRequest', 'envLaneCommitPinned',
     'redrawCheckedToday', 'imagePulledAnonymously', 'openenvValidatePassed', 'exampleReplayAllTasksPassed', 'schemaEqual', 'limitsOk']],
   ['3. 24h slot free, not already submitted (today\'s run)', ['runDateIsToday', 'slotFree', 'notAlreadySubmitted']],

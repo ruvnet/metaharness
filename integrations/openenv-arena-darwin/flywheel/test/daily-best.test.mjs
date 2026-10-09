@@ -9,11 +9,11 @@ import { cpSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { baselineGenome, genomeToCells } from '../../lib/cells.mjs';
-import { canonicalDigest } from '../canonical-json.mjs';
+import { canonicalDigest, canonicalJson } from '../canonical-json.mjs';
 import { DECISION_KEYS, REDRAW_REQUEST_KEYS } from '../decide.mjs';
 import { loadConfig } from '../flywheel-config.mjs';
 import { runFlywheel } from '../flywheel.mjs';
-import { loadIncumbent, recordRedraw, recordRedrawRejected, requestBodyDigest, writeIncumbent } from '../incumbent.mjs';
+import { loadIncumbent, recordRedraw, recordRedrawRejected, requestBodyDigest, storeRequest, writeIncumbent } from '../incumbent.mjs';
 import { redrawFacts } from '../recheck.mjs';
 import { renderMarkdown, renderSlack } from '../report.mjs';
 import { candidateOf, ENV_COMMIT, makeFakes, setup, startOf } from './fw-fakes.mjs';
@@ -124,8 +124,9 @@ test('daily-best, day N, gate refuses: the validated incumbent is re-drawn (fres
   assert.match(sub.request.submission_id, /^metaharness-darwin-2026-10-10-redraw-[0-9a-f]{10}$/);
   assert.notEqual(sub.request.submission_id, before.submissionId, 'a fresh id, never the validated one');
   assert.notEqual(sub.request.submission_id, r.st.request.submissionId, 'distinct from the same-day candidate id');
-  assert.equal(sub.request.name, 'MetaHarness Darwin 2026-10-10 (incumbent re-draw)');
+  assert.equal(sub.request.name, `${posted.name} (incumbent re-draw)`, 'the validated name plus the re-draw suffix');
   assert.equal(requestBodyDigest(sub.request), requestBodyDigest(posted), 'the validated request again, apart from id and name');
+  assert.deepEqual({ ...sub.request, submission_id: posted.submission_id, name: posted.name }, posted, 'the stored body itself, not a re-render');
   assert.ok(r.calls.render.some(c => c.outDir.includes('/incumbent-redraw/')), 'rendered and checked today');
   const after = readJson(join(env.stateDir, 'incumbent.json'));
   assert.deepEqual([after.genome, after.genomeDigest], [before.genome, before.genomeDigest], 'a re-draw never replaces the incumbent genome');
@@ -133,6 +134,8 @@ test('daily-best, day N, gate refuses: the validated incumbent is re-drawn (fres
   assert.deepEqual(after.genomeFrom, { submissionId: before.submissionId, date: D1 });
   assert.deepEqual([after.requestSha256, after.requestName, after.requestBodySha256],
     [sub.approvedSha256, sub.request.name, requestBodyDigest(sub.request)], 'the next re-draw is bound to exactly these POSTed bytes');
+  assert.deepEqual(after.storedRequest, { path: `validated-requests/${sub.approvedSha256}.json`, sha256: sub.approvedSha256 }, 'and its stored copy moved with it');
+  assert.equal(readFileSync(join(env.stateDir, after.storedRequest.path), 'utf8'), canonicalJson(sub.request), 'the exact POSTed bytes');
   const j = journalOf(env.stateDir).filter(e => e.date === D2);
   assert.ok(j.some(e => e.phase === 'incumbent' && e.event === 'redraw-recorded'));
   assert.ok(!j.some(e => e.phase === 'incumbent' && e.event === 'updated'));
@@ -166,6 +169,7 @@ test('daily-best, day N, gate refuses: the validated incumbent is re-drawn (fres
   assert.deepEqual(n.st.decision, { submit: false, reasons: ['modeAuto'], kind: 'incumbent-redraw' });
   assert.deepEqual([n.st.wouldSubmitInAuto, n.calls.submit.length, n.st.outcome], [true, 0, 'no-candidate']);
   assert.match(n.st.redraw.submissionId, /-2026-10-11-redraw-/);
+  assert.equal(n.st.redraw.name, `${posted.name} (incumbent re-draw)`, 'a re-drawn re-draw never accumulates suffixes');
 });
 
 test('daily-best, day N without any candidate (auto): the incumbent is re-drawn', async () => {
@@ -231,17 +235,15 @@ const REDRAW_FAILURES = [
   ['env lane worktree at another commit', { envCommit: 'f'.repeat(40) }, 'envLaneCommitPinned'],
   ['env lane worktree dirty', { envDirty: true }, 'envLaneCommitPinned'],
   ['check report dated yesterday', { checkedAt: `${D1}T15:00:00.000Z` }, 'redrawCheckedToday'],
-  ['re-rendered tasks differ from the incumbent genome', { mutateTasks: true }, ['requestRenderedForIncumbent', 'redrawIsIncumbentRequest']],
-  ['rendered image differs from config', { renderImage: OTHER_IMAGE }, ['requestRenderedForIncumbent', 'redrawIsIncumbentRequest']],
-  ['config.image changed since the incumbent was validated', { cfg: c => { c.image = OTHER_IMAGE; } }, 'redrawIsIncumbentRequest'],
-  ['task limits changed since the incumbent was validated', { cfg: c => { c.submission.taskLimits = { ...c.submission.taskLimits, rollout_wall_s: 1700 }; } }, 'redrawIsIncumbentRequest'],
-  ['incumbent record without a body digest (hand-written)', { rec: r => { delete r.requestBodySha256; } }, 'redrawIsIncumbentRequest'],
-  ['incumbent record without the POSTed name', { rec: r => { delete r.requestName; } }, 'redrawIsIncumbentRequest'],
-  ['incumbent record names the digest of other bytes', { rec: r => { r.requestSha256 = 'e'.repeat(64); } }, 'redrawIsIncumbentRequest'],
+  ['re-draw tasks on disk differ from the stored request', { mutateTasks: true }, 'redrawIsIncumbentRequest'],
+  ['re-draw image on disk differs from the stored request\'s', { renderImage: OTHER_IMAGE }, ['requestRenderedForIncumbent', 'redrawIsIncumbentRequest']],
+  ['incumbent record without a body digest (hand-written)', { rec: r => { delete r.requestBodySha256; } }, ['storedRequestIntact', 'redrawIsIncumbentRequest']],
+  ['incumbent record without the POSTed name', { rec: r => { delete r.requestName; } }, ['storedRequestIntact', 'redrawIsIncumbentRequest']],
+  ['incumbent record names the digest of other bytes', { rec: r => { r.requestSha256 = 'e'.repeat(64); } }, ['storedRequestIntact', 'redrawIsIncumbentRequest']],
   ['the arena rejected this body since (author origin)', { rec: r => { r.lastRejected = { submissionId: 'x', date: D1, errorOrigin: 'author',
     requestBodySha256: r.requestBodySha256 }; } }, 'incumbentBodyNotRejected'],
   ['incumbent.json says validating, not validated', { rec: r => { r.state = 'validating'; } }, 'incumbentValidated'],
-  ['darwin evidence is a dry run', { evidence: 'evaluator_dry_run_fake_rows_not_model_rollouts' }, 'darwinEvidenceIsScorecards'],
+  ['darwin evidence is a dry run', { evidence: 'evaluator_dry_run_fake_rows_not_model_rollouts' }, 'redrawNotRehearsal'],
   ['own submissions list unreadable', { ownListUnknown: true }, 'leaderboardAgreesWithIncumbent'],
   ['leaderboard unreadable', { boardHasIncumbent: 'throw' }, 'leaderboardAgreesWithIncumbent'],
   ['slot taken between preflight and decision', { slotSeq: [true, false] }, 'slotFree'],
@@ -379,19 +381,40 @@ test('daily-best: checks from an earlier day are never POSTed, even under a stal
   assert.deepEqual(b.st.decision.reasons, ['redrawCheckedToday']);
 });
 
-test('daily-best: a hand-written body digest is not enough; a record rebuilt from the exact submitted request is', async () => {
-  const { env, incumbent } = await dayN();
-  env.config.submission.taskLimits = { ...env.config.submission.taskLimits, rollout_wall_s: 1700 }; // the validated request had 1800
-  const probe = await run({ gatePromote: false }, { env, date: D2, mode: 'dry-run' });
-  assert.ok(probe.st.decision.reasons.includes('redrawIsIncumbentRequest'));
-  writeFileSync(incPath(env), JSON.stringify({ ...incumbent, requestBodySha256: requestBodyDigest(readJson(probe.st.redraw.requestPath)) }));
+test('daily-best: config.image and task limits changed since validation: the STORED request is re-drawn unchanged (noted, not blocked)', async () => {
+  for (const cfg of [c => { c.image = OTHER_IMAGE; }, c => { c.submission.taskLimits = { ...c.submission.taskLimits, rollout_wall_s: 1700 }; }]) {
+    const { env, posted } = await dayN();
+    cfg(env.config);
+    const r = await run({ gatePromote: false, statusSeq: ['validated'] }, { env, date: D2 });
+    assert.deepEqual([r.st.decision, r.calls.submit.length], [{ submit: true, reasons: [], kind: 'incumbent-redraw' }, 1], String(cfg));
+    const sub = r.calls.submit[0].request;
+    assert.deepEqual({ ...sub, submission_id: posted.submission_id, name: posted.name }, posted, 'the validated body, not today\'s config');
+    assert.equal(r.calls.render.find(c => c.outDir.includes('/incumbent-redraw/')).image, posted.image, 'every check ran on the stored image');
+    const imageNote = r.st.notes.some(n => n.includes('config.image is') && n.includes('not blocking'));
+    assert.equal(imageNote, env.config.image !== posted.image, String(r.st.notes));
+    if (env.config.image !== posted.image) assert.match(readFileSync(r.st.files.markdownPath, 'utf8'), /config\.image `[^`]+` differs: not blocking/);
+  }
+});
+
+test('daily-best: a hand-written record is not enough; the stored exact request is what makes a re-draw possible', async () => {
+  const { env, incumbent } = await dayN(); // a hand-edited body digest no longer matches the stored copy
+  writeFileSync(incPath(env), JSON.stringify({ ...incumbent, requestBodySha256: 'c'.repeat(64) }));
   const b = await run({ gatePromote: false }, { env, date: D2 });
-  assert.deepEqual([b.st.decision.reasons, b.calls.submit.length, b.st.outcome], [['redrawIsIncumbentRequest'], 0, 'needs-human']);
-  // README reconciliation: every field from the exact request.json that was POSTed and validated
+  assert.deepEqual([b.st.decision.reasons, b.calls.submit.length, b.st.outcome], [['storedRequestIntact', 'redrawIsIncumbentRequest'], 0, 'needs-human']);
+  // every field rebuilt by hand from the exact request.json, but no stored copy: nothing to re-submit -> a human decides
   const { env: env2, posted } = await dayN();
-  writeIncumbent(env2.stateDir, { genome: candidateOf(baselineGenome()), submissionId: posted.submission_id, requestSha256: canonicalDigest(posted),
-    requestBodySha256: requestBodyDigest(posted), requestName: posted.name, date: D1, state: 'validated' });
-  const ok = await run({ gatePromote: false, statusSeq: ['validated'] }, { env: env2, date: D2 });
+  const fields = { submissionId: posted.submission_id, requestSha256: canonicalDigest(posted), requestBodySha256: requestBodyDigest(posted),
+    requestName: posted.name, date: D1, state: 'validated' };
+  writeIncumbent(env2.stateDir, { genome: candidateOf(baselineGenome()), ...fields });
+  const no = await run({ gatePromote: false }, { env: env2, date: D2 });
+  assert.equal(no.st.redraw.ok, false);
+  assert.match(no.st.redraw.reasons[0], /^stored_request_unusable:stored_request_record_invalid/);
+  assert.ok(no.st.decision.reasons.includes('storedRequestIntact'), String(no.st.decision.reasons));
+  assert.deepEqual([no.calls.submit.length, no.st.outcome], [0, 'needs-human']);
+  // with the immutable stored copy of exactly those bytes it re-draws again
+  const { env: env3 } = await dayN();
+  writeIncumbent(env3.stateDir, { genome: candidateOf(baselineGenome()), ...fields, storedRequest: storeRequest(env3.stateDir, posted, canonicalDigest(posted)) });
+  const ok = await run({ gatePromote: false, statusSeq: ['validated'] }, { env: env3, date: D2 });
   assert.deepEqual([ok.st.decision.submit, ok.calls.submit.length], [true, 1]);
 });
 
@@ -414,7 +437,7 @@ test('daily-best: the decision re-reads the re-draw\'s files and incumbent.json 
   const edit = (p, f) => { const v = readJson(p); f(v); writeFileSync(p, JSON.stringify(v)); };
   const cases = [
     ['presubmit-check.json now reports a failure', (d) => edit(join(d, 'presubmit-check.json'), r => { r.ok = false; r.reasons = ['schema_failed']; r.checks.schema.ok = false; }), CHECKS],
-    ['request.json name edited', (d) => edit(join(d, 'request.json'), r => { r.name += ' x'; }), ['requestDigestValid', 'checksForThisRequest']],
+    ['request.json name edited', (d) => edit(join(d, 'request.json'), r => { r.name += ' x'; }), ['requestRenderedForIncumbent', 'requestDigestValid', 'checksForThisRequest']],
     ['incumbent.json no longer says validated', (_d, env) => edit(incPath(env), r => { r.state = 'validating'; }), ['incumbentValidated']],
   ];
   for (const [name, tamper, reasons] of cases) {
@@ -432,22 +455,29 @@ test('daily-best: the decision re-reads the re-draw\'s files and incumbent.json 
   assert.deepEqual([c.st.outcome, c.calls.submit.length], ['incumbent-changed', 0]);
 });
 
-test('redrawFacts: request, genome, id and record digests come from disk and the re-draw itself, never from the stored result', async () => {
-  const { env, incumbent } = await dayN();
+test('redrawFacts: request, stored copy, id and record digests come from disk and the re-draw itself, never from the stored result', async () => {
+  const { env, incumbent, posted } = await dayN();
   const r = await run({ gatePromote: false }, { env, date: D2, mode: 'dry-run' });
   const x = { deps: makeFakes({ start: startOf(D2) }).deps, config: env.config, stateDir: env.stateDir };
   const inc = loadIncumbent(env.stateDir, { baselineGenome, genomeToCells });
-  const facts = (redraw = r.st.redraw) => redrawFacts(x, { inc, plan: null, redraw });
+  const facts = (redraw = r.st.redraw) => redrawFacts(x, { redraw });
   const good = facts();
-  assert.deepEqual([good.request.sha256, good.request.submissionId, good.request.genomeDigest, good.request.asValidatedSha256, good.clockToday],
-    [r.st.redraw.requestSha256, r.st.redraw.submissionId, inc.genomeDigest, incumbent.requestSha256, D2]);
-  assert.deepEqual(good.incumbentRecord, { state: 'validated', genomeDigest: inc.genomeDigest, submissionId: incumbent.submissionId,
-    requestSha256: incumbent.requestSha256, requestBodySha256: incumbent.requestBodySha256, lastRejected: null });
+  assert.deepEqual([good.request.sha256, good.request.submissionId, good.request.asValidatedSha256, good.request.source, good.clockToday, good.evaluatorDryRun],
+    [r.st.redraw.requestSha256, r.st.redraw.submissionId, incumbent.requestSha256, 'stored-request', D2, false]);
+  assert.deepEqual([good.request.expectedImage, good.request.name, good.request.expectedName], [posted.image, `${posted.name} (incumbent re-draw)`,
+    `${posted.name} (incumbent re-draw)`]);
+  assert.deepEqual(good.incumbentRecord, { state: 'validated', hasGenome: true, genomeDigest: inc.genomeDigest, submissionId: incumbent.submissionId,
+    requestSha256: incumbent.requestSha256, requestBodySha256: incumbent.requestBodySha256, requestName: incumbent.requestName, lastRejected: null });
+  assert.deepEqual(good.storedRequest, { fileOk: true, problem: null, recordedSha256: incumbent.requestSha256, fileSha256: incumbent.requestSha256,
+    canonicalSha256: incumbent.requestSha256, canonical: true, submissionId: posted.submission_id, name: posted.name,
+    bodySha256: incumbent.requestBodySha256, image: posted.image });
   assert.equal(facts({ ...r.st.redraw, submissionId: 'metaharness-darwin-other' }).request.submissionId, null, 'the id on disk is the rendered one');
-  assert.equal(facts({ ...r.st.redraw, genome: baselineGenome() }).request.genomeDigest, canonicalDigest(baselineGenome()), 'the re-draw\'s own genome');
   assert.equal(facts({ ...r.st.redraw, requestSha256: 'e'.repeat(64) }).request.sha256, null, 'the digest of the file on disk');
   writeFileSync(incPath(env), JSON.stringify({ ...incumbent, genomeDigest: 'f'.repeat(64) }));
   assert.equal(facts().incumbentRecord.genomeDigest, null, 'a record whose digest is not its genome\'s');
   writeFileSync(incPath(env), JSON.stringify({ ...incumbent, requestName: undefined }));
   assert.equal(facts().request.asValidatedSha256, null, 'a record without the POSTed name cannot be rebuilt');
+  writeFileSync(incPath(env), JSON.stringify({ ...incumbent, storedRequest: { ...incumbent.storedRequest, path: '../elsewhere.json' } }));
+  assert.deepEqual([facts().storedRequest.fileOk, facts().storedRequest.problem, facts().request.expectedImage],
+    [false, 'stored_request_path_not_content_addressed', null], 'a recorded path is never trusted');
 });

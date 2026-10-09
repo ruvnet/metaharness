@@ -3,7 +3,7 @@
 // spend pre-check. `x` is the run context built by flywheel.mjs runFlywheel().
 import { follow, slotNow } from './finish.mjs';
 import { sweepGpus } from './gpu-sweep.mjs';
-import { readPending } from './incumbent.mjs';
+import { genomeLessIncumbent, readPending } from './incumbent.mjs';
 import { redact } from './journal.mjs';
 
 export { boardAgrees } from './decide.mjs'; // pure; lives with the flags that use it
@@ -42,7 +42,7 @@ export async function preflight(x, { gpuWorkPending }) {
     j.append('preflight', 'done', { outcome: st.outcome, slot: s });
     return;
   }
-  if (gpuWorkPending && rentsGpu(config)) {
+  if (gpuWorkPending && rentsGpu(config) && !genomeLessIncumbent(x.stateDir)) { // a body-only incumbent never rents
     try { await deps.gpu.precheck?.(deps.nowMs()); } catch (e) {
       if (e?.name !== 'SpendRefused') throw e;
       st.outcome = 'budget-refused';

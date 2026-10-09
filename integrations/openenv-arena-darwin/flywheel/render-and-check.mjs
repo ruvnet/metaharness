@@ -15,6 +15,10 @@
 //   /schema equality -> replay_native.py over EVERY task id in the request. The container is stopped on every exit path.
 // The env lane's scripts run with HOME/HF_HOME/XDG_CACHE_HOME in an empty dir under --out-dir and the hub offline, so
 // nothing they run can reach the HF token file; their `submit` path is never invoked (the JS digest check covers it).
+// Verbatim mode (`request` option / --request-json FILE: a stored, already-validated request re-drawn under a fresh id):
+// the `render` step writes that exact request instead of calling submission.py (checks.render.verbatim = true); every
+// other step runs unchanged against the request's own image, tasks, dataset, server_port (never a configured one) and
+// finish_action. A task carrying its own image is refused (per_task_image_not_checked): only the top-level image is checked.
 // stdout: {ok, reasons, request_sha256, request_path, report_path}. Exit 0 ok, 1 a check failed, 2 usage.
 import { spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
@@ -67,6 +71,12 @@ function atomicWrite(path, text) {
 export async function renderAndCheck(opts) {
   const o = { ...DEFAULTS, ...Object.fromEntries(Object.entries(opts ?? {}).filter(([, v]) => v !== undefined)) };
   if (!Number.isFinite(o.nowMs)) throw new TypeError('nowMs (epoch ms) must be passed in');
+  if (o.request !== undefined) { // verbatim: the request itself says which finish action and server port it carries
+    if (!o.request || typeof o.request !== 'object' || Array.isArray(o.request)) throw new TypeError('request must be an object');
+    o.includeFinishAction = Object.hasOwn(o.request, 'finish_action');
+    // never a configured port (wire.mjs spreads config.checks into every call): the port the POSTed body names, or none
+    o.serverPort = Number.isInteger(o.request.server_port) ? o.request.server_port : undefined;
+  }
   const outDir = resolve(o.outDir);
   if (existsSync(outDir) && readdirSync(outDir).length) throw new Error('out dir must be new or empty');
   mkdirSync(outDir, { recursive: true, mode: 0o700 });
@@ -89,6 +99,22 @@ export async function renderAndCheck(opts) {
   const name = `arena-flywheel-check-${tag}`;
   const s = {}; // state shared between steps
   let started = false;
+  /** Verbatim render: write the given request unchanged; it must read back to the same canonical digest. */
+  const verbatim = () => {
+    let want;
+    try { want = canonicalDigest(o.request); } catch { return { ok: false, reasons: ['request_not_canonical_json'] }; }
+    atomicWrite(p.request, JSON.stringify(o.request, null, 2) + '\n');
+    s.request = readJsonOr(p.request);
+    if (!s.request) return { ok: false, reasons: ['rendered_request_unreadable'] };
+    const reasons = [];
+    let jsSha = null;
+    try { jsSha = canonicalDigest(s.request); } catch { reasons.push('request_not_canonical_json'); }
+    if (jsSha !== want) reasons.push('verbatim_request_digest_changed_on_write');
+    if (!sameCanonical(s.request.tasks, o.tasks)) reasons.push('rendered_tasks_differ_from_input');
+    report.request_sha256 = jsSha;
+    report.request_path = p.request;
+    return { ok: !reasons.length, reasons, verbatim: true, requestSha256: jsSha, jsSha256: jsSha, requestFileSha256: fileSha(p.request) };
+  };
 
   const steps = {
     inputs: async () => {
@@ -170,6 +196,7 @@ export async function renderAndCheck(opts) {
     },
     env_source: () => imageEnvSource({ docker, container: name, root: s.envRoot, outDir, tail }),
     render: async () => {
+      if (o.request !== undefined) return verbatim();
       atomicWrite(p.tasks, JSON.stringify({ tasks: o.tasks }, null, 2) + '\n');
       const py = [...argvOf(o.python), join(env, 'submission.py')];
       const args = ['render', '--submission-id', o.submissionId, '--name', o.name, '--image', o.image, '--dataset', o.dataset,
@@ -195,6 +222,10 @@ export async function renderAndCheck(opts) {
     },
     limits: async () => {
       const reasons = checkRequest(s.request, { image: o.image, dataset: o.dataset, submission_id: o.submissionId, name: o.name });
+      // verbatim: every check runs on the top-level image only, so a task carrying its own image would go unchecked
+      if (o.request !== undefined && Array.isArray(s.request.tasks) && s.request.tasks.some(t => t && typeof t === 'object' && Object.hasOwn(t, 'image'))) {
+        reasons.push('per_task_image_not_checked');
+      }
       return { ok: !reasons.length, reasons };
     },
     actions: async () => { // replay_native.py hard-wires ENV/example-actions.json, so it must BE the request's
@@ -264,18 +295,24 @@ function stopAllSync() {
 
 async function main(argv) {
   const { values: v } = parseArgs({ args: argv, options: Object.fromEntries([
-    ...['out-dir', 'submission-id', 'name', 'image', 'dataset', 'tasks-json', 'source', 'server-port', 'env-dir', 'python', 'openenv',
+    ...['out-dir', 'submission-id', 'name', 'image', 'dataset', 'tasks-json', 'request-json', 'source', 'server-port', 'env-dir', 'python', 'openenv',
       'docker', 'expect-env-commit', 'run-id', 'checked-at', 'now-ms', 'health-timeout-s', 'validate-timeout-s'].map(k => [k, { type: 'string' }]),
     ['no-finish-action', { type: 'boolean' }]]) });
-  const need = ['out-dir', 'submission-id', 'name', 'image', 'dataset', 'tasks-json'].filter(k => !v[k]);
+  // --request-json: verbatim mode; id, name, image, dataset and tasks come from that request (never mixed with flags)
+  const request = v['request-json'] === undefined ? undefined : readJsonOr(v['request-json']);
+  if (v['request-json'] !== undefined && (!request || typeof request !== 'object' || Array.isArray(request))) { process.stderr.write('--request-json must hold a request object\n'); return 2; }
+  const fromRequest = ['submission-id', 'name', 'image', 'dataset', 'tasks-json', 'source', 'server-port', 'no-finish-action'].filter(k => request && v[k] !== undefined);
+  if (fromRequest.length) { process.stderr.write(`--request-json takes these from the request: drop --${fromRequest.join(', --')}\n`); return 2; }
+  const need = (request ? ['out-dir'] : ['out-dir', 'submission-id', 'name', 'image', 'dataset', 'tasks-json']).filter(k => !v[k]);
   if (need.length) { process.stderr.write(`missing --${need.join(', --')}\n`); return 2; }
-  const raw = readJsonOr(v['tasks-json']);
+  const raw = request ? { tasks: request.tasks } : readJsonOr(v['tasks-json']);
   const tasks = Array.isArray(raw) ? raw : raw?.tasks;
   if (!Array.isArray(tasks)) { process.stderr.write('--tasks-json must hold a list or {tasks:[...]}\n'); return 2; }
   for (const [sig, code] of [['SIGINT', 130], ['SIGTERM', 143]]) process.on(sig, () => { stopAllSync(); process.exit(code); });
   const num = k => (v[k] === undefined ? undefined : Number(v[k]));
-  const opts = Object.fromEntries(Object.entries({ outDir: v['out-dir'], submissionId: v['submission-id'], name: v.name, image: v.image,
-    dataset: v.dataset, tasks, source: v.source, serverPort: num('server-port'), envDir: v['env-dir'], python: v.python,
+  const opts = Object.fromEntries(Object.entries({ outDir: v['out-dir'], request, submissionId: request?.submission_id ?? v['submission-id'],
+    name: request?.name ?? v.name, image: request?.image ?? v.image,
+    dataset: request?.dataset ?? v.dataset, tasks, source: v.source, serverPort: num('server-port'), envDir: v['env-dir'], python: v.python,
     openenv: v.openenv, docker: v.docker, expectEnvCommit: v['expect-env-commit'], runId: v['run-id'], checkedAt: v['checked-at'],
     nowMs: num('now-ms') ?? Date.now(), healthTimeoutS: num('health-timeout-s'), validateTimeoutS: num('validate-timeout-s'),
     includeFinishAction: v['no-finish-action'] ? false : undefined }).filter(([, x]) => x !== undefined));

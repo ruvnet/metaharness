@@ -48,6 +48,8 @@ export function renderMarkdown(s) {
     const ch = r.checks?.checks ?? {};
     L.push('', `## ${title}`, '', `- File: ${code(r.requestPath)}`, `- sha256: ${code(r.requestSha256)}`,
       `- Submission ID: ${code(r.submissionId)}; tasks: ${(r.tasks ?? []).map(t => t.task_id).join(', ')}`,
+      ...(r.source === 'stored-request' ? [`- Source: stored validated request ${code(r.storedRequest?.sha256)}; image ${code(r.storedImage ?? r.image)}`
+        + `${r.configImageDiffers === true ? ` (config.image ${code(r.configImage)} differs: not blocking, the validated body is the source of truth)` : ''}`] : []),
       `- Checks for this request/image: ${yes(r.checks?.requestSha256 === r.requestSha256 && r.checks?.image === r.image)}`,
       ...['anonymousPull', 'openenvValidate', 'exampleReplay', 'schemaEqual', 'limits'].map(k => `- ${k}: ${yes(ch[k]?.ok)}${ch[k]?.detail ? ` (${redact(ch[k].detail)})` : ''}`));
   }

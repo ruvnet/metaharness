@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { canonicalDigest } from './canonical-json.mjs';
 import { cardMatchesGenome, pairedOutcomes, planHashOf, preregistered, provenanceMatches } from './confirm.mjs';
 import { torontoDate } from './dates.mjs';
-import { genomeToTasks, requestBodyDigest, tasksMatch } from './incumbent.mjs';
+import { genomeToTasks, readStoredRequest, redrawName, requestBodyDigest, tasksMatch } from './incumbent.mjs';
 import { readJson, redact } from './journal.mjs';
 
 const tryRead = p => { try { return typeof p === 'string' ? readJson(p) : null; } catch { return null; } };
@@ -37,7 +37,7 @@ export async function recheckFacts(x, { inc, search, cand, plan, req, conf, gate
   const expectedTasks = cand && p ? safe(() => genomeToTasks(cand.genome, { genomeToCells: cells.genomeToCells,
     contextTokens: p.expectedProvenance.contextTokens, taskLimits: config.submission.taskLimits })) : null;
   const facts = {
-    darwin: { evidence: search?.evidence },
+    darwin: { evidence: search?.evidence, skipped: search?.skipped ?? null },
     incumbent: { genomeDigest: safe(() => canonicalDigest(inc.genome)) === inc.genomeDigest ? inc.genomeDigest : null,
       day1: inc.day1, submissionId: inc.submissionId ?? null },
     leaderboard: { hasIncumbent: x.st.arena?.hasIncumbent ?? null, latestValidatedId: x.st.arena?.latestValidatedId },
@@ -73,36 +73,40 @@ export async function recheckFacts(x, { inc, search, cand, plan, req, conf, gate
 
 /**
  * daily-best, kind 'incumbent-redraw': the re-draw's request and pre-submit facts, re-derived from its files on disk
- * exactly like the candidate's (plus its check date and body digest), and incumbent.json as it is on disk NOW.
- * asValidatedSha256 = the re-draw body under the validated submission's own submission_id and name (null when the
- * record lacks either): it must reproduce the record's requestSha256. clockToday = Toronto date of the clock right now.
- * -> {request, checks, incumbentRecord, clockToday}: replaces those slots of recheckFacts' facts for buildDecisionFlags.
+ * exactly like the candidate's (plus its check date and body digest), incumbent.json as it is on disk NOW and its
+ * stored validated request re-read and re-hashed NOW (readStoredRequest: path, perms, owner, both digests).
+ * expectedImage/expectedName come from that stored request (never config.image). asValidatedSha256 = the re-draw body
+ * under the validated submission's own submission_id and name (null when the record lacks either): it must reproduce
+ * the record's requestSha256. clockToday = Toronto date of the clock right now; evaluatorDryRun = the config now.
+ * -> {request, storedRequest, checks, incumbentRecord, clockToday, evaluatorDryRun}: replaces those slots of
+ * recheckFacts' facts for buildDecisionFlags.
  */
-export function redrawFacts(x, { inc, plan, redraw }) {
+export function redrawFacts(x, { redraw }) {
   const { deps, config } = x;
   const reqDisk = tryRead(redraw?.requestPath);
   const reqSha = safe(() => canonicalDigest(reqDisk));
   const report = tryRead(redraw?.reportPath);
   const checks = report ? safe(() => deps.renderCheck.toDecisionFacts(report), {}) : {};
-  const contextTokens = plan?.plan?.expectedProvenance?.contextTokens ?? config.evaluator.contextTokens; // as flywheel.mjs rendered it
-  const expectedTasks = safe(() => genomeToTasks(inc.genome, { genomeToCells: deps.darwin.cells.genomeToCells, contextTokens,
-    taskLimits: config.submission.taskLimits }));
   const rec = tryRead(join(x.stateDir, 'incumbent.json'));
   const recObj = rec && typeof rec === 'object' && !Array.isArray(rec) ? rec : null;
+  const sr = recObj ? readStoredRequest(x.stateDir, recObj.storedRequest) : null;
   const asValidated = reqDisk && typeof reqDisk === 'object' && recObj && typeof recObj.submissionId === 'string' && typeof recObj.requestName === 'string'
     ? safe(() => canonicalDigest({ ...reqDisk, submission_id: recObj.submissionId, name: recObj.requestName })) : null;
   return {
     request: redraw ? { sha256: reqSha && reqSha === redraw.requestSha256 ? reqSha : null, image: reqDisk?.image ?? null,
-      expectedImage: config.image, renderedFor: redraw.renderedFor, tasks: reqDisk?.tasks ?? null,
-      genomeDigest: safe(() => canonicalDigest(redraw.genome)),
-      tasksMatchIncumbent: Boolean(expectedTasks && reqDisk) && tasksMatch(reqDisk.tasks, expectedTasks),
+      expectedImage: sr?.image ?? null, renderedFor: redraw.renderedFor, source: redraw.source ?? null, tasks: reqDisk?.tasks ?? null,
+      name: typeof reqDisk?.name === 'string' ? reqDisk.name : null, expectedName: redrawName(sr?.name),
       submissionId: typeof reqDisk?.submission_id === 'string' && reqDisk.submission_id === redraw.submissionId ? reqDisk.submission_id : null,
       bodySha256: reqDisk ? safe(() => requestBodyDigest(reqDisk)) : null, asValidatedSha256: asValidated } : {},
+    storedRequest: sr ? { fileOk: sr.fileOk, problem: sr.problem, recordedSha256: sr.recordedSha256, fileSha256: sr.fileSha256,
+      canonicalSha256: sr.canonicalSha256, canonical: sr.canonical, submissionId: sr.submissionId, name: sr.name, bodySha256: sr.bodySha256,
+      image: sr.image } : null,
     checks: { ...checks, checkedDate: safe(() => torontoDate(report?.checked_at ?? NaN)) },
-    incumbentRecord: recObj ? { state: recObj.state ?? null,
+    incumbentRecord: recObj ? { state: recObj.state ?? null, hasGenome: recObj.genome !== null && recObj.genome !== undefined,
       genomeDigest: safe(() => canonicalDigest(recObj.genome)) === recObj.genomeDigest ? recObj.genomeDigest : null,
       submissionId: recObj.submissionId ?? null, requestSha256: recObj.requestSha256 ?? null,
-      requestBodySha256: recObj.requestBodySha256 ?? null, lastRejected: recObj.lastRejected ?? null } : null,
+      requestBodySha256: recObj.requestBodySha256 ?? null, requestName: recObj.requestName ?? null, lastRejected: recObj.lastRejected ?? null } : null,
     clockToday: safe(() => torontoDate(deps.nowMs())),
+    evaluatorDryRun: typeof config.evaluator?.dryRun === 'boolean' ? config.evaluator.dryRun : null,
   };
 }

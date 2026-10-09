@@ -2,7 +2,8 @@
 // Fake `openenv` and fake `replay_native.py` for failure-path tests (behaviour from $FAKE_TOOL_MODE).
 //   fake-tool.mjs validate --url U --json --output F --timeout N        modes: validate-ok | validate-fail
 //   fake-tool.mjs --url U --output F --tasks-json REQUEST.json          modes: replay-fail | replay-subset | replay-lie
-import { readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const argv = process.argv.slice(2);
@@ -26,7 +27,10 @@ const shown = mode === 'replay-subset' ? ids.slice(0, 1) : ids;
 const tasks = shown.map(task_id => ({ task_id, status: 'passed', episodes: ['declared_examples', 'observed_file_oracle', 'wrong_answer', 'seeded_reset_replay'].map(ep) }));
 const failed = mode === 'replay-fail';
 // replay-subset and replay-lie both exit 0 and claim success: the checker must not trust the exit code alone.
+// Like replay_native.py: the example actions it replayed are ENV/example-actions.json (the env lane dir is its cwd).
+const examples = existsSync('example-actions.json') ? createHash('sha256').update(readFileSync('example-actions.json')).digest('hex') : null;
 const report = { status: failed ? 'failed' : 'passed', task_count: mode === 'replay-lie' ? ids.length : shown.length,
-  episodes_expected: shown.length * 4, episodes_passed: failed ? 0 : shown.length * 4, tasks: mode === 'replay-lie' ? [] : tasks };
+  episodes_expected: shown.length * 4, episodes_passed: failed ? 0 : shown.length * 4, tasks: mode === 'replay-lie' ? [] : tasks,
+  source_sha256: { 'example-actions.json': examples } };
 writeFileSync(flag('--output'), JSON.stringify(report));
 process.exit(failed ? 1 : 0);

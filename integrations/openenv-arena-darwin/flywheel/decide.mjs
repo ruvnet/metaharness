@@ -12,9 +12,10 @@
 //
 // Policy `daily-best` (owner standing approval, 2026-10-08): submit the best available request every day. The KIND is
 // chosen by gatePromote && gateReceiptVerified alone: 'promoted' -> the candidate's request under exactly the
-// DECISION_KEYS above; otherwise 'incumbent-redraw' -> the arena-validated incumbent's request, re-rendered unchanged
-// with a fresh submission_id, under REDRAW_KEYS (every pre-submit check again, today; not if the arena rejected that
-// body since). A promoted kind whose other
+// DECISION_KEYS above; otherwise 'incumbent-redraw' -> the STORED copy of the arena-validated incumbent's exact request,
+// unchanged apart from a fresh submission_id and the re-draw name, under REDRAW_KEYS (the stored copy intact and bound to
+// the validated digest; every pre-submit check again, today, on its own image; not if the arena rejected that body
+// since). A promoted kind whose other
 // conditions fail blocks; it never falls through to a re-draw, so every condition stays load-bearing in both policies.
 // A re-draw is another sample of the same request: selection on noise, never an improvement.
 import { SHA256_RE } from './canonical-json.mjs';
@@ -42,9 +43,10 @@ export const POLICIES = Object.freeze(['gate-only', 'daily-best']);
 /** daily-best, kind 'incumbent-redraw': the conditions for re-submitting the arena-validated incumbent's request. */
 export const REDRAW_KEYS = Object.freeze([
   'modeAuto',
-  // the incumbent itself: validated by the arena, agreed by the board, re-rendered unchanged (fresh id only), and that
-  // body not rejected by the arena since (an author-origin rejection is never POSTed again without a human)
-  'leaderboardAgreesWithIncumbent', 'darwinEvidenceIsScorecards', 'incumbentValidated', 'requestRenderedForIncumbent',
+  // the incumbent itself: validated by the arena, agreed by the board, not a dry-run rehearsal, its stored request intact
+  // and bound to the validated digest, re-submitted unchanged (fresh id and re-draw name only), and that body not
+  // rejected by the arena since (an author-origin rejection is never POSTed again without a human)
+  'leaderboardAgreesWithIncumbent', 'redrawNotRehearsal', 'incumbentValidated', 'storedRequestIntact', 'requestRenderedForIncumbent',
   'redrawIsIncumbentRequest', 'incumbentBodyNotRejected',
   // every pre-submit check on THIS request and image, run today
   'requestDigestValid', 'checksForThisRequest', 'envLaneCommitPinned', 'redrawCheckedToday',
@@ -52,9 +54,11 @@ export const REDRAW_KEYS = Object.freeze([
   'runDateIsToday', 'slotFree', 'notAlreadySubmitted',
 ]);
 /** Re-draw conditions about whether a valid incumbent request exists at all: one of them failing = needs-human. */
-export const REDRAW_REQUEST_KEYS = Object.freeze(['incumbentValidated', 'requestRenderedForIncumbent', 'redrawIsIncumbentRequest',
+export const REDRAW_REQUEST_KEYS = Object.freeze(['incumbentValidated', 'storedRequestIntact', 'requestRenderedForIncumbent', 'redrawIsIncumbentRequest',
   'incumbentBodyNotRejected', 'requestDigestValid', 'checksForThisRequest', 'envLaneCommitPinned', 'redrawCheckedToday',
   'imagePulledAnonymously', 'openenvValidatePassed', 'exampleReplayAllTasksPassed', 'schemaEqual', 'limitsOk']);
+/** search.skipped when the incumbent has no genome (body-only): no rental, no search, nothing to promote over it. */
+export const SEARCH_SKIPPED_NO_GENOME = 'incumbent_has_no_genome';
 /** One wording for every report, so a public post states the kind honestly. */
 export const KIND_LABELS = Object.freeze({
   promoted: 'promoted candidate: the Flywheel gate promoted it on preregistered paired evidence (verified receipt)',
@@ -130,33 +134,51 @@ export function boardAgrees(incumbent, board) {
  *           checks:{anonymousPull, openenvValidate, exampleReplay, schemaEqual, limits}},
  *   expectEnvCommit, dates:{run, today}, slot:{free}, alreadySubmitted
  * policy 'daily-best' adds the re-draw-only flags, from (with `request`/`checks` then describing the RE-DRAW request):
- *   incumbentRecord:{state, genomeDigest, submissionId, requestSha256, requestBodySha256, lastRejected} (incumbent.json as
- *   on disk at decision time), request:{..., tasksMatchIncumbent, submissionId, bodySha256, asValidatedSha256},
- *   checks:{..., checkedDate}, clockToday (the Toronto date of the decision-time clock, not of the caller's --now)
+ *   incumbentRecord:{state, hasGenome, genomeDigest, submissionId, requestSha256, requestBodySha256, requestName, lastRejected}
+ *   (incumbent.json as on disk at decision time), storedRequest:{fileOk, recordedSha256, fileSha256, canonicalSha256,
+ *   canonical, submissionId, name, bodySha256, image} (incumbent.mjs readStoredRequest of the stored copy, at decision
+ *   time), request:{..., source, name, expectedName, submissionId, bodySha256, asValidatedSha256}, darwin:{..., skipped},
+ *   evaluatorDryRun (config now), checks:{..., checkedDate}, clockToday (the Toronto date of the decision-time clock, not
+ *   of the caller's --now)
  */
 export function buildDecisionFlags(f = {}, policy = 'gate-only') {
   const flags = gateOnlyFlags(f);
   if (policy !== 'daily-best') return flags;
   const r = f.request ?? {}, rec = isObj(f.incumbentRecord) ? f.incumbentRecord : null, inc = f.incumbent ?? {};
+  const sr = isObj(f.storedRequest) ? f.storedRequest : null;
   const rej = rec?.lastRejected;
   return { ...flags,
     // the incumbent was itself accepted + validated by the arena, and incumbent.json on disk NOW is this run's incumbent
-    incumbentValidated: inc.day1 === false && rec !== null && rec.state === 'validated' && sameHex(rec.genomeDigest, inc.genomeDigest)
+    // (the same genome, or, for a body-only incumbent, still none)
+    incumbentValidated: inc.day1 === false && rec !== null && rec.state === 'validated'
+      && (inc.genomeDigest === null ? rec.hasGenome === false && rec.genomeDigest === null : sameHex(rec.genomeDigest, inc.genomeDigest))
       && typeof rec.submissionId === 'string' && rec.submissionId === inc.submissionId,
-    // rendered from the incumbent genome for config.image, under a fresh submission_id (never the validated one's)
-    requestRenderedForIncumbent: r.renderedFor === 'incumbent-redraw' && r.tasksMatchIncumbent === true && typeof r.image === 'string'
-      && r.image === r.expectedImage && sameHex(r.genomeDigest, inc.genomeDigest)
-      && typeof r.submissionId === 'string' && typeof inc.submissionId === 'string' && r.submissionId !== inc.submissionId,
-    // byte-identical to the validated request apart from submission_id and name: a re-draw, never a lookalike. The body
-    // digest alone is a hand-writable claim, so the re-draw body under the validated submission's own id and name must
-    // also reproduce requestSha256, the digest of the bytes arena-api.mjs actually POSTed for it.
-    redrawIsIncumbentRequest: rec !== null && sameHex(r.bodySha256, rec.requestBodySha256) && sameHex(r.asValidatedSha256, rec.requestSha256),
+    // the stored copy is the exact validated request: an untouched read-only file at its content address whose bytes and
+    // canonical JSON both hash to the record's requestSha256, with the record's submission_id, name and body digest
+    storedRequestIntact: rec !== null && sr !== null && sr.fileOk === true && sr.canonical === true && sameHex(sr.recordedSha256, rec.requestSha256)
+      && sameHex(sr.fileSha256, rec.requestSha256) && sameHex(sr.canonicalSha256, rec.requestSha256)
+      && typeof sr.submissionId === 'string' && sr.submissionId === rec.submissionId
+      && typeof sr.name === 'string' && sr.name === rec.requestName && sameHex(sr.bodySha256, rec.requestBodySha256),
+    // built from the stored request, for ITS image (never config.image), under the re-draw name and a fresh submission_id
+    requestRenderedForIncumbent: r.renderedFor === 'incumbent-redraw' && r.source === 'stored-request' && typeof r.image === 'string'
+      && r.image === r.expectedImage && typeof r.name === 'string' && r.name === r.expectedName
+      && typeof r.submissionId === 'string' && typeof inc.submissionId === 'string' && r.submissionId !== inc.submissionId
+      && (rec === null || r.submissionId !== rec.submissionId),
+    // byte-identical to the validated request apart from submission_id and name: a re-draw, never a lookalike. Its body is
+    // the stored body and the record's, and that body under the validated submission's own id and name reproduces
+    // requestSha256, the digest of the bytes arena-api.mjs actually POSTed for it.
+    redrawIsIncumbentRequest: rec !== null && sr !== null && sameHex(r.bodySha256, sr.bodySha256) && sameHex(r.bodySha256, rec.requestBodySha256)
+      && sameHex(r.asValidatedSha256, rec.requestSha256),
     // no author-origin rejection of this body is recorded since it was validated (a malformed record blocks too)
     incumbentBodyNotRejected: rec !== null && (rej === undefined || rej === null
       || (isObj(rej) && hex(rej.requestBodySha256) && rej.requestBodySha256 !== rec.requestBodySha256 && rej.requestBodySha256 !== r.bodySha256)),
     // the pre-submit checks of this request ran today by the run date AND by the decision-time clock (a resumed,
     // pre-dated or stale --now run never reuses older checks)
     redrawCheckedToday: typeof f.checks?.checkedDate === 'string' && f.checks.checkedDate === f.dates?.today && f.checks.checkedDate === f.clockToday,
+    // not a dry-run rehearsal: the search produced real scorecards, or (a body-only incumbent) no search ran because there
+    // is no genome and the evaluator is not in dry-run now
+    redrawNotRehearsal: f.darwin?.evidence === 'evaluator_scorecards'
+      || (f.darwin?.skipped === SEARCH_SKIPPED_NO_GENOME && inc.genomeDigest === null && rec?.hasGenome === false && f.evaluatorDryRun === false),
   };
 }
 
