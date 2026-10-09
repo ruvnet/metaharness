@@ -18,7 +18,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { DECISION_KEYS } from './decide.mjs';
+import { DECISION_KEYS, KIND_LABELS, REDRAW_KEYS, reportedKind } from './decide.mjs';
 import { summarize, validateRows } from './gpu-spend.mjs';
 
 /** decide.mjs flags grouped under the owner's four auto-submit conditions. Unlisted keys show as "Other flags". */
@@ -33,6 +33,16 @@ export const POLICY_GROUPS = [
   ['3. 24h slot free, not already submitted (today\'s run)', ['runDateIsToday', 'slotFree', 'notAlreadySubmitted']],
   ['4. mode=auto', ['modeAuto']],
 ];
+/** Policy daily-best, decision kind 'incumbent-redraw': the same four conditions over decide.mjs REDRAW_KEYS. */
+export const REDRAW_GROUPS = [
+  ['1. Arena-validated incumbent, re-drawn unchanged (no gate: not an improvement)', ['leaderboardAgreesWithIncumbent',
+    'darwinEvidenceIsScorecards', 'incumbentValidated', 'requestRenderedForIncumbent', 'redrawIsIncumbentRequest', 'incumbentBodyNotRejected']],
+  ['2. Pre-submit checks on this request and digest, today', ['requestDigestValid', 'checksForThisRequest', 'envLaneCommitPinned',
+    'redrawCheckedToday', 'imagePulledAnonymously', 'openenvValidatePassed', 'exampleReplayAllTasksPassed', 'schemaEqual', 'limitsOk']],
+  ['3. 24h slot free, not already submitted (today\'s run)', ['runDateIsToday', 'slotFree', 'notAlreadySubmitted']],
+  ['4. mode=auto', ['modeAuto']],
+];
+const KIND_SHORT = { promoted: 'promoted candidate', 'incumbent-redraw': 'incumbent re-draw' };
 export const CHECK_KEYS = ['anonymousPull', 'openenvValidate', 'exampleReplay', 'schemaEqual', 'limits'];
 export const SLACK_MAX = 3500;
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
@@ -107,20 +117,23 @@ export function safeUrl(u) {
 }
 
 /** The four auto-submit conditions as rows over decide.mjs flags, recovered from decision.reasons (decideSubmit
- *  lists every key that is not exactly true). Informational only. No decision object -> every row UNKNOWN. */
+ *  lists every key that is not exactly true). Informational only. No decision object -> every row UNKNOWN.
+ *  A daily-best incumbent re-draw is shown over its own conditions (REDRAW_KEYS), never as a gate promotion. */
 export function policyView(s) {
   const reasons = Array.isArray(s.decision?.reasons) ? s.decision.reasons.map(String) : null;
   const known = reasons !== null && typeof s.decision?.submit === 'boolean';
-  const grouped = new Set(POLICY_GROUPS.flatMap(([, keys]) => keys));
-  const other = DECISION_KEYS.filter(k => !grouped.has(k));
-  const rows = [...POLICY_GROUPS, ...(other.length ? [['Other flags', other]] : [])].map(([label, keys]) => {
+  const redraw = s.decision?.kind === 'incumbent-redraw';
+  const [groups, allKeys] = redraw ? [REDRAW_GROUPS, REDRAW_KEYS] : [POLICY_GROUPS, DECISION_KEYS];
+  const grouped = new Set(groups.flatMap(([, keys]) => keys));
+  const other = allKeys.filter(k => !grouped.has(k));
+  const rows = [...groups, ...(other.length ? [['Other flags', other]] : [])].map(([label, keys]) => {
     if (!known) return { label, result: 'UNKNOWN', detail: 'no decision recorded' };
     const failed = keys.filter(k => reasons.includes(k));
     const detail = `${keys.length - failed.length}/${keys.length} true`
       + (failed.length ? `; not true: ${failed.slice(0, 5).join(', ')}${failed.length > 5 ? ', …' : ''}` : '');
     return { label, result: failed.length ? 'FAIL' : 'PASS', detail };
   });
-  const extra = known ? reasons.filter(r => !DECISION_KEYS.includes(r)) : [];
+  const extra = known ? reasons.filter(r => !allKeys.includes(r)) : [];
   const allPass = known && s.decision.submit === true && rows.every(r => r.result === 'PASS') && extra.length === 0;
   const posted = s.submission?.posted === true;
   const inconsistent = posted && (!allPass || s.mode !== 'auto');
@@ -144,7 +157,10 @@ export function spendView(ledgerPath, nowIso) {
 function view(s, ctx) {
   const p = policyView(s);
   const conf = s.confirmation ?? {};
-  const req = s.request;
+  const k = reportedKind(s); // what this date POSTed, else the decision's kind (daily-best only)
+  const kind = typeof k === 'string' && Object.hasOwn(KIND_SHORT, k) ? k : null;
+  const req = kind === 'incumbent-redraw' ? s.redraw : s.request;
+  const reqLabel = kind === 'incumbent-redraw' ? 'Re-draw request' : 'Request';
   const ch = req?.checks?.checks ?? {};
   const failedChecks = CHECK_KEYS.filter(k => ch[k]?.ok === false).map(k => `${k}${ch[k]?.detail ? ` (${txt(ch[k].detail, 80)})` : ''}`);
   const sub = s.submission;
@@ -153,7 +169,7 @@ function view(s, ctx) {
   const lb = s.leaderboard;
   return {
     p,
-    title: `Arena flywheel ${txt(s.date)}: ${txt(s.outcome, 40).toUpperCase()} (mode ${txt(s.mode, 20)})`,
+    title: `Arena flywheel ${txt(s.date)}: ${txt(s.outcome, 40).toUpperCase()}${kind ? `, ${KIND_SHORT[kind]}` : ''} (mode ${txt(s.mode, 20)})`,
     alerts: [
       ctx.staleFor ? `STALE: this is the status for ${txt(s.date)}; no status was written for ${ctx.staleFor}.` : null,
       p.inconsistent ? 'INCONSISTENT: a submission was posted without mode=auto and every decide.mjs condition true. Check the journal.' : null,
@@ -161,15 +177,16 @@ function view(s, ctx) {
       p.extra.length ? `Decision input problems: ${p.extra.slice(0, 4).map(x => txt(x, 60)).join(', ')}` : null,
     ].filter(Boolean),
     head: `Submitted: ${yn(p.posted)}. Would submit in auto mode: ${yn(s.wouldSubmitInAuto)}. Decision submit=${yn(s.decision?.submit)}.`
-      + (s.error ? ` Error: ${txt(s.error, 160)}` : ''),
+      + (kind ? ` Kind: ${KIND_LABELS[kind]}.` : '') + (s.error ? ` Error: ${txt(s.error, 160)}` : ''),
     genomes: `Incumbent: ${txt(s.incumbent?.source, 40)}${s.incumbent?.day1 ? ' (day 1)' : ''}. Candidate: `
       + (s.candidate ? `${txt(s.candidate.variantId, 60)}, changed ${Array.isArray(s.candidate.changedFamilies) && s.candidate.changedFamilies.length ? s.candidate.changedFamilies.map(f => txt(f, 30)).join(', ') : 'unknown'}` : 'none')
       + `. Darwin improved over baseline: ${yn(s.darwin?.improvedOverBaseline)}.`,
     scores: [['incumbent', conf.incumbentScore ?? {}], ['candidate', conf.candidateScore ?? {}]],
     gate: `Gate: promote ${yn(s.gate?.promote)}, receipt verified ${yn(s.gate?.verified)}, key pinned ${yn(s.gate?.publicKeyPinned)}`
       + (Array.isArray(s.gate?.reasons) && s.gate.reasons.length ? `, reasons ${s.gate.reasons.slice(0, 4).map(r => txt(r, 50)).join(', ')}` : ''),
-    request: req ? `Request: ${txt(req.submissionId, 80)}, ${Array.isArray(req.tasks) ? req.tasks.length : 'unknown'} tasks, sha256 ${short(req.requestSha256)}, `
-      + `checks ${CHECK_KEYS.filter(k => ch[k]?.ok === true).length}/${CHECK_KEYS.length} passed${failedChecks.length ? ` (failed: ${failedChecks.join('; ')})` : ''}` : 'Request: none rendered for a candidate',
+    request: req ? `${reqLabel}: ${txt(req.submissionId, 80)}, ${Array.isArray(req.tasks) ? req.tasks.length : 'unknown'} tasks, sha256 ${short(req.requestSha256)}, `
+      + `checks ${CHECK_KEYS.filter(k => ch[k]?.ok === true).length}/${CHECK_KEYS.length} passed${failedChecks.length ? ` (failed: ${failedChecks.join('; ')})` : ''}`
+      : kind === 'incumbent-redraw' ? 'Re-draw request: none rendered (no arena-validated incumbent request)' : 'Request: none rendered for a candidate',
     needsHuman: s.needsHuman ? `NEEDS HUMAN: a v2-defaults request was rendered for review: ${txt(s.needsHuman.requestPath, 160)} (sha256 ${short(s.needsHuman.requestSha256)})` : null,
     slot: `Slot: free at preflight ${yn(s.slot?.preflight?.free)}, at decision ${yn(s.slot?.decision?.free)}`
       + (isNum(s.slot?.decision?.retryAfterS) ? `, retry after ${Math.round(s.slot.decision.retryAfterS)} s` : ''),

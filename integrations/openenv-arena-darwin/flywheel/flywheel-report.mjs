@@ -1,6 +1,7 @@
 // Daily status JSON + human-readable markdown under <stateDir>/reports/<date>/. Everything is redacted again
 // on the way out (defence in depth: the orchestrator never holds the HF token or the Vast key).
 import { join } from 'node:path';
+import { KIND_LABELS, reportedKind } from './decide.mjs';
 import { redact, redactDeep, writeJsonAtomic, writeTextAtomic } from './journal.mjs';
 
 const yes = v => (v === true ? 'yes' : v === false ? 'no' : '—');
@@ -10,10 +11,13 @@ const num = v => (typeof v === 'number' && Number.isFinite(v) ? (Number.isIntege
 export function renderMarkdown(s) {
   const L = [];
   L.push(`# Arena flywheel ${s.date}`, '', `- Outcome: **${s.outcome}**`, `- Mode: \`${s.mode}\``,
+    ...(s.policy ? [`- Policy: \`${s.policy}\``] : []),
     `- Submitted: ${yes(s.submission?.posted === true)}`, `- Would submit in auto mode: ${yes(s.wouldSubmitInAuto)}`);
   if (s.error) L.push(`- Error: ${s.error}`);
   if (s.decision) {
     L.push('', '## Decision (pure `decideSubmit`, no LLM)', '', `submit = **${s.decision.submit}**`, '');
+    const kind = reportedKind(s); // what this date POSTed, else the decision's kind
+    if (kind) L.push(`Kind: **${kind}** (${KIND_LABELS[kind] ?? 'unknown kind'})`, '');
     if (s.decision.reasons.length) L.push('Blocking conditions:', '', ...s.decision.reasons.map(r => `- \`${r}\``));
   }
   L.push('', '## Incumbent and candidate', '',
@@ -38,7 +42,8 @@ export function renderMarkdown(s) {
       `- Request digest bound in receipt: ${code(g.boundRequestSha256)} (gate.mjs supports binding: ${yes(g.bindingSupported)})`,
       `- Receipt: ${code(g.receiptPath)}; public key ${code(g.publicKey)}`);
   }
-  for (const [title, r] of [['Candidate request', s.request], ['Needs-human request (v2 defaults)', s.needsHuman]]) {
+  for (const [title, r] of [['Candidate request', s.request], ['Needs-human request (v2 defaults)', s.needsHuman],
+    ['Incumbent re-draw request (same request as the validated incumbent, fresh submission_id)', s.redraw]]) {
     if (!r) continue;
     const ch = r.checks?.checks ?? {};
     L.push('', `## ${title}`, '', `- File: ${code(r.requestPath)}`, `- sha256: ${code(r.requestSha256)}`,

@@ -1,7 +1,9 @@
 // Incumbent state, pending-submission state, genome -> arena task mapping, and the cells-module wrapper that
 // makes run-darwin.mjs start its search from the incumbent instead of lib/cells.mjs's v2 defaults.
 //
-//   <stateDir>/incumbent.json            written ONLY after a submission reaches state `validated`
+//   <stateDir>/incumbent.json            written ONLY after a submission reaches state `validated`; a validated
+//                                        re-draw (policy daily-best) moves only its submissionId/date, never the genome;
+//                                        a re-draw the arena REJECTED (author origin) adds only `lastRejected`
 //   <stateDir>/pending-submission.json   written BEFORE the POST; reconciled by the next run, never re-POSTed
 import { existsSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
@@ -79,10 +81,48 @@ export function loadIncumbent(stateDir, { baselineGenome, genomeToCells }) {
     submissionId: rec.submissionId, requestSha256: rec.requestSha256, since: rec.date };
 }
 
-export function writeIncumbent(stateDir, { genome, submissionId, requestSha256, date, state }) {
+/** Digest of a request without its submission_id and name: equal bodies = the same submission drawn again. */
+export function requestBodyDigest(request) {
+  if (!request || typeof request !== 'object' || Array.isArray(request)) fail('request must be an object');
+  const { submission_id: _id, name: _name, ...body } = request;
+  return canonicalDigest(body);
+}
+
+/** requestSha256 = canonical digest of the POSTed request; requestName = its `name`. With submissionId they rebuild
+ *  those exact bytes from a re-rendered body, which is what binds a re-draw to what the arena validated. */
+export function writeIncumbent(stateDir, { genome, submissionId, requestSha256, requestBodySha256 = null, requestName = null, date, state }) {
   if (state !== 'validated') fail('incumbent may only be updated from a validated submission');
   return writeJsonAtomic(join(stateDir, 'incumbent.json'),
-    { genome, genomeDigest: canonicalDigest(genome), submissionId, requestSha256, date, state });
+    { genome, genomeDigest: canonicalDigest(genome), submissionId, requestSha256, date, state, requestBodySha256, requestName });
+}
+
+/**
+ * A validated incumbent RE-DRAW never replaces the incumbent genome. It only moves the record's pointer to the newest
+ * validated own submission (the board check compares exactly that), keeping which submission set the genome in
+ * `genomeFrom`. Fails closed, writing nothing, unless the re-drawn genome IS the validated incumbent's.
+ */
+export function recordRedraw(stateDir, { genome, submissionId, requestSha256, requestBodySha256 = null, requestName = null, date, state }) {
+  if (state !== 'validated') fail('incumbent may only be updated from a validated submission');
+  const cur = readJsonIfExists(join(stateDir, 'incumbent.json'));
+  if (!cur || cur.state !== 'validated' || cur.genomeDigest !== canonicalDigest(cur.genome) || canonicalDigest(genome) !== cur.genomeDigest) {
+    fail('redraw_genome_is_not_the_incumbent: a re-draw never replaces the incumbent genome');
+  }
+  return writeJsonAtomic(join(stateDir, 'incumbent.json'), { genome: cur.genome, genomeDigest: cur.genomeDigest, submissionId,
+    requestSha256, date, state, requestBodySha256, requestName, lastKind: 'incumbent-redraw',
+    genomeFrom: cur.genomeFrom ?? { submissionId: cur.submissionId, date: cur.date } });
+}
+
+/**
+ * The arena REJECTED an incumbent re-draw (author origin; a platform-origin rejection returns the slot and is not
+ * recorded). Adds `lastRejected` to incumbent.json and changes nothing else: decide.mjs incumbentBodyNotRejected then
+ * blocks re-draws of that body until a promoted candidate is validated (writeIncumbent writes a fresh record) or a human
+ * removes the field. -> the path written, or null when there is no incumbent.json (nothing to re-draw from).
+ */
+export function recordRedrawRejected(stateDir, { submissionId, date, errorOrigin = null, requestBodySha256 = null }) {
+  const path = join(stateDir, 'incumbent.json');
+  const cur = readJsonIfExists(path);
+  if (!cur) return null;
+  return writeJsonAtomic(path, { ...cur, lastRejected: { submissionId, date, errorOrigin, requestBodySha256 } });
 }
 
 const pendingPath = stateDir => join(stateDir, 'pending-submission.json');

@@ -3,21 +3,27 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { canonicalDigest } from './canonical-json.mjs';
-import { buildDecisionFlags, decideSubmit } from './decide.mjs';
-import { clearPending, genomeToTasks, readPending, submissionIdFor, tasksMatch, writeIncumbent, writePending } from './incumbent.mjs';
+import { buildDecisionFlags, decideSubmit, decisionKind, REDRAW_REQUEST_KEYS } from './decide.mjs';
+import { clearPending, genomeToTasks, readPending, recordRedraw, recordRedrawRejected, requestBodyDigest, submissionIdFor, tasksMatch,
+  writeIncumbent, writePending } from './incumbent.mjs';
 import { readJson, redact, runStep, writeJsonAtomic } from './journal.mjs';
-import { recheckFacts } from './recheck.mjs';
+import { recheckFacts, redrawFacts } from './recheck.mjs';
 
 export const QUOTA_FALLBACK_S = 24 * 3600; // a 429 without retry_after_s: the arena's own rolling window
+
+// submission_id tag and name suffix per rendered request. The id embeds the run date, so every re-draw gets a fresh one.
+const RENDERED = Object.freeze({ candidate: { tag: '', suffix: '' }, 'needs-human': { tag: 'v2', suffix: ' (v2 defaults)' },
+  'incumbent-redraw': { tag: 'redraw', suffix: ' (incumbent re-draw)' } });
 
 /** Render the request for `genome` with the env lane's renderer and run every pre-submit check on it. */
 export function renderPhase(x, renderedFor, genome, contextTokens) {
   const { config, deps, j, date } = x;
+  if (!Object.hasOwn(RENDERED, renderedFor)) throw new Error(`unknown rendered request kind: ${renderedFor}`);
   return runStep(j, `render-${renderedFor}`, async () => {
     const tasks = genomeToTasks(genome, { genomeToCells: deps.darwin.cells.genomeToCells, contextTokens, taskLimits: config.submission.taskLimits });
-    const v2 = renderedFor !== 'candidate';
-    const submissionId = submissionIdFor({ prefix: config.submission.idPrefix, date, tasks, image: config.image, tag: v2 ? 'v2' : '' });
-    const name = `${config.submission.namePrefix} ${date}${v2 ? ' (v2 defaults)' : ''}`;
+    const { tag, suffix } = RENDERED[renderedFor];
+    const submissionId = submissionIdFor({ prefix: config.submission.idPrefix, date, tasks, image: config.image, tag });
+    const name = `${config.submission.namePrefix} ${date}${suffix}`;
     const n = j.find(`render-${renderedFor}`, 'start').length;
     const report = await deps.renderCheck.run({ outDir: join(x.runDir, renderedFor, `attempt-${n}`), submissionId, name,
       image: config.image, dataset: config.dataset, tasks, runId: `${date}-${renderedFor}-${n}`, nowMs: deps.nowMs(), checkedAt: deps.clock() });
@@ -96,12 +102,37 @@ export async function follow(x, pending, polls) {
     st.submission = { ...(st.submission ?? {}), submissionId: pending.submissionId, forDate: pending.date, state,
       slotState: s?.slot_state ?? null, errorOrigin: s?.error_origin ?? null, runId: s?.run_id ?? null };
     if (state === 'validated') {
-      writeIncumbent(stateDir, { genome: pending.genome, submissionId: pending.submissionId, requestSha256: pending.requestSha256, date: pending.date, state });
+      const rec = { genome: pending.genome, submissionId: pending.submissionId, requestSha256: pending.requestSha256,
+        requestBodySha256: pending.requestBodySha256 ?? null, requestName: pending.requestName ?? null, date: pending.date, state };
+      if (pending.kind !== 'incumbent-redraw') {
+        writeIncumbent(stateDir, rec);
+        clearPending(stateDir);
+        j.append('incumbent', 'updated', { submissionId: pending.submissionId, requestSha256: pending.requestSha256 });
+        return state;
+      }
+      let error = null; // a re-draw: the genome stays; only the newest-validated pointer moves (or nothing, fail closed)
+      try { recordRedraw(stateDir, rec); } catch (e) { error = redact(e?.message ?? e); }
       clearPending(stateDir);
-      j.append('incumbent', 'updated', { submissionId: pending.submissionId, requestSha256: pending.requestSha256 });
+      if (!error) j.append('incumbent', 'redraw-recorded', { submissionId: pending.submissionId, requestSha256: pending.requestSha256 });
+      else {
+        j.append('incumbent', 'unchanged', { reason: error, submissionId: pending.submissionId });
+        st.notes.push(`validated re-draw ${pending.submissionId} was not recorded (${error}): reconcile incumbent.json by hand`);
+      }
       return state;
     }
-    if (state === 'rejected') { clearPending(stateDir); j.append('incumbent', 'unchanged', { reason: 'rejected', submissionId: pending.submissionId }); return state; }
+    if (state === 'rejected') {
+      // A rejected re-draw (author origin; a missing origin counts as author) blocks re-draws of that body before the
+      // pending record goes: otherwise the next day would POST the same rejected body again with no human involved.
+      const origin = s?.error_origin ?? null;
+      if (pending.kind === 'incumbent-redraw' && origin !== 'platform') {
+        const written = recordRedrawRejected(stateDir, { submissionId: pending.submissionId, date: pending.date, errorOrigin: origin,
+          requestBodySha256: pending.requestBodySha256 ?? null });
+        j.append('incumbent', 'redraw-rejected', { submissionId: pending.submissionId, errorOrigin: origin, recorded: written !== null });
+        st.notes.push(`incumbent re-draw ${pending.submissionId} was rejected (${origin ?? 'author'} origin): re-draws of this request stay `
+          + 'blocked (needs-human) until a promoted candidate is validated or a human removes lastRejected from incumbent.json');
+      }
+      clearPending(stateDir); j.append('incumbent', 'unchanged', { reason: 'rejected', submissionId: pending.submissionId }); return state;
+    }
     if (state === 'absent' && neverPosted(pending)) { // crashed before arena-api.mjs persisted `sending`: nothing was sent
       clearPending(stateDir); j.append('submit', 'never-sent', { submissionId: pending.submissionId }); return state;
     }
@@ -110,22 +141,30 @@ export async function follow(x, pending, polls) {
   return st.submission?.state ?? pending.state;
 }
 
-async function submit(x, req) {
+async function submit(x, req, kind) {
   const { deps, j, st, stateDir, date } = x;
   const receiptPath = join(x.runDir, 'submit', 'arena-receipt.json');
-  // The genome the POSTed request was rendered from (decide.mjs candidateMatchesPlan proved it is the candidate).
-  const pending = { date, submissionId: req.submissionId, requestSha256: req.requestSha256, genome: req.genome, receiptPath, state: 'sending' };
+  // The genome the POSTed request was rendered from (decide.mjs candidateMatchesPlan / requestRenderedForIncumbent
+  // proved it is the candidate / the incumbent), the body digest a later re-draw must reproduce exactly, and the name
+  // that (with submission_id) rebuilds the POSTed bytes from that body (decide.mjs redrawIsIncumbentRequest).
+  let requestBodySha256 = null, requestName = null;
+  try { const body = readJson(req.requestPath); requestBodySha256 = requestBodyDigest(body); requestName = typeof body.name === 'string' ? body.name : null; }
+  catch { /* the POST below fails on it too */ }
+  const pending = { date, submissionId: req.submissionId, requestSha256: req.requestSha256, genome: req.genome, receiptPath, state: 'sending',
+    requestBodySha256, requestName, ...(kind ? { kind } : {}) };
   writePending(stateDir, pending); // before the POST: a crash is reconciled by the next run, never re-POSTed
-  j.append('submit', 'intent', { submissionId: req.submissionId, requestSha256: req.requestSha256 });
+  j.append('submit', 'intent', { submissionId: req.submissionId, requestSha256: req.requestSha256, ...(kind ? { kind } : {}) });
   let r;
   try { r = await deps.arena.submit({ request: readJson(req.requestPath), approvedSha256: req.requestSha256, receiptPath }); } catch (e) {
-    st.submission = { submissionId: req.submissionId, posted: null, state: 'unknown', error: redact(e?.message) };
+    st.submission = { submissionId: req.submissionId, posted: null, state: 'unknown', error: redact(e?.message), ...(kind ? { kind } : {}) };
     j.append('submit', 'error', { error: st.submission.error });
     st.outcome = 'submit-unknown';
     return;
   }
+  // daily-best: `kind` on the submission is what was POSTed; every report states that, never a later recomputed decision
   st.submission = { submissionId: req.submissionId, posted: r?.post_attempted === true, receiptState: r?.state ?? null,
-    state: r?.arena?.state ?? null, httpStatus: r?.http_status ?? null, code: r?.error_code ?? null, retryAfterS: r?.retry_after_s ?? null };
+    state: r?.arena?.state ?? null, httpStatus: r?.http_status ?? null, code: r?.error_code ?? null, retryAfterS: r?.retry_after_s ?? null,
+    ...(kind ? { kind } : {}) };
   j.append('submit', 'result', { ...st.submission });
   if (r?.state === 'refused') {
     clearPending(stateDir);
@@ -142,23 +181,41 @@ async function submit(x, req) {
 }
 
 /** Re-derive every fact from disk + current config (recheck.mjs), decide (pure), and submit only in auto mode when
- *  every condition holds. Resumed phase results are file locations here, never verdicts. */
+ *  every condition holds. Resumed phase results are file locations here, never verdicts. Under policy daily-best the
+ *  re-derived gate picks the kind; for an incumbent re-draw the request/check facts are the re-draw's, also from disk. */
 export async function decideAndSubmit(x, { inc, search, cand, plan, conf, req, gate }) {
   const { j, st, stateDir, date, config } = x;
+  const policy = config.policy ?? 'gate-only';
   const intent = j.last('submit', 'intent');
   const pending = readPending(stateDir);
   if (intent && pending?.date === date) await follow(x, pending, config.poll.attempts);
   st.slot.decision = await slotNow(x);
   const { facts, view } = await recheckFacts(x, { inc, search, cand, plan, conf, req, gate });
   if (st.gate) st.gate.atDecision = view; // the verification the decision used (current pin), next to the gate-time one
-  const flags = buildDecisionFlags({ ...facts, mode: st.mode, slot: st.slot.decision,
-    alreadySubmitted: Boolean(intent) || Boolean(readPending(stateDir)) });
+  const base = { ...facts, mode: st.mode, slot: st.slot.decision, alreadySubmitted: Boolean(intent) || Boolean(readPending(stateDir)) };
+  let flags = buildDecisionFlags(base, policy), used = facts, chosen = req;
+  if (policy === 'daily-best' && decisionKind(flags) === 'incumbent-redraw') {
+    chosen = st.redraw ?? null;
+    used = { ...base, ...redrawFacts(x, { inc, plan, redraw: chosen }) };
+    flags = buildDecisionFlags(used, policy);
+  }
   st.flags = flags;
-  st.decision = decideSubmit(flags);
-  st.wouldSubmitInAuto = decideSubmit({ ...flags, modeAuto: true }).submit;
+  st.decision = decideSubmit(flags, policy);
+  st.wouldSubmitInAuto = decideSubmit({ ...flags, modeAuto: true }, policy).submit;
+  const kind = policy === 'daily-best' ? st.decision.kind : undefined;
   j.append('decide', 'done', { submit: st.decision.submit, reasons: st.decision.reasons, wouldSubmitInAuto: st.wouldSubmitInAuto,
-    requestSha256: facts.request?.sha256 ?? null, planHash: plan?.planHash ?? null });
-  if (intent) { st.outcome = resumedOutcome(j, st); return; } // this date already POSTed (or tried): never again
-  if (st.decision.submit) { await submit(x, req); return; }
-  st.outcome = st.needsHuman ? 'needs-human' : cand ? 'skipped' : 'no-candidate';
+    requestSha256: used.request?.sha256 ?? null, planHash: plan?.planHash ?? null, ...(kind ? { policy, kind } : {}) });
+  if (intent) { // this date already POSTed (or tried): never again
+    st.outcome = resumedOutcome(j, st);
+    if (kind) { // the kind POSTed is the journaled one (an intent without a kind was a gate-only, i.e. promoted, POST)
+      const posted = intent.kind ?? 'promoted';
+      st.submission = { ...(st.submission ?? { submissionId: intent.submissionId }), kind: posted };
+      if (posted !== kind) st.notes.push(`this date already POSTed ${intent.submissionId} as kind ${posted}; this rerun's recomputed decision kind (${kind}) is not what was submitted`);
+    }
+    return;
+  }
+  if (st.decision.submit) { await submit(x, chosen, kind); return; }
+  // daily-best: neither a submittable promoted candidate nor a valid incumbent request -> a human decides
+  const noIncumbentRequest = kind === 'incumbent-redraw' && st.decision.reasons.some(r => REDRAW_REQUEST_KEYS.includes(r));
+  st.outcome = st.needsHuman || noIncumbentRequest ? 'needs-human' : cand ? 'skipped' : 'no-candidate';
 }

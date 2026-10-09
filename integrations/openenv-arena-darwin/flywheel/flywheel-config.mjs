@@ -4,6 +4,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import { POLICIES } from './decide.mjs';
 import { checkTaskLimits } from './incumbent.mjs';
 
 export class ConfigError extends Error {}
@@ -16,6 +17,9 @@ export const defaultStateDir = (env = process.env, home = homedir()) =>
 export function defaultConfig(home = homedir()) {
   return {
     mode: 'dry-run', // dry-run never POSTs; only "auto" may submit, and only when decideSubmit says so
+    // gate-only: submit only a gate-promoted candidate. daily-best: else re-draw the arena-validated incumbent (decide.mjs).
+    // The policy never relaxes the mode: dry-run still never POSTs, and auto still needs checks.expectEnvCommit.
+    policy: 'gate-only',
     schedule: { onCalendar: '*-*-* 10:17:00 America/Toronto' }, // informational; systemd/arena-flywheel.timer owns it
     image: 'ghcr.io/ruvnet/metaharness-arena@sha256:2f3f12b986574ac99ecae451f47408ea5c8cc12c4fa27bf1c5cafa6880676b37',
     dataset: 'ruv/metaharness-arena-tasks',
@@ -65,6 +69,7 @@ export function validateConfig(c, home = homedir()) {
   const int = (v, lo, hi) => Number.isSafeInteger(v) && v >= lo && v <= hi;
   const str = v => typeof v === 'string' && v.length > 0;
   need(c.mode === 'dry-run' || c.mode === 'auto', 'mode must be "dry-run" or "auto"');
+  need(POLICIES.includes(c.policy), `policy must be one of ${POLICIES.map(p => `"${p}"`).join(', ')}`);
   need(/^(ghcr\.io|docker\.io)\/[a-z0-9._/-]+@sha256:[0-9a-f]{64}$/.test(c.image ?? ''), 'image must be ghcr.io|docker.io/...@sha256:<64 hex>');
   need(/^[A-Za-z0-9][A-Za-z0-9_.-]*\/[A-Za-z0-9][A-Za-z0-9_.-]*$/.test(c.dataset ?? ''), 'dataset must be owner/name (no revision)');
   need(/^[A-Za-z0-9][A-Za-z0-9_.-]{0,80}$/.test(c.submission?.idPrefix ?? ''), 'submission.idPrefix invalid');

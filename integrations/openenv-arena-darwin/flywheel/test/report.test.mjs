@@ -6,8 +6,8 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { after, describe, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { DECISION_KEYS } from '../decide.mjs';
-import { main, policyView, POLICY_GROUPS, redact, renderMarkdown, renderSlack, safeUrl, SLACK_MAX } from '../report.mjs';
+import { DECISION_KEYS, REDRAW_KEYS } from '../decide.mjs';
+import { CHECK_KEYS, main, policyView, POLICY_GROUPS, REDRAW_GROUPS, redact, renderMarkdown, renderSlack, safeUrl, SLACK_MAX } from '../report.mjs';
 
 const REPORT = join(dirname(fileURLToPath(import.meta.url)), '..', 'report.mjs');
 const tmp = mkdtempSync(join(tmpdir(), 'arena-fw-report-'));
@@ -58,6 +58,45 @@ describe('policy view over decide.mjs flags', () => {
     assert.match(md, /\*\*INCONSISTENT/);
     const ok = renderMarkdown(status({ mode: 'auto', decision: { submit: true, reasons: [] }, submission: { posted: true } }));
     assert.doesNotMatch(ok, /INCONSISTENT/);
+  });
+});
+
+describe('policy daily-best: the decision kind is stated, a re-draw is never shown as a promotion', () => {
+  const redraw = (decision, over = {}) => status({ policy: 'daily-best', mode: 'auto', decision: { kind: 'incumbent-redraw', ...decision },
+    redraw: { requestPath: '/s/redraw.json', requestSha256: HEX, submissionId: 'metaharness-darwin-2026-10-10-redraw-0123456789',
+      tasks: [{ task_id: 't1' }], checks: { checks: Object.fromEntries(CHECK_KEYS.map(k => [k, { ok: true }])) } }, ...over });
+  test('every REDRAW_KEY is placed in exactly one re-draw group', () => {
+    const grouped = REDRAW_GROUPS.flatMap(([, k]) => k);
+    assert.equal(new Set(grouped).size, grouped.length);
+    assert.deepEqual([...grouped].sort(), [...REDRAW_KEYS].sort());
+  });
+  test('a re-draw is shown over its own conditions with the honest label, in markdown and Slack', () => {
+    const s = redraw({ submit: true, reasons: [] }, { submission: { posted: true, submissionId: 'x', state: 'validating', httpStatus: 202 } });
+    const p = policyView(s);
+    assert.deepEqual(p.rows.map(r => r.result), ['PASS', 'PASS', 'PASS', 'PASS']);
+    assert.match(p.rows[0].label, /re-drawn unchanged \(no gate: not an improvement\)/);
+    assert.equal(p.allPass, true);
+    const md = renderMarkdown(s), sl = renderSlack(s);
+    for (const t of [md, sl]) {
+      assert.match(t, /Arena flywheel 2026-10-09: SKIPPED, incumbent re-draw \(mode auto\)/);
+      assert.match(t, /Kind: incumbent re-draw: .*selection on noise, not an improvement/);
+    }
+    assert.match(md, /- Re-draw request: metaharness-darwin-2026-10-10-redraw-0123456789, 1 tasks, .*checks 5\/5 passed/);
+    assert.doesNotMatch(md, /Gate promotes|INCONSISTENT/);
+  });
+  test('blocked re-draw: rows follow its reasons; candidate keys in its reasons are input problems; posted without them is INCONSISTENT', () => {
+    const p = policyView(redraw({ submit: false, reasons: ['redrawIsIncumbentRequest', 'slotFree'] }));
+    assert.deepEqual(p.rows.map(r => r.result), ['FAIL', 'PASS', 'FAIL', 'PASS']);
+    assert.deepEqual(policyView(redraw({ submit: false, reasons: ['gatePromote'] })).extra, ['gatePromote']);
+    assert.match(renderMarkdown(redraw({ submit: false, reasons: ['incumbentValidated'] }, { redraw: undefined })),
+      /Re-draw request: none rendered \(no arena-validated incumbent request\)/);
+    assert.match(renderMarkdown(redraw({ submit: false, reasons: ['slotFree'] }, { submission: { posted: true } })), /\*\*INCONSISTENT/);
+  });
+  test('a promoted kind keeps the gate rows; gate-only statuses (no kind) render without any kind text', () => {
+    const s = status({ policy: 'daily-best', mode: 'auto', decision: { submit: true, reasons: [], kind: 'promoted' } });
+    assert.match(renderMarkdown(s), /SKIPPED, promoted candidate \(mode auto\)/);
+    assert.match(policyView(s).rows[0].label, /Gate promotes/);
+    for (const t of [renderMarkdown(status()), renderSlack(status())]) assert.doesNotMatch(t, /Kind:|re-draw|promoted candidate/);
   });
 });
 

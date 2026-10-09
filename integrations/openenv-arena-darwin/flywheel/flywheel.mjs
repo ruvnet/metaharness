@@ -9,8 +9,9 @@
 // from the incumbent, its own confirmation off) -> PREREGISTERED paired confirmation (plan hash journaled before
 // any rollout; both genomes on one fresh date-derived seed block) -> gpu down -> render + checks -> gate.mjs v2
 // (--run search report + confirmation cards + Darwin-derived pairs; request digest bound when gate.mjs supports
-// it) -> decide (facts re-derived from disk by recheck.mjs; pure decideSubmit, no LLM) -> submit (auto only) ->
-// incumbent update only once `validated` -> report. gpu down also runs in `finally` on every path. Default mode is
+// it) -> [policy daily-best, no promoted candidate: re-render + re-check the validated incumbent's request] -> decide
+// (facts re-derived from disk by recheck.mjs; pure decideSubmit, no LLM) -> submit (auto only) -> incumbent update only
+// once `validated` (a re-draw never changes the incumbent genome) -> report. gpu down also runs in `finally`. Default mode is
 // dry-run, which never POSTs; --mode can only downgrade (auto needs config.json mode "auto" too).
 //
 // deps (wire.mjs builds the real ones; tests inject fakes):
@@ -28,6 +29,7 @@ import { parseArgs } from 'node:util';
 import { canonicalDigest } from './canonical-json.mjs';
 import { cardMatchesGenome, changedFamilies, confirmationPlan, confirmSeedBase, dayIndex, pairedOutcomes, pairedPower,
   preregistered, provenanceMatches } from './confirm.mjs';
+import { reportedKind } from './decide.mjs';
 import { decideAndSubmit, gatePhase, renderPhase } from './finish.mjs';
 import { writeReport } from './flywheel-report.mjs';
 import { loadIncumbent } from './incumbent.mjs';
@@ -51,14 +53,15 @@ export async function runFlywheel({ config, date, now, mode, stateDir, deps }) {
   dayIndex(date);
   if (!Number.isFinite(Date.parse(now))) throw new Error(`invalid --now: ${now}`);
   const lock = acquireLock(stateDir, { pid: deps.pid, date, startedAt: now, isPidAlive: deps.isPidAlive });
-  const st = { kind: 'arena_flywheel_status', version: 1, date, mode: runMode, startedAt: now, outcome: null, notes: [], slot: {}, gpu: {} };
+  const daily = config.policy === 'daily-best' ? { policy: 'daily-best' } : {}; // gate-only status/journal stay as before
+  const st = { kind: 'arena_flywheel_status', version: 1, date, mode: runMode, ...daily, startedAt: now, outcome: null, notes: [], slot: {}, gpu: {} };
   if (mode === 'auto' && runMode !== 'auto') st.notes.push('--mode auto ignored: config.json says dry-run (the flag can only downgrade)');
   let j = null;
   const x = { config, date, now, stateDir, deps, st, gpu: null };
   try {
     j = x.j = openJournal({ stateDir, date, clock: deps.clock });
     x.runDir = j.runDir;
-    j.append('run', 'start', { mode: runMode, startedAt: now, lockReclaimed: lock.reclaimed });
+    j.append('run', 'start', { mode: runMode, ...daily, startedAt: now, lockReclaimed: lock.reclaimed });
     await phases(x);
   } catch (e) {
     st.outcome = 'error';
@@ -67,7 +70,9 @@ export async function runFlywheel({ config, date, now, mode, stateDir, deps }) {
   } finally {
     await gpuDown(x, 'finally');
     try { st.files = writeReport(stateDir, st); } catch (e) { st.reportError = redact(e?.message); }
-    try { await deps.notify?.({ date, mode: runMode, outcome: st.outcome, submit: st.decision?.submit ?? false, reasons: st.decision?.reasons ?? [], report: st.files?.markdownPath ?? null }); }
+    const kind = reportedKind(st); // what this date POSTed, else what the decision was about (daily-best only)
+    try { await deps.notify?.({ date, mode: runMode, outcome: st.outcome, submit: st.decision?.submit ?? false, reasons: st.decision?.reasons ?? [],
+      ...(kind ? { kind } : {}), report: st.files?.markdownPath ?? null }); }
     catch (e) { st.notes.push(`notify failed: ${redact(e?.message)}`); }
     try { j?.append('run', 'end', { outcome: st.outcome }); } catch { /* best effort */ }
     lock.release();
@@ -81,7 +86,9 @@ async function phases(x) {
   if (st.outcome) return;
   const inc = await runStep(j, 'incumbent', () => loadIncumbent(x.stateDir, deps.darwin.cells));
   st.incumbent = { day1: inc.day1, source: inc.source, genomeDigest: inc.genomeDigest, submissionId: inc.submissionId };
-  if (!j.last('submit', 'intent') && loadIncumbent(x.stateDir, deps.darwin.cells).genomeDigest !== inc.genomeDigest) {
+  const onDisk = j.last('submit', 'intent') ? null : loadIncumbent(x.stateDir, deps.darwin.cells);
+  // a validated re-draw moves only the pointer (same genome), so the submission id is compared too
+  if (onDisk && (onDisk.genomeDigest !== inc.genomeDigest || onDisk.submissionId !== inc.submissionId)) {
     st.outcome = 'incumbent-changed'; // a pending submission was validated after this date's run stored its incumbent
     st.notes.push('incumbent changed since this date first ran: this date is skipped; the next date starts from the new incumbent');
     return;
@@ -129,8 +136,15 @@ async function phases(x) {
       alpha: Number(pg.alpha), lambda: Number(pg.lambda) });
     if (!gate.bindingSupported) st.notes.push('gate.mjs cannot bind the request digest yet (Darwin-lane change request): auto-submit stays blocked');
   }
-  if (inc.day1 && !(gate?.promote === true && gate?.verified === true)) {
+  const promoted = gate?.promote === true && gate?.verified === true;
+  if (inc.day1 && !promoted) {
     st.needsHuman = await renderPhase(x, 'needs-human', inc.genome, contextTokens);
+  }
+  // daily-best: no promoted candidate -> re-render the arena-validated incumbent (fresh id) and re-run every check today.
+  // Day 1 has no validated incumbent request, so it stays needs-human. (A same-date rerun resumes the gate phase result
+  // too, so a re-draw rendered earlier this date is resumed here even if the receipt verifies at decision time now.)
+  if (config.policy === 'daily-best' && !inc.day1 && !promoted) {
+    st.redraw = await renderPhase(x, 'incumbent-redraw', inc.genome, contextTokens);
   }
   await decideAndSubmit(x, { inc, search, cand, plan, conf, req, gate });
 }
@@ -263,7 +277,8 @@ async function main(argv, env = process.env) {
   try {
     const st = await runFlywheel({ config, date: o.date, now: o.now ?? deps.clock(), mode: o.mode, stateDir, deps });
     process.stdout.write(`${JSON.stringify({ date: st.date, mode: st.mode, outcome: st.outcome, submit: st.decision?.submit ?? false,
-      reasons: st.decision?.reasons ?? [], report: st.files?.markdownPath ?? null, error: st.error ?? null })}\n`);
+      reasons: st.decision?.reasons ?? [], ...(reportedKind(st) ? { kind: reportedKind(st) } : {}), report: st.files?.markdownPath ?? null,
+      error: st.error ?? null })}\n`);
     return st.outcome === 'error' ? EXIT.error : EXIT.ok;
   } catch (e) {
     process.stderr.write(`flywheel: ${redact(e.message)}\n`);

@@ -45,11 +45,13 @@ export function makeFakes(o = {}) {
   const calls = { ready: 0, search: [], evaluate: [], gate: [], verify: [], up: [], down: [], destroy: [], precheck: 0, recover: 0,
     render: [], slot: 0, status: 0, standing: [], getSubmission: [], submit: [], sleep: [], notify: [] };
   let tick = 0;
+  const t0 = Date.parse(o.start ?? START); // o.start: the fake clock follows a later run date (default: START)
   const throwAt = (point) => { if (o.throwAt === point) throw new Error(o.throwMessage ?? `injected failure at ${point}`); };
   const prov = ({ seedBase, attempts }) => ({ envSourceSha: 'a'.repeat(64), runnerSha: 'b'.repeat(64), serverSha: 'c'.repeat(64), runnerArgsSha: 'd'.repeat(64), model: 'qwen38',
     modelRevision: 'r1', contextTokens: 16384, seedBase, attempts });
   const statusSeq = [...(o.statusSeq ?? ['validated'])];
   const slotSeq = [...(o.slotSeq ?? [])];
+  const verifySeq = [...(o.verifySeq ?? [])]; // per verify() call (gate time, then decision time); then verifyOk
   const darwin = {
     cells: { FAMILIES, baselineGenome, genomeToCells },
     digestOf,
@@ -95,7 +97,7 @@ export function makeFakes(o = {}) {
       throwAt('verify');
       const r = readJson(receiptPath);
       // like darwin-steps verify(): pinned = the receipt's key IS the pin in force at call time (o.pinNow rotates it)
-      return { verified: o.verifyOk ?? true, promote: r.payload.promote, exitCode: 0, publicKey: r.publicKey, payload: r.payload,
+      return { verified: verifySeq.length ? verifySeq.shift() : (o.verifyOk ?? true), promote: r.payload.promote, exitCode: 0, publicKey: r.publicKey, payload: r.payload,
         publicKeyPinned: (o.pinned ?? true) && r.publicKey === (o.pinNow?.() ?? PUBKEY) };
     },
   };
@@ -107,7 +109,7 @@ export function makeFakes(o = {}) {
       journal({ phase: 'gpu.spend_ok', plannedUsd: 11.38 });
       if (o.upRefuses) { const e = new Error('spend refused: no offer'); e.name = 'SpendRefused'; throw e; }
       throwAt('up');
-      return { instanceId: 4242 + calls.up.length, baseUrl: 'http://127.0.0.1:9/v1', deadlineEpoch: Date.parse(START) / 1000 + 3 * 3600,
+      return { instanceId: 4242 + calls.up.length, baseUrl: 'http://127.0.0.1:9/v1', deadlineEpoch: t0 / 1000 + 3 * 3600,
         plannedUsd: 11.38, teardown: () => { throw new Error('flywheel must call deps.gpu.down, not teardown directly'); } };
     },
     async down(h) { calls.down.push(h.instanceId); if (o.downThrows) throw new Error('vast destroy failed'); return { confirmed: true }; },
@@ -132,7 +134,7 @@ export function makeFakes(o = {}) {
         replay: { ...ok('replay'), taskIds: ids } };
       const allOk = !o.failCheck;
       const report = { kind: 'arena_flywheel_presubmit_check', ok: allOk, reasons: allOk ? [] : [`${o.failCheck}_failed`], image: request.image,
-        submission_id: opts.submissionId, request_sha256: sha, request_path: requestPath, checks };
+        checked_at: o.checkedAt ?? opts.checkedAt ?? null, submission_id: opts.submissionId, request_sha256: sha, request_path: requestPath, checks };
       const reportPath = writeJson(join(opts.outDir, 'presubmit-check.json'), report); // the decision re-reads it from disk
       return { ...report, report_path: reportPath };
     },
@@ -155,12 +157,13 @@ export function makeFakes(o = {}) {
       const inc = o.stateDirFn && existsSync(join(o.stateDirFn(), 'incumbent.json')) ? readJson(join(o.stateDirFn(), 'incumbent.json')).submissionId : null;
       const latestValidatedId = o.ownListUnknown ? undefined : o.latestValidatedId !== undefined ? o.latestValidatedId : inc;
       return s === true ? { free: true, reasons: [], freeAtMs: null, latestValidatedId }
-        : { free: false, reasons: ['slot_in_use'], freeAtMs: o.freeAtMs ?? Date.parse(START) + 20 * 3600e3, latestValidatedId };
+        : { free: false, reasons: ['slot_in_use'], freeAtMs: o.freeAtMs ?? t0 + 20 * 3600e3, latestValidatedId };
     },
     async getSubmission(id) {
       calls.getSubmission.push(id);
       const state = statusSeq.length > 1 ? statusSeq.shift() : statusSeq[0];
-      return state === null ? null : { submission_id: id, state, slot_state: state === 'validated' ? 'used' : 'held' };
+      return state === null ? null : { submission_id: id, state, slot_state: state === 'validated' ? 'used' : 'held',
+        ...(o.errorOrigin !== undefined && state === 'rejected' ? { error_origin: o.errorOrigin } : {}) }; // 'author' | 'platform'
     },
     async submit({ request, approvedSha256, receiptPath }) {
       calls.submit.push({ request, approvedSha256, receiptPath });
@@ -170,7 +173,7 @@ export function makeFakes(o = {}) {
   };
   const deps = {
     pid: o.pid ?? process.pid, isPidAlive: o.isPidAlive ?? (pid => pid === process.pid),
-    clock: () => new Date(Date.parse(START) + 1000 * tick++).toISOString(), nowMs: () => Date.parse(START) + 1000 * tick,
+    clock: () => new Date(t0 + 1000 * tick++).toISOString(), nowMs: () => t0 + 1000 * tick,
     sleep: async ms => { calls.sleep.push(ms); },
     notify: async s => { calls.notify.push(s); throwAt('notify'); },
     darwin, gpu, renderCheck, arena,

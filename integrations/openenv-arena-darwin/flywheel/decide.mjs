@@ -6,9 +6,17 @@
 // DECISION_KEYS order. buildDecisionFlags(facts) derives the flags from raw run facts (also pure); the facts
 // themselves are re-derived from the files on disk at decision time (recheck.mjs), never resumed booleans.
 //
-// Policy (owner rUv): auto-submit only when (1) the Flywheel gate promotes the candidate and its signed
-// receipt verifies against the pinned key; (2) every pre-submit check passed on THIS request and image and
+// Policy `gate-only` (the default; owner rUv): auto-submit only when (1) the Flywheel gate promotes the candidate and
+// its signed receipt verifies against the pinned key; (2) every pre-submit check passed on THIS request and image and
 // the request digest is the one bound into the gate receipt; (3) the 24 h slot is free; (4) mode = auto.
+//
+// Policy `daily-best` (owner standing approval, 2026-10-08): submit the best available request every day. The KIND is
+// chosen by gatePromote && gateReceiptVerified alone: 'promoted' -> the candidate's request under exactly the
+// DECISION_KEYS above; otherwise 'incumbent-redraw' -> the arena-validated incumbent's request, re-rendered unchanged
+// with a fresh submission_id, under REDRAW_KEYS (every pre-submit check again, today; not if the arena rejected that
+// body since). A promoted kind whose other
+// conditions fail blocks; it never falls through to a re-draw, so every condition stays load-bearing in both policies.
+// A re-draw is another sample of the same request: selection on noise, never an improvement.
 import { SHA256_RE } from './canonical-json.mjs';
 
 export const DECISION_KEYS = Object.freeze([
@@ -29,15 +37,57 @@ export const DECISION_KEYS = Object.freeze([
   'runDateIsToday', 'slotFree', 'notAlreadySubmitted',
 ]);
 
+export const POLICIES = Object.freeze(['gate-only', 'daily-best']);
+
+/** daily-best, kind 'incumbent-redraw': the conditions for re-submitting the arena-validated incumbent's request. */
+export const REDRAW_KEYS = Object.freeze([
+  'modeAuto',
+  // the incumbent itself: validated by the arena, agreed by the board, re-rendered unchanged (fresh id only), and that
+  // body not rejected by the arena since (an author-origin rejection is never POSTed again without a human)
+  'leaderboardAgreesWithIncumbent', 'darwinEvidenceIsScorecards', 'incumbentValidated', 'requestRenderedForIncumbent',
+  'redrawIsIncumbentRequest', 'incumbentBodyNotRejected',
+  // every pre-submit check on THIS request and image, run today
+  'requestDigestValid', 'checksForThisRequest', 'envLaneCommitPinned', 'redrawCheckedToday',
+  'imagePulledAnonymously', 'openenvValidatePassed', 'exampleReplayAllTasksPassed', 'schemaEqual', 'limitsOk',
+  'runDateIsToday', 'slotFree', 'notAlreadySubmitted',
+]);
+/** Re-draw conditions about whether a valid incumbent request exists at all: one of them failing = needs-human. */
+export const REDRAW_REQUEST_KEYS = Object.freeze(['incumbentValidated', 'requestRenderedForIncumbent', 'redrawIsIncumbentRequest',
+  'incumbentBodyNotRejected', 'requestDigestValid', 'checksForThisRequest', 'envLaneCommitPinned', 'redrawCheckedToday',
+  'imagePulledAnonymously', 'openenvValidatePassed', 'exampleReplayAllTasksPassed', 'schemaEqual', 'limitsOk']);
+/** One wording for every report, so a public post states the kind honestly. */
+export const KIND_LABELS = Object.freeze({
+  promoted: 'promoted candidate: the Flywheel gate promoted it on preregistered paired evidence (verified receipt)',
+  'incumbent-redraw': 'incumbent re-draw: the arena-validated incumbent request again with a fresh submission_id; selection on noise, not an improvement',
+});
+/** The kind a status reports: what this date POSTed (submission.kind, from the journaled intent), else the decision's
+ *  kind. A same-date rerun recomputes the decision; it never relabels what was already submitted. */
+export const reportedKind = s => s?.submission?.kind ?? s?.decision?.kind ?? null;
+
 const KEY_SET = new Set(DECISION_KEYS);
+const DAILY_KEY_SET = new Set([...DECISION_KEYS, ...REDRAW_KEYS]);
 const isObj = v => v !== null && typeof v === 'object' && !Array.isArray(v);
 
-/** The decision. Fails closed on any non-object input, missing key, non-`true` value or unknown key. */
-export function decideSubmit(flags) {
-  if (!isObj(flags)) return { submit: false, reasons: ['invalid_decision_input'] };
-  const reasons = DECISION_KEYS.filter(k => flags[k] !== true);
-  for (const k of Object.keys(flags).sort()) if (!KEY_SET.has(k)) reasons.push(`unexpected_flag:${k}`);
-  return { submit: reasons.length === 0, reasons };
+/** daily-best: which request today's decision is about. Only a promoted gate with a verified receipt names the candidate. */
+export const decisionKind = flags => (isObj(flags) && flags.gatePromote === true && flags.gateReceiptVerified === true ? 'promoted' : 'incumbent-redraw');
+
+/**
+ * The decision. Fails closed on any non-object input, missing key, non-`true` value, unknown key or unknown policy.
+ * gate-only -> {submit, reasons} (unchanged); daily-best -> {submit, reasons, kind} over the kind's own key list.
+ */
+export function decideSubmit(flags, policy = 'gate-only') {
+  if (policy === 'gate-only') {
+    if (!isObj(flags)) return { submit: false, reasons: ['invalid_decision_input'] };
+    const reasons = DECISION_KEYS.filter(k => flags[k] !== true);
+    for (const k of Object.keys(flags).sort()) if (!KEY_SET.has(k)) reasons.push(`unexpected_flag:${k}`);
+    return { submit: reasons.length === 0, reasons };
+  }
+  if (policy !== 'daily-best') return { submit: false, reasons: ['invalid_policy'], kind: null };
+  if (!isObj(flags)) return { submit: false, reasons: ['invalid_decision_input'], kind: null };
+  const kind = decisionKind(flags);
+  const reasons = (kind === 'promoted' ? DECISION_KEYS : REDRAW_KEYS).filter(k => flags[k] !== true);
+  for (const k of Object.keys(flags).sort()) if (!DAILY_KEY_SET.has(k)) reasons.push(`unexpected_flag:${k}`);
+  return { submit: reasons.length === 0, reasons, kind };
 }
 
 const ok = check => isObj(check) && check.ok === true;
@@ -79,8 +129,38 @@ export function boardAgrees(incumbent, board) {
  *   checks:{requestSha256, image, envSourceSha, envCommit, envDirty,
  *           checks:{anonymousPull, openenvValidate, exampleReplay, schemaEqual, limits}},
  *   expectEnvCommit, dates:{run, today}, slot:{free}, alreadySubmitted
+ * policy 'daily-best' adds the re-draw-only flags, from (with `request`/`checks` then describing the RE-DRAW request):
+ *   incumbentRecord:{state, genomeDigest, submissionId, requestSha256, requestBodySha256, lastRejected} (incumbent.json as
+ *   on disk at decision time), request:{..., tasksMatchIncumbent, submissionId, bodySha256, asValidatedSha256},
+ *   checks:{..., checkedDate}, clockToday (the Toronto date of the decision-time clock, not of the caller's --now)
  */
-export function buildDecisionFlags(f = {}) {
+export function buildDecisionFlags(f = {}, policy = 'gate-only') {
+  const flags = gateOnlyFlags(f);
+  if (policy !== 'daily-best') return flags;
+  const r = f.request ?? {}, rec = isObj(f.incumbentRecord) ? f.incumbentRecord : null, inc = f.incumbent ?? {};
+  const rej = rec?.lastRejected;
+  return { ...flags,
+    // the incumbent was itself accepted + validated by the arena, and incumbent.json on disk NOW is this run's incumbent
+    incumbentValidated: inc.day1 === false && rec !== null && rec.state === 'validated' && sameHex(rec.genomeDigest, inc.genomeDigest)
+      && typeof rec.submissionId === 'string' && rec.submissionId === inc.submissionId,
+    // rendered from the incumbent genome for config.image, under a fresh submission_id (never the validated one's)
+    requestRenderedForIncumbent: r.renderedFor === 'incumbent-redraw' && r.tasksMatchIncumbent === true && typeof r.image === 'string'
+      && r.image === r.expectedImage && sameHex(r.genomeDigest, inc.genomeDigest)
+      && typeof r.submissionId === 'string' && typeof inc.submissionId === 'string' && r.submissionId !== inc.submissionId,
+    // byte-identical to the validated request apart from submission_id and name: a re-draw, never a lookalike. The body
+    // digest alone is a hand-writable claim, so the re-draw body under the validated submission's own id and name must
+    // also reproduce requestSha256, the digest of the bytes arena-api.mjs actually POSTed for it.
+    redrawIsIncumbentRequest: rec !== null && sameHex(r.bodySha256, rec.requestBodySha256) && sameHex(r.asValidatedSha256, rec.requestSha256),
+    // no author-origin rejection of this body is recorded since it was validated (a malformed record blocks too)
+    incumbentBodyNotRejected: rec !== null && (rej === undefined || rej === null
+      || (isObj(rej) && hex(rej.requestBodySha256) && rej.requestBodySha256 !== rec.requestBodySha256 && rej.requestBodySha256 !== r.bodySha256)),
+    // the pre-submit checks of this request ran today by the run date AND by the decision-time clock (a resumed,
+    // pre-dated or stale --now run never reuses older checks)
+    redrawCheckedToday: typeof f.checks?.checkedDate === 'string' && f.checks.checkedDate === f.dates?.today && f.checks.checkedDate === f.clockToday,
+  };
+}
+
+function gateOnlyFlags(f) {
   const g = f.gate ?? {}, r = f.request ?? {}, c = f.confirmation ?? {}, ch = f.checks ?? {}, cs = ch.checks ?? {}, p = f.plan ?? {};
   const candidatePresent = isObj(f.candidate) && hex(f.candidate.genomeDigest);
   return {

@@ -2,7 +2,7 @@
 
 The flywheel runs once a day on ruvultra as a systemd **user** timer. It searches for a better OpenEnv Arena environment
 configuration and tests the result on fresh seeds. It renders and checks a submission request, and submits only when every
-policy condition holds and the mode is `auto`.
+policy condition holds and the mode is `auto`. The `policy` setting decides what may be submitted (see [Policy](#policy-gate-only-or-daily-best)).
 
 The default mode is **dry-run**, which never POSTs. No LLM takes part in the submit decision: `decide.mjs` is a pure
 function. Slack messages and comments on the board are never approval.
@@ -19,12 +19,42 @@ function. Slack messages and comments on the board are never approval.
 | 6 | GPU down | Also runs in `finally` on every path. |
 | 7 | Render and check | Renders the request with the env lane's `submission.py`, then pulls the exact digest anonymously, hashes the env source INSIDE that image (`arena_env/{tasks,environment}.py`, the `lib/provenance.mjs` formula) and runs `openenv validate`, a `/schema` equality check, the arena limits and an example-action replay of every task ID. The env lane's scripts run with an empty `HOME`/`HF_HOME` and the hub offline. |
 | 8 | Gate | `gate.mjs` v2 takes `--run`, the confirmation cards and the pairs, at the PREREGISTERED `alpha`, `lambda` and `candidateBudget` (from the plan, never today's config). Its receipt is verified against the pinned key. |
-| 9 | Decide | Every fact is re-derived from the files on disk and the current config (`recheck.mjs`; the receipt is verified again against today's pin). `decideSubmit`: 31 named conditions must each be exactly `true`, including `candidateMatchesPlan`, `gateConfigMatchesPlan`, `envLaneCommitPinned`, `imageEnvSourceMatchesPlan` and `runDateIsToday`. |
-| 10 | Submit | Auto mode only: one POST of the approved bytes, behind a receipt and a pending record. Then the result is polled. The incumbent moves only on `validated`. |
+| 8b | Re-draw | `daily-best` only, when the gate did not promote with a verified receipt and an arena-validated incumbent exists: renders the incumbent's request again under a fresh submission_id and runs every check of step 7 on it. |
+| 9 | Decide | Every fact is re-derived from the files on disk and the current config (`recheck.mjs`; the receipt is verified again against today's pin). `decideSubmit`: 31 named conditions must each be exactly `true`, including `candidateMatchesPlan`, `gateConfigMatchesPlan`, `envLaneCommitPinned`, `imageEnvSourceMatchesPlan` and `runDateIsToday`. A re-draw uses its own 19 conditions. |
+| 10 | Submit | Auto mode only: one POST of the approved bytes, behind a receipt and a pending record. Then the result is polled. The incumbent moves only on `validated`, and a re-draw never changes its genome. |
 | 11 | Report | Writes `reports/<date>/status.json` and `report.md`. |
 
 On day 1, if the gate does not promote, the tick renders a **needs-human** request for the v2 defaults
-(8 × `<family>-d2`) and does not submit it.
+(8 × `<family>-d2`) and does not submit it. This holds under both policies.
+
+## Policy: gate-only or daily-best
+
+`policy` in the config selects what may be submitted. The default is `gate-only`. `daily-best` implements the owner's
+standing approval of 2026-10-08: submit the best available request every day. Neither policy changes the mode rules.
+Dry-run never POSTs, and `auto` still requires `checks.expectEnvCommit`. To enable it, set in `config.json`:
+`"policy": "daily-best"`, `"mode": "auto"` and `"checks": {"expectEnvCommit": "<40-hex commit of checks.envDir>"}`.
+
+| Situation on the day | `gate-only` | `daily-best` |
+|---|---|---|
+| Gate promotes, receipt verifies, and every other condition holds | Submit the candidate | Submit the candidate, kind `promoted` |
+| Gate promotes, receipt verifies, but another condition fails | Skip | Skip. It does **not** fall back to a re-draw |
+| No promotion with a verified receipt, and a validated incumbent exists | Skip | Submit an **incumbent re-draw**, kind `incumbent-redraw`, if all 19 re-draw conditions hold |
+| No promotion and no validated incumbent (day 1) | `needs-human` | `needs-human` |
+| A re-draw condition about the request fails (render, body, rejection, checks, check date) | — | `needs-human` |
+
+- **What a re-draw is.** It is the arena-validated incumbent's request again, with a fresh submission_id (`<prefix>-<date>-redraw-<hash>`).
+  - `redrawIsIncumbentRequest`: the request body without `submission_id` and `name` must hash to `incumbent.json`'s `requestBodySha256`, AND that body with the validated submission's own `submissionId` and `requestName` must reproduce its `requestSha256` (the digest of the bytes actually POSTed). If the image, task limits, context budget or env lane renderer changed, the re-draw is blocked.
+  - `incumbentBodyNotRejected`: the arena has not rejected this body since it was validated. An author-origin (or unknown-origin) rejection of a re-draw adds `lastRejected` to `incumbent.json`, and re-draws then stop (`needs-human`) until a promoted candidate is validated or a human removes the field. A platform-origin rejection gives the slot back and is not recorded.
+  - `requestRenderedForIncumbent`: the request is rendered from the incumbent genome for `config.image`, under an id that is not the validated one.
+  - `incumbentValidated`: `incumbent.json` on disk is this run's incumbent and was validated by the arena.
+  - `redrawCheckedToday`: the pre-submit check report is dated today, both by the run date and by the clock at decision time. A resumed, pre-dated or stale-`--now` run never reuses older checks. (The candidate path's `runDateIsToday` still trusts `--now`; the systemd tick sets it itself.)
+  - The shared conditions apply as for a candidate: every pre-submit check, the board agreement, the slot, `runDateIsToday`, `notAlreadySubmitted` and `modeAuto`. `darwinEvidenceIsScorecards` also applies, so an `evaluator.dryRun` rehearsal still never submits. So does a day whose search failed or whose GPU rental was refused: that day ends before the re-draw.
+  - The gate, plan and confirmation conditions do not apply, because a re-draw has no receipt. The approved digest is still bound to the POST by `arena-api.mjs`.
+- **What a re-draw is not.** It is another draw of the same request. That is selection on noise, not an improvement. `report.md`, `report.mjs` (Markdown and Slack), the notification and the journal (`decide/done`, `submit/intent`) all state the kind, so public posts can say which one it was. Once a date has POSTed, its reports state the kind that was POSTed (from the journaled intent), never a rerun's recomputed one.
+- **Incumbent.** A promoted candidate replaces the incumbent only after it is `validated`, as before. A validated re-draw never changes the genome. It moves `incumbent.json`'s `submissionId`/`date` to the newest validated own submission, so the next board check agrees, and keeps the submission that set the genome in `genomeFrom`. A date whose stored incumbent no longer matches `incumbent.json` (genome or pointer) ends `incumbent-changed`.
+- **"Best-measured" incumbent and the first submission.** No other record of a best-measured genome exists: re-draws come only from `incumbent.json`, written only from a validated submission. So from a fresh state `daily-best` submits nothing until the gate promotes (which needs the `gate.mjs` request binding) or a human bootstraps it: submit the day-1 `needs-human` request (`runs/<date>/needs-human/attempt-N/request.json`) by hand, and once it is `validated`, write `incumbent.json` from that exact file. Every field must come from the file whose canonical digest equals the arena receipt's `request_sha256`:
+  `node -e "Promise.all(['./flywheel/incumbent.mjs','./flywheel/canonical-json.mjs','./lib/cells.mjs'].map(m=>import(m))).then(([i,c,l])=>{const r=JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'));i.writeIncumbent(process.argv[2],{genome:l.baselineGenome(),submissionId:r.submission_id,requestSha256:c.canonicalDigest(r),requestBodySha256:i.requestBodyDigest(r),requestName:r.name,date:process.argv[3],state:'validated'})})" <request.json> ~/.local/state/arena-flywheel <date>`
+  (run from `integrations/openenv-arena-darwin/`, with no tick running). A record without `requestSha256`, `requestBodySha256` and `requestName` keeps re-draws blocked.
 
 ## Install
 
@@ -73,12 +103,13 @@ loginctl enable-linger ruvultra                                                #
 | Key | Default | Meaning |
 |---|---|---|
 | `mode` | `dry-run` | `auto` is the only mode that can POST |
+| `policy` | `gate-only` | `gate-only` or `daily-best` (see [Policy](#policy-gate-only-or-daily-best)). Any other value is refused |
 | `darwin.generations` / `children` / `maxTotalNewCells` | 2 / 3 / 14 | Search size. `maxTotalNewCells` counts runner calls, at `searchAttempts/4` per cell |
 | `darwin.searchAttempts` | 4 | Episodes per cell in the search (run-darwin's `--attempts`) |
 | `confirmation.attempts` | 8 | Episodes per cell in the confirmation. Decides whether the gate can ever promote (see below) |
 | `gate.candidateBudget` | `null` | Alpha is split over this. `null` uses gate.mjs v2's default, the number of search candidates evaluated |
 | `gate.keyDir` | `~/.config/arena-flywheel/gate-key` | Ed25519 signing key, mode 0700. Must be outside any git work tree |
-| `gate.expectPublicKey` | `null` | Operator pin. Without it `gatePublicKeyPinned` is false and nothing submits. Rotating it revokes every receipt not yet submitted |
+| `gate.expectPublicKey` | `null` | Operator pin. Without it `gatePublicKeyPinned` is false and no candidate submits (a `daily-best` re-draw has no receipt). Rotating it revokes every receipt not yet submitted |
 | `checks.expectEnvCommit` | none | Full 40-hex commit of `checks.envDir`. **Required by `mode: "auto"`** (config refused otherwise); the worktree must be clean (`envLaneCommitPinned`) |
 | `caps.dailyUsd` / `totalUsd` | 12 / 200 | Spend caps. "Daily" is the America/Toronto calendar date of each rental. The ledger is seeded with 5.00 USD of prior manual spend, and never re-seeded once a rental is journaled (a deleted `spend.jsonl` refuses all renting) |
 | `gpu.*` | `gpu.mjs` `GPU_DEFAULTS` | Offer query, `maxDphUsd` 3.5, `maxGpuHours` 3 (watchdog deadline), `localPort` 8100 |
@@ -110,6 +141,7 @@ Switch to auto only after reviewing at least one dry-run tick in which **every f
 2. **Statistical power.** The gate needs `ceil(ln(candidateBudget/0.05)/ln 1.5)` paired blocks. Today that is 13 when 7 candidates are evaluated, or 8 with `candidateBudget: 1`. A one-family change at 8 attempts gives 2. `report.md` prints the attempts that would be needed. Raise `confirmation.attempts` or accept needs-human days.
 3. **Pin and limits.** Set `gate.expectPublicKey` and `checks.expectEnvCommit`. Review `submission.taskLimits.rollout_wall_s` and the spend caps.
 4. **One environment.** `imageEnvSourceMatchesPlan` requires the env source inside `image` to equal the one the confirmation measured (`evaluator.envDir`). Measured: image `2f3f12b9` and the knobs worktree 0af81c55 hash to `a60e9dfb…`; image `77b83bb4` and the v3 worktree 36db9a71 (needed for `--thinking off`) hash to `8b503376…`. Pair them accordingly (`image`, `checks.envDir`, `checks.expectEnvCommit`, `evaluator.envDir`).
+   Under `daily-best`, items 1 and 2 gate only promoted submissions. A re-draw needs an arena-validated incumbent, so it never submits before one exists (see the bootstrap in [Policy](#policy-gate-only-or-daily-best)).
 5. **Flip it.** Set `"mode": "auto"` in the config. The next tick uses it. `--mode` can only downgrade: `--mode auto` with a dry-run config stays dry-run, and `runDateIsToday` refuses any `--date` that is not the Toronto date of `--now`. For a single manual auto tick (config already auto):
    `node --experimental-strip-types flywheel.mjs --date $(TZ=America/Toronto date +%F) --now $(date -u +%FT%TZ)`
 
@@ -123,7 +155,7 @@ State lives in `~/.local/state/arena-flywheel/`. Every write is append-only or a
 |---|---|
 | `reports/<date>/report.md`, `status.json` | The day's long report and machine status: decision, flags, candidate, confirmation, gate, requests, GPU, slot, notes |
 | `journal.jsonl` | Every phase event of every run, with timestamps, plan hashes, digests and decisions |
-| `runs/<date>/` | Phase results (for resume), the Darwin work root, confirmation cards and pairs, gate receipts, and rendered requests with check reports (`candidate/`, `needs-human/`) |
+| `runs/<date>/` | Phase results (for resume), the Darwin work root, confirmation cards and pairs, gate receipts, and rendered requests with check reports (`candidate/`, `needs-human/`, `incumbent-redraw/`) |
 | `spend.jsonl` | GPU spend ledger: `seed`, `planned`, `cancelled` and `settled` rows |
 | `pending-submission.json`, `incumbent.json`, `quota.json` | Submission state. Never edit these while a tick is running |
 
@@ -132,12 +164,12 @@ Short summary: `node flywheel/report.mjs` (add `--format slack` for the Slack te
 | Outcome | Meaning |
 |---|---|
 | `skipped` | There was a candidate, but at least one flag was false. The reasons are listed |
-| `needs-human` | Day 1 and the gate did not promote. `runs/<date>/needs-human/.../request.json` is the v2-defaults request for a human to review |
+| `needs-human` | Day 1 and the gate did not promote. `runs/<date>/needs-human/.../request.json` is the v2-defaults request for a human to review. Under `daily-best`, also a day N whose re-draw request is invalid (the reasons say which condition) |
 | `no-candidate` | Darwin did not beat the incumbent (day N) |
 | `slot-busy` | The 24 h slot is held or unreadable (fail closed), or the arena returned 429. No GPU was rented |
 | `budget-refused` | A cap, Vast credit or offer check refused to rent |
 | `incumbent-mismatch` | Local `incumbent.json` disagrees with the public leaderboard. A human must reconcile it. No GPU was rented |
-| `incumbent-changed` | A pending submission was validated after this date first ran. The date is skipped |
+| `incumbent-changed` | A pending submission (a candidate, or a re-draw that moved the pointer) was validated after this date first ran. The date is skipped |
 | `submitted-validated`, `submitted-pending`, `submitted-rejected` | A POST happened. Pending submissions are reconciled by the next tick and never re-POSTed |
 | `submit-unknown`, `submit-refused` | The outcome of a POST is unknown (reconciled later, never re-sent), or it was refused at once |
 | `error` | See `error` in the report. The GPU was still torn down |

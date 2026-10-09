@@ -2,7 +2,8 @@
 // Run: node --experimental-strip-types --test integrations/openenv-arena-darwin/flywheel/test/*.test.mjs
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildDecisionFlags, DECISION_KEYS, decideSubmit, replayCoversRequest } from '../decide.mjs';
+import { buildDecisionFlags, DECISION_KEYS, decideSubmit, decisionKind, KIND_LABELS, POLICIES, REDRAW_KEYS, REDRAW_REQUEST_KEYS,
+  replayCoversRequest } from '../decide.mjs';
 
 const allTrue = () => Object.fromEntries(DECISION_KEYS.map(k => [k, true]));
 const H = c => c.repeat(64);
@@ -141,4 +142,235 @@ test('replayCoversRequest requires the exact task-id set', () => {
   assert.equal(replayCoversRequest({ taskIds: ['a-d1', 'a-d1'] }, tasks), false);
   assert.equal(replayCoversRequest({ taskIds: [] }, []), false);
   assert.equal(replayCoversRequest({}, tasks), false);
+});
+
+// ---------------------------------------------------------------------------------------------------------------
+// Policies. gate-only must be byte-identical to the pre-policy decideSubmit; daily-best decides over the kind's keys.
+// LEGACY is a frozen copy of decideSubmit as it was before the policy field existed.
+const LEGACY_SET = new Set(DECISION_KEYS);
+function LEGACY(flags) {
+  if (flags === null || typeof flags !== 'object' || Array.isArray(flags)) return { submit: false, reasons: ['invalid_decision_input'] };
+  const reasons = DECISION_KEYS.filter(k => flags[k] !== true);
+  for (const k of Object.keys(flags).sort()) if (!LEGACY_SET.has(k)) reasons.push(`unexpected_flag:${k}`);
+  return { submit: reasons.length === 0, reasons };
+}
+const BAD = [false, undefined, null, 'true', 1, {}, []];
+const redrawTrue = () => Object.fromEntries(REDRAW_KEYS.map(k => [k, true])); // no gate keys -> kind incumbent-redraw
+const withBad = (f, k, bad) => { const g = { ...f }; if (bad === undefined) delete g[k]; else g[k] = bad; return g; };
+const same = (a, b, msg) => assert.equal(JSON.stringify(a), JSON.stringify(b), msg);
+
+test('gate-only (default and explicit) is byte-identical to the legacy decision over every single and pair sweep', () => {
+  assert.deepEqual(POLICIES, ['gate-only', 'daily-best']);
+  const inputs = [allTrue(), {}, null, undefined, 'auto', [], 42, true, { ...allTrue(), approvedInSlack: true },
+    { ...allTrue(), incumbentValidated: true }, { ...redrawTrue() }, Object.fromEntries(DECISION_KEYS.map(k => [k, false]))];
+  for (const k of DECISION_KEYS) for (const bad of BAD) inputs.push(withBad(allTrue(), k, bad));
+  for (let a = 0; a < DECISION_KEYS.length; a++) for (let b = a + 1; b < DECISION_KEYS.length; b++) {
+    inputs.push({ ...allTrue(), [DECISION_KEYS[a]]: false, [DECISION_KEYS[b]]: false });
+  }
+  for (const f of inputs) {
+    same(decideSubmit(f), LEGACY(f), JSON.stringify(f));
+    same(decideSubmit(f, 'gate-only'), LEGACY(f), JSON.stringify(f));
+    same(decideSubmit(f, undefined), LEGACY(f));
+  }
+  // the re-draw-only flags are unknown to gate-only: they can never be smuggled into a gate-only decision
+  assert.deepEqual(decideSubmit({ ...allTrue(), redrawIsIncumbentRequest: true }), { submit: false, reasons: ['unexpected_flag:redrawIsIncumbentRequest'] });
+  assert.equal('kind' in decideSubmit(allTrue()), false, 'gate-only output has no new field');
+});
+
+test('unknown policies fail closed; daily-best rejects non-objects and unknown keys', () => {
+  for (const p of ['daily', 'DAILY-BEST', 'yolo', null, 1, '']) assert.deepEqual(decideSubmit(allTrue(), p), { submit: false, reasons: ['invalid_policy'], kind: null }, String(p));
+  for (const v of [null, undefined, 'auto', [], 42, true]) assert.deepEqual(decideSubmit(v, 'daily-best'), { submit: false, reasons: ['invalid_decision_input'], kind: null });
+  assert.deepEqual(decideSubmit({ ...redrawTrue(), approvedInSlack: true }, 'daily-best'),
+    { submit: false, reasons: ['unexpected_flag:approvedInSlack'], kind: 'incumbent-redraw' });
+  assert.deepEqual(decideSubmit({ ...allTrue(), approvedInSlack: true }, 'daily-best'), { submit: false, reasons: ['unexpected_flag:approvedInSlack'], kind: 'promoted' });
+});
+
+test('daily-best: the kind is chosen by gatePromote && gateReceiptVerified alone', () => {
+  const cases = [[true, true, 'promoted'], [true, false, 'incumbent-redraw'], [false, true, 'incumbent-redraw'], [false, false, 'incumbent-redraw'],
+    ['true', true, 'incumbent-redraw'], [true, 1, 'incumbent-redraw'], [undefined, undefined, 'incumbent-redraw']];
+  for (const [promote, verified, kind] of cases) {
+    const f = { ...redrawTrue(), gatePromote: promote, gateReceiptVerified: verified };
+    assert.equal(decisionKind(f), kind, `${promote}/${verified}`);
+    assert.equal(decideSubmit(f, 'daily-best').kind, kind);
+  }
+  assert.equal(decisionKind(null), 'incumbent-redraw');
+});
+
+test('daily-best, promoted kind: all DECISION_KEYS -> submit the candidate; any other single failure blocks (never falls through)', () => {
+  const both = () => ({ ...allTrue(), ...redrawTrue() }); // a perfectly valid re-draw is available too
+  assert.deepEqual(decideSubmit(allTrue(), 'daily-best'), { submit: true, reasons: [], kind: 'promoted' });
+  assert.deepEqual(decideSubmit(both(), 'daily-best'), { submit: true, reasons: [], kind: 'promoted' });
+  for (const k of DECISION_KEYS) {
+    for (const bad of BAD) {
+      const d = decideSubmit(withBad(both(), k, bad), 'daily-best');
+      if (k === 'gatePromote' || k === 'gateReceiptVerified') { // not promoted with a verified receipt: today is a re-draw day
+        assert.deepEqual(d, { submit: true, reasons: [], kind: 'incumbent-redraw' }, `${k}=${JSON.stringify(bad)}`);
+        assert.equal(decideSubmit(withBad(allTrue(), k, bad), 'daily-best').submit, false, 'and without a valid re-draw nothing submits');
+      } else assert.deepEqual(d, { submit: false, reasons: [k], kind: 'promoted' }, `${k}=${JSON.stringify(bad)}`);
+    }
+  }
+});
+
+test('daily-best, incumbent re-draw kind: every single REDRAW condition, made non-true in any way, blocks and is named', () => {
+  assert.deepEqual(decideSubmit(redrawTrue(), 'daily-best'), { submit: true, reasons: [], kind: 'incumbent-redraw' });
+  assert.deepEqual(decideSubmit({ ...redrawTrue(), gatePromote: false, gateReceiptVerified: true }, 'daily-best'),
+    { submit: true, reasons: [], kind: 'incumbent-redraw' }, 'gate keys are allowed, just not required, for a re-draw');
+  for (const k of REDRAW_KEYS) {
+    for (const bad of BAD) assert.deepEqual(decideSubmit(withBad(redrawTrue(), k, bad), 'daily-best'), { submit: false, reasons: [k], kind: 'incumbent-redraw' }, `${k}=${JSON.stringify(bad)}`);
+  }
+  for (let a = 0; a < REDRAW_KEYS.length; a++) {
+    for (let b = a + 1; b < REDRAW_KEYS.length; b++) {
+      const f = { ...redrawTrue(), [REDRAW_KEYS[a]]: false, [REDRAW_KEYS[b]]: false };
+      assert.deepEqual(decideSubmit(f, 'daily-best').reasons, [REDRAW_KEYS[a], REDRAW_KEYS[b]]);
+    }
+  }
+  assert.deepEqual(decideSubmit(Object.fromEntries(REDRAW_KEYS.map(k => [k, false])), 'daily-best').reasons, [...REDRAW_KEYS]);
+  assert.deepEqual(decideSubmit({}, 'daily-best'), { submit: false, reasons: [...REDRAW_KEYS], kind: 'incumbent-redraw' });
+});
+
+test('daily-best: dry-run (modeAuto not true) never submits either kind', () => {
+  for (const f of [allTrue(), redrawTrue(), { ...allTrue(), ...redrawTrue() }]) {
+    for (const bad of BAD) {
+      const d = decideSubmit(withBad(f, 'modeAuto', bad), 'daily-best');
+      assert.deepEqual([d.submit, d.reasons], [false, ['modeAuto']]);
+    }
+  }
+});
+
+test('REDRAW_KEYS: the shared checks plus five re-draw-only conditions; no gate, plan or confirmation key', () => {
+  assert.equal(new Set(REDRAW_KEYS).size, REDRAW_KEYS.length);
+  const own = REDRAW_KEYS.filter(k => !DECISION_KEYS.includes(k));
+  assert.deepEqual(own, ['incumbentValidated', 'requestRenderedForIncumbent', 'redrawIsIncumbentRequest', 'incumbentBodyNotRejected', 'redrawCheckedToday']);
+  for (const k of ['modeAuto', 'leaderboardAgreesWithIncumbent', 'darwinEvidenceIsScorecards', 'requestDigestValid', 'checksForThisRequest',
+    'envLaneCommitPinned', 'imagePulledAnonymously', 'openenvValidatePassed', 'exampleReplayAllTasksPassed', 'schemaEqual', 'limitsOk',
+    'runDateIsToday', 'slotFree', 'notAlreadySubmitted']) assert.ok(REDRAW_KEYS.includes(k), k);
+  for (const k of REDRAW_KEYS) assert.ok(!/^(gate|confirmation|candidate|plan)|requestDigestBoundInGateReceipt|imageEnvSourceMatchesPlan|pairedEvidenceUsed/.test(k), k);
+  for (const k of REDRAW_REQUEST_KEYS) assert.ok(REDRAW_KEYS.includes(k), k);
+  assert.match(KIND_LABELS['incumbent-redraw'], /selection on noise, not an improvement/);
+  assert.match(KIND_LABELS.promoted, /promoted/);
+});
+
+// A consistent day-N re-draw: incumbent validated by the arena, re-rendered with a fresh id, every check passed today.
+const IMG = 'ghcr.io/x/y@sha256:' + H('9');
+const INC_ID = 'metaharness-darwin-2026-10-09-0123456789';
+function goodRedrawFacts() {
+  const sha = H('7'), body = H('8'), tasks = [{ task_id: 'math_route-d2' }, { task_id: 'finance_ledger-d3' }];
+  return {
+    mode: 'auto', darwin: { evidence: 'evaluator_scorecards' }, incumbent: { genomeDigest: H('1'), day1: false, submissionId: INC_ID },
+    leaderboard: { hasIncumbent: true, latestValidatedId: INC_ID }, candidate: { genomeDigest: H('2') },
+    gate: { promote: false, verified: true, publicKeyPinned: true },
+    incumbentRecord: { state: 'validated', genomeDigest: H('1'), submissionId: INC_ID, requestSha256: H('a'), requestBodySha256: body, lastRejected: null },
+    request: { sha256: sha, image: IMG, expectedImage: IMG, renderedFor: 'incumbent-redraw', tasks, tasksMatchIncumbent: true,
+      genomeDigest: H('1'), submissionId: 'metaharness-darwin-2026-10-10-redraw-0123456789', bodySha256: body, asValidatedSha256: H('a') },
+    checks: { requestSha256: sha, image: IMG, envSourceSha: H('5'), envCommit: COMMIT, envDirty: false, checkedDate: '2026-10-10',
+      checks: { anonymousPull: { ok: true }, openenvValidate: { ok: true }, exampleReplay: { ok: true, taskIds: ['finance_ledger-d3', 'math_route-d2'] },
+        schemaEqual: { ok: true }, limits: { ok: true } } },
+    expectEnvCommit: COMMIT, dates: { run: '2026-10-10', today: '2026-10-10' }, clockToday: '2026-10-10', slot: { free: true }, alreadySubmitted: false,
+  };
+}
+
+test('buildDecisionFlags: gate-only emits exactly DECISION_KEYS; daily-best adds the five re-draw keys', () => {
+  assert.deepEqual(Object.keys(buildDecisionFlags(goodRedrawFacts())), [...DECISION_KEYS]);
+  assert.deepEqual(Object.keys(buildDecisionFlags(goodRedrawFacts(), 'gate-only')), [...DECISION_KEYS]);
+  assert.deepEqual(Object.keys(buildDecisionFlags(goodFacts())), [...DECISION_KEYS]);
+  const flags = buildDecisionFlags(goodRedrawFacts(), 'daily-best');
+  assert.deepEqual(Object.keys(flags), [...DECISION_KEYS, 'incumbentValidated', 'requestRenderedForIncumbent', 'redrawIsIncumbentRequest',
+    'incumbentBodyNotRejected', 'redrawCheckedToday']);
+  assert.ok(REDRAW_KEYS.every(k => flags[k] === true), JSON.stringify(flags));
+  assert.deepEqual(decideSubmit(flags, 'daily-best'), { submit: true, reasons: [], kind: 'incumbent-redraw' });
+  // the candidate's facts under daily-best still decide the promoted kind exactly as gate-only does
+  const promoted = buildDecisionFlags(goodFacts(), 'daily-best');
+  assert.deepEqual(decideSubmit(promoted, 'daily-best'), { submit: true, reasons: [], kind: 'promoted' });
+  assert.deepEqual(decideSubmit(buildDecisionFlags({}, 'daily-best'), 'daily-best'), { submit: false, reasons: [...REDRAW_KEYS], kind: 'incumbent-redraw' });
+});
+
+test('buildDecisionFlags daily-best: each raw-fact defect of a re-draw maps to its condition', () => {
+  const cases = [
+    ['modeAuto', f => { f.mode = 'dry-run'; }],
+    ['leaderboardAgreesWithIncumbent', f => { f.leaderboard.latestValidatedId = 'someone-validated-later'; }],
+    ['leaderboardAgreesWithIncumbent', f => { delete f.leaderboard.latestValidatedId; }],
+    ['darwinEvidenceIsScorecards', f => { f.darwin.evidence = 'evaluator_dry_run_fake_rows_not_model_rollouts'; }],
+    // (a) the incumbent must itself have been accepted + validated by the arena, and still be on disk as such
+    ['incumbentValidated', f => { f.incumbent.day1 = true; }],
+    ['incumbentValidated', f => { f.incumbentRecord = null; }],
+    ['incumbentValidated', f => { f.incumbentRecord.state = 'validating'; }],
+    ['incumbentValidated', f => { f.incumbentRecord.genomeDigest = H('3'); }],
+    ['incumbentValidated', f => { f.incumbentRecord.submissionId = 'moved-since-this-run-loaded-it'; }],
+    // the request is the incumbent's, for config.image, under a fresh id
+    ['requestRenderedForIncumbent', f => { f.request.renderedFor = 'candidate'; }], // the wrong request fed for the kind
+    ['requestRenderedForIncumbent', f => { f.request.renderedFor = 'needs-human'; }],
+    ['requestRenderedForIncumbent', f => { f.request.tasksMatchIncumbent = false; }],
+    ['requestRenderedForIncumbent', f => { f.request.expectedImage = 'ghcr.io/x/y@sha256:' + H('6'); }],
+    ['requestRenderedForIncumbent', f => { f.request.genomeDigest = H('2'); }], // the candidate genome
+    ['requestRenderedForIncumbent', f => { f.request.submissionId = INC_ID; }], // not a fresh id
+    ['requestRenderedForIncumbent', f => { f.request.submissionId = null; }],
+    // re-draw = the validated request again, byte for byte apart from submission_id and name
+    ['redrawIsIncumbentRequest', f => { f.request.bodySha256 = H('6'); }],
+    ['redrawIsIncumbentRequest', f => { delete f.incumbentRecord.requestBodySha256; }], // a record without the body digest
+    ['redrawIsIncumbentRequest', f => { f.request.bodySha256 = null; f.incumbentRecord.requestBodySha256 = null; }],
+    // ... and the body digest is bound to the bytes the arena validated: body + validated id/name reproduce requestSha256
+    ['redrawIsIncumbentRequest', f => { f.request.asValidatedSha256 = H('6'); }], // a hand-written body digest of another body
+    ['redrawIsIncumbentRequest', f => { f.request.asValidatedSha256 = null; }], // a record without requestName
+    ['redrawIsIncumbentRequest', f => { delete f.incumbentRecord.requestSha256; }],
+    // the arena rejected this body since it was validated (author origin): never POSTed again without a human
+    ['incumbentBodyNotRejected', f => { f.incumbentRecord.lastRejected = { submissionId: 'r', requestBodySha256: H('8') }; }],
+    ['incumbentBodyNotRejected', f => { f.incumbentRecord.lastRejected = { submissionId: 'r', requestBodySha256: null }; }], // digest unknown
+    ['incumbentBodyNotRejected', f => { f.incumbentRecord.lastRejected = true; }], // malformed
+    ['incumbentBodyNotRejected', f => { f.incumbentRecord = null; }],
+    // every check, today, on this request
+    ['redrawCheckedToday', f => { f.checks.checkedDate = '2026-10-09'; }], // yesterday's check report
+    ['redrawCheckedToday', f => { f.checks.checkedDate = null; }],
+    ['redrawCheckedToday', f => { f.clockToday = '2026-10-12'; }], // a stale --now: run date and checks agree, the clock does not
+    ['redrawCheckedToday', f => { delete f.clockToday; }],
+    ['checksForThisRequest', f => { f.checks.image = 'ghcr.io/x/z@sha256:' + H('9'); }],
+    ['envLaneCommitPinned', f => { f.checks.envDirty = true; }],
+    ['envLaneCommitPinned', f => { f.expectEnvCommit = null; }],
+    ['imagePulledAnonymously', f => { f.checks.checks.anonymousPull.ok = 'yes'; }],
+    ['openenvValidatePassed', f => { delete f.checks.checks.openenvValidate; }],
+    ['schemaEqual', f => { f.checks.checks.schemaEqual = { ok: false }; }],
+    ['limitsOk', f => { f.checks.checks.limits = true; }],
+    ['exampleReplayAllTasksPassed', f => { f.checks.checks.exampleReplay.taskIds = ['math_route-d2']; }],
+    ['runDateIsToday', f => { f.dates.today = '2026-10-11'; }],
+    ['slotFree', f => { f.slot = { free: 'true' }; }],
+    ['notAlreadySubmitted', f => { f.alreadySubmitted = true; }],
+  ];
+  for (const [key, mutate] of cases) {
+    const f = goodRedrawFacts();
+    mutate(f);
+    const d = decideSubmit(buildDecisionFlags(f, 'daily-best'), 'daily-best');
+    assert.equal(d.submit, false, key);
+    assert.equal(d.kind, 'incumbent-redraw', key);
+    assert.ok(d.reasons.includes(key), `${key}: got ${d.reasons}`);
+  }
+  const f = goodRedrawFacts();
+  f.request.sha256 = 'not-a-digest';
+  assert.deepEqual(decideSubmit(buildDecisionFlags(f, 'daily-best'), 'daily-best').reasons, ['requestDigestValid', 'checksForThisRequest']);
+  const yesterday = goodRedrawFacts(); // a resumed run on a later day: both the date and the check date block
+  yesterday.dates.today = '2026-10-11';
+  assert.deepEqual(decideSubmit(buildDecisionFlags(yesterday, 'daily-best'), 'daily-best').reasons, ['redrawCheckedToday', 'runDateIsToday']);
+});
+
+test('buildDecisionFlags daily-best: binding, rejection and clock conditions name exactly themselves; gate-only ignores their facts', () => {
+  const decide = mutate => { const f = goodRedrawFacts(); mutate(f); return decideSubmit(buildDecisionFlags(f, 'daily-best'), 'daily-best'); };
+  const exact = [
+    [f => { f.request.asValidatedSha256 = H('6'); }, ['redrawIsIncumbentRequest']],
+    [f => { f.incumbentRecord.requestSha256 = 'not-hex'; }, ['redrawIsIncumbentRequest']],
+    [f => { f.incumbentRecord.lastRejected = { submissionId: 'r', date: '2026-10-10', errorOrigin: null, requestBodySha256: H('8') }; }, ['incumbentBodyNotRejected']],
+    [f => { f.incumbentRecord.lastRejected = { submissionId: 'r' }; }, ['incumbentBodyNotRejected']],
+    [f => { f.clockToday = '2026-10-12'; }, ['redrawCheckedToday']],
+    [f => { f.clockToday = null; }, ['redrawCheckedToday']],
+  ];
+  for (const [m, reasons] of exact) assert.deepEqual(decide(m), { submit: false, reasons, kind: 'incumbent-redraw' }, String(m));
+  // a recorded rejection of ANOTHER body (e.g. before a human reconciled the record) does not block this one; none at all is fine
+  for (const lastRejected of [{ submissionId: 'r', requestBodySha256: H('c') }, null, undefined]) {
+    assert.deepEqual(decide(f => { f.incumbentRecord.lastRejected = lastRejected; }), { submit: true, reasons: [], kind: 'incumbent-redraw' });
+  }
+  // gate-only never reads them: the same defects leave its flags byte-identical
+  const base = goodFacts();
+  for (const [m] of exact) {
+    const f = { ...goodFacts(), incumbentRecord: goodRedrawFacts().incumbentRecord, clockToday: '2026-10-10' };
+    m(f);
+    assert.deepEqual(buildDecisionFlags(f), buildDecisionFlags(base));
+    assert.deepEqual(buildDecisionFlags(f, 'gate-only'), buildDecisionFlags(base));
+  }
 });
