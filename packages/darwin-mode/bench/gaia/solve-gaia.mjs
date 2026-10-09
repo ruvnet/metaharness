@@ -34,6 +34,7 @@ import { fileURLToPath } from 'node:url';
 import { parseAction, stateHash } from '../swebench/agentic-loop.mjs';
 import { searchWiki, openWiki } from './wiki-tools.mjs';
 import { solveWithScaffold, mockDeps } from './scaffolds.mjs';
+import { numericFlag } from '../swebench/lib/numeric-flags.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -44,7 +45,7 @@ const rel = (p) => (isAbsolute(p) ? p : join(HERE, p));
 const MODEL = argv('--model', 'deepseek/deepseek-v4-pro');
 const MAX_STEPS = +argv('--max-steps', 12);
 const CONCURRENCY = Math.max(1, +argv('--concurrency', 4));
-const MAX_COST = +argv('--max-cost', Infinity);
+const MAX_COST = numericFlag(argv, '--max-cost', Infinity);
 const TEMP = +argv('--temperature', 0);
 const SAMPLE = +argv('--sample', 0);
 const MAX_OUT = +argv('--max-out', 6000);

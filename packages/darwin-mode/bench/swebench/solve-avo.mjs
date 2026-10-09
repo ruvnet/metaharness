@@ -24,6 +24,7 @@ import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runConformantTests } from './conformant-tests.mjs';
 import { langProfile } from './lang-profile.mjs';
+import { numericFlag } from './lib/numeric-flags.mjs';
 import {
   Ed25519ReceiptSigner,
   EphemeralGovernedMemory,
@@ -49,7 +50,7 @@ const OUT = rel(argv('--out', `results/arm-${ARM}.jsonl`));
 const CONCURRENCY = Number(argv('--concurrency', '4'));
 const LIMIT = Number(argv('--limit', '100'));
 const MODEL = argv('--model', PREREG.config.model);
-const BUDGET_USD = Number(argv('--budget-usd', '30'));
+const BUDGET_USD = numericFlag(argv, '--budget-usd', 30);
 const PER_INSTANCE_USD = PREREG.config.perInstanceBudget.maxCostUsd;
 const MAX_ACTIONS = PREREG.config.perInstanceBudget.maxActions;
 const KEY = (process.env.OPENROUTER_API_KEY || '').trim();
