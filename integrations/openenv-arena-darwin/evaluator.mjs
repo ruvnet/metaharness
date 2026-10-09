@@ -31,7 +31,7 @@ const FLAGS = {
   'model-revision': 'string', 'tokenizer-json': 'string', 'tokenizer-sha256': 'string', 'context-tokens': 'int',
   'cache-dir': 'string', 'runs-dir': 'string', 'seed-base': 'int', attempts: 'int', 'max-new-cells': 'int',
   concurrency: 'int', 'max-total-tokens': 'int', 'cell-timeout-s': 'int', 'deadline-ms': 'int', 'infra-retries': 'int',
-  'dry-run': 'bool',
+  thinking: 'string', 'dry-run': 'bool',
 };
 
 export function parseArgs(argv, env = process.env) {
@@ -41,6 +41,8 @@ export function parseArgs(argv, env = process.env) {
     tokenizerSha256: '0997f410c57a1f4e53b09e4be8f4a172d90edd9564368fb0847030937229b9f3', contextTokens: 16384,
     seedBase: 700000, attempts: 4, maxNewCells: 8, concurrency: 2, maxTotalTokens: 2_000_000,
     cellTimeoutS: RUNNER_CALL_WORST_CASE_S, infraRetries: 1, dryRun: false,
+    // The arena trainer generates ~70-240 tokens per reply (public Trackio), i.e. thinking off; measure in that regime.
+    thinking: 'off',
   };
   for (let i = 0; i < argv.length; i++) {
     const name = argv[i].startsWith('--') ? argv[i].slice(2) : null;
@@ -62,6 +64,7 @@ export function parseArgs(argv, env = process.env) {
   need(o.cellTimeoutS >= 1, '--cell-timeout-s must be >= 1');
   need(o.infraRetries <= 2, '--infra-retries must be 0..2');
   need(o.deadlineMs === undefined || o.deadlineMs >= 1000, '--deadline-ms must be >= 1000');
+  need(o.thinking === 'on' || o.thinking === 'off', '--thinking must be on or off');
   if (o.dryRun) {
     o.model ??= 'qwen38'; o.modelRevision ??= '1d4bf0f2';
   } else {

@@ -28,7 +28,8 @@ export function normalizeBaseUrl(raw) {
 }
 
 export function runnerArgsSha(o) {
-  return sha256(canon({ ...RUNNER_FIXED, maxTotalTokens: o.maxTotalTokens, tokenizerSha256: o.tokenizerSha256 }));
+  // thinking is part of the key: on/off measure different regimes and must never share a cached cell.
+  return sha256(canon({ ...RUNNER_FIXED, maxTotalTokens: o.maxTotalTokens, tokenizerSha256: o.tokenizerSha256, thinking: o.thinking ?? 'off' }));
 }
 
 /** What the endpoint actually serves. Throws (fail closed) when unreachable, non-JSON, or not serving `model`. */

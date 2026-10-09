@@ -129,7 +129,7 @@ test('real mode: --model/--model-revision required; refuses without ARENA_MODEL_
     '--difficulty', '3', '--max-steps', '8', '--max-tokens', '12000', '--request-timeout', '900', '--max-total-tokens', '2000000',
     '--accounting', 'arena', '--episode-completion-tokens', '12000', '--episode-context-tokens', '16384',
     '--tokenizer-json', '/tok.json', '--tokenizer-sha256', '0997f410c57a1f4e53b09e4be8f4a172d90edd9564368fb0847030937229b9f3',
-    '--seed', '700004', '--output', '/out.jsonl']);
+    '--seed', '700004', '--thinking', 'off', '--output', '/out.jsonl']);
 });
 
 test('cell key binds the endpoint, the SERVED model and the fixed runner args (proxy vs 27B never collide)', async (t) => {

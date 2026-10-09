@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const EVALUATOR = join(ROOT, 'evaluator.mjs');
-const V2 = process.env.DARWIN_ARENA_ENV_DIR ?? '/home/ruvultra/projects/metaharness-arena-v2/integrations/openenv-arena';
+const V2 = process.env.DARWIN_ARENA_ENV_DIR ?? '/home/ruvultra/projects/metaharness-arena-v3/integrations/openenv-arena';
 const VENV_PY = process.env.DARWIN_ARENA_PYTHON ?? '/tmp/arena383venv/bin/python';
 const TOKENIZER = process.env.DARWIN_ARENA_TOKENIZER_JSON
   ?? '/home/ruvultra/.cache/claude-code/tmp/claude-1000/-home-ruvultra-metaharness/fdc9c3bf-0e2e-4419-9363-e2abdaffd1c5/scratchpad/tok/tokenizer.json';

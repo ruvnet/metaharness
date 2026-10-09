@@ -67,7 +67,7 @@ export function runnerArgv(o, cell, seed, output) {
     '--max-total-tokens', String(o.maxTotalTokens), '--accounting', RUNNER_FIXED.accounting,
     '--episode-completion-tokens', String(cell.budget), '--episode-context-tokens', String(o.contextTokens),
     '--tokenizer-json', o.tokenizerJson, '--tokenizer-sha256', o.tokenizerSha256, '--seed', String(seed),
-    '--output', output, ...knobArgs(cell)];
+    '--thinking', o.thinking, '--output', output, ...knobArgs(cell)];
 }
 
 const readJsonl = (path) => readFileSync(path, 'utf8').split('\n').filter((l) => l.trim()).map((l) => JSON.parse(l));
