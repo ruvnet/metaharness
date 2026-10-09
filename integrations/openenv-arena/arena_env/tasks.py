@@ -18,6 +18,7 @@ import itertools
 import json
 import math
 import random
+import re
 from collections import deque
 from fractions import Fraction
 from typing import Any
@@ -33,6 +34,63 @@ DOMAINS = dict(zip(TASK_IDS, [
     "office and white-collar work", "finance and economics", "math and formal reasoning",
     "cybersecurity", "media and content production",
 ]))
+
+# Generator data dimensions only. These cannot change grading, protocol, model,
+# token budgets, seeds or task identity. Defaults preserve the version-2 stream.
+KNOBS = {
+    "software_change": {"suite_count_delta": {"type": "int", "min": -1, "max": 2, "default": 0}},
+    "science_calibration": {"sample_count_delta": {"type": "int", "min": -2, "max": 2, "default": 0}},
+}
+
+
+def validate_task_params(family: str, params: dict | None = None) -> dict[str, int]:
+    """Return a fresh canonical parameter map, rejecting implicit coercion."""
+    if family not in TASK_IDS:
+        raise ValueError(f"Unknown task family: {family!r}")
+    if params is None:
+        return {}
+    if type(params) is not dict or len(params) > 1:
+        raise ValueError("params must contain at most one supported knob")
+    allowed = KNOBS.get(family, {})
+    normalized = {}
+    for key, value in params.items():
+        if type(key) is not str or key not in allowed:
+            raise ValueError(f"Unknown knob for {family}: {key!r}")
+        spec = allowed[key]
+        if type(value) is not int or not spec["min"] <= value <= spec["max"]:
+            raise ValueError(f"{key} must be an integer in [{spec['min']},{spec['max']}]")
+        if value != spec["default"]:
+            normalized[key] = value
+    return normalized
+
+
+def format_task_id(family: str, difficulty: int = 2, params: dict | None = None) -> str:
+    """Canonical native ID; default knobs are omitted, never p0 or m0."""
+    if type(difficulty) is not int or difficulty not in (1, 2, 3):
+        raise ValueError("difficulty must be 1, 2, or 3")
+    normalized = validate_task_params(family, params)
+    result = f"{family}-d{difficulty}"
+    if normalized:
+        key, value = next(iter(normalized.items()))
+        result += f"--{key}-{'p' if value > 0 else 'm'}{abs(value)}"
+    return result
+
+
+def parse_task_id(task_id: str) -> tuple[str, int, dict[str, int]]:
+    """Parse a legacy family ID or one canonical bounded native task ID."""
+    if type(task_id) is not str or len(task_id) > 128:
+        raise ValueError("task_id must be a bounded string")
+    if task_id in TASK_IDS:
+        return task_id, 2, {}
+    match = re.fullmatch(r"([a-z_]+)-d([123])(?:--([a-z_]+)-([pm])([1-9][0-9]*))?", task_id)
+    if match is None:
+        raise ValueError("Invalid native task ID")
+    family, level, key, sign, magnitude = match.groups()
+    params = {} if key is None else {key: int(magnitude) * (1 if sign == "p" else -1)}
+    normalized = validate_task_params(family, params)
+    if format_task_id(family, int(level), normalized) != task_id:
+        raise ValueError("Noncanonical native task ID")
+    return family, int(level), normalized
 
 
 def _json(value: Any) -> str:
@@ -68,7 +126,7 @@ def _task(task_id: str, prompt: str, files: dict, expected: dict) -> dict:
     }
 
 
-def _software(rng: random.Random, d: int) -> dict:
+def _software(rng: random.Random, d: int, params: dict | None = None) -> dict:
     names = [f"svc_{i:02}" for i in range(4 + 2 * d)]
     rng.shuffle(names)
     modules = {}
@@ -77,7 +135,7 @@ def _software(rng: random.Random, d: int) -> dict:
         modules[name] = sorted(deps)
     changed = sorted(rng.sample(names[1:1 + len(names) // 2], d))
     tests = {f"test_{i:02}": {"targets": sorted(rng.sample(names, rng.randint(1, min(4, d + 2)))),
-                             "cost": rng.randint(2, 10)} for i in range(5 + d)}
+                             "cost": rng.randint(2, 10)} for i in range(5 + d + (params or {}).get("suite_count_delta", 0))}
     # Two expensive fallback suites guarantee coverage without disclosing impact.
     tests["test_full_a"] = {"targets": names[::2], "cost": 12 + d}
     tests["test_full_b"] = {"targets": names[1::2], "cost": 12 + d}
@@ -162,14 +220,14 @@ def _industrial(rng: random.Random, d: int) -> dict:
         {"order": list(order), "completion": completion, "weighted_tardiness": penalty, "makespan": end})
 
 
-def _science(rng: random.Random, d: int) -> dict:
+def _science(rng: random.Random, d: int, params: dict | None = None) -> dict:
     gain, offset, drift = rng.randint(2, 7), rng.randint(-15, 15), rng.choice([-3, -2, -1, 1, 2, 3])
     refs = [{"reference": v, "time": t, "raw": v * gain + offset + drift * t}
             for v, t in ((5, 0), (45, 0), (5, 10))]
     rng.shuffle(refs)
     policy = {"acceptable_median": [15, 35], "max_replicate_span": rng.randint(6, 9)}
     raw, medians, quarantine, accepted = {}, {}, [], []
-    sample_ids = _ids(rng, "sample", 4 + d * 2)
+    sample_ids = _ids(rng, "sample", 4 + d * 2 + (params or {}).get("sample_count_delta", 0))
     bad_positions = set(rng.sample(range(len(sample_ids)), rng.randint(1, len(sample_ids) - 2)))
     for i, name in enumerate(sample_ids):
         base = rng.randint(19, 31)
@@ -499,7 +557,7 @@ def _media(rng: random.Random, d: int) -> dict:
 _GENERATORS = dict(zip(TASK_IDS, [_software, _industrial, _science, _office, _finance, _math, _security, _media]))
 
 
-def make_task(task_id: str, seed: int, difficulty: int = 2) -> dict:
+def make_task(task_id: str, seed: int, difficulty: int = 2, params: dict | None = None) -> dict:
     """Generate a fresh task without touching global RNG state or caller data."""
     if task_id not in _GENERATORS:
         raise ValueError(f"Unknown task_id: {task_id!r}")
@@ -507,10 +565,13 @@ def make_task(task_id: str, seed: int, difficulty: int = 2) -> dict:
         raise ValueError("seed must be an integer, not a boolean")
     if type(difficulty) is not int or difficulty not in (1, 2, 3):
         raise ValueError("difficulty must be 1, 2, or 3")
+    normalized = validate_task_params(task_id, params)
     seed_bytes = f"arena-curriculum-v2|{task_id}|{seed}|{difficulty}".encode()
     rng = random.Random(int.from_bytes(hashlib.sha256(seed_bytes).digest(), "big"))
-    result = _GENERATORS[task_id](rng, difficulty)
+    result = _GENERATORS[task_id](rng, difficulty, normalized) if task_id in KNOBS else _GENERATORS[task_id](rng, difficulty)
     result.update(seed=seed, difficulty=difficulty, generator_version=2)
+    if normalized:
+        result.update(params=normalized, generator_version=3)
     return result
 
 

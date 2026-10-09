@@ -21,7 +21,7 @@ from urllib.parse import urlsplit
 
 from arena_env.environment import ArenaAction, ArenaEnvironment
 from arena_env import tasks as task_module
-from arena_env.tasks import TASK_IDS
+from arena_env.tasks import TASK_IDS, parse_task_id, format_task_id
 
 MAX_RESPONSE_BYTES = 2_000_000
 FINISH_REASONS = {"stop", "length", "tool_calls", "content_filter"}
@@ -161,6 +161,17 @@ def reasoning_payload(message, token):
     return retained, text, field, len(texts) == 2, None, bool(token and token in text)
 
 
+def native_task_id(value, difficulty):
+    """Bare family IDs use --difficulty; explicit native IDs keep their level."""
+    try:
+        if value in TASK_IDS:
+            return format_task_id(value, difficulty)
+        family, level, params = parse_task_id(value)
+        return format_task_id(family, level, params)
+    except (TypeError, ValueError):
+        raise CalibrationError("Unknown, malformed or out-of-bounds native task ID") from None
+
+
 def task_budgets(args, tasks):
     result = {family: {"completion_tokens": args.episode_completion_tokens,
                        "context_tokens": args.episode_context_tokens} for family in tasks}
@@ -171,22 +182,23 @@ def task_budgets(args, tasks):
             if not isinstance(rows, list):
                 raise CalibrationError("Task budgets must use the native tasks list format")
             seen = set()
+            by_native = {native_task_id(task, args.difficulty): task for task in tasks}
             for row in rows:
                 task_id = row.get("task_id") if isinstance(row, dict) else None
-                if not isinstance(task_id, str) or task_id in seen:
+                if not isinstance(task_id, str):
                     raise CalibrationError("Invalid or duplicated task budget ID")
-                seen.add(task_id)
-                family = task_id[:-3] if task_id.endswith(f"-d{args.difficulty}") else task_id
-                if family not in TASK_IDS:
-                    raise CalibrationError("Task budget IDs must match the selected difficulty")
+                canonical_id = native_task_id(task_id, args.difficulty)
+                if canonical_id in seen:
+                    raise CalibrationError("Invalid or duplicated task budget ID")
+                seen.add(canonical_id)
                 for field in ("completion_tokens", "context_tokens"):
                     number = row.get(field)
                     if type(number) is not int or not 1 <= number <= 32768:
                         raise CalibrationError("Task token budgets must be explicit integers in 1..32768")
-                    if family in result:
-                        result[family][field] = number
-            if not all(family in seen or f"{family}-d{args.difficulty}" in seen for family in tasks):
-                raise CalibrationError("Task budget file does not cover every selected family")
+                    if canonical_id in by_native:
+                        result[by_native[canonical_id]][field] = number
+            if not set(by_native) <= seen:
+                raise CalibrationError("Task budget file does not cover every exact selected native ID")
         except CalibrationError:
             raise
         except Exception:
@@ -197,7 +209,9 @@ def task_budgets(args, tasks):
 def run_episode(args, family, attempt, token, counter, global_budget, limits, opener, env_factory=ArenaEnvironment):
     seed = args.seed + attempt
     env = env_factory()
-    reset = env.reset(task_id=f"{family}-d{args.difficulty}", seed=seed)
+    native_id = native_task_id(family, args.difficulty)
+    base_family, difficulty, params = parse_task_id(native_id)
+    reset = env.reset(task_id=native_id, seed=seed)
     messages = [
         {"role": "system", "content": "Solve the task with the available tools. Each reply must be exactly one JSON action object, with no markdown. Action schema: " + json.dumps(ArenaAction.model_json_schema())},
         {"role": "user", "content": reset.model_dump_json()},
@@ -340,7 +354,8 @@ def run_episode(args, family, attempt, token, counter, global_budget, limits, op
                   "global_reserved_units": global_budget.reserved, "episode_reserved_units": episode_reserved,
                   "arena_budget_matched": False, "arena_wall_matched": False}
     trajectory = {"seed": seed, "messages": messages, "failure": failure, "provider_metrics": provider_metrics, "accounting": accounting}
-    return {"type": "episode", "evidence_kind": "proxy_calibration", "task_id": family, "difficulty": args.difficulty,
+    return {"type": "episode", "evidence_kind": "proxy_calibration", "task_id": family, "difficulty": difficulty,
+            "native_task_id": native_id, "family": base_family, "params": params,
             "seed": seed, "attempt": attempt, "reward": reward, "solved": reward == 1.0,
             "trajectory": trajectory, "trajectoryDigest": canonical_digest(trajectory), "calls": calls,
             "total_tokens_reported": sum(m.get("total_tokens") or 0 for m in provider_metrics),
@@ -365,7 +380,7 @@ def build_parser():
     parser.add_argument("--model", required=True)
     parser.add_argument("--model-revision", required=True)
     parser.add_argument("--api-key-env", default="ARENA_MODEL_API_KEY")
-    parser.add_argument("--task-id", choices=TASK_IDS, action="append")
+    parser.add_argument("--task-id", action="append", help="Bare family or validated native ID with optional bounded knob; explicit IDs keep their own difficulty")
     parser.add_argument("--difficulty", type=int, choices=[1, 2, 3], default=2)
     parser.add_argument("--max-steps", type=bounded_int(2, 8), default=4)
     parser.add_argument("--max-tokens", type=bounded_int(128, 32768), default=2048)
@@ -408,12 +423,15 @@ def main(argv=None):
         if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", args.api_key_env):
             raise CalibrationError("API key setting must name an environment variable")
         tasks = list(dict.fromkeys(args.task_id or TASK_IDS))
+        native_ids = [native_task_id(task, args.difficulty) for task in tasks]
+        if len(tasks) > 50 or len(set(native_ids)) != len(native_ids):
+            raise CalibrationError("Select 1..50 unique native tasks; aliases cannot duplicate a task")
         limits = task_budgets(args, tasks)
         if args.accounting == "arena" and (not args.tokenizer_json or not args.tokenizer_sha256):
             raise CalibrationError("Arena-style accounting requires a local tokenizer JSON and its SHA256")
         if args.accounting != "arena" and (args.tokenizer_json or args.tokenizer_sha256):
             raise CalibrationError("Tokenizer options require --accounting arena")
-        manifest = {"tasks": [{"task_id": f"{family}-d{args.difficulty}", "split": "train"} for family in tasks],
+        manifest = {"tasks": [{"task_id": task_id, "split": "train"} for task_id in native_ids],
                     "environmentSource": environment_source_binding()}
         ceiling = len(tasks) * 4 * args.max_steps
         plan = {"model": args.model, "revision": args.model_revision, "families": tasks, "attempts_per_family": 4,
@@ -464,7 +482,7 @@ def main(argv=None):
                                   "global_provider_reported_tokens": budget.reported, "provider_exceeded_reservation": budget.overrun}) + "\n")
             receipt = {"kind": "proxy_calibration", "source": "model_rollouts", "modelId": model_id,
                        "runnerRevision": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(), "manifestDigest": plan["manifestDigest"],
-                       "groups": [{"taskId": f"{family}-d{args.difficulty}", "family": family,
+                       "groups": [{"taskId": native_task_id(family, args.difficulty), "family": parse_task_id(native_task_id(family, args.difficulty))[0],
                                    "attempts": [{"seed": r["seed"], "reward": r["reward"], "success": r["solved"], "trajectoryDigest": r["trajectoryDigest"]}
                                                 for r in rows if r["task_id"] == family]} for family in tasks]}
             # No-call budget rows are not model rollouts; do not manufacture a receipt.

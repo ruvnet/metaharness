@@ -6,13 +6,28 @@ const exact = (value, keys) => value && typeof value === 'object' && !Array.isAr
 const digest = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
 const id = value => typeof value === 'string' && /^[A-Za-z0-9_.:/-]{1,128}$/.test(value);
 const unique = values => new Set(values).size === values.length;
+// Mirror the bounded native ID grammar in arena_env.tasks.parse_task_id. This
+// descriptive adapter cannot load Python or introduce additional environment knobs.
+const families = new Set(['software_change', 'industrial_schedule', 'science_calibration',
+  'office_reconciliation', 'finance_ledger', 'math_route', 'security_triage', 'media_timeline']);
+const knobs = { software_change: ['suite_count_delta', -1, 2], science_calibration: ['sample_count_delta', -2, 2] };
+function nativeFamily(taskId) {
+  if (families.has(taskId)) return taskId;
+  if (typeof taskId !== 'string') return null;
+  const match = /^([a-z_]+)-d([123])(?:--([a-z_]+)-([pm])([12]))?$/.exec(taskId);
+  if (!match || !families.has(match[1])) return null;
+  const [, family, , knob, sign, magnitude] = match;
+  if (!knob) return family;
+  const spec = knobs[family], value = Number(magnitude) * (sign === 'p' ? 1 : -1);
+  return spec && knob === spec[0] && value >= spec[1] && value <= spec[2] ? family : null;
+}
 
 /** Posthoc descriptive evidence only. No candidate, holdout, training or authority claims. */
 export function diagnoseCalibration({ manifest, calibration }) {
   ok(exact(manifest, ['tasks', 'environmentSource']), 'invalid_native_manifest');
   ok(Array.isArray(manifest.tasks) && manifest.tasks.length >= 1 && manifest.tasks.length <= 50, 'invalid_native_tasks');
   const taskIds = manifest.tasks.map(task => {
-    ok(exact(task, ['task_id', 'split']) && id(task.task_id) && task.split === 'train', 'invalid_native_training_task');
+    ok(exact(task, ['task_id', 'split']) && nativeFamily(task.task_id) && task.split === 'train', 'invalid_native_training_task');
     return task.task_id;
   });
   ok(unique(taskIds), 'duplicate_native_task');
@@ -31,7 +46,7 @@ export function diagnoseCalibration({ manifest, calibration }) {
   ok(Array.isArray(calibration.groups) && calibration.groups.length === taskIds.length, 'incomplete_calibration_groups');
   const groups = calibration.groups.map(group => {
     ok(exact(group, ['taskId', 'family', 'attempts']) && taskIds.includes(group.taskId) && id(group.family), 'invalid_calibration_group');
-    ok(group.taskId === group.family || /^[123]$/.test(group.taskId.slice(group.family.length + 2)) && group.taskId.startsWith(group.family + '-d'), 'task_family_mismatch');
+    ok(nativeFamily(group.taskId) === group.family, 'task_family_mismatch');
     ok(Array.isArray(group.attempts) && group.attempts.length === 4, 'four_actual_attempts_required');
     group.attempts.forEach(attempt => {
       ok(exact(attempt, ['seed', 'reward', 'success', 'trajectoryDigest']), 'invalid_attempt_fields');

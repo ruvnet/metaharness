@@ -8,11 +8,11 @@ import { diagnoseCalibration } from './diagnostics.mjs';
 import { openWorkflow, actionFor } from './runtime.mjs';
 
 // Synthetic unit fixtures only. Retained real rollouts are executed separately.
-function fixture() {
-  const manifest = { tasks: [{ task_id: 'office_reconciliation-d1', split: 'train' }] };
+function fixture(taskId = 'office_reconciliation-d1', family = 'office_reconciliation') {
+  const manifest = { tasks: [{ task_id: taskId, split: 'train' }] };
   const calibration = { kind: 'proxy_calibration', source: 'model_rollouts', modelId: 'fixture:model',
     runnerRevision: 'a'.repeat(64), manifestDigest: hash(manifest),
-    groups: [{ taskId: 'office_reconciliation-d1', family: 'office_reconciliation',
+    groups: [{ taskId, family,
       attempts: [1, 0.5, 1, 1].map((reward, seed) => ({ seed, reward, success: reward === 1, trajectoryDigest: hash({ seed, reward }) })) }] };
   return { manifest, calibration };
 }
@@ -27,6 +27,43 @@ test('legacy diagnostics report weak binding without a fabricated selection plan
   assert.equal(result.groups[0].successes, 3);
   assert.equal(result.groups[0].mixedSuccess, true);
   assert.equal(result.groups[0].meanReward, 0.875);
+});
+
+test('native base IDs and all bounded nonzero knob values preserve descriptive scope', () => {
+  const families = ['software_change', 'industrial_schedule', 'science_calibration', 'office_reconciliation',
+    'finance_ledger', 'math_route', 'security_triage', 'media_timeline'];
+  for (const family of families) {
+    for (const taskId of [family, ...[1, 2, 3].map(level => `${family}-d${level}`)]) {
+      assert.equal(diagnoseCalibration(fixture(taskId, family)).groups[0].family, family);
+    }
+  }
+  for (const level of [1, 2, 3]) {
+    for (const [family, knob, values] of [['software_change', 'suite_count_delta', [-1, 1, 2]],
+      ['science_calibration', 'sample_count_delta', [-2, -1, 1, 2]]]) {
+      for (const value of values) {
+        const taskId = `${family}-d${level}--${knob}-${value > 0 ? 'p' : 'm'}${Math.abs(value)}`;
+        const result = diagnoseCalibration(fixture(taskId, family));
+        assert.equal(result.groups[0].taskId, taskId);
+        assert.equal(result.promote, false);
+        assert.equal(result.posthoc, true);
+      }
+    }
+  }
+});
+
+test('unknown families, noncanonical knobs, invalid bounds and wrong receipt families are rejected', () => {
+  const invalid = ['bogus', 'bogus-d2', 'software_change-d0', 'software_change-d4', 'software_change-d02',
+    'software_change--suite_count_delta-p1', 'software_change-d2--suite_count_delta-p0',
+    'software_change-d2--suite_count_delta-m0', 'software_change-d2--suite_count_delta-p01',
+    'software_change-d2--suite_count_delta-m2', 'software_change-d2--suite_count_delta-p3',
+    'science_calibration-d2--sample_count_delta-m3', 'science_calibration-d2--sample_count_delta-+1',
+    'software_change-d2--sample_count_delta-p1', 'science_calibration-d2--suite_count_delta-p1',
+    'math_route-d2--suite_count_delta-p1', 'software_change-d2--unknown-p1',
+    'software_change-d2--suite_count_delta-p1--suite_count_delta-p1'];
+  for (const taskId of invalid) {
+    assert.throws(() => diagnoseCalibration(fixture(taskId, 'software_change')), /invalid_native_training_task/, taskId);
+  }
+  assert.throws(() => diagnoseCalibration(fixture('software_change-d3--suite_count_delta-p1', 'science_calibration')), /task_family_mismatch/);
 });
 
 test('manifest, source components and receipt outcomes must match', () => {

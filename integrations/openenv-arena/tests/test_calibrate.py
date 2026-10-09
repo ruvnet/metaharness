@@ -34,6 +34,7 @@ class Environment:
     def __init__(self):
         self.actions = []
     def reset(self, **kwargs):
+        self.reset_kwargs = kwargs
         return Observation("RESET")
     def step(self, action):
         self.actions.append(action.model_dump())
@@ -274,6 +275,52 @@ class CalibrationTests(unittest.TestCase):
 
     def test_redirect_is_refused(self):
         with self.assertRaises(c.CalibrationError):c.NoRedirect().redirect_request(None,None,302,'',{},'https://evil.test')
+
+    def test_variant_identity_reaches_reset_and_receipt_row(self):
+        variant = "science_calibration-d3--sample_count_delta-m1"
+        opener = Mock(); opener.open.return_value = Response(reply())
+        env = Environment()
+        row = c.run_episode(args(difficulty=1), variant, 0, "TEST_SECRET_VALUE",
+                            c.TokenCounter(CharacterTokenizer(), "a"*64), c.ReservationBudget(1_000_000),
+                            {"completion_tokens":4096,"context_tokens":8192}, opener, lambda:env)
+        self.assertEqual(env.reset_kwargs["task_id"], variant)
+        self.assertEqual(row["native_task_id"], variant)
+        self.assertEqual(row["family"], "science_calibration")
+        self.assertEqual(row["difficulty"], 3)
+        self.assertEqual(row["params"], {"sample_count_delta":-1})
+
+    def test_variant_budget_requires_exact_identity_not_family_fallback(self):
+        variant = "science_calibration-d3--sample_count_delta-p1"
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)/"budgets.json"
+            config = args(episode_completion_tokens=4096,episode_context_tokens=8192,task_budgets_json=path)
+            def write(task_id):
+                path.write_text(json.dumps({"tasks":[{"task_id":task_id,"completion_tokens":6000,"context_tokens":8192}]}))
+            write("science_calibration-d3")
+            with self.assertRaises(c.CalibrationError):c.task_budgets(config,[variant])
+            write(variant)
+            self.assertEqual(c.task_budgets(config,[variant])[variant]["completion_tokens"],6000)
+            path.write_text(json.dumps({"tasks":[{"task_id":name,"completion_tokens":6000,"context_tokens":8192}
+                                                for name in ["science_calibration","science_calibration-d2"]]}))
+            with self.assertRaises(c.CalibrationError):c.task_budgets(config,["science_calibration"])
+
+    def test_native_task_validation_precedes_provider_and_output_creation(self):
+        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ,{},clear=True):
+            output_path = Path(directory)/"result.jsonl"
+            base = ['--base-url','http://127.0.0.1:8001/v1','--model','target','--model-revision','revision',
+                    '--output',str(output_path)]
+            for tasks in [["science_calibration-d3--sample_count_delta-p999"],
+                          ["science_calibration", "science_calibration-d2"],
+                          ["science_calibration-d3--unknown-p1"]]:
+                argv=base+sum((["--task-id",task] for task in tasks),[])
+                with contextlib.redirect_stderr(io.StringIO()):self.assertEqual(c.main(argv),2)
+                self.assertFalse(output_path.exists())
+            stream=io.StringIO()
+            variant="software_change-d3--suite_count_delta-p1"
+            with contextlib.redirect_stdout(stream):
+                self.assertEqual(c.main(base+['--task-id',variant]),0)
+            self.assertEqual(json.loads(stream.getvalue())["plan"]["manifest"]["tasks"],
+                             [{"task_id":variant,"split":"train"}])
 
 
 if __name__=='__main__':unittest.main()

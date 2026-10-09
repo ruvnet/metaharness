@@ -10,7 +10,7 @@ from openenv.core.env_server.interfaces import Environment
 from openenv.core.env_server.types import Action, Observation, State
 from pydantic import Field
 
-from .tasks import TASK_IDS, make_task, grade
+from .tasks import TASK_IDS, make_task, grade, parse_task_id
 
 MAX_STEPS = 16
 MAX_ANSWER_BYTES = 16384
@@ -43,21 +43,12 @@ class ArenaEnvironment(Environment[ArenaAction, ArenaObservation, State]):
 
     def reset(self, seed: int | None = None, episode_id: str | None = None, **kwargs: Any) -> ArenaObservation:
         task_id = kwargs.get("task_id", TASK_IDS[0])
-        if not isinstance(task_id, str):
-            raise ValueError("task_id must be a string")
-        difficulty = 2
-        family = task_id
-        for level in (1, 2, 3):
-            if task_id.endswith(f"-d{level}"):
-                family, difficulty = task_id[:-3], level
-                break
-        if family not in TASK_IDS:
-            raise ValueError("unknown task_id")
+        family, difficulty, params = parse_task_id(task_id)
         if seed is None:
             seed = secrets.randbelow(2**63)
         if type(seed) is not int or seed < 0 or seed >= 2**64:
             raise ValueError("seed must be an unsigned 64 bit integer")
-        self._task = make_task(family, seed, difficulty)
+        self._task = make_task(family, seed, difficulty, params)
         self._state = State(episode_id=episode_id or str(uuid4()), step_count=0)
         self._done, self._reward = False, 0.0
         return self._observe(prompt=self._task["prompt"] + "\nUse read with path * to read all files in one call. Then submit your answer object once. No shell is available.", files=sorted(self._task["files"]))

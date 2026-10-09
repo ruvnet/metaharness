@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Replay every declared task through the real OpenEnv WebSocket protocol.
 
-Four episodes per task, with a hard ceiling of 32 total episodes:
+Four episodes per task, with a hard ceiling of 200 total episodes:
   1. Declared example actions terminate at reward zero.
   2. Independent oracle derived only from public observations/files earns one.
   3. A type-preserving incorrect answer earns less than one.
@@ -37,7 +37,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 # Import only the independent file-based oracle, never make_task or grade.
-from arena_env.tasks import oracle_answer  # noqa: E402
+from arena_env.tasks import oracle_answer, parse_task_id  # noqa: E402
 
 
 OPENENV_REVISION = "86a180ede21e044f7929b9a7783ad83aa67d83a3"
@@ -154,7 +154,7 @@ def run_episode(websocket_url: str, declared_id: str, seed: int, control: str,
     with connect(websocket_url, proxy=None, open_timeout=10, close_timeout=3, max_size=1_048_576) as socket:
         reset = exchange(socket, "reset", {"task_id": declared_id, "seed": seed})
         require(not reset["done"] and reset["reward"] == 0, "Reset must begin an unrewarded nonterminal episode")
-        family = declared_id[:-3] if declared_id.endswith(("-d1", "-d2", "-d3")) else declared_id
+        family = parse_task_id(declared_id)[0]
         require(reset["observation"].get("task_id") == family, "Server reset selected a different task family")
         require(type(reset["observation"].get("prompt")) is str and bool(reset["observation"]["prompt"]),
                 "Reset prompt is missing")
@@ -190,16 +190,18 @@ def run_episode(websocket_url: str, declared_id: str, seed: int, control: str,
     return record, fingerprint
 
 
-def replay(url: str) -> dict:
+def replay(url: str, tasks_path: Path = ROOT / "tasks.json") -> dict:
     started = time.perf_counter()
     base, websocket_url = endpoints(url)
-    task_manifest = json.loads((ROOT / "tasks.json").read_text())
+    task_manifest = json.loads(tasks_path.read_text())
     tasks = task_manifest.get("tasks")
     require(type(tasks) is list and bool(tasks), "tasks.json has no declared tasks")
     declared_ids = [row.get("task_id") for row in tasks]
     require(all(type(value) is str and value for value in declared_ids), "Task IDs must be nonempty strings")
     require(len(set(declared_ids)) == len(declared_ids), "Task IDs must be unique")
-    require(len(declared_ids) * len(CONTROLS) <= 32, "Replay exceeds the 32-episode ceiling")
+    require(len(declared_ids) * len(CONTROLS) <= 200, "Replay exceeds the 200-episode ceiling")
+    for declared_id in declared_ids:
+        parse_task_id(declared_id)
     examples = json.loads((ROOT / "example-actions.json").read_text())
     require(type(examples) is list and 1 <= len(examples) <= 16 and all(type(action) is dict for action in examples),
             "example-actions.json must contain 1..16 action objects")
@@ -219,8 +221,9 @@ def replay(url: str) -> dict:
                      "request_envelope": {"type": "reset|step", "data": "object"},
                      "response_envelope": "type=observation; data={observation,reward,done}",
                      "client_websockets_version": importlib.metadata.version("websockets")},
-        "source_sha256": {name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
-                          for name in ("tasks.json", "example-actions.json", "arena_env/tasks.py", "scripts/replay_native.py")},
+        "source_sha256": {**{name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
+                          for name in ("example-actions.json", "arena_env/tasks.py", "scripts/replay_native.py")},
+                          "task_manifest": hashlib.sha256(tasks_path.read_bytes()).hexdigest()},
         "task_count": len(declared_ids), "episodes_expected": len(declared_ids) * len(CONTROLS),
         "episodes_attempted": 0, "episodes_passed": 0, "tasks": [],
         "limitations": ["Verifies runtime protocol and synthetic reward controls, not model transfer or leaderboard performance.",
@@ -252,9 +255,10 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--url", required=True, help="Running native OpenEnv server, without credentials")
     parser.add_argument("--output", required=True, type=Path, help="JSON evidence report path")
+    parser.add_argument("--tasks-json", type=Path, default=ROOT / "tasks.json", help="Explicit task manifest, at most 50 tasks")
     args = parser.parse_args()
     try:
-        report = replay(args.url)
+        report = replay(args.url, args.tasks_json)
     except Exception as error:
         report = {"evidence_kind": "native_runtime_protocol_replay", "is_model_benchmark": False,
                   "private_arena_score": None, "status": "failed", "error_type": type(error).__name__,
