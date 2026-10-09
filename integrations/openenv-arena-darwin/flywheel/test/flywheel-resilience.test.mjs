@@ -99,7 +99,7 @@ test('resume: a crash after search re-runs neither search nor the plan; GPU is r
 
 test('idempotent submit: an unknown POST outcome is never re-POSTed; the rerun only reconciles', async () => {
   const env = setup();
-  const a = await run({ throwAt: 'submit' }, { env });
+  const a = await run({ receiptMode: 'crash-sending' }, { env });
   assert.equal(a.st.outcome, 'submit-unknown');
   assert.equal(a.calls.submit.length, 1);
   assert.ok(existsSync(join(env.stateDir, 'pending-submission.json')));
@@ -116,7 +116,7 @@ test('a pending record whose POST provably never happened is cleared by the next
   mkdirSync(env.stateDir, { recursive: true });
   writeFileSync(join(env.stateDir, 'pending-submission.json'), JSON.stringify({ date: '2026-10-08', submissionId: 'metaharness-darwin-x',
     requestSha256: 'a'.repeat(64), genome: {}, receiptPath: join(env.stateDir, 'runs', '2026-10-08', 'submit', 'arena-receipt.json'), state: 'sending' }));
-  const r = await run({ statusSeq: [null] }, { env });
+  const r = await run({ statusSeq: [null], receiptMode: 'none' }, { env });
   assert.equal(existsSync(join(env.stateDir, 'pending-submission.json')), false);
   assert.ok(journalOf(env.stateDir).some(e => e.event === 'never-sent'));
   assert.equal(r.calls.submit.length, 1, 'the day is free to submit again');

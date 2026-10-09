@@ -66,6 +66,14 @@ test('each contract violation is named', () => {
   assert.equal(Object.keys(ARENA_TASK_LIMITS).length, 11);
 });
 
+test('F3: a non-string submission_id / name / image / dataset is never coerced to pass (submission.py rejects it)', () => {
+  assert.ok(checkRequest(with_({ submission_id: 123 })).includes('submission_id_invalid'));
+  assert.ok(checkRequest(with_({ submission_id: ['flywheel-2026-10-09'] })).includes('submission_id_invalid'), 'a one-element array stringifies to a valid id');
+  assert.ok(checkRequest(with_({ name: 5 })).includes('name_invalid'));
+  assert.ok(checkRequest(with_({ image: 5 })).includes('image_not_digest_pinned'));
+  assert.ok(checkRequest(with_({ dataset: 5 })).includes('dataset_invalid'));
+});
+
 test('scorecard cells -> native task ids with measured tokens and explicit config budgets', () => {
   const card = { raw: { provenance: { contextTokens: 16384 }, cells: [
     { family: 'software_change', difficulty: 2, budget: 8192, knobs: {} },

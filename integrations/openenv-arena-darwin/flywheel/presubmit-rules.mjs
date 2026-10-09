@@ -34,7 +34,7 @@ export function checkRequest(r, expect = {}) {
   for (const k of REQUIRED) if (!(k in r)) bad(`missing_field:${k}`);
   for (const k of Object.keys(r)) if (!REQUIRED.includes(k) && !OPTIONAL.includes(k)) bad(`unknown_field:${k}`);
   for (const [k, v] of Object.entries(expect)) if (v !== undefined && r[k] !== v) bad(`${k}_differs_from_expected`);
-  if (!ID_RE.test(String(r.submission_id))) bad('submission_id_invalid');
+  if (typeof r.submission_id !== 'string' || !ID_RE.test(r.submission_id)) bad('submission_id_invalid');
   if (typeof r.name !== 'string' || r.name.length < 1 || r.name.length > 200) bad('name_invalid');
   if (typeof r.image !== 'string' || !IMAGE_DIGEST_RE.test(r.image)) bad('image_not_digest_pinned');
   if (typeof r.dataset !== 'string' || !DATASET_RE.test(r.dataset)) bad('dataset_invalid');

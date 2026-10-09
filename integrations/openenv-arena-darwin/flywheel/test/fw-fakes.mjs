@@ -187,6 +187,21 @@ export function makeFakes(o = {}) {
     async submit({ request, approvedSha256, receiptPath }) {
       calls.submit.push({ request, approvedSha256, receiptPath });
       throwAt('submit');
+      // like arena-api.mjs: the durable receipt is written by the client. o.receiptMode: 'genuine' (default, POSTed + recorded),
+      // 'existing' (the id already existed: recorded, post_attempted=false), 'crash-sending' (receipt left at `sending`, then throws), 'none' (no receipt file)
+      if (!o.submitResult && o.receiptMode !== 'none') {
+        const mode = o.receiptMode ?? 'genuine';
+        const base = { kind: 'arena_flywheel_submit_receipt', version: 1, submission_id: request.submission_id, request_sha256: approvedSha256 };
+        if (mode === 'existing') {
+          const receipt = { ...base, post_attempted: false, state: 'recorded', note: 'An arena submission with this id already exists; its payload digest is not verifiable. No POST sent.' };
+          mkdirSync(dirname(receiptPath), { recursive: true }); writeFileSync(receiptPath, JSON.stringify(receipt));
+          return receipt;
+        }
+        const receipt = { ...base, post_attempted: true, state: mode === 'crash-sending' ? 'sending' : 'recorded' };
+        mkdirSync(dirname(receiptPath), { recursive: true }); writeFileSync(receiptPath, JSON.stringify(receipt));
+        if (mode === 'crash-sending') throw new Error('process died after the POST');
+        return { ...receipt, arena: { state: 'validating' } };
+      }
       return o.submitResult ?? { state: 'recorded', post_attempted: true, submission_id: request.submission_id, arena: { state: 'validating' } };
     },
   };

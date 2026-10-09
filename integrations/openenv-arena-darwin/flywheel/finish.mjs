@@ -8,6 +8,7 @@ import { clearPending, genomeToTasks, readPending, readStoredRequest, recordRedr
   storeRequest, submissionIdFor, tasksMatch, writeIncumbent, writePending } from './incumbent.mjs';
 import { readJson, readJsonIfExists, redact, runStep, writeJsonAtomic } from './journal.mjs';
 import { recheckFacts, redrawFacts } from './recheck.mjs';
+import { summarizeSubmission } from './arena-api.mjs';
 
 export const QUOTA_FALLBACK_S = 24 * 3600; // a 429 without retry_after_s: the arena's own rolling window
 
@@ -122,7 +123,33 @@ function resumedOutcome(j, st) {
   return 'submit-unknown';
 }
 
-/** Poll a pending submission (never POSTs). The incumbent changes only on `validated`. */
+/**
+ * Does the durable submit receipt prove THIS flywheel POSTed the pending digest? post_attempted:true is persisted before
+ * the POST, and the receipt's digest must equal the pending one. An existing-id receipt (post_attempted:false: "payload
+ * digest is not verifiable") or a mismatching one proves nothing, so a `validated` status for that id is not ours.
+ */
+function postProven(pending) {
+  if (typeof pending.receiptPath !== 'string' || !existsSync(pending.receiptPath)) return { ok: false, receipt: null, why: 'no submit receipt' };
+  let receipt;
+  try { receipt = readJson(pending.receiptPath); } catch { return { ok: false, receipt: null, why: 'submit receipt unreadable' }; }
+  if (receipt?.submission_id !== pending.submissionId) return { ok: false, receipt, why: 'receipt is for a different submission id' };
+  if (receipt.post_attempted !== true) return { ok: false, receipt, why: 'receipt says no POST was sent (the id already existed)' };
+  if (receipt.request_sha256 !== pending.requestSha256) return { ok: false, receipt, why: 'receipt digest differs from the pending digest' };
+  if (receipt.state === 'refused') return { ok: false, receipt, why: 'receipt says the POST was refused' };
+  return { ok: true, receipt, why: null };
+}
+
+/** Repair a receipt a crash left short of `recorded` (mirrors client.reconcile on a found submission); never POSTs. */
+function reconcileReceipt(x, pending, receipt, s) {
+  if (receipt.state === 'recorded') return;
+  const healed = { ...receipt, state: 'recorded', reconciled_at: x.deps.clock() };
+  try { healed.arena = summarizeSubmission(s, pending.submissionId); } catch { healed.arena = { submission_id: pending.submissionId, state: s?.state ?? null }; }
+  delete healed.next_action;
+  writeJsonAtomic(pending.receiptPath, healed);
+  x.j.append('submit', 'receipt-reconciled', { submissionId: pending.submissionId, from: receipt.state });
+}
+
+/** Poll a pending submission (never POSTs). The incumbent changes only on `validated` with a POST-proving receipt. */
 export async function follow(x, pending, polls) {
   const { deps, j, st, stateDir } = x;
   for (let i = 0; i <= polls; i++) {
@@ -134,6 +161,15 @@ export async function follow(x, pending, polls) {
     st.submission = { ...(st.submission ?? {}), submissionId: pending.submissionId, forDate: pending.date, state,
       slotState: s?.slot_state ?? null, errorOrigin: s?.error_origin ?? null, runId: s?.run_id ?? null };
     if (state === 'validated') {
+      const proof = postProven(pending);
+      if (!proof.ok) { // not provably our body: install nothing, but do not leave a pending record blocking every later day
+        clearPending(stateDir);
+        j.append('incumbent', 'unproven-validation', { submissionId: pending.submissionId, requestSha256: pending.requestSha256, reason: proof.why });
+        st.notes.push(`needs-human: arena reports ${pending.submissionId} validated, but that is not proven to be our POSTed body (${proof.why}): `
+          + 'incumbent.json was NOT changed; verify the arena submission by hand (bootstrap-incumbent.mjs) before relying on it');
+        return state;
+      }
+      try { reconcileReceipt(x, pending, proof.receipt, s); } catch (e) { j.append('submit', 'receipt-reconcile-failed', { reason: redact(e?.message ?? e) }); }
       const rec = { genome: pending.genome ?? null, submissionId: pending.submissionId, requestSha256: pending.requestSha256,
         requestBodySha256: pending.requestBodySha256 ?? null, requestName: pending.requestName ?? null, date: pending.date, state,
         storedRequest: pending.storedRequest ?? null };
