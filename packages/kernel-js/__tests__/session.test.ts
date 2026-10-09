@@ -224,4 +224,72 @@ describe('SessionLog (ADR-246 §2.3)', () => {
     const log = await SessionLog.open(fixture);
     expect(log.stateHash('main')).toBe(expected);
   });
+
+  describe('concurrent append()/fork() (TOCTOU race, ADR-246 §2.3)', () => {
+    it('N concurrent unawaited appends on one instance get distinct, monotonic indices', async () => {
+      const path = join(await tmp(), 'session.jsonl');
+      const log = new SessionLog(path);
+      const N = 20;
+      const events = await Promise.all(
+        Array.from({ length: N }, (_, i) => log.append('turn', { i })),
+      );
+      const indices = events.map(e => e.index).sort((a, b) => a - b);
+      expect(indices).toEqual(Array.from({ length: N }, (_, i) => i)); // no duplicates, no gaps
+
+      // The on-disk log must itself be valid (reopen must not throw) — a
+      // raced write produces either a duplicate-index or not-monotonic
+      // validation error, which makes the WHOLE session unrecoverable.
+      const resumed = await SessionLog.open(path);
+      expect(resumed.replay('main').eventCount).toBe(N);
+
+      // Result must match running the same N appends strictly sequentially
+      // (same payloads, same order) — concurrency must not change outcome.
+      const seqPath = join(await tmp(), 'session.jsonl');
+      const seqLog = new SessionLog(seqPath);
+      for (let i = 0; i < N; i++) await seqLog.append('turn', { i });
+      expect(resumed.stateHash('main')).toBe(seqLog.stateHash('main'));
+    });
+
+    it('concurrent fork() calls for the SAME new branch name: exactly one wins, the log stays valid', async () => {
+      const path = join(await tmp(), 'session.jsonl');
+      const log = new SessionLog(path);
+      await log.append('turn', { a: 1 });
+
+      const attempts = await Promise.allSettled([
+        log.fork(0, 'side'),
+        log.fork(0, 'side'),
+        log.fork(0, 'side'),
+      ]);
+      const fulfilled = attempts.filter(a => a.status === 'fulfilled');
+      const rejected = attempts.filter(a => a.status === 'rejected');
+      expect(fulfilled).toHaveLength(1); // exactly one fork succeeds
+      expect(rejected).toHaveLength(2);
+      for (const r of rejected as PromiseRejectedResult[]) {
+        expect(String(r.reason)).toMatch(/branch "side" already exists/);
+      }
+
+      const resumed = await SessionLog.open(path);
+      expect(resumed.replay('side').eventCount).toBe(2); // main's event + side's one fork event
+    });
+
+    it('concurrent appends across two fork() siblings sharing state still get distinct indices', async () => {
+      const path = join(await tmp(), 'session.jsonl');
+      const main = new SessionLog(path);
+      await main.append('turn', { a: 1 });
+      const side = await main.fork(0, 'side');
+
+      const [m1, m2, s1, s2] = await Promise.all([
+        main.append('turn', { m: 1 }),
+        main.append('turn', { m: 2 }),
+        side.append('turn', { s: 1 }),
+        side.append('turn', { s: 2 }),
+      ]);
+      expect([m1.index, m2.index].sort()).toEqual([1, 2]);
+      expect([s1.index, s2.index].sort()).toEqual([1, 2]); // side's index 0 is its own fork event
+
+      const resumed = await SessionLog.open(path);
+      expect(resumed.replay('main').eventCount).toBe(3); // a1, m1, m2
+      expect(resumed.replay('side').eventCount).toBe(4); // main's a1 (upstream) + fork + s1, s2
+    });
+  });
 });
