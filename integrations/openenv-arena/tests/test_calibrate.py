@@ -181,6 +181,7 @@ class CalibrationTests(unittest.TestCase):
             self.assertEqual(plan['request_timeout_s'],900)
             self.assertEqual(plan['global_prompt_generation_reservation_limit'],500000)
             self.assertFalse(plan['arena_budget_matched'])
+            self.assertEqual(plan['manifest']['environmentSource'],c.environment_source_binding())
             self.assertFalse((Path(directory)/'result.jsonl').exists())
 
     def test_execute_requires_explicit_global_ceiling(self):
@@ -257,6 +258,19 @@ class CalibrationTests(unittest.TestCase):
         row, _, _=run([response])
         self.assertEqual(row["trajectory"]["messages"][-2]["reasoning_content"],"legacy reasoning")
         self.assertEqual(row["trajectory"]["provider_metrics"][0]["reasoning_field"],"reasoning_content")
+
+    def test_manifest_binds_actual_imported_environment_source_bytes(self):
+        import hashlib
+        binding=c.environment_source_binding()
+        expected={"arena_env/tasks.py":hashlib.sha256(Path(c.task_module.__file__).read_bytes()).hexdigest(),
+                  "arena_env/environment.py":hashlib.sha256(Path(sys.modules[c.ArenaEnvironment.__module__].__file__).read_bytes()).hexdigest()}
+        self.assertEqual(binding["components"],expected)
+        self.assertEqual(binding["sha256"],c.canonical_digest(expected))
+        original={"tasks":[{"task_id":"math_route-d1","split":"train"}],"environmentSource":binding}
+        changed=json.loads(json.dumps(original))
+        changed["environmentSource"]["components"]["arena_env/tasks.py"]="f"*64
+        changed["environmentSource"]["sha256"]=c.canonical_digest(changed["environmentSource"]["components"])
+        self.assertNotEqual(c.canonical_digest(original),c.canonical_digest(changed))
 
     def test_redirect_is_refused(self):
         with self.assertRaises(c.CalibrationError):c.NoRedirect().redirect_request(None,None,302,'',{},'https://evil.test')

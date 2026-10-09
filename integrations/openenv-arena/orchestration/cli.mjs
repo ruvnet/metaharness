@@ -4,9 +4,9 @@ import { dirname, resolve } from 'node:path';
 import { openWorkflow, actionFor } from './runtime.mjs';
 
 const [command, input, journal = '.arena/workflow.db'] = process.argv.slice(2);
-const commands = { validate: 'arena.validate_plan', calibrate: 'arena.calibrate', review: 'arena.review' };
+const commands = { diagnose: 'arena.diagnose_calibration', validate: 'arena.validate_plan', calibrate: 'arena.calibrate', review: 'arena.review' };
 if (!commands[command] || !input) {
-  console.error('Usage: node orchestration/cli.mjs validate|calibrate|review input.json [journal.db]');
+  console.error('Usage: node orchestration/cli.mjs diagnose|validate|calibrate|review input.json [journal.db]');
   process.exit(2);
 }
 let runtime;

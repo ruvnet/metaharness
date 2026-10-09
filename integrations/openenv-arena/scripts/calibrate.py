@@ -20,6 +20,7 @@ import urllib.request
 from urllib.parse import urlsplit
 
 from arena_env.environment import ArenaAction, ArenaEnvironment
+from arena_env import tasks as task_module
 from arena_env.tasks import TASK_IDS
 
 MAX_RESPONSE_BYTES = 2_000_000
@@ -382,6 +383,18 @@ def build_parser():
     return parser
 
 
+def environment_source_binding():
+    """Bind the actual imported environment modules, not just reused task IDs."""
+    modules = {"arena_env/tasks.py": task_module,
+               "arena_env/environment.py": sys.modules[ArenaEnvironment.__module__]}
+    try:
+        components = {name: hashlib.sha256(Path(module.__file__).read_bytes()).hexdigest()
+                      for name, module in modules.items()}
+    except Exception:
+        raise CalibrationError("Imported environment source could not be hashed") from None
+    return {"components": components, "sha256": canonical_digest(components)}
+
+
 def main(argv=None):
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -400,7 +413,8 @@ def main(argv=None):
             raise CalibrationError("Arena-style accounting requires a local tokenizer JSON and its SHA256")
         if args.accounting != "arena" and (args.tokenizer_json or args.tokenizer_sha256):
             raise CalibrationError("Tokenizer options require --accounting arena")
-        manifest = {"tasks": [{"task_id": f"{family}-d{args.difficulty}", "split": "train"} for family in tasks]}
+        manifest = {"tasks": [{"task_id": f"{family}-d{args.difficulty}", "split": "train"} for family in tasks],
+                    "environmentSource": environment_source_binding()}
         ceiling = len(tasks) * 4 * args.max_steps
         plan = {"model": args.model, "revision": args.model_revision, "families": tasks, "attempts_per_family": 4,
                 "max_calls": ceiling, "max_completion_tokens": ceiling * args.max_tokens,

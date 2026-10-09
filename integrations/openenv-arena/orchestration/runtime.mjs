@@ -2,8 +2,9 @@ import { execFileSync } from 'node:child_process';
 import { resolve, isAbsolute } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { calibrate, hash, PROVENANCE, reviewCandidate, signLocalDecision, validatePlan } from './curriculum.mjs';
+import { diagnoseCalibration } from './diagnostics.mjs';
 
-export const CAPABILITIES = Object.freeze(['arena.validate_plan', 'arena.calibrate', 'arena.review']);
+export const CAPABILITIES = Object.freeze(['arena.validate_plan', 'arena.calibrate', 'arena.review', 'arena.diagnose_calibration']);
 
 /** RGI_ROOT is a reviewed local code checkout, never a path supplied by model output. */
 export async function loadRgi(root = process.env.RGI_ROOT) {
@@ -30,6 +31,10 @@ export async function openWorkflow({ dbPath, rgiRoot, allowedCapabilities = [], 
     if (frozen !== hash(plan)) throw new Error('journal_plan_changed');
   };
   const handlers = {
+    'arena.diagnose_calibration': async payload => {
+      const diagnostic = diagnoseCalibration(payload);
+      return { ...diagnostic, receipt: signLocalDecision(diagnostic) };
+    },
     'arena.validate_plan': async ({ plan }) => {
       validatePlan(plan);
       const frozen = runtime.restore('arena-plan-digest');
@@ -56,6 +61,7 @@ export async function openWorkflow({ dbPath, rgiRoot, allowedCapabilities = [], 
     },
   };
   const fields = {
+    'arena.diagnose_calibration': ['manifest', 'calibration'],
     'arena.validate_plan': ['plan'], 'arena.calibrate': ['plan', 'calibration'],
     'arena.review': ['plan', 'candidateId', 'calibration', 'controls', 'transfer'],
   };
