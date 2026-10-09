@@ -1,0 +1,23 @@
+{
+  "source_commit": "0af81c55269be029dd64ccdc79e23654aa9dcaa4",
+  "image": "ghcr.io/ruvnet/metaharness-arena@sha256:2f3f12b986574ac99ecae451f47408ea5c8cc12c4fa27bf1c5cafa6880676b37",
+  "run_url": "https://github.com/ruvnet/metaharness/actions/runs/37863855948",
+  "job_id": 113605779405,
+  "platform": "linux/amd64",
+  "runtime_test_dependencies_absent": true,
+  "test_overlay_pytest": "9.0.3",
+  "container_tests": {
+    "passed": 140,
+    "subtests_passed": 782
+  },
+  "native_protocol": {
+    "passed": 6,
+    "total": 6
+  },
+  "anonymous_digest_pull_and_container_tests": "passed",
+  "fresh_runner_base_and_knob_websocket_replay": "pending",
+  "default_v2_generation": "768 frozen instances byte identical",
+  "model_calibration": "knob search pending; no measured gain claimed",
+  "dataset": "v2 public revision remains valid for unchanged default fixtures; final variant export pending selection",
+  "arena_submission": null
+}

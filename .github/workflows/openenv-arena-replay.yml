@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     env:
-      ARENA_IMAGE: ghcr.io/ruvnet/metaharness-arena@sha256:228329c4928eef054d6e1d3021c9867df416539d4d5e656cc760f97c17c9e35a
+      ARENA_IMAGE: ghcr.io/ruvnet/metaharness-arena@sha256:2f3f12b986574ac99ecae451f47408ea5c8cc12c4fa27bf1c5cafa6880676b37
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -36,6 +36,8 @@ jobs:
           docker exec arena-release openenv validate --url http://127.0.0.1:8000 --json > release-evidence/native-protocol.json
           docker exec arena-release python /replay/scripts/replay_native.py --url http://127.0.0.1:8000 --output /tmp/native-replay.json
           docker exec arena-release cat /tmp/native-replay.json > release-evidence/native-replay.json
+          docker exec arena-release python /replay/scripts/replay_native.py --url http://127.0.0.1:8000 --tasks-json /replay/tests/knob-replay-tasks.json --output /tmp/native-knob-replay.json
+          docker exec arena-release cat /tmp/native-knob-replay.json > release-evidence/native-knob-replay.json
           printf '%s\n' "$ARENA_IMAGE" > release-evidence/image.txt
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:

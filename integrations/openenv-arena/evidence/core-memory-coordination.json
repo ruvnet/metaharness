@@ -20,5 +20,15 @@
     "readback_verified": false,
     "retrieval_backend": "lexical-degraded",
     "fallback_evidence": "https://github.com/ruvnet/core-memory/issues/147"
-  }
+  },
+  "updates": [
+    {
+      "at": "2026-10-09T00:11:22Z",
+      "operation": "update_issue",
+      "issue_url": "https://github.com/ruvnet/core-memory/issues/147",
+      "scope": "Append verified v2 artifact evidence, corrected v1 diagnostic limits, Darwin ownership and submission HOLD",
+      "signed_core_memory_receipt": false,
+      "readback_from_update_response": true
+    }
+  ]
 }
