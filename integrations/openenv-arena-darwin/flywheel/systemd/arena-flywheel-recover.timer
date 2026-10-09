@@ -1,0 +1,15 @@
+[Unit]
+Description=Hourly (and after boot) GPU recovery sweep for the OpenEnv Arena flywheel
+Documentation=file://%h/metaharness/integrations/openenv-arena-darwin/flywheel/recover.mjs
+
+[Timer]
+# A reboot drops the per-rental watchdog units; a crash before the instance id is known leaves only the ledger row.
+# This sweep bounds either leak to about an hour past the rental's plan instead of the next daily tick.
+OnBootSec=5min
+OnUnitActiveSec=1h
+RandomizedDelaySec=2min
+AccuracySec=1min
+Unit=arena-flywheel-recover.service
+
+[Install]
+WantedBy=timers.target

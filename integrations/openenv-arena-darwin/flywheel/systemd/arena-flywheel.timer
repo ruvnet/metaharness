@@ -1,0 +1,18 @@
+[Unit]
+Description=Daily OpenEnv Arena submission flywheel (10:17 America/Toronto, jittered)
+Documentation=file://%h/metaharness/integrations/openenv-arena-darwin/flywheel/install.sh
+
+[Timer]
+# Off the hour on purpose: :00 and :30 are where every scheduled job on every machine lands. The zone is
+# explicit so the tick stays at 10:17 Toronto time across DST even if the host TZ ever changes.
+# The arena quota is ONE accepted submission per rolling 24 h measured from acceptance, and a tick can take
+# hours, so consecutive days can find the slot still held. The orchestrator checks the slot and skips.
+OnCalendar=*-*-* 10:17:00 America/Toronto
+RandomizedDelaySec=10m
+AccuracySec=1min
+# Fire at next boot if the machine was off at 10:17. With no stamp yet (first enable) it does NOT fire.
+Persistent=true
+Unit=arena-flywheel.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,43 @@
+[Unit]
+Description=OpenEnv Arena daily submission flywheel (dry-run unless config.json says mode=auto)
+Documentation=file://%h/metaharness/integrations/openenv-arena-darwin/flywheel/install.sh
+# The HF token and Docker's image store are bind mounts from the /data LEGEND drives. If a drive is missing the
+# tick must fail, not find no token or an empty image store on root.
+RequiresMountsFor=%h/.cache/huggingface /var/lib/containerd
+# No network-online.target: the user manager has no such unit. run-tick.sh waits with nm-online instead.
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/metaharness/integrations/openenv-arena-darwin
+Environment=PATH=%h/.local/bin:%h/.cargo/bin:/usr/local/bin:/usr/bin:/bin
+Environment=VASTAI_NO_UPDATE_CHECK=1
+# ~/.config/arena-flywheel and ~/.local/state/arena-flywheel, created 0700 and exported as
+# $CONFIGURATION_DIRECTORY and $STATE_DIRECTORY. Neither is removed when the unit stops.
+ConfigurationDirectory=arena-flywheel
+ConfigurationDirectoryMode=0700
+StateDirectory=arena-flywheel
+StateDirectoryMode=0700
+UMask=0077
+ExecStart=%h/metaharness/integrations/openenv-arena-darwin/flywheel/systemd/run-tick.sh
+# Print-only summary into this unit's journal, on success AND failure. It never posts anywhere.
+ExecStopPost=-/bin/sh -c 'exec /usr/bin/node %h/metaharness/integrations/openenv-arena-darwin/flywheel/report.mjs --format md --today "$$(TZ=America/Toronto date +%%F)" --now "$$(date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ)"'
+# Never retried by systemd: a retry could double-submit. A failed tick waits for tomorrow or a human.
+Restart=no
+TimeoutStartSec=8h
+# On timeout or `systemctl --user stop`, SIGTERM goes to the orchestrator only (mixed), which destroys any Vast
+# instance in its trap; everything left in the cgroup is SIGKILLed after TimeoutStopSec. The Vast watchdog is a
+# separate transient unit (systemd-run --user), so this kill does not reach it.
+KillMode=mixed
+TimeoutStopSec=10min
+
+# Deliberately NO ProtectSystem/ProtectHome/ReadWritePaths/PrivateTmp.
+#
+# They put the service in its own mount namespace. This tick drives docker, ssh tunnels, vastai, gcloud and
+# systemd-run against the user's real home and runtime dir, and the host's other timer (nightly-cleanup) showed
+# that a private namespace can silently blind a safety check while every other guard still reports success.
+# Containment here is the orchestrator's own fail-closed checks plus UMask=0077.
+NoNewPrivileges=yes
+# No core files: WorkingDirectory is inside the repo, and a core would hold whatever the process had in memory.
+LimitCORE=0
+Nice=10
+SyslogIdentifier=arena-flywheel

@@ -1,0 +1,23 @@
+[Unit]
+Description=OpenEnv Arena flywheel GPU recovery sweep (destroy leaked Vast instances, close spend-ledger runs; never rents or submits)
+Documentation=file://%h/metaharness/integrations/openenv-arena-darwin/flywheel/recover.mjs
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/metaharness/integrations/openenv-arena-darwin
+Environment=PATH=%h/.local/bin:%h/.cargo/bin:/usr/local/bin:/usr/bin:/bin
+Environment=VASTAI_NO_UPDATE_CHECK=1
+StateDirectory=arena-flywheel
+StateDirectoryMode=0700
+UMask=0077
+# tick.flock serialises it with run-tick.sh: while a daily tick runs this exits 0 at once (flock -E 0), and a tick
+# that starts during a sweep waits for it. recover.mjs also skips while any flywheel run holds flywheel.lock.
+ExecStart=/usr/bin/flock -n -E 0 %S/arena-flywheel/tick.flock /usr/bin/node %h/metaharness/integrations/openenv-arena-darwin/flywheel/recover.mjs --state-dir %S/arena-flywheel
+Restart=no
+TimeoutStartSec=30min
+KillMode=mixed
+TimeoutStopSec=5min
+NoNewPrivileges=yes
+LimitCORE=0
+Nice=10
+SyslogIdentifier=arena-flywheel-recover
