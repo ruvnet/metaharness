@@ -20,6 +20,7 @@ function fixture(taskId = 'office_reconciliation-d1', family = 'office_reconcili
 test('legacy diagnostics report weak binding without a fabricated selection plan', () => {
   const result = diagnoseCalibration(fixture());
   assert.equal(result.sourceBinding, 'legacy_task_ids_only_environment_unbound');
+  assert.deepEqual(result.chatTemplate, { recorded: false, requestedKwargs: null, effect: 'unverified' });
   assert.equal(result.posthoc, true);
   assert.equal(result.preregistered, false);
   assert.equal(result.promote, false);
@@ -27,6 +28,48 @@ test('legacy diagnostics report weak binding without a fabricated selection plan
   assert.equal(result.groups[0].successes, 3);
   assert.equal(result.groups[0].mixedSuccess, true);
   assert.equal(result.groups[0].meanReward, 0.875);
+});
+
+test('null or explicit boolean thinking requests remain descriptive and hash-bound', () => {
+  for (const setting of [null, { enable_thinking: true }, { enable_thinking: false }]) {
+    const input = fixture();
+    input.manifest.chat_template_kwargs = setting;
+    input.calibration.manifestDigest = hash(input.manifest);
+    const result = diagnoseCalibration(input);
+    assert.deepEqual(result.chatTemplate, { recorded: true, requestedKwargs: setting, effect: 'unverified' });
+    assert.equal(result.manifestDigest, input.calibration.manifestDigest);
+    assert.equal(result.promote, false);
+    assert.equal(result.selectionAuthorized, false);
+    assert.equal(result.trainingImprovement, null);
+    assert.equal(result.officialScore, null);
+  }
+});
+
+test('malformed thinking settings are rejected even with a recomputed manifest digest', () => {
+  const invalid = [undefined, 'true', 'false', true, false, 0, [], {},
+    { enable_thinking: 'true' }, { enable_thinking: 1 }, { enable_thinking: null },
+    { enable_thinking: false, reasoning_effort: 'low' }, { reasoning_effort: 'low' }];
+  for (const setting of invalid) {
+    const input = fixture();
+    input.manifest.chat_template_kwargs = setting;
+    input.calibration.manifestDigest = hash(input.manifest);
+    assert.throws(() => diagnoseCalibration(input), /invalid_chat_template_kwargs/);
+  }
+});
+
+test('adding, changing or removing a valid thinking setting invalidates the receipt hash', () => {
+  const legacy = fixture();
+  legacy.manifest.chat_template_kwargs = null;
+  assert.throws(() => diagnoseCalibration(legacy), /native_manifest_digest_mismatch/);
+  for (const setting of [null, { enable_thinking: true }, { enable_thinking: false }]) {
+    const input = fixture();
+    input.manifest.chat_template_kwargs = setting;
+    input.calibration.manifestDigest = hash(input.manifest);
+    input.manifest.chat_template_kwargs = { enable_thinking: setting === null || !setting.enable_thinking };
+    assert.throws(() => diagnoseCalibration(input), /native_manifest_digest_mismatch/);
+    delete input.manifest.chat_template_kwargs;
+    assert.throws(() => diagnoseCalibration(input), /native_manifest_digest_mismatch/);
+  }
 });
 
 test('native base IDs and all bounded nonzero knob values preserve descriptive scope', () => {
@@ -92,7 +135,10 @@ test('actual pinned rGi stores diagnostic only and defaults to denying its capab
   const directory = mkdtempSync(join(tmpdir(), 'arena-diagnostic-'));
   try {
     const denied = await openWorkflow({ dbPath: join(directory, 'denied.db'), allowedCapabilities: [] });
-    const action = actionFor('arena.diagnose_calibration', fixture());
+    const input = fixture();
+    input.manifest.chat_template_kwargs = { enable_thinking: false };
+    input.calibration.manifestDigest = hash(input.manifest);
+    const action = actionFor('arena.diagnose_calibration', input);
     denied.enqueue(action); await denied.step();
     assert.equal(denied.store.job(action.id).status, 'denied'); denied.close();
     const dbPath = join(directory, 'diagnostic.db');
@@ -101,6 +147,7 @@ test('actual pinned rGi stores diagnostic only and defaults to denying its capab
     assert.equal(runtime.store.job(action.id).status, 'succeeded');
     const result = JSON.parse(runtime.store.db.prepare('SELECT result FROM jobs WHERE id=?').get(action.id).result);
     assert.equal(result.promote, false); assert.equal(result.preregistered, false);
+    assert.deepEqual(result.chatTemplate, { recorded: true, requestedKwargs: { enable_thinking: false }, effect: 'unverified' });
     assert.ok(result.receipt);
     assert.equal(runtime.restore('arena-selected-manifest'), undefined);
     const review = actionFor('arena.review', {});

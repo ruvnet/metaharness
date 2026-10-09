@@ -76,6 +76,64 @@ def run(responses, config=None, limits=None, budget=None):
 
 
 class CalibrationTests(unittest.TestCase):
+    def test_thinking_switch_is_sent_and_retained_on_every_request_with_unset_omitted(self):
+        digests = []
+        for thinking in (None, "on", "off"):
+            with self.subTest(thinking=thinking):
+                row, opener, _ = run([reply('{"op":"read","path":"*"}'), reply()], args(thinking=thinking))
+                expected = None if thinking is None else {"enable_thinking": thinking == "on"}
+                bodies = [json.loads(call.args[0].data) for call in opener.open.call_args_list]
+                self.assertEqual(len(bodies), 2)
+                for body, metric in zip(bodies, row["trajectory"]["provider_metrics"]):
+                    if thinking is None:
+                        self.assertNotIn("chat_template_kwargs", body)
+                    else:
+                        self.assertEqual(body["chat_template_kwargs"], expected)
+                    self.assertEqual(metric["chat_template_kwargs"], expected)
+                    self.assertFalse(metric["thinking_mode_verified"])
+                self.assertEqual(row["trajectory"]["chat_template_kwargs"], expected)
+                self.assertEqual(row["trajectoryDigest"], c.canonical_digest(row["trajectory"]))
+                digests.append(row["trajectoryDigest"])
+        self.assertEqual(len(set(digests)), 3)
+
+    def test_thinking_manifest_binds_three_distinct_modes_without_provider_calls(self):
+        with tempfile.TemporaryDirectory() as directory, patch.object(c, "provider_call") as provider, patch.dict(os.environ, {}, clear=True):
+            output_path = Path(directory) / "result.jsonl"
+            base = ["--base-url", "http://127.0.0.1:8001/v1", "--model", "target", "--model-revision", "revision", "--output", str(output_path)]
+            digests = []
+            for thinking in (None, "on", "off"):
+                output = io.StringIO()
+                with contextlib.redirect_stdout(output):
+                    self.assertEqual(c.main(base + ([] if thinking is None else ["--thinking", thinking])), 0)
+                plan = json.loads(output.getvalue())["plan"]
+                expected = None if thinking is None else {"enable_thinking": thinking == "on"}
+                self.assertEqual(plan["chat_template_kwargs"], expected)
+                self.assertEqual(plan["manifest"]["chat_template_kwargs"], expected)
+                self.assertFalse(plan["thinking_mode_verified"])
+                self.assertIn("unverified", plan["thinking_control_scope"])
+                self.assertEqual(plan["runner_sha256"], c.hashlib.sha256(Path(c.__file__).read_bytes()).hexdigest())
+                self.assertEqual(plan["manifestDigest"], c.canonical_digest(plan["manifest"]))
+                digests.append(plan["manifestDigest"])
+            self.assertEqual(len(set(digests)), 3)
+            self.assertFalse(output_path.exists())
+            provider.assert_not_called()
+
+    def test_invalid_thinking_is_rejected_before_provider_or_output(self):
+        with tempfile.TemporaryDirectory() as directory, patch.object(c, "provider_call") as provider:
+            path = Path(directory) / "result.jsonl"
+            with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+                c.main(["--base-url", "http://127.0.0.1:8001/v1", "--model", "target", "--model-revision", "revision",
+                        "--output", str(path), "--thinking", "auto", "--execute"])
+            self.assertFalse(path.exists())
+            for value in (True, False, {}, "auto", "ON"):
+                opener, factory = Mock(), Mock()
+                with self.assertRaises(c.CalibrationError):
+                    c.run_episode(args(thinking=value), "science_calibration", 0, "TEST_SECRET_VALUE", c.TokenCounter(),
+                                  c.ReservationBudget(10000), {"completion_tokens": 4096, "context_tokens": 8192}, opener, factory)
+                opener.open.assert_not_called()
+                factory.assert_not_called()
+            provider.assert_not_called()
+
     def test_configurable_timeout_is_forwarded_and_timeout_preserves_trajectory(self):
         row, opener, env = run([TimeoutError("TEST_SECRET_VALUE")])
         self.assertEqual(opener.open.call_args.kwargs["timeout"], 900)

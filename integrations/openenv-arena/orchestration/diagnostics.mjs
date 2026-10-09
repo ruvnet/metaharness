@@ -24,7 +24,14 @@ function nativeFamily(taskId) {
 
 /** Posthoc descriptive evidence only. No candidate, holdout, training or authority claims. */
 export function diagnoseCalibration({ manifest, calibration }) {
-  ok(exact(manifest, ['tasks', 'environmentSource']), 'invalid_native_manifest');
+  ok(exact(manifest, ['tasks', 'environmentSource', 'chat_template_kwargs']), 'invalid_native_manifest');
+  const chatTemplateRecorded = Object.hasOwn(manifest, 'chat_template_kwargs');
+  const chatTemplateKwargs = manifest.chat_template_kwargs;
+  if (chatTemplateRecorded) {
+    ok(chatTemplateKwargs === null || (exact(chatTemplateKwargs, ['enable_thinking'])
+      && Object.keys(chatTemplateKwargs).length === 1
+      && typeof chatTemplateKwargs.enable_thinking === 'boolean'), 'invalid_chat_template_kwargs');
+  }
   ok(Array.isArray(manifest.tasks) && manifest.tasks.length >= 1 && manifest.tasks.length <= 50, 'invalid_native_tasks');
   const taskIds = manifest.tasks.map(task => {
     ok(exact(task, ['task_id', 'split']) && nativeFamily(task.task_id) && task.split === 'train', 'invalid_native_training_task');
@@ -69,7 +76,9 @@ export function diagnoseCalibration({ manifest, calibration }) {
   ok(unique(calibration.groups.flatMap(group => group.attempts.map(attempt => attempt.trajectoryDigest))), 'reused_calibration_trajectory');
   return { kind: 'posthoc_calibration_diagnostic', scope: 'descriptive_proxy_calibration_only',
     manifestDigest: hash(manifest), evidenceDigest: hash(calibration), modelId: calibration.modelId,
-    sourceBinding, groups, posthoc: true, preregistered: false, promote: false,
+    sourceBinding, chatTemplate: { recorded: chatTemplateRecorded,
+      requestedKwargs: chatTemplateKwargs == null ? null : { enable_thinking: chatTemplateKwargs.enable_thinking },
+      effect: 'unverified' }, groups, posthoc: true, preregistered: false, promote: false,
     selectionAuthorized: false, officialScore: null, trainingImprovement: null,
     claim: 'Descriptive retained-rollout diagnostics, not a preregistered transfer study, policy promotion or Arena score. Receipt hashes do not attest model execution.' };
 }

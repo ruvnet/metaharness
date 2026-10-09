@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-09T00:47:34.760905+00:00",
+  "checked_at": "2026-10-09T00:52:23.222456+00:00",
   "decision": "HOLD",
   "eligible_for_user_review": false,
   "measured_darwin_win": false,
@@ -21,6 +21,7 @@
   ],
   "pending": [
     "recalibrate clarified science source before treating completeness omissions as reasoning signal",
+    "verify actual trainer model/template/thinking configuration; short completion metrics alone do not establish mode",
     "external Darwin search and gate source review",
     "retained target model search and fresh confirmation evidence",
     "strict fitness gain over matched incumbent",
@@ -69,5 +70,36 @@
     "status": "reported by coordinating session; receipt and lifecycle not yet verified",
     "kind": "baseline, not a Darwin fitness win",
     "coordination_url": "https://cognitumhq.slack.com/archives/C0C0PRMQZ1C"
+  },
+  "daily_support": {
+    "enabled": true,
+    "scope": "research, coordination, reversible improvements and exact request preparation; no automatic submission",
+    "schedule": "daily around 18:00 America/Toronto from 2026-10-09",
+    "reuse": "existing ruOS public status digest and ruvultra search/GPU lane",
+    "working_connectors": [
+      "Slack",
+      "GitHub",
+      "private Ruflo AI Team",
+      "ruOS"
+    ],
+    "federation": "channel_list returns Internal error",
+    "memory_receipt": "https://github.com/ruvnet/core-memory/issues/147#issuecomment-6072003252",
+    "new_paid_compute_authority": false
+  },
+  "thinking_control": {
+    "requested_modes": [
+      "on",
+      "off"
+    ],
+    "unset": "provider field omitted; default unknown",
+    "bound_into": [
+      "manifest",
+      "plan",
+      "provider metrics",
+      "trajectory"
+    ],
+    "effective_mode_verified": false,
+    "tests": "29 calibration tests and 3 subtests; 25 diagnostics/workflow tests through pinned rGi with zero skips",
+    "acceptance": "Actual trainer configuration must confirm mode before claiming matched calibration"
   }
 }

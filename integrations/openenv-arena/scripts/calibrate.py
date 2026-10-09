@@ -3,6 +3,8 @@
 Arena-style accounting is local accounting, NOT equivalence to Arena's unknown
 production chat wrapper. A pinned tokenizer counts a documented serialization.
 The global reservation ceiling is not a provider dollar limit or billing promise.
+Thinking controls record requested chat-template kwargs, not verified trainer
+behavior. Unset preserves provider defaults; short completions do not prove mode.
 """
 from __future__ import annotations
 import argparse
@@ -206,7 +208,21 @@ def task_budgets(args, tasks):
     return result
 
 
+def chat_template_kwargs(thinking):
+    """Only the explicit supported switch is sent; None means field omitted.
+
+    https://docs.vllm.ai/en/stable/features/reasoning_outputs/#request-level-override
+    A request override does not independently attest the loaded trainer/template.
+    """
+    if thinking is None:
+        return None
+    if thinking not in ("on", "off"):
+        raise CalibrationError("Thinking must be on, off, or unset")
+    return {"enable_thinking": thinking == "on"}
+
+
 def run_episode(args, family, attempt, token, counter, global_budget, limits, opener, env_factory=ArenaEnvironment):
+    template_kwargs = chat_template_kwargs(getattr(args, "thinking", None))
     seed = args.seed + attempt
     env = env_factory()
     native_id = native_task_id(family, args.difficulty)
@@ -246,13 +262,15 @@ def run_episode(args, family, attempt, token, counter, global_budget, limits, op
         episode_reserved += reservation
         calls += 1
         metric = {"request_max_tokens": allowance, "request_timeout_s": args.request_timeout,
+                  "chat_template_kwargs": template_kwargs, "thinking_mode_verified": False,
                   "prompt_reservation": prompt_reservation, "reservation": reservation,
                   "prompt_count_method": counter.mode, "context_serialization": "canonical JSON messages without provider chat template"}
         provider_metrics.append(metric)
+        payload = {"model": args.model, "messages": messages, "temperature": 0.7, "max_tokens": allowance}
+        if template_kwargs is not None:
+            payload["chat_template_kwargs"] = template_kwargs
         try:
-            reply = provider_call(opener, args.base_url, token,
-                                  {"model": args.model, "messages": messages, "temperature": 0.7, "max_tokens": allowance},
-                                  args.request_timeout)
+            reply = provider_call(opener, args.base_url, token, payload, args.request_timeout)
         except Exception as error:
             timeout = isinstance(error, (TimeoutError, socket.timeout)) or isinstance(error, urllib.error.URLError) and isinstance(error.reason, (TimeoutError, socket.timeout))
             failure = "request_timeout" if timeout else "provider_request_failed"
@@ -353,7 +371,8 @@ def run_episode(args, family, attempt, token, counter, global_budget, limits, op
                   "context_limit": limits["context_tokens"] if args.accounting == "arena" else None,
                   "global_reserved_units": global_budget.reserved, "episode_reserved_units": episode_reserved,
                   "arena_budget_matched": False, "arena_wall_matched": False}
-    trajectory = {"seed": seed, "messages": messages, "failure": failure, "provider_metrics": provider_metrics, "accounting": accounting}
+    trajectory = {"seed": seed, "messages": messages, "failure": failure, "provider_metrics": provider_metrics, "accounting": accounting,
+                  "chat_template_kwargs": template_kwargs, "thinking_mode_verified": False}
     return {"type": "episode", "evidence_kind": "proxy_calibration", "task_id": family, "difficulty": difficulty,
             "native_task_id": native_id, "family": base_family, "params": params,
             "seed": seed, "attempt": attempt, "reward": reward, "solved": reward == 1.0,
@@ -379,6 +398,8 @@ def build_parser():
     parser.add_argument("--base-url", required=True, help="OpenAI compatible base ending /v1")
     parser.add_argument("--model", required=True)
     parser.add_argument("--model-revision", required=True)
+    parser.add_argument("--thinking", choices=["on", "off"],
+                        help="Request enable_thinking=true/false through chat_template_kwargs; unset leaves provider defaults. Effect remains unverified.")
     parser.add_argument("--api-key-env", default="ARENA_MODEL_API_KEY")
     parser.add_argument("--task-id", action="append", help="Bare family or validated native ID with optional bounded knob; explicit IDs keep their own difficulty")
     parser.add_argument("--difficulty", type=int, choices=[1, 2, 3], default=2)
@@ -414,6 +435,7 @@ def main(argv=None):
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
+        template_kwargs = chat_template_kwargs(args.thinking)
         model_id = args.model + ":" + args.model_revision
         if not re.fullmatch(r"[A-Za-z0-9_.:/-]{1,128}", model_id):
             raise CalibrationError("Model and revision must form an orchestration identifier of at most 128 characters")
@@ -432,9 +454,12 @@ def main(argv=None):
         if args.accounting != "arena" and (args.tokenizer_json or args.tokenizer_sha256):
             raise CalibrationError("Tokenizer options require --accounting arena")
         manifest = {"tasks": [{"task_id": task_id, "split": "train"} for task_id in native_ids],
-                    "environmentSource": environment_source_binding()}
+                    "environmentSource": environment_source_binding(), "chat_template_kwargs": template_kwargs}
         ceiling = len(tasks) * 4 * args.max_steps
         plan = {"model": args.model, "revision": args.model_revision, "families": tasks, "attempts_per_family": 4,
+                "chat_template_kwargs": template_kwargs, "thinking_mode_verified": False,
+                "thinking_control_scope": "Exact requested kwargs; null means omitted/provider default unknown. Trainer/template effect remains unverified; short completions do not establish thinking mode.",
+                "runner_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                 "max_calls": ceiling, "max_completion_tokens": ceiling * args.max_tokens,
                 "global_prompt_generation_reservation_limit": args.max_total_tokens,
                 "request_timeout_s": args.request_timeout, "max_tokens_per_request": args.max_tokens,
