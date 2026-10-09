@@ -41,7 +41,7 @@
     "org.opencontainers.image.source": "https://github.com/ruvnet/metaharness"
   },
   "full_layer_pull": "CI evidence recorded separately; this independent check fetched manifest/config only.",
-  "fresh_runtime_replay": "pending",
+  "fresh_runtime_replay": "passed; see container-ci-v4.json",
   "arena_submission": null,
   "source_commit_basis": "GitHub build run head and published-digest log linkage; image config has no org.opencontainers.image.revision label."
 }

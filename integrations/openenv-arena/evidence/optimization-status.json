@@ -1,13 +1,13 @@
 {
-  "checked_at": "2026-10-09T00:43:30Z",
+  "checked_at": "2026-10-09T00:47:34.760905+00:00",
   "decision": "HOLD",
   "eligible_for_user_review": false,
   "measured_darwin_win": false,
   "submission_authorized": false,
   "arena_submission": null,
   "official_score": null,
-  "qualified_image": "ghcr.io/ruvnet/metaharness-arena@sha256:2f3f12b986574ac99ecae451f47408ea5c8cc12c4fa27bf1c5cafa6880676b37",
-  "source_commit": "0af81c55269be029dd64ccdc79e23654aa9dcaa4",
+  "qualified_image": "ghcr.io/ruvnet/metaharness-arena@sha256:77b83bb41f4e968fee5ba54a0c57c5e70cb90ecafda7dde1f18e7280943ed941",
+  "source_commit": "9dcd7ab5fc45a61be599770c0fb89c3d68772f60",
   "completed": [
     "measured search plan and independent readiness review contract",
     "bounded native generator knobs and machine readable registry",
@@ -16,10 +16,11 @@
     "fresh anonymous image replay: 32 base,16 knob,6 protocol",
     "v2 public dataset bytes verified",
     "independent full v2 replay:64 episodes,128 token-accounting checks,5 valid mixed cells",
-    "selected native variant exporter with source hashes and dataset manifest;3focusedtests and17subtests"
+    "selected native variant exporter with source hashes and dataset manifest;3focusedtests and17subtests",
+    "clarified image fresh anonymous replay:32 base episodes,16 knob boundary episodes,native validator exit zero"
   ],
   "pending": [
-    "qualify and recalibrate clarified science source before treating completeness omissions as reasoning signal",
+    "recalibrate clarified science source before treating completeness omissions as reasoning signal",
     "external Darwin search and gate source review",
     "retained target model search and fresh confirmation evidence",
     "strict fitness gain over matched incumbent",
@@ -57,7 +58,7 @@
     "reason": "five v2 partials omit precisely quarantined median keys while means remain correct",
     "validation": "140 tests,782 subtests; frozen768-instance comparison permits only documented prompt clause",
     "fitness_win": false,
-    "new_image_and_calibration": "Published image passed 140 tests,782 subtests,6 native protocol checks and anonymous container controls; fresh48 replay and clarified target model calibration pending.",
+    "new_image_and_calibration": "Runtime qualification complete including fresh48 replay; clarified target-model calibration pending.",
     "source_commit": "9dcd7ab5fc45a61be599770c0fb89c3d68772f60",
     "image": "ghcr.io/ruvnet/metaharness-arena@sha256:77b83bb41f4e968fee5ba54a0c57c5e70cb90ecafda7dde1f18e7280943ed941"
   },
