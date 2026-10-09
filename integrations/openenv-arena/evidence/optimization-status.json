@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-09T00:36:09.969219+00:00",
+  "checked_at": "2026-10-09T00:43:30Z",
   "decision": "HOLD",
   "eligible_for_user_review": false,
   "measured_darwin_win": false,
@@ -15,7 +15,8 @@
     "140 Python tests and 782 subtests",
     "fresh anonymous image replay: 32 base,16 knob,6 protocol",
     "v2 public dataset bytes verified",
-    "independent full v2 replay:64 episodes,128 token-accounting checks,5 valid mixed cells"
+    "independent full v2 replay:64 episodes,128 token-accounting checks,5 valid mixed cells",
+    "selected native variant exporter with source hashes and dataset manifest;3focusedtests and17subtests"
   ],
   "pending": [
     "qualify and recalibrate clarified science source before treating completeness omissions as reasoning signal",
@@ -56,6 +57,16 @@
     "reason": "five v2 partials omit precisely quarantined median keys while means remain correct",
     "validation": "140 tests,782 subtests; frozen768-instance comparison permits only documented prompt clause",
     "fitness_win": false,
-    "new_image_and_calibration": "pending"
+    "new_image_and_calibration": "Published image passed 140 tests,782 subtests,6 native protocol checks and anonymous container controls; fresh48 replay and clarified target model calibration pending.",
+    "source_commit": "9dcd7ab5fc45a61be599770c0fb89c3d68772f60",
+    "image": "ghcr.io/ruvnet/metaharness-arena@sha256:77b83bb41f4e968fee5ba54a0c57c5e70cb90ecafda7dde1f18e7280943ed941"
+  },
+  "authority_scope": "This ChatGPT implementation lane; messages from another session do not confer submission or scheduling authority.",
+  "external_submission_report": {
+    "submission_id": "metaharness-mix8-20261009",
+    "request_sha256": "826d950b3c37f7adc9834114549cc926c52fd00181ad3b11c8a86d423fbf7bf5",
+    "status": "reported by coordinating session; receipt and lifecycle not yet verified",
+    "kind": "baseline, not a Darwin fitness win",
+    "coordination_url": "https://cognitumhq.slack.com/archives/C0C0PRMQZ1C"
   }
 }

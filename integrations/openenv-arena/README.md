@@ -88,6 +88,15 @@ The placeholders in documentation are not publishable references. Publish the bu
 
 Arena uses the image, not the dataset contents, to run training. The dataset establishes public attribution and provenance. Bundle source and task assets in the image, and pin any optional asset revision. Keep image size below 2 GiB compressed and 128 layers. The Dockerfile runs as a nonroot user and exposes one port.
 
+Export the selected native variants from the same source as the selected image:
+
+```sh
+PYTHONPATH=. python scripts/export_dataset.py .arena/selected-dataset \
+  --tasks-json .arena/selected-tasks.json --seeds 32
+```
+
+The destination must be new. The task list accepts 1 to 50 canonical IDs or native task objects, including bounded knob suffixes. Validation rejects aliases, duplicates and unsupported values before creating output. Each row preserves the exact ID, family, parameters and virtual files; answer keys are excluded. `manifest.json` records declared IDs, actual generator/environment source hashes and the JSONL hash and row count. Upload all three exported files, record the public dataset revision and verify its bytes. The export does not infer an image digest or prove a source commit. Omitting `--tasks-json` retains the full 768-row legacy layout.
+
 ## Reviewable submission
 
 Render only after the server is running and the public assets exist. Environment variables below hold nonsecret identifiers, except HF_TOKEN which must be supplied securely in the environment only.
@@ -160,3 +169,5 @@ V3 adds two bounded [generator controls](KNOBS.md) for the external Darwin lane:
 [Complete v2 calibration review](evidence/calibration-v2-review.json) independently replayed all 64 episodes and 128 request accounting checks without mismatches: 43 full successes, 10 partial rewards and 11 observed truncations. Five of 16 cells are valid mixed, six saturated and five excluded for truncation. The same review verifies the completed v1 capture of 96 episodes, retaining unknown causes for its 21 validation failures. V1/v2 settings differ, and v2 omitted modern reasoning history, so these results do not establish a matched improvement or pass the submission gate.
 
 The [answer failure audit](evidence/calibration-v2-failure-facets.json) found that five science partials omitted precisely the quarantined samples from `medians` while computing the remaining medians and accepted mean correctly. The current source explicitly requires every sample in that map. This is a prompt clarification, with unchanged inputs, answers, verifier and knobs. All 140 tests and 782 subtests pass, including the frozen task comparison with only that documented clause permitted. A new image and new model calibration are required for this clarified source; the already qualified evolution image above remains the prior version. These completeness failures must not be represented as measured arithmetic difficulty.
+
+The clarified science image is public at `ghcr.io/ruvnet/metaharness-arena@sha256:77b83bb41f4e968fee5ba54a0c57c5e70cb90ecafda7dde1f18e7280943ed941`, built from `9dcd7ab5fc45a61be599770c0fb89c3d68772f60`. [Publication CI](https://github.com/ruvnet/metaharness/actions/runs/37865671261) passed 140 tests, 782 subtests, six protocol checks and anonymous container controls. Fresh full native replay and model recalibration are pending. The variant exporter supports exact selected native IDs and records their source and dataset hashes. This image is a clarified baseline, with no measured fitness win claimed.

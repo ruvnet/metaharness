@@ -1,0 +1,47 @@
+{
+  "verified_at": "2026-10-09T00:43:12.515283+00:00",
+  "source_commit": "9dcd7ab5fc45a61be599770c0fb89c3d68772f60",
+  "image": "ghcr.io/ruvnet/metaharness-arena@sha256:77b83bb41f4e968fee5ba54a0c57c5e70cb90ecafda7dde1f18e7280943ed941",
+  "anonymous_manifest_verified": true,
+  "anonymous_config_verified": true,
+  "credential_source": "Anonymous GHCR pull token only; no account credentials read or supplied. Token not retained.",
+  "manifest_digest": "sha256:77b83bb41f4e968fee5ba54a0c57c5e70cb90ecafda7dde1f18e7280943ed941",
+  "manifest_header_digest": "sha256:77b83bb41f4e968fee5ba54a0c57c5e70cb90ecafda7dde1f18e7280943ed941",
+  "manifest_media_type": "application/vnd.docker.distribution.manifest.v2+json",
+  "manifest_bytes": 2414,
+  "config_digest": "sha256:0b7e868b865658ff46f0a0b6b9e99ab28c2c2cb0a80c4e2486920cb8924165ca",
+  "config_bytes": 8837,
+  "compressed_layer_bytes": 208978301,
+  "layer_count": 10,
+  "architecture": "amd64",
+  "os": "linux",
+  "runtime_user": "10001",
+  "working_dir": "/app",
+  "exposed_ports": {
+    "8000/tcp": {}
+  },
+  "entrypoint": [
+    "/usr/bin/tini",
+    "--"
+  ],
+  "cmd": [
+    "python",
+    "-m",
+    "uvicorn",
+    "arena_env.app:app",
+    "--host",
+    "0.0.0.0",
+    "--port",
+    "8000",
+    "--workers",
+    "1"
+  ],
+  "labels": {
+    "org.opencontainers.image.description": "Original procedural OpenEnv tasks; no measured transfer claim",
+    "org.opencontainers.image.source": "https://github.com/ruvnet/metaharness"
+  },
+  "full_layer_pull": "CI evidence recorded separately; this independent check fetched manifest/config only.",
+  "fresh_runtime_replay": "pending",
+  "arena_submission": null,
+  "source_commit_basis": "GitHub build run head and published-digest log linkage; image config has no org.opencontainers.image.revision label."
+}

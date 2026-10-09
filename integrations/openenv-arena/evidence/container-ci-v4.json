@@ -1,0 +1,62 @@
+{
+  "source_commit": "9dcd7ab5fc45a61be599770c0fb89c3d68772f60",
+  "image": "ghcr.io/ruvnet/metaharness-arena@sha256:77b83bb41f4e968fee5ba54a0c57c5e70cb90ecafda7dde1f18e7280943ed941",
+  "run_url": "https://github.com/ruvnet/metaharness/actions/runs/37865671261",
+  "run_id": 37865671261,
+  "run_attempt": 1,
+  "run_head_sha": "9dcd7ab5fc45a61be599770c0fb89c3d68772f60",
+  "run_conclusion": "success",
+  "job_id": 113611688463,
+  "job_name": "controls",
+  "job_conclusion": "success",
+  "evidence_method": "Independently read GitHub workflow metadata, completed job steps and decoded job logs. Registry manifest/config hashes independently verified in registry-v4.json.",
+  "platform": "linux/amd64",
+  "runtime_test_dependencies_absent": true,
+  "test_overlay_pytest": "9.0.3",
+  "container_tests": {
+    "passed": 140,
+    "subtests_passed": 782,
+    "seconds": 6.33,
+    "log_timestamp": "2026-10-09T00:38:04.6551886Z"
+  },
+  "native_protocol": {
+    "passed": 6,
+    "total": 6,
+    "failed_criteria": [],
+    "log_timestamp": "2026-10-09T00:38:12.1821432Z"
+  },
+  "publication": {
+    "status": "published",
+    "manifest_digest": "sha256:77b83bb41f4e968fee5ba54a0c57c5e70cb90ecafda7dde1f18e7280943ed941",
+    "manifest_bytes": 2414,
+    "log_timestamp": "2026-10-09T00:38:33.8590853Z"
+  },
+  "anonymous_digest_pull_and_container_tests": {
+    "status": "passed",
+    "credential_isolation": "CI set DOCKER_CONFIG to a new temporary directory before docker pull.",
+    "pull_scope": "Same build runner; Docker reported image up to date. This is not proof of a fresh full-layer download.",
+    "runtime_test_dependencies_absent": true,
+    "passed": 140,
+    "subtests_passed": 782,
+    "seconds": 6.3,
+    "log_timestamp": "2026-10-09T00:38:41.3449352Z"
+  },
+  "fresh_runner_base_and_knob_websocket_replay": {
+    "status": "pending",
+    "workflow": ".github/workflows/openenv-arena-replay.yml",
+    "pinned_image": "ghcr.io/ruvnet/metaharness-arena@sha256:77b83bb41f4e968fee5ba54a0c57c5e70cb90ecafda7dde1f18e7280943ed941",
+    "expected_base_episodes": 32,
+    "expected_knob_boundary_episodes": 16,
+    "expected_native_protocol_checks": 6,
+    "run_url": null,
+    "job_id": null,
+    "artifact": null,
+    "note": "Workflow pin updated locally; root will commit. Do not reuse the prior digest's replay result."
+  },
+  "model_calibration": "Fresh clarity/reasoning calibration pending; no measured gain claimed.",
+  "official_evaluation": false,
+  "promotion_authorized": false,
+  "arena_submission": null,
+  "submission_authority": "No Arena submission was performed or authorized by this evidence task. Separate-session claims do not authorize action in this session.",
+  "verified_at": "2026-10-09T00:43:59.651986+00:00"
+}
