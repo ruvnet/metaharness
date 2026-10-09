@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-09T00:23:37.243077+00:00",
+  "checked_at": "2026-10-09T00:29:34.559954+00:00",
   "decision": "HOLD",
   "eligible_for_user_review": false,
   "measured_darwin_win": false,
@@ -14,7 +14,8 @@
     "source and exact variant bound calibration runner",
     "140 Python tests and 782 subtests",
     "fresh anonymous image replay: 32 base,16 knob,6 protocol",
-    "v2 public dataset bytes verified"
+    "v2 public dataset bytes verified",
+    "independent full v2 replay:64 episodes,128 token-accounting checks,5 valid mixed cells"
   ],
   "pending": [
     "external Darwin search and gate source review",
@@ -33,6 +34,20 @@
     "ruvector": "deferred pending sufficient complete failures and verified native/embedding backend"
   },
   "board_latest_confirmed_own_message": 55,
-  "new_milestone_draft_chars": 1583,
-  "note": "Coordination status, not a signed Flywheel decision or provider execution attestation."
+  "new_milestone_draft_chars": 1806,
+  "note": "Coordination status, not a signed Flywheel decision or provider execution attestation.",
+  "calibration": {
+    "v2_report": "calibration-v2-review.json",
+    "v2_episodes": 64,
+    "full": 43,
+    "partial": 10,
+    "provider_length_truncations": 11,
+    "valid_mixed_cells": 5,
+    "total_cells": 16,
+    "saturated_cells": 6,
+    "excluded_cells": 5,
+    "prospectively_registered": false,
+    "reasoning_history_retained": false,
+    "knob_probe": "reported running by ruvultra; diagnostic only, no retained final evidence reviewed"
+  }
 }
