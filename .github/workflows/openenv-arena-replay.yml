@@ -1,0 +1,50 @@
+name: OpenEnv Arena anonymous release replay
+on:
+  push:
+    branches: [feat/openenv-arena-entry]
+    paths:
+      - '.github/workflows/openenv-arena-replay.yml'
+      - 'integrations/openenv-arena/scripts/replay_native.py'
+      - 'integrations/openenv-arena/tasks.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  anonymous-replay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      ARENA_IMAGE: ghcr.io/ruvnet/metaharness-arena@sha256:77b83bb41f4e968fee5ba54a0c57c5e70cb90ecafda7dde1f18e7280943ed941
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Pull the released digest on a fresh runner without registry login
+        run: |
+          export DOCKER_CONFIG=$(mktemp -d)
+          docker pull "$ARENA_IMAGE"
+          docker image inspect "$ARENA_IMAGE" --format '{{.Os}}/{{.Architecture}} {{.Size}} bytes'
+          test "$(docker image inspect "$ARENA_IMAGE" --format '{{.Os}}/{{.Architecture}}')" = linux/amd64
+      - name: Native protocol and all declared task replays
+        run: |
+          mkdir -p release-evidence
+          docker run -d --name arena-release --network none --cap-drop ALL --security-opt no-new-privileges --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m -v "$PWD/integrations/openenv-arena:/replay:ro" "$ARENA_IMAGE"
+          for attempt in $(seq 1 30); do
+            if docker exec arena-release python -c 'import urllib.request; urllib.request.urlopen("http://127.0.0.1:8000/health",timeout=1)' >/dev/null 2>&1; then break; fi
+            sleep 1
+          done
+          docker exec arena-release openenv validate --url http://127.0.0.1:8000 --json > release-evidence/native-protocol.json
+          docker exec arena-release python /replay/scripts/replay_native.py --url http://127.0.0.1:8000 --output /tmp/native-replay.json
+          docker exec arena-release cat /tmp/native-replay.json > release-evidence/native-replay.json
+          docker exec arena-release python /replay/scripts/replay_native.py --url http://127.0.0.1:8000 --tasks-json /replay/tests/knob-replay-tasks.json --output /tmp/native-knob-replay.json
+          docker exec arena-release cat /tmp/native-knob-replay.json > release-evidence/native-knob-replay.json
+          printf '%s\n' "$ARENA_IMAGE" > release-evidence/image.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: arena-anonymous-runtime-evidence
+          path: release-evidence/
+      - name: Container logs and cleanup
+        if: always()
+        run: |
+          docker logs arena-release || true
+          docker rm -f arena-release || true

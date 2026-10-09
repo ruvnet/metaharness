@@ -1,0 +1,34 @@
+{
+  "kind": "unsigned_collaboration_receipt",
+  "signed_core_memory_receipt": false,
+  "intent": {
+    "at": "2026-10-08T23:46:48.996090+00:00",
+    "operation": "create_issue",
+    "repository": "ruvnet/core-memory",
+    "marker": "core-memory:openenv-arena-20261008:coordination",
+    "scope": "Non-authoritative evidence and pending acceptance gates; no submission approval or runtime policy mutation"
+  },
+  "result": {
+    "at": "2026-10-08T23:47:09.471512+00:00",
+    "issue_url": "https://github.com/ruvnet/core-memory/issues/147",
+    "issue_number": 147,
+    "state": "open"
+  },
+  "ruflo_memory": {
+    "key": "metaharness/openenv-arena/qualification-vs-calibration-20261008",
+    "write_acknowledged": true,
+    "readback_verified": false,
+    "retrieval_backend": "lexical-degraded",
+    "fallback_evidence": "https://github.com/ruvnet/core-memory/issues/147"
+  },
+  "updates": [
+    {
+      "at": "2026-10-09T00:11:22Z",
+      "operation": "update_issue",
+      "issue_url": "https://github.com/ruvnet/core-memory/issues/147",
+      "scope": "Append verified v2 artifact evidence, corrected v1 diagnostic limits, Darwin ownership and submission HOLD",
+      "signed_core_memory_receipt": false,
+      "readback_from_update_response": true
+    }
+  ]
+}

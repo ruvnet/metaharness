@@ -1,0 +1,253 @@
+{
+  "dataset": "ruv/metaharness-arena-tasks",
+  "example_actions": [
+    {
+      "op": "read",
+      "path": "*"
+    },
+    {
+      "answer": {},
+      "op": "submit"
+    }
+  ],
+  "finish_action": {
+    "answer": {},
+    "op": "submit"
+  },
+  "image": "ghcr.io/ruvnet/metaharness-arena@sha256:730f64d25ff21431a0af9c5d4fea8da2d74257569e1d53a2295d90c2c9721252",
+  "name": "MetaHarness Procedural Reasoning",
+  "schema": {
+    "action": {
+      "additionalProperties": false,
+      "properties": {
+        "answer": {
+          "additionalProperties": true,
+          "description": "For submit: answer object matching the prompt. An empty object ends with reward zero.",
+          "title": "Answer",
+          "type": "object"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "description": "Additional metadata for the action",
+          "title": "Metadata",
+          "type": "object"
+        },
+        "op": {
+          "description": "List files, read a file (or * for all), or submit the final structured answer once.",
+          "enum": [
+            "list",
+            "read",
+            "submit"
+          ],
+          "title": "Op",
+          "type": "string"
+        },
+        "path": {
+          "default": "",
+          "description": "Exact virtual filename, or * to read all files.",
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "op"
+      ],
+      "title": "ArenaAction",
+      "type": "object"
+    },
+    "observation": {
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "default": "",
+          "title": "Content",
+          "type": "string"
+        },
+        "done": {
+          "default": false,
+          "description": "Whether the episode has terminated",
+          "title": "Done",
+          "type": "boolean"
+        },
+        "error": {
+          "default": "",
+          "title": "Error",
+          "type": "string"
+        },
+        "files": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Files",
+          "type": "array"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "description": "Additional metadata for the observation",
+          "title": "Metadata",
+          "type": "object"
+        },
+        "prompt": {
+          "default": "",
+          "title": "Prompt",
+          "type": "string"
+        },
+        "remaining_steps": {
+          "default": 0,
+          "title": "Remaining Steps",
+          "type": "integer"
+        },
+        "reward": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Reward signal from the last action",
+          "title": "Reward"
+        },
+        "task_id": {
+          "default": "",
+          "title": "Task Id",
+          "type": "string"
+        }
+      },
+      "title": "ArenaObservation",
+      "type": "object"
+    }
+  },
+  "source": "https://github.com/ruvnet/metaharness/tree/90a793a9f4f1a06a5b6422164951e9192c909daa/integrations/openenv-arena",
+  "submission_id": "metaharness-procedural-v1",
+  "tasks": [
+    {
+      "completion_tokens": 4096,
+      "context_tokens": 8192,
+      "cpu_floor_vcpus": 1,
+      "memory_gib": 2,
+      "reset_wall_s": 120,
+      "rollout_wall_s": 180,
+      "split": "train",
+      "task_id": "software_change-d2",
+      "tool_calls_per_minute": 60,
+      "tool_calls_total": 16,
+      "tool_wall_s": 20,
+      "verifier_wall_s": 30,
+      "workspace_gib": 2
+    },
+    {
+      "completion_tokens": 4096,
+      "context_tokens": 8192,
+      "cpu_floor_vcpus": 1,
+      "memory_gib": 2,
+      "reset_wall_s": 120,
+      "rollout_wall_s": 180,
+      "split": "train",
+      "task_id": "industrial_schedule-d2",
+      "tool_calls_per_minute": 60,
+      "tool_calls_total": 16,
+      "tool_wall_s": 20,
+      "verifier_wall_s": 30,
+      "workspace_gib": 2
+    },
+    {
+      "completion_tokens": 4096,
+      "context_tokens": 8192,
+      "cpu_floor_vcpus": 1,
+      "memory_gib": 2,
+      "reset_wall_s": 120,
+      "rollout_wall_s": 180,
+      "split": "train",
+      "task_id": "science_calibration-d2",
+      "tool_calls_per_minute": 60,
+      "tool_calls_total": 16,
+      "tool_wall_s": 20,
+      "verifier_wall_s": 30,
+      "workspace_gib": 2
+    },
+    {
+      "completion_tokens": 4096,
+      "context_tokens": 8192,
+      "cpu_floor_vcpus": 1,
+      "memory_gib": 2,
+      "reset_wall_s": 120,
+      "rollout_wall_s": 180,
+      "split": "train",
+      "task_id": "office_reconciliation-d2",
+      "tool_calls_per_minute": 60,
+      "tool_calls_total": 16,
+      "tool_wall_s": 20,
+      "verifier_wall_s": 30,
+      "workspace_gib": 2
+    },
+    {
+      "completion_tokens": 4096,
+      "context_tokens": 8192,
+      "cpu_floor_vcpus": 1,
+      "memory_gib": 2,
+      "reset_wall_s": 120,
+      "rollout_wall_s": 180,
+      "split": "train",
+      "task_id": "finance_ledger-d2",
+      "tool_calls_per_minute": 60,
+      "tool_calls_total": 16,
+      "tool_wall_s": 20,
+      "verifier_wall_s": 30,
+      "workspace_gib": 2
+    },
+    {
+      "completion_tokens": 4096,
+      "context_tokens": 8192,
+      "cpu_floor_vcpus": 1,
+      "memory_gib": 2,
+      "reset_wall_s": 120,
+      "rollout_wall_s": 180,
+      "split": "train",
+      "task_id": "math_route-d2",
+      "tool_calls_per_minute": 60,
+      "tool_calls_total": 16,
+      "tool_wall_s": 20,
+      "verifier_wall_s": 30,
+      "workspace_gib": 2
+    },
+    {
+      "completion_tokens": 4096,
+      "context_tokens": 8192,
+      "cpu_floor_vcpus": 1,
+      "memory_gib": 2,
+      "reset_wall_s": 120,
+      "rollout_wall_s": 180,
+      "split": "train",
+      "task_id": "security_triage-d2",
+      "tool_calls_per_minute": 60,
+      "tool_calls_total": 16,
+      "tool_wall_s": 20,
+      "verifier_wall_s": 30,
+      "workspace_gib": 2
+    },
+    {
+      "completion_tokens": 4096,
+      "context_tokens": 8192,
+      "cpu_floor_vcpus": 1,
+      "memory_gib": 2,
+      "reset_wall_s": 120,
+      "rollout_wall_s": 180,
+      "split": "train",
+      "task_id": "media_timeline-d2",
+      "tool_calls_per_minute": 60,
+      "tool_calls_total": 16,
+      "tool_wall_s": 20,
+      "verifier_wall_s": 30,
+      "workspace_gib": 2
+    }
+  ]
+}

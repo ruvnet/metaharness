@@ -1,0 +1,75 @@
+{
+  "source_commit": "9dcd7ab5fc45a61be599770c0fb89c3d68772f60",
+  "image": "ghcr.io/ruvnet/metaharness-arena@sha256:77b83bb41f4e968fee5ba54a0c57c5e70cb90ecafda7dde1f18e7280943ed941",
+  "run_url": "https://github.com/ruvnet/metaharness/actions/runs/37865671261",
+  "run_id": 37865671261,
+  "run_attempt": 1,
+  "run_head_sha": "9dcd7ab5fc45a61be599770c0fb89c3d68772f60",
+  "run_conclusion": "success",
+  "job_id": 113611688463,
+  "job_name": "controls",
+  "job_conclusion": "success",
+  "evidence_method": "Independently read GitHub workflow metadata, completed job steps and decoded job logs. Registry manifest/config hashes independently verified in registry-v4.json.",
+  "platform": "linux/amd64",
+  "runtime_test_dependencies_absent": true,
+  "test_overlay_pytest": "9.0.3",
+  "container_tests": {
+    "passed": 140,
+    "subtests_passed": 782,
+    "seconds": 6.33,
+    "log_timestamp": "2026-10-09T00:38:04.6551886Z"
+  },
+  "native_protocol": {
+    "passed": 6,
+    "total": 6,
+    "failed_criteria": [],
+    "log_timestamp": "2026-10-09T00:38:12.1821432Z"
+  },
+  "publication": {
+    "status": "published",
+    "manifest_digest": "sha256:77b83bb41f4e968fee5ba54a0c57c5e70cb90ecafda7dde1f18e7280943ed941",
+    "manifest_bytes": 2414,
+    "log_timestamp": "2026-10-09T00:38:33.8590853Z"
+  },
+  "anonymous_digest_pull_and_container_tests": {
+    "status": "passed",
+    "credential_isolation": "CI set DOCKER_CONFIG to a new temporary directory before docker pull.",
+    "pull_scope": "Same build runner; Docker reported image up to date. This is not proof of a fresh full-layer download.",
+    "runtime_test_dependencies_absent": true,
+    "passed": 140,
+    "subtests_passed": 782,
+    "seconds": 6.3,
+    "log_timestamp": "2026-10-09T00:38:41.3449352Z"
+  },
+  "fresh_runner_base_and_knob_websocket_replay": {
+    "status": "passed",
+    "run_url": "https://github.com/ruvnet/metaharness/actions/runs/37866305920",
+    "job_id": 113613735951,
+    "head_sha": "ac5accef1a3ef952c29701f11a8acb471b49e70f",
+    "base_episodes_passed": 32,
+    "base_episodes_total": 32,
+    "knob_boundary_episodes_passed": 16,
+    "knob_boundary_episodes_total": 16,
+    "native_protocol": {
+      "status": "passed",
+      "evidence": "openenv validate completed with exit zero in the successful native replay step; pinned CLI raises nonzero for a failed report",
+      "raw_criteria_readback": false
+    },
+    "anonymous_exact_digest_pull": true,
+    "fresh_full_layer_download": true,
+    "evidence": "Completed job logs record all ten layer pulls, exact manifest digest, 32/32 and 16/16 episode summaries; workflow metadata confirms every step succeeded.",
+    "artifact": {
+      "name": "arena-anonymous-runtime-evidence",
+      "id": 11588575922,
+      "digest": "sha256:2dd69a9f4fefcfd322d1e10908d7c05e43005c21f90c7b4a06d5cf1408176a4e",
+      "expires_at": "2027-01-07T00:44:33Z",
+      "raw_download_review": "Connector produced a ZIP file reference, but subsequent bytes fetch returned HTTP403; raw ZIP content not independently inspected."
+    }
+  },
+  "model_calibration": "Fresh clarity/reasoning calibration pending; no measured gain claimed.",
+  "official_evaluation": false,
+  "promotion_authorized": false,
+  "arena_submission": null,
+  "submission_authority": "No Arena submission was performed or authorized by this evidence task. Separate-session claims do not authorize action in this session.",
+  "verified_at": "2026-10-09T00:47:34.760558+00:00"
+}
