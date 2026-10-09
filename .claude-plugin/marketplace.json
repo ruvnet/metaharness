@@ -8,7 +8,8 @@
   "plugins": [
     {
       "name": "metaharness",
-      "source": "./",
+      "source": "./.claude-plugin/skills",
+      "skills": ["./"],
       "description": "Scaffold your own focused AI agent harness with its own npx CLI, MCP wiring, and host adapter. 14 skills (create/validate/publish/diag/score/threat-model/…), 9 host integrations, Ed25519 witness provenance, and GCP Secret Manager validation. Install, then run /create-harness or `npx metaharness <name>`."
     }
   ]
