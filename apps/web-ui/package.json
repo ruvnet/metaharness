@@ -15,7 +15,7 @@
     "shot": "node scripts/screenshot.mjs"
   },
   "dependencies": {
-    "@huggingface/transformers": "^4.2.0",
+    "@huggingface/transformers": "^4.3.1",
     "jszip": "^3.10.1",
     "lucide-react": "^0.456.0",
     "react": "^18.3.1",
@@ -24,7 +24,7 @@
   "overrides": {
     "adm-zip": "^0.6.1",
     "protobufjs": "^7.6.5",
-    "sharp": "^0.35.4"
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.1",
