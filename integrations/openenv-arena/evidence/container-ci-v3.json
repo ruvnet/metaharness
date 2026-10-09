@@ -15,7 +15,25 @@
     "total": 6
   },
   "anonymous_digest_pull_and_container_tests": "passed",
-  "fresh_runner_base_and_knob_websocket_replay": "pending",
+  "fresh_runner_base_and_knob_websocket_replay": {
+    "status": "passed",
+    "run_url": "https://github.com/ruvnet/metaharness/actions/runs/37864151455",
+    "job_id": 113606758158,
+    "head_sha": "b6c4ef00455f7ea0dad6e5efa21ecc00e4a04745",
+    "base_episodes_passed": 32,
+    "base_episodes_total": 32,
+    "knob_boundary_episodes_passed": 16,
+    "knob_boundary_episodes_total": 16,
+    "native_protocol_passed": 6,
+    "native_protocol_total": 6,
+    "anonymous_exact_digest_pull": true,
+    "artifact": {
+      "name": "arena-anonymous-runtime-evidence",
+      "id": 11587208906,
+      "digest": "sha256:935d6490cf45521041249abd23d18d66a113e38e553793d4e1b5a3128dbe6c7c",
+      "expires_at": "2027-01-07T00:19:07Z"
+    }
+  },
   "default_v2_generation": "768 frozen instances byte identical",
   "model_calibration": "knob search pending; no measured gain claimed",
   "dataset": "v2 public revision remains valid for unchanged default fixtures; final variant export pending selection",
