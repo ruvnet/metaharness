@@ -17,6 +17,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./task-harness-candidate": {
+      "types": "./dist/task-harness-candidate.d.ts",
+      "import": "./dist/task-harness-candidate.js"
     }
   },
   "bin": {
@@ -34,6 +38,7 @@
     "build": "tsc",
     "test": "vitest run --passWithNoTests",
     "lint": "tsc --noEmit",
+    "benchmark:task-harness-candidate": "npm run build && node dist/task-harness-candidate-benchmark.js",
     "gen:templates": "node scripts/gen-templates.mjs"
   },
   "keywords": [
