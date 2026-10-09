@@ -347,7 +347,7 @@ ADR-006 (memory + learning) and ADR-008 (drift detection) cut across all phases.
 
 | ADR | Title | Status | Summary |
 |-----|-------|--------|---------|
-| [ADR-320](./ADR-320-openenv-arena-daily-submission-flywheel.md) | OpenEnv Arena daily submission flywheel and Darwin search lane | Proposed | `integrations/openenv-arena-darwin/flywheel`: gated daily submission (`gate-only` default, `daily-best` re-draws the stored arena-validated request body verbatim under a fresh id), every pre-submit check on the exact image digest, offline incumbent bootstrap, bank-first strategy under best-per-domain scoring, a single checked submission script run by local codex, and the codex review fixes (`978ab069`). Not installed or enabled by default. The environment lane's own ADR-319 (`openenv-arena-curriculum`) lives in PR #383. |
+| [ADR-320](./ADR-320-openenv-arena-daily-submission-flywheel.md) | OpenEnv Arena daily submission flywheel and Darwin search lane | Proposed | `integrations/openenv-arena-darwin/flywheel`: gated daily submission (`gate-only` default, `daily-best` re-draws the stored arena-validated request body verbatim under a fresh id), every pre-submit check on the exact image digest, offline incumbent bootstrap, bank-first strategy under best-per-domain scoring, a single checked submission script run by local codex, the codex review fixes (`978ab069`), a measured reply-format A/B, an unattended systemd fallback for the daily slot, and an honest limit on the design (no validated proxy fitness; state-of-the-art comparison). Not installed or enabled by default. The environment lane's own ADR-319 (`openenv-arena-curriculum`) lives in PR #383. |
 
 ## Conventions used across the series
 
