@@ -208,6 +208,56 @@ class CalibrationTests(unittest.TestCase):
         self.assertEqual(row2["failure"],"provider_exceeded_reservation")
         opener.open.assert_not_called()
 
+    def test_current_reasoning_field_is_preserved_and_counted_once(self):
+        response=reply(completion=None)
+        response["choices"][0]["message"]["reasoning"]="modern thinking"
+        row, _, env=run([response])
+        assistant=row["trajectory"]["messages"][-2]
+        self.assertEqual(assistant["reasoning"],"modern thinking")
+        self.assertNotIn("reasoning_content",assistant)
+        metric=row["trajectory"]["provider_metrics"][0]
+        self.assertEqual(metric["reasoning_field"],"reasoning")
+        self.assertEqual(metric["generation_charged"],len('{"op":"submit","answer":{}}')+len("modern thinking"))
+        self.assertEqual(env.actions[0]["op"],"submit")
+
+    def test_identical_reasoning_aliases_coalesce_without_double_count(self):
+        response=reply(completion=None,reasoning="same")
+        response["choices"][0]["message"]["reasoning"]="same"
+        row, _, _=run([response])
+        assistant=row["trajectory"]["messages"][-2]
+        self.assertEqual(assistant["reasoning"],"same")
+        self.assertNotIn("reasoning_content",assistant)
+        metric=row["trajectory"]["provider_metrics"][0]
+        self.assertTrue(metric["reasoning_aliases_coalesced"])
+        self.assertEqual(metric["generation_charged"],len('{"op":"submit","answer":{}}')+4)
+
+    def test_conflicting_or_nontext_reasoning_aliases_fail_without_action(self):
+        for modern,legacy,failure in (("modern","different","conflicting_reasoning_aliases"),
+                                      (["nontext"],"legacy","invalid_reasoning_type"),
+                                      ("modern",False,"invalid_reasoning_type")):
+            response=reply()
+            response["choices"][0]["message"].update(reasoning=modern,reasoning_content=legacy)
+            row, _, env=run([response])
+            self.assertEqual(row["failure"],failure)
+            self.assertEqual(env.actions,[])
+            self.assertFalse(row["solved"])
+
+    def test_either_reasoning_field_redacts_credential_echo(self):
+        for field in ("reasoning","reasoning_content"):
+            response=reply()
+            response["choices"][0]["message"][field]="TEST_SECRET_VALUE"
+            row, _, env=run([response])
+            self.assertEqual(row["failure"],"credential_redacted_from_provider_reply")
+            self.assertNotIn("TEST_SECRET_VALUE",json.dumps(row))
+            self.assertEqual(env.actions,[])
+
+    def test_null_modern_alias_preserves_legacy_field(self):
+        response=reply(reasoning="legacy reasoning")
+        response["choices"][0]["message"]["reasoning"]=None
+        row, _, _=run([response])
+        self.assertEqual(row["trajectory"]["messages"][-2]["reasoning_content"],"legacy reasoning")
+        self.assertEqual(row["trajectory"]["provider_metrics"][0]["reasoning_field"],"reasoning_content")
+
     def test_redirect_is_refused(self):
         with self.assertRaises(c.CalibrationError):c.NoRedirect().redirect_request(None,None,302,'',{},'https://evil.test')
 

@@ -139,6 +139,27 @@ def redacted(text, token):
     return text.replace(token, "[REDACTED_CREDENTIAL]") if token else text
 
 
+def reasoning_payload(message, token):
+    """Current vLLM uses reasoning; retain legacy reasoning_content faithfully.
+
+    https://docs.vllm.ai/en/stable/features/reasoning_outputs/
+    Identical aliases count once and prefer the current field. Conflicting or
+    nontext aliases are retained safely for diagnosis but never execute actions.
+    """
+    values = {key: message.get(key) for key in ("reasoning", "reasoning_content")}
+    texts = {key: value for key, value in values.items() if isinstance(value, str)}
+    invalid = any(value is not None and not isinstance(value, str) for value in values.values())
+    conflicting = len(texts) == 2 and texts["reasoning"] != texts["reasoning_content"]
+    error = "invalid_reasoning_type" if invalid else "conflicting_reasoning_aliases" if conflicting else None
+    if error:
+        retained = {key: redacted(value, token) for key, value in texts.items()}
+        return retained, "\n".join(dict.fromkeys(texts.values())), "invalid", False, error, any(token in value for value in texts.values())
+    field = "reasoning" if "reasoning" in texts else "reasoning_content" if "reasoning_content" in texts else None
+    text = texts[field] if field else ""
+    retained = {field: redacted(text, token)} if field else {}
+    return retained, text, field, len(texts) == 2, None, bool(token and token in text)
+
+
 def task_budgets(args, tasks):
     result = {family: {"completion_tokens": args.episode_completion_tokens,
                        "context_tokens": args.episode_context_tokens} for family in tasks}
@@ -226,15 +247,15 @@ def run_episode(args, family, attempt, token, counter, global_budget, limits, op
             metric.update(metric_for(reply))
             message = reply["choices"][0]["message"]
             content = message.get("content")
-            reasoning = message.get("reasoning_content")
-            if content is not None and not isinstance(content, str) or reasoning is not None and not isinstance(reasoning, str):
+            if content is not None and not isinstance(content, str):
                 raise CalibrationError("Nontext provider reply")
-            # Keep separate reasoning rather than contaminating the native JSON action.
-            assistant = {"role": "assistant", "content": redacted(content or "", token)}
-            if reasoning is not None:
-                assistant["reasoning_content"] = redacted(reasoning, token)
+            reasoning_fields, reasoning, reasoning_field, aliases_coalesced, reasoning_error, reasoning_leaked = reasoning_payload(message, token)
+            metric["reasoning_field"] = reasoning_field
+            metric["reasoning_aliases_coalesced"] = aliases_coalesced
+            # Keep provider field names separate from the native JSON action.
+            assistant = {"role": "assistant", "content": redacted(content or "", token), **reasoning_fields}
             messages.append(assistant)
-            leaked = content is not None and token in content or reasoning is not None and token in reasoning
+            leaked = content is not None and token in content or reasoning_leaked
             reported_completion = metric["completion_tokens"]
             measured_completion = counter.count(content or "") + counter.count(reasoning or "")
             # Provider completion_tokens generally INCLUDES reasoning_tokens. Do not add it twice.
@@ -250,6 +271,9 @@ def run_episode(args, family, attempt, token, counter, global_budget, limits, op
                 global_budget.overrun = True
             if leaked:
                 failure = "credential_redacted_from_provider_reply"
+                break
+            if reasoning_error:
+                failure = reasoning_error
                 break
             if metric["finish_reason"] == "length":
                 failure = "completion_truncated"
