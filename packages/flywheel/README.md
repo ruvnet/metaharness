@@ -19,6 +19,24 @@ loop so every host and vertical harness reuses one engine instead of copying cod
 
 ---
 
+## Production and research modes
+
+Library calls retain research compatibility (including issue #319's missing-evidence
+fallback). For claim-bearing runs, use `promotionMode: 'production'` with independent
+paired suites and a durable pre-call `hardBudget`. The CLI defaults to production;
+research CLI configs must explicitly set `promotionMode: 'research'`.
+
+Production binds gate configuration, evaluator/corpus/dependency identities and budget
+history into signed receipts. Replay requires independently pinned gate and signer
+identities. Missing or malformed independent evidence is INCONCLUSIVE. The built-in
+file limiter supports Linux/macOS; Windows requires another durable adapter and fails
+closed without one. `budget.spent()` remains a research soft boundary.
+
+See [the production contract and examples](../../docs/flywheel/production-controls.md)
+for configuration, trust assumptions, recovery, reproductions and offline benchmarks.
+Signatures and passing synthetic tests do not prove real-world evaluator independence
+or live production improvement.
+
 ## Why
 
 Most "self-improving agent" pitches are unfalsifiable. The flywheel makes improvement **provable**:
