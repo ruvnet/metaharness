@@ -524,3 +524,8 @@ Ed25519 witness; `harness sbom` emits SPDX-2.3.
 ---
 
 > **Keywords:** metaharness, AI agent CLI, AI agent scaffold, AI agent generator, repo to agent, GitHub repo to AI agent, agent harness, agent harness generator, agent framework alternative, agentic AI, agentic workflow, autonomous AI agents, multi-agent framework, multi-agent system, MCP, MCP server, model context protocol, Claude Code plugin, OpenAI Codex plugin, Anthropic agents, GPT agent, Codex agent, pi.dev extension, hermes agent, Nous Research, OpenClaw, RVM agent, vertical AI agents, custom AI CLI, npx metaharness, npm create AI agent, Rust WASM agent kernel, NAPI-RS, wasm-bindgen, agent memory, ReasoningBank, HNSW vector search, emergent time, witness manifest, Ed25519 signed, provenance, SBOM, SPDX, SLSA, plugin marketplace, IPFS registry, drift detection, anti-slop, TDD agents, self-evolving agents, federated agents, swarm intelligence, GCP Workload Identity Federation, Secret Manager, npm provenance, repo-aware AI, repo-native CLI, repo factory.
+
+<!-- ruv-constellation:manifest -->
+## ruv constellation
+
+[manifest.ruv](manifest.ruv) describes this repository with source-pinned capability evidence. Explore the [ruvnet nexus](https://github.com/ruvnet/ruvnet/blob/main/docs/ruv-catalog.md) and [manifest contract](https://github.com/ruvnet/ruvnet/blob/main/docs/ruv-manifest.md). Declared integration roles are discovery metadata and do not grant execution authority or certify runtime behavior.
