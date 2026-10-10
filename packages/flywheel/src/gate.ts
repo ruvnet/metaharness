@@ -5,6 +5,7 @@
 // (every clause load-bearing; ALL must hold) — but it is just a `PromotionRule`, so a caller may inject
 // its own (stricter compliance gate, cost policy, etc.) and fingerprint that instead.
 import { createHash } from 'node:crypto';
+import { canon } from './receipts.js';
 import type { PromotionEvidence, PromotionDecision, PromotionRule, Score } from './types.js';
 
 function isFiniteNumber(n: unknown): n is number {
@@ -74,10 +75,25 @@ export function meetsPromotionRule(e: PromotionEvidence): PromotionDecision {
 }
 
 /**
- * A fingerprint of a promotion rule's source — an external reviewer recomputes this and compares it to a
- * pinned value to prove the gate was UNCHANGED between runs. `Function.prototype.toString` is stable for
- * a given source; for a build-artifact-level guarantee, hash the rule's source file instead and pass it.
+ * Legacy source fingerprinting remains available for bare rules. Configuration-bearing wrappers
+ * register their canonical manifest below. Bare source identity cannot bind captured configuration,
+ * helper code or evaluation provenance; claim-bearing runs use the production manifest.
  */
+const manifests = new WeakMap<PromotionRule, unknown>();
+
+/** Configuration-bearing wrappers register a frozen JSON description. Bare legacy rules retain
+ * their historical source fingerprint; that alone is NOT a production policy identity. */
+export function bindGateManifest(rule: PromotionRule, manifest: unknown): PromotionRule {
+  manifests.set(rule, JSON.parse(canon(manifest)));
+  return rule;
+}
+
 export function gateFingerprint(rule: PromotionRule): string {
-  return createHash('sha256').update(rule.toString()).digest('hex');
+  const manifest = manifests.get(rule);
+  return createHash('sha256').update(manifest === undefined ? rule.toString() : canon({ source: rule.toString(), manifest })).digest('hex');
+}
+
+/** Includes the default rule's otherwise invisible helper dependencies without changing its legacy pin. */
+export function defaultGateImplementation(): string {
+  return createHash('sha256').update([meetsPromotionRule, isValidScore, isFiniteNumber].map(String).join('\n')).digest('hex');
 }
