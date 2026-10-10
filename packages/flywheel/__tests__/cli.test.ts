@@ -122,3 +122,19 @@ describe('flywheel graph/analyze/replay — shared fail-closed bundle validation
     unlinkSync(path);
   });
 });
+
+
+describe('flywheel run production default', () => {
+  it('requires explicit production controls before invoking an old config', async () => {
+    const path = join(tmpdir(), `production-cli-default-${process.pid}.mjs`);
+    writeFileSync(path, `export default {rootPolicy:{a:''}, proposer:async()=>{throw new Error('must not propose')}, evaluator:async()=>{throw new Error('must not evaluate')}, holdout:{id:'s',items:[]}, maxGenerations:1};`);
+    try { await expect(dispatch('run', [path])).rejects.toThrow(/production requires/); }
+    finally { unlinkSync(path); }
+  });
+  it('keeps explicitly selected research configs usable without independent evidence', async () => {
+    const path = join(tmpdir(), `production-cli-research-${process.pid}.mjs`);
+    writeFileSync(path, `export default {promotionMode:'research', rootPolicy:{a:''}, proposer:async()=>'#', evaluator:async(p)=>({primary:p.a.length,noopRate:0,costPerWin:1,regressed:false}), holdout:{id:'s',items:[]}, maxGenerations:1, dataSource:'SYNTHETIC'};`);
+    try { expect((await dispatch('run', [path])).code).toBe(0); }
+    finally { unlinkSync(path); }
+  });
+});

@@ -22,8 +22,8 @@ const USAGE = [
   'metaharness flywheel — a verifiable self-improvement loop for agent harnesses.',
   '',
   '  metaharness flywheel run <config.mjs> [--out bundle.json] [--generations N]',
-  '      Run the loop. <config.mjs> default-exports a FlywheelConfig (your proposer/evaluator/suites).',
-  '  metaharness flywheel replay <proof-bundle.json> [--gate-fingerprint <hex>]',
+  '      Run in production mode by default (requires independent evidence + hard budget). Set promotionMode: research explicitly for compatibility.',
+  '  metaharness flywheel replay <proof-bundle.json> [--gate-fingerprint <hex>] [--signer-public-key <base64>]',
   '      Independently verify a bundle: receipts + lineage-to-root + (optional) frozen-gate fingerprint.',
   '  metaharness flywheel graph <proof-bundle.json>',
   '      Print the promoted lineage chain and the compounding lift curve.',
@@ -50,10 +50,11 @@ function flag(args: string[], name: string): string | undefined {
 
 async function replay(args: string[]): Promise<CliResult> {
   const bundle = loadBundle(args[0]);
-  const v = verifyReplayBundle(bundle, { pinnedGateFingerprint: flag(args, '--gate-fingerprint') });
+  const v = verifyReplayBundle(bundle, { pinnedGateFingerprint: flag(args, '--gate-fingerprint'), pinnedPublicKey: flag(args, '--signer-public-key') });
   const lines = [
     `Replaying ${args[0]}  [data_source=${bundle.data_source}]`,
     `  chain:  ${v.chainSummary}`,
+    `  production policy/evidence/budget binding: ${bundle.promotion_mode === 'production' ? (v.checks.productionBindings ? 'PASS' : 'FAIL (requires independently pinned gate and signer)') : 'research / legacy'}`,
     `  receipts verify (Ed25519, embedded key): ${v.checks.receipts ? 'PASS' : 'FAIL'}`,
     `  reconstructs to gen-0 root:               ${v.checks.reachesRoot ? 'PASS' : 'FAIL'}`,
     `  each generation re-bases on the winner:   ${v.checks.contiguousParents ? 'PASS' : 'FAIL'}`,
@@ -100,7 +101,7 @@ async function run(args: string[]): Promise<CliResult> {
     return { code: 2, lines: [`${cfgPath} must default-export a FlywheelConfig with at least { rootPolicy, proposer, evaluator, holdout }.`] };
   }
   const gens = Number(flag(args, '--generations')) || partial.maxGenerations || 10;
-  const result = await runFlywheelGenerations({ maxGenerations: gens, signer: partial.signer ?? makeSigner(), dataSource: partial.dataSource ?? 'LIVE', ...partial } as FlywheelConfig);
+  const result = await runFlywheelGenerations({ maxGenerations: gens, signer: partial.signer ?? makeSigner(), ...partial, promotionMode: partial.promotionMode ?? 'production' } as FlywheelConfig);
   const out = flag(args, '--out');
   const lines = [`Ran ${result.generationsRun} generations.`];
   for (const p of result.liftCurve) lines.push(`  gen${p.generation}: primary=${p.primary} ${p.delta > 0 ? `(+${p.delta})` : ''}`);
