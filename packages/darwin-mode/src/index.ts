@@ -44,6 +44,7 @@ export * from './mock-sandbox.js';
 export * from './tier2-sandbox.js';
 export * from './sandbox.js';
 export * from './scorer.js';
+export * from './rule-learning-gate.js';
 export * from './archive.js';
 export * from './evolve.js';
 
