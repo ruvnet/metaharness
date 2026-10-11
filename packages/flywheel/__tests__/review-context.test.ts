@@ -4,10 +4,13 @@ import { describe, expect, it } from 'vitest';
 
 import {
   prepareIndependentReviewPacket,
+  signIndependentReviewPacket,
   verifyIndependentReviewPacket,
+  verifyIndependentReviewReceipt,
   type IndependentReviewInput,
   type ReviewPacketExpectation,
 } from '../src/review-context.js';
+import { makeSigner } from '../src/receipts.js';
 
 const digest = (label: string): string => `sha256:${createHash('sha256').update(label).digest('hex')}`;
 
@@ -198,5 +201,124 @@ describe('independent review context', () => {
     const ids = prepareIndependentReviewPacket(input).evidence.map((item) => item.id);
     expect(ids).toEqual([...ids].sort());
     expect(ids).toEqual(['A.b', 'a:b', 'a_b']);
+  });
+});
+
+describe('independent review context — producer-signed receipt (ADR-317 trust-boundary hardening)', () => {
+  const NOW = '2026-09-24T14:30:00.000Z'; // inside base()'s fixed createdAt/expiresAt window
+
+  it('verifies a packet signed by a trusted producer, on top of the existing structural checks', () => {
+    const packet = prepareIndependentReviewPacket(base());
+    const signer = makeSigner();
+    const packetReceipt = signIndependentReviewPacket(packet, 'runner:ci1', signer);
+
+    const verdict = verifyIndependentReviewReceipt(
+      packet,
+      packetReceipt,
+      expectation(),
+      { 'runner:ci1': signer.publicKey() },
+      NOW,
+    );
+    expect(verdict).toEqual({ ok: true, reason: 'ok' });
+  });
+
+  it('rejects a packet whose structural/expected-binding check already fails, before even looking at the receipt', () => {
+    const packet = prepareIndependentReviewPacket(base());
+    const signer = makeSigner();
+    const packetReceipt = signIndependentReviewPacket(packet, 'runner:ci1', signer);
+
+    const verdict = verifyIndependentReviewReceipt(
+      packet,
+      packetReceipt,
+      { ...expectation(), role: 'release' },
+      { 'runner:ci1': signer.publicKey() },
+      NOW,
+    );
+    expect(verdict).toEqual({ ok: false, reason: 'role mismatch' });
+  });
+
+  it('rejects an internally self-consistent packet signed by an UNTRUSTED key (the exact gap a plain packetDigest cannot catch)', () => {
+    const packet = prepareIndependentReviewPacket(base());
+    const attacker = makeSigner(); // no entry in trustedProducerKeys below
+    const packetReceipt = signIndependentReviewPacket(packet, 'runner:ci1', attacker);
+
+    const verdict = verifyIndependentReviewReceipt(
+      packet,
+      packetReceipt,
+      expectation(),
+      { 'runner:ci1': makeSigner().publicKey() }, // a DIFFERENT, legitimately-trusted key
+      NOW,
+    );
+    expect(verdict).toEqual({ ok: false, reason: 'producer key mismatch' });
+  });
+
+  it('rejects an unknown producer id outright, even with a validly-signed receipt', () => {
+    const packet = prepareIndependentReviewPacket(base());
+    const signer = makeSigner();
+    const packetReceipt = signIndependentReviewPacket(packet, 'runner:rogue', signer);
+
+    const verdict = verifyIndependentReviewReceipt(
+      packet,
+      packetReceipt,
+      expectation(),
+      { 'runner:ci1': signer.publicKey() },
+      NOW,
+    );
+    expect(verdict).toEqual({ ok: false, reason: 'unknown producer id' });
+  });
+
+  it('rejects a packet tampered with after signing, even though the stale packetDigest round-trips on its own', () => {
+    const packet = prepareIndependentReviewPacket(base());
+    const signer = makeSigner();
+    const packetReceipt = signIndependentReviewPacket(packet, 'runner:ci1', signer);
+
+    // Swap in a different (also internally valid) packet's digest post-hoc — the receipt was
+    // signed over the ORIGINAL packet's digest, so this must not verify against the new one.
+    const otherPacket = prepareIndependentReviewPacket({ ...base(), reviewId: 'review:2' });
+    const tampered = { ...packet, packetDigest: otherPacket.packetDigest };
+
+    const verdict = verifyIndependentReviewReceipt(
+      tampered,
+      packetReceipt,
+      expectation(),
+      { 'runner:ci1': signer.publicKey() },
+      NOW,
+    );
+    expect(verdict.ok).toBe(false);
+  });
+
+  it('rejects a forged receipt payload claiming a different producer id than it was signed with', () => {
+    const packet = prepareIndependentReviewPacket(base());
+    const signer = makeSigner();
+    const signed = signIndependentReviewPacket(packet, 'runner:ci1', signer);
+    // Relabel the receipt's producerId without re-signing — the signed payload still says 'runner:ci1'.
+    const relabeled = { producerId: 'runner:ci2', receipt: signed.receipt };
+
+    const verdict = verifyIndependentReviewReceipt(
+      packet,
+      relabeled,
+      expectation(),
+      { 'runner:ci1': signer.publicKey(), 'runner:ci2': signer.publicKey() },
+      NOW,
+    );
+    expect(verdict).toEqual({ ok: false, reason: 'receipt payload mismatch' });
+  });
+
+  it('fails closed on a malformed packet receipt instead of throwing', () => {
+    const packet = prepareIndependentReviewPacket(base());
+    const verdict = verifyIndependentReviewReceipt(
+      packet,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      { producerId: 'runner:ci1' } as any,
+      expectation(),
+      { 'runner:ci1': 'not-a-real-key' },
+      NOW,
+    );
+    expect(verdict.ok).toBe(false);
+  });
+
+  it('leaves the existing unsigned verification path byte-for-byte unchanged', () => {
+    const packet = prepareIndependentReviewPacket(base());
+    expect(verifyIndependentReviewPacket(packet, expectation(), NOW)).toEqual({ ok: true, reason: 'ok' });
   });
 });
