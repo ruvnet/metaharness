@@ -1,0 +1,163 @@
+{
+  "dateToronto": "2026-10-11",
+  "engine": "@metaharness/darwin@0.10.3/evolveNumeric",
+  "decision": "MEASURED_LEARNING_GAIN",
+  "planHash": "fb5cb1e71fb7202601e69c8eba601d777649964a8ed24dde887796843f8aea1f",
+  "selectedGenome": {
+    "learning_rate": 0.39999999999999997
+  },
+  "generations": 3,
+  "variants": 7,
+  "winningLineage": [
+    "baseline",
+    "g1_v1"
+  ],
+  "discoveryControls": [
+    {
+      "genome": {
+        "hard_fraction": 0
+      },
+      "primary": 0.9579761904761905,
+      "familyMeans": {
+        "digits": 0.9159523809523811,
+        "wine": 1
+      }
+    },
+    {
+      "genome": {
+        "hard_fraction": 0.5
+      },
+      "primary": 0.964537037037037,
+      "familyMeans": {
+        "digits": 0.929074074074074,
+        "wine": 1
+      }
+    }
+  ],
+  "discoveryWinner": {
+    "primary": 0.9761904761904763,
+    "familyMeans": {
+      "digits": 0.9523809523809524,
+      "wine": 1
+    }
+  },
+  "confirmation": {
+    "candidate": {
+      "digits": 0.9603830973830976,
+      "wine": 1
+    },
+    "controls": [
+      {
+        "digits": 0.9414223509223509,
+        "wine": 1
+      },
+      {
+        "digits": 0.9460793650793651,
+        "wine": 1
+      }
+    ],
+    "comparisons": [
+      {
+        "control": {
+          "hard_fraction": 0
+        },
+        "gain": 0.009480373230373273,
+        "lower95": 0.006666785494356009,
+        "noFamilyRegression": true
+      },
+      {
+        "control": {
+          "hard_fraction": 0.5
+        },
+        "gain": 0.007151866151866182,
+        "lower95": 0.005081937273761605,
+        "noFamilyRegression": true
+      }
+    ],
+    "pass": true
+  },
+  "verification": {
+    "checkpointReplays": 60,
+    "predictionsVerified": 11880,
+    "scientificTests": 3,
+    "coreTests": 25
+  },
+  "timing": {
+    "firstSearchSecondsObservedInExecutorOutput": 14.943,
+    "cachedReplaySeconds": 0.031,
+    "candidate20FitSeconds": 0.1533816779992776,
+    "control20FitSeconds": [
+      0.12786191899795085,
+      0.15998873399803415
+    ],
+    "latencyImprovementClaimed": false
+  },
+  "providerCallsThisSearch": 0,
+  "providerCostUsdThisSearch": 0,
+  "signed": false,
+  "promote": false,
+  "rsi": "NOT_ESTABLISHED",
+  "limitations": [
+    "One fixed public-data split; seed interval is conditional on that split",
+    "Wine was at ceiling; this is not a gain on two domains",
+    "No equal-budget random/grid search comparison",
+    "Winner appeared in generation one; recursive optimizer advantage unproved",
+    "No LLM weight training or production deployment"
+  ],
+  "negativeCurriculumResult": {
+    "planHash": "b5ac97490ef28bbdf0d58dacfcb3fcd7714986074c66a2888fcdcff459291959",
+    "selectedGenome": {
+      "hard_fraction": 0.7286304407624444
+    },
+    "discoveryControls": [
+      {
+        "genome": {
+          "hard_fraction": 0
+        },
+        "primary": 0.9579761904761905,
+        "familyMeans": {
+          "digits": 0.9159523809523811,
+          "wine": 1
+        }
+      },
+      {
+        "genome": {
+          "hard_fraction": 0.5
+        },
+        "primary": 0.964537037037037,
+        "familyMeans": {
+          "digits": 0.929074074074074,
+          "wine": 1
+        }
+      }
+    ],
+    "discoveryWinner": {
+      "primary": 0.9645502645502646,
+      "familyMeans": {
+        "digits": 0.9291005291005292,
+        "wine": 1
+      }
+    },
+    "discoveryPass": false,
+    "generations": 3,
+    "lineage": [
+      "baseline",
+      "g1_v1"
+    ],
+    "variants": 7,
+    "confirmation": null,
+    "decision": "HOLD_NO_CONFIRMED_GAIN",
+    "experimentSeconds": 6.874,
+    "externalCalls": 0,
+    "providerCostUsd": 0,
+    "rsi": "NOT_ESTABLISHED",
+    "promote": false,
+    "signed": false,
+    "limits": "Small public datasets. Fixed gradient budget, wall cost measured. Single split; seed interval is conditional on this split. No claim of general RSI."
+  },
+  "receiptRecovery": {
+    "observed": "completed receipts with leftover lock files blocked replay",
+    "fix": "reuse integrity-checked completed receipt before acquiring execution lock",
+    "incompleteReceipts": "still block execution"
+  }
+}
