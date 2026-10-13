@@ -106,12 +106,22 @@ export function buildThreatModel(dir: string, generatedAt: string = new Date().t
   if (secretsReachable) dangerousPermissions++;
   if (policy && policyDefaultDeny === false) dangerousPermissions++;
 
+  // The boolean grid above only covers the specific knobs named in this
+  // file's own header comment — it has no term for "no policy file exists
+  // at all" (policyDefaultDeny is `null`, not `false`, so it never trips
+  // the `=== false` check below) or for any other scanMcp() finding this
+  // file doesn't separately model (e.g. an unscoped `Bash(*)` settings
+  // allow-rule, surfaced only as `unrestricted-bash-allow`). Without this,
+  // `scan.worst` can independently be 'high' while verdict/exitCode still
+  // read 'clean'/0 — disclosed-but-deferred 2026-09-03 (#276), closed here
+  // by folding scan.worst's own severity rollup into the floor for both
+  // thresholds, so verdict can never read better than the underlying scan.
   let verdict: 'clean' | 'medium' | 'high';
   let exitCode: 0 | 1 | 2;
-  if (shellAccess || policyDefaultDeny === false || secretsReachable) {
+  if (shellAccess || policyDefaultDeny === false || secretsReachable || scan.worst === 'high') {
     verdict = 'high';
     exitCode = 2;
-  } else if (networkAccess || fileWrite || (mcpInUse && auditLog === false)) {
+  } else if (networkAccess || fileWrite || (mcpInUse && auditLog === false) || scan.worst === 'medium') {
     verdict = 'medium';
     exitCode = 1;
   } else {
