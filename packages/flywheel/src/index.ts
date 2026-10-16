@@ -10,7 +10,7 @@ export type { FlywheelConfig, FlywheelResult } from './run.js';
 export { meetsPromotionRule, gateFingerprint } from './gate.js';
 export { sequentialEvidence, withSequentialEvidence } from './sequential.js';
 export type { PairedOutcome, SequentialConfig, SequentialVerdict } from './sequential.js';
-export { makeSigner, verifyReceipt, canon } from './receipts.js';
+export { makeSigner, verifyReceipt, canon, canonEquals } from './receipts.js';
 export { InMemoryLineageStore, computeLiftCurve, liftPoint } from './lineage.js';
 export { verifyReplayBundle } from './replay.js';
 export type { ReplayVerdict } from './replay.js';

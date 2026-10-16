@@ -33,7 +33,7 @@
 //       a payload happens to carry keeps this additive: a receipt whose payload predates this check
 //       (carries none of these keys) is left unchecked here — it does not retroactively secure old
 //       bundles, only binds every bundle produced after this check shipped.
-import { verifyReceipt, canon } from './receipts.js';
+import { verifyReceipt, canonEquals } from './receipts.js';
 import { gateFingerprint } from './gate.js';
 import { pairedOutcomesFromItemWins } from './sequential.js';
 import type { ReplayBundle, PromotionRule, LineageCommit, Score } from './types.js';
@@ -223,7 +223,7 @@ export function verifyReplayBundle(
       const payload = c.receipt.payload as Record<string, unknown>;
       for (const [k, live] of Object.entries(BOUND_KEYS)) {
         if (!(k in payload)) continue;
-        if (canon(payload[k]) !== canon(live(c))) { sealedFieldsAuthentic = false; break; }
+        if (!canonEquals(payload[k], live(c))) { sealedFieldsAuthentic = false; break; }
       }
       if (!sealedFieldsAuthentic) break;
     }

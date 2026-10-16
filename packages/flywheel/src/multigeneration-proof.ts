@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { canon, verifyReceipt } from './receipts.js';
+import { canon, canonEquals, verifyReceipt } from './receipts.js';
 import type { PromotionReceipt } from './types.js';
 
 export const MULTIGEN_PROOF_VERSION = 'multigen-proof-v1' as const;
@@ -234,9 +234,17 @@ function validAttestation(
   a: ReviewerAttestation,
   trustedReviewerKeys: Record<string, string>,
 ): boolean {
-  const trusted = trustedReviewerKeys[a.reviewerId];
-  if (!trusted || trusted !== a.receipt.publicKey || !verifyReceipt(a.receipt)) return false;
-  return canon(a.receipt.payload) === canon(reviewerPayload(runId, g, a.reviewerId));
+  // `g`/`a.receipt.payload` are untrusted (part of the `MultiGenerationEvidence` under verification);
+  // an attestation this function cannot safely canon-compare has not been confirmed valid, so it fails
+  // closed to `false` like any other mismatch, rather than throwing out of a function whose callers
+  // (verifyMultiGenerationEvidence's per-generation loop) are designed to always return a verdict.
+  try {
+    const trusted = trustedReviewerKeys[a.reviewerId];
+    if (!trusted || trusted !== a.receipt.publicKey || !verifyReceipt(a.receipt)) return false;
+    return canon(a.receipt.payload) === canon(reviewerPayload(runId, g, a.reviewerId));
+  } catch {
+    return false;
+  }
 }
 
 function capabilityImproved(
@@ -318,8 +326,8 @@ export function verifyMultiGenerationEvidence(
     if (!validProbe(g.parentImprover) || !validProbe(g.childImprover)) failures.push(`${prefix}invalid_improver_probe`);
     if (!sameBudget(g.parentImprover.budget, g.childImprover.budget)) failures.push(`${prefix}unmatched_improver_budget`);
 
-    if (previousChild && canon(previousChild) !== canon(g.baseline)) failures.push(`${prefix}baseline_not_prior_child`);
-    if (previousChildImprover && canon(previousChildImprover) !== canon(g.parentImprover)) {
+    if (previousChild && !canonEquals(previousChild, g.baseline)) failures.push(`${prefix}baseline_not_prior_child`);
+    if (previousChildImprover && !canonEquals(previousChildImprover, g.parentImprover)) {
       failures.push(`${prefix}improver_not_prior_child`);
     }
 
@@ -394,6 +402,16 @@ export function verifyMultiGenerationEvidence(
     proofClass = allSynthetic ? 'SYNTHETIC_RECURSIVE_IMPROVER' : 'BOUNDED_RECURSIVE_IMPROVER';
   } else if (structuralPass) proofClass = 'STRUCTURAL_MULTI_GENERATION';
 
+  // Runs unconditionally, after every other check, on the full untrusted `e` — unlike the comparisons
+  // above, there is no existing failure reason a thrown error could fall back to, so one is added here.
+  let evidenceDigest: string;
+  try {
+    evidenceDigest = multiGenerationEvidenceDigest(e);
+  } catch {
+    failures.push('undigestable_evidence');
+    evidenceDigest = `sha256:${'0'.repeat(64)}`;
+  }
+
   return {
     pass: failures.length === 0,
     proofClass,
@@ -401,6 +419,6 @@ export function verifyMultiGenerationEvidence(
     independentConfirmation,
     failures,
     derived,
-    evidenceDigest: multiGenerationEvidenceDigest(e),
+    evidenceDigest,
   };
 }
