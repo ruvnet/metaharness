@@ -1,3 +1,11 @@
+# 0.12.0 (2026-10-16)
+
+Adds optional independent paired confirmation with frozen policies and data partitions, exact statistical comparison, regression limits, effect budgets and scoped execution receipts. Includes a pinned public intent-classification pilot and explicit limits on repeated testing. Existing development and evolve APIs remain compatible.
+
+# 0.11.0 — 2026-10-16
+
+Added the opt-in contrastive subpath: scoped edits, matching execution digests, selective composition, exact budget admission, late-result rejection, portable scoped experiment memory and typed model/Ruflo executor bridge. Existing evolve and CLI defaults are unchanged. Added a source-bound synthetic benchmark and explicit live-provider editor smoke. See CONTRASTIVE.md for trust boundaries and limitations.
+
 # Changelog — @metaharness/darwin
 
 All notable changes to this package. Dates UTC.

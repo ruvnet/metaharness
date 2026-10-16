@@ -1,7 +1,7 @@
 {
   "name": "@metaharness/darwin",
-  "version": "0.10.3",
-  "description": "Freeze the model, evolve the harness. Two measured applications: (1) SWE-bench code-repair — conformant GLM->Opus empty-patch cascade resolves 51.3% Lite (n=300) and 55.6% Verified (278/500, Wilson 95% CI [51.2, 59.9], official swebench gold eval, no gold tests in-loop, ~$0.15/instance est.); the same cheap->frontier cascade generalizes across both splits at ~56x cheaper than frontier-only; (2) Darwin Shield (v0.3.0) — a defensive zero-day discovery harness (Semgrep + fuzz oracles, safety-gated, deterministic replay). The harness, not the model, is the lever. Dependency-free (Node built-ins).",
+  "version": "0.12.0",
+  "description": "Freeze the model, evolve the harness. Two measured applications: (1) SWE-bench code-repair \u2014 conformant GLM->Opus empty-patch cascade resolves 51.3% Lite (n=300) and 55.6% Verified (278/500, Wilson 95% CI [51.2, 59.9], official swebench gold eval, no gold tests in-loop, ~$0.15/instance est.); the same cheap->frontier cascade generalizes across both splits at ~56x cheaper than frontier-only; (2) Darwin Shield (v0.3.0) \u2014 a defensive zero-day discovery harness (Semgrep + fuzz oracles, safety-gated, deterministic replay). The harness, not the model, is the lever. Dependency-free (Node built-ins).",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -16,6 +16,10 @@
     "./gepa": {
       "types": "./dist/gepa/index.d.ts",
       "import": "./dist/gepa/index.js"
+    },
+    "./contrastive": {
+      "types": "./dist/contrastive/index.d.ts",
+      "import": "./dist/contrastive/index.js"
     }
   },
   "files": [
@@ -25,14 +29,16 @@
     "SECURITY.md",
     "LICENSE",
     "CHANGELOG.md",
-    "LEARNINGS.md"
+    "LEARNINGS.md",
+    "CONTRASTIVE.md"
   ],
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
     "lint": "tsc --noEmit",
     "bench:shield": "npm run build && node bench/security/darwin-shield-bench.mjs",
-    "bench:clade": "npm run build && node bench/selection/clade-throughput.mjs"
+    "bench:clade": "npm run build && node bench/selection/clade-throughput.mjs",
+    "bench:contrastive": "npm run build && node bench/contrastive/run.mjs"
   },
   "keywords": [
     "llm",
@@ -50,10 +56,10 @@
   ],
   "author": "rUv <ruv@ruv.net>",
   "license": "MIT",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator",
+  "homepage": "https://github.com/ruvnet/metaharness",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator",
+    "url": "https://github.com/ruvnet/metaharness.git",
     "directory": "packages/darwin-mode"
   },
   "engines": {

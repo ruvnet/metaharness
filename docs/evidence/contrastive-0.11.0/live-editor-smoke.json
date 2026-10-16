@@ -1,0 +1,356 @@
+{
+  "schema": "contrastive-live-editor-smoke.v1",
+  "timestamp": "2026-10-16T16:44:24.113Z",
+  "evidenceClass": "live-provider-editors-with-synthetic-deterministic-executor",
+  "claimEligible": false,
+  "reason": "This validates provider integration, not general LLM task performance or superiority.",
+  "model": "google/gemini-2.5-flash-lite",
+  "pricingSnapshot": {
+    "prompt": 1e-7,
+    "completion": 4e-7
+  },
+  "gitHead": "7f9455fe6b249c9198a41761cb0ef723e7a6bc2d",
+  "sourceDigest": "cb46f8adb67119a4c0fd3a216c0154c6dde6076442743e2ab3ee1e6e5a422975",
+  "manifests": [
+    {
+      "path": "src/contrastive/editors.ts",
+      "sha256": "0cf802589560ab84b5a0f60b0be6d89ce80904c9b8c970e4e91ac9c337d074d4"
+    },
+    {
+      "path": "src/contrastive/engine.ts",
+      "sha256": "60c62de340938d0059201e784562b4d1f815270faa2c117722df856b419701d4"
+    },
+    {
+      "path": "src/contrastive/index.ts",
+      "sha256": "928b3aeab0061a09f5aa3b26b5900bbfa38b49b66f59b2a5528582a54f13a487"
+    },
+    {
+      "path": "src/contrastive/memory.ts",
+      "sha256": "dcc510af892c6864dc7f60fc9e85c4e5cff98055471a4db4f0770dcb3574346c"
+    },
+    {
+      "path": "src/contrastive/types.ts",
+      "sha256": "6f15c5fff0f49fd48a0b134644035101b59443b341ff2ee3e8eaa9e65cf4a15b"
+    },
+    {
+      "path": "src/contrastive/validation.ts",
+      "sha256": "57634ff4168bd8b5c9b7b67590320abdf1772fc29c47ddaacc96013af16e42aa"
+    },
+    {
+      "path": "dist/contrastive/editors.d.ts",
+      "sha256": "286f9dd0d2353d339062dde46a6a0256d500a11e661b096c5805ae075337930c"
+    },
+    {
+      "path": "dist/contrastive/editors.js",
+      "sha256": "1c1d9c2016bf17c6bf2411d47392e057d5cbf54069f5ecfea8cd596e0b71ff34"
+    },
+    {
+      "path": "dist/contrastive/engine.d.ts",
+      "sha256": "aba4e82ecb807ef90fd9638313fcfa4b02cf7c269acd5843f9a2e96ca23fc748"
+    },
+    {
+      "path": "dist/contrastive/engine.js",
+      "sha256": "e173b517541707e011014928d7e1415259a9f9c57eb14dcbe235cfd9110222c7"
+    },
+    {
+      "path": "dist/contrastive/index.d.ts",
+      "sha256": "8f30ace4f663f9bac3a5f600563f743df506c4a96345f3b40bdd4bdd641ba5e7"
+    },
+    {
+      "path": "dist/contrastive/index.js",
+      "sha256": "f0ac5dbf84658f7b889ec1cf464326422e62ae5ddd00cbf6ff857e2799578231"
+    },
+    {
+      "path": "dist/contrastive/memory.d.ts",
+      "sha256": "ba9dda6b62e347f43e2ef953013d26a7f38af34a2d814cae6692be5f995dcabb"
+    },
+    {
+      "path": "dist/contrastive/memory.js",
+      "sha256": "c5e564ed202c64e4e55cd83d89a773784a02a61648c49358e80db328409ff409"
+    },
+    {
+      "path": "dist/contrastive/types.d.ts",
+      "sha256": "006014e0cde1c3eb54d2f4491c916755c5a6535f2fffd6b3feb3b81d968fe3c7"
+    },
+    {
+      "path": "dist/contrastive/types.js",
+      "sha256": "01ae2a5b120382f9a648ced7ee8507493a134f216d100fc61600c6c9738235d2"
+    },
+    {
+      "path": "dist/contrastive/validation.d.ts",
+      "sha256": "8aa8f89814f5579b6e961f1fd5541eec9130884f586adb1d2e02aa3da3f9d66a"
+    },
+    {
+      "path": "dist/contrastive/validation.js",
+      "sha256": "912ef4897211873a915962f26b965c92e992c8bb78478c5977e8d459254f6cb1"
+    },
+    {
+      "path": "bench/contrastive/fixtures.mjs",
+      "sha256": "a03273e95b0cd0ceafa522e9731f0378032dc8d5b84108edbdd7d097fe4fe1c2"
+    },
+    {
+      "path": "bench/contrastive/live-pilot.mjs",
+      "sha256": "cdaa6801f84e80c719262886bd7050c7eb990ab748d97d726d6a992d26aa6e74"
+    },
+    {
+      "path": "bench/contrastive/provenance.mjs",
+      "sha256": "e1c7d50979486e979929c3e29616a41f2496a867aad656e96150164aa6ff425b"
+    },
+    {
+      "path": "bench/contrastive/run.mjs",
+      "sha256": "f4321560282ef6c142418f618e7ee70419650d96f227ad7c11295a85ee527ca0"
+    },
+    {
+      "path": "bench/contrastive/synthetic-adapter.mjs",
+      "sha256": "44fa8047b4bf43ce75794a0e16e72856b2ee44df2cfc10c91fb4a6383c4c489c"
+    }
+  ],
+  "developmentTasks": 8,
+  "heldoutTasks": 100,
+  "baseline": {
+    "total": 100,
+    "passed": 23,
+    "score": 0.23,
+    "failed": [
+      "holdout:0",
+      "holdout:1",
+      "holdout:2",
+      "holdout:3",
+      "holdout:4",
+      "holdout:5",
+      "holdout:6",
+      "holdout:7",
+      "holdout:8",
+      "holdout:10",
+      "holdout:12",
+      "holdout:13",
+      "holdout:14",
+      "holdout:15",
+      "holdout:16",
+      "holdout:17",
+      "holdout:19",
+      "holdout:20",
+      "holdout:21",
+      "holdout:22",
+      "holdout:23",
+      "holdout:24",
+      "holdout:25",
+      "holdout:26",
+      "holdout:27",
+      "holdout:28",
+      "holdout:29",
+      "holdout:31",
+      "holdout:33",
+      "holdout:34",
+      "holdout:35",
+      "holdout:36",
+      "holdout:39",
+      "holdout:41",
+      "holdout:44",
+      "holdout:45",
+      "holdout:46",
+      "holdout:47",
+      "holdout:49",
+      "holdout:50",
+      "holdout:53",
+      "holdout:54",
+      "holdout:55",
+      "holdout:56",
+      "holdout:57",
+      "holdout:58",
+      "holdout:59",
+      "holdout:60",
+      "holdout:61",
+      "holdout:62",
+      "holdout:66",
+      "holdout:68",
+      "holdout:69",
+      "holdout:71",
+      "holdout:72",
+      "holdout:73",
+      "holdout:75",
+      "holdout:76",
+      "holdout:77",
+      "holdout:79",
+      "holdout:81",
+      "holdout:82",
+      "holdout:83",
+      "holdout:85",
+      "holdout:86",
+      "holdout:87",
+      "holdout:88",
+      "holdout:89",
+      "holdout:90",
+      "holdout:91",
+      "holdout:92",
+      "holdout:93",
+      "holdout:94",
+      "holdout:96",
+      "holdout:97",
+      "holdout:98",
+      "holdout:99"
+    ]
+  },
+  "candidate": {
+    "total": 100,
+    "passed": 100,
+    "score": 1,
+    "failed": []
+  },
+  "result": {
+    "baselineDigest": "1e37e2dea2350a9b945738e23f0187e6060c5a7124c4a0e1154d052d9786b64a",
+    "baselineScore": 0.25,
+    "calls": 7,
+    "candidate": {
+      "components": [
+        {
+          "content": {
+            "quoted": true
+          },
+          "id": "split",
+          "scope": "invariant"
+        },
+        {
+          "content": {
+            "decimalComma": true
+          },
+          "id": "amount",
+          "scope": "domain"
+        }
+      ]
+    },
+    "candidateDigest": "e5330a815dca8521c8ea6e74bf93e52056111ae379f1b38c865b929410cad488",
+    "deduplicated": 0,
+    "outcome": "candidate",
+    "promotion": "not-authorized",
+    "reason": "development-improvement",
+    "receipts": [
+      {
+        "candidateDigest": "1e37e2dea2350a9b945738e23f0187e6060c5a7124c4a0e1154d052d9786b64a",
+        "cumulativeReportedUsd": 0,
+        "cumulativeReservedUsd": 0,
+        "durationMs": 1.1277499999999918,
+        "kind": "baseline",
+        "reportedUsd": 0,
+        "reservedUsd": 0,
+        "sequence": 1,
+        "status": "success"
+      },
+      {
+        "candidateDigest": "1e37e2dea2350a9b945738e23f0187e6060c5a7124c4a0e1154d052d9786b64a",
+        "cumulativeReportedUsd": 0.000058311,
+        "cumulativeReservedUsd": 0.05,
+        "durationMs": 2604.909585,
+        "kind": "propose:invariant",
+        "reportedUsd": 0.000058311,
+        "reservedUsd": 0.05,
+        "sequence": 2,
+        "status": "success"
+      },
+      {
+        "candidateDigest": "dd6a67997f98fc028b13b4149de9cc2a6cdec55aa849a90b939878f93ccb7782",
+        "cumulativeReportedUsd": 0.000058311,
+        "cumulativeReservedUsd": 0.05,
+        "durationMs": 0.6211800000000949,
+        "kind": "probe:invariant",
+        "reportedUsd": 0,
+        "reservedUsd": 0,
+        "sequence": 3,
+        "status": "success"
+      },
+      {
+        "candidateDigest": "1e37e2dea2350a9b945738e23f0187e6060c5a7124c4a0e1154d052d9786b64a",
+        "cumulativeReportedUsd": 0.000117018,
+        "cumulativeReservedUsd": 0.1,
+        "durationMs": 538.2567779999999,
+        "kind": "propose:domain",
+        "reportedUsd": 0.000058707,
+        "reservedUsd": 0.05,
+        "sequence": 4,
+        "status": "success"
+      },
+      {
+        "candidateDigest": "9b78b1159e3c4807c674e96cadb0b10a7af1c683377728317880fb1288de318e",
+        "cumulativeReportedUsd": 0.000117018,
+        "cumulativeReservedUsd": 0.1,
+        "durationMs": 0.4846099999999751,
+        "kind": "probe:domain",
+        "reportedUsd": 0,
+        "reservedUsd": 0,
+        "sequence": 5,
+        "status": "success"
+      },
+      {
+        "candidateDigest": "1e37e2dea2350a9b945738e23f0187e6060c5a7124c4a0e1154d052d9786b64a",
+        "cumulativeReportedUsd": 0.00019077299999999998,
+        "cumulativeReservedUsd": 0.15,
+        "durationMs": 540.157318,
+        "kind": "compose",
+        "reportedUsd": 0.000073755,
+        "reservedUsd": 0.05,
+        "sequence": 6,
+        "status": "success"
+      },
+      {
+        "candidateDigest": "e5330a815dca8521c8ea6e74bf93e52056111ae379f1b38c865b929410cad488",
+        "cumulativeReportedUsd": 0.00019077299999999998,
+        "cumulativeReservedUsd": 0.15,
+        "durationMs": 0.4538700000002791,
+        "kind": "probe:composition",
+        "reportedUsd": 0,
+        "reservedUsd": 0,
+        "sequence": 7,
+        "status": "success"
+      }
+    ],
+    "reportedUsd": 0.00019077299999999998,
+    "reservedUsd": 0.15,
+    "selectedScore": 1
+  },
+  "parserCounts": {
+    "probe": 4,
+    "propose": 0,
+    "compose": 0,
+    "executedRows": 32
+  },
+  "retainedEntries": 1,
+  "retrievedEntries": 1,
+  "telemetry": [
+    {
+      "role": "invariant",
+      "responseId": "gen-1792169061-SdPoBtefZ8590aFaTtpk",
+      "model": "google/gemini-2.5-flash-lite",
+      "promptTokens": 477,
+      "completionTokens": 28,
+      "costUsd": 0.000058311,
+      "costSource": "provider-usage",
+      "reservedUsd": 0.05,
+      "latencyMs": 2599.683685
+    },
+    {
+      "role": "domain",
+      "responseId": "gen-1792169063-V7XQjbFAw4trdZl1htiX",
+      "model": "google/gemini-2.5-flash-lite",
+      "promptTokens": 477,
+      "completionTokens": 29,
+      "costUsd": 0.000058707,
+      "costSource": "provider-usage",
+      "reservedUsd": 0.05,
+      "latencyMs": 537.930828
+    },
+    {
+      "role": "composer",
+      "responseId": "gen-1792169063-hCAWj2O88wJQZKcvs1Uo",
+      "model": "google/gemini-2.5-flash-lite",
+      "promptTokens": 537,
+      "completionTokens": 52,
+      "costUsd": 0.000073755,
+      "costSource": "provider-usage",
+      "reservedUsd": 0.05,
+      "latencyMs": 539.4695780000002
+    }
+  ],
+  "liveLatencyMs": 3696.38667,
+  "totalProviderCostUsd": 0.00019077299999999998,
+  "reservedProviderUsd": 0.15000000000000002
+}

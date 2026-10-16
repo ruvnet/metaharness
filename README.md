@@ -61,6 +61,8 @@ Output is an npm-publishable `.zip` with **your name on it, your branding, your 
 
 ### New
 
+* Bounded contrastive harness development: `@metaharness/darwin/contrastive` adds scoped proposals, actual probes, selective composition and metered experiment memory behind immutable caller policy. [API guide](packages/darwin-mode/CONTRASTIVE.md). Independent paired confirmation adds unseen-task, statistical and regression checks. Public intent-classification evidence remains separate from general agent performance claims.
+
 [Watch Darwin evolve a harness](docs/visual-walkthrough.md#evolve) · [Explore model routing](docs/visual-walkthrough.md#routing) · [Review experimental extensions](docs/visual-walkthrough.md#extensions)
 
 - **Run an experimental ARC-AGI-3 harness from the ChatGPT UI.**

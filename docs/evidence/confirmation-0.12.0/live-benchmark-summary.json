@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "mode": "live",
+  "completed": true,
+  "superiorityConfirmed": false,
+  "promotion": "not-authorized",
+  "accounting": {
+    "reservedUsd": 0.596,
+    "knownReportedCostUsd": 0.007642223,
+    "unresolvedAttempts": 0,
+    "reservationsByStage": {
+      "development:contrastive": 0.184,
+      "development:control": 0.252,
+      "confirmation": 0.16
+    },
+    "providerCalls": 253,
+    "requestedEndpoint": "google-vertex/eu",
+    "observedProviders": [
+      "Google"
+    ],
+    "halted": false
+  },
+  "costByStage": {
+    "development:contrastive": 0.002362739,
+    "development:control": 0.002937528,
+    "confirmation:baseline": 0.001085832,
+    "confirmation:contrastive": 0.001256124
+  },
+  "limitations": [
+    "40 balanced confirmation cases in 8 selected intents; not full CLINC150 or general agent performance.",
+    "Public data may have appeared in model pretraining; local separation does not prove novel data.",
+    "Same-process evaluator closure separation is not a malicious-adapter sandbox.",
+    "Provider temperature zero does not guarantee bitwise deterministic responses.",
+    "The control has equal development ceilings; actual spend and latency differ.",
+    "A rejection or unchanged baseline is a valid experiment result. No tuning or retries after confirmation."
+  ],
+  "source": {
+    "gitCommit": "7b7cb54bc5afae0ee9a6a690b632ccc8662ce5ab",
+    "sourceAndBuildSha256": "cc99a5833a39f2f6d9533faac08f249cbfd8cef54e31bc6e8dea97082d7b19eb",
+    "node": "v20.20.2"
+  },
+  "accuracy": {
+    "baseline": {
+      "passed": 38,
+      "total": 40,
+      "costOfPredictionsUsedUsd": 0.001085832,
+      "correctPerUsd": 34996.20567454266,
+      "costPerCorrectUsd": 2.857452631578947e-05,
+      "latencyMedianMs": 449.2563829999999,
+      "latencyP95Ms": 686.3409789999932,
+      "costNote": "Measured cost of unique predictions used by this arm; shared cache is not billed twice. Actual incremental spend is in costByStage.",
+      "candidateDigest": "2b06ffee78e85bca80e6de7fe579a5d9348dee5770966d73fc188f2ef866d4bc"
+    },
+    "contrastive": {
+      "passed": 38,
+      "total": 40,
+      "costOfPredictionsUsedUsd": 0.001256124,
+      "correctPerUsd": 30251.79042833351,
+      "costPerCorrectUsd": 3.3055894736842106e-05,
+      "latencyMedianMs": 428.9354439999952,
+      "latencyP95Ms": 917.0439250000018,
+      "costNote": "Measured cost of unique predictions used by this arm; shared cache is not billed twice. Actual incremental spend is in costByStage.",
+      "candidateDigest": "073a49ed5382e8cb5de54b1d5e19660c6ca77bd79dd2a3c46a4026094ef4b105"
+    },
+    "control": {
+      "passed": 38,
+      "total": 40,
+      "costOfPredictionsUsedUsd": 0.001085832,
+      "correctPerUsd": 34996.20567454266,
+      "costPerCorrectUsd": 2.857452631578947e-05,
+      "latencyMedianMs": 449.2563829999999,
+      "latencyP95Ms": 686.3409789999932,
+      "costNote": "Measured cost of unique predictions used by this arm; shared cache is not billed twice. Actual incremental spend is in costByStage.",
+      "candidateDigest": "2b06ffee78e85bca80e6de7fe579a5d9348dee5770966d73fc188f2ef866d4bc"
+    }
+  },
+  "assets": {
+    "metaharness-clinc150-confirmation-1792170546201.freeze.json": {
+      "bytes": 9129,
+      "sha256": "95f524a82470c4ff538419b92a38b9ca5651014981e2ebfc20cab872b2afa1ba"
+    },
+    "metaharness-clinc150-confirmation-1792170546201.candidates.json": {
+      "bytes": 8042,
+      "sha256": "28ebeb35f635473f4388f4c7f39e63d48e05674d977328c430a663999fa49262"
+    },
+    "metaharness-clinc150-confirmation-1792170546201.result.json": {
+      "bytes": 309288,
+      "sha256": "f9bf84a6246fa2b5521930bf05485648204baeb1e64177935725608b40efd641"
+    }
+  }
+}

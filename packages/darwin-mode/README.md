@@ -29,6 +29,14 @@ fine-tuning — just a population, a benchmark, and an archive.
 This follows the **Darwin Gödel Machine** lineage: iteratively mutate the source of a
 coding agent, then *empirically validate* each variant.
 
+## Contrastive development and confirmation (0.12.0)
+
+Use `@metaharness/darwin/contrastive` for bounded invariant/domain proposals, actual probes, selective composition, metered editor adapters and scoped experimental memory. Seven admitted calls maximum for one full round, with digest reuse and immutable caller policy. Production promotion remains outside the loop. [API and adapter guide](CONTRASTIVE.md) · [ADR-319](../../docs/adrs/ADR-319-bounded-contrastive-development.md).
+
+Independent confirmation compares one frozen candidate and baseline on disjoint task pairs. It enforces minimum evidence, statistical and regression limits while keeping production authority separate. [Confirmation design](../../docs/adrs/ADR-320-independent-contrastive-confirmation.md).
+
+Validation includes adversarial tests, synthetic mechanism benchmarks and a pinned public intent-classification pilot. The pilot reports actual provider costs and can reject a development winner; it does not establish general LLM improvement.
+
 ## ⭐ The product: Test-Driven Repair (TDR) — a CI Autofixer that resolves 68.3% for pennies
 
 **Hand Darwin a failing test, get a verified-fix PR — at ~$0.01–0.08/instance.** On **SWE-bench Lite**,

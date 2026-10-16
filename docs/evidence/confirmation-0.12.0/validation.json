@@ -1,0 +1,46 @@
+{
+  "date": "2026-10-16",
+  "build": "passed",
+  "cleanInstall": "npm ci --ignore-scripts passed",
+  "testFilesPassed": 76,
+  "testFilesSkipped": 2,
+  "testsPassed": 830,
+  "testsSkipped": 19,
+  "testDurationSeconds": 89.37,
+  "focusedConfirmationTests": 99,
+  "productionAuditVulnerabilities": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0,
+    "total": 0
+  },
+  "offlineBenchmark": {
+    "experimentCalls": 165,
+    "providerMockCalls": 16,
+    "maxConcurrency": 4,
+    "realProviderCalls": 0,
+    "realSpendUsd": 0
+  },
+  "limitations": [
+    "19 existing skipped tests",
+    "Rust CI blocked by existing Candle 0.8 / yanked zip 1.x dependency; issue 408"
+  ],
+  "packagedApiAcceptance": {
+    "installedApi": "passed",
+    "cases": 20,
+    "pValue": 0.015625,
+    "provenanceMismatch": "rejected",
+    "promotion": "not-authorized"
+  },
+  "package": {
+    "name": "@metaharness/darwin",
+    "version": "0.12.0",
+    "filename": "metaharness-darwin-0.12.0.tgz",
+    "size": 380121,
+    "unpackedSize": 1358198,
+    "shasum": "bea81384aff470423a296cc951be0f1e8c737efd",
+    "integrity": "sha512-opUL/Ho/48I0HWs+eSePVkrl1O9F+MreFakw2nYJGT5tG92DtOSmeFcpzLAEWt5Rnr5xNFZ0Ieg0RMKRhUyqiw=="
+  }
+}

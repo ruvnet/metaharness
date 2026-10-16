@@ -1,0 +1,52 @@
+{
+  "sourceCommit": "7f9455f",
+  "date": "2026-10-16",
+  "execution": "ruOS Software Factory, Node v20.20.2, Linux",
+  "tests": {
+    "passed": 731,
+    "skipped": 19,
+    "filesPassed": 74,
+    "filesSkipped": 2
+  },
+  "build": "npm run build --workspace=@metaharness/darwin passed",
+  "productionDependencyAudit": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "dependencies": {
+      "prod": 273,
+      "dev": 197,
+      "optional": 156,
+      "peer": 8,
+      "peerOptional": 0,
+      "total": 523
+    }
+  },
+  "package": {
+    "name": "@metaharness/darwin",
+    "version": "0.11.0",
+    "filename": "metaharness-darwin-0.11.0.tgz",
+    "size": 372529,
+    "unpackedSize": 1321189,
+    "shasum": "8c31d5caea547f9f2e9d985a2a6d0a6b54e57a78",
+    "integrity": "sha512-rlVdVrp2shfDCPny2UmEOwe7/+scpv4mcIFTezFcPiLWcMo5Bsp39iS+Z81skFv8mUJdNCnVAwGRAkfVv9bsZg=="
+  },
+  "consumerChecks": [
+    "fresh tarball install with scripts disabled",
+    "root, gepa and contrastive imports",
+    "six public contrastive exports",
+    "baseline execution, deduplication and no-promotion result"
+  ],
+  "security": "47 adversarial tests; independent review found no blocking issues; trusted adapters must enforce capability and real provider spend limits",
+  "optimization": "Development parser executions reduced from 64 to 32 by reusing grading failures; no wall-clock speedup claim",
+  "claims": [
+    "Synthetic mechanism benchmark only",
+    "Live provider smoke uses generated parser tasks, not a general agent benchmark",
+    "No automatic production promotion"
+  ]
+}

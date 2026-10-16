@@ -1,0 +1,349 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "repository": "https://github.com/clinc/oos-eval",
+    "commit": "828f8093932c8fe6ca7936c3d2e52903b1c523de",
+    "path": "data/data_full.json",
+    "sha256": "36923c3705a59e08fe9c3883d8bc2dd966ef93e22cb78ac41171782a698d56e0",
+    "license": "CC-BY-3.0",
+    "licenseSha256": "e6bc9e9c474700b708f568bac9e5a8a9bcb2b1dad53442f5ba449fcb848b8e76",
+    "paper": "https://aclanthology.org/D19-1131/"
+  },
+  "seed": "metaharness-clinc150-confirmation-v1-20261016",
+  "taxonomy": {
+    "balance": "Current funds available in a bank account.",
+    "bill_balance": "Amount owed on a bill or credit card statement.",
+    "bill_due": "When a bill or payment is due.",
+    "min_payment": "Minimum amount that must be paid.",
+    "pay_bill": "Make or arrange a bill payment.",
+    "transactions": "Inspect individual account transactions or charges.",
+    "spending_history": "Review or summarize past spending over a period.",
+    "income": "Review income or earnings received."
+  },
+  "selection": "SHA256 rank within intent, official validation versus test split",
+  "development": [
+    {
+      "id": "clinc:val:508",
+      "text": "can i afford a new tv from my savings account",
+      "gold": "balance"
+    },
+    {
+      "id": "clinc:val:513",
+      "text": "i wonder if i have enough money in my chase account for a bike",
+      "gold": "balance"
+    },
+    {
+      "id": "clinc:val:500",
+      "text": "do i have more than $100 in my pnc account",
+      "gold": "balance"
+    },
+    {
+      "id": "clinc:val:2565",
+      "text": "how much do i have left to pay on my server and domain",
+      "gold": "bill_balance"
+    },
+    {
+      "id": "clinc:val:2571",
+      "text": "what is the total of all my bills combined",
+      "gold": "bill_balance"
+    },
+    {
+      "id": "clinc:val:2568",
+      "text": "how much do i have to pay on taxes and cable",
+      "gold": "bill_balance"
+    },
+    {
+      "id": "clinc:val:1541",
+      "text": "what day do i have to pay my leasing office bill",
+      "gold": "bill_due"
+    },
+    {
+      "id": "clinc:val:1558",
+      "text": "is the bill due this week",
+      "gold": "bill_due"
+    },
+    {
+      "id": "clinc:val:1540",
+      "text": "when do i need to pay my dte energy bill",
+      "gold": "bill_due"
+    },
+    {
+      "id": "clinc:val:2215",
+      "text": "what's my bill's minimum payment",
+      "gold": "min_payment"
+    },
+    {
+      "id": "clinc:val:2202",
+      "text": "whats the minimum payment on my electric bill",
+      "gold": "min_payment"
+    },
+    {
+      "id": "clinc:val:2206",
+      "text": "how little can i pay towards my car insurance",
+      "gold": "min_payment"
+    },
+    {
+      "id": "clinc:val:745",
+      "text": "tell me if you can help pay a bill",
+      "gold": "pay_bill"
+    },
+    {
+      "id": "clinc:val:744",
+      "text": "i want assistance with my utility bill",
+      "gold": "pay_bill"
+    },
+    {
+      "id": "clinc:val:748",
+      "text": "pay my monthy mortgage payment",
+      "gold": "pay_bill"
+    },
+    {
+      "id": "clinc:val:689",
+      "text": "please tell me all the purchases on my hy-vee card for this statement period",
+      "gold": "transactions"
+    },
+    {
+      "id": "clinc:val:699",
+      "text": "how much was my last transaction for",
+      "gold": "transactions"
+    },
+    {
+      "id": "clinc:val:697",
+      "text": "what withdrawals were there on my account yesterday",
+      "gold": "transactions"
+    },
+    {
+      "id": "clinc:val:776",
+      "text": "how much have i spent on shoes recently",
+      "gold": "spending_history"
+    },
+    {
+      "id": "clinc:val:770",
+      "text": "have i spent too much of my paycheck on donuts lately",
+      "gold": "spending_history"
+    },
+    {
+      "id": "clinc:val:761",
+      "text": "how much have i spent lately",
+      "gold": "spending_history"
+    },
+    {
+      "id": "clinc:val:2912",
+      "text": "what do i get paid",
+      "gold": "income"
+    },
+    {
+      "id": "clinc:val:2911",
+      "text": "how much do i make in a year",
+      "gold": "income"
+    },
+    {
+      "id": "clinc:val:2919",
+      "text": "yearly salary",
+      "gold": "income"
+    }
+  ],
+  "confirmation": [
+    {
+      "id": "clinc:test:772",
+      "text": "how much moola is in my bank accounts",
+      "gold": "balance"
+    },
+    {
+      "id": "clinc:test:764",
+      "text": "will you tell me my bank balance",
+      "gold": "balance"
+    },
+    {
+      "id": "clinc:test:750",
+      "text": "what are my coffers at",
+      "gold": "balance"
+    },
+    {
+      "id": "clinc:test:766",
+      "text": "how much money do i have in my various bank accounts",
+      "gold": "balance"
+    },
+    {
+      "id": "clinc:test:778",
+      "text": "what's my checking look like",
+      "gold": "balance"
+    },
+    {
+      "id": "clinc:test:3866",
+      "text": "is the phone bill the same as last month",
+      "gold": "bill_balance"
+    },
+    {
+      "id": "clinc:test:3852",
+      "text": "what do i owe this month on all my bills",
+      "gold": "bill_balance"
+    },
+    {
+      "id": "clinc:test:3857",
+      "text": "has my electricity bill increased this month how much",
+      "gold": "bill_balance"
+    },
+    {
+      "id": "clinc:test:3842",
+      "text": "how much do i owe visa",
+      "gold": "bill_balance"
+    },
+    {
+      "id": "clinc:test:3849",
+      "text": "what is the cost of my rent and water bills",
+      "gold": "bill_balance"
+    },
+    {
+      "id": "clinc:test:2322",
+      "text": "tell me the last day i can pay my gas bill",
+      "gold": "bill_due"
+    },
+    {
+      "id": "clinc:test:2310",
+      "text": "when is my electric bill due by",
+      "gold": "bill_due"
+    },
+    {
+      "id": "clinc:test:2338",
+      "text": "when does my gas bill need paid by",
+      "gold": "bill_due"
+    },
+    {
+      "id": "clinc:test:2328",
+      "text": "i need to find out how to check the due date for the water bill",
+      "gold": "bill_due"
+    },
+    {
+      "id": "clinc:test:2318",
+      "text": "when is my cell phone due",
+      "gold": "bill_due"
+    },
+    {
+      "id": "clinc:test:3316",
+      "text": "what is the minimum i can pay on my electric bill",
+      "gold": "min_payment"
+    },
+    {
+      "id": "clinc:test:3317",
+      "text": "what is the minimum i can pay on my gas bill",
+      "gold": "min_payment"
+    },
+    {
+      "id": "clinc:test:3324",
+      "text": "what is the minimum amount i can pay on my gas bill",
+      "gold": "min_payment"
+    },
+    {
+      "id": "clinc:test:3311",
+      "text": "what is the lowest amount i can pay for my insurance bill",
+      "gold": "min_payment"
+    },
+    {
+      "id": "clinc:test:3303",
+      "text": "what is my minimum verizon bill payment",
+      "gold": "min_payment"
+    },
+    {
+      "id": "clinc:test:1138",
+      "text": "pay $175 on my visa",
+      "gold": "pay_bill"
+    },
+    {
+      "id": "clinc:test:1120",
+      "text": "i am going to need help paying my rent bill",
+      "gold": "pay_bill"
+    },
+    {
+      "id": "clinc:test:1131",
+      "text": "pay my gas bill with my checking account",
+      "gold": "pay_bill"
+    },
+    {
+      "id": "clinc:test:1116",
+      "text": "i need some assistance paying my utilities bill",
+      "gold": "pay_bill"
+    },
+    {
+      "id": "clinc:test:1121",
+      "text": "i want to pay my bill",
+      "gold": "pay_bill"
+    },
+    {
+      "id": "clinc:test:1044",
+      "text": "show my my most recent visa card transaction",
+      "gold": "transactions"
+    },
+    {
+      "id": "clinc:test:1031",
+      "text": "i need information about my recent transaction",
+      "gold": "transactions"
+    },
+    {
+      "id": "clinc:test:1039",
+      "text": "how much have i spent on my bank card sine i last paid my bill",
+      "gold": "transactions"
+    },
+    {
+      "id": "clinc:test:1048",
+      "text": "what is the largest transaction i have made on video games this month",
+      "gold": "transactions"
+    },
+    {
+      "id": "clinc:test:1042",
+      "text": "what was my recent transaction on my visa card",
+      "gold": "transactions"
+    },
+    {
+      "id": "clinc:test:1162",
+      "text": "about how much did i spend recently",
+      "gold": "spending_history"
+    },
+    {
+      "id": "clinc:test:1168",
+      "text": "what are my finances like lately",
+      "gold": "spending_history"
+    },
+    {
+      "id": "clinc:test:1151",
+      "text": "how much money did i spend this weekend",
+      "gold": "spending_history"
+    },
+    {
+      "id": "clinc:test:1144",
+      "text": "how much have i been spending on booze this month",
+      "gold": "spending_history"
+    },
+    {
+      "id": "clinc:test:1141",
+      "text": "how many dollars have i spent on coffee this month",
+      "gold": "spending_history"
+    },
+    {
+      "id": "clinc:test:4373",
+      "text": "what's my salary for this year",
+      "gold": "income"
+    },
+    {
+      "id": "clinc:test:4375",
+      "text": "what's the amount of my income",
+      "gold": "income"
+    },
+    {
+      "id": "clinc:test:4378",
+      "text": "what is my payment going to be",
+      "gold": "income"
+    },
+    {
+      "id": "clinc:test:4351",
+      "text": "how much money do i earn",
+      "gold": "income"
+    },
+    {
+      "id": "clinc:test:4367",
+      "text": "what is my income this year",
+      "gold": "income"
+    }
+  ],
+  "frozenSha256": "6a0376d9a5b1766096986bb0b87f65f2fc4c2808d3260ea9fb27027952103c92"
+}
