@@ -17,6 +17,7 @@ import { fileURLToPath } from 'node:url';
 import { agenticSolve, agenticSolveNative, chebTemp, buildAgenticSystem, applyPolicySystem } from './agentic-loop.mjs';
 import { runConformantTests } from './conformant-tests.mjs';
 import { langProfile } from './lang-profile.mjs';
+import { parseMaxCost } from './cost-guard.mjs';
 // ADR-195 Phase-2 capability stack (all opt-in; off by default — backward-compatible).
 import { localizeSeed, formatSeedForAgent } from './localize.mjs';
 import { reproGateSolve, reproFeedbackBlock } from './repro-gate.mjs';
@@ -53,7 +54,7 @@ const key = (process.env[KEY_ENV] || (() => { try { return readFileSync('/tmp/.o
 const CONCURRENCY = Math.max(1, +argv('--concurrency', 1));
 // In-solver budget cap (see solve-repair.mjs). `--max-cost <usd>` stops pulling
 // new instances once cumulative LLM cost reaches it; in-flight finish + write.
-const MAX_COST = +argv('--max-cost', Infinity);
+const MAX_COST = parseMaxCost(args);
 const TEMP = +argv('--temperature', 0); // Best-of-N diversity: run N trajectories at temp>0 to vary them
 const CHEB_TEMP = process.argv.includes('--cheb-temp'); // PR#49/ADR-188: Chebyshev step-depth temp (hot→greedy)
 const CHEB_HI = +argv('--cheb-hi', 0.8);                 // hot-end temperature for the schedule
