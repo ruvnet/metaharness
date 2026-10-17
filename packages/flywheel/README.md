@@ -1,3 +1,7 @@
+## Experimental bounded learning API
+
+Version 0.2.0-experimental.1 adds runBoundedLearning with training separation, skill drift checks and full development cost accounting. No useful learning gain or production worker isolation is demonstrated. See [BOUNDED-LEARNING.md](./BOUNDED-LEARNING.md). Install explicitly with the experimental npm tag. Existing promotion controls remain required.
+
 # @metaharness/flywheel
 
 **A verifiable self-improvement loop for agent harnesses.**
