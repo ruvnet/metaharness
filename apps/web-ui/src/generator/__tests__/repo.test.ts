@@ -61,6 +61,14 @@ describe('recommendPlan', () => {
     expect(plan.agents).toContain('architect');
   });
 
+  it('recommends mcp:off for a repo with zero MCP signal (ADR-022: off is first-class)', () => {
+    const plan = recommendPlan(analyzeFiles(rustRepo));
+    expect(plan.mcp).toBe('off');
+    const paths = buildScaffold(planToConfig(plan)).map((f) => f.path);
+    expect(paths).not.toContain('src/mcp/server.ts');
+    expect(paths.some((p) => p.startsWith('src/mcp/'))).toBe(false);
+  });
+
   it('routes an MCP server repo to the mcp-server archetype with remote MCP', () => {
     const plan = recommendPlan(analyzeFiles(mcpRepo));
     expect(plan.archetypeId).toBe('mcp-server-harness');

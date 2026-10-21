@@ -325,6 +325,19 @@ export function recommendPlan(profile: RepoProfile, semanticScores?: Record<stri
     execution: 'disabled' as const,
   }));
 
+  // Dream Cycle 2026-10-10 (generator-genome): every ARCHETYPES entry hardcodes
+  // policy.mcp to 'local' or 'remote' — none ever 'off' — so `plan.mcp === 'off'`
+  // was structurally unreachable from this function for ANY input repo, even one
+  // with zero real MCP signal, contradicting ADR-022's "off is a first-class mode"
+  // and this file's own `McpPolicy` doc comment ("the harness author opts INTO
+  // capability, never out of safety"). Mirrors the identical fix already applied
+  // to packages/create-agent-harness/src/analyze-repo.ts's `recommendPlan()`
+  // (branch dream/2026-10-05-generator-genome, unmerged as of tonight), adapted
+  // to this file's plural `requiredSignals` array instead of that file's singular
+  // `requiredSignal` field. An archetype that explicitly requires MCP signal
+  // (`requiredSignals` includes 'hasMcp') keeps its mode regardless.
+  const mcp: McpMode = a.policy.mcp === 'local' && !profile.hasMcp && !a.requiredSignals.includes('hasMcp') ? 'off' : a.policy.mcp;
+
   return {
     name: toKebabCase(`${profile.name}-harness`),
     hosts,
@@ -334,7 +347,7 @@ export function recommendPlan(profile: RepoProfile, semanticScores?: Record<stri
     agents: a.agents,
     skills: a.skills,
     commands: a.commands,
-    mcp: a.policy.mcp,
+    mcp,
     policy: a.policy.policy,
     riskProfile: describeRisk(a.policy.policy),
     suggestedCommands: suggested,
