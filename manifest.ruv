@@ -1,0 +1,140 @@
+{
+  "schemaVersion": "0.1",
+  "id": "ruv://ruvnet/constellation/service/metaharness/resources/manifest.ruv",
+  "name": "metaharness",
+  "summary": "Generate repository-aware CLI, agent and MCP harnesses from a repository or project specification. Generated tool policy and governance interfaces. Boundaries: Inventory is source/documentation inspection only; no runtime, release, performance or security validation was performed. Nested packages and scoped instructions are not exhaustively inventoried.",
+  "repository": {
+    "url": "https://github.com/ruvnet/metaharness",
+    "defaultBranch": "main",
+    "visibility": "public"
+  },
+  "nexus": "https://github.com/ruvnet/ruvnet",
+  "capabilities": [
+    {
+      "id": "harness-generation",
+      "description": "Generate repository-aware CLI, agent and MCP harnesses from a repository or project specification.",
+      "status": "documented",
+      "evidence": [
+        {
+          "url": "https://github.com/ruvnet/metaharness/blob/e0dfd44da72b7adfb7c57fdd42d124be58ed7086/README.md",
+          "revision": "e0dfd44da72b7adfb7c57fdd42d124be58ed7086",
+          "kind": "documentation"
+        }
+      ]
+    },
+    {
+      "id": "policy-governance",
+      "description": "Generated tool policy and governance interfaces.",
+      "status": "documented",
+      "evidence": [
+        {
+          "url": "https://github.com/ruvnet/metaharness/blob/e0dfd44da72b7adfb7c57fdd42d124be58ed7086/README.md",
+          "revision": "e0dfd44da72b7adfb7c57fdd42d124be58ed7086",
+          "kind": "documentation"
+        }
+      ]
+    },
+    {
+      "id": "evolution-evaluation",
+      "description": "Evaluate harness changes through documented Darwin Mode.",
+      "status": "documented",
+      "evidence": [
+        {
+          "url": "https://github.com/ruvnet/metaharness/blob/e0dfd44da72b7adfb7c57fdd42d124be58ed7086/README.md",
+          "revision": "e0dfd44da72b7adfb7c57fdd42d124be58ed7086",
+          "kind": "documentation"
+        }
+      ]
+    },
+    {
+      "id": "release-verification",
+      "description": "Generated release verification and witness-signed provenance.",
+      "status": "documented",
+      "evidence": [
+        {
+          "url": "https://github.com/ruvnet/metaharness/blob/e0dfd44da72b7adfb7c57fdd42d124be58ed7086/README.md",
+          "revision": "e0dfd44da72b7adfb7c57fdd42d124be58ed7086",
+          "kind": "documentation"
+        }
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "readme",
+      "url": "https://github.com/ruvnet/metaharness/blob/e0dfd44da72b7adfb7c57fdd42d124be58ed7086/README.md",
+      "kind": "docs"
+    },
+    {
+      "id": "package-json",
+      "url": "https://github.com/ruvnet/metaharness/blob/e0dfd44da72b7adfb7c57fdd42d124be58ed7086/package.json",
+      "kind": "source"
+    },
+    {
+      "id": "cargo-toml",
+      "url": "https://github.com/ruvnet/metaharness/blob/e0dfd44da72b7adfb7c57fdd42d124be58ed7086/Cargo.toml",
+      "kind": "source"
+    }
+  ],
+  "relationships": [],
+  "integrations": [
+    {
+      "role": "nexus",
+      "project": "ruv://ruvnet/constellation/service/ruvnet/resources/manifest.ruv",
+      "status": "declared"
+    },
+    {
+      "role": "coordination",
+      "project": "ruv://ruvnet/constellation/service/ruflo/resources/manifest.ruv",
+      "status": "declared"
+    },
+    {
+      "role": "execution-artifacts",
+      "project": "ruv://ruvnet/constellation/service/rvm/resources/manifest.ruv",
+      "status": "declared"
+    },
+    {
+      "role": "public-retrieval",
+      "project": "ruv://ruvnet/constellation/service/ruvector/resources/manifest.ruv",
+      "status": "declared"
+    },
+    {
+      "role": "evaluation",
+      "project": "ruv://ruvnet/constellation/service/metaharness/resources/manifest.ruv",
+      "status": "declared"
+    },
+    {
+      "role": "evolution",
+      "project": "ruv://ruvnet/constellation/service/autogenous/resources/manifest.ruv",
+      "status": "declared"
+    },
+    {
+      "role": "improvement-proposals",
+      "project": "ruv://ruvnet/constellation/service/dream-machine/resources/manifest.ruv",
+      "status": "declared"
+    },
+    {
+      "role": "stream-observation",
+      "project": "ruv://ruvnet/constellation/service/midstream/resources/manifest.ruv",
+      "status": "declared"
+    },
+    {
+      "role": "cryptography-research",
+      "project": "ruv://ruvnet/constellation/service/qudag/resources/manifest.ruv",
+      "status": "declared"
+    },
+    {
+      "role": "community",
+      "project": "ruv://ruvnet/constellation/service/agentbbs/resources/manifest.ruv",
+      "status": "declared"
+    }
+  ],
+  "safety": {
+    "discoveryOnly": true,
+    "executionRequiresAuthorization": true
+  },
+  "provenance": {
+    "sourceCommit": "e0dfd44da72b7adfb7c57fdd42d124be58ed7086",
+    "observedAt": "2026-10-10T02:57:25.769738Z"
+  }
+}
