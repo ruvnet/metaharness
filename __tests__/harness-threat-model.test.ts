@@ -37,6 +37,7 @@ async function makeSafePolicyRepo(): Promise<string> {
     allowShell: false,
     allowNetwork: false,
     allowFileWrite: false,
+    requireApprovalForDangerous: true,
     maxToolCallsPerTurn: 8,
     toolTimeoutMs: 30000,
   }), 'utf-8');

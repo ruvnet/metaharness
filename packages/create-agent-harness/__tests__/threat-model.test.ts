@@ -54,15 +54,15 @@ describe('buildThreatModel — mcpInUse / scanMcp detection-surface consistency'
     // discarded by formatThreatModel's early "mcp is off" return.
     expect(tm.findings.some((f) => f.id === 'no-policy')).toBe(true);
     expect(tm.worst).toBe('high');
-    // NOTE (disclosed, not fixed tonight): tm.verdict/tm.exitCode are derived
-    // from a separate boolean grid (shellAccess/policyDefaultDeny/secretsReachable/
-    // networkAccess/fileWrite/auditLog) that does not itself consider
-    // tm.worst/tm.findings severity, so a HIGH scanMcp finding like
-    // 'no-policy' can coexist with verdict:'clean' here. That is a real,
-    // narrower, separate gap from tonight's mcpInUse/scanMcp consistency fix
-    // — see the PR/gist for why it's out of scope for this diff.
-    expect(tm.verdict).toBe('clean');
-    expect(tm.exitCode).toBe(0);
+    // Previously disclosed-but-deferred (2026-09-03, #276): tm.verdict/tm.exitCode
+    // were derived from a separate boolean grid (shellAccess/policyDefaultDeny/
+    // secretsReachable/networkAccess/fileWrite/auditLog) that did not itself
+    // consider tm.worst/tm.findings severity, so this HIGH 'no-policy' finding
+    // coexisted with verdict:'clean'/exitCode:0. Fixed below (see the
+    // dedicated 'verdict floors to scan.worst' describe block) by folding
+    // scan.worst into both verdict thresholds.
+    expect(tm.verdict).toBe('high');
+    expect(tm.exitCode).toBe(2);
   });
 
   it('BUG REPRO: formatThreatModel does not early-return "off" when only mcpServers is registered', async () => {
@@ -149,6 +149,86 @@ describe('buildThreatModel — mcpInUse / scanMcp detection-surface consistency'
     expect(tm.findings.some((f) => f.id === 'unrestricted-bash-allow')).toBe(true);
     expect(tm.findings.some((f) => f.id === 'no-policy')).toBe(false);
     expect(tm.worst).toBe('high');
+    // A 2nd live instance of the same gap this file's 'verdict floors to
+    // scan.worst' block closes: the compliant policy sets shellAccess=false
+    // and policyDefaultDeny=true, so pre-fix this read verdict:'clean' even
+    // though 'unrestricted-bash-allow' (from the settings.json surface, not
+    // the policy surface) made tm.worst 'high'.
+    expect(tm.verdict).toBe('high');
+    expect(tm.exitCode).toBe(2);
+  });
+
+  describe('verdict floors to scan.worst (closes 2026-09-03 #276 disclosed-not-fixed gap)', () => {
+    it('no policy file at all: verdict/exitCode now match the HIGH no-policy finding', async () => {
+      const dir = await makeHarness({ policy: null, mcpJson: null, servers: { bot: { command: 'npx' } } });
+      const tm = buildThreatModel(dir);
+      expect(tm.worst).toBe('high');
+      expect(tm.verdict).toBe('high');
+      expect(tm.exitCode).toBe(2);
+    });
+
+    it('a MEDIUM-only scanMcp finding (no audit log) with an otherwise-safe boolean grid now floors verdict to medium', async () => {
+      // defaultDeny true, no shell/network/file-write, allow/deny guard secrets —
+      // but auditLog is explicitly false in the *policy* file. The existing
+      // boolean grid already catches `auditLog === false` via its own
+      // `mcpInUse && auditLog === false` clause, so this fixture instead
+      // isolates a scanMcp-only MEDIUM the boolean grid has no term for at
+      // all: an unscoped risky interpreter allow-rule ('risky-bash-allow',
+      // severity medium) with every policy knob otherwise compliant.
+      const dir = await makeHarness({
+        policy: {
+          defaultDeny: true,
+          auditLog: true,
+          requireApprovalForDangerous: true,
+          toolTimeoutMs: 30000,
+          maxToolCallsPerTurn: 8,
+        },
+        allow: ['Bash(python *)'],
+        deny: ['Read(./.env)'],
+        servers: { bot: { command: 'npx' } },
+      });
+      const tm = buildThreatModel(dir);
+      expect(tm.shellAccess).toBe(false);
+      expect(tm.policyDefaultDeny).toBe(true);
+      expect(tm.secretsReachable).toBe(false);
+      expect(tm.networkAccess).toBe(false);
+      expect(tm.fileWrite).toBe(false);
+      expect(tm.findings.some((f) => f.id === 'risky-bash-allow')).toBe(true);
+      expect(tm.worst).toBe('medium');
+      expect(tm.verdict).toBe('medium');
+      expect(tm.exitCode).toBe(1);
+    });
+
+    it('zero findings beyond the clean/info sentinel never floors verdict above clean', async () => {
+      const dir = await makeHarness({
+        policy: {
+          defaultDeny: true,
+          auditLog: true,
+          allowShell: false,
+          allowNetwork: false,
+          allowFileWrite: false,
+          requireApprovalForDangerous: true,
+          toolTimeoutMs: 30000,
+          maxToolCallsPerTurn: 8,
+        },
+        allow: [],
+        deny: ['Read(./.env)'],
+        servers: { bot: { command: 'npx' } },
+      });
+      const tm = buildThreatModel(dir);
+      expect(tm.worst).toBe('info');
+      expect(tm.verdict).toBe('clean');
+      expect(tm.exitCode).toBe(0);
+    });
+
+    it('MCP not in use at all: scan.worst stays info and verdict stays clean (no regression)', async () => {
+      const dir = await makeHarness({ policy: null, mcpJson: null, servers: null });
+      const tm = buildThreatModel(dir);
+      expect(tm.mcpInUse).toBe(false);
+      expect(tm.worst).toBe('info');
+      expect(tm.verdict).toBe('clean');
+      expect(tm.exitCode).toBe(0);
+    });
   });
 
   it('BUG REPRO: secretsReachable is false and verdict is "clean" when the only deny rule targets .env.example, not the real .env', async () => {
