@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "id": "curriculum-pilot-v1",
+  "sourceHash": "1111111111111111111111111111111111111111111111111111111111111111",
+  "verifierHash": "2222222222222222222222222222222222222222222222222222222222222222",
+  "trainerHash": "3333333333333333333333333333333333333333333333333333333333333333",
+  "settingsHash": "4444444444444444444444444444444444444444444444444444444444444444",
+  "model": "Qwen/Qwen3-4B-Instruct-2507",
+  "modelRevision": "0000000000000000000000000000000000000000",
+  "dataScope": "synthetic",
+  "rounds": 3,
+  "trainingFamilies": [
+    "office-dependencies"
+  ],
+  "confirmationFamilies": [
+    "industrial-constraints",
+    "software-dependencies"
+  ],
+  "discoverySeeds": [
+    "11",
+    "12"
+  ],
+  "confirmationSeeds": [
+    "91",
+    "92"
+  ],
+  "cells": [
+    "office-d2",
+    "office-d3"
+  ],
+  "attempts": 4,
+  "budget": {
+    "maxCalls": 3,
+    "maxTokens": 10000,
+    "maxSeconds": 3600,
+    "maxUsd": 1
+  },
+  "knob": {
+    "name": "distractors",
+    "min": 0,
+    "max": 8,
+    "step": 1
+  },
+  "incumbent": 2,
+  "minimumTransferGain": 0.05
+}
