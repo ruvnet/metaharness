@@ -46,5 +46,10 @@
   "devDependencies": {
     "typescript": "^5.4.0",
     "vitest": "^4.1.12"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/metaharness.git",
+    "directory": "packages/flywheel"
   }
 }

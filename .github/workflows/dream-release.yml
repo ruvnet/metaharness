@@ -74,7 +74,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          gh release create "$RELEASE_TAG" --verify-tag --title 'MetaHarness 0.4.18 — Dream integration and security fixes' --notes-file docs/releases/dream-v0.4.18.md dist-release/*.tgz dist-release/dream-artifacts.json dist-release/benchmark.json
+          gh release create "$RELEASE_TAG" --verify-tag --title "MetaHarness ${RELEASE_TAG#dream-v} — Dream integration and security fixes" --notes-file "docs/releases/$RELEASE_TAG.md" dist-release/*.tgz dist-release/dream-artifacts.json dist-release/benchmark.json
           mkdir -p /tmp/dream-public
           gh release download "$RELEASE_TAG" --dir /tmp/dream-public
           for artifact in dist-release/*.tgz dist-release/dream-artifacts.json; do

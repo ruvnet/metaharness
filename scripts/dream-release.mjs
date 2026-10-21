@@ -17,6 +17,8 @@ if (mode === 'pack') {
   mkdirSync(out, { recursive: true });
   const artifacts = packages.map(dir => {
     const pkg = JSON.parse(readFileSync(`packages/${dir}/package.json`, 'utf8'));
+    assert.equal(pkg.repository?.url, 'https://github.com/ruvnet/metaharness.git', `${pkg.name}: repository URL must match provenance`);
+    assert.equal(pkg.repository?.directory, `packages/${dir}`, `${pkg.name}: wrong repository directory`);
     const [packed] = JSON.parse(run(npm, ['pack', '--json', '--ignore-scripts', '--pack-destination', out], resolve('packages', dir)));
     assert(packed.files.some(f => f.path === 'dist/index.js'), `${pkg.name}: missing compiled entry`);
     return { name: pkg.name, version: pkg.version, file: packed.filename, sha256: hash(readFileSync(join(out, packed.filename))) };

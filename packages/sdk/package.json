@@ -1,11 +1,11 @@
 {
   "name": "@metaharness/sdk",
   "version": "0.1.1",
-  "description": "Convenience helpers for harness authors — defineHarness, defineAgent, defineSkill, defineTool. Light wrappers around @metaharness/kernel.",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator",
+  "description": "Convenience helpers for harness authors \u2014 defineHarness, defineAgent, defineSkill, defineTool. Light wrappers around @metaharness/kernel.",
+  "homepage": "https://github.com/ruvnet/metaharness",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "url": "https://github.com/ruvnet/metaharness.git",
     "directory": "packages/sdk"
   },
   "license": "MIT",
