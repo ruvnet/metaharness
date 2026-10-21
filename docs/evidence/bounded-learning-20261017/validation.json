@@ -1,0 +1,17 @@
+{
+  "date": "2026-10-17",
+  "baseCommit": "e0dfd44da72b7adfb7c57fdd42d124be58ed7086",
+  "scope": "@metaharness/flywheel additive bounded-learning API",
+  "packageTests": {"passed": 159, "failed": 0, "newTests": 16},
+  "esmBuild": "PASS",
+  "cjsBuild": "PASS",
+  "localVerification": "PASS",
+  "ruosVerification": {"completionVersion": 1, "completionVerified": true, "status": "ok", "exitCode": 0},
+  "evidenceClass": "synthetic_contract_tests",
+  "usefulLearningGain": "NOT_DEMONSTRATED",
+  "liveWorkerIntegration": "NOT_IMPLEMENTED",
+  "packageRelease": "NOT_ATTEMPTED",
+  "providerCalls": 0,
+  "credentialsLoadedForTests": false,
+  "limitations": ["Existing root lockfile fails npm ci for five optional native kernel entries", "Tests ran with isolated pinned tooling", "No Rust or full monorepo validation", "Trusted adapter callbacks are not an isolation boundary", "No automatic promotion", "Point estimates require independent statistical confirmation"]
+}

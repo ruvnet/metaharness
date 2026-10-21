@@ -84,3 +84,7 @@ export type {
   GenerationCheckpoint,
   ResumeState,
 } from './types.js';
+
+export { runBoundedLearning } from './bounded-learning.js';
+export type { BoundedLearningConfig, BoundedLearningResult, LearningAdapters,
+  LearningObservation, LearningReply, LearningRecord, LearningStage } from './bounded-learning.js';
