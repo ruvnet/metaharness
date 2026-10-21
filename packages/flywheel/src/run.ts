@@ -1,3 +1,6 @@
+import { runProductionFlywheel } from './production-run.js';
+import type { ProductionGateConfig } from './production-gate.js';
+import type { BudgetLimiter } from './budget.js';
 // @metaharness/flywheel — runFlywheelGenerations(): the promotion LOOP. run → measure → mutate → verify
 // → promote, generation after generation, each re-basing on the previous promoted winner so verified
 // wins COMPOUND into an auditable lineage. Host- and benchmark-agnostic: everything specific enters via
@@ -25,6 +28,11 @@ function pairedOutcomesOf(baseline: Score, candidate: Score, suiteLen: number): 
 }
 
 export interface FlywheelConfig {
+  /** Legacy/research is the library default. CLI defaults to production; synthetic runs opt into research. */
+  promotionMode?: 'research' | 'production';
+  production?: ProductionGateConfig;
+  /** Reservations include failed/uncertain calls. Units must bound each injected operation's actual cost. */
+  hardBudget?: { limiter: BudgetLimiter; evaluatorUnits: number; proposerUnits: number };
   /** The gen-0 policy — the immutable root every promotion chains back to. */
   rootPolicy: Policy;
   proposer: Proposer;
@@ -38,7 +46,7 @@ export interface FlywheelConfig {
   mutationTargets?: string[];
   maxGenerations: number;
   signer: Signer;
-  /** Stop early once `spent() ≥ total` (e.g. a $ budget). */
+  /** RESEARCH soft generation boundary, not a hard cost cap. Production requires hardBudget. */
   budget?: { total: number; spent: () => number };
   /** Caller-supplied ISO/label per generation (determinism; no clock in the engine). */
   now?: (generation: number) => string;
@@ -54,12 +62,14 @@ export interface FlywheelConfig {
   /** Optional per-generation checkpoint hook — called at the END of each generation with a fully
    *  assembled replay bundle for the run so far. Lets a long (multi-hour) run persist incremental
    *  progress so a crash keeps the completed generations. Observation-only: never affects promotion.
-   *  Errors thrown by the hook are swallowed (a bad checkpoint must not kill a valid run). */
+   *  Research hook errors are swallowed for compatibility. Production clones the callback payload,
+   *  binds durable budget history into its checkpoint and propagates errors to stop further work. */
   onGeneration?: (info: GenerationCheckpoint) => void | Promise<void>;
   /** Resume a crashed run from a persisted {@link GenerationCheckpoint.resumeState}. When set, the gen-0
    *  root is NOT re-evaluated or re-created — the prior lineage is re-seeded and the loop continues from
    *  `resumeFrom.fromGeneration + 1`. Unset ⇒ a fresh run (identical to before). The caller is
-   *  responsible for restoring any external spend counter from the checkpoint's `spent`. */
+   *  responsible for restoring any research spend counter. Production verifies the signed state,
+   *  unchanged gate and exact operation-history prefix in the original durable ledger. */
   resumeFrom?: ResumeState;
   lineageStore?: LineageStore;
   rootId?: string;
@@ -78,6 +88,9 @@ export interface FlywheelResult {
 }
 
 export async function runFlywheelGenerations(cfg: FlywheelConfig): Promise<FlywheelResult> {
+  if (cfg.promotionMode !== undefined && cfg.promotionMode !== 'research' && cfg.promotionMode !== 'production') throw new Error('invalid promotionMode');
+  if (cfg.promotionMode === 'production') return runProductionFlywheel(cfg);
+  if (cfg.production || cfg.hardBudget) throw new Error('production controls require explicit promotionMode: production');
   const rule = cfg.promotionRule ?? meetsPromotionRule;
   const targets = cfg.mutationTargets ?? Object.keys(cfg.rootPolicy);
   const store = cfg.lineageStore ?? new InMemoryLineageStore();
@@ -139,6 +152,7 @@ export async function runFlywheelGenerations(cfg: FlywheelConfig): Promise<Flywh
     const verifiedN = promoted.filter((c) => c.primaryDelta > 0).length;
     const anchorSurvivingN = promoted.filter((c) => c.primaryDelta > 0 && (rootAnchor === null || (c.anchorScore ?? -Infinity) >= rootAnchor)).length;
     return {
+      promotion_mode: 'research',
       data_source: cfg.dataSource ?? 'UNSPECIFIED',
       root_id: rootId,
       chain: chainNow,

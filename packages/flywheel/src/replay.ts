@@ -1,3 +1,5 @@
+import { isProductionBundle, verifyProductionBindings } from './production-replay.js';
+import { createProductionPromotionRule } from './production-gate.js';
 // @metaharness/flywheel — independent replay. Given ONLY a ReplayBundle (and, optionally, the pinned
 // gate fingerprint + the gate rule itself), an external reviewer establishes the run with no trust in the
 // producer:
@@ -68,6 +70,7 @@ function receiptMatchesCommit(c: LineageCommit): boolean {
 export interface ReplayVerdict {
   pass: boolean;
   checks: {
+    productionBindings: boolean;
     receipts: boolean;
     reachesRoot: boolean;
     contiguousParents: boolean;
@@ -92,10 +95,16 @@ export interface ReplayVerdict {
 
 export function verifyReplayBundle(
   bundle: ReplayBundle,
-  opts: { pinnedGateFingerprint?: string; promotionRule?: PromotionRule } = {},
+  opts: { pinnedGateFingerprint?: string; pinnedPublicKey?: string; promotionRule?: PromotionRule } = {},
 ): ReplayVerdict {
   const failures: string[] = [];
   const chain = bundle.chain;
+  const production = !!opts.pinnedPublicKey || isProductionBundle(bundle);
+  const productionBindings = !production || verifyProductionBindings(bundle, opts);
+  if (!productionBindings) failures.push('productionBindings');
+  if (production && !opts.promotionRule && bundle.gate_manifest) {
+    try { opts = { ...opts, promotionRule: createProductionPromotionRule(bundle.gate_manifest) }; } catch { /* binding check fails closed */ }
+  }
 
   const receipts = chain.length > 0 && chain.every((c) => verifyReceipt(c.receipt) && receiptMatchesCommit(c));
   if (!receipts) failures.push('receipts');
@@ -182,7 +191,7 @@ export function verifyReplayBundle(
         // wrapped base rule during replay. Absent `itemWins` (every bundle produced before tonight, and
         // any non-sequential Evaluator), this is `undefined` and behavior is byte-for-byte unchanged.
         const pairedOutcomes = pairedOutcomesFromItemWins(c.baselineScore, c.candidateScore);
-        if (!opts.promotionRule({ baseline: c.baselineScore, candidate: c.candidateScore, anchor, ...(pairedOutcomes ? { pairedOutcomes } : {}) }).promote) {
+        if (!opts.promotionRule({ baseline: c.baselineScore, candidate: c.candidateScore, anchor, ...(c.productionEvidence ? { production: c.productionEvidence } : {}), ...(pairedOutcomes ? { pairedOutcomes } : {}) }).promote) {
           gateReExecutes = false;
           break;
         }
@@ -232,7 +241,7 @@ export function verifyReplayBundle(
 
   return {
     pass: failures.length === 0,
-    checks: { receipts, reachesRoot, contiguousParents, allPromoted, gateUnchanged, gateReExecutes, allCommitsReceipts, sealedFieldsAuthentic },
+    checks: { productionBindings, receipts, reachesRoot, contiguousParents, allPromoted, gateUnchanged, gateReExecutes, allCommitsReceipts, sealedFieldsAuthentic },
     failures,
     chainSummary: chain.map((c) => `gen${c.generation}${c.mutation ? `(${c.mutation.target})` : '(root)'}`).join(' → '),
   };

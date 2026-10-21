@@ -1,0 +1,150 @@
+{
+  "benchmark": "flywheel-production-controls-v1",
+  "dataSource": "SYNTHETIC_OFFLINE",
+  "paidInferenceCalls": 0,
+  "paidCostUSD": 0,
+  "environment": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "AMD EPYC 9V74 80-Core Processor"
+  },
+  "timingScope": "Timed loop includes ledger initialization, every file-fsynced reservation and committed head, independent baseline/candidate evaluations, frozen anchor, receipt signing and final bundle assembly; endToEnd adds replay. Excludes key generation, temporary-directory allocation/cleanup and warmups. Evaluators/proposers are in-process synthetic functions with no latency injection.",
+  "controlRuns": {
+    "runsPerMode": 25,
+    "warmupsPerMode": 3,
+    "generationsPerRun": 2,
+    "independentSamplesPerGeneration": 12,
+    "research": {
+      "milliseconds": {
+        "loop": {
+          "n": 25,
+          "min": 0.164,
+          "p50": 0.205,
+          "p90": 0.273,
+          "p95": 0.284,
+          "p99": 0.316,
+          "max": 0.326,
+          "mean": 0.218
+        },
+        "replay": {
+          "n": 25,
+          "min": 0.767,
+          "p50": 0.839,
+          "p90": 1.142,
+          "p95": 1.189,
+          "p99": 1.198,
+          "max": 1.2,
+          "mean": 0.902
+        },
+        "endToEnd": {
+          "n": 25,
+          "min": 0.956,
+          "p50": 1.056,
+          "p90": 1.361,
+          "p95": 1.423,
+          "p99": 1.495,
+          "max": 1.516,
+          "mean": 1.12
+        }
+      },
+      "perRun": {
+        "evaluatorCalls": 6,
+        "proposerCalls": 2,
+        "evaluatedItems": 6,
+        "externalOperationUnits": 8,
+        "durableReservedUnits": null,
+        "promotions": 2
+      },
+      "allReplaysPassed": true
+    },
+    "production": {
+      "milliseconds": {
+        "loop": {
+          "n": 25,
+          "min": 15.051,
+          "p50": 18.959,
+          "p90": 23.111,
+          "p95": 25.059,
+          "p99": 26.361,
+          "max": 26.624,
+          "mean": 19.483
+        },
+        "replay": {
+          "n": 25,
+          "min": 3.308,
+          "p50": 3.715,
+          "p90": 4.549,
+          "p95": 4.597,
+          "p99": 4.898,
+          "max": 4.992,
+          "mean": 3.847
+        },
+        "endToEnd": {
+          "n": 25,
+          "min": 18.458,
+          "p50": 22.673,
+          "p90": 27.199,
+          "p95": 29.596,
+          "p99": 30.157,
+          "max": 30.168,
+          "mean": 23.331
+        }
+      },
+      "perRun": {
+        "evaluatorCalls": 10,
+        "proposerCalls": 2,
+        "evaluatedItems": 54,
+        "externalOperationUnits": 12,
+        "durableReservedUnits": 12,
+        "promotions": 2
+      },
+      "allReplaysPassed": true
+    },
+    "medianEndToEndDifferenceMs": 21.617,
+    "medianEndToEndRatio": 21.471,
+    "costUnitMeaning": "One declared unit per proposer/evaluator invocation. These are synthetic operation counts, not token usage or currency."
+  },
+  "statisticalChecks": {
+    "familyAlpha": 0.05,
+    "perComparisonAlpha": 0.01,
+    "lambda": 0.5,
+    "nullLabels": {
+      "candidateWinProbability": 0.5,
+      "seed": 1592639710,
+      "independentFamilies": 1000,
+      "comparisonsPerFamily": 5,
+      "samplesPerComparison": 96,
+      "acceptedFamilies": 3,
+      "acceptedComparisons": 3,
+      "familyAcceptanceRate": 0.003,
+      "familyAcceptanceWilson95": [
+        0.0010207838811386186,
+        0.008783014053503173
+      ],
+      "elapsedMs": 284.296
+    },
+    "injectedEffect": {
+      "candidateWinProbability": 0.65,
+      "seed": 3235559783,
+      "independentFamilies": 1000,
+      "comparisonsPerFamily": 5,
+      "samplesPerComparison": 96,
+      "acceptedFamilies": 878,
+      "acceptedComparisons": 1755,
+      "familyAcceptanceRate": 0.878,
+      "familyAcceptanceWilson95": [
+        0.8562557152982502,
+        0.8968512552866701
+      ],
+      "elapsedMs": 282.548
+    },
+    "assumptions": [
+      "Independent families; fresh independent Bernoulli discordant labels within each fixed suite and comparison.",
+      "Selection is fixed independently of promotion labels. Suites and maxComparisons are fixed before sampling.",
+      "A family is accepted if any pre-registered comparison promotes; the same manifested family is reused only across isolated Monte Carlo replicates, never as a durable run.",
+      "All evidence and provenance are synthetic test fixtures. These experiments exercise the strict rule only, not trusted provider provenance or durable admission.",
+      "Wilson intervals summarize finite Monte Carlo sampling. Results are not a theorem proof, a guarantee on dependent tasks, model quality evidence, or a paid-model benchmark."
+    ]
+  }
+}

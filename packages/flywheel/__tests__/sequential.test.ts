@@ -191,3 +191,23 @@ describe('withSequentialEvidence', () => {
     );
   });
 });
+
+
+describe('numeric stability', () => {
+  it('recovers after an overflowing favorable prefix instead of permanently accepting', () => {
+    const wins = candidateWins(1810);
+    const losses = Array.from({ length: 1800 }, (_, i) => pair(`loss-${i}`, false, true));
+    const verdict = sequentialEvidence([...wins, ...losses]);
+    expect(verdict.significant).toBe(false);
+    expect(verdict.eValue).toBeLessThan(1e-200);
+    expect(sequentialEvidence([...losses, ...wins]).significant).toBe(false);
+  });
+  it('recovers after an underflowing adverse prefix rather than permanently rejecting', () => {
+    const losses = Array.from({ length: 1800 }, (_, i) => pair(`loss-${i}`, false, true));
+    expect(sequentialEvidence([...losses, ...candidateWins(3200)]).significant).toBe(true);
+  });
+  it('rejects runtime string parameters', () => {
+    expect(() => sequentialEvidence([], { alpha: '0.5' as any })).toThrow(RangeError);
+    expect(() => sequentialEvidence([], { lambda: '0.5' as any })).toThrow(RangeError);
+  });
+});
