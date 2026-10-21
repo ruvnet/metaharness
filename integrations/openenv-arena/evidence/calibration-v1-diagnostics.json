@@ -1,0 +1,1318 @@
+{
+  "version": 1,
+  "generatedAt": "2026-10-09T00:03:56.652Z",
+  "kind": "executed_posthoc_rgi_calibration_diagnostics",
+  "source": {
+    "episode_file_sha256": "8b6b23a9d781c1ba83fcc266ab831094696772882e54afd5d02d367e0b2d3f09",
+    "review_sha256": "9dcdb714e5d74bb88a3c9cde3d73aed2105463bb71c765c86331977ba9263c24",
+    "gist": "https://gist.github.com/ruvnet/00fb40aeabb35a893f140597e2695c1d",
+    "environment_commit": "90a793a9f4f1a06a5b6422164951e9192c909daa"
+  },
+  "runtime": {
+    "rgi_revision": "2dd6adb526a7ca1d27b1c4d6cf98c828b390c421",
+    "enabledCapabilities": [
+      "arena.diagnose_calibration"
+    ],
+    "localSelectionEnabled": false,
+    "selectionCheckpointPresent": false,
+    "frozenPromotionPlanPresent": false,
+    "status": {
+      "stopped": false,
+      "spentMicros": 0,
+      "reservedMicros": 0,
+      "sequence": 0,
+      "jobs": {
+        "succeeded": 10
+      }
+    }
+  },
+  "counts": {
+    "completed_receipts": 10,
+    "completed_episodes": 40,
+    "saturated_groups": 9,
+    "mixed_success_groups": 1,
+    "excluded_partial_group_episodes": 37
+  },
+  "boundaries": {
+    "posthoc": true,
+    "preregistered": false,
+    "legacy_environment_binding": "task IDs only; environment not cryptographically bound by original receipt",
+    "model_execution_attestation": "Publisher assertion; independently replayed retained data per frozen review",
+    "arena_budget_matched": false,
+    "training_improvement_measured": false,
+    "official_evaluation": false,
+    "promotion_authorized": false
+  },
+  "results": [
+    {
+      "actionId": "arena:4557e2adf5db17150c918972096fd5b3c3dae1f0c320207f99b28d88549c0914",
+      "queued": true,
+      "jobStatus": "succeeded",
+      "input": {
+        "manifest": {
+          "tasks": [
+            {
+              "task_id": "math_route-d1",
+              "split": "train"
+            }
+          ]
+        },
+        "calibration": {
+          "kind": "proxy_calibration",
+          "source": "model_rollouts",
+          "modelId": "qwen38:1d4bf0f2",
+          "runnerRevision": "aaa826e43ffc4293beee116740722ea6906a30c0f1c4c6216c926f5d01ac1d19",
+          "manifestDigest": "2b2ecc14c2067b9deb0fca533d16c5bcefda8acc927db04c11a85503619ee0ac",
+          "groups": [
+            {
+              "taskId": "math_route-d1",
+              "family": "math_route",
+              "attempts": [
+                {
+                  "seed": 400100,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "141a11b86a420c9122f4b709f5e22e96cc6bfe0e8f5e07dc7270998a967dbb66"
+                },
+                {
+                  "seed": 400101,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "47e2510fc36a2bf7c6e5fb1a52a0b2274015a451a805c638a6aeca37d33d5c90"
+                },
+                {
+                  "seed": 400102,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "d3e8eee3a71f875d1d5bc44384db36df9ec0b3a74c2f6681be086fe2958431d3"
+                },
+                {
+                  "seed": 400103,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "e8d621581aacb1065b20b3418064d39d796b7953dc118aeb179532a1b62ec1e4"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "result": {
+        "kind": "posthoc_calibration_diagnostic",
+        "scope": "descriptive_proxy_calibration_only",
+        "manifestDigest": "2b2ecc14c2067b9deb0fca533d16c5bcefda8acc927db04c11a85503619ee0ac",
+        "evidenceDigest": "01a540c35a7c95666d5f236911fac98fcb57b82e738b6196002617fb5a5a4287",
+        "modelId": "qwen38:1d4bf0f2",
+        "sourceBinding": "legacy_task_ids_only_environment_unbound",
+        "groups": [
+          {
+            "taskId": "math_route-d1",
+            "family": "math_route",
+            "attempts": 4,
+            "successes": 4,
+            "rewards": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "meanReward": 1,
+            "rewardStd": 0,
+            "zeroVariance": true,
+            "mixedSuccess": false,
+            "saturatedObserved": true
+          }
+        ],
+        "posthoc": true,
+        "preregistered": false,
+        "promote": false,
+        "selectionAuthorized": false,
+        "officialScore": null,
+        "trainingImprovement": null,
+        "claim": "Descriptive retained-rollout diagnostics, not a preregistered transfer study, policy promotion or Arena score. Receipt hashes do not attest model execution.",
+        "receipt": {
+          "payload": {
+            "kind": "posthoc_calibration_diagnostic",
+            "scope": "descriptive_proxy_calibration_only",
+            "manifestDigest": "2b2ecc14c2067b9deb0fca533d16c5bcefda8acc927db04c11a85503619ee0ac",
+            "evidenceDigest": "01a540c35a7c95666d5f236911fac98fcb57b82e738b6196002617fb5a5a4287",
+            "modelId": "qwen38:1d4bf0f2",
+            "sourceBinding": "legacy_task_ids_only_environment_unbound",
+            "groups": [
+              {
+                "taskId": "math_route-d1",
+                "family": "math_route",
+                "attempts": 4,
+                "successes": 4,
+                "rewards": [
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "meanReward": 1,
+                "rewardStd": 0,
+                "zeroVariance": true,
+                "mixedSuccess": false,
+                "saturatedObserved": true
+              }
+            ],
+            "posthoc": true,
+            "preregistered": false,
+            "promote": false,
+            "selectionAuthorized": false,
+            "officialScore": null,
+            "trainingImprovement": null,
+            "claim": "Descriptive retained-rollout diagnostics, not a preregistered transfer study, policy promotion or Arena score. Receipt hashes do not attest model execution."
+          },
+          "signature": "HJejwyjB0OzSBCmbjAg1/EWlQ/xc6q9hLT9JH1+0kZtQPhf+3nrUuFe16SQrVsLpQMHv78LPIpJQxAnCIfOdCA==",
+          "publicKey": "MCowBQYDK2VwAyEA/JDJRqE9+F6u0sj2pXSqy8m9D7BNxruMBZEbMJyorck=",
+          "alg": "ed25519"
+        }
+      }
+    },
+    {
+      "actionId": "arena:8cb0b91e1a7eb40e94c00e2f6f4e7d342e8806010b161ca6a8525dfb77bbf8fa",
+      "queued": true,
+      "jobStatus": "succeeded",
+      "input": {
+        "manifest": {
+          "tasks": [
+            {
+              "task_id": "math_route-d2",
+              "split": "train"
+            }
+          ]
+        },
+        "calibration": {
+          "kind": "proxy_calibration",
+          "source": "model_rollouts",
+          "modelId": "qwen38:1d4bf0f2",
+          "runnerRevision": "aaa826e43ffc4293beee116740722ea6906a30c0f1c4c6216c926f5d01ac1d19",
+          "manifestDigest": "3af23e039581e7aefd900f20d1b0ea629ca249f8f71c1c4344877d7d9b203615",
+          "groups": [
+            {
+              "taskId": "math_route-d2",
+              "family": "math_route",
+              "attempts": [
+                {
+                  "seed": 400200,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "468a27ca98c706d167e4e8b1d3957db19d5e85ac08a158893d3a7a7ceb388211"
+                },
+                {
+                  "seed": 400201,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "327c604e4ce5850c506ca65200058f407d26aebe963c77c5a73466ca31a2a559"
+                },
+                {
+                  "seed": 400202,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "64dba5aca2b1c6569a48639e28857d93862e50548a9f7b70bf1ae14d64e19c78"
+                },
+                {
+                  "seed": 400203,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "83472053469303a47d49c0cd72d453a12baa09808eae8df734b8f2df7ef10962"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "result": {
+        "kind": "posthoc_calibration_diagnostic",
+        "scope": "descriptive_proxy_calibration_only",
+        "manifestDigest": "3af23e039581e7aefd900f20d1b0ea629ca249f8f71c1c4344877d7d9b203615",
+        "evidenceDigest": "aa6c6399982a37c359c9947fd26a848085cc53f8b93f93fa906b7fd2e6dfca39",
+        "modelId": "qwen38:1d4bf0f2",
+        "sourceBinding": "legacy_task_ids_only_environment_unbound",
+        "groups": [
+          {
+            "taskId": "math_route-d2",
+            "family": "math_route",
+            "attempts": 4,
+            "successes": 4,
+            "rewards": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "meanReward": 1,
+            "rewardStd": 0,
+            "zeroVariance": true,
+            "mixedSuccess": false,
+            "saturatedObserved": true
+          }
+        ],
+        "posthoc": true,
+        "preregistered": false,
+        "promote": false,
+        "selectionAuthorized": false,
+        "officialScore": null,
+        "trainingImprovement": null,
+        "claim": "Descriptive retained-rollout diagnostics, not a preregistered transfer study, policy promotion or Arena score. Receipt hashes do not attest model execution.",
+        "receipt": {
+          "payload": {
+            "kind": "posthoc_calibration_diagnostic",
+            "scope": "descriptive_proxy_calibration_only",
+            "manifestDigest": "3af23e039581e7aefd900f20d1b0ea629ca249f8f71c1c4344877d7d9b203615",
+            "evidenceDigest": "aa6c6399982a37c359c9947fd26a848085cc53f8b93f93fa906b7fd2e6dfca39",
+            "modelId": "qwen38:1d4bf0f2",
+            "sourceBinding": "legacy_task_ids_only_environment_unbound",
+            "groups": [
+              {
+                "taskId": "math_route-d2",
+                "family": "math_route",
+                "attempts": 4,
+                "successes": 4,
+                "rewards": [
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "meanReward": 1,
+                "rewardStd": 0,
+                "zeroVariance": true,
+                "mixedSuccess": false,
+                "saturatedObserved": true
+              }
+            ],
+            "posthoc": true,
+            "preregistered": false,
+            "promote": false,
+            "selectionAuthorized": false,
+            "officialScore": null,
+            "trainingImprovement": null,
+            "claim": "Descriptive retained-rollout diagnostics, not a preregistered transfer study, policy promotion or Arena score. Receipt hashes do not attest model execution."
+          },
+          "signature": "Lt7y9/Q6A73buu+xmSh3C0e9InZZ//sFU4BSQyV8L636E1ttkGApN5WaLaQozRzm/Ym0pljflFOB6ueVg0ORBQ==",
+          "publicKey": "MCowBQYDK2VwAyEAbcWCRcs++t2RuY1kYp+9nm4jeF8pVrIh3e/UVRLK8Xo=",
+          "alg": "ed25519"
+        }
+      }
+    },
+    {
+      "actionId": "arena:7e4c6631b33355095cbd146cada90d4226e40a2882a79906f412c433093451b5",
+      "queued": true,
+      "jobStatus": "succeeded",
+      "input": {
+        "manifest": {
+          "tasks": [
+            {
+              "task_id": "media_timeline-d1",
+              "split": "train"
+            }
+          ]
+        },
+        "calibration": {
+          "kind": "proxy_calibration",
+          "source": "model_rollouts",
+          "modelId": "qwen38:1d4bf0f2",
+          "runnerRevision": "aaa826e43ffc4293beee116740722ea6906a30c0f1c4c6216c926f5d01ac1d19",
+          "manifestDigest": "e003f85e218b5e6c502a7975a6c4df96cef49879a7bac8e573e482843af7d157",
+          "groups": [
+            {
+              "taskId": "media_timeline-d1",
+              "family": "media_timeline",
+              "attempts": [
+                {
+                  "seed": 400100,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "24e019e3c5ded5b515c4cb2cddc9aa4d2d7077f7b3fc5583e69a354a58f68389"
+                },
+                {
+                  "seed": 400101,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "1727bb90bafd2416f59596fe70da9b4419637f320f0beb9fa79b8055bd67c992"
+                },
+                {
+                  "seed": 400102,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "624262758c6cd40a7d2d35453d809d4dbb44cd98b1544281ebd9d329aa68cb23"
+                },
+                {
+                  "seed": 400103,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "09d149102c89b6267f585df0c22db5b663e6e6e7dec5bafcd0c3446dc262b79a"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "result": {
+        "kind": "posthoc_calibration_diagnostic",
+        "scope": "descriptive_proxy_calibration_only",
+        "manifestDigest": "e003f85e218b5e6c502a7975a6c4df96cef49879a7bac8e573e482843af7d157",
+        "evidenceDigest": "05aa8d10883b5d60db6d0544ab9db607b392945bb1aef4d583240c0afdf160d2",
+        "modelId": "qwen38:1d4bf0f2",
+        "sourceBinding": "legacy_task_ids_only_environment_unbound",
+        "groups": [
+          {
+            "taskId": "media_timeline-d1",
+            "family": "media_timeline",
+            "attempts": 4,
+            "successes": 4,
+            "rewards": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "meanReward": 1,
+            "rewardStd": 0,
+            "zeroVariance": true,
+            "mixedSuccess": false,
+            "saturatedObserved": true
+          }
+        ],
+        "posthoc": true,
+        "preregistered": false,
+        "promote": false,
+        "selectionAuthorized": false,
+        "officialScore": null,
+        "trainingImprovement": null,
+        "claim": "Descriptive retained-rollout diagnostics, not a preregistered transfer study, policy promotion or Arena score. Receipt hashes do not attest model execution.",
+        "receipt": {
+          "payload": {
+            "kind": "posthoc_calibration_diagnostic",
+            "scope": "descriptive_proxy_calibration_only",
+            "manifestDigest": "e003f85e218b5e6c502a7975a6c4df96cef49879a7bac8e573e482843af7d157",
+            "evidenceDigest": "05aa8d10883b5d60db6d0544ab9db607b392945bb1aef4d583240c0afdf160d2",
+            "modelId": "qwen38:1d4bf0f2",
+            "sourceBinding": "legacy_task_ids_only_environment_unbound",
+            "groups": [
+              {
+                "taskId": "media_timeline-d1",
+                "family": "media_timeline",
+                "attempts": 4,
+                "successes": 4,
+                "rewards": [
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "meanReward": 1,
+                "rewardStd": 0,
+                "zeroVariance": true,
+                "mixedSuccess": false,
+                "saturatedObserved": true
+              }
+            ],
+            "posthoc": true,
+            "preregistered": false,
+            "promote": false,
+            "selectionAuthorized": false,
+            "officialScore": null,
+            "trainingImprovement": null,
+            "claim": "Descriptive retained-rollout diagnostics, not a preregistered transfer study, policy promotion or Arena score. Receipt hashes do not attest model execution."
+          },
+          "signature": "KwOOpIWJxc4Ui25vxwOMW14X94EJ6LvOBMZl6NvJhToJgiKZ55Z8U1pxmN0Qhl3WtWLWrnGQdaURMRWGL9SNDQ==",
+          "publicKey": "MCowBQYDK2VwAyEA+S6SQuNz50F2odcAFU4YWmZE+LRcVsHOTF70tyJ0oi0=",
+          "alg": "ed25519"
+        }
+      }
+    },
+    {
+      "actionId": "arena:1ea3fc103765d330d97db44b29b552b908715c175e7d30b9f53bae74a5e0760d",
+      "queued": true,
+      "jobStatus": "succeeded",
+      "input": {
+        "manifest": {
+          "tasks": [
+            {
+              "task_id": "office_reconciliation-d1",
+              "split": "train"
+            }
+          ]
+        },
+        "calibration": {
+          "kind": "proxy_calibration",
+          "source": "model_rollouts",
+          "modelId": "qwen38:1d4bf0f2",
+          "runnerRevision": "aaa826e43ffc4293beee116740722ea6906a30c0f1c4c6216c926f5d01ac1d19",
+          "manifestDigest": "bfc29624931ed0bb480a01345abcf37214453690c635cea9cf896b13a18f2c6c",
+          "groups": [
+            {
+              "taskId": "office_reconciliation-d1",
+              "family": "office_reconciliation",
+              "attempts": [
+                {
+                  "seed": 400100,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "5dc8a20f5722e2922fc3ae76753ccfbd0b4f48d7bb5a898a8fc404575652fd51"
+                },
+                {
+                  "seed": 400101,
+                  "reward": 0.5,
+                  "success": false,
+                  "trajectoryDigest": "7cb3c7d0967f391addd17f8e8e9697b8dce31185b9e236168491fee74808ddde"
+                },
+                {
+                  "seed": 400102,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "6ec779a349fa25f3fcc5fbed317e4fc98e146995b5e420bfde18195a818fda3c"
+                },
+                {
+                  "seed": 400103,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "a90c71593d170419830c420a506b234c915737296680c064dc166e66f9959806"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "result": {
+        "kind": "posthoc_calibration_diagnostic",
+        "scope": "descriptive_proxy_calibration_only",
+        "manifestDigest": "bfc29624931ed0bb480a01345abcf37214453690c635cea9cf896b13a18f2c6c",
+        "evidenceDigest": "da8753570b6edfd2aed5c5845de1f0dcc21280b5f9e1e66cf858ed4825bb8dae",
+        "modelId": "qwen38:1d4bf0f2",
+        "sourceBinding": "legacy_task_ids_only_environment_unbound",
+        "groups": [
+          {
+            "taskId": "office_reconciliation-d1",
+            "family": "office_reconciliation",
+            "attempts": 4,
+            "successes": 3,
+            "rewards": [
+              1,
+              0.5,
+              1,
+              1
+            ],
+            "meanReward": 0.875,
+            "rewardStd": 0.21650635094610965,
+            "zeroVariance": false,
+            "mixedSuccess": true,
+            "saturatedObserved": false
+          }
+        ],
+        "posthoc": true,
+        "preregistered": false,
+        "promote": false,
+        "selectionAuthorized": false,
+        "officialScore": null,
+        "trainingImprovement": null,
+        "claim": "Descriptive retained-rollout diagnostics, not a preregistered transfer study, policy promotion or Arena score. Receipt hashes do not attest model execution.",
+        "receipt": {
+          "payload": {
+            "kind": "posthoc_calibration_diagnostic",
+            "scope": "descriptive_proxy_calibration_only",
+            "manifestDigest": "bfc29624931ed0bb480a01345abcf37214453690c635cea9cf896b13a18f2c6c",
+            "evidenceDigest": "da8753570b6edfd2aed5c5845de1f0dcc21280b5f9e1e66cf858ed4825bb8dae",
+            "modelId": "qwen38:1d4bf0f2",
+            "sourceBinding": "legacy_task_ids_only_environment_unbound",
+            "groups": [
+              {
+                "taskId": "office_reconciliation-d1",
+                "family": "office_reconciliation",
+                "attempts": 4,
+                "successes": 3,
+                "rewards": [
+                  1,
+                  0.5,
+                  1,
+                  1
+                ],
+                "meanReward": 0.875,
+                "rewardStd": 0.21650635094610965,
+                "zeroVariance": false,
+                "mixedSuccess": true,
+                "saturatedObserved": false
+              }
+            ],
+            "posthoc": true,
+            "preregistered": false,
+            "promote": false,
+            "selectionAuthorized": false,
+            "officialScore": null,
+            "trainingImprovement": null,
+            "claim": "Descriptive retained-rollout diagnostics, not a preregistered transfer study, policy promotion or Arena score. Receipt hashes do not attest model execution."
+          },
+          "signature": "U04ktK3pIDlEZVvmZozYhxwvd14dbQC8iUiVYCMvBlFq5riT/yZWKgOSFtPNnqVP61snXZpTH+gQjD3VexuTBg==",
+          "publicKey": "MCowBQYDK2VwAyEA6icaJSSYnhNtRfZLrFVIXPnUHw+g9L4DazS/Z4m6OEk=",
+          "alg": "ed25519"
+        }
+      }
+    },
+    {
+      "actionId": "arena:2daf63860c91fe8854e3854bc075737fc2eebe98edbb170986a39aeaf756b600",
+      "queued": true,
+      "jobStatus": "succeeded",
+      "input": {
+        "manifest": {
+          "tasks": [
+            {
+              "task_id": "office_reconciliation-d2",
+              "split": "train"
+            }
+          ]
+        },
+        "calibration": {
+          "kind": "proxy_calibration",
+          "source": "model_rollouts",
+          "modelId": "qwen38:1d4bf0f2",
+          "runnerRevision": "aaa826e43ffc4293beee116740722ea6906a30c0f1c4c6216c926f5d01ac1d19",
+          "manifestDigest": "31e0e4705ad1b8fac4690199843e4fc34e1f461e922d0c7b880f13a58fdf6b88",
+          "groups": [
+            {
+              "taskId": "office_reconciliation-d2",
+              "family": "office_reconciliation",
+              "attempts": [
+                {
+                  "seed": 400200,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "d3f72462207441e23d38dd0a5611aaed02976464fe0f78cfd444c676fb3f363a"
+                },
+                {
+                  "seed": 400201,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "6d573efd32a29a2093a094931392c8163c0c2706f1d7d010936465c220649b43"
+                },
+                {
+                  "seed": 400202,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "4504e5792be54275e6ccc40134be0d58b7b1e705fe97d338d99d3cd9565539bc"
+                },
+                {
+                  "seed": 400203,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "b548d5e40099ad3508d18373c80a31b2a2f45d584bfd636087835801727ced5c"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "result": {
+        "kind": "posthoc_calibration_diagnostic",
+        "scope": "descriptive_proxy_calibration_only",
+        "manifestDigest": "31e0e4705ad1b8fac4690199843e4fc34e1f461e922d0c7b880f13a58fdf6b88",
+        "evidenceDigest": "96e02ab1c7b2a75e924f48e5b0e89a707b482566ca7ee37117512029a085e766",
+        "modelId": "qwen38:1d4bf0f2",
+        "sourceBinding": "legacy_task_ids_only_environment_unbound",
+        "groups": [
+          {
+            "taskId": "office_reconciliation-d2",
+            "family": "office_reconciliation",
+            "attempts": 4,
+            "successes": 4,
+            "rewards": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "meanReward": 1,
+            "rewardStd": 0,
+            "zeroVariance": true,
+            "mixedSuccess": false,
+            "saturatedObserved": true
+          }
+        ],
+        "posthoc": true,
+        "preregistered": false,
+        "promote": false,
+        "selectionAuthorized": false,
+        "officialScore": null,
+        "trainingImprovement": null,
+        "claim": "Descriptive retained-rollout diagnostics, not a preregistered transfer study, policy promotion or Arena score. Receipt hashes do not attest model execution.",
+        "receipt": {
+          "payload": {
+            "kind": "posthoc_calibration_diagnostic",
+            "scope": "descriptive_proxy_calibration_only",
+            "manifestDigest": "31e0e4705ad1b8fac4690199843e4fc34e1f461e922d0c7b880f13a58fdf6b88",
+            "evidenceDigest": "96e02ab1c7b2a75e924f48e5b0e89a707b482566ca7ee37117512029a085e766",
+            "modelId": "qwen38:1d4bf0f2",
+            "sourceBinding": "legacy_task_ids_only_environment_unbound",
+            "groups": [
+              {
+                "taskId": "office_reconciliation-d2",
+                "family": "office_reconciliation",
+                "attempts": 4,
+                "successes": 4,
+                "rewards": [
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "meanReward": 1,
+                "rewardStd": 0,
+                "zeroVariance": true,
+                "mixedSuccess": false,
+                "saturatedObserved": true
+              }
+            ],
+            "posthoc": true,
+            "preregistered": false,
+            "promote": false,
+            "selectionAuthorized": false,
+            "officialScore": null,
+            "trainingImprovement": null,
+            "claim": "Descriptive retained-rollout diagnostics, not a preregistered transfer study, policy promotion or Arena score. Receipt hashes do not attest model execution."
+          },
+          "signature": "VhOgxyeyEeFnJerNB17t5o72lL4xX0O4TULgnJVpzVpjvJ6sy6heSWsG3GWOU7+hSUJaYbI7MzJQJdDmEi6IDw==",
+          "publicKey": "MCowBQYDK2VwAyEAgCXV5uDaDfmVssoUAIpZ+ktlPHNdONAPpe+dWLgBbAo=",
+          "alg": "ed25519"
+        }
+      }
+    },
+    {
+      "actionId": "arena:52fa216d4dd92eaeae2a66675755b3dad8604f6b8cb91c66edcc5bfdc77231d7",
+      "queued": true,
+      "jobStatus": "succeeded",
+      "input": {
+        "manifest": {
+          "tasks": [
+            {
+              "task_id": "science_calibration-d1",
+              "split": "train"
+            }
+          ]
+        },
+        "calibration": {
+          "kind": "proxy_calibration",
+          "source": "model_rollouts",
+          "modelId": "qwen38:1d4bf0f2",
+          "runnerRevision": "aaa826e43ffc4293beee116740722ea6906a30c0f1c4c6216c926f5d01ac1d19",
+          "manifestDigest": "238d47d99ce2359e17aef38f169311925d8869ece529918f5a443cee10b47025",
+          "groups": [
+            {
+              "taskId": "science_calibration-d1",
+              "family": "science_calibration",
+              "attempts": [
+                {
+                  "seed": 400100,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "1a9ccdb5c0b29c7b4688a57fda757a17f2b08a619b1a3e348ebfc52762cc0799"
+                },
+                {
+                  "seed": 400101,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "af4ef6fd5da19d97f951e81bd7b9255c1bbc4d75976b196a844d442acac4370c"
+                },
+                {
+                  "seed": 400102,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "9a702ac611610ca1ccebfc3d64078dbac87b60d8714e59303f20cee4e5610291"
+                },
+                {
+                  "seed": 400103,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "34bc9b3bb3e9165087fdcf9e554b3afcbd9d7797f377e4d51c3bea5158749a82"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "result": {
+        "kind": "posthoc_calibration_diagnostic",
+        "scope": "descriptive_proxy_calibration_only",
+        "manifestDigest": "238d47d99ce2359e17aef38f169311925d8869ece529918f5a443cee10b47025",
+        "evidenceDigest": "03489330ec7ec2910c3d5dd76958752c598f57052eec7efa6d27cde771aae0cd",
+        "modelId": "qwen38:1d4bf0f2",
+        "sourceBinding": "legacy_task_ids_only_environment_unbound",
+        "groups": [
+          {
+            "taskId": "science_calibration-d1",
+            "family": "science_calibration",
+            "attempts": 4,
+            "successes": 4,
+            "rewards": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "meanReward": 1,
+            "rewardStd": 0,
+            "zeroVariance": true,
+            "mixedSuccess": false,
+            "saturatedObserved": true
+          }
+        ],
+        "posthoc": true,
+        "preregistered": false,
+        "promote": false,
+        "selectionAuthorized": false,
+        "officialScore": null,
+        "trainingImprovement": null,
+        "claim": "Descriptive retained-rollout diagnostics, not a preregistered transfer study, policy promotion or Arena score. Receipt hashes do not attest model execution.",
+        "receipt": {
+          "payload": {
+            "kind": "posthoc_calibration_diagnostic",
+            "scope": "descriptive_proxy_calibration_only",
+            "manifestDigest": "238d47d99ce2359e17aef38f169311925d8869ece529918f5a443cee10b47025",
+            "evidenceDigest": "03489330ec7ec2910c3d5dd76958752c598f57052eec7efa6d27cde771aae0cd",
+            "modelId": "qwen38:1d4bf0f2",
+            "sourceBinding": "legacy_task_ids_only_environment_unbound",
+            "groups": [
+              {
+                "taskId": "science_calibration-d1",
+                "family": "science_calibration",
+                "attempts": 4,
+                "successes": 4,
+                "rewards": [
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "meanReward": 1,
+                "rewardStd": 0,
+                "zeroVariance": true,
+                "mixedSuccess": false,
+                "saturatedObserved": true
+              }
+            ],
+            "posthoc": true,
+            "preregistered": false,
+            "promote": false,
+            "selectionAuthorized": false,
+            "officialScore": null,
+            "trainingImprovement": null,
+            "claim": "Descriptive retained-rollout diagnostics, not a preregistered transfer study, policy promotion or Arena score. Receipt hashes do not attest model execution."
+          },
+          "signature": "574iMut8ThH40OO4BlQRXq8BtQSd0l1lawR/myz1GpKiE8XzB2FkiXlHTc4tFZIcg+bydAfF16k29mnU63q7Cg==",
+          "publicKey": "MCowBQYDK2VwAyEAX+MGiTj9pfcB2FYqT1SQaYtDlaTTi/1hnJA7H1b9io0=",
+          "alg": "ed25519"
+        }
+      }
+    },
+    {
+      "actionId": "arena:ceb666edc78478c7a6b1a74ac5662a5c7796d3c4f3b85db8845f9d5a688361d8",
+      "queued": true,
+      "jobStatus": "succeeded",
+      "input": {
+        "manifest": {
+          "tasks": [
+            {
+              "task_id": "science_calibration-d2",
+              "split": "train"
+            }
+          ]
+        },
+        "calibration": {
+          "kind": "proxy_calibration",
+          "source": "model_rollouts",
+          "modelId": "qwen38:1d4bf0f2",
+          "runnerRevision": "aaa826e43ffc4293beee116740722ea6906a30c0f1c4c6216c926f5d01ac1d19",
+          "manifestDigest": "6c610a3d43604d627b214dde60d0c4b763708b7bd3536b2b29183324da95bec3",
+          "groups": [
+            {
+              "taskId": "science_calibration-d2",
+              "family": "science_calibration",
+              "attempts": [
+                {
+                  "seed": 400200,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "2c2c3b640c9737e3387450f160a6f096feaaaea0511f604c022a3b8bbbe63253"
+                },
+                {
+                  "seed": 400201,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "a52f7f404abfefa7f826f783cabe9938a21c26e3e313531689df02b296a784c5"
+                },
+                {
+                  "seed": 400202,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "94d9a1d48e2a0864bb8324169bd0ad77cc9eb329a08b9df9757fcb7808686438"
+                },
+                {
+                  "seed": 400203,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "bf1d9d713c92ed8e8a737da2a5475aff07179d268ba98945226a6dd902776eca"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "result": {
+        "kind": "posthoc_calibration_diagnostic",
+        "scope": "descriptive_proxy_calibration_only",
+        "manifestDigest": "6c610a3d43604d627b214dde60d0c4b763708b7bd3536b2b29183324da95bec3",
+        "evidenceDigest": "8f6c526f60530f203f4bcf65f3e3363a462c426ebab0a5384ffaaa99a73ec8f3",
+        "modelId": "qwen38:1d4bf0f2",
+        "sourceBinding": "legacy_task_ids_only_environment_unbound",
+        "groups": [
+          {
+            "taskId": "science_calibration-d2",
+            "family": "science_calibration",
+            "attempts": 4,
+            "successes": 4,
+            "rewards": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "meanReward": 1,
+            "rewardStd": 0,
+            "zeroVariance": true,
+            "mixedSuccess": false,
+            "saturatedObserved": true
+          }
+        ],
+        "posthoc": true,
+        "preregistered": false,
+        "promote": false,
+        "selectionAuthorized": false,
+        "officialScore": null,
+        "trainingImprovement": null,
+        "claim": "Descriptive retained-rollout diagnostics, not a preregistered transfer study, policy promotion or Arena score. Receipt hashes do not attest model execution.",
+        "receipt": {
+          "payload": {
+            "kind": "posthoc_calibration_diagnostic",
+            "scope": "descriptive_proxy_calibration_only",
+            "manifestDigest": "6c610a3d43604d627b214dde60d0c4b763708b7bd3536b2b29183324da95bec3",
+            "evidenceDigest": "8f6c526f60530f203f4bcf65f3e3363a462c426ebab0a5384ffaaa99a73ec8f3",
+            "modelId": "qwen38:1d4bf0f2",
+            "sourceBinding": "legacy_task_ids_only_environment_unbound",
+            "groups": [
+              {
+                "taskId": "science_calibration-d2",
+                "family": "science_calibration",
+                "attempts": 4,
+                "successes": 4,
+                "rewards": [
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "meanReward": 1,
+                "rewardStd": 0,
+                "zeroVariance": true,
+                "mixedSuccess": false,
+                "saturatedObserved": true
+              }
+            ],
+            "posthoc": true,
+            "preregistered": false,
+            "promote": false,
+            "selectionAuthorized": false,
+            "officialScore": null,
+            "trainingImprovement": null,
+            "claim": "Descriptive retained-rollout diagnostics, not a preregistered transfer study, policy promotion or Arena score. Receipt hashes do not attest model execution."
+          },
+          "signature": "4icUmBVA1qWDFE4bpAzaiwdJel1B08ONIkVnKk5z7MMfQKkXssywvnJinRLCKDvsZSp9urN6kqXJBFbjzhiCCw==",
+          "publicKey": "MCowBQYDK2VwAyEAv9p76KZasFTLaQXqon0e9Ycxm6tWlmNuZMv0Kum5tms=",
+          "alg": "ed25519"
+        }
+      }
+    },
+    {
+      "actionId": "arena:3ae8491e875efb0fe737fcf8b39352c9dcc3837b978baa4ebbf6598723b3b0e3",
+      "queued": true,
+      "jobStatus": "succeeded",
+      "input": {
+        "manifest": {
+          "tasks": [
+            {
+              "task_id": "science_calibration-d3",
+              "split": "train"
+            }
+          ]
+        },
+        "calibration": {
+          "kind": "proxy_calibration",
+          "source": "model_rollouts",
+          "modelId": "qwen38:1d4bf0f2",
+          "runnerRevision": "aaa826e43ffc4293beee116740722ea6906a30c0f1c4c6216c926f5d01ac1d19",
+          "manifestDigest": "bf4ed30d6921e8b650306ba3b3289b4d9727fdaef7fb935b9a60290e0a710d0d",
+          "groups": [
+            {
+              "taskId": "science_calibration-d3",
+              "family": "science_calibration",
+              "attempts": [
+                {
+                  "seed": 400300,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "a34d99cec12e9d4c52ab07f163ac946e0f43b9188842af623795e19c16e9aa40"
+                },
+                {
+                  "seed": 400301,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "2f5135f80349d7f58097e089064f5c932a0abce7b73ba7c5b74bedbb1a8f6974"
+                },
+                {
+                  "seed": 400302,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "986b64a4134a7aa98244de2d24ee0890ca4add6f99406d6687c86165944174db"
+                },
+                {
+                  "seed": 400303,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "6f774450d437cc477445743c4ae8b874b235e4bc6ee6ad3a3a092ffae2b15949"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "result": {
+        "kind": "posthoc_calibration_diagnostic",
+        "scope": "descriptive_proxy_calibration_only",
+        "manifestDigest": "bf4ed30d6921e8b650306ba3b3289b4d9727fdaef7fb935b9a60290e0a710d0d",
+        "evidenceDigest": "825629fc957267495c98a1a383edb0770be8a9c0b86bebb6faa93476121bb325",
+        "modelId": "qwen38:1d4bf0f2",
+        "sourceBinding": "legacy_task_ids_only_environment_unbound",
+        "groups": [
+          {
+            "taskId": "science_calibration-d3",
+            "family": "science_calibration",
+            "attempts": 4,
+            "successes": 4,
+            "rewards": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "meanReward": 1,
+            "rewardStd": 0,
+            "zeroVariance": true,
+            "mixedSuccess": false,
+            "saturatedObserved": true
+          }
+        ],
+        "posthoc": true,
+        "preregistered": false,
+        "promote": false,
+        "selectionAuthorized": false,
+        "officialScore": null,
+        "trainingImprovement": null,
+        "claim": "Descriptive retained-rollout diagnostics, not a preregistered transfer study, policy promotion or Arena score. Receipt hashes do not attest model execution.",
+        "receipt": {
+          "payload": {
+            "kind": "posthoc_calibration_diagnostic",
+            "scope": "descriptive_proxy_calibration_only",
+            "manifestDigest": "bf4ed30d6921e8b650306ba3b3289b4d9727fdaef7fb935b9a60290e0a710d0d",
+            "evidenceDigest": "825629fc957267495c98a1a383edb0770be8a9c0b86bebb6faa93476121bb325",
+            "modelId": "qwen38:1d4bf0f2",
+            "sourceBinding": "legacy_task_ids_only_environment_unbound",
+            "groups": [
+              {
+                "taskId": "science_calibration-d3",
+                "family": "science_calibration",
+                "attempts": 4,
+                "successes": 4,
+                "rewards": [
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "meanReward": 1,
+                "rewardStd": 0,
+                "zeroVariance": true,
+                "mixedSuccess": false,
+                "saturatedObserved": true
+              }
+            ],
+            "posthoc": true,
+            "preregistered": false,
+            "promote": false,
+            "selectionAuthorized": false,
+            "officialScore": null,
+            "trainingImprovement": null,
+            "claim": "Descriptive retained-rollout diagnostics, not a preregistered transfer study, policy promotion or Arena score. Receipt hashes do not attest model execution."
+          },
+          "signature": "q7eT61YeLWnWjwAx/JOpkErfhyJshgUqn/9a4DyCW454Zqj8+XK9AZI39JUPIM80/9TeEMLQorAQ74zBZxx7Cg==",
+          "publicKey": "MCowBQYDK2VwAyEAqPEnivZS6s9UfLItWRAalKQSj/grJ1R4EssNl7tXWCs=",
+          "alg": "ed25519"
+        }
+      }
+    },
+    {
+      "actionId": "arena:f205e84cae2b8e530f92a9766d54b92cf4977696a1768437248bd59c691af7b7",
+      "queued": true,
+      "jobStatus": "succeeded",
+      "input": {
+        "manifest": {
+          "tasks": [
+            {
+              "task_id": "software_change-d1",
+              "split": "train"
+            }
+          ]
+        },
+        "calibration": {
+          "kind": "proxy_calibration",
+          "source": "model_rollouts",
+          "modelId": "qwen38:1d4bf0f2",
+          "runnerRevision": "aaa826e43ffc4293beee116740722ea6906a30c0f1c4c6216c926f5d01ac1d19",
+          "manifestDigest": "ce707493af04c3e0defd7771f6ef17b820cfd1ea8837b7316720d7fcb9ff8574",
+          "groups": [
+            {
+              "taskId": "software_change-d1",
+              "family": "software_change",
+              "attempts": [
+                {
+                  "seed": 400100,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "ca293aa44a5351e15dffe3308b880feb4fc9471a45f2dd4cdd5feacbcfdeafde"
+                },
+                {
+                  "seed": 400101,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "3a88772fef82b7dc32403af0b189da34d2e04f76ec2f1c8d8235808578702095"
+                },
+                {
+                  "seed": 400102,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "c34cf8163a817587ffc2147960df64b321e39fed867991dbcfb1e68546e2ec11"
+                },
+                {
+                  "seed": 400103,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "16651e26ae48891b131b9182786c35d18a240c1f56f1d2489fe3df71c5b52f53"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "result": {
+        "kind": "posthoc_calibration_diagnostic",
+        "scope": "descriptive_proxy_calibration_only",
+        "manifestDigest": "ce707493af04c3e0defd7771f6ef17b820cfd1ea8837b7316720d7fcb9ff8574",
+        "evidenceDigest": "d03454295d65536ef37834d5d673b213b0bdd05c44e78dd1c405c136c7b2dc8b",
+        "modelId": "qwen38:1d4bf0f2",
+        "sourceBinding": "legacy_task_ids_only_environment_unbound",
+        "groups": [
+          {
+            "taskId": "software_change-d1",
+            "family": "software_change",
+            "attempts": 4,
+            "successes": 4,
+            "rewards": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "meanReward": 1,
+            "rewardStd": 0,
+            "zeroVariance": true,
+            "mixedSuccess": false,
+            "saturatedObserved": true
+          }
+        ],
+        "posthoc": true,
+        "preregistered": false,
+        "promote": false,
+        "selectionAuthorized": false,
+        "officialScore": null,
+        "trainingImprovement": null,
+        "claim": "Descriptive retained-rollout diagnostics, not a preregistered transfer study, policy promotion or Arena score. Receipt hashes do not attest model execution.",
+        "receipt": {
+          "payload": {
+            "kind": "posthoc_calibration_diagnostic",
+            "scope": "descriptive_proxy_calibration_only",
+            "manifestDigest": "ce707493af04c3e0defd7771f6ef17b820cfd1ea8837b7316720d7fcb9ff8574",
+            "evidenceDigest": "d03454295d65536ef37834d5d673b213b0bdd05c44e78dd1c405c136c7b2dc8b",
+            "modelId": "qwen38:1d4bf0f2",
+            "sourceBinding": "legacy_task_ids_only_environment_unbound",
+            "groups": [
+              {
+                "taskId": "software_change-d1",
+                "family": "software_change",
+                "attempts": 4,
+                "successes": 4,
+                "rewards": [
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "meanReward": 1,
+                "rewardStd": 0,
+                "zeroVariance": true,
+                "mixedSuccess": false,
+                "saturatedObserved": true
+              }
+            ],
+            "posthoc": true,
+            "preregistered": false,
+            "promote": false,
+            "selectionAuthorized": false,
+            "officialScore": null,
+            "trainingImprovement": null,
+            "claim": "Descriptive retained-rollout diagnostics, not a preregistered transfer study, policy promotion or Arena score. Receipt hashes do not attest model execution."
+          },
+          "signature": "LjS6sXfSDMoxvdCPZkUl49YUAWBvPDPBvioSIu8xsTawXhuYhRh80NTQeQQ37ocbrsPRGJt+xWmy/kanivhdBw==",
+          "publicKey": "MCowBQYDK2VwAyEA+QHEV4yyDQKvUhmkgvYf9aW/pKeHqcL+Z/0RxOPll8E=",
+          "alg": "ed25519"
+        }
+      }
+    },
+    {
+      "actionId": "arena:742783647e4db2a4322a19cb7965b1ad409d95f57e8f84bf9a12345eaa6d2148",
+      "queued": true,
+      "jobStatus": "succeeded",
+      "input": {
+        "manifest": {
+          "tasks": [
+            {
+              "task_id": "software_change-d2",
+              "split": "train"
+            }
+          ]
+        },
+        "calibration": {
+          "kind": "proxy_calibration",
+          "source": "model_rollouts",
+          "modelId": "qwen38:1d4bf0f2",
+          "runnerRevision": "aaa826e43ffc4293beee116740722ea6906a30c0f1c4c6216c926f5d01ac1d19",
+          "manifestDigest": "bf14765eb4104790919cf9989737306461e189c997a5f69d3eab08f040e4640b",
+          "groups": [
+            {
+              "taskId": "software_change-d2",
+              "family": "software_change",
+              "attempts": [
+                {
+                  "seed": 400200,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "64e41ab61a5fead83df0add800ca2eee0d8e5fb203d217aa795420e33d33e4aa"
+                },
+                {
+                  "seed": 400201,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "cf27ad17540425e1e7f93bb7d6144e5cacb154fadec39375583828a3cba950b1"
+                },
+                {
+                  "seed": 400202,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "6745e57801bc70cd7bc1de343349eb4e68907e3f627e3cddf22d9e8f86e483eb"
+                },
+                {
+                  "seed": 400203,
+                  "reward": 1,
+                  "success": true,
+                  "trajectoryDigest": "69853b9ffcb3ddbbe422100970689879fb0eb7c50a9d192a9bd20710d0c28a79"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "result": {
+        "kind": "posthoc_calibration_diagnostic",
+        "scope": "descriptive_proxy_calibration_only",
+        "manifestDigest": "bf14765eb4104790919cf9989737306461e189c997a5f69d3eab08f040e4640b",
+        "evidenceDigest": "2615b1cbe989dc1bc913b3709a421cc4dc017407ceff45a577b5e9612683dfd7",
+        "modelId": "qwen38:1d4bf0f2",
+        "sourceBinding": "legacy_task_ids_only_environment_unbound",
+        "groups": [
+          {
+            "taskId": "software_change-d2",
+            "family": "software_change",
+            "attempts": 4,
+            "successes": 4,
+            "rewards": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "meanReward": 1,
+            "rewardStd": 0,
+            "zeroVariance": true,
+            "mixedSuccess": false,
+            "saturatedObserved": true
+          }
+        ],
+        "posthoc": true,
+        "preregistered": false,
+        "promote": false,
+        "selectionAuthorized": false,
+        "officialScore": null,
+        "trainingImprovement": null,
+        "claim": "Descriptive retained-rollout diagnostics, not a preregistered transfer study, policy promotion or Arena score. Receipt hashes do not attest model execution.",
+        "receipt": {
+          "payload": {
+            "kind": "posthoc_calibration_diagnostic",
+            "scope": "descriptive_proxy_calibration_only",
+            "manifestDigest": "bf14765eb4104790919cf9989737306461e189c997a5f69d3eab08f040e4640b",
+            "evidenceDigest": "2615b1cbe989dc1bc913b3709a421cc4dc017407ceff45a577b5e9612683dfd7",
+            "modelId": "qwen38:1d4bf0f2",
+            "sourceBinding": "legacy_task_ids_only_environment_unbound",
+            "groups": [
+              {
+                "taskId": "software_change-d2",
+                "family": "software_change",
+                "attempts": 4,
+                "successes": 4,
+                "rewards": [
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "meanReward": 1,
+                "rewardStd": 0,
+                "zeroVariance": true,
+                "mixedSuccess": false,
+                "saturatedObserved": true
+              }
+            ],
+            "posthoc": true,
+            "preregistered": false,
+            "promote": false,
+            "selectionAuthorized": false,
+            "officialScore": null,
+            "trainingImprovement": null,
+            "claim": "Descriptive retained-rollout diagnostics, not a preregistered transfer study, policy promotion or Arena score. Receipt hashes do not attest model execution."
+          },
+          "signature": "GspRzd+3R+PF3I+aUD/7xEPd7GKAa3I73EuQD2d50B+5cKe8080DJ8C4RE3tgCei82VWzpqHOFrJhFiwhUv/Dw==",
+          "publicKey": "MCowBQYDK2VwAyEAsJQxNwp0EJRM3ykAwnynSq8Jep+LnLc5KK1hlZXTRJE=",
+          "alg": "ed25519"
+        }
+      }
+    }
+  ]
+}

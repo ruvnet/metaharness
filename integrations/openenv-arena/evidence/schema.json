@@ -1,0 +1,138 @@
+{
+  "action": {
+    "additionalProperties": false,
+    "properties": {
+      "metadata": {
+        "additionalProperties": true,
+        "description": "Additional metadata for the action",
+        "title": "Metadata",
+        "type": "object"
+      },
+      "op": {
+        "description": "List files, read a file (or * for all), or submit the final structured answer once.",
+        "enum": [
+          "list",
+          "read",
+          "submit"
+        ],
+        "title": "Op",
+        "type": "string"
+      },
+      "path": {
+        "default": "",
+        "description": "Exact virtual filename, or * to read all files.",
+        "title": "Path",
+        "type": "string"
+      },
+      "answer": {
+        "additionalProperties": true,
+        "description": "For submit: answer object matching the prompt. An empty object ends with reward zero.",
+        "title": "Answer",
+        "type": "object"
+      }
+    },
+    "required": [
+      "op"
+    ],
+    "title": "ArenaAction",
+    "type": "object"
+  },
+  "observation": {
+    "additionalProperties": false,
+    "properties": {
+      "done": {
+        "default": false,
+        "description": "Whether the episode has terminated",
+        "title": "Done",
+        "type": "boolean"
+      },
+      "reward": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Reward signal from the last action",
+        "title": "Reward"
+      },
+      "metadata": {
+        "additionalProperties": true,
+        "description": "Additional metadata for the observation",
+        "title": "Metadata",
+        "type": "object"
+      },
+      "task_id": {
+        "default": "",
+        "title": "Task Id",
+        "type": "string"
+      },
+      "prompt": {
+        "default": "",
+        "title": "Prompt",
+        "type": "string"
+      },
+      "files": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Files",
+        "type": "array"
+      },
+      "content": {
+        "default": "",
+        "title": "Content",
+        "type": "string"
+      },
+      "error": {
+        "default": "",
+        "title": "Error",
+        "type": "string"
+      },
+      "remaining_steps": {
+        "default": 0,
+        "title": "Remaining Steps",
+        "type": "integer"
+      }
+    },
+    "title": "ArenaObservation",
+    "type": "object"
+  },
+  "state": {
+    "additionalProperties": true,
+    "description": "Base class for environment state.\n\nRepresents internal environment state, separate from observations.",
+    "properties": {
+      "episode_id": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Unique identifier for the current episode",
+        "title": "Episode Id"
+      },
+      "step_count": {
+        "default": 0,
+        "description": "Number of steps taken in the current episode",
+        "minimum": 0,
+        "title": "Step Count",
+        "type": "integer"
+      }
+    },
+    "title": "State",
+    "type": "object"
+  }
+}

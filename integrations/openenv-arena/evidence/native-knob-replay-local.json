@@ -1,0 +1,260 @@
+{
+  "elapsed_seconds": 0.098319,
+  "episodes_attempted": 16,
+  "episodes_expected": 16,
+  "episodes_passed": 16,
+  "evidence_kind": "native_runtime_protocol_replay",
+  "generated_at": "2026-10-09T00:14:58.606809+00:00",
+  "is_model_benchmark": false,
+  "limitations": [
+    "Verifies runtime protocol and synthetic reward controls, not model transfer or leaderboard performance.",
+    "Source hashes identify the replay client; endpoint image identity must be attested separately by CI."
+  ],
+  "private_arena_score": null,
+  "protocol": {
+    "client_websockets_version": "17.2",
+    "endpoint": "/ws",
+    "openenv_revision_expected": "86a180ede21e044f7929b9a7783ad83aa67d83a3",
+    "reference_source": "https://github.com/meta-pytorch/OpenEnv/tree/86a180ede21e044f7929b9a7783ad83aa67d83a3/src/openenv/core/env_server",
+    "request_envelope": {
+      "data": "object",
+      "type": "reset|step"
+    },
+    "response_envelope": "type=observation; data={observation,reward,done}",
+    "transport": "real_websocket"
+  },
+  "source_sha256": {
+    "arena_env/tasks.py": "27b9934df0adf579c8564dba123ae538e43476aa4b98418208bd46d28e7b8079",
+    "example-actions.json": "7fe75862b4e33f830a51ce62bdb8df8ed642808cd4ef286ec26b5425e5203e79",
+    "scripts/replay_native.py": "5b56032db370fdb0993ca5a66e4c1ba4cbfe8d140f92f6dfaf472dbf1150812c",
+    "task_manifest": "3949ebb789368233d0959c5010c667f30ec05e222e9be4cc8bfb43b6c43c6e8e"
+  },
+  "status": "passed",
+  "target": {
+    "base_url": "http://127.0.0.1:8117",
+    "health": {
+      "status": "healthy"
+    },
+    "schema_sha256": "367c55c4a21d1594fed8ab115abb83f563caa9986c200b8ddc3546fb93729c8c",
+    "server_revision_attested": false
+  },
+  "task_count": 4,
+  "tasks": [
+    {
+      "episodes": [
+        {
+          "action_count": 2,
+          "control": "declared_examples",
+          "elapsed_seconds": 0.007272,
+          "reward": 0.0,
+          "status": "passed",
+          "terminal": true
+        },
+        {
+          "action_count": 2,
+          "control": "observed_file_oracle",
+          "elapsed_seconds": 0.0042,
+          "files_sha256": "102eeadb2627288458d3c2c4159d95b51616945a44b41c7e0dd0c177755b016a",
+          "oracle_input": "public_reset_and_virtual_file_observations_only",
+          "reset_sha256": "7f687cd222aed853f9fb45f96847d39fb180355bccb186cdab4fdf62f373179b",
+          "reward": 1.0,
+          "status": "passed",
+          "terminal": true,
+          "virtual_file_bytes": 842,
+          "virtual_file_count": 3
+        },
+        {
+          "action_count": 2,
+          "control": "wrong_answer",
+          "elapsed_seconds": 0.004108,
+          "files_sha256": "102eeadb2627288458d3c2c4159d95b51616945a44b41c7e0dd0c177755b016a",
+          "oracle_input": "public_reset_and_virtual_file_observations_only",
+          "reset_sha256": "7f687cd222aed853f9fb45f96847d39fb180355bccb186cdab4fdf62f373179b",
+          "reward": 0.75,
+          "status": "passed",
+          "terminal": true,
+          "virtual_file_bytes": 842,
+          "virtual_file_count": 3
+        },
+        {
+          "action_count": 2,
+          "control": "seeded_reset_replay",
+          "elapsed_seconds": 0.003551,
+          "files_sha256": "102eeadb2627288458d3c2c4159d95b51616945a44b41c7e0dd0c177755b016a",
+          "oracle_input": "public_reset_and_virtual_file_observations_only",
+          "reset_sha256": "7f687cd222aed853f9fb45f96847d39fb180355bccb186cdab4fdf62f373179b",
+          "reward": 1.0,
+          "status": "passed",
+          "terminal": true,
+          "virtual_file_bytes": 842,
+          "virtual_file_count": 3
+        }
+      ],
+      "seed": 8000123,
+      "status": "passed",
+      "task_id": "software_change-d3--suite_count_delta-m1"
+    },
+    {
+      "episodes": [
+        {
+          "action_count": 2,
+          "control": "declared_examples",
+          "elapsed_seconds": 0.008401,
+          "reward": 0.0,
+          "status": "passed",
+          "terminal": true
+        },
+        {
+          "action_count": 2,
+          "control": "observed_file_oracle",
+          "elapsed_seconds": 0.009529,
+          "files_sha256": "ceb5f078661b49e5bd35a81052cc475f5dc56607b85fb1b116f5004c6dd41662",
+          "oracle_input": "public_reset_and_virtual_file_observations_only",
+          "reset_sha256": "7f687cd222aed853f9fb45f96847d39fb180355bccb186cdab4fdf62f373179b",
+          "reward": 1.0,
+          "status": "passed",
+          "terminal": true,
+          "virtual_file_bytes": 995,
+          "virtual_file_count": 3
+        },
+        {
+          "action_count": 2,
+          "control": "wrong_answer",
+          "elapsed_seconds": 0.009054,
+          "files_sha256": "ceb5f078661b49e5bd35a81052cc475f5dc56607b85fb1b116f5004c6dd41662",
+          "oracle_input": "public_reset_and_virtual_file_observations_only",
+          "reset_sha256": "7f687cd222aed853f9fb45f96847d39fb180355bccb186cdab4fdf62f373179b",
+          "reward": 0.75,
+          "status": "passed",
+          "terminal": true,
+          "virtual_file_bytes": 995,
+          "virtual_file_count": 3
+        },
+        {
+          "action_count": 2,
+          "control": "seeded_reset_replay",
+          "elapsed_seconds": 0.009293,
+          "files_sha256": "ceb5f078661b49e5bd35a81052cc475f5dc56607b85fb1b116f5004c6dd41662",
+          "oracle_input": "public_reset_and_virtual_file_observations_only",
+          "reset_sha256": "7f687cd222aed853f9fb45f96847d39fb180355bccb186cdab4fdf62f373179b",
+          "reward": 1.0,
+          "status": "passed",
+          "terminal": true,
+          "virtual_file_bytes": 995,
+          "virtual_file_count": 3
+        }
+      ],
+      "seed": 8000124,
+      "status": "passed",
+      "task_id": "software_change-d3--suite_count_delta-p2"
+    },
+    {
+      "episodes": [
+        {
+          "action_count": 2,
+          "control": "declared_examples",
+          "elapsed_seconds": 0.004985,
+          "reward": 0.0,
+          "status": "passed",
+          "terminal": true
+        },
+        {
+          "action_count": 2,
+          "control": "observed_file_oracle",
+          "elapsed_seconds": 0.003338,
+          "files_sha256": "aa6f53e5f820a14576d3c19055a9629aeb3d173bc987df76683cdd65e07cf47b",
+          "oracle_input": "public_reset_and_virtual_file_observations_only",
+          "reset_sha256": "a1d51c38bc4e9ece5cf6ccbd8ba099c8bf1f1b93264ada38677a03c50873f913",
+          "reward": 1.0,
+          "status": "passed",
+          "terminal": true,
+          "virtual_file_bytes": 635,
+          "virtual_file_count": 3
+        },
+        {
+          "action_count": 2,
+          "control": "wrong_answer",
+          "elapsed_seconds": 0.003578,
+          "files_sha256": "aa6f53e5f820a14576d3c19055a9629aeb3d173bc987df76683cdd65e07cf47b",
+          "oracle_input": "public_reset_and_virtual_file_observations_only",
+          "reset_sha256": "a1d51c38bc4e9ece5cf6ccbd8ba099c8bf1f1b93264ada38677a03c50873f913",
+          "reward": 0.75,
+          "status": "passed",
+          "terminal": true,
+          "virtual_file_bytes": 635,
+          "virtual_file_count": 3
+        },
+        {
+          "action_count": 2,
+          "control": "seeded_reset_replay",
+          "elapsed_seconds": 0.003543,
+          "files_sha256": "aa6f53e5f820a14576d3c19055a9629aeb3d173bc987df76683cdd65e07cf47b",
+          "oracle_input": "public_reset_and_virtual_file_observations_only",
+          "reset_sha256": "a1d51c38bc4e9ece5cf6ccbd8ba099c8bf1f1b93264ada38677a03c50873f913",
+          "reward": 1.0,
+          "status": "passed",
+          "terminal": true,
+          "virtual_file_bytes": 635,
+          "virtual_file_count": 3
+        }
+      ],
+      "seed": 8000125,
+      "status": "passed",
+      "task_id": "science_calibration-d3--sample_count_delta-m2"
+    },
+    {
+      "episodes": [
+        {
+          "action_count": 2,
+          "control": "declared_examples",
+          "elapsed_seconds": 0.002998,
+          "reward": 0.0,
+          "status": "passed",
+          "terminal": true
+        },
+        {
+          "action_count": 2,
+          "control": "observed_file_oracle",
+          "elapsed_seconds": 0.00389,
+          "files_sha256": "95787653ebe902d164b35ecf8f2442b0170a382824cc2509298956c1ab0ad4dc",
+          "oracle_input": "public_reset_and_virtual_file_observations_only",
+          "reset_sha256": "a1d51c38bc4e9ece5cf6ccbd8ba099c8bf1f1b93264ada38677a03c50873f913",
+          "reward": 1.0,
+          "status": "passed",
+          "terminal": true,
+          "virtual_file_bytes": 911,
+          "virtual_file_count": 3
+        },
+        {
+          "action_count": 2,
+          "control": "wrong_answer",
+          "elapsed_seconds": 0.004588,
+          "files_sha256": "95787653ebe902d164b35ecf8f2442b0170a382824cc2509298956c1ab0ad4dc",
+          "oracle_input": "public_reset_and_virtual_file_observations_only",
+          "reset_sha256": "a1d51c38bc4e9ece5cf6ccbd8ba099c8bf1f1b93264ada38677a03c50873f913",
+          "reward": 0.75,
+          "status": "passed",
+          "terminal": true,
+          "virtual_file_bytes": 911,
+          "virtual_file_count": 3
+        },
+        {
+          "action_count": 2,
+          "control": "seeded_reset_replay",
+          "elapsed_seconds": 0.004787,
+          "files_sha256": "95787653ebe902d164b35ecf8f2442b0170a382824cc2509298956c1ab0ad4dc",
+          "oracle_input": "public_reset_and_virtual_file_observations_only",
+          "reset_sha256": "a1d51c38bc4e9ece5cf6ccbd8ba099c8bf1f1b93264ada38677a03c50873f913",
+          "reward": 1.0,
+          "status": "passed",
+          "terminal": true,
+          "virtual_file_bytes": 911,
+          "virtual_file_count": 3
+        }
+      ],
+      "seed": 8000126,
+      "status": "passed",
+      "task_id": "science_calibration-d3--sample_count_delta-p2"
+    }
+  ]
+}

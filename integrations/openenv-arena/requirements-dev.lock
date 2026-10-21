@@ -1,0 +1,6 @@
+# Test-only overlay for the pinned Python 3.12 runtime; never installed in the published image.
+# Runtime requirements.lock already supplies packaging and pygments.
+# pytest 9.0.3 fixes PYSEC-2026-1845 / CVE-2025-71176.
+iniconfig==2.3.1
+pluggy==1.6.0
+pytest==9.0.3

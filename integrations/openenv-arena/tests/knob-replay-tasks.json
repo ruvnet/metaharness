@@ -1,0 +1,8 @@
+{
+  "tasks": [
+    {"task_id": "software_change-d3--suite_count_delta-m1", "split": "train"},
+    {"task_id": "software_change-d3--suite_count_delta-p2", "split": "train"},
+    {"task_id": "science_calibration-d3--sample_count_delta-m2", "split": "train"},
+    {"task_id": "science_calibration-d3--sample_count_delta-p2", "split": "train"}
+  ]
+}
