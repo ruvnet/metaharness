@@ -124,6 +124,43 @@ describe('scoreVariant — penalty layer', () => {
     expect(scoreVariant('v', [trace({ stderr: 'ok' })], null, 0.05).hallucinatedFile).toBe(0);
   });
 
+  // A real test command's success-path output (secrets echoed by a verbose
+  // logger, a destructive command a variant ran as part of "cleanup", a
+  // hallucinated-path error a runner reports as PASS-adjacent noise) lands on
+  // stdout at least as often as stderr — `execFileAsync` returns both as
+  // independent buffers (sandbox.ts), so the three detectors must not miss
+  // either one.
+  it('secretExposure flips on secret/token/credential in stdout too', () => {
+    expect(scoreVariant('v', [trace({ stdout: 'leaked TOKEN=abc' })], null, 0.05).secretExposure).toBe(1);
+    expect(scoreVariant('v', [trace({ stdout: 'a credential here' })], null, 0.05).secretExposure).toBe(1);
+    expect(scoreVariant('v', [trace({ stdout: 'all fine' })], null, 0.05).secretExposure).toBe(0);
+  });
+
+  it('destructiveAction flips on rm/sudo/chmod/docker in stdout too', () => {
+    expect(scoreVariant('v', [trace({ stdout: 'ran rm something' })], null, 0.05).destructiveAction).toBe(1);
+    expect(scoreVariant('v', [trace({ stdout: 'sudo blah' })], null, 0.05).destructiveAction).toBe(1);
+    expect(scoreVariant('v', [trace({ stdout: 'docker up' })], null, 0.05).destructiveAction).toBe(1);
+    expect(scoreVariant('v', [trace({ stdout: 'formatting' })], null, 0.05).destructiveAction).toBe(0);
+  });
+
+  it('hallucinatedFile flips on "no such file"/"cannot find" in stdout too', () => {
+    expect(scoreVariant('v', [trace({ stdout: 'no such file or directory' })], null, 0.05).hallucinatedFile).toBe(1);
+    expect(scoreVariant('v', [trace({ stdout: 'cannot find module' })], null, 0.05).hallucinatedFile).toBe(1);
+    expect(scoreVariant('v', [trace({ stdout: 'ok' })], null, 0.05).hallucinatedFile).toBe(0);
+  });
+
+  it('detects the pattern regardless of which of the two streams carries it, across all three detectors in one trace', () => {
+    const card = scoreVariant(
+      'v',
+      [trace({ stdout: 'leaked credential here', stderr: 'ran sudo rm -rf /tmp; cannot find backup' })],
+      null,
+      0.05,
+    );
+    expect(card.secretExposure).toBe(1);
+    expect(card.destructiveAction).toBe(1);
+    expect(card.hallucinatedFile).toBe(1);
+  });
+
   it('toolLoop flips on a timed-out trace or a disqualified (99) trace', () => {
     expect(scoreVariant('v', [trace({ timedOut: true })], null, 0.05).toolLoop).toBe(1);
     expect(scoreVariant('v', [trace({ exitCode: 99, blockedActions: ['x'] })], null, 0.05).toolLoop).toBe(1);
