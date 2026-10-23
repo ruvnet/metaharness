@@ -11,7 +11,7 @@
 // structured findings, so it is unit-testable without the kernel and reusable
 // from CI. The CLI wrapper just formats + sets the exit code.
 
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 export type Severity = 'high' | 'medium' | 'low' | 'info';
@@ -41,6 +41,69 @@ function readJson(path: string): unknown | undefined {
   }
 }
 
+function readText(path: string): string | undefined {
+  try {
+    return existsSync(path) ? readFileSync(path, 'utf-8') : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+// Dream Cycle 2026-10-23 (security-adversarial): `mcpEnabled` below previously
+// went true for codex/hermes/openclaw/copilot/opencode harnesses only as a
+// side effect of the scaffolder also always stamping `.harness/mcp-policy.json`
+// at generation time (fixed 2026-10-18, #413/#414) — scanMcp() itself never
+// independently looked at these hosts' own native MCP registration files.
+// Live-reproduced: scaffold `--host codex`, delete `.harness/mcp-policy.json`
+// (an older harness predating 2026-10-18, or any hand-edited directory), and
+// `scanMcp()` reports `mcpEnabled: false` / "No MCP surface — nothing to
+// scan" even though `.codex/config.toml` has a real, live, ungoverned
+// `[mcp_servers.*]` entry — the exact ungoverned-MCP case the `no-policy`
+// HIGH finding exists to catch. threat-model.ts's `mcpInUse` inherits the
+// same blind spot, since it delegates to this function's `mcpEnabled`.
+// Shapes mirror each host adapter's real emitted format (verified by
+// reading packages/host-{codex,hermes,openclaw,copilot,opencode}/src and the
+// CLI's own dependency-free mirror, host-config.ts, which is what
+// `npx metaharness --host <x>` actually emits):
+//   - codex:    .codex/config.toml      `[mcp_servers.<name>]` TOML tables
+//   - hermes:   optional-mcps/*.json    one file per registered server
+//   - openclaw: .openclaw/openclaw.json { mcp: { servers: {...} } }
+//   - copilot:  .vscode/mcp.json        { servers: {...} } (+ mcpServers alias)
+//   - opencode: .opencode/opencode.json { mcp: {...} }
+function nativeHostMcpDetected(root: string): boolean {
+  const codexToml = readText(join(root, '.codex', 'config.toml'));
+  if (codexToml && /^\[mcp_servers\./m.test(codexToml)) return true;
+
+  try {
+    const dir = join(root, 'optional-mcps');
+    if (existsSync(dir)) {
+      const hasServer = readdirSync(dir).some((f) => {
+        if (!f.endsWith('.json')) return false;
+        const parsed = readJson(join(dir, f)) as Record<string, unknown> | undefined;
+        return !!parsed && Object.keys(parsed).length > 0;
+      });
+      if (hasServer) return true;
+    }
+  } catch {
+    // unreadable directory — treat as not registered, not a crash
+  }
+
+  // Real path per host-config.ts (the CLI's actual emitter): .openclaw/openclaw.json,
+  // NOT a bare top-level openclaw.json.
+  const openclaw = readJson(join(root, '.openclaw', 'openclaw.json')) as { mcp?: { servers?: Record<string, unknown> } } | undefined;
+  if (openclaw?.mcp?.servers && Object.keys(openclaw.mcp.servers).length > 0) return true;
+
+  const vscode = readJson(join(root, '.vscode', 'mcp.json')) as
+    | { servers?: Record<string, unknown>; mcpServers?: Record<string, unknown> }
+    | undefined;
+  if (vscode && (Object.keys(vscode.servers ?? {}).length > 0 || Object.keys(vscode.mcpServers ?? {}).length > 0)) return true;
+
+  const opencode = readJson(join(root, '.opencode', 'opencode.json')) as { mcp?: Record<string, unknown> } | undefined;
+  if (opencode?.mcp && Object.keys(opencode.mcp).length > 0) return true;
+
+  return false;
+}
+
 /**
  * Scan a harness directory for MCP security issues. Never executes anything —
  * static inspection of policy + config + manifest files only.
@@ -59,14 +122,15 @@ export function scanMcp(dir: string): ScanReport {
     | { dependencies?: Record<string, string> }
     | undefined;
 
-  // Three independent, valid ways a harness can register MCP: a policy file,
-  // a top-level .mcp.json, or .claude/settings.json's mcpServers key. All
-  // three must be checked here — this is the one place downstream callers
-  // (e.g. threat-model.ts's mcpInUse) rely on as the authoritative answer.
+  // Independent, valid ways a harness can register MCP: a policy file, a
+  // top-level .mcp.json, .claude/settings.json's mcpServers key, or one of
+  // 5 native per-host formats (see nativeHostMcpDetected). All must be
+  // checked here — this is the one place downstream callers (e.g.
+  // threat-model.ts's mcpInUse) rely on as the authoritative answer.
   //
   // Deterministic precedence when more than one surface is present at once
-  // (duplicate/conflicting registration): there is none, by design — the
-  // three are OR'd for `mcpEnabled`, and every check below is additive and
+  // (duplicate/conflicting registration): there is none, by design — all
+  // are OR'd for `mcpEnabled`, and every check below is additive and
   // keyed to its own source file, not to "is MCP in use" generally. A
   // compliant `.harness/mcp-policy.json` does not suppress a risky
   // `.claude/settings.json` permission (or vice versa): each surface's
@@ -74,7 +138,10 @@ export function scanMcp(dir: string): ScanReport {
   // shadowed by another surface's presence. See mcp-scan.test.ts's
   // "duplicate/conflicting registration" case.
   const mcpEnabled =
-    !!policy || !!mcpJson || !!(settings && settings.mcpServers && Object.keys(settings.mcpServers).length > 0);
+    !!policy ||
+    !!mcpJson ||
+    !!(settings && settings.mcpServers && Object.keys(settings.mcpServers).length > 0) ||
+    nativeHostMcpDetected(root);
 
   if (!mcpEnabled) {
     add({ id: 'mcp-disabled', severity: 'info', title: 'No MCP surface', detail: 'No MCP policy or server registered — nothing to scan.' });
