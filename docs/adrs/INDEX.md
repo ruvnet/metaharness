@@ -371,3 +371,5 @@ If you are reading this with intent to start implementation, the gating ADR is *
 - [ADR 320: Independent paired confirmation](./ADR-320-independent-contrastive-confirmation.md)
 
 - [ADR-321: One deadline for contrastive development and confirmation](./ADR-321-contrastive-total-deadline.md)
+
+- [ADR-322: Trusted-signer allowlist for `verifyReplayBundle`](./ADR-322-flywheel-replay-trusted-signer-allowlist.md) — closes ADR-274's disclosed key-trust residual: `verifyReceipt` only proved a receipt's signature matched its own embedded key, never that the key was trusted, so a self-signed fabricated bundle verified clean. Adds an opt-in `trustedPublicKeys` allowlist + `--trusted-key` CLI flag, mirroring ADR-271's `FLYWHEEL_TRUSTED_PUBLIC_KEYS_JSON` pattern. Originally filed as ADR-319; renumbered after a collision with the contrastive-development series (see the ADR's own Note).

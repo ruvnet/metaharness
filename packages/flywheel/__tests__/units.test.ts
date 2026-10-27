@@ -178,6 +178,79 @@ describe('verifyReplayBundle — an HONEST-NULL run (0 promotions) is VALID (reg
   });
 });
 
+describe('verifyReplayBundle — trustedSigner: opts.trustedPublicKeys (dream-cycle 2026-10-06)', () => {
+  // `verifyReceipt` proves a receipt matches ITS OWN embedded key, not that the key is authorized — a
+  // forger with no access to the real producer's key can mint a fresh keypair, sign a fully fabricated
+  // bundle with it, and every other check (receipts, allCommitsReceipts, sealedFieldsAuthentic) passes.
+  const forger = makeSigner();
+  const root: LineageCommit = {
+    id: 'root', generation: 0, parents: [], mutation: null, primaryDelta: 0, anchorScore: null,
+    verdict: 'ROOT', failureReasons: [], receipt: forger.sign({ kind: 'root', root: 'root' }), createdAt: 'gen-0',
+  };
+  const rejected: LineageCommit = {
+    id: 'c1', generation: 1, parents: ['root'], mutation: { target: 'x', summary: 'x' }, primaryDelta: 0,
+    anchorScore: null, verdict: 'REJECTED', failureReasons: ['primary_regressed'],
+    receipt: forger.sign({ kind: 'candidate', id: 'c1', verdict: 'REJECTED' }), createdAt: 'gen-1',
+  };
+  const bundle: ReplayBundle = {
+    data_source: 'LIVE', root_id: 'root', chain: [root], all_commits: [rejected],
+    lift_curve: [{ generation: 0, primary: 1, delta: 0, anchor: null }],
+    gate_fingerprint: gateFingerprint(meetsPromotionRule),
+    verified_improvements: 0, anchor_surviving_improvements: 0, milestone_reached: false, created_at: 'gen-0',
+  };
+
+  it('a fully self-signed, fabricated bundle PASSES today when no allowlist is supplied — the disclosed gap, unchanged default behavior', () => {
+    const v = verifyReplayBundle(bundle);
+    expect(v.checks.trustedSigner).toBe(true); // unchecked, not "verified trusted"
+    expect(v.pass).toBe(true);
+  });
+
+  it('REJECTS the same bundle once the reviewer supplies an allowlist that does not include the forger key', () => {
+    const v = verifyReplayBundle(bundle, { trustedPublicKeys: [makeSigner().publicKey()] });
+    expect(v.checks.trustedSigner).toBe(false);
+    expect(v.pass).toBe(false);
+    expect(v.failures).toContain('trustedSigner');
+  });
+
+  it('PASSES once the forger key is actually on the allowlist', () => {
+    const v = verifyReplayBundle(bundle, { trustedPublicKeys: [forger.publicKey()] });
+    expect(v.checks.trustedSigner).toBe(true);
+    expect(v.pass).toBe(true);
+  });
+
+  it('checks all_commits, not just the promoted chain — an untrusted REJECTED-commit signer also fails', () => {
+    const honestSigner = makeSigner();
+    const chainOnlyTrusted: ReplayBundle = {
+      ...bundle,
+      root_id: 'root2',
+      chain: [{ ...root, id: 'root2', receipt: honestSigner.sign({ kind: 'root', root: 'root2' }) }],
+    };
+    const v = verifyReplayBundle(chainOnlyTrusted, { trustedPublicKeys: [honestSigner.publicKey()] });
+    expect(v.checks.trustedSigner).toBe(false); // the REJECTED all_commits entry is still forger-signed
+  });
+
+  it('an empty allowlist ([]) is treated as "not supplied", not "trust nothing" — guards the empty-array-is-truthy bug class (cf. #319/#320)', () => {
+    const v = verifyReplayBundle(bundle, { trustedPublicKeys: [] });
+    expect(v.checks.trustedSigner).toBe(true);
+    expect(v.pass).toBe(true);
+  });
+
+  it('a commit with no receipt field FAILS CLOSED, not throws, once an allowlist is supplied (adversarial-critic finding)', () => {
+    // Isolates the trustedSigner check from an unrelated, PRE-EXISTING crash this candidate does not
+    // introduce and is not fixing tonight (sealedFieldsAuthentic's `c.receipt.payload` dereference has
+    // no guard either — reproduced separately, same TypeError, present on `main` with no
+    // `trustedPublicKeys` involved at all; disclosed in tonight's issue for a future night). A ROOT
+    // commit is skipped by that loop (`c.verdict === 'ROOT'`), isolating exactly the line this test
+    // targets: `trustedSigner`'s own `c.receipt?.publicKey` dereference.
+    const noReceiptRoot = { ...root, receipt: undefined } as unknown as LineageCommit;
+    const malformed: ReplayBundle = { ...bundle, chain: [noReceiptRoot], all_commits: [] };
+    expect(() => verifyReplayBundle(malformed, { trustedPublicKeys: [forger.publicKey()] })).not.toThrow();
+    const v = verifyReplayBundle(malformed, { trustedPublicKeys: [forger.publicKey()] });
+    expect(v.checks.trustedSigner).toBe(false);
+    expect(v.pass).toBe(false);
+  });
+});
+
 describe('verifyReplayBundle — gateReExecutes: re-run the rule on sealed scores (ADR-235, extended ADR-254)', () => {
   const signer = makeSigner();
   const S2 = (o: Partial<Score> = {}): Score => ({ primary: 5, noopRate: 0.3, costPerWin: 1, regressed: false, ...o });
