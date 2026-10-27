@@ -28,6 +28,14 @@ describe('train runner — size gate (7-14B only)', () => {
   it('REJECTS a 32B model (it spills a 16GB GPU, §59)', () => {
     expect(() => assertTunableSize(QWEN32)).toThrow(/14.*B band|32B/i);
   });
+  it('REJECTS a NaN paramsB (a malformed --params-b flag must fail loud, not silently pass)', () => {
+    const BAD: BaseModelSpec = { id: 'typo/model', paramsB: NaN };
+    expect(() => assertTunableSize(BAD)).toThrow(/NaN/);
+  });
+  it('REJECTS an Infinity paramsB', () => {
+    const BAD: BaseModelSpec = { id: 'typo/model', paramsB: Infinity };
+    expect(() => assertTunableSize(BAD)).toThrow(/Infinity/);
+  });
 });
 
 describe('train runner — dry-run emits a valid plan', () => {
