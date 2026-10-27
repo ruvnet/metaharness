@@ -34,4 +34,4 @@ export {
   type LabelCredit,
   type MutationAttribution,
 } from './adapters.js';
-export { canon, digest, buildCreditReceiptPayload, type CreditReceiptInput } from './receipt.js';
+export { canon, canonEquals, digest, buildCreditReceiptPayload, type CreditReceiptInput } from './receipt.js';

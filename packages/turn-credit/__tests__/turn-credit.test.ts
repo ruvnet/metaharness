@@ -16,6 +16,8 @@ import {
   attributeMutation,
   beliefTrajectory,
   buildCreditReceiptPayload,
+  canon,
+  canonEquals,
   clipPrior,
   creditByLabel,
   digest,
@@ -233,6 +235,43 @@ describe('receipts + determinism', () => {
 
   it('re-processing the same trace is byte-identical (canonical digest match)', () => {
     expect(digest(processTrajectory(input))).toBe(digest(processTrajectory(input)));
+  });
+
+  // Dream Cycle 2026-10-26 — this `canon()` is "duplicated locally" from `@metaharness/flywheel`'s
+  // `receipts.ts` (see module doc comment) and, until tonight, had neither hardening the flywheel's own
+  // copy shipped 2026-10-16 (depth bound) / 2026-10-21 (non-finite rejection). Disclosed-not-fixed in
+  // the 2026-10-21 ledger row; closed here. Every case proves the FIX (a clean rejection reaching the
+  // real `digest()` call site), not just "didn't crash."
+  function deepNest(n: number): unknown {
+    let o: unknown = { leaf: true };
+    for (let i = 0; i < n; i++) o = { next: o };
+    return o;
+  }
+
+  it('canonicalizes normal, shallow values exactly as before (byte-identical)', () => {
+    expect(canon({ b: 2, a: 1 })).toBe('{"a":1,"b":2}');
+    expect(canon([1, 2, { a: 1 }])).toBe('[1,2,{"a":1}]');
+  });
+
+  it('throws a clear, bounded Error — not a native stack overflow — past the depth limit', () => {
+    expect(() => canon(deepNest(100_000))).toThrow(/exceeds max nesting depth/);
+  });
+
+  it('rejects NaN/Infinity/-Infinity instead of collapsing them to the same string as null', () => {
+    expect(() => canon(NaN)).toThrow(/non-finite/);
+    expect(() => canon(Infinity)).toThrow(/non-finite/);
+    expect(() => canon(-Infinity)).toThrow(/non-finite/);
+  });
+
+  it('canonEquals() is fail-closed: a value that cannot be canonicalized counts as NOT equal, never throws', () => {
+    expect(canonEquals({ a: 1 }, { a: 1 })).toBe(true);
+    expect(canonEquals({ a: NaN }, { a: null })).toBe(false); // the exact collision this fix closes
+    expect(canonEquals(deepNest(100_000), { a: 1 })).toBe(false);
+  });
+
+  it('digest() (the real call site) rejects a non-finite field in a credit payload instead of hashing a null-collided string', () => {
+    const poisoned = { ...processTrajectory(input), poisoned: NaN };
+    expect(() => digest(poisoned)).toThrow(/non-finite/);
   });
 
   it('receipt payload carries revisions, weights, pivotal turns, proxy flag, and digests', () => {

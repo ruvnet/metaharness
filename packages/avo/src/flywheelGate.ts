@@ -24,13 +24,41 @@ import { createHash, generateKeyPairSync, sign as edSign, type KeyObject } from 
 
 /* ── mirrors of the meta-llm gate primitives (src/evolve/gate.ts + flywheel/genomeRegistry.ts) ── */
 
+/** No payload this module canonicalizes nests deeper than a handful of levels (flat score/manifest
+ *  fields). Mirrors `@metaharness/flywheel`'s `receipts.ts` `MAX_CANON_DEPTH` hardening (2026-10-16):
+ *  this `canon` is an "exact mirror" of the gate's per the module doc comment above, so a bound no
+ *  caller here legitimately needs still closes the same crafted-deep-payload stack-exhaustion gap. */
+const MAX_CANON_DEPTH = 64;
+
 /** Canonical JSON — byte-identical to the gate's `canon`. Object keys sorted; used for both the
- *  signed bytes and the manifest hashes, so signatures verify and hashes match cross-repo. */
-export function canon(v: unknown): string {
+ *  signed bytes and the manifest hashes, so signatures verify and hashes match cross-repo.
+ *  Non-finite numbers (NaN/Infinity/-Infinity) are rejected rather than silently collapsed to the
+ *  same `"null"` JSON.stringify produces for all three — mirrors `flywheel/receipts.ts`'s 2026-10-21
+ *  hardening: this package's `canon()` output feeds `edSign`/`edVerify` and the manifest-hash binding
+ *  below, so that collision could otherwise let a tampered numeric field escape detection with no
+ *  signing key. */
+export function canon(v: unknown, depth = 0): string {
+  if (depth > MAX_CANON_DEPTH) {
+    throw new Error(`canon: value exceeds max nesting depth (${MAX_CANON_DEPTH}) — refusing to canonicalize`);
+  }
+  if (typeof v === 'number' && !Number.isFinite(v)) {
+    throw new Error('canon: non-finite numbers cannot be represented in signed JSON');
+  }
   if (v === null || typeof v !== 'object') return JSON.stringify(v);
-  if (Array.isArray(v)) return `[${v.map(canon).join(',')}]`;
+  if (Array.isArray(v)) return `[${v.map((x) => canon(x, depth + 1)).join(',')}]`;
   const o = v as Record<string, unknown>;
-  return `{${Object.keys(o).sort().map((k) => `${JSON.stringify(k)}:${canon(o[k])}`).join(',')}}`;
+  return `{${Object.keys(o).sort().map((k) => `${JSON.stringify(k)}:${canon(o[k], depth + 1)}`).join(',')}}`;
+}
+
+/** `canon(a) === canon(b)`, except a value that cannot be safely canonicalized (too deep, or carrying
+ *  a non-finite number) counts as NOT equal rather than throwing — mirrors `flywheel/receipts.ts`'s
+ *  `canonEquals`. Used where a mismatch must fail a check cleanly rather than escape as an error. */
+export function canonEquals(a: unknown, b: unknown): boolean {
+  try {
+    return canon(a) === canon(b);
+  } catch {
+    return false;
+  }
 }
 
 const sha256hex = (s: string): string => createHash('sha256').update(s).digest('hex');
