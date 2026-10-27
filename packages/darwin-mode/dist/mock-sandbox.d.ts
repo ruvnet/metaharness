@@ -47,9 +47,10 @@ export interface SimResult {
 /**
  * Simulate a scripted agent loop. Outcome is a deterministic function of the
  * surface params and the task: the agent must (a) see enough context and
- * (b) retry past the task's failing attempts. The log records plan steps,
- * context builds, and retry decisions — so verbosity/repetition/duration all
- * vary by surface, populating the behavioural phenotype (ADR-091).
+ * (b) retry past the task's failing attempts, adjusted by its memory policy's
+ * keep-threshold (ADR-102). The log records plan steps, context builds, and
+ * retry decisions — so verbosity/repetition/duration all vary by surface,
+ * populating the behavioural phenotype (ADR-091).
  */
 export declare function simulateAgentLoop(params: SurfaceParams, task: MockTask): SimResult;
 /** Run ONE mock task against a variant, producing a surface-dependent RunTrace. */
