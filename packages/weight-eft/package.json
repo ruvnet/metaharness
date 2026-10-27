@@ -20,6 +20,7 @@
   },
   "files": [
     "dist/**",
+    "AGENTS.md",
     "README.md",
     "LICENSE"
   ],
