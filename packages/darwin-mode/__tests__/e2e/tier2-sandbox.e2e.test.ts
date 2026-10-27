@@ -71,4 +71,84 @@ describe.skipIf(nodeMajor < 22 || process.platform === 'win32')('Tier-2 agent sa
     const traces = await runVariantTasksAgent(base, custom);
     expect(traces.map((t) => t.taskId)).toEqual(['c1', 'c2']);
   }, 60_000);
+
+  it('a toolPolicy that schedules test before the cheap gates solves strictly fewer tasks (real code drives it)', async () => {
+    const profile = await profileRepo(repo);
+    const base = await generateBaselineHarness(profile, wr);
+
+    // A copy whose tool_policy.ts reorders the cheap-first contract: test runs
+    // FIRST instead of last, forgoing the cheap-gate-catches-it-first chance
+    // tier2-driver.ts's misorderPenalty models.
+    const misorderedDir = join(wr, 'variants', 'misordered');
+    await cp(base.dir, misorderedDir, { recursive: true });
+    const tp = await readFile(join(misorderedDir, 'tool_policy.ts'), 'utf8');
+    await writeFile(
+      join(misorderedDir, 'tool_policy.ts'),
+      tp.replace(
+        "const ORDER: Record<CommandKind, number> = { lint: 0, build: 1, test: 2 };",
+        "const ORDER: Record<CommandKind, number> = { test: 0, lint: 1, build: 2 };",
+      ),
+    );
+    const misordered = { ...base, id: 'misordered', dir: misorderedDir };
+
+    // One task whose buggy file is trivially located (single file, no context
+    // competition) and whose failAttempts (2) sits exactly at the baseline's
+    // maxAttempts(3)-1 boundary — the one extra attempt the misorder penalty
+    // costs pushes it past the retry budget.
+    const task = {
+      id: 'order-hard',
+      prompt: 'fix it',
+      files: ['src/it.ts'],
+      buggyFile: 'src/it.ts',
+      classification: 'transient' as const,
+      failAttempts: 2,
+      backoffMs: 10,
+      difficulty: 5 as const,
+    };
+
+    const [baseTrace] = await runVariantTasksAgent(base, [task]);
+    const [misorderedTrace] = await runVariantTasksAgent(misordered, [task]);
+
+    expect(baseTrace.exitCode).toBe(0); // baseline (cheap-first) solves it
+    expect(misorderedTrace.exitCode).not.toBe(0); // misordered: one attempt short
+  }, 60_000);
+
+  it('a degenerate toolPolicy (empty schedule) is penalized, not silently treated as compliant', async () => {
+    const profile = await profileRepo(repo);
+    const base = await generateBaselineHarness(profile, wr);
+
+    // A copy whose tool_policy.ts always schedules nothing at all — the
+    // degenerate case round-1's critic flagged: `order.length > 0 && ...`
+    // would have let an empty schedule slip through with misorderPenalty=0,
+    // indistinguishable from full compliance. `orderKinds` now has to end in
+    // `'test'` to avoid the penalty; an empty array never does.
+    const emptyDir = join(wr, 'variants', 'empty-order');
+    await cp(base.dir, emptyDir, { recursive: true });
+    const tp = await readFile(join(emptyDir, 'tool_policy.ts'), 'utf8');
+    await writeFile(
+      join(emptyDir, 'tool_policy.ts'),
+      tp.replace(
+        'export function orderKinds(kinds: CommandKind[]): CommandKind[] {\n  return kinds\n    .filter(isKindAllowed)\n    .slice()\n    .sort((a, b) => ORDER[a] - ORDER[b]);\n}',
+        'export function orderKinds(_kinds: CommandKind[]): CommandKind[] {\n  return [];\n}',
+      ),
+    );
+    const emptyOrder = { ...base, id: 'empty-order', dir: emptyDir };
+
+    const task = {
+      id: 'order-hard-empty',
+      prompt: 'fix it',
+      files: ['src/it.ts'],
+      buggyFile: 'src/it.ts',
+      classification: 'transient' as const,
+      failAttempts: 2,
+      backoffMs: 10,
+      difficulty: 5 as const,
+    };
+
+    const [baseTrace] = await runVariantTasksAgent(base, [task]);
+    const [emptyTrace] = await runVariantTasksAgent(emptyOrder, [task]);
+
+    expect(baseTrace.exitCode).toBe(0);
+    expect(emptyTrace.exitCode).not.toBe(0); // degenerate schedule: penalized like a misorder, not free
+  }, 60_000);
 });

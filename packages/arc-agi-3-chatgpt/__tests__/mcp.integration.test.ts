@@ -61,6 +61,21 @@ describe('real Streamable HTTP MCP clients', () => {
     await rm(stateRoot, { recursive: true, force: true });
   });
 
+  it('bounds validation errors for an oversized invalid plan before invoking the environment', async () => {
+    const client = await connect(started.actorUrl, ACTOR_TOKEN);
+    const before = fixture.calls;
+    try {
+      const result = await client.callTool({
+        name: 'arc_execute_guarded_plan',
+        arguments: {episodeId: 'episode_' + 'a'.repeat(32), idempotencyKey: 'oversized-plan-review',
+          plan: {planId: 'bounded-schema-plan', steps: Array(2000).fill('invalid-step')}},
+      });
+      expect(result.isError).toBe(true);
+      expect(JSON.stringify(result).length).toBeLessThan(4096);
+      expect(fixture.calls).toBe(before);
+    } finally { await client.close(); }
+  });
+
   it('initializes, lists, calls actor and boss tools, and reads the exact UI resource', async () => {
     const actor = await connect(started.actorUrl, ACTOR_TOKEN);
     const actorTools = await actor.listTools();

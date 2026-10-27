@@ -26,9 +26,18 @@ async function main() {
     const plan = (planner.createPlan?.(task.prompt) ?? []);
     const planOk = plan.length > 0 && plan.some((s) => s.kind === 'verify');
     log.push(`plan: ${plan.length} steps, verify=${planOk}`);
-    // Tool ordering is exercised (its output shapes the log / behaviour).
+    // REAL toolPolicy: the policy's own contract is "cheap gates (lint/build)
+    // before the expensive test run" (see tool_policy.ts's ORDER comment). A
+    // policy that doesn't end its schedule on `test` — whether it reorders
+    // test earlier or drops/filters kinds down to a degenerate schedule that
+    // never reaches test last at all — forgoes the chance for a cheap gate to
+    // catch the failure first, so it costs one extra verification attempt.
+    // `order[order.length - 1]` is `undefined` for an empty schedule, which
+    // correctly never equals `'test'` — a degenerate policy is penalized, not
+    // silently treated as compliant.
     const order = (tools.orderKinds?.(['lint', 'test', 'build']) ?? []);
-    log.push(`tools: ${order.join('>')}`);
+    const misorderPenalty = order[order.length - 1] !== 'test' ? 1 : 0;
+    log.push(`tools: ${order.join('>')} misorderPenalty=${misorderPenalty}`);
     const maxA = (retry.maxAttempts ?? 3);
     let solved = false;
     let attemptsUsed = 0;
@@ -41,7 +50,7 @@ async function main() {
         ctxLen = ctx.length;
         const located = ctx.some((c) => c.path === task.buggyFile);
         log.push(`attempt ${attempt}: ctx=${ctx.length} located=${located}`);
-        if (planOk && located && attempt >= task.failAttempts) {
+        if (planOk && located && attempt >= task.failAttempts + misorderPenalty) {
             solved = true;
             log.push('verify: PASS');
             break;
