@@ -38,6 +38,26 @@ describe('buildRepoScorecard', () => {
     expect(sc.repo).toBe('acme-sdk');
   });
 
+  // Dream Cycle 2026-10-05 (generator-genome): `recommendedMode` reads
+  // `plan.mcp === 'off' ? 'CLI' : 'CLI + MCP'`, but recommendPlan() could
+  // never produce 'off' (see analyze-repo.ts's recommendPlan fix) — so this
+  // repo (no `.mcp.json`, no MCP mention) always scored 'CLI + MCP' before
+  // tonight's fix, identically to a repo that genuinely needs MCP tooling.
+  it('recommends CLI-only (not CLI + MCP) for a repo with zero MCP signal', () => {
+    expect(buildRepoScorecard(repo, 'x').recommendedMode).toBe('CLI');
+  });
+
+  it('still recommends CLI + MCP for a repo with a real MCP signal', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'scorecard-mcp-'));
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: 'acme-mcp-sdk' }));
+    writeFileSync(join(dir, '.mcp.json'), JSON.stringify({ mcpServers: { x: { command: 'npx' } } }));
+    try {
+      expect(buildRepoScorecard(dir, 'x').recommendedMode).toBe('CLI + MCP');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it('rewards build+test signals in compile confidence', () => {
     const withBuild = buildRepoScorecard(repo, 'x');
     // has language + build + test → should be high
@@ -86,13 +106,19 @@ describe('toolSafety actually differentiates MCP exposure (Dream Cycle 2026-09-1
     const sdkSc = buildRepoScorecard(sdkRepo, 'x');
     expect(mcpSc.archetype).toBe('mcp-server-harness');
     expect(sdkSc.archetype).toBe('typescript-sdk-harness');
-    // Real measured values post-fix (Dream Cycle 2026-09-10 evidence run):
-    // mcp-server-harness → 82, typescript-sdk-harness → 95 (gap 13).
-    // Pre-fix these were 90 and 100 (gap 10) for EVERY repo pair with this
-    // archetype split — a fixed, repo-independent constant, not a measurement.
+    // Real measured values post-09-10-fix, pre-2026-10-05-fix: mcp-server-harness
+    // → 82, typescript-sdk-harness → 95 (gap 13). Dream Cycle 2026-10-05
+    // (generator-genome) closed a sibling gap: `sdkRepo` has ZERO real MCP
+    // signal (no .mcp.json, no MCP mention), but recommendPlan() could never
+    // produce `mcp: 'off'` for ANY repo (no archetype's static `mcp` field is
+    // ever 'off') — so this repo was scored as if it carried a 'local' MCP
+    // posture (-5pts) it doesn't actually have. Now that recommendPlan() can
+    // report 'off' for a no-signal repo, this repo correctly scores the full
+    // 100 ("MCP not in use — safest"), widening the gap to 18. mcp-server-harness
+    // is unaffected (hasMcp:true is required to reach that archetype at all).
     expect(mcpSc.toolSafety).toBe(82);
-    expect(sdkSc.toolSafety).toBe(95);
-    expect(sdkSc.toolSafety - mcpSc.toolSafety).toBeGreaterThan(10); // was exactly 10 pre-fix, always
+    expect(sdkSc.toolSafety).toBe(100);
+    expect(sdkSc.toolSafety - mcpSc.toolSafety).toBeGreaterThan(10); // was exactly 10 pre-09-10-fix, always
     expect([mcpSc.toolSafety, sdkSc.toolSafety]).not.toEqual([90, 100]); // the old constant pair
   });
 

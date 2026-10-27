@@ -268,6 +268,21 @@ export function recommendPlan(profile: RepoProfile, semantic?: Record<string, nu
   const a = top.archetype;
   const hosts: Host[] = ['claude-code'];
   if (profile.hasCodex) hosts.push('codex');
+  // Dream Cycle 2026-10-05 (generator-genome): every entry in ARCHETYPES sets
+  // mcp to 'local' or 'remote' — none ever set 'off' — so `plan.mcp === 'off'`
+  // was structurally unreachable from this function for ANY input repo, even
+  // one with zero real MCP signal. That silently broke 3 downstream reporting
+  // paths whose own unit tests and doc comments expect 'off' to be a real,
+  // reachable state: genome-scorers.ts's resolveAgentTopology() always added
+  // 'security' (its `plan.mcp === 'local' || 'remote'` clause was always
+  // true), scoreMcpRisk()'s `surface: 'off'` branch was dead, and
+  // repo-scorecard.ts's `recommendedMode` could never read 'CLI'-only. This
+  // is scoring/reporting-only: it does not touch what a scaffolded harness
+  // actually ships — index.ts's scaffold() hardcodes `mcp: 'local'`
+  // independently for the generated harness's own self-referential MCP
+  // server, so real output is unaffected. An archetype that explicitly
+  // requires MCP (`requiredSignal: 'hasMcp'`) keeps its mcp mode regardless.
+  const mcp = a.mcp === 'local' && !profile.hasMcp && a.requiredSignal !== 'hasMcp' ? 'off' : a.mcp;
   return {
     name: kebab(`${profile.name}-harness`),
     hosts,
@@ -278,7 +293,7 @@ export function recommendPlan(profile: RepoProfile, semantic?: Record<string, nu
     agents: a.agents,
     skills: a.skills,
     commands: a.commands,
-    mcp: a.mcp,
+    mcp,
     policy: SAFE,
     riskProfile: describeRisk(SAFE),
     suggestedCommands: [...profile.buildCommands, ...profile.testCommands].map((command) => ({ command, trust: 'inferred' as const, execution: 'disabled' as const })),

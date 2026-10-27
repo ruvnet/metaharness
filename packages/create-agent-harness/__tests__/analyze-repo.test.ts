@@ -9,7 +9,8 @@ import { describe, it, expect } from 'vitest';
 import { mkdtemp, mkdir, writeFile, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { analyzeFiles, inventory, recommendPlan, scoreArchetypes, ruvllmSemantic, analyzeRepoCmd } from '../src/analyze-repo.js';
+import { analyzeFiles, inventory, recommendPlan, scoreArchetypes, ruvllmSemantic, analyzeRepoCmd, type RepoProfile } from '../src/analyze-repo.js';
+import { resolveAgentTopology } from '../src/genome-scorers.js';
 
 async function rustRepoDir(): Promise<string> {
   const dir = await mkdtemp(join(tmpdir(), 'analyze-rust-'));
@@ -71,6 +72,60 @@ describe('recommendPlan (lexical default)', () => {
     expect(plan.template).toBe('vertical:coding');
     expect(plan.engine).toBe('lexical');
     expect(plan.suggestedCommands.every((c) => c.execution === 'disabled')).toBe(true);
+  });
+
+  // Dream Cycle 2026-10-05 (generator-genome): every ARCHETYPES entry sets
+  // mcp to 'local' or 'remote' — none ever set 'off' — so `plan.mcp === 'off'`
+  // was structurally unreachable from recommendPlan() for ANY repo, even one
+  // with zero real MCP signal. That silently broke resolveAgentTopology()'s
+  // 'security' gate (its own unit tests assert 'security' is skipped when
+  // `plan.mcp === 'off'`, a state the real pipeline could never produce) and
+  // repo-scorecard.ts's CLI-only `recommendedMode`. Before this fix, the
+  // rust crate above (zero MCP signal) got `mcp: 'local'` and 'security' in
+  // its topology regardless; this characterizes the corrected behavior.
+  it('reports mcp: off for a repo with zero MCP signal (was always local/remote)', async () => {
+    const dir = await rustRepoDir();
+    const profile = analyzeFiles('ruvector', inventory(dir));
+    expect(profile.hasMcp).toBe(false);
+    const plan = recommendPlan(profile);
+    expect(plan.mcp).toBe('off');
+    // ... and resolveAgentTopology, run through the REAL pipeline (not a
+    // hand-built plan() fixture), no longer force-includes 'security'.
+    expect(resolveAgentTopology(profile, plan)).not.toContain('security');
+  });
+
+  it('keeps mcp: local when the repo shows real MCP signal', () => {
+    const profile: RepoProfile = {
+      name: 'mcp-tool',
+      languages: ['typescript'],
+      hasMcp: true,
+      hasClaude: false,
+      hasCodex: false,
+      hasCi: false,
+      buildCommands: [],
+      testCommands: [],
+      tokens: ['typescript', 'sdk'],
+    };
+    const plan = recommendPlan(profile);
+    expect(plan.mcp).toBe('local');
+    expect(resolveAgentTopology(profile, plan)).toContain('security');
+  });
+
+  it('keeps mcp: remote for the mcp-server-harness archetype even if hasMcp were false', () => {
+    const profile: RepoProfile = {
+      name: 'mcp-srv',
+      languages: [],
+      hasMcp: true, // required to be eligible for mcp-server-harness at all
+      hasClaude: false,
+      hasCodex: false,
+      hasCi: false,
+      buildCommands: [],
+      testCommands: [],
+      tokens: ['mcp', 'tool', 'server', 'protocol', 'stdio', 'resource', 'prompt'],
+    };
+    const plan = recommendPlan(profile);
+    expect(plan.archetypeId).toBe('mcp-server-harness');
+    expect(plan.mcp).toBe('remote');
   });
 });
 
