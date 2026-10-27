@@ -37,6 +37,66 @@ Most "self-improving agent" pitches are unfalsifiable. The flywheel makes improv
 - **Receipt-backed + replayable.** Every promotion is Ed25519-signed; an external reviewer replays the
   bundle, reconstructs the lineage to gen-0, and verifies the gate — trusting the *signature*, not you.
 
+## Verified trajectory rewriting
+
+`createVerifiedRewriteProposer(target, config, observe)` adapts Terminal RSI style verified rewriting
+to the existing Flywheel proposer. It consumes an explicitly public development trace, generates a
+runbook, requires independent review, and replays it twice in fresh adapter sessions before proposing
+the runbook as a policy lever. Confirmation and anchor evaluation still decide promotion.
+
+```ts
+import {
+  createVerifiedRewriteProposer, terminalOutcomesToScore, runFlywheelGenerations,
+} from '@metaharness/flywheel';
+
+// applicationAdapters contains trusted model, isolation, review, and protected verifier adapters.
+const proposer = createVerifiedRewriteProposer('procedure', () => ({
+  task: publicDevelopmentTask, // split: 'development'; approved publicSteps; SHA256 snapshotDigest
+  discoveryOutcome: independentlyVerifiedDiscovery,
+  ...applicationAdapters, // rewrite, review, open
+  repeats: 2,
+  maxReplayCost: 2, // caller defined accounting units
+  signal: AbortSignal.timeout(60_000),
+}));
+// Supply proposer to runFlywheelGenerations. Inside the protected Evaluator:
+// return terminalOutcomesToScore(await evaluateTerminalSuite(policy, suite));
+```
+
+`terminalOutcomesToScore` maps strict completion to primary and per item wins, with safety violations
+blocking promotion. `noopRate` is set to the gate's floor, not estimated from failures: the adapter
+requires strict completion lift or lower cost per completion. Supply a custom evaluator when actual
+no op measurements are available. Empty suites, nonfinite costs, and malformed reports are rejected.
+
+`successPrioritizedReward(outcome, frozenFamilyDivisor)` supplies bounded partial progress for
+diagnostics only. Its value must not replace strict completion in promotion scoring. A saturated
+floating point failure score remains below one.
+
+The core does not supply a sandbox, content sanitizer, or autonomous spending authority. The caller
+must approve public trace content, provision genuine clean environments, keep verifier code outside
+actor write access, enforce spend and cancellation in adapters, and retain the observation records.
+The development label prevents accidental split misuse but cannot detect dishonest labels. Snapshot
+digests and session IDs detect mismatches, not a dishonest environment provider. Accounting includes
+completed verifier reports only; failed adapter calls may incur additional unreported costs. An
+AbortSignal is cooperative: an adapter ignoring it can delay return. Reviewer and verifier functions
+are trusted application components, not self reported actor judgments.
+
+Runbook and task hashes are included in the signed promotion mutation summary. A verified runbook
+qualifies a proposal only. No weights, PPO training, critic inheritance, or TB GAE are implemented.
+The integration test repairs real temporary files with Node processes but uses a deterministic adapter;
+it establishes orchestration correctness, not model learning. See [ADR 322](../../docs/adrs/ADR-322-terminal-rsi-verified-rewriting.md).
+
+The [live ruOS and OpenRouter smoke](../../docs/validation/terminal-rsi-live-smoke.md) made 44 API
+calls, produced four replayable signed bundles and correctly rejected a transferred runbook regression.
+Baseline confirmation passed four of four comparisons; assisted confirmation passed three of four.
+No promotion was made. This evidence supports guardrail operation, not default enablement or capability lift.
+
+```sh
+npm run build --workspace @metaharness/flywheel
+npm run test --workspace @metaharness/flywheel
+node packages/flywheel/scripts/verify-dual.mjs
+node packages/flywheel/scripts/benchmark-verified-rewrite.mjs
+```
+
 ## Features
 
 - 🎯 **One tiny API** — `runFlywheelGenerations()` drives coding *and* non-coding harnesses unchanged.

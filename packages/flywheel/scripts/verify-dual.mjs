@@ -5,7 +5,7 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const cjs = require('@metaharness/flywheel');
 const esm = await import('@metaharness/flywheel');
-const fns = ['meetsPromotionRule', 'runFlywheelGenerations', 'gateFingerprint', 'verifyReplayBundle', 'analyzeBundle'];
+const fns = ['meetsPromotionRule', 'runFlywheelGenerations', 'gateFingerprint', 'verifyReplayBundle', 'analyzeBundle', 'successPrioritizedReward', 'terminalOutcomesToScore', 'verifyTrajectoryRewrite', 'createVerifiedRewriteProposer'];
 for (const f of fns) {
   if (typeof cjs[f] !== 'function') { console.error(`FAIL: CJS require missing ${f}`); process.exit(1); }
   if (typeof esm[f] !== 'function') { console.error(`FAIL: ESM import missing ${f}`); process.exit(1); }

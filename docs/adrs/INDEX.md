@@ -371,3 +371,5 @@ If you are reading this with intent to start implementation, the gating ADR is *
 - [ADR 320: Independent paired confirmation](./ADR-320-independent-contrastive-confirmation.md)
 
 - [ADR-321: One deadline for contrastive development and confirmation](./ADR-321-contrastive-total-deadline.md)
+
+- [ADR 322: Verified development trajectory rewriting](./ADR-322-terminal-rsi-verified-rewriting.md)
