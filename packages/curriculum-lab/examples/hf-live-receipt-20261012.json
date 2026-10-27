@@ -1,0 +1,266 @@
+{
+  "dateUTC": "2026-10-12",
+  "dateToronto": "2026-10-11",
+  "testedCommit": "cb723017c14ea968bd17f268ed515966347861c4",
+  "initialCommit": "e43acd9853699f43ad371e9e97c2d512b065a50e",
+  "initial": {
+    "executor": {
+      "completionVersion": 1,
+      "completionVerified": true,
+      "status": "ok",
+      "exitCode": 0
+    },
+    "result": {
+      "status": "INCONCLUSIVE",
+      "specHash": "dcc7504cd8c8b01a69e3ecda6884c10f96d0f676192647a7bbfad9337a5db195",
+      "sourceHash": "d1ecc3b14230d543d621341e347c9b6002182c09d6e19eb09a3cf31616ec8e67",
+      "proposal": {
+        "status": "INCONCLUSIVE",
+        "reason": "operation_failed_or_uncertain",
+        "retry": false,
+        "reused": false
+      },
+      "receiptReuseVerified": true,
+      "networkRequestsThisInvocation": 1,
+      "evaluation": null,
+      "estimatedInferenceUsd": null,
+      "estimateBasis": "Groq public per-million token rates checked 2026-10-12; HF billing unverified",
+      "billedInferenceUsd": null,
+      "desktopCostUsd": null,
+      "runReservationUsd": 0.01,
+      "authorizedCeilingUsd": 5,
+      "decision": "HOLD",
+      "rsi": "NOT_ESTABLISHED",
+      "arena": "UNMEASURED",
+      "promote": false,
+      "signed": false,
+      "receiptHash": "c25465288deb0f9cb3adf6cdc111383a6b071fd87c58411a40253ad705d5cb18"
+    }
+  },
+  "corrected": {
+    "executor": {
+      "completionVersion": 1,
+      "completionVerified": true,
+      "status": "ok",
+      "exitCode": 0
+    },
+    "result": {
+      "status": "E2E_COMPLETE",
+      "specHash": "06e597692afa4b883fe68e48a24b5395af26e78dd5d1cf775cdc1db3e7d2e005",
+      "sourceHash": "8d89397adbcda68c2e66087e0f1a57cf30f4865f59990ab7c9d7a33d672c4316",
+      "proposal": {
+        "model": "openai/gpt-oss-120b:groq",
+        "requestHash": "f2bae3048516b9fa6c912eee65d55a267328cbe32ca927e27e348a2751b814fd",
+        "latencyMs": 762.603803,
+        "billedUsd": null,
+        "reservedUsd": 0.01,
+        "status": "PROPOSED",
+        "proposal": {
+          "parameter": "cost_width",
+          "value": 5
+        },
+        "proposalHash": "b143336d72c41adfe89867404403b339e297a63091f80ecf7cd95bb456a5b9c0",
+        "usage": {
+          "queue_time": 0.230843537,
+          "prompt_tokens": 166,
+          "prompt_time": 0.00641585,
+          "completion_tokens": 73,
+          "completion_time": 0.153518261,
+          "total_tokens": 239,
+          "total_time": 0.159934111,
+          "completion_tokens_details": {
+            "reasoning_tokens": 54
+          }
+        },
+        "promote": false,
+        "reused": false
+      },
+      "receiptReuseVerified": true,
+      "networkRequestsThisInvocation": 1,
+      "evaluation": {
+        "status": "complete",
+        "rows": [
+          {
+            "seed": 7,
+            "updatesPerArm": 3600,
+            "baselineWeights": [
+              -1.0885070896978393,
+              5.623437942261624
+            ],
+            "candidateWeights": [
+              -0.8735340936673103,
+              5.633077215755847
+            ],
+            "baseline": 0.9975,
+            "candidate": 0.9715
+          },
+          {
+            "seed": 19,
+            "updatesPerArm": 3600,
+            "baselineWeights": [
+              -0.9503870868309224,
+              5.632908429963356
+            ],
+            "candidateWeights": [
+              -0.7566773739123173,
+              5.643606540311229
+            ],
+            "baseline": 0.981,
+            "candidate": 0.9515
+          },
+          {
+            "seed": 31,
+            "updatesPerArm": 3600,
+            "baselineWeights": [
+              -1.1437350964495476,
+              5.779530386005085
+            ],
+            "candidateWeights": [
+              -0.938210750095877,
+              5.787990580955352
+            ],
+            "baseline": 0.999,
+            "candidate": 0.972
+          }
+        ],
+        "meanAccuracyGain": -0.027500000000000007,
+        "trajectoryHash": "799058e766a63a7abd33fc831f86687327ef7d21eca33437db31b4b5bc4ba3ad",
+        "trajectoryCount": 12000,
+        "strictGainNoRegression": false,
+        "interpretation": "toy seed/width generalization only; no independent domain transfer",
+        "promote": false,
+        "reused": false
+      },
+      "estimatedInferenceUsd": 0.00006869999999999999,
+      "estimateBasis": "Groq public per-million token rates checked 2026-10-12; HF billing unverified",
+      "billedInferenceUsd": null,
+      "desktopCostUsd": null,
+      "runReservationUsd": 0.01,
+      "authorizedCeilingUsd": 5,
+      "decision": "HOLD",
+      "rsi": "NOT_ESTABLISHED",
+      "arena": "UNMEASURED",
+      "promote": false,
+      "signed": false,
+      "receiptHash": "3da87c7f9821b7e3eaaae05623ad5101fda1278c3a2ede17551e33195594adcc"
+    }
+  },
+  "replay": {
+    "executor": {
+      "completionVersion": 1,
+      "completionVerified": true,
+      "status": "ok",
+      "exitCode": 0
+    },
+    "result": {
+      "status": "E2E_COMPLETE",
+      "specHash": "06e597692afa4b883fe68e48a24b5395af26e78dd5d1cf775cdc1db3e7d2e005",
+      "sourceHash": "8d89397adbcda68c2e66087e0f1a57cf30f4865f59990ab7c9d7a33d672c4316",
+      "proposal": {
+        "billedUsd": null,
+        "latencyMs": 762.603803,
+        "model": "openai/gpt-oss-120b:groq",
+        "promote": false,
+        "proposal": {
+          "parameter": "cost_width",
+          "value": 5
+        },
+        "proposalHash": "b143336d72c41adfe89867404403b339e297a63091f80ecf7cd95bb456a5b9c0",
+        "requestHash": "f2bae3048516b9fa6c912eee65d55a267328cbe32ca927e27e348a2751b814fd",
+        "reservedUsd": 0.01,
+        "status": "PROPOSED",
+        "usage": {
+          "completion_time": 0.153518261,
+          "completion_tokens": 73,
+          "completion_tokens_details": {
+            "reasoning_tokens": 54
+          },
+          "prompt_time": 0.00641585,
+          "prompt_tokens": 166,
+          "queue_time": 0.230843537,
+          "total_time": 0.159934111,
+          "total_tokens": 239
+        },
+        "reused": true
+      },
+      "receiptReuseVerified": true,
+      "networkRequestsThisInvocation": 0,
+      "evaluation": {
+        "interpretation": "toy seed/width generalization only; no independent domain transfer",
+        "meanAccuracyGain": -0.027500000000000007,
+        "promote": false,
+        "rows": [
+          {
+            "baseline": 0.9975,
+            "baselineWeights": [
+              -1.0885070896978393,
+              5.623437942261624
+            ],
+            "candidate": 0.9715,
+            "candidateWeights": [
+              -0.8735340936673103,
+              5.633077215755847
+            ],
+            "seed": 7,
+            "updatesPerArm": 3600
+          },
+          {
+            "baseline": 0.981,
+            "baselineWeights": [
+              -0.9503870868309224,
+              5.632908429963356
+            ],
+            "candidate": 0.9515,
+            "candidateWeights": [
+              -0.7566773739123173,
+              5.643606540311229
+            ],
+            "seed": 19,
+            "updatesPerArm": 3600
+          },
+          {
+            "baseline": 0.999,
+            "baselineWeights": [
+              -1.1437350964495476,
+              5.779530386005085
+            ],
+            "candidate": 0.972,
+            "candidateWeights": [
+              -0.938210750095877,
+              5.787990580955352
+            ],
+            "seed": 31,
+            "updatesPerArm": 3600
+          }
+        ],
+        "status": "complete",
+        "strictGainNoRegression": false,
+        "trajectoryCount": 12000,
+        "trajectoryHash": "799058e766a63a7abd33fc831f86687327ef7d21eca33437db31b4b5bc4ba3ad",
+        "reused": true
+      },
+      "estimatedInferenceUsd": 0.00006869999999999999,
+      "estimateBasis": "Groq public per-million token rates checked 2026-10-12; HF billing unverified",
+      "billedInferenceUsd": null,
+      "desktopCostUsd": null,
+      "runReservationUsd": 0.01,
+      "authorizedCeilingUsd": 5,
+      "decision": "HOLD",
+      "rsi": "NOT_ESTABLISHED",
+      "arena": "UNMEASURED",
+      "promote": false,
+      "signed": false,
+      "receiptHash": "148a9f5f6680ceb8933690212a3592714f741a7078211552ea73caec48b9f796"
+    }
+  },
+  "accounting": {
+    "authorizedUsd": 5,
+    "totalReservedUsd": 0.02,
+    "successfulRequestEstimatedUsd": 0.0000687,
+    "initialBilledUsd": null,
+    "totalBilledUsd": null,
+    "desktopCostUsd": null
+  },
+  "interpretation": "Live HF proposal plus real local toy policy training/evaluation. Candidate regressed 2.75 percentage points. No HF weight training, Arena calibration, independent-domain transfer, Darwin evolution-cycle execution or RSI proof. No promotion.",
+  "signed": false
+}

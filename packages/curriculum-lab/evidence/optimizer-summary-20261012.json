@@ -1,0 +1,752 @@
+{
+  "planHash": "41d5c0c076f3c70d8df7ae87bf385f15ba97ae8d57399315a2386d14d5c17acb",
+  "rows": [
+    {
+      "split": 28001,
+      "uniqueEvaluationsPerMethod": 7,
+      "searchFitBudgetPerMethod": 42,
+      "confirmationFitBudgetPerArm": 12,
+      "rates": {
+        "darwin": 0.4217400506992495,
+        "random": 0.4,
+        "anchor": 0.4
+      },
+      "randomPool": [
+        0.4,
+        0.9076139776873856,
+        0.17259327898615237,
+        0.06361277730795974,
+        0.3361274439733375,
+        0.06147369576010236,
+        0.1063198391964591,
+        0.07710139718457269,
+        0.30688581021815825,
+        0.16683664793513991,
+        0.2688305940606424
+      ],
+      "randomDiscovery": [
+        {
+          "rate": 0.4,
+          "primary": 0.9743584656084656
+        },
+        {
+          "rate": 0.3361274439733375,
+          "primary": 0.9727248677248678
+        },
+        {
+          "rate": 0.17259327898615237,
+          "primary": 0.9724933862433862
+        },
+        {
+          "rate": 0.9076139776873856,
+          "primary": 0.9715542328042327
+        },
+        {
+          "rate": 0.1063198391964591,
+          "primary": 0.9681679894179894
+        },
+        {
+          "rate": 0.06147369576010236,
+          "primary": 0.9650132275132276
+        },
+        {
+          "rate": 0.06361277730795974,
+          "primary": 0.9640740740740741
+        }
+      ],
+      "darwinLineage": [
+        "baseline",
+        "g2_v1"
+      ],
+      "confirmation": {
+        "darwin": {
+          "primary": 0.9647747460272026,
+          "familyMeans": {
+            "digits": 0.956793758043758,
+            "wine": 0.9777777777777779,
+            "breast_cancer": 0.959752702260072
+          }
+        },
+        "random": {
+          "primary": 0.9632954697362658,
+          "familyMeans": {
+            "digits": 0.954648755898756,
+            "wine": 0.9777777777777779,
+            "breast_cancer": 0.9574598755322633
+          }
+        },
+        "anchor": {
+          "primary": 0.9632954697362658,
+          "familyMeans": {
+            "digits": 0.954648755898756,
+            "wine": 0.9777777777777779,
+            "breast_cancer": 0.9574598755322633
+          }
+        }
+      }
+    },
+    {
+      "split": 28101,
+      "uniqueEvaluationsPerMethod": 7,
+      "searchFitBudgetPerMethod": 42,
+      "confirmationFitBudgetPerArm": 12,
+      "rates": {
+        "darwin": 0.4461814055202811,
+        "random": 0.4265489281420728,
+        "anchor": 0.4
+      },
+      "randomPool": [
+        0.4,
+        0.05096745089902399,
+        0.21310117209602122,
+        0.260678198672865,
+        0.13750681671454973,
+        0.4265489281420728,
+        0.05355391841272782,
+        0.10519213220627452,
+        0.09693164805363744,
+        0.11353413586279008,
+        0.12517570588657428
+      ],
+      "randomDiscovery": [
+        {
+          "rate": 0.4265489281420728,
+          "primary": 0.9658401052308685
+        },
+        {
+          "rate": 0.4,
+          "primary": 0.9643650836977073
+        },
+        {
+          "rate": 0.260678198672865,
+          "primary": 0.9633662526407368
+        },
+        {
+          "rate": 0.21310117209602122,
+          "primary": 0.9615608508934747
+        },
+        {
+          "rate": 0.13750681671454973,
+          "primary": 0.9577710145454986
+        },
+        {
+          "rate": 0.05355391841272782,
+          "primary": 0.9557472050216891
+        },
+        {
+          "rate": 0.05096745089902399,
+          "primary": 0.9553239245984088
+        }
+      ],
+      "darwinLineage": [
+        "baseline",
+        "g1_v0",
+        "g2_v0"
+      ],
+      "confirmation": {
+        "darwin": {
+          "primary": 0.981678911053911,
+          "familyMeans": {
+            "digits": 0.9690942728442729,
+            "wine": 1,
+            "breast_cancer": 0.9759424603174603
+          }
+        },
+        "random": {
+          "primary": 0.9815374302874303,
+          "familyMeans": {
+            "digits": 0.9669337194337194,
+            "wine": 1,
+            "breast_cancer": 0.9776785714285715
+          }
+        },
+        "anchor": {
+          "primary": 0.9830486736736738,
+          "familyMeans": {
+            "digits": 0.9697313384813385,
+            "wine": 1,
+            "breast_cancer": 0.9794146825396827
+          }
+        }
+      }
+    },
+    {
+      "split": 28201,
+      "uniqueEvaluationsPerMethod": 8,
+      "searchFitBudgetPerMethod": 48,
+      "confirmationFitBudgetPerArm": 12,
+      "rates": {
+        "darwin": 0.6935123824294945,
+        "random": 0.539508373796078,
+        "anchor": 0.4
+      },
+      "randomPool": [
+        0.4,
+        0.05724197985058259,
+        0.2631163265189578,
+        0.053411536281742306,
+        0.056252843919726514,
+        0.14798523648974782,
+        0.539508373796078,
+        0.14351730425342304,
+        0.6123283698073237,
+        0.07726120229364494,
+        0.05828561811929625
+      ],
+      "randomDiscovery": [
+        {
+          "rate": 0.539508373796078,
+          "primary": 0.9546360939105779
+        },
+        {
+          "rate": 0.4,
+          "primary": 0.9518583161328001
+        },
+        {
+          "rate": 0.2631163265189578,
+          "primary": 0.9439747182492022
+        },
+        {
+          "rate": 0.14351730425342304,
+          "primary": 0.9430355648100489
+        },
+        {
+          "rate": 0.14798523648974782,
+          "primary": 0.9421228663973503
+        },
+        {
+          "rate": 0.053411536281742306,
+          "primary": 0.9398412741738978
+        },
+        {
+          "rate": 0.056252843919726514,
+          "primary": 0.9398280466606703
+        },
+        {
+          "rate": 0.05724197985058259,
+          "primary": 0.9389021207347442
+        }
+      ],
+      "darwinLineage": [
+        "baseline",
+        "g1_v1",
+        "g2_v3"
+      ],
+      "confirmation": {
+        "darwin": {
+          "primary": 0.9625910732160733,
+          "familyMeans": {
+            "digits": 0.9510172672672672,
+            "wine": 0.9761904761904763,
+            "breast_cancer": 0.960565476190476
+          }
+        },
+        "random": {
+          "primary": 0.9620792220792221,
+          "familyMeans": {
+            "digits": 0.9502257614757614,
+            "wine": 0.9761904761904763,
+            "breast_cancer": 0.9598214285714286
+          }
+        },
+        "anchor": {
+          "primary": 0.963034194909195,
+          "familyMeans": {
+            "digits": 0.94887441012441,
+            "wine": 0.9761904761904763,
+            "breast_cancer": 0.9640376984126984
+          }
+        }
+      }
+    },
+    {
+      "split": 28301,
+      "uniqueEvaluationsPerMethod": 6,
+      "searchFitBudgetPerMethod": 36,
+      "confirmationFitBudgetPerArm": 12,
+      "rates": {
+        "darwin": 1,
+        "random": 0.4,
+        "anchor": 0.4
+      },
+      "randomPool": [
+        0.4,
+        0.06428895696012236,
+        0.3248701102856272,
+        0.21887462952404024,
+        0.4602509933199966,
+        0.0513414259750112,
+        0.2717534907090123,
+        0.1958056766049754,
+        0.19340743709599223,
+        0.052577080315946816,
+        0.5427911519231626
+      ],
+      "randomDiscovery": [
+        {
+          "rate": 0.4,
+          "primary": 0.9745628768303186
+        },
+        {
+          "rate": 0.4602509933199966,
+          "primary": 0.9741463639719453
+        },
+        {
+          "rate": 0.3248701102856272,
+          "primary": 0.9711472582263608
+        },
+        {
+          "rate": 0.21887462952404024,
+          "primary": 0.9696325541535171
+        },
+        {
+          "rate": 0.06428895696012236,
+          "primary": 0.9556113901323532
+        },
+        {
+          "rate": 0.0513414259750112,
+          "primary": 0.9508962474242527
+        }
+      ],
+      "darwinLineage": [
+        "baseline",
+        "g1_v1"
+      ],
+      "confirmation": {
+        "darwin": {
+          "primary": 0.9738358000858001,
+          "familyMeans": {
+            "digits": 0.96118993993994,
+            "wine": 1,
+            "breast_cancer": 0.9603174603174602
+          }
+        },
+        "random": {
+          "primary": 0.9757137494637496,
+          "familyMeans": {
+            "digits": 0.9668237880737881,
+            "wine": 1,
+            "breast_cancer": 0.9603174603174602
+          }
+        },
+        "anchor": {
+          "primary": 0.9757137494637496,
+          "familyMeans": {
+            "digits": 0.9668237880737881,
+            "wine": 1,
+            "breast_cancer": 0.9603174603174602
+          }
+        }
+      }
+    },
+    {
+      "split": 28401,
+      "uniqueEvaluationsPerMethod": 9,
+      "searchFitBudgetPerMethod": 54,
+      "confirmationFitBudgetPerArm": 12,
+      "rates": {
+        "darwin": 0.2759670556929274,
+        "random": 0.3562439177951602,
+        "anchor": 0.4
+      },
+      "randomPool": [
+        0.4,
+        0.07220347719993128,
+        0.4011175967424858,
+        0.8969242748717123,
+        0.18828468224142494,
+        0.3562439177951602,
+        0.13688380625663252,
+        0.2671445313871812,
+        0.06108885129037965,
+        0.7155853889104958,
+        0.25274007903892787
+      ],
+      "randomDiscovery": [
+        {
+          "rate": 0.3562439177951602,
+          "primary": 0.9691071428571428
+        },
+        {
+          "rate": 0.2671445313871812,
+          "primary": 0.968862433862434
+        },
+        {
+          "rate": 0.4,
+          "primary": 0.9684126984126985
+        },
+        {
+          "rate": 0.4011175967424858,
+          "primary": 0.9681679894179894
+        },
+        {
+          "rate": 0.18828468224142494,
+          "primary": 0.967010582010582
+        },
+        {
+          "rate": 0.8969242748717123,
+          "primary": 0.9659126984126983
+        },
+        {
+          "rate": 0.13688380625663252,
+          "primary": 0.9642328042328042
+        },
+        {
+          "rate": 0.07220347719993128,
+          "primary": 0.9572619047619048
+        },
+        {
+          "rate": 0.06108885129037965,
+          "primary": 0.9563095238095238
+        }
+      ],
+      "darwinLineage": [
+        "baseline",
+        "g1_v1"
+      ],
+      "confirmation": {
+        "darwin": {
+          "primary": 0.9806716143053352,
+          "familyMeans": {
+            "digits": 0.9536427498927499,
+            "wine": 1,
+            "breast_cancer": 0.9883720930232558
+          }
+        },
+        "random": {
+          "primary": 0.9770399968074387,
+          "familyMeans": {
+            "digits": 0.9543758043758044,
+            "wine": 1,
+            "breast_cancer": 0.9767441860465116
+          }
+        },
+        "anchor": {
+          "primary": 0.9744134666227691,
+          "familyMeans": {
+            "digits": 0.9523101673101675,
+            "wine": 1,
+            "breast_cancer": 0.9709302325581395
+          }
+        }
+      }
+    },
+    {
+      "split": 28501,
+      "uniqueEvaluationsPerMethod": 6,
+      "searchFitBudgetPerMethod": 36,
+      "confirmationFitBudgetPerArm": 12,
+      "rates": {
+        "darwin": 0.4,
+        "random": 0.4,
+        "anchor": 0.4
+      },
+      "randomPool": [
+        0.4,
+        0.08109234254639977,
+        0.49526047894959524,
+        0.1837748752798659,
+        0.07702562749735649,
+        0.1235938879335122,
+        0.06894916553387229,
+        0.3644746254933818,
+        0.38590530002483014,
+        0.4869635644895969,
+        0.11768347241158787
+      ],
+      "randomDiscovery": [
+        {
+          "rate": 0.4,
+          "primary": 0.9708928571428572
+        },
+        {
+          "rate": 0.1837748752798659,
+          "primary": 0.9641666666666667
+        },
+        {
+          "rate": 0.49526047894959524,
+          "primary": 0.9616137566137567
+        },
+        {
+          "rate": 0.1235938879335122,
+          "primary": 0.958095238095238
+        },
+        {
+          "rate": 0.07702562749735649,
+          "primary": 0.9548412698412698
+        },
+        {
+          "rate": 0.08109234254639977,
+          "primary": 0.9520634920634921
+        }
+      ],
+      "darwinLineage": [
+        "baseline"
+      ],
+      "confirmation": {
+        "darwin": {
+          "primary": 0.9794121783099837,
+          "familyMeans": {
+            "digits": 0.963948948948949,
+            "wine": 1,
+            "breast_cancer": 0.9742875859810023
+          }
+        },
+        "random": {
+          "primary": 0.9794121783099837,
+          "familyMeans": {
+            "digits": 0.963948948948949,
+            "wine": 1,
+            "breast_cancer": 0.9742875859810023
+          }
+        },
+        "anchor": {
+          "primary": 0.9794121783099837,
+          "familyMeans": {
+            "digits": 0.963948948948949,
+            "wine": 1,
+            "breast_cancer": 0.9742875859810023
+          }
+        }
+      }
+    },
+    {
+      "split": 28601,
+      "uniqueEvaluationsPerMethod": 11,
+      "searchFitBudgetPerMethod": 66,
+      "confirmationFitBudgetPerArm": 12,
+      "rates": {
+        "darwin": 0.6742553829286606,
+        "random": 0.6114988322660199,
+        "anchor": 0.4
+      },
+      "randomPool": [
+        0.4,
+        0.09107550321231482,
+        0.6114988322660199,
+        0.7530893238219218,
+        0.6302102986534078,
+        0.8575837156217739,
+        0.6946018755358756,
+        0.49726547625266215,
+        0.1218904083491146,
+        0.33138395056033493,
+        0.0547970062030242
+      ],
+      "randomDiscovery": [
+        {
+          "rate": 0.6114988322660199,
+          "primary": 0.9546693121693123
+        },
+        {
+          "rate": 0.8575837156217739,
+          "primary": 0.9542195767195767
+        },
+        {
+          "rate": 0.6946018755358756,
+          "primary": 0.9537566137566138
+        },
+        {
+          "rate": 0.7530893238219218,
+          "primary": 0.9519642857142857
+        },
+        {
+          "rate": 0.33138395056033493,
+          "primary": 0.9517328042328043
+        },
+        {
+          "rate": 0.4,
+          "primary": 0.9516335978835979
+        },
+        {
+          "rate": 0.6302102986534078,
+          "primary": 0.9515277777777778
+        },
+        {
+          "rate": 0.49726547625266215,
+          "primary": 0.950138888888889
+        },
+        {
+          "rate": 0.09107550321231482,
+          "primary": 0.9463756613756615
+        },
+        {
+          "rate": 0.1218904083491146,
+          "primary": 0.9461243386243385
+        },
+        {
+          "rate": 0.0547970062030242,
+          "primary": 0.9421296296296298
+        }
+      ],
+      "darwinLineage": [
+        "baseline",
+        "g2_v0"
+      ],
+      "confirmation": {
+        "darwin": {
+          "primary": 0.9660854861927577,
+          "familyMeans": {
+            "digits": 0.958499570999571,
+            "wine": 0.9888888888888889,
+            "breast_cancer": 0.9508679986898132
+          }
+        },
+        "random": {
+          "primary": 0.9611655985333516,
+          "familyMeans": {
+            "digits": 0.9571283783783784,
+            "wine": 0.9888888888888889,
+            "breast_cancer": 0.9374795283327875
+          }
+        },
+        "anchor": {
+          "primary": 0.9631586836356735,
+          "familyMeans": {
+            "digits": 0.9555485842985842,
+            "wine": 0.9777777777777779,
+            "breast_cancer": 0.9561496888306584
+          }
+        }
+      }
+    },
+    {
+      "split": 28701,
+      "uniqueEvaluationsPerMethod": 9,
+      "searchFitBudgetPerMethod": 54,
+      "confirmationFitBudgetPerArm": 12,
+      "rates": {
+        "darwin": 1,
+        "random": 0.6784366772805064,
+        "anchor": 0.4
+      },
+      "randomPool": [
+        0.4,
+        0.10228767630717095,
+        0.7550184958343152,
+        0.15430388098233544,
+        0.25781355727510824,
+        0.297526779679949,
+        0.34987498526065186,
+        0.6784366772805064,
+        0.7699957293438546,
+        0.2255103475843736,
+        0.5103030743879727
+      ],
+      "randomDiscovery": [
+        {
+          "rate": 0.6784366772805064,
+          "primary": 0.9776181782050326
+        },
+        {
+          "rate": 0.7699957293438546,
+          "primary": 0.9771684427552971
+        },
+        {
+          "rate": 0.297526779679949,
+          "primary": 0.9762425168293712
+        },
+        {
+          "rate": 0.34987498526065186,
+          "primary": 0.9759947338351095
+        },
+        {
+          "rate": 0.4,
+          "primary": 0.9755317708721464
+        },
+        {
+          "rate": 0.15430388098233544,
+          "primary": 0.9743906649775194
+        },
+        {
+          "rate": 0.25781355727510824,
+          "primary": 0.974377437464292
+        },
+        {
+          "rate": 0.7550184958343152,
+          "primary": 0.9728830404187976
+        },
+        {
+          "rate": 0.10228767630717095,
+          "primary": 0.9699559082892416
+        }
+      ],
+      "darwinLineage": [
+        "baseline",
+        "g1_v0"
+      ],
+      "confirmation": {
+        "darwin": {
+          "primary": 0.96544338981839,
+          "familyMeans": {
+            "digits": 0.9501496138996139,
+            "wine": 1,
+            "breast_cancer": 0.9461805555555556
+          }
+        },
+        "random": {
+          "primary": 0.9688980051480051,
+          "familyMeans": {
+            "digits": 0.9453844916344916,
+            "wine": 1,
+            "breast_cancer": 0.9613095238095238
+          }
+        },
+        "anchor": {
+          "primary": 0.9691166166166166,
+          "familyMeans": {
+            "digits": 0.9460403260403261,
+            "wine": 1,
+            "breast_cancer": 0.9613095238095238
+          }
+        }
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "control": "random",
+      "gain": 0.0006689435805008331,
+      "lower95": -0.0016044411455665808,
+      "familyGains": {
+        "digits": 0.0006083092020591901,
+        "wine": 0,
+        "breast_cancer": 0.001398521539443337
+      },
+      "pass": false
+    },
+    {
+      "control": "anchor",
+      "gain": 0.0004125207551908261,
+      "lower95": -0.0021868543388029846,
+      "familyGains": {
+        "digits": 0.0008012253324752999,
+        "wine": 0.001388888888888884,
+        "breast_cancer": -0.0009525519557916362
+      },
+      "pass": false
+    }
+  ],
+  "decision": "HOLD_NO_CONFIRMED_SEARCH_ADVANTAGE",
+  "rsi": "NOT_ESTABLISHED",
+  "externalCalls": 0,
+  "providerCostUsd": 0,
+  "executedEvaluations": 138,
+  "seconds": 7.229,
+  "signed": false,
+  "promote": false,
+  "limits": "Repeated partitions of three public datasets overlap; intervals describe this benchmark, not independent population evidence. Discovery chooses only learning rate, not the optimizer source. Even a pass is not general RSI.",
+  "verification": {
+    "verifiedEvaluations": 138,
+    "verifiedFits": 948,
+    "verifiedPredictions": 160924,
+    "trainingTraceSteps": 60672,
+    "status": "PASS",
+    "method": "Independent matrix prediction and per-class recall recomputation; complete training trace membership and fixed-budget checks"
+  },
+  "archive": {
+    "file": "optimizer-evidence-20261012.tar.gz",
+    "sha256": "9e2adaad3211c71aa2898a8d2c54b714ebc6db7fcef71844ae1ba304a2a1b056",
+    "bytes": 9778077
+  }
+}
