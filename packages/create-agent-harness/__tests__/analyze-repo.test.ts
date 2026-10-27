@@ -52,6 +52,33 @@ describe('inventory + analyzeFiles', () => {
     expect(analyzeFiles('ruvector', inventory(dir)).hasVerifiedTestFiles).toBe(true);
   });
 
+  // Dream Cycle 2026-10-25: 2026-08-25's #229 fix stopped `hasVerifiedTestFiles`
+  // from being credited off manifest/language detection alone — but the real
+  // fs scan behind it (`dirExists`) only checked the directory was present,
+  // not that it had anything in it. `mkdir tests` with zero files reopened
+  // the exact false-positive #229 was meant to close, one level deeper.
+  it('an empty tests/ directory (mkdir only, no files inside) does NOT count as verified', async () => {
+    const dir = await rustRepoDir();
+    await mkdir(join(dir, 'tests'), { recursive: true });
+    expect(analyzeFiles('ruvector', inventory(dir)).hasVerifiedTestFiles).toBe(false);
+    // adding a real file flips it, proving the probe still works for the real case
+    await writeFile(join(dir, 'tests', 'smoke.rs'), '// smoke test', 'utf-8');
+    expect(analyzeFiles('ruvector', inventory(dir)).hasVerifiedTestFiles).toBe(true);
+  });
+
+  // Caught by an independent critic the same night: a first version of this
+  // fix only scanned the top level of `tests/`, so `mkdir -p tests/unit` with
+  // zero files anywhere still passed (the top-level entry `unit` is itself a
+  // non-dot entry). Closed before ship by walking the subtree.
+  it('a nested-but-still-empty tests/unit/ directory does NOT count as verified either', async () => {
+    const dir = await rustRepoDir();
+    await mkdir(join(dir, 'tests', 'unit'), { recursive: true });
+    expect(analyzeFiles('ruvector', inventory(dir)).hasVerifiedTestFiles).toBe(false);
+    // a real file nested two levels down correctly flips it
+    await writeFile(join(dir, 'tests', 'unit', 'smoke.rs'), '// smoke test', 'utf-8');
+    expect(analyzeFiles('ruvector', inventory(dir)).hasVerifiedTestFiles).toBe(true);
+  });
+
   it('a manifest-only repo (test script declared, no real test dir) reads as unverified', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'analyze-manifest-only-'));
     await writeFile(join(dir, 'package.json'), JSON.stringify({ name: 'x', scripts: { test: 'echo no tests' } }), 'utf-8');
