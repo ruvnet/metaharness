@@ -1,0 +1,39 @@
+{
+  "source_commit": "4657e5b82e124917b01d79ee5e9de41badb48fda",
+  "generator_source_commit": "f3d922974e47f87b1a6dae323e5c8f3c2905c201",
+  "image": "ghcr.io/ruvnet/metaharness-arena@sha256:228329c4928eef054d6e1d3021c9867df416539d4d5e656cc760f97c17c9e35a",
+  "run_url": "https://github.com/ruvnet/metaharness/actions/runs/37861943028",
+  "job_id": 113599497671,
+  "platform": "linux/amd64",
+  "runtime_test_dependencies_absent": true,
+  "runtime_packages": 108,
+  "test_overlay_pytest": "9.0.3",
+  "container_tests": {
+    "passed": 88,
+    "subtests_passed": 782
+  },
+  "native_protocol": {
+    "passed": 6,
+    "total": 6
+  },
+  "anonymous_digest_pull_and_container_tests": "passed",
+  "fresh_runner_websocket_replay": {
+    "status": "passed",
+    "run_url": "https://github.com/ruvnet/metaharness/actions/runs/37862215898",
+    "job_id": 113600363557,
+    "head_sha": "cd670b2ae9564fd823b591532c0ee3f586aecb2a",
+    "episodes_passed": 32,
+    "episodes_total": 32,
+    "native_protocol_passed": 6,
+    "native_protocol_total": 6,
+    "anonymous_exact_digest_pull": true,
+    "artifact": {
+      "name": "arena-anonymous-runtime-evidence",
+      "id": 11586249385,
+      "digest": "sha256:276eb97cd8f2dbb3836c951c933ce7c3f5cfebbbfc9cfb74ffe1dcbf09094396",
+      "expires_at": "2027-01-06"
+    }
+  },
+  "model_calibration": "v2 pending; v1 independently replayed",
+  "arena_submission": null
+}

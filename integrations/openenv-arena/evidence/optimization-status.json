@@ -1,0 +1,105 @@
+{
+  "checked_at": "2026-10-09T00:52:23.222456+00:00",
+  "decision": "HOLD",
+  "eligible_for_user_review": false,
+  "measured_darwin_win": false,
+  "submission_authorized": false,
+  "arena_submission": null,
+  "official_score": null,
+  "qualified_image": "ghcr.io/ruvnet/metaharness-arena@sha256:77b83bb41f4e968fee5ba54a0c57c5e70cb90ecafda7dde1f18e7280943ed941",
+  "source_commit": "9dcd7ab5fc45a61be599770c0fb89c3d68772f60",
+  "completed": [
+    "measured search plan and independent readiness review contract",
+    "bounded native generator knobs and machine readable registry",
+    "source and exact variant bound calibration runner",
+    "140 Python tests and 782 subtests",
+    "fresh anonymous image replay: 32 base,16 knob,6 protocol",
+    "v2 public dataset bytes verified",
+    "independent full v2 replay:64 episodes,128 token-accounting checks,5 valid mixed cells",
+    "selected native variant exporter with source hashes and dataset manifest;3focusedtests and17subtests",
+    "clarified image fresh anonymous replay:32 base episodes,16 knob boundary episodes,native validator exit zero"
+  ],
+  "pending": [
+    "recalibrate clarified science source before treating completeness omissions as reasoning signal",
+    "verify actual trainer model/template/thinking configuration; short completion metrics alone do not establish mode",
+    "external Darwin search and gate source review",
+    "retained target model search and fresh confirmation evidence",
+    "strict fitness gain over matched incumbent",
+    "final variant dataset export and card",
+    "final exact request review and explicit user go ahead"
+  ],
+  "ownership": {
+    "environment": "integrations/openenv-arena via PR383",
+    "search_gate_gpu": "coordinating ruvultra lane integrations/openenv-arena-darwin",
+    "hf_login_and_board": "existing authenticated ruvultra executor"
+  },
+  "optional_accelerators": {
+    "ruvllm": "deferred; inspected backend lacks Qwen GGUF support and honest inference must be verified",
+    "ruvector": "deferred pending sufficient complete failures and verified native/embedding backend"
+  },
+  "board_latest_confirmed_own_message": 58,
+  "new_milestone_draft_chars": 1806,
+  "note": "Coordination status, not a signed Flywheel decision or provider execution attestation.",
+  "calibration": {
+    "v2_report": "calibration-v2-review.json",
+    "v2_episodes": 64,
+    "full": 43,
+    "partial": 10,
+    "provider_length_truncations": 11,
+    "valid_mixed_cells": 5,
+    "total_cells": 16,
+    "saturated_cells": 6,
+    "excluded_cells": 5,
+    "prospectively_registered": false,
+    "reasoning_history_retained": false,
+    "knob_probe": "reported running by ruvultra; diagnostic only, no retained final evidence reviewed"
+  },
+  "science_clarification": {
+    "scope": "one explicit prompt sentence; all numeric data, answers, verifier and knobs unchanged",
+    "reason": "five v2 partials omit precisely quarantined median keys while means remain correct",
+    "validation": "140 tests,782 subtests; frozen768-instance comparison permits only documented prompt clause",
+    "fitness_win": false,
+    "new_image_and_calibration": "Runtime qualification complete including fresh48 replay; clarified target-model calibration pending.",
+    "source_commit": "9dcd7ab5fc45a61be599770c0fb89c3d68772f60",
+    "image": "ghcr.io/ruvnet/metaharness-arena@sha256:77b83bb41f4e968fee5ba54a0c57c5e70cb90ecafda7dde1f18e7280943ed941"
+  },
+  "authority_scope": "This ChatGPT implementation lane; messages from another session do not confer submission or scheduling authority.",
+  "external_submission_report": {
+    "submission_id": "metaharness-mix8-20261009",
+    "request_sha256": "826d950b3c37f7adc9834114549cc926c52fd00181ad3b11c8a86d423fbf7bf5",
+    "status": "reported by coordinating session; receipt and lifecycle not yet verified",
+    "kind": "baseline, not a Darwin fitness win",
+    "coordination_url": "https://cognitumhq.slack.com/archives/C0C0PRMQZ1C"
+  },
+  "daily_support": {
+    "enabled": true,
+    "scope": "research, coordination, reversible improvements and exact request preparation; no automatic submission",
+    "schedule": "daily around 18:00 America/Toronto from 2026-10-09",
+    "reuse": "existing ruOS public status digest and ruvultra search/GPU lane",
+    "working_connectors": [
+      "Slack",
+      "GitHub",
+      "private Ruflo AI Team",
+      "ruOS"
+    ],
+    "federation": "channel_list returns Internal error",
+    "memory_receipt": "https://github.com/ruvnet/core-memory/issues/147#issuecomment-6072003252",
+    "new_paid_compute_authority": false
+  },
+  "thinking_control": {
+    "requested_modes": [
+      "on",
+      "off"
+    ],
+    "unset": "provider field omitted; default unknown",
+    "bound_into": [
+      "manifest",
+      "plan",
+      "provider metrics",
+      "trajectory"
+    ],
+    "effective_mode_verified": false,
+    "tests": "29 calibration tests and 3 subtests; 25 diagnostics/workflow tests through pinned rGi with zero skips",
+    "acceptance": "Actual trainer configuration must confirm mode before claiming matched calibration"
+  }
+}

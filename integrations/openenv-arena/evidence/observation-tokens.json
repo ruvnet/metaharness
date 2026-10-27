@@ -1,0 +1,573 @@
+{
+  "kind": "observation_token_measurement",
+  "model": "Qwen/Qwen3.8-27B",
+  "model_revision": "1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0",
+  "tokenizer_sha256": "0997f410c57a1f4e53b09e4be8f4a172d90edd9564368fb0847030937229b9f3",
+  "tokenizers_version": "0.22.2",
+  "environment_source_commit": "90a793a9f4f1a06a5b6422164951e9192c909daa",
+  "method": "Serialize full native observation model with ensure_ascii=True and compact/spaced JSON separators; encode with pinned tokenizer, add_special_tokens=False. No chat template, model generation or reasoning tokens. Production serialization and template overhead unverified. Reset is exempt from completion budget. Measurements are not model calibration.",
+  "episodes": [
+    {
+      "task_id": "software_change-d2",
+      "seed": 400000,
+      "reset_tokens": {
+        "compact": 211,
+        "spaced": 227
+      },
+      "read_all_tokens": {
+        "compact": 447,
+        "spaced": 458
+      },
+      "terminal_tokens": {
+        "compact": 36,
+        "spaced": 49
+      }
+    },
+    {
+      "task_id": "software_change-d2",
+      "seed": 400001,
+      "reset_tokens": {
+        "compact": 211,
+        "spaced": 227
+      },
+      "read_all_tokens": {
+        "compact": 447,
+        "spaced": 458
+      },
+      "terminal_tokens": {
+        "compact": 36,
+        "spaced": 49
+      }
+    },
+    {
+      "task_id": "software_change-d2",
+      "seed": 400002,
+      "reset_tokens": {
+        "compact": 211,
+        "spaced": 227
+      },
+      "read_all_tokens": {
+        "compact": 463,
+        "spaced": 474
+      },
+      "terminal_tokens": {
+        "compact": 36,
+        "spaced": 49
+      }
+    },
+    {
+      "task_id": "software_change-d2",
+      "seed": 400003,
+      "reset_tokens": {
+        "compact": 211,
+        "spaced": 227
+      },
+      "read_all_tokens": {
+        "compact": 463,
+        "spaced": 474
+      },
+      "terminal_tokens": {
+        "compact": 36,
+        "spaced": 49
+      }
+    },
+    {
+      "task_id": "industrial_schedule-d2",
+      "seed": 400000,
+      "reset_tokens": {
+        "compact": 276,
+        "spaced": 292
+      },
+      "read_all_tokens": {
+        "compact": 339,
+        "spaced": 350
+      },
+      "terminal_tokens": {
+        "compact": 37,
+        "spaced": 50
+      }
+    },
+    {
+      "task_id": "industrial_schedule-d2",
+      "seed": 400001,
+      "reset_tokens": {
+        "compact": 276,
+        "spaced": 292
+      },
+      "read_all_tokens": {
+        "compact": 355,
+        "spaced": 366
+      },
+      "terminal_tokens": {
+        "compact": 37,
+        "spaced": 50
+      }
+    },
+    {
+      "task_id": "industrial_schedule-d2",
+      "seed": 400002,
+      "reset_tokens": {
+        "compact": 276,
+        "spaced": 292
+      },
+      "read_all_tokens": {
+        "compact": 385,
+        "spaced": 396
+      },
+      "terminal_tokens": {
+        "compact": 37,
+        "spaced": 50
+      }
+    },
+    {
+      "task_id": "industrial_schedule-d2",
+      "seed": 400003,
+      "reset_tokens": {
+        "compact": 276,
+        "spaced": 292
+      },
+      "read_all_tokens": {
+        "compact": 369,
+        "spaced": 380
+      },
+      "terminal_tokens": {
+        "compact": 37,
+        "spaced": 50
+      }
+    },
+    {
+      "task_id": "science_calibration-d2",
+      "seed": 400000,
+      "reset_tokens": {
+        "compact": 248,
+        "spaced": 264
+      },
+      "read_all_tokens": {
+        "compact": 289,
+        "spaced": 300
+      },
+      "terminal_tokens": {
+        "compact": 36,
+        "spaced": 49
+      }
+    },
+    {
+      "task_id": "science_calibration-d2",
+      "seed": 400001,
+      "reset_tokens": {
+        "compact": 248,
+        "spaced": 264
+      },
+      "read_all_tokens": {
+        "compact": 269,
+        "spaced": 280
+      },
+      "terminal_tokens": {
+        "compact": 36,
+        "spaced": 49
+      }
+    },
+    {
+      "task_id": "science_calibration-d2",
+      "seed": 400002,
+      "reset_tokens": {
+        "compact": 248,
+        "spaced": 264
+      },
+      "read_all_tokens": {
+        "compact": 289,
+        "spaced": 300
+      },
+      "terminal_tokens": {
+        "compact": 36,
+        "spaced": 49
+      }
+    },
+    {
+      "task_id": "science_calibration-d2",
+      "seed": 400003,
+      "reset_tokens": {
+        "compact": 248,
+        "spaced": 264
+      },
+      "read_all_tokens": {
+        "compact": 289,
+        "spaced": 300
+      },
+      "terminal_tokens": {
+        "compact": 36,
+        "spaced": 49
+      }
+    },
+    {
+      "task_id": "office_reconciliation-d2",
+      "seed": 400000,
+      "reset_tokens": {
+        "compact": 238,
+        "spaced": 254
+      },
+      "read_all_tokens": {
+        "compact": 1423,
+        "spaced": 1434
+      },
+      "terminal_tokens": {
+        "compact": 37,
+        "spaced": 50
+      }
+    },
+    {
+      "task_id": "office_reconciliation-d2",
+      "seed": 400001,
+      "reset_tokens": {
+        "compact": 238,
+        "spaced": 254
+      },
+      "read_all_tokens": {
+        "compact": 1424,
+        "spaced": 1435
+      },
+      "terminal_tokens": {
+        "compact": 37,
+        "spaced": 50
+      }
+    },
+    {
+      "task_id": "office_reconciliation-d2",
+      "seed": 400002,
+      "reset_tokens": {
+        "compact": 238,
+        "spaced": 254
+      },
+      "read_all_tokens": {
+        "compact": 1424,
+        "spaced": 1435
+      },
+      "terminal_tokens": {
+        "compact": 37,
+        "spaced": 50
+      }
+    },
+    {
+      "task_id": "office_reconciliation-d2",
+      "seed": 400003,
+      "reset_tokens": {
+        "compact": 238,
+        "spaced": 254
+      },
+      "read_all_tokens": {
+        "compact": 1424,
+        "spaced": 1435
+      },
+      "terminal_tokens": {
+        "compact": 37,
+        "spaced": 50
+      }
+    },
+    {
+      "task_id": "finance_ledger-d2",
+      "seed": 400000,
+      "reset_tokens": {
+        "compact": 245,
+        "spaced": 261
+      },
+      "read_all_tokens": {
+        "compact": 1092,
+        "spaced": 1103
+      },
+      "terminal_tokens": {
+        "compact": 37,
+        "spaced": 50
+      }
+    },
+    {
+      "task_id": "finance_ledger-d2",
+      "seed": 400001,
+      "reset_tokens": {
+        "compact": 245,
+        "spaced": 261
+      },
+      "read_all_tokens": {
+        "compact": 1093,
+        "spaced": 1104
+      },
+      "terminal_tokens": {
+        "compact": 37,
+        "spaced": 50
+      }
+    },
+    {
+      "task_id": "finance_ledger-d2",
+      "seed": 400002,
+      "reset_tokens": {
+        "compact": 245,
+        "spaced": 261
+      },
+      "read_all_tokens": {
+        "compact": 1095,
+        "spaced": 1106
+      },
+      "terminal_tokens": {
+        "compact": 37,
+        "spaced": 50
+      }
+    },
+    {
+      "task_id": "finance_ledger-d2",
+      "seed": 400003,
+      "reset_tokens": {
+        "compact": 245,
+        "spaced": 261
+      },
+      "read_all_tokens": {
+        "compact": 1096,
+        "spaced": 1107
+      },
+      "terminal_tokens": {
+        "compact": 37,
+        "spaced": 50
+      }
+    },
+    {
+      "task_id": "math_route-d2",
+      "seed": 400000,
+      "reset_tokens": {
+        "compact": 202,
+        "spaced": 218
+      },
+      "read_all_tokens": {
+        "compact": 768,
+        "spaced": 779
+      },
+      "terminal_tokens": {
+        "compact": 36,
+        "spaced": 49
+      }
+    },
+    {
+      "task_id": "math_route-d2",
+      "seed": 400001,
+      "reset_tokens": {
+        "compact": 202,
+        "spaced": 218
+      },
+      "read_all_tokens": {
+        "compact": 648,
+        "spaced": 659
+      },
+      "terminal_tokens": {
+        "compact": 36,
+        "spaced": 49
+      }
+    },
+    {
+      "task_id": "math_route-d2",
+      "seed": 400002,
+      "reset_tokens": {
+        "compact": 202,
+        "spaced": 218
+      },
+      "read_all_tokens": {
+        "compact": 729,
+        "spaced": 740
+      },
+      "terminal_tokens": {
+        "compact": 36,
+        "spaced": 49
+      }
+    },
+    {
+      "task_id": "math_route-d2",
+      "seed": 400003,
+      "reset_tokens": {
+        "compact": 202,
+        "spaced": 218
+      },
+      "read_all_tokens": {
+        "compact": 1013,
+        "spaced": 1024
+      },
+      "terminal_tokens": {
+        "compact": 36,
+        "spaced": 49
+      }
+    },
+    {
+      "task_id": "security_triage-d2",
+      "seed": 400000,
+      "reset_tokens": {
+        "compact": 276,
+        "spaced": 292
+      },
+      "read_all_tokens": {
+        "compact": 1401,
+        "spaced": 1412
+      },
+      "terminal_tokens": {
+        "compact": 37,
+        "spaced": 50
+      }
+    },
+    {
+      "task_id": "security_triage-d2",
+      "seed": 400001,
+      "reset_tokens": {
+        "compact": 276,
+        "spaced": 292
+      },
+      "read_all_tokens": {
+        "compact": 1403,
+        "spaced": 1414
+      },
+      "terminal_tokens": {
+        "compact": 37,
+        "spaced": 50
+      }
+    },
+    {
+      "task_id": "security_triage-d2",
+      "seed": 400002,
+      "reset_tokens": {
+        "compact": 276,
+        "spaced": 292
+      },
+      "read_all_tokens": {
+        "compact": 1399,
+        "spaced": 1410
+      },
+      "terminal_tokens": {
+        "compact": 37,
+        "spaced": 50
+      }
+    },
+    {
+      "task_id": "security_triage-d2",
+      "seed": 400003,
+      "reset_tokens": {
+        "compact": 276,
+        "spaced": 292
+      },
+      "read_all_tokens": {
+        "compact": 1403,
+        "spaced": 1414
+      },
+      "terminal_tokens": {
+        "compact": 37,
+        "spaced": 50
+      }
+    },
+    {
+      "task_id": "media_timeline-d2",
+      "seed": 400000,
+      "reset_tokens": {
+        "compact": 312,
+        "spaced": 328
+      },
+      "read_all_tokens": {
+        "compact": 768,
+        "spaced": 779
+      },
+      "terminal_tokens": {
+        "compact": 36,
+        "spaced": 49
+      }
+    },
+    {
+      "task_id": "media_timeline-d2",
+      "seed": 400001,
+      "reset_tokens": {
+        "compact": 312,
+        "spaced": 328
+      },
+      "read_all_tokens": {
+        "compact": 768,
+        "spaced": 779
+      },
+      "terminal_tokens": {
+        "compact": 36,
+        "spaced": 49
+      }
+    },
+    {
+      "task_id": "media_timeline-d2",
+      "seed": 400002,
+      "reset_tokens": {
+        "compact": 312,
+        "spaced": 328
+      },
+      "read_all_tokens": {
+        "compact": 765,
+        "spaced": 776
+      },
+      "terminal_tokens": {
+        "compact": 36,
+        "spaced": 49
+      }
+    },
+    {
+      "task_id": "media_timeline-d2",
+      "seed": 400003,
+      "reset_tokens": {
+        "compact": 312,
+        "spaced": 328
+      },
+      "read_all_tokens": {
+        "compact": 771,
+        "spaced": 782
+      },
+      "terminal_tokens": {
+        "compact": 36,
+        "spaced": 49
+      }
+    }
+  ],
+  "summary": [
+    {
+      "task_id": "software_change-d2",
+      "max_read_all_tokens": 474,
+      "max_post_reset_observation_tokens": 523,
+      "min_4096_budget_left_for_model": 3573
+    },
+    {
+      "task_id": "industrial_schedule-d2",
+      "max_read_all_tokens": 396,
+      "max_post_reset_observation_tokens": 446,
+      "min_4096_budget_left_for_model": 3650
+    },
+    {
+      "task_id": "science_calibration-d2",
+      "max_read_all_tokens": 300,
+      "max_post_reset_observation_tokens": 349,
+      "min_4096_budget_left_for_model": 3747
+    },
+    {
+      "task_id": "office_reconciliation-d2",
+      "max_read_all_tokens": 1435,
+      "max_post_reset_observation_tokens": 1485,
+      "min_4096_budget_left_for_model": 2611
+    },
+    {
+      "task_id": "finance_ledger-d2",
+      "max_read_all_tokens": 1107,
+      "max_post_reset_observation_tokens": 1157,
+      "min_4096_budget_left_for_model": 2939
+    },
+    {
+      "task_id": "math_route-d2",
+      "max_read_all_tokens": 1024,
+      "max_post_reset_observation_tokens": 1073,
+      "min_4096_budget_left_for_model": 3023
+    },
+    {
+      "task_id": "security_triage-d2",
+      "max_read_all_tokens": 1414,
+      "max_post_reset_observation_tokens": 1464,
+      "min_4096_budget_left_for_model": 2632
+    },
+    {
+      "task_id": "media_timeline-d2",
+      "max_read_all_tokens": 782,
+      "max_post_reset_observation_tokens": 831,
+      "min_4096_budget_left_for_model": 3265
+    }
+  ]
+}

@@ -1,0 +1,1040 @@
+{
+  "review_version": 1,
+  "reviewed_at": "2026-10-09T00:28:20.757381+00:00",
+  "evidence_kind": "independently_replayed_proxy_calibration",
+  "source": {
+    "gist": "https://gist.github.com/ruvnet/00fb40aeabb35a893f140597e2695c1d",
+    "gist_revision": "36277b41b125f68f2a82947636e525270679bd28",
+    "gist_updated_at": "2026-10-09T00:22:56Z",
+    "public_file_verification": [
+      {
+        "filename": "README.md",
+        "bytes": 1867,
+        "sha256": "e964587e0cfcfd818e26241c2d0d0860f8c6e458fe40fa9f8960b4f34bf00f49",
+        "raw_url": "https://gist.githubusercontent.com/ruvnet/00fb40aeabb35a893f140597e2695c1d/raw/f76b7d0cd22442e003fa1a6de78bcdc4d681eb70/README.md",
+        "size_matches_api": true
+      },
+      {
+        "filename": "calibration-v1-episodes.jsonl",
+        "bytes": 625404,
+        "sha256": "6dacaf455c53113991b6cf4d3df0eb6854d5c0c4f3f59ed606ed3751b7e4bcc1",
+        "raw_url": "https://gist.githubusercontent.com/ruvnet/00fb40aeabb35a893f140597e2695c1d/raw/17f74eeea47588adddbaa911964c25d6a46463b4/calibration-v1-episodes.jsonl",
+        "size_matches_api": true,
+        "row_types": {
+          "plan": 24,
+          "episode": 96,
+          "summary": 24,
+          "orchestration_receipt": 24
+        }
+      },
+      {
+        "filename": "calibration-v1-table.txt",
+        "bytes": 1466,
+        "sha256": "2d41341bd41583ee927694d8082984a5bb15dfa60c891afaf24959e9f33f007c",
+        "raw_url": "https://gist.githubusercontent.com/ruvnet/00fb40aeabb35a893f140597e2695c1d/raw/fd1c3205051c7f5964fb19a6b2dae67547494d88/calibration-v1-table.txt",
+        "size_matches_api": true
+      },
+      {
+        "filename": "calibration-v2-episodes.jsonl",
+        "bytes": 589509,
+        "sha256": "bf8ff3cd6b440cd523dd3cecc9240b2f10f2a17e4260529b74d7709fa4710d31",
+        "raw_url": "https://gist.githubusercontent.com/ruvnet/00fb40aeabb35a893f140597e2695c1d/raw/55921b221f793168723df75e89531b9e1c0b5ee3/calibration-v2-episodes.jsonl",
+        "size_matches_api": true,
+        "row_types": {
+          "plan": 16,
+          "episode": 64,
+          "summary": 16,
+          "orchestration_receipt": 16
+        }
+      },
+      {
+        "filename": "calibration-v2-table.txt",
+        "bytes": 989,
+        "sha256": "dea02cc0f79d4b76301f46d9e35e65548017038bac4c562fd13aec8eec418fa3",
+        "raw_url": "https://gist.githubusercontent.com/ruvnet/00fb40aeabb35a893f140597e2695c1d/raw/51bbb14858b563da21446579397fc0b0a799ae9a/calibration-v2-table.txt",
+        "size_matches_api": true
+      }
+    ],
+    "raw_download_directory": "/workspace/scratch/8b761c4699a3/calibration-v2-public/36277b41b125f68f2a82947636e525270679bd28",
+    "review_script_sha256": "2031a78ed7e03a78829ecccd5c0500bc24c9c10102fe9cdcce4965b537099606",
+    "tokenizer_sha256": "0997f410c57a1f4e53b09e4be8f4a172d90edd9564368fb0847030937229b9f3"
+  },
+  "v2": {
+    "environment_commit": "f3d922974e47f87b1a6dae323e5c8f3c2905c201",
+    "frozen_file_sha256": {
+      "arena_env/__init__.py": "d0cca47bd35b44e121fb394856996d9f2271c29528b73d5b6160ab63f47f9a0f",
+      "arena_env/tasks.py": "94e29b6d884302f57e9440591cca5c07350cc4eb47d9e4e9f7a27689c519b781",
+      "arena_env/environment.py": "d6882e2c9dabf1ee0fde75df0acdef85670598da633ce523cf54038fd40562a9"
+    },
+    "expected_runner_sha256": "f04a50abad5947e1d271a23725fbc9754b460af8b310779900aad4140c917032",
+    "row_types": {
+      "plan": 16,
+      "episode": 64,
+      "summary": 16,
+      "orchestration_receipt": 16
+    },
+    "verification": {
+      "manifest_digest": 16,
+      "trajectory_digest": 64,
+      "trajectory_identity": 64,
+      "plan_episode_identity": 64,
+      "reset": 64,
+      "system_schema": 64,
+      "request_budget_accounting": 128,
+      "completion_charge": 128,
+      "provider_usage_arithmetic": 128,
+      "reasoning_usage_bounds": 128,
+      "valid_action_observation": 117,
+      "observation_tokenizer": 117,
+      "reward": 64,
+      "solved_flag": 64,
+      "provider_call_count": 64,
+      "tokenizer_pin": 64,
+      "episode_accounting": 64,
+      "provider_total": 64,
+      "truncation_finish_reason": 64,
+      "summary": 16,
+      "global_accounting": 16,
+      "runner_hash": 16,
+      "receipt_manifest": 16,
+      "receipt_groups": 16,
+      "truncation_hits_remaining_allowance": 11
+    },
+    "mismatches": [],
+    "totals": {
+      "episodes": 64,
+      "full": 43,
+      "partial": 10,
+      "zero": 11,
+      "failure_counts": {
+        "completion_truncated": 11
+      },
+      "valid_mixed_cells": 5,
+      "full_success_rate": 0.671875,
+      "full_success_among_failure_free_episodes": 0.8113207547169812,
+      "failure_free_episodes": 53,
+      "invalid_json_or_provider_records": 0,
+      "planned_episodes": 64,
+      "complete_unique_four_attempt_cells": 16,
+      "zero_variance_cells": 8
+    },
+    "groups": [
+      {
+        "family": "finance_ledger",
+        "difficulty": 2,
+        "attempts": 4,
+        "full": 4,
+        "partial": 0,
+        "zero": 0,
+        "invalid": 0,
+        "provider_reported_truncated": 0,
+        "other_execution_failures": 0,
+        "failure_counts": {},
+        "rewards": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "seeds": [
+          600200,
+          600201,
+          600202,
+          600203
+        ],
+        "mean_reward": 1.0,
+        "reward_std": 0.0,
+        "complete_unique_four_attempts": true,
+        "execution_failure_free": true,
+        "valid_mixed_cell": false,
+        "completion_units_range": [
+          3259,
+          5380
+        ],
+        "token_usage": {
+          "mean_provider_total_tokens": 5259.5,
+          "mean_generation_tokens": 3038.5,
+          "mean_post_reset_observation_tokens": 1105.5,
+          "mean_episode_completion_units": 4144,
+          "max_retained_context_units": 2348
+        },
+        "classification": "saturated_full_success",
+        "zero_variance": true
+      },
+      {
+        "family": "finance_ledger",
+        "difficulty": 3,
+        "attempts": 4,
+        "full": 3,
+        "partial": 1,
+        "zero": 0,
+        "invalid": 0,
+        "provider_reported_truncated": 0,
+        "other_execution_failures": 0,
+        "failure_counts": {},
+        "rewards": [
+          1.0,
+          0.5,
+          1.0,
+          1.0
+        ],
+        "seeds": [
+          600300,
+          600301,
+          600302,
+          600303
+        ],
+        "mean_reward": 0.875,
+        "reward_std": 0.21650635094610965,
+        "complete_unique_four_attempts": true,
+        "execution_failure_free": true,
+        "valid_mixed_cell": true,
+        "completion_units_range": [
+          2451,
+          4398
+        ],
+        "token_usage": {
+          "mean_provider_total_tokens": 4836.5,
+          "mean_generation_tokens": 2416.75,
+          "mean_post_reset_observation_tokens": 1303.75,
+          "mean_episode_completion_units": 3720.5,
+          "max_retained_context_units": 2665
+        },
+        "classification": "valid_mixed",
+        "zero_variance": false
+      },
+      {
+        "family": "industrial_schedule",
+        "difficulty": 2,
+        "attempts": 4,
+        "full": 0,
+        "partial": 0,
+        "zero": 4,
+        "invalid": 0,
+        "provider_reported_truncated": 4,
+        "other_execution_failures": 0,
+        "failure_counts": {
+          "completion_truncated": 4
+        },
+        "rewards": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "seeds": [
+          600200,
+          600201,
+          600202,
+          600203
+        ],
+        "mean_reward": 0.0,
+        "reward_std": 0.0,
+        "complete_unique_four_attempts": true,
+        "execution_failure_free": false,
+        "valid_mixed_cell": false,
+        "completion_units_range": [
+          8192,
+          8192
+        ],
+        "token_usage": {
+          "mean_provider_total_tokens": 9302,
+          "mean_generation_tokens": 7803.75,
+          "mean_post_reset_observation_tokens": 388.25,
+          "mean_episode_completion_units": 8192,
+          "max_retained_context_units": 1110
+        },
+        "classification": "excluded_execution_failure",
+        "zero_variance": true
+      },
+      {
+        "family": "industrial_schedule",
+        "difficulty": 3,
+        "attempts": 4,
+        "full": 0,
+        "partial": 0,
+        "zero": 4,
+        "invalid": 0,
+        "provider_reported_truncated": 4,
+        "other_execution_failures": 0,
+        "failure_counts": {
+          "completion_truncated": 4
+        },
+        "rewards": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "seeds": [
+          600300,
+          600301,
+          600302,
+          600303
+        ],
+        "mean_reward": 0.0,
+        "reward_std": 0.0,
+        "complete_unique_four_attempts": true,
+        "execution_failure_free": false,
+        "valid_mixed_cell": false,
+        "completion_units_range": [
+          8192,
+          8192
+        ],
+        "token_usage": {
+          "mean_provider_total_tokens": 9303.5,
+          "mean_generation_tokens": 7722.5,
+          "mean_post_reset_observation_tokens": 469.5,
+          "mean_episode_completion_units": 8192,
+          "max_retained_context_units": 1278
+        },
+        "classification": "excluded_execution_failure",
+        "zero_variance": true
+      },
+      {
+        "family": "math_route",
+        "difficulty": 2,
+        "attempts": 4,
+        "full": 3,
+        "partial": 0,
+        "zero": 1,
+        "invalid": 0,
+        "provider_reported_truncated": 1,
+        "other_execution_failures": 0,
+        "failure_counts": {
+          "completion_truncated": 1
+        },
+        "rewards": [
+          1.0,
+          1.0,
+          0.0,
+          1.0
+        ],
+        "seeds": [
+          600200,
+          600201,
+          600202,
+          600203
+        ],
+        "mean_reward": 0.75,
+        "reward_std": 0.4330127018922193,
+        "complete_unique_four_attempts": true,
+        "execution_failure_free": false,
+        "valid_mixed_cell": false,
+        "completion_units_range": [
+          2685,
+          8192
+        ],
+        "token_usage": {
+          "mean_provider_total_tokens": 5909.75,
+          "mean_generation_tokens": 3976.25,
+          "mean_post_reset_observation_tokens": 889.5,
+          "mean_episode_completion_units": 4865.75,
+          "max_retained_context_units": 1877
+        },
+        "classification": "excluded_execution_failure",
+        "zero_variance": false
+      },
+      {
+        "family": "math_route",
+        "difficulty": 3,
+        "attempts": 4,
+        "full": 3,
+        "partial": 1,
+        "zero": 0,
+        "invalid": 0,
+        "provider_reported_truncated": 0,
+        "other_execution_failures": 0,
+        "failure_counts": {},
+        "rewards": [
+          1.0,
+          0.6666666666666666,
+          1.0,
+          1.0
+        ],
+        "seeds": [
+          600300,
+          600301,
+          600302,
+          600303
+        ],
+        "mean_reward": 0.9166666666666666,
+        "reward_std": 0.14433756729740646,
+        "complete_unique_four_attempts": true,
+        "execution_failure_free": true,
+        "valid_mixed_cell": true,
+        "completion_units_range": [
+          5173,
+          6357
+        ],
+        "token_usage": {
+          "mean_provider_total_tokens": 6942,
+          "mean_generation_tokens": 4742.5,
+          "mean_post_reset_observation_tokens": 1168.25,
+          "mean_episode_completion_units": 5910.75,
+          "max_retained_context_units": 2314
+        },
+        "classification": "valid_mixed",
+        "zero_variance": false
+      },
+      {
+        "family": "media_timeline",
+        "difficulty": 2,
+        "attempts": 4,
+        "full": 4,
+        "partial": 0,
+        "zero": 0,
+        "invalid": 0,
+        "provider_reported_truncated": 0,
+        "other_execution_failures": 0,
+        "failure_counts": {},
+        "rewards": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "seeds": [
+          600200,
+          600201,
+          600202,
+          600203
+        ],
+        "mean_reward": 1.0,
+        "reward_std": 0.0,
+        "complete_unique_four_attempts": true,
+        "execution_failure_free": true,
+        "valid_mixed_cell": false,
+        "completion_units_range": [
+          3108,
+          5909
+        ],
+        "token_usage": {
+          "mean_provider_total_tokens": 5825.5,
+          "mean_generation_tokens": 3713.25,
+          "mean_post_reset_observation_tokens": 921.25,
+          "mean_episode_completion_units": 4634.5,
+          "max_retained_context_units": 2055
+        },
+        "classification": "saturated_full_success",
+        "zero_variance": true
+      },
+      {
+        "family": "media_timeline",
+        "difficulty": 3,
+        "attempts": 4,
+        "full": 3,
+        "partial": 0,
+        "zero": 1,
+        "invalid": 0,
+        "provider_reported_truncated": 1,
+        "other_execution_failures": 0,
+        "failure_counts": {
+          "completion_truncated": 1
+        },
+        "rewards": [
+          0.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "seeds": [
+          600300,
+          600301,
+          600302,
+          600303
+        ],
+        "mean_reward": 0.75,
+        "reward_std": 0.4330127018922193,
+        "complete_unique_four_attempts": true,
+        "execution_failure_free": false,
+        "valid_mixed_cell": false,
+        "completion_units_range": [
+          4890,
+          8192
+        ],
+        "token_usage": {
+          "mean_provider_total_tokens": 7306.25,
+          "mean_generation_tokens": 5010,
+          "mean_post_reset_observation_tokens": 1096.25,
+          "mean_episode_completion_units": 6106.25,
+          "max_retained_context_units": 2316
+        },
+        "classification": "excluded_execution_failure",
+        "zero_variance": false
+      },
+      {
+        "family": "office_reconciliation",
+        "difficulty": 2,
+        "attempts": 4,
+        "full": 4,
+        "partial": 0,
+        "zero": 0,
+        "invalid": 0,
+        "provider_reported_truncated": 0,
+        "other_execution_failures": 0,
+        "failure_counts": {},
+        "rewards": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "seeds": [
+          600200,
+          600201,
+          600202,
+          600203
+        ],
+        "mean_reward": 1.0,
+        "reward_std": 0.0,
+        "complete_unique_four_attempts": true,
+        "execution_failure_free": true,
+        "valid_mixed_cell": false,
+        "completion_units_range": [
+          3352,
+          4623
+        ],
+        "token_usage": {
+          "mean_provider_total_tokens": 5087,
+          "mean_generation_tokens": 2628.75,
+          "mean_post_reset_observation_tokens": 1460.75,
+          "mean_episode_completion_units": 4089.5,
+          "max_retained_context_units": 2592
+        },
+        "classification": "saturated_full_success",
+        "zero_variance": true
+      },
+      {
+        "family": "office_reconciliation",
+        "difficulty": 3,
+        "attempts": 4,
+        "full": 3,
+        "partial": 1,
+        "zero": 0,
+        "invalid": 0,
+        "provider_reported_truncated": 0,
+        "other_execution_failures": 0,
+        "failure_counts": {},
+        "rewards": [
+          1.0,
+          0.5,
+          1.0,
+          1.0
+        ],
+        "seeds": [
+          600300,
+          600301,
+          600302,
+          600303
+        ],
+        "mean_reward": 0.875,
+        "reward_std": 0.21650635094610965,
+        "complete_unique_four_attempts": true,
+        "execution_failure_free": true,
+        "valid_mixed_cell": true,
+        "completion_units_range": [
+          2614,
+          6691
+        ],
+        "token_usage": {
+          "mean_provider_total_tokens": 5746.5,
+          "mean_generation_tokens": 2971,
+          "mean_post_reset_observation_tokens": 1777.5,
+          "mean_episode_completion_units": 4748.5,
+          "max_retained_context_units": 3026
+        },
+        "classification": "valid_mixed",
+        "zero_variance": false
+      },
+      {
+        "family": "science_calibration",
+        "difficulty": 2,
+        "attempts": 4,
+        "full": 1,
+        "partial": 3,
+        "zero": 0,
+        "invalid": 0,
+        "provider_reported_truncated": 0,
+        "other_execution_failures": 0,
+        "failure_counts": {},
+        "rewards": [
+          1.0,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "seeds": [
+          600200,
+          600201,
+          600202,
+          600203
+        ],
+        "mean_reward": 0.8125,
+        "reward_std": 0.10825317547305482,
+        "complete_unique_four_attempts": true,
+        "execution_failure_free": true,
+        "valid_mixed_cell": true,
+        "completion_units_range": [
+          3344,
+          4133
+        ],
+        "token_usage": {
+          "mean_provider_total_tokens": 4719.5,
+          "mean_generation_tokens": 3073.5,
+          "mean_post_reset_observation_tokens": 587.75,
+          "mean_episode_completion_units": 3661.25,
+          "max_retained_context_units": 1510
+        },
+        "classification": "valid_mixed",
+        "zero_variance": false
+      },
+      {
+        "family": "science_calibration",
+        "difficulty": 3,
+        "attempts": 4,
+        "full": 1,
+        "partial": 3,
+        "zero": 0,
+        "invalid": 0,
+        "provider_reported_truncated": 0,
+        "other_execution_failures": 0,
+        "failure_counts": {},
+        "rewards": [
+          0.75,
+          0.75,
+          1.0,
+          0.5
+        ],
+        "seeds": [
+          600300,
+          600301,
+          600302,
+          600303
+        ],
+        "mean_reward": 0.75,
+        "reward_std": 0.1767766952966369,
+        "complete_unique_four_attempts": true,
+        "execution_failure_free": true,
+        "valid_mixed_cell": true,
+        "completion_units_range": [
+          4757,
+          6689
+        ],
+        "token_usage": {
+          "mean_provider_total_tokens": 6896.75,
+          "mean_generation_tokens": 5171.5,
+          "mean_post_reset_observation_tokens": 667.25,
+          "mean_episode_completion_units": 5838.75,
+          "max_retained_context_units": 1652
+        },
+        "classification": "valid_mixed",
+        "zero_variance": false
+      },
+      {
+        "family": "security_triage",
+        "difficulty": 2,
+        "attempts": 4,
+        "full": 4,
+        "partial": 0,
+        "zero": 0,
+        "invalid": 0,
+        "provider_reported_truncated": 0,
+        "other_execution_failures": 0,
+        "failure_counts": {},
+        "rewards": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "seeds": [
+          600200,
+          600201,
+          600202,
+          600203
+        ],
+        "mean_reward": 1.0,
+        "reward_std": 0.0,
+        "complete_unique_four_attempts": true,
+        "execution_failure_free": true,
+        "valid_mixed_cell": false,
+        "completion_units_range": [
+          5195,
+          6749
+        ],
+        "token_usage": {
+          "mean_provider_total_tokens": 6764,
+          "mean_generation_tokens": 4249.75,
+          "mean_post_reset_observation_tokens": 1439.75,
+          "mean_episode_completion_units": 5689.5,
+          "max_retained_context_units": 2733
+        },
+        "classification": "saturated_full_success",
+        "zero_variance": true
+      },
+      {
+        "family": "security_triage",
+        "difficulty": 3,
+        "attempts": 4,
+        "full": 4,
+        "partial": 0,
+        "zero": 0,
+        "invalid": 0,
+        "provider_reported_truncated": 0,
+        "other_execution_failures": 0,
+        "failure_counts": {},
+        "rewards": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "seeds": [
+          600300,
+          600301,
+          600302,
+          600303
+        ],
+        "mean_reward": 1.0,
+        "reward_std": 0.0,
+        "complete_unique_four_attempts": true,
+        "execution_failure_free": true,
+        "valid_mixed_cell": false,
+        "completion_units_range": [
+          5572,
+          7557
+        ],
+        "token_usage": {
+          "mean_provider_total_tokens": 7502,
+          "mean_generation_tokens": 4709.75,
+          "mean_post_reset_observation_tokens": 1718.25,
+          "mean_episode_completion_units": 6428,
+          "max_retained_context_units": 3164
+        },
+        "classification": "saturated_full_success",
+        "zero_variance": true
+      },
+      {
+        "family": "software_change",
+        "difficulty": 2,
+        "attempts": 4,
+        "full": 4,
+        "partial": 0,
+        "zero": 0,
+        "invalid": 0,
+        "provider_reported_truncated": 0,
+        "other_execution_failures": 0,
+        "failure_counts": {},
+        "rewards": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "seeds": [
+          600200,
+          600201,
+          600202,
+          600203
+        ],
+        "mean_reward": 1.0,
+        "reward_std": 0.0,
+        "complete_unique_four_attempts": true,
+        "execution_failure_free": true,
+        "valid_mixed_cell": false,
+        "completion_units_range": [
+          2825,
+          6100
+        ],
+        "token_usage": {
+          "mean_provider_total_tokens": 5494,
+          "mean_generation_tokens": 3794.75,
+          "mean_post_reset_observation_tokens": 672.75,
+          "mean_episode_completion_units": 4467.5,
+          "max_retained_context_units": 1542
+        },
+        "classification": "saturated_full_success",
+        "zero_variance": true
+      },
+      {
+        "family": "software_change",
+        "difficulty": 3,
+        "attempts": 4,
+        "full": 2,
+        "partial": 1,
+        "zero": 1,
+        "invalid": 0,
+        "provider_reported_truncated": 1,
+        "other_execution_failures": 0,
+        "failure_counts": {
+          "completion_truncated": 1
+        },
+        "rewards": [
+          0.5,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "seeds": [
+          600300,
+          600301,
+          600302,
+          600303
+        ],
+        "mean_reward": 0.625,
+        "reward_std": 0.414578098794425,
+        "complete_unique_four_attempts": true,
+        "execution_failure_free": false,
+        "valid_mixed_cell": false,
+        "completion_units_range": [
+          6360,
+          8192
+        ],
+        "token_usage": {
+          "mean_provider_total_tokens": 7948,
+          "mean_generation_tokens": 6096.75,
+          "mean_post_reset_observation_tokens": 815.75,
+          "mean_episode_completion_units": 6912.5,
+          "max_retained_context_units": 1772
+        },
+        "classification": "excluded_execution_failure",
+        "zero_variance": false
+      }
+    ],
+    "provider_finish_reason_counts": {
+      "stop": 117,
+      "length": 11
+    },
+    "reasoning_tokens_reported_sum": 274240,
+    "assistant_reasoning_fields_retained": 0,
+    "truncated_episodes": [
+      {
+        "task_id": "industrial_schedule",
+        "difficulty": 2,
+        "seed": 600200,
+        "total_tokens_reported": 9301,
+        "episode_completion_units": 8192,
+        "last_completion_tokens": 7748,
+        "last_reasoning_tokens": 7748,
+        "last_action_content_characters": 0
+      },
+      {
+        "task_id": "industrial_schedule",
+        "difficulty": 2,
+        "seed": 600201,
+        "total_tokens_reported": 9303,
+        "episode_completion_units": 8192,
+        "last_completion_tokens": 7755,
+        "last_reasoning_tokens": 7755,
+        "last_action_content_characters": 0
+      },
+      {
+        "task_id": "industrial_schedule",
+        "difficulty": 2,
+        "seed": 600202,
+        "total_tokens_reported": 9301,
+        "episode_completion_units": 8192,
+        "last_completion_tokens": 6885,
+        "last_reasoning_tokens": 6885,
+        "last_action_content_characters": 0
+      },
+      {
+        "task_id": "industrial_schedule",
+        "difficulty": 2,
+        "seed": 600203,
+        "total_tokens_reported": 9303,
+        "episode_completion_units": 8192,
+        "last_completion_tokens": 7782,
+        "last_reasoning_tokens": 7782,
+        "last_action_content_characters": 0
+      },
+      {
+        "task_id": "industrial_schedule",
+        "difficulty": 3,
+        "seed": 600300,
+        "total_tokens_reported": 9303,
+        "episode_completion_units": 8192,
+        "last_completion_tokens": 7623,
+        "last_reasoning_tokens": 7623,
+        "last_action_content_characters": 0
+      },
+      {
+        "task_id": "industrial_schedule",
+        "difficulty": 3,
+        "seed": 600301,
+        "total_tokens_reported": 9303,
+        "episode_completion_units": 8192,
+        "last_completion_tokens": 7698,
+        "last_reasoning_tokens": 7698,
+        "last_action_content_characters": 0
+      },
+      {
+        "task_id": "industrial_schedule",
+        "difficulty": 3,
+        "seed": 600302,
+        "total_tokens_reported": 9305,
+        "episode_completion_units": 8192,
+        "last_completion_tokens": 7728,
+        "last_reasoning_tokens": 7728,
+        "last_action_content_characters": 0
+      },
+      {
+        "task_id": "industrial_schedule",
+        "difficulty": 3,
+        "seed": 600303,
+        "total_tokens_reported": 9303,
+        "episode_completion_units": 8192,
+        "last_completion_tokens": 7730,
+        "last_reasoning_tokens": 7730,
+        "last_action_content_characters": 0
+      },
+      {
+        "task_id": "math_route",
+        "difficulty": 2,
+        "seed": 600202,
+        "total_tokens_reported": 9263,
+        "episode_completion_units": 8192,
+        "last_completion_tokens": 7152,
+        "last_reasoning_tokens": 7152,
+        "last_action_content_characters": 0
+      },
+      {
+        "task_id": "media_timeline",
+        "difficulty": 3,
+        "seed": 600300,
+        "total_tokens_reported": 9419,
+        "episode_completion_units": 8192,
+        "last_completion_tokens": 7099,
+        "last_reasoning_tokens": 6894,
+        "last_action_content_characters": 445
+      },
+      {
+        "task_id": "software_change",
+        "difficulty": 3,
+        "seed": 600303,
+        "total_tokens_reported": 9255,
+        "episode_completion_units": 8192,
+        "last_completion_tokens": 7328,
+        "last_reasoning_tokens": 7328,
+        "last_action_content_characters": 0
+      }
+    ],
+    "cell_classification_counts": {
+      "saturated_full_success": 6,
+      "valid_mixed": 5,
+      "excluded_execution_failure": 5
+    },
+    "published_table_verification": {
+      "matching_rows": 16,
+      "mismatches": [],
+      "checked_fields": [
+        "family",
+        "difficulty",
+        "full successes",
+        "attempt count",
+        "mean reward rounded to 2 decimals",
+        "mean provider total tokens rounded to integer"
+      ]
+    },
+    "source_claim_and_replay": {
+      "readme_environment_source": "4657e5b82e124917b01d79ee5e9de41badb48fda",
+      "replayed_source": "f3d922974e47f87b1a6dae323e5c8f3c2905c201",
+      "tasks_and_environment_bytes_identical_between_claimed_and_replay_source": {
+        "arena_env/tasks.py": true,
+        "arena_env/environment.py": true
+      },
+      "method": "Extract __init__.py, tasks.py and environment.py using git show into isolated temporary package; import only those frozen modules. Replay stored reset and every retained assistant action with a following observation; compare all observations and rewards. Independently recalculate local tokenizer accounting and canonical hashes."
+    }
+  },
+  "supplemental_complete_v1_review": {
+    "environment_commit": "90a793a9f4f1a06a5b6422164951e9192c909daa",
+    "frozen_file_sha256": {
+      "arena_env/__init__.py": "d0cca47bd35b44e121fb394856996d9f2271c29528b73d5b6160ab63f47f9a0f",
+      "arena_env/tasks.py": "c7be08e8a62621ceb4d8aff39e4cf8e9b64dd8b2c9326e8442d3e39998ab9aea",
+      "arena_env/environment.py": "d6882e2c9dabf1ee0fde75df0acdef85670598da633ce523cf54038fd40562a9"
+    },
+    "expected_runner_sha256": "aaa826e43ffc4293beee116740722ea6906a30c0f1c4c6216c926f5d01ac1d19",
+    "row_types": {
+      "plan": 24,
+      "episode": 96,
+      "summary": 24,
+      "orchestration_receipt": 24
+    },
+    "verification": {
+      "manifest_digest": 24,
+      "trajectory_digest": 96,
+      "trajectory_identity": 96,
+      "plan_episode_identity": 96,
+      "reset": 96,
+      "system_schema": 96,
+      "valid_action_observation": 170,
+      "reward": 96,
+      "solved_flag": 96,
+      "summary": 24,
+      "runner_hash": 24,
+      "receipt_manifest": 24,
+      "receipt_groups": 24
+    },
+    "mismatches": [],
+    "totals": {
+      "episodes": 96,
+      "full": 72,
+      "partial": 3,
+      "zero": 21,
+      "failure_counts": {
+        "ValidationError": 21
+      },
+      "observed_mixed_cells_without_recorded_failure": 2,
+      "readiness_eligible_mixed_cells": null,
+      "readiness_limitation": "Missing finish and usage diagnostics prevent applying the modern valid-cell readiness rule to legacy v1."
+    },
+    "prior_capture_comparison": {
+      "previous_episodes": 77,
+      "unchanged_episodes": 77,
+      "new_episodes": 19
+    },
+    "source_file": "calibration-v1-episodes.jsonl",
+    "mechanism_assessment": "All 21 zero rewards carry only ValidationError. Invalid assistant outputs, provider finish reasons and reasoning were discarded by the legacy runner. The updated README assertion that all 21 were truncated is unsupported; classify their cause as unknown. The prior 77-episode review remains historically correct and unchanged."
+  },
+  "provenance_bounds": {
+    "model_claim": "Qwen/Qwen3.8-27B",
+    "model_revision_claimed_in_readme": "1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0",
+    "model_revision_recorded_in_plans": [
+      "1d4bf0f2"
+    ],
+    "server_aliases_recorded": [
+      "qwen38"
+    ],
+    "runner_sha256_matches_frozen_source": true,
+    "environment_source_bound_in_original_receipts": false,
+    "independent_environment_replay_matches": true,
+    "model_execution_attestation": "Publisher assertion. Matching hashes, deterministic environment replay and internally consistent provider metrics do not attest which remote model/hardware generated a reply.",
+    "modern_reasoning_retained": false,
+    "retained_assistant_reasoning_fields": 0,
+    "provider_reasoning_tokens_reported": 274240,
+    "reasoning_limitation": "Frozen runner reads only reasoning_content; publisher says vLLM 0.31.0 returned reasoning. Retained trajectories omit reasoning text and later requests omit it. Local budget charges provider completion_tokens including reasoning; the replay verifies this arithmetic, not omitted reasoning tokenization or full-context fidelity.",
+    "context_accounting": "Pinned tokenizer over canonical retained messages, without the production chat template. Context totals omit unretained reasoning. They are not full Arena-equivalent context measurements.",
+    "per_request_generation_cap": 8192,
+    "local_episode_generation_plus_postreset_observation_cap": 8192,
+    "local_context_cap": 16384,
+    "temperature": 0.7,
+    "max_steps": 8,
+    "request_timeout_s": 900,
+    "global_reservation_limit_per_plan": 2000000,
+    "provider_total_tokens_semantics": "Sum of provider prompt+completion totals for each reply. Repeated prompt tokens count again. This is not the episode completion budget.",
+    "arena_budget_matched": false,
+    "arena_wall_matched": false,
+    "official_evaluation": false,
+    "training_improvement_measured": false,
+    "causal_comparison_to_v1": false,
+    "current_knob_generator_calibrated": false
+  },
+  "corrections": [
+    "V2 has 11 provider-reported length truncations across five cells: industrial d2 four, industrial d3 four, math d2 one, media d3 one, software d3 one. A claim of industrial-only truncation is false.",
+    "Every truncated v2 episode charged exactly 8192 generation plus post-reset observation units and the final request reached its remaining allowance. Industrial mean provider totals near 9300 include prompts; they do not establish an 8192 completion-budget violation.",
+    "Only five of sixteen v2 cells are execution-failure-free with 1..3 full successes in four attempts and nonzero reward variance. Six are saturated at four full successes; five contain truncation and are excluded from valid mixed calibration.",
+    "Complete v1 raw is now available: 96 episodes, 72 full, three partial, 21 unknown-cause ValidationError failures. All 77 previously reviewed episodes are unchanged; 19 were added. Do not retroactively label the 21 as truncations."
+  ],
+  "decision": "Use the five valid mixed v2 cells as provisional curriculum signals under this exact captured proxy policy. Recalibrate with retained modern reasoning, source-bound receipts and the frozen intended token/template policy before difficulty selection or promotion. No submission, private-evaluation conclusion or training-lift claim follows from this review."
+}
