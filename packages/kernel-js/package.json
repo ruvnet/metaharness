@@ -29,7 +29,12 @@
     "./dispatch": {
       "types": "./dist/dispatch.d.ts",
       "import": "./dist/dispatch.js"
-    }
+    },
+    "./self-evolution": {
+      "types": "./dist/self-evolution.d.ts",
+      "import": "./dist/self-evolution.js"
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist/**",
