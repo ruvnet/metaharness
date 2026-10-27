@@ -166,6 +166,52 @@ tests that documented them are pinned **green** as regression tests.
 Files: `__tests__/security/inspect-bypass.test.ts` (hardened #1a/#1b/#1c/#2/#3),
 `__tests__/security/validate-generated.test.ts` (hardened #1/#2/#3) — now green.
 
+### 7a-bis. Hardened content-scan gap, 4th instance (FIXED — 2026-10-02)
+
+A 2026-10-02 Dream Cycle re-audit (`docs/dream-cycle/2026-10-02-gist.md`) found a
+4th blind spot in the same family as §7a, and closed it the same way.
+
+| # | Former bypass | Payload | Fix shipped in `BLOCKED_CONTENT_PATTERNS` |
+|---|---|---|---|
+| **#4** | Optional chaining (`?.`) | `process?.env` · `process?.['env']` · `process?.binding(` · `Reflect?.get(process,…)` · `eval?.(` · `fetch?.(` · `require?.(` · generic `exec?.(` | Every pattern requiring the identifier to be IMMEDIATELY followed by `.`/`(`/`[` now tolerates an optional `?.` in between (`\??\.?` inserted before the separator). `import(` and `new Function` are unaffected — `?.` on either is a JS **syntax error** (cannot optional-chain a `new` expression or the `import()` keyword form), confirmed empirically, so no fix was needed there. |
+
+> Unlike #1-#3, this one has **no structural second layer**: #1's env-scrub
+> meant a successful `process.env` read returned nothing live, and #2/#3's
+> no-shell-execution contained the blast radius to an already-scrubbed Node
+> process. `fetch?.(...)` has no such backstop — `tier2-sandbox.ts`'s Tier-2
+> agent sandbox genuinely executes a passing variant's real surface code in a
+> live (env-scrubbed but network-unrestricted) Node child, so a variant that
+> cleared this gate with `fetch?.(...)` could make a real outbound HTTP call,
+> violating ADR-071 containment rule #3 ("no network access by default") for
+> real, not just on paper. Also unlike #1-#3, these are not obfuscation —
+> optional chaining is ordinary, idiomatic modern TS an LLM mutator is likely
+> to emit with no evasive intent at all.
+
+**Round 2 (same night, independent critic):** the round-1 fix above closed
+`?.` but missed a sibling token with the identical shape — the **non-null
+assertion operator (`!`)**. `fetch!(url)`, `process!.env`, `eval!(code)`,
+`require!(mod)`, generic `exec!(cmd)`, and `Reflect!.get(process,…)` are all
+valid TypeScript (`!` erases to nothing at compile time) and cleared both
+gates exactly like round 1's `?.` payloads did — demonstrated end-to-end
+against the shipped round-1 code with a real `inspectVariant()` call on a
+crafted `planner.ts`. The critic also caught a **false-positive regression**
+in round 1's `process.env`/`process.binding` fix: making every separator
+character independently optional (`\??\.?\s*\[?`) meant "process" and "env"
+could match with **no separator at all**, flagging ordinary identifiers like
+`processEnvVar` or the type `NodeJS.ProcessEnv`. The round-2 fix replaces the
+independently-optional pieces with an alternation of whole, valid separator
+forms (`.` | `?.` | `!.` before a bare property, or an optional `?.`/`!`
+before a mandatory `[`) — so a real separator is always required — and adds
+the same `(?:\?\.|!)?` tolerance (for the call-form patterns, where the
+trailing `(` stays mandatory, so no equivalent false-positive risk exists)
+to `exec`/`eval`/`fetch`/`require`/`Reflect.get`'s `!` forms. Independently
+re-reproduced (red→green, zero regressions, zero new false positives on the
+5 identifiers the critic flagged) before shipping.
+
+Files: `__tests__/security/inspect-bypass.test.ts` (hardened #4a-#4h, #5
+round-2 non-null-assertion cases + false-positive regression cases),
+`__tests__/security/validate-generated.test.ts` (same, mirrored) — now green.
+
 ### 7b. Out of scope by design
 
 - **The repo-provided `testCommand` runs real code.** `inspectVariant` bounds
