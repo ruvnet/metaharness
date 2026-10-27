@@ -119,3 +119,23 @@ vertical's composite gate, `withSequentialEvidence` itself — behaves byte-for-
 - ADR-278 — the sibling "documented gate, unreachable call site" finding in Darwin Mode
 - arXiv:2512.03109, "E-valuator: Reliable Agent Verifiers with Sequential Hypothesis Testing" (submitted
   2025-12-02, revised 2026-05-28)
+
+## Addendum: explicit production promotion boundary (2026-10-10)
+
+The research compatibility behavior from issue #319 remains unchanged: absent/empty
+per-item evidence may fall back to the research base rule. That path must not be
+presented as independently verified production promotion.
+
+A separate `promotionMode: 'production'` path now freezes a canonical effective-policy
+manifest, selects on a research suite, and gates one frozen candidate per generation
+using fresh disjoint paired evaluation with a fixed-family alpha allocation. It rejects
+missing/malformed/noninformative evidence, binds signed receipts and replay to the
+manifest and trusted signer, and reserves durable budget units before every injected
+operation, including failures and uncertain execution. The CLI defaults to this mode;
+the library default remains research for compatibility. Configured anchors retain full
+safety-score evidence. Sequential accumulation moves to log space to avoid false
+acceptance after overflow.
+
+See [production controls](../flywheel/production-controls.md) for the exact trust boundary,
+platform support, recovery semantics, reproduction and benchmarks. The controls do not
+prove evaluator honesty, sandbox in-process callbacks, or establish live model gains.

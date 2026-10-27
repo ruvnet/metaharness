@@ -1,0 +1,29 @@
+{
+  "base": "e0dfd44da72b7adfb7c57fdd42d124be58ed7086",
+  "synthetic": true,
+  "paidInferenceCalls": 0,
+  "before": {
+    "missingEvidencePromotes": true,
+    "equalFingerprintsDifferentDecisions": true,
+    "softEvaluatorBudget": 2,
+    "evaluatorCalls": 6,
+    "promotions": 1,
+    "overflowingNearNullPromotes": true
+  },
+  "after": {
+    "missingEvidence": {
+      "promote": false,
+      "status": "INCONCLUSIVE",
+      "reasons": [
+        "missing_independent_evidence"
+      ]
+    },
+    "alphaFingerprintsDistinct": true,
+    "hardUnits": 2,
+    "evaluatorCalls": 1,
+    "proposerCalls": 1,
+    "reserved": 2,
+    "promotions": 0,
+    "overflowingNearNullPromotes": false
+  }
+}

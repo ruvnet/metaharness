@@ -84,3 +84,8 @@ export type {
   GenerationCheckpoint,
   ResumeState,
 } from './types.js';
+
+export { createProductionManifest, createProductionPromotionRule, evidenceDigest } from './production-gate.js';
+export type { ProductionGateConfig, ProductionGateManifest, ProductionEvidence, EvaluationProvenance, PromotionSuite } from './production-gate.js';
+export { FileBudgetLimiter, InMemoryBudgetLimiter, BudgetExceededError, BudgetLedgerError } from './budget.js';
+export type { BudgetLimiter, BudgetSnapshot, BudgetReservation, FileBudgetLimiterOptions, ReservedBudgetOperation, BudgetErrorCode } from './budget.js';
