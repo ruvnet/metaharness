@@ -1,3 +1,7 @@
+# 0.12.1 (2026-10-21)
+
+Fix: the contrastive development loop restarted its `timeoutMs` budget for every callback (setup, adapter admission, execution, validation, cache hits) instead of enforcing one deadline across the whole round, so a round could run well past its configured budget. Now enforces a single monotonic deadline across the round; an expired round preserves the baseline and reserves cost conservatively rather than overrunning. Independent confirmation already had a shared deadline and is unchanged. Default (non-contrastive) Darwin behavior is unchanged. PR #424.
+
 # 0.12.0 (2026-10-16)
 
 Adds optional independent paired confirmation with frozen policies and data partitions, exact statistical comparison, regression limits, effect budgets and scoped execution receipts. Includes a pinned public intent-classification pilot and explicit limits on repeated testing. Existing development and evolve APIs remain compatible.
