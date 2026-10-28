@@ -270,9 +270,13 @@ jobs:
 
   # Clean contributor install must work with npm 11, without install fallback.
   contributor-install:
-    name: Contributor / Node 24 npm 11
-    runs-on: ubuntu-latest
+    name: Contributor / Node 24 npm 11 / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
@@ -282,6 +286,8 @@ jobs:
         run: npx --yes npm@11 ci
       - run: npm run build
       - run: npx vitest run packages/kernel-js packages/bench --maxWorkers=2
+      - name: Kernel tarball npm 11 consumer clean install
+        run: node scripts/kernel-consumer-smoke.mjs
 
   # ─────────────────────────────────────────────────────────────────────
   # Bench (Linux only — others would be redundant for synthetic corpus)

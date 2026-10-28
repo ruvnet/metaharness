@@ -210,17 +210,19 @@ describe('@metaharness/host-prime-agent (ADR-247)', () => {
         '',
       ].join('\n'));
       writeFileSync(join(dir, 'generated.py'), mcpIntegrationPy('remote-search', 'https://example.com/mcp'));
-      expect(() => execFileSync('python3', ['-m', 'py_compile', join(dir, 'generated.py')], { stdio: 'pipe' })).not.toThrow();
+      // These are real Python launches, not in-process unit checks. Bound each
+      // child, while allowing Windows startup overhead within the test budget.
+      expect(() => execFileSync('python3', ['-m', 'py_compile', join(dir, 'generated.py')], { stdio: 'pipe', timeout: 10_000 })).not.toThrow();
       expect(() => execFileSync('python3', ['-c', [
         'import asyncio, generated',
         'assert generated.integration.server == "remote-search"',
         'assert generated.integration.url == "https://example.com/mcp"',
         'assert asyncio.run(generated.list_tools())[0]["name"] == "ping"',
-      ].join('; ')], { cwd: dir, stdio: 'pipe' })).not.toThrow();
+      ].join('; ')], { cwd: dir, stdio: 'pipe', timeout: 10_000 })).not.toThrow();
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
-  });
+  }, 30_000);
 
   it('system prompt and agent roles use current Prime Agent discovery surfaces', () => {
     const out = adapter.generateConfig(defaultSpec);
