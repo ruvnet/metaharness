@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import { execFileSync } from 'node:child_process';
+import { mkdtempSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   HOST_NAME,
   ghaSlug,
@@ -131,6 +134,40 @@ describe('@metaharness/host-github-actions (ADR-033)', () => {
       expect(y).toContain('  # schedule:');
     });
 
+    it('projects heartbeat.instruction as a HEARTBEAT_INSTRUCTION env var alongside the cron trigger', () => {
+      const y = workflowYaml({
+        ...base,
+        autonomous: { heartbeat: { cadence: '0 9 * * 1', instruction: 'check the backlog' } },
+      } as HarnessSpec);
+      expect(y).toContain(`HEARTBEAT_INSTRUCTION: ${JSON.stringify('check the backlog')}`);
+    });
+
+    it('JSON-escapes heartbeat.instruction so a quote/newline cannot break the env: value', () => {
+      const evil = 'check in"\nFOO: pwned';
+      const y = workflowYaml({
+        ...base,
+        autonomous: { heartbeat: { cadence: '0 9 * * 1', instruction: evil } },
+      } as HarnessSpec);
+      expect(y).toContain(`HEARTBEAT_INSTRUCTION: ${JSON.stringify(evil)}`);
+      expect(y).not.toMatch(/^FOO: pwned/m);
+    });
+
+    it('omits HEARTBEAT_INSTRUCTION when cadence is not a valid cron (no schedule trigger to attach it to)', () => {
+      const y = workflowYaml({
+        ...base,
+        autonomous: { heartbeat: { cadence: 'every 5 minutes', instruction: 'check the backlog' } },
+      } as HarnessSpec);
+      expect(y).not.toContain('HEARTBEAT_INSTRUCTION');
+    });
+
+    it('omits HEARTBEAT_INSTRUCTION when instruction is empty, even with a valid cron', () => {
+      const y = workflowYaml({
+        ...base,
+        autonomous: { heartbeat: { cadence: '0 9 * * 1', instruction: '' } },
+      } as HarnessSpec);
+      expect(y).not.toContain('HEARTBEAT_INSTRUCTION');
+    });
+
     it('projects autonomous.gateCommand onto a real pre-flight gating step (after checkout, before the harness step)', () => {
       const y = workflowYaml({ ...base, autonomous: { gateCommand: 'npm test' } } as HarnessSpec);
       expect(y).toContain('ADR-246 autonomous gate');
@@ -209,6 +246,60 @@ describe('@metaharness/host-github-actions (ADR-033)', () => {
       expect(yml.split('\n')[0]).toBe('# Composite action for the evil-action author: pwned-by-attacker # harness (ADR-033).');
       expect(yml).not.toMatch(/^author:/m);
     });
+
+    // Regression: on a schedule-triggered run (no comment body), `task:`
+    // in workflowYaml resolves to the bare `github.event_name` literal
+    // ("schedule") — heartbeat.instruction was computed, passed as an env
+    // var, and then never read, so a cron-driven heartbeat carried no real
+    // task content. Fixed by having the run step override $TASK from
+    // $HEARTBEAT_INSTRUCTION specifically when $GITHUB_EVENT_NAME is
+    // "schedule". Executes the real bash body (not a string match) so a
+    // non-vacuous fix is required to pass.
+    it('a scheduled run (GITHUB_EVENT_NAME=schedule) uses heartbeat.instruction as the task, not the bare event name', () => {
+      const yml = actionYaml({
+        ...base,
+        autonomous: { heartbeat: { cadence: '0 9 * * 1', instruction: 'check the backlog' } },
+      } as HarnessSpec);
+      const body = yml.split('run: |\n')[1]!.split('\n      env:')[0]!;
+      const outputFile = join(mkdtempSync(join(tmpdir(), 'gha-')), 'output');
+      execFileSync('bash', ['-c', body], {
+        encoding: 'utf-8',
+        env: {
+          ...process.env,
+          GITHUB_EVENT_NAME: 'schedule',
+          HEARTBEAT_INSTRUCTION: 'check the backlog',
+          TASK: 'schedule',
+          GITHUB_OUTPUT: outputFile,
+        },
+      });
+      expect(readFileSync(outputFile, 'utf-8')).toContain('"task":"check the backlog"');
+    });
+
+    it('a manual/issue_comment run (GITHUB_EVENT_NAME != schedule) is unaffected by HEARTBEAT_INSTRUCTION', () => {
+      const yml = actionYaml({
+        ...base,
+        autonomous: { heartbeat: { cadence: '0 9 * * 1', instruction: 'check the backlog' } },
+      } as HarnessSpec);
+      const body = yml.split('run: |\n')[1]!.split('\n      env:')[0]!;
+      const outputFile = join(mkdtempSync(join(tmpdir(), 'gha-')), 'output');
+      execFileSync('bash', ['-c', body], {
+        encoding: 'utf-8',
+        env: {
+          ...process.env,
+          GITHUB_EVENT_NAME: 'issue_comment',
+          HEARTBEAT_INSTRUCTION: 'check the backlog',
+          TASK: 'do the real thing',
+          GITHUB_OUTPUT: outputFile,
+        },
+      });
+      expect(readFileSync(outputFile, 'utf-8')).toContain('"task":"do the real thing"');
+    });
+
+    it('does not emit the schedule/HEARTBEAT_INSTRUCTION branch at all when there is no scheduled heartbeat', () => {
+      const yml = actionYaml(base);
+      expect(yml).not.toContain('HEARTBEAT_INSTRUCTION');
+      expect(yml).not.toContain('GITHUB_EVENT_NAME');
+    });
   });
 
   describe('installRunbook', () => {
@@ -248,6 +339,35 @@ describe('@metaharness/host-github-actions (ADR-033)', () => {
       expect(withAutonomous).toContain('Not projected');
       expect(withAutonomous).toContain('heartbeat');
       expect(withAutonomous).not.toContain('Projected onto this host');
+    });
+
+    // Regression: a cron-shaped cadence made `heartbeat` as a whole look
+    // "Projected onto this host" (the cadence→trigger line was there), but
+    // `instruction` itself — the actual content of the heartbeat — was
+    // never mentioned in either the Projected or Not-projected list. ADR-246
+    // §2.2 requires every autonomous field to be projected or explicitly
+    // disclosed as a no-op; this was neither, for the one field a scheduled
+    // heartbeat exists to carry.
+    it('discloses heartbeat.instruction as projected when a real cron trigger carries it', () => {
+      const withAutonomous = installRunbook({
+        ...base,
+        autonomous: { heartbeat: { cadence: '0 9 * * 1', instruction: 'check the backlog' } },
+      } as HarnessSpec);
+      const projectedLine = withAutonomous.split('\n').find((l) => l.startsWith('Projected onto this host'))!;
+      expect(projectedLine).toContain('heartbeat.instruction');
+      expect(withAutonomous).not.toContain('**Not projected**');
+    });
+
+    it('discloses heartbeat.instruction as not-projected when empty, even with a valid cron', () => {
+      const withAutonomous = installRunbook({
+        ...base,
+        autonomous: { heartbeat: { cadence: '0 9 * * 1', instruction: '' } },
+      } as HarnessSpec);
+      const notProjectedLine = withAutonomous.split('\n').find((l) => l.includes('**Not projected**'))!;
+      expect(notProjectedLine).toContain('heartbeat.instruction');
+      const projectedLine = withAutonomous.split('\n').find((l) => l.startsWith('Projected onto this host'))!;
+      expect(projectedLine).toContain('heartbeat.cadence');
+      expect(projectedLine).not.toContain('heartbeat.instruction');
     });
   });
 
