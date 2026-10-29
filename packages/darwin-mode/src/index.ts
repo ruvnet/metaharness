@@ -20,6 +20,8 @@
 //   openrouter-mutator — optional LLM-backed CodeGenerator (same safety gate)
 //   requesty-mutator   — optional LLM-backed CodeGenerator (Requesty is an
 //                        OpenAI-compatible gateway; same safety gate)
+//   cheaperinference-mutator — optional LLM-backed CodeGenerator (Cheaper
+//                        Inference is an OpenAI-compatible gateway; same safety gate)
 //   sandbox        — gate-first, shell-free, env-scrubbed task runner
 //   scorer         — the frozen weighted scorer + strict promotion gate (ADR-072)
 //   archive        — the population tree + archive-wide selection (ADR-073)
@@ -33,6 +35,7 @@ export * from './generator.js';
 export * from './mutator.js';
 export * from './openrouter-mutator.js';
 export * from './requesty-mutator.js';
+export * from './cheaperinference-mutator.js';
 export * from './ruvllm-mutator.js';
 export * from './refine-mutator.js';
 export * from './phenotype.js';
