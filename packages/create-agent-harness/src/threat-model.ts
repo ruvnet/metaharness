@@ -86,16 +86,24 @@ export function buildThreatModel(dir: string, generatedAt: string = new Date().t
   const shellAccess = policy?.allowShell === true;
   const networkAccess = policy?.allowNetwork === true;
   const fileWrite = policy?.allowFileWrite === true;
-  // "Secrets reachable" = there is no .env-blocking deny rule AND tools have
-  // some non-trivial read permission. Conservative: true if allow has any
-  // Read(*) rule and deny doesn't block .env. `envSecretGuarded` (mcp-scan.ts)
-  // is the single source of truth for what actually counts as guarding —
+  // "Secrets reachable" = there is no .env-blocking deny rule. Claude Code's
+  // own permission precedence is deny-first, then ask, then allow (first
+  // match wins) — the Read tool needs no entry in `permissions.allow` to
+  // work; it runs by default unless a `deny` rule stops it. None of this
+  // repo's 20 shipped scaffold templates ever lists a `Read` rule in `allow`
+  // (confirmed by direct inspection of every `templates/*/.claude/
+  // settings.json.tmpl`), so a prior `hasReadAllow` gate here — requiring an
+  // explicit allow-listed `Read` rule before `secretsReachable` could ever
+  // be `true` — made the field permanently `false` for every real generated
+  // harness regardless of whether `.env` was actually guarded, silently
+  // defeating the one human-facing "Secrets reachable: yes/no" line this
+  // command exists to answer correctly. `envSecretGuarded` (mcp-scan.ts) is
+  // the single source of truth for what actually counts as guarding —
   // reused here rather than re-implemented so this file cannot drift back
   // into the unanchored-substring false negative mcp-scan.ts itself once had
   // (a `Read(./.env.example)`-only deny rule guards nothing real).
   const guardsEnv = envSecretGuarded(deny);
-  const hasReadAllow = allow.some((a) => /^Read/.test(a));
-  const secretsReachable = mcpInUse && !guardsEnv && hasReadAllow;
+  const secretsReachable = mcpInUse && !guardsEnv;
 
   // Count "dangerous permissions" = high-severity findings from mcp-scan +
   // the top-level boolean knobs the user named.
