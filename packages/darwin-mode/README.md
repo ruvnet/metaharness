@@ -71,7 +71,7 @@ repo
   → repeat
 ```
 
-Dependency-free: **Node ≥ 20 built-ins only**, no runtime dependencies.
+One runtime dependency: `@babel/parser` (used by the AST safety gate). Otherwise Node ≥ 20 built-ins only. The Tier-2 `agent` sandbox needs Node ≥ 22 (type stripping + permission model) and refuses to run elsewhere.
 
 ## Quick start
 

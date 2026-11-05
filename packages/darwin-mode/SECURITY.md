@@ -99,6 +99,35 @@ records the findings as `blockedActions`.
 - **Never throws.** A failing/timing-out command becomes a `RunTrace`, so a
   hostile variant cannot abort the evolution loop.
 
+### 4a. Tier-2 isolation (0.13.0)
+
+The Tier-2 `agent` sandbox (`src/tier2-sandbox.ts`) is the path that imports
+and executes a variant's surface modules. Since 0.13.0 it runs them in a child
+process that is confined independently of the static gate:
+
+- **Node permission model** (`--permission`): filesystem reads limited to the
+  driver file and the variant directory; no filesystem writes, child processes,
+  workers, native addons or WASI.
+- **`--disallow-code-generation-from-strings`**: string-to-code construction
+  throws. This is the control that covers constructor chains reached through
+  a key the static layers cannot evaluate (`obj[k]` with an arbitrary `k`).
+- **Heap cap** (`--max-old-space-size`, default 256 MiB) and a SIGKILL timeout.
+- **Empty environment**, cwd = variant directory, no shell.
+- **Driver self-check**: before importing any variant module the driver checks
+  that it is confined, installs a resolve hook (where `module.registerHooks` is
+  available) that only resolves the variant's own surface files, and removes
+  `process`, network and timer globals.
+- **Refuse, never degrade**: without a permission model or type stripping,
+  Tier-2 execution returns a blocked trace (exit 99) instead of running.
+
+**Network limitation.** On Node 22–24 the permission model does not restrict
+network access. There, network is covered by the static gate, the removal of
+network globals and the resolve hook — not by the permission model. Where Node
+provides a network permission it is denied by default.
+
+Proof: `__tests__/security/tier2-isolation.test.ts` (spawns the driver without
+the static gate in front) and `__tests__/security/ast-gate.test.ts`.
+
 ---
 
 ## 5. Frozen scorer / benchmark immutability (ADR-072)
@@ -177,6 +206,10 @@ Files: `__tests__/security/inspect-bypass.test.ts` (hardened #1a/#1b/#1c/#2/#3),
 - **Deterministic mutator is a placeholder.** Today's mutator is string
   replacement; the LLM `CodeGenerator` (ADR-071 §contract) drops in **behind the
   same gate** — `validateGeneratedCode` is the choke point that does not move.
+- **The AST layer (0.13.0) is an allowlist walk, not a proof.** It rejects the
+  constructs a surface never needs (module loading, capability globals,
+  constructor/prototype access, runtime-built keys), and a parse failure is a
+  rejection; Tier-2 runtime isolation (§4a) backs it up.
 - **Pattern-based scanning is heuristic.** A static regex scan cannot prove
   semantic safety; it is a *floor*. The §7a bypasses illustrate that obfuscation
   is always possible against a denylist. The structural defenses (allowlist,
