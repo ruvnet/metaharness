@@ -205,7 +205,14 @@ export function analyzeFiles(name: string, files: Record<string, string>): RepoP
     hasMcp: !!get('.mcp.json') || /modelcontextprotocol|mcp server/i.test(text),
     hasClaude: !!files['.claude/settings.json'] || /claude/i.test(text),
     hasCodex: !!files['.codex/config.toml'] || /codex/i.test(text),
-    hasCi: !!files['.github/workflows/ci.yml'] || /github actions|workflow/i.test(text),
+    // The bare word "workflow" over-matches ordinary prose (e.g. a README
+    // saying "follow our development workflow") with zero real CI and zero
+    // verified test files, silently handing `resolveAgentTopology()` a
+    // trusted-CI signal (genome-scorers.ts:64/68) it never earned — the exact
+    // "manifest/text trusted over real evidence" bug class already closed for
+    // hasVerifiedTestFiles (2026-08-25/09-15/10-25). Require a CI system to be
+    // named, or the workflows path itself, not just the generic noun.
+    hasCi: !!files['.github/workflows/ci.yml'] || /github\s*actions|gitlab[\s-]?ci|circleci|travis[\s-]?ci|\.github\/workflows|continuous[\s-]?integration/i.test(text),
     buildCommands,
     testCommands,
     tokens: tokenize(text),
