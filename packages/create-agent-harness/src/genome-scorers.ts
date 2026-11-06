@@ -140,7 +140,21 @@ export function scorePublishReadiness(profile: RepoProfile, plan: HarnessPlan): 
   // same way, instead of re-litigating a per-language allow-list.
   if (profile.languages.length > 0) s += 0.3;
   if (profile.buildCommands.length > 0) s += 0.2; // can build
-  if (profile.testCommands.length > 0) s += 0.15; // can test
+  // `can test` requires real evidence, not just a language-inferred
+  // testCommands entry (Dream Cycle 2026-10-30) — the same "manifest implies
+  // tests" bug class already closed in this scorer's siblings
+  // (scoreTestConfidence #229 2026-08-25; score.ts's scoreTestCoverage and
+  // repo-scorecard.ts's compileConfidence, both fixed on still-unmerged
+  // branches). `publish` is the single highest-weighted term in genome.ts's
+  // risk_score (0.5) and directly gates the ready/needs-work/blocked verdict
+  // and process exit code, so this was the highest-stakes instance of the
+  // family still on the raw manifest shortcut. `npm test` is the one
+  // testCommands entry that is NOT language-inferred (analyze-repo.ts only
+  // pushes it when package.json declares a real `scripts.test`), so it still
+  // counts as authored evidence — same carve-out resolveAgentTopology's
+  // `authoredTestScript` already uses above.
+  const hasRealTestSignal = profile.hasVerifiedTestFiles || profile.testCommands.includes('npm test');
+  if (hasRealTestSignal) s += 0.15; // can test
   if (profile.hasCi) s += 0.2; // ci will gate it
   if (plan.policy.defaultDeny) s += 0.05; // policy locked
   return Math.min(1, s);
