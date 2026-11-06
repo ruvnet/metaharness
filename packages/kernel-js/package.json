@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/kernel",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Cross-platform kernel for the agent-harness-generator — wasm primary, NAPI-RS native fallback",
   "homepage": "https://github.com/ruvnet/metaharness",
   "repository": {
@@ -57,7 +57,7 @@
     "@ruvector/emergent-time": "^0.1.0"
   },
   "peerDependencies": {
-    "@ruvector/rvf": "^0.2.0 || ^0.3.0 || ^0.4.0",
+    "@ruvector/rvf": "^0.3.0 || ^0.4.6",
     "@metaharness/kernel-darwin-arm64": "0.1.0",
     "@metaharness/kernel-darwin-x64": "0.1.0",
     "@metaharness/kernel-linux-x64-gnu": "0.1.0",
@@ -86,5 +86,8 @@
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "@ruvector/rvf": "^0.4.6"
   }
 }
