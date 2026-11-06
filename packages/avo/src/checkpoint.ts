@@ -26,9 +26,19 @@ export function createCheckpoint(input: {
 }
 
 export function verifyVariationCheckpoint(checkpoint: VariationCheckpoint, signer: ReceiptSigner): boolean {
-  const { checkpointHash: _hash, signature: _signature, rvfManifestPath: _rvf, ...unsigned } = checkpoint;
-  const expected = checkpointHash(unsigned);
-  return expected === checkpoint.checkpointHash && signer.verify(expected, checkpoint.signature);
+  // `checkpointHash`/`canonical` (crypto.ts) now throw on a value that cannot be safely canonicalized
+  // (over-depth or non-finite) rather than silently colliding — such a checkpoint cannot be confirmed
+  // authentic, so it must fail this check the same as any other mismatch. `operator.ts`'s
+  // `restoreOrInitialize` calls this as `if (!verifyVariationCheckpoint(...)) throw ...` for its own
+  // clean, documented error message; letting a canonicalization error escape here instead would bypass
+  // that message with a less diagnostic one from one level down.
+  try {
+    const { checkpointHash: _hash, signature: _signature, rvfManifestPath: _rvf, ...unsigned } = checkpoint;
+    const expected = checkpointHash(unsigned);
+    return expected === checkpoint.checkpointHash && signer.verify(expected, checkpoint.signature);
+  } catch {
+    return false;
+  }
 }
 
 export class JsonCheckpointStore implements CheckpointStore {
