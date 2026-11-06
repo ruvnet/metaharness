@@ -99,6 +99,17 @@ export function workflowYaml(spec: HarnessSpec): string {
   const permLines = Object.entries(perms).map(([k, v]) => `  ${k}: ${v}`);
   const cadence = spec.autonomous?.heartbeat?.cadence;
   const cronCadence = cadence && looksLikeCron(cadence) ? cadence.trim() : undefined;
+  // ADR-246 §2.2: `heartbeat.instruction` is a required sibling of a real
+  // `cadence` (kernel-js types.ts: `heartbeat?: { cadence: string;
+  // instruction: string }`) but was previously never read here — the cron
+  // trigger fired with no instruction reaching the harness, which on a
+  // schedule event (no comment body) otherwise resolves `task` to the bare
+  // literal `github.event_name` ("schedule"). Projected as an env var (not
+  // interpolated into a GHA expression) so an adversarial instruction string
+  // can't escape the YAML value the same way gateCommand/step-name already
+  // guard against — JSON.stringify closes it exactly like those sites.
+  const instruction = spec.autonomous?.heartbeat?.instruction;
+  const scheduledInstruction = cronCadence && instruction ? instruction : undefined;
   return [
     `# GitHub Actions harness: ${yamlCommentSafe(spec.name)}`,
     spec.description ? `# ${yamlCommentSafe(spec.description)}` : '# Autonomous agent harness — runs on the GitHub Actions runner.',
@@ -172,6 +183,15 @@ export function workflowYaml(spec: HarnessSpec): string {
     '          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}',
     '          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}',
     '          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}',
+    ...(scheduledInstruction
+      ? [
+          // ADR-246 §2.2: real projection of `autonomous.heartbeat.instruction`
+          // — read by the composite action's run step below whenever this
+          // run was the schedule trigger firing, so a cron-driven heartbeat
+          // carries real task content instead of the literal event name.
+          `          HEARTBEAT_INSTRUCTION: ${JSON.stringify(scheduledInstruction)}`,
+        ]
+      : []),
     '',
   ].join('\n');
 }
@@ -184,6 +204,9 @@ export function actionYaml(spec: HarnessSpec): string {
   const slug = ghaSlug(spec.name);
   const hasPrompt = !!spec.systemPrompt;
   const hasMcp = (spec.mcpServers?.length ?? 0) > 0;
+  const cadence = spec.autonomous?.heartbeat?.cadence;
+  const cronCadence = cadence && looksLikeCron(cadence) ? cadence.trim() : undefined;
+  const hasScheduledInstruction = !!(cronCadence && spec.autonomous?.heartbeat?.instruction);
   return [
     `# Composite action for the ${yamlCommentSafe(spec.name)} harness (ADR-033).`,
     '# Called by .github/workflows/' + slug + '.yml. Reusable across workflows.',
@@ -218,6 +241,17 @@ export function actionYaml(spec: HarnessSpec): string {
       '        # ADR-044: the harness system prompt ships next to the action.',
       '        export HARNESS_SYSTEM_PROMPT="$(cat "$GITHUB_ACTION_PATH/SYSTEM.md")"',
     ] : []),
+    ...(hasScheduledInstruction ? [
+      // ADR-246 §2.2: on the schedule trigger (no comment body, so $TASK
+      // is otherwise the bare event name) use the heartbeat's own
+      // instruction as the task instead. $GITHUB_EVENT_NAME is one of
+      // Actions' always-set default env vars; $HEARTBEAT_INSTRUCTION is
+      // set on the calling workflow step above and inherited here the
+      // same way $ANTHROPIC_API_KEY already is.
+      '        if [ "$GITHUB_EVENT_NAME" = "schedule" ] && [ -n "${HEARTBEAT_INSTRUCTION:-}" ]; then',
+      '          TASK="$HEARTBEAT_INSTRUCTION"',
+      '        fi',
+    ] : []),
     '        # Replace with your harness entrypoint. It MUST: read $TASK,',
     '        # complete autonomously, write a structured result to',
     '        # $GITHUB_OUTPUT as result=<json>, and exit 0 on success.',
@@ -237,8 +271,18 @@ export function installRunbook(spec: HarnessSpec): string {
   const cronCadence = cadence && looksLikeCron(cadence) ? cadence.trim() : undefined;
   const projected: string[] = [];
   const notProjected: string[] = [];
-  if (cronCadence) projected.push('`heartbeat.cadence` → a real `schedule:` cron trigger');
-  else if (autonomous?.heartbeat) notProjected.push('`heartbeat` (cadence is not a 5-field cron expression, so no real trigger could be emitted)');
+  if (cronCadence) {
+    projected.push('`heartbeat.cadence` → a real `schedule:` cron trigger');
+    if (autonomous?.heartbeat?.instruction) {
+      projected.push(
+        '`heartbeat.instruction` → the scheduled run\'s task input (used only when the triggering event is `schedule`; manual/issue-comment runs are unaffected)',
+      );
+    } else {
+      notProjected.push('`heartbeat.instruction` (empty — the scheduled run falls back to the bare event name as its task)');
+    }
+  } else if (autonomous?.heartbeat) {
+    notProjected.push('`heartbeat` (cadence is not a 5-field cron expression, so no real trigger could be emitted)');
+  }
   if (autonomous?.gateCommand) projected.push('`gateCommand` → a real pre-flight gating step (the job fails if it exits non-zero)');
   if (autonomous?.goal) notProjected.push('`goal` (no native goal/token-budget surface)');
   if (autonomous?.maxTurns !== undefined) notProjected.push('`maxTurns` (no native turn-budget surface)');
