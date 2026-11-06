@@ -156,4 +156,16 @@ describe('exporter — long-context filter', () => {
     ];
     expect(estimateTokens(withTool)).toBeGreaterThan(90); // ~400/4 + overhead
   });
+
+  it('REJECTS a NaN maxTokens (a malformed --max-tokens flag) instead of silently exporting 0 rows', () => {
+    // Number('abc') → NaN; NaN survives `options.maxTokens ?? DEFAULT`; every
+    // trajectory then looks "over budget" (`tokens <= NaN` is always false) and
+    // the export would silently yield 0 SFT/DPO rows at exit code 0.
+    expect(() => exportTrainingData(archive, { evalHoldout: [], maxTokens: NaN })).toThrow(/finite/i);
+  });
+
+  it('REJECTS a non-positive maxTokens (0 or negative)', () => {
+    expect(() => exportTrainingData(archive, { evalHoldout: [], maxTokens: 0 })).toThrow(/finite/i);
+    expect(() => exportTrainingData(archive, { evalHoldout: [], maxTokens: -1 })).toThrow(/finite/i);
+  });
 });
