@@ -20,6 +20,9 @@ describe('private package artifact', () => {
       : npmArguments;
     const { stdout } = await execute(npmExecutable, npmExecutableArguments, {
       cwd: packageRoot,
+      // A real npm subprocess can exceed Vitest's 5s unit default on Windows.
+      // Bound the child as well as the test so a hung pack cannot leak a process.
+      timeout: 20_000,
       maxBuffer: 10 * 1024 * 1024,
       windowsHide: true,
       env: {
@@ -44,7 +47,7 @@ describe('private package artifact', () => {
       'README.md',
       'LICENSE',
     ]));
-  });
+  }, 30_000);
 
   it('has no OpenAI SDK dependency or server-side model credential', async () => {
     const manifest = JSON.parse(await readFile(join(packageRoot, 'package.json'), 'utf8')) as {
