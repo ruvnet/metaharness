@@ -61,6 +61,37 @@ describe('inventory + analyzeFiles', () => {
     expect(p.testCommands.length).toBeGreaterThan(0); // the old, insufficient signal is still present
     expect(p.hasVerifiedTestFiles).toBe(false); // but no real test dir exists
   });
+
+  // Dream Cycle 2026-11-05: hasCi's regex matched the bare word "workflow"
+  // anywhere in README/package.json/Cargo.toml/pyproject.toml/CONTRIBUTING.md
+  // text, with zero real `.github/workflows` directory — a repo that merely
+  // describes its own *development* workflow in prose, with no CI and no
+  // tests, was read as CI-equipped, silently bypassing the hasVerifiedTestFiles
+  // hardening (2026-08-25/09-15/10-25) one layer up in resolveAgentTopology.
+  it('does not infer hasCi from generic "workflow" prose with no real CI', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'analyze-prose-workflow-'));
+    await writeFile(
+      join(dir, 'README.md'),
+      'Please follow our development workflow before opening a PR: branch, commit, review.',
+      'utf-8',
+    );
+    await writeFile(join(dir, 'package.json'), JSON.stringify({ name: 'x' }), 'utf-8');
+    const p = analyzeFiles('x', inventory(dir));
+    expect(p.hasCi).toBe(false);
+  });
+
+  it('still infers hasCi when a named CI system or the workflows path is mentioned in prose', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'analyze-prose-ci-named-'));
+    await writeFile(join(dir, 'README.md'), 'Builds run on GitHub Actions; see .github/workflows for the pipeline.', 'utf-8');
+    await writeFile(join(dir, 'package.json'), JSON.stringify({ name: 'x' }), 'utf-8');
+    const p = analyzeFiles('x', inventory(dir));
+    expect(p.hasCi).toBe(true);
+  });
+
+  it('a real .github/workflows/ci.yml file still sets hasCi regardless of prose', async () => {
+    const dir = await rustRepoDir();
+    expect(analyzeFiles('ruvector', inventory(dir)).hasCi).toBe(true);
+  });
 });
 
 describe('recommendPlan (lexical default)', () => {
