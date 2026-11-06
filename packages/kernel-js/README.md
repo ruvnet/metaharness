@@ -88,8 +88,9 @@ if (!mem) {
 - Not supported: RVF has no per-vector metadata yet (ruvector issue #704), so
   hits carry no `storedAt`, and `rankWithDecay` treats them all as age 0.
   `{ exact: true }` needs `@ruvector/rvf` 0.4.6 or later. Earlier versions ignore it.
-- Supported range: `@ruvector/rvf` `^0.3.0 || ^0.4.0`. On 0.2.3, deletes did not
-  survive a reopen.
+- Supported range: `@ruvector/rvf` `^0.3.0 || ^0.4.6`. On 0.2.3, deletes did not
+  survive a reopen. In the 0.4 line the floor is 0.4.6, which adds `forceExact` and the
+  filtered-HNSW recall fallback.
 
 Measured with `bench/memory-rvf-bench.mjs` on `@ruvector/rvf` 0.4.6 and Node 22.
 The data was seeded uniform random vectors with cosine distance. Each run used
@@ -97,7 +98,7 @@ The data was seeded uniform random vectors with cosine distance. Each run used
 store. The figures are medians of 5 runs (10k) and 3 runs (1k) on a shared,
 heavily loaded host, so the latencies are indicative only.
 
-| Set | recall@10 (HNSW) | recall p50 / p95 | exact scan p50 | `insert()` p50 / p95 | `insertBatch` per vector |
+| Set | recall@10 (HNSW, unfiltered, efSearch 100) | recall p50 / p95 | exact scan p50 | `insert()` p50 / p95 | `insertBatch` per vector |
 |---|---|---|---|---|---|
 | 1k × 128 | 1.000 | 0.11 ms / – | – | – | – |
 | 10k × 128 | 0.972 | 1.26 ms / 2.09 ms | 0.74 ms (recall 1.0) | 5.2 ms / 17.1 ms | 0.031 ms |

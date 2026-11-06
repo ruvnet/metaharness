@@ -33,7 +33,7 @@
 //     another process) opening the same namespace for writing fails with
 //     RVF LockHeld. Call `close()` to release it.
 //
-// RVF is an OPTIONAL peer dependency (^0.3.0 || ^0.4.0). When it is not
+// RVF is an OPTIONAL peer dependency (^0.3.0 || ^0.4.6). When it is not
 // installed, `createRvfBackend()` returns null and the caller keeps its
 // default in-process memory. When it IS installed but fails at use time
 // (native binding missing, lock held, dimension mismatch), the error is

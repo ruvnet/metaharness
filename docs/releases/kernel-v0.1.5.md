@@ -23,7 +23,7 @@ Behaviour changes:
 
 Not supported, because RVF cannot do it yet: per-vector metadata (ruvector issue #704). Hits carry no `storedAt`, so `rankWithDecay` cannot reorder RVF hits by age. `{ exact: true }` is passed through only by `@ruvector/rvf` 0.4.6 and later (rvf-node 0.4.1). Earlier versions ignore it, and search stays on HNSW.
 
-Peer range narrowed from `^0.2.0 || ^0.3.0 || ^0.4.0` to `^0.3.0 || ^0.4.0`. This is deliberate, one release after 0.1.4 widened it. The backend was probed against 0.2.3: deleting 1 of 200 vectors and reopening the file still reported 200, and per-vector metadata was accepted and silently dropped. 0.3.4 and 0.4.6 both keep the delete across a reopen and reject metadata explicitly.
+Peer range narrowed from `^0.2.0 || ^0.3.0 || ^0.4.0` to `^0.3.0 || ^0.4.6`. The 0.4 line starts at 0.4.6 (rvf-node 0.4.1), which adds `forceExact` and measures filtered-HNSW recall and falls back to an exact scan below 0.95. This is deliberate, one release after 0.1.4 widened it. The backend was probed against 0.2.3: deleting 1 of 200 vectors and reopening the file still reported 200, and per-vector metadata was accepted and silently dropped. 0.3.4 and 0.4.6 both keep the delete across a reopen and reject metadata explicitly.
 
 `@ruvector/rvf@^0.4.6` is now a devDependency of `packages/kernel-js`, so CI runs the real-import tests. Those tests store 600 vectors, reopen the store from disk, and check exact top-10 against brute force, HNSW recall, delete and upsert persistence, namespace isolation, input validation, the lock, and the fallback when rvf is absent.
 
@@ -33,7 +33,7 @@ Run with `node packages/kernel-js/bench/memory-rvf-bench.mjs N DIM 200` on `@ruv
 
 | Metric | 1k × 128 | 10k × 128 | 10k × 384 |
 | --- | --- | --- | --- |
-| recall@10, HNSW (efSearch 100) | 1.000 | 0.972 | 0.8745 |
+| recall@10, HNSW (unfiltered query, default efSearch 100, `forceExact` off) | 1.000 | 0.972 | 0.8745 |
 | recall@10, `exact: true` | | 1.000 | |
 | search p50 / p95 | 0.11 ms | 1.26 ms / 2.09 ms | |
 | exact search p50 | | 0.74 ms | |
