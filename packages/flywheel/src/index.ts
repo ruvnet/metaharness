@@ -14,6 +14,8 @@ export { makeSigner, verifyReceipt, canon, canonEquals } from './receipts.js';
 export { InMemoryLineageStore, computeLiftCurve, liftPoint } from './lineage.js';
 export { verifyReplayBundle } from './replay.js';
 export type { ReplayVerdict } from './replay.js';
+export { successPrioritizedReward, terminalOutcomesToScore, verifyTrajectoryRewrite, createVerifiedRewriteProposer } from './verified-rewrite.js';
+export type { TerminalOutcome, PublicRewriteTask, RewriteSession, VerifiedRewriteConfig, VerifiedRewriteResult } from './verified-rewrite.js';
 export { analyzeBundle, formatAnalysis } from './analyze.js';
 export type { BundleAnalysis, TargetStat } from './analyze.js';
 export { validateReplayBundle } from './validate-bundle.js';

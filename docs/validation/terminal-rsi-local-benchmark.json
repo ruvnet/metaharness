@@ -1,0 +1,11 @@
+{
+  "evidence": "LOCAL_ORCHESTRATION_ONLY",
+  "node": "v24.22.1",
+  "iterations": 2000,
+  "replaysPerIteration": 8,
+  "rewriteMicrosecondsPerIteration": 15.190930999999999,
+  "rewardAndScoreMicrosecondsPerIteration": 0.14217298999999997,
+  "rejectedReplaySessions": 1,
+  "fullReplaySessions": 8,
+  "avoidedReplayFraction": 0.875
+}
