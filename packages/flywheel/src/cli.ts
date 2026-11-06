@@ -23,8 +23,9 @@ const USAGE = [
   '',
   '  metaharness flywheel run <config.mjs> [--out bundle.json] [--generations N]',
   '      Run the loop. <config.mjs> default-exports a FlywheelConfig (your proposer/evaluator/suites).',
-  '  metaharness flywheel replay <proof-bundle.json> [--gate-fingerprint <hex>]',
-  '      Independently verify a bundle: receipts + lineage-to-root + (optional) frozen-gate fingerprint.',
+  '  metaharness flywheel replay <proof-bundle.json> [--gate-fingerprint <hex>] [--trusted-key <base64> ...]',
+  '      Independently verify a bundle: receipts + lineage-to-root + (optional) frozen-gate fingerprint',
+  '      + (optional, repeatable) signer allowlist — reject any receipt not signed by a --trusted-key.',
   '  metaharness flywheel graph <proof-bundle.json>',
   '      Print the promoted lineage chain and the compounding lift curve.',
   '  metaharness flywheel analyze <proof-bundle.json>',
@@ -48,13 +49,25 @@ function flag(args: string[], name: string): string | undefined {
   return i >= 0 ? args[i + 1] : undefined;
 }
 
+/** Collect every occurrence of a repeatable flag, e.g. `--trusted-key A --trusted-key B`. */
+function flagAll(args: string[], name: string): string[] {
+  const out: string[] = [];
+  for (let i = 0; i < args.length; i++) if (args[i] === name && args[i + 1] !== undefined) out.push(args[i + 1]!);
+  return out;
+}
+
 async function replay(args: string[]): Promise<CliResult> {
   const bundle = loadBundle(args[0]);
-  const v = verifyReplayBundle(bundle, { pinnedGateFingerprint: flag(args, '--gate-fingerprint') });
+  const trustedKeys = flagAll(args, '--trusted-key');
+  const v = verifyReplayBundle(bundle, {
+    pinnedGateFingerprint: flag(args, '--gate-fingerprint'),
+    ...(trustedKeys.length > 0 ? { trustedPublicKeys: trustedKeys } : {}),
+  });
   const lines = [
     `Replaying ${args[0]}  [data_source=${bundle.data_source}]`,
     `  chain:  ${v.chainSummary}`,
     `  receipts verify (Ed25519, embedded key): ${v.checks.receipts ? 'PASS' : 'FAIL'}`,
+    `  signer is on --trusted-key allowlist:     ${trustedKeys.length > 0 ? (v.checks.trustedSigner ? 'PASS' : 'FAIL') : 'skipped (no --trusted-key)'}`,
     `  reconstructs to gen-0 root:               ${v.checks.reachesRoot ? 'PASS' : 'FAIL'}`,
     `  each generation re-bases on the winner:   ${v.checks.contiguousParents ? 'PASS' : 'FAIL'}`,
     `  every chain node is a promotion:          ${v.checks.allPromoted ? 'PASS' : 'FAIL'}`,
