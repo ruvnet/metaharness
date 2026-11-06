@@ -183,7 +183,9 @@ function buildStoreFromA(aRows) {
     return { question: t.question, payload };
   });
   store = buildEpisodicStore(join(OUTDIR, 'episodic.rvf'), entries);
-  console.error(`[store] episodic memory built: ${entries.length} prior-attempt vectors (agenticow, leave-one-out recall)`);
+  console.error(store
+    ? `[store] episodic memory built: ${entries.length} prior-attempt vectors (agenticow, leave-one-out recall)`
+    : '[store] agenticow unavailable — episodic memory disabled (mem/memdecomp branches run without recall)');
 }
 
 // ════════════════════════════════════════════════════════════════════════════════════

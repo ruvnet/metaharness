@@ -67,6 +67,7 @@
   },
   "devDependencies": {
     "@metaharness/flywheel": "^0.1.1",
+    "agenticow": "^0.2.3",
     "typescript": "^5.4.0",
     "vitest": "^4.1.12"
   },
