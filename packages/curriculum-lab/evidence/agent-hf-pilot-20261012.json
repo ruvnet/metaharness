@@ -1,0 +1,72 @@
+{
+  "sourceCommit": "442a23e458a4340339079e063f73cd13f75b9bc0",
+  "decision": "INCONCLUSIVE_PROVIDER_403",
+  "evaluatedTrainingTasks": 0,
+  "completedLanes": 0,
+  "confirmationEvaluated": false,
+  "inferenceAttempts": 1,
+  "newReservationUsd": 0.01,
+  "knownTaskReservationsUsd": 0.03,
+  "billedCostUsd": null,
+  "estimatedInferenceUsd": null,
+  "readOnlyAuthProbe": {
+    "whoami": 200,
+    "models": 200
+  },
+  "executor": {
+    "status": "ok",
+    "exitCode": 0,
+    "completionVersion": 1,
+    "completionVerified": true,
+    "machineId": "85050dc77130e8"
+  },
+  "limits": "Valid account authentication and model listing do not prove inference authorization or provider availability. Original report's zero usage is missing usage, not zero billed cost. No learning result, no retry, no token rotation.",
+  "hostEvidenceDirectory": "/home/ruv/.ruos/validation/agent-hf-pilot-20261012",
+  "evidence": {
+    "report": {
+      "hash": "1a122d45e79dc0746807d72fe4f31091e10adc34987993c5f17d3255e4a43c7a",
+      "report": {
+        "baselineTraining": 0,
+        "billedUsd": null,
+        "calls": 1,
+        "comparisons": [],
+        "confirmationDenominator": 12,
+        "confirmationScores": {},
+        "decision": "INCONCLUSIVE",
+        "effectiveThinkingVerified": false,
+        "error": "pilot_incomplete_no_retry",
+        "estimatedInferenceUsd": 0,
+        "infrastructureCostUsd": null,
+        "model": "openai/gpt-oss-120b:groq",
+        "modelRevision": null,
+        "planHash": "b1b35fbe829c7182bd9c6b1e3cde738a96efe9c7a2d20482089dee868a6087f8",
+        "promote": false,
+        "providerFailures": 1,
+        "reservedUsd": 0.01,
+        "rsi": "NOT_ESTABLISHED",
+        "seconds": 0.1471457200000259,
+        "signed": false,
+        "trainingDenominator": 6,
+        "usage": {
+          "completion_tokens": 0,
+          "prompt_tokens": 0,
+          "total_tokens": 0
+        }
+      }
+    },
+    "provider": {
+      "status": "INCONCLUSIVE",
+      "reason": "provider_http_403",
+      "requestHash": "e8836e1ab67f1939799855de8d7320d804271308d23e1121479680d2bcedd5ce",
+      "latencySeconds": 0.1456033890000299
+    },
+    "fileHashes": {
+      "frozen.json": "8db470187b5a12ef86cb63495987d0aed18f63cd4a0d2fce0c94dcf74c20b7df",
+      "run.intent.json": "a9dd0d090813e90a93441db2116e8d077295bdcbc5b72fafed1bb978550b83bd",
+      "000.intent.json": "2645f592226f45c42339377400d22f2fd07d958482b10d7381a05823a415c227",
+      "report.json": "8d7b71b9a250014bebf19fede6fd87f0baa495b1892e6f30a93b4e25f2528cea",
+      "confirmation.json": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+      "000.receipt.json": "5f35d1a697334d0a7b4d626919df3c15f1e4caa4498b933618fa127d471bbad0"
+    }
+  }
+}

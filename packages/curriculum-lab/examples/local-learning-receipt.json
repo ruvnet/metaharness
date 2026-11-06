@@ -1,0 +1,59 @@
+{
+  "experiment": "synthetic_cpu_policy_gradient_smoke",
+  "rows": [
+    {
+      "seed": 7,
+      "untrained": 0.5,
+      "fixed": 1.0,
+      "curriculum": 1.0,
+      "updatesPerArm": 3600,
+      "fixedWeights": [
+        -1.0885070896978393,
+        5.623437942261624
+      ],
+      "curriculumWeights": [
+        -1.0958859374290826,
+        5.654365823620871
+      ]
+    },
+    {
+      "seed": 19,
+      "untrained": 0.502,
+      "fixed": 1.0,
+      "curriculum": 1.0,
+      "updatesPerArm": 3600,
+      "fixedWeights": [
+        -0.9503870868309224,
+        5.632908429963356
+      ],
+      "curriculumWeights": [
+        -0.9503898173631555,
+        5.626835443605734
+      ]
+    },
+    {
+      "seed": 31,
+      "untrained": 0.476,
+      "fixed": 1.0,
+      "curriculum": 1.0,
+      "updatesPerArm": 3600,
+      "fixedWeights": [
+        -1.1437350964495476,
+        5.779530386005085
+      ],
+      "curriculumWeights": [
+        -1.157178410220411,
+        5.846550566065848
+      ]
+    }
+  ],
+  "handAuthoredOracleAccuracy": 1.0,
+  "model": "two-parameter logistic policy",
+  "curriculum": "hand-authored, not learned",
+  "externalCalls": 0,
+  "providerCostUsd": 0,
+  "rsiVerdict": "NOT_ESTABLISHED",
+  "arenaTransfer": "UNMEASURED",
+  "promote": false,
+  "receiptHash": "b8ad8d51064586b0a932cce7dce49672ac12fdcde6b4dc7cf30542abeeb0ef34"
+}
