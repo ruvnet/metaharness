@@ -24,11 +24,11 @@
     "@types/express": "^4.17.21",
     "@types/node": "^20.11.0",
     "@types/supertest": "^6.0.2",
-    "@vitest/coverage-v8": "^2.0.0",
+    "@vitest/coverage-v8": "^4.1.12",
     "supertest": "^7.0.0",
     "tsx": "^4.7.0",
     "typescript": "^5.4.0",
-    "vitest": "^2.0.0"
+    "vitest": "^4.1.12"
   },
   "comments": {
     "deferred-deps": "Wired during Phase-1 implementation (kept out of the skeleton to keep install fast + green): firebase-admin (Firestore api_keys/usage_ledger), @google-cloud/pubsub (completions-usage), js-tiktoken + per-family tokenizers (§5.1 progressive billing floor). @midstream/wasm is a FUTURE optionalDependency (404 on npm today — §3.5) loaded via the dynamic-import firewall in src/midstream/firewall.ts, never declared as a hard dep."
