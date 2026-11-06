@@ -1,17 +1,23 @@
-name: Dream release
+name: Release
+# Per-package npm release with provenance. Tag a merged main commit with
+#   <package>-vX.Y.Z   e.g. metaharness-v0.4.21, darwin-v0.13.1, sdk-v0.1.2
+# where <package> is a packages/<dir> name, an npm name, or an @metaharness/<name>
+# short name. Only that package is packed, smoke-tested, published and verified.
+# dream-vX.Y.Z keeps the original four-package Dream set (sdk, flywheel, agntcy,
+# metaharness) and checks the version against metaharness.
 on:
   push:
-    tags: ['dream-v*.*.*']
+    tags: ['*-v[0-9]+.[0-9]+.[0-9]+']
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Merged Dream release tag (dream-vX.Y.Z)'
+        description: 'Existing release tag on main: <package>-vX.Y.Z (or dream-vX.Y.Z)'
         required: true
         type: string
 permissions:
   contents: read
 concurrency:
-  group: dream-release
+  group: release-${{ inputs.tag || github.ref_name }}
   cancel-in-progress: false
 jobs:
   release:
@@ -30,14 +36,44 @@ jobs:
           ref: ${{ inputs.tag || github.ref_name }}
           fetch-depth: 0
           persist-credentials: false
+      - name: Resolve the tagged package
+        id: pkg
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^([a-z0-9][a-z0-9._-]*)-v([0-9]+\.[0-9]+\.[0-9]+)$ ]] || { echo "::error::tag must be <package>-vX.Y.Z"; exit 1; }
+          prefix="${BASH_REMATCH[1]}" version="${BASH_REMATCH[2]}"
+          if [[ "$prefix" == dream ]]; then
+            dirs="sdk flywheel agntcy create-agent-harness" primary=create-agent-harness
+          else
+            primary="$(PREFIX="$prefix" node --input-type=module -e "
+              import { readdirSync, readFileSync, existsSync } from 'node:fs';
+              const p = process.env.PREFIX;
+              const hits = readdirSync('packages').filter(d => existsSync('packages/'+d+'/package.json')).filter(d => {
+                const n = JSON.parse(readFileSync('packages/'+d+'/package.json', 'utf8')).name;
+                return d === p || n === p || n === '@metaharness/' + p;
+              });
+              if (hits.length !== 1) throw new Error('tag prefix ' + p + ' matches ' + hits.length + ' packages');
+              console.log(hits[0]);")"
+            dirs="$primary"
+          fi
+          PRIMARY="$primary" VERSION="$version" node --input-type=module -e "
+            import { readFileSync } from 'node:fs';
+            const p = JSON.parse(readFileSync('packages/' + process.env.PRIMARY + '/package.json', 'utf8'));
+            if (p.private) throw new Error(p.name + ' is private');
+            if (p.version !== process.env.VERSION) throw new Error('tag/package version mismatch: ' + p.name + '@' + p.version);"
+          test -f "docs/releases/$RELEASE_TAG.md" || { echo "::error::missing docs/releases/$RELEASE_TAG.md"; exit 1; }
+          echo "dirs=$dirs" >> "$GITHUB_OUTPUT"
+          echo "dream=$([[ "$prefix" == dream ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          if [[ "$prefix" == dream ]]; then title="MetaHarness $version — Dream integration and security fixes"
+          else title="$(node -p "require('./packages/$primary/package.json').name")@$version"; fi
+          echo "title=$title" >> "$GITHUB_OUTPUT"
       - name: Verify merged source and exact-SHA CI
         shell: bash
         run: |
           set -euo pipefail
-          [[ "$RELEASE_TAG" =~ ^dream-v[0-9]+\.[0-9]+\.[0-9]+$ ]]
           test "$(git rev-parse HEAD)" = "$(git rev-parse "$RELEASE_TAG^{commit}")"
           git merge-base --is-ancestor HEAD origin/main
-          node --input-type=module -e "import {readFileSync} from 'node:fs'; const p=JSON.parse(readFileSync('packages/create-agent-harness/package.json')); if(process.env.RELEASE_TAG !== 'dream-v'+p.version) throw Error('tag/package version mismatch');"
           for workflow in ci.yml security.yml; do
             conclusion=$(gh run list --workflow "$workflow" --commit "$(git rev-parse HEAD)" --event push --limit 1 --json conclusion --jq '.[0].conclusion')
             test "$conclusion" = success
@@ -48,6 +84,8 @@ jobs:
           node-version: '22'
           registry-url: https://registry.npmjs.org
       - name: Build, test, audit, and seal packages
+        env:
+          RELEASE_PACKAGES: ${{ steps.pkg.outputs.dirs }}
         run: |
           npm ci --ignore-scripts
           npm run build
@@ -56,7 +94,7 @@ jobs:
           npm audit --audit-level=moderate
           node scripts/dream-release.mjs pack
           node scripts/dream-release.mjs smoke
-          node bench/dream/canonicalization.mjs > dist-release/benchmark.json
+          if [ "${{ steps.pkg.outputs.dream }}" = true ]; then node bench/dream/canonicalization.mjs > dist-release/benchmark.json; fi
       - uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed
         with:
           workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
@@ -66,17 +104,21 @@ jobs:
         with:
           secrets: |-
             npm_token:${{ vars.GCP_PROJECT_ID }}/NPM_TOKEN
-      - name: Publish sealed npm artifacts and verify public bytes
+      - name: Publish sealed npm artifacts with provenance and verify public bytes
         run: node scripts/dream-release.mjs publish
         env:
+          RELEASE_PACKAGES: ${{ steps.pkg.outputs.dirs }}
           NODE_AUTH_TOKEN: ${{ steps.secrets.outputs.npm_token }}
       - name: Create GitHub release and verify downloaded artifacts
         shell: bash
+        env:
+          RELEASE_TITLE: ${{ steps.pkg.outputs.title }}
         run: |
           set -euo pipefail
-          gh release create "$RELEASE_TAG" --verify-tag --title "MetaHarness ${RELEASE_TAG#dream-v} — Dream integration and security fixes" --notes-file "docs/releases/$RELEASE_TAG.md" dist-release/*.tgz dist-release/dream-artifacts.json dist-release/benchmark.json
-          mkdir -p /tmp/dream-public
-          gh release download "$RELEASE_TAG" --dir /tmp/dream-public
+          gh release create "$RELEASE_TAG" --verify-tag --title "$RELEASE_TITLE" --notes-file "docs/releases/$RELEASE_TAG.md" dist-release/*.tgz dist-release/*.json
+          public="$RUNNER_TEMP/release-public"
+          mkdir -p "$public"
+          gh release download "$RELEASE_TAG" --dir "$public"
           for artifact in dist-release/*.tgz dist-release/dream-artifacts.json; do
-            cmp "$artifact" "/tmp/dream-public/$(basename "$artifact")"
+            cmp "$artifact" "$public/$(basename "$artifact")"
           done
