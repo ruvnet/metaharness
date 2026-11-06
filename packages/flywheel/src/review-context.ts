@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 
-import { canon } from './receipts.js';
+import { canon, verifyReceipt } from './receipts.js';
+import type { PromotionReceipt, Signer } from './types.js';
 
 export const REVIEW_CONTEXT_POLICY = 'independent-review-v1' as const;
 export const REVIEW_CONTEXT_AUTHORITY = 'none' as const;
@@ -68,6 +69,21 @@ export interface ReviewPacketExpectation {
 export interface ReviewPacketVerdict {
   ok: boolean;
   reason: string;
+}
+
+/**
+ * Binds an {@link IndependentReviewPacket} to a producer identity via the package's existing
+ * Ed25519 receipt infra (`receipts.ts`), the same pattern `multigeneration-proof.ts`'s
+ * `ReviewerAttestation`/`validAttestation` already uses for reviewer verdicts. Entirely additive:
+ * `prepareIndependentReviewPacket`/`verifyIndependentReviewPacket` are unchanged and remain valid
+ * on their own — `packetDigest` alone proves the packet wasn't mutated after hashing, never who
+ * minted it (see ADR-317's "Trust boundary" section, which discloses this outright: "Anyone can
+ * mint a packet that verifies"). A caller that wants producer authenticity, not just tamper
+ * detection, uses this layer on top.
+ */
+export interface ReviewPacketReceipt {
+  producerId: string;
+  receipt: PromotionReceipt;
 }
 
 const INPUT_KEYS = new Set([
@@ -316,5 +332,67 @@ export function verifyIndependentReviewPacket(
     return { ok: true, reason: 'ok' };
   } catch (error) {
     return { ok: false, reason: error instanceof Error ? error.message : 'invalid packet' };
+  }
+}
+
+/** The exact bytes a producer signs and a verifier re-derives — binds the receipt to THIS packet's
+ *  digest and to the claimed producer identity, so a receipt cannot be replayed onto a different
+ *  packet or claimed by a different producer than the one the signing key actually belongs to. */
+function reviewPacketSignedPayload(packetDigest: string, producerId: string): Record<string, unknown> {
+  return { kind: 'independent-review-packet' as const, packetDigest, producerId };
+}
+
+/** Sign an already-built packet, attesting a producer identity with the package's standard
+ *  per-process {@link Signer} (`receipts.ts#makeSigner`, or any HSM/secret-backed equivalent). */
+export function signIndependentReviewPacket(
+  packet: IndependentReviewPacket,
+  producerId: string,
+  signer: Signer,
+): ReviewPacketReceipt {
+  const id = requireToken(producerId, 'producerId');
+  return { producerId: id, receipt: signer.sign(reviewPacketSignedPayload(packet.packetDigest, id)) };
+}
+
+/**
+ * Verify BOTH the packet (structure, freshness, expected bindings — see
+ * {@link verifyIndependentReviewPacket}) AND that it was signed by a trusted producer: the
+ * receipt's embedded signature must verify, its public key must match the caller-supplied
+ * `trustedProducerKeys[producerId]` (a producer cannot claim a trusted id while signing with an
+ * untrusted/unknown key), and the signed payload must bind to THIS packet's digest. Fails closed
+ * on any missing, mistyped, or mismatched field rather than skipping the check.
+ */
+export function verifyIndependentReviewReceipt(
+  packet: unknown,
+  packetReceipt: ReviewPacketReceipt,
+  expected: ReviewPacketExpectation,
+  trustedProducerKeys: Readonly<Record<string, string>>,
+  now: string | Date = new Date(),
+): ReviewPacketVerdict {
+  const base = verifyIndependentReviewPacket(packet, expected, now);
+  if (!base.ok) return base;
+  try {
+    if (
+      packetReceipt === null ||
+      typeof packetReceipt !== 'object' ||
+      typeof packetReceipt.producerId !== 'string' ||
+      typeof packetReceipt.receipt !== 'object' ||
+      packetReceipt.receipt === null
+    ) {
+      return { ok: false, reason: 'malformed packet receipt' };
+    }
+    const producerId = requireToken(packetReceipt.producerId, 'producerId');
+    const trustedKey = trustedProducerKeys[producerId];
+    if (!trustedKey) return { ok: false, reason: 'unknown producer id' };
+    if (trustedKey !== packetReceipt.receipt.publicKey) return { ok: false, reason: 'producer key mismatch' };
+    if (!verifyReceipt(packetReceipt.receipt)) return { ok: false, reason: 'invalid receipt signature' };
+
+    const packetDigest = (packet as { packetDigest: string }).packetDigest;
+    const expectedPayload = reviewPacketSignedPayload(packetDigest, producerId);
+    if (canon(packetReceipt.receipt.payload) !== canon(expectedPayload)) {
+      return { ok: false, reason: 'receipt payload mismatch' };
+    }
+    return { ok: true, reason: 'ok' };
+  } catch (error) {
+    return { ok: false, reason: error instanceof Error ? error.message : 'invalid packet receipt' };
   }
 }

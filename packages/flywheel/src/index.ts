@@ -24,6 +24,8 @@ export {
   REVIEW_EVIDENCE_KINDS,
   prepareIndependentReviewPacket,
   verifyIndependentReviewPacket,
+  signIndependentReviewPacket,
+  verifyIndependentReviewReceipt,
 } from './review-context.js';
 export type {
   IndependentReviewInput,
@@ -31,6 +33,7 @@ export type {
   ReviewEvidenceKind,
   ReviewEvidenceRef,
   ReviewPacketExpectation,
+  ReviewPacketReceipt,
   ReviewPacketVerdict,
   ReviewRole,
 } from './review-context.js';
