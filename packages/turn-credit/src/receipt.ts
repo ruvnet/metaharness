@@ -7,14 +7,39 @@
 import { createHash } from 'node:crypto';
 import type { TrajectoryCredit } from './types.js';
 
+/** No payload this module canonicalizes nests deeper than a handful of levels. Mirrors
+ *  `@metaharness/flywheel`'s `receipts.ts` `MAX_CANON_DEPTH` hardening (2026-10-16). */
+const MAX_CANON_DEPTH = 64;
+
 /** Deterministic, sorted-key JSON canonicalization — the exact bytes digested.
  *  (Same algorithm as the flywheel's `canon`; duplicated locally so this package
- *  stays dependency-free and phase-1.) */
-export function canon(v: unknown): string {
+ *  stays dependency-free and phase-1.) Non-finite numbers (NaN/Infinity/-Infinity) are rejected
+ *  rather than silently collapsed to the same `"null"` JSON.stringify produces for all three —
+ *  mirrors `flywheel/receipts.ts`'s 2026-10-21 hardening: this digest is the audit trail a
+ *  tamper-evident credit receipt is checked against, so that collision could otherwise let a
+ *  tampered numeric field escape detection. */
+export function canon(v: unknown, depth = 0): string {
+  if (depth > MAX_CANON_DEPTH) {
+    throw new Error(`canon: value exceeds max nesting depth (${MAX_CANON_DEPTH}) — refusing to canonicalize`);
+  }
+  if (typeof v === 'number' && !Number.isFinite(v)) {
+    throw new Error('canon: non-finite numbers cannot be represented in signed JSON');
+  }
   if (v === null || typeof v !== 'object') return JSON.stringify(v);
-  if (Array.isArray(v)) return `[${v.map(canon).join(',')}]`;
+  if (Array.isArray(v)) return `[${v.map((x) => canon(x, depth + 1)).join(',')}]`;
   const o = v as Record<string, unknown>;
-  return `{${Object.keys(o).sort().map((k) => `${JSON.stringify(k)}:${canon(o[k])}`).join(',')}}`;
+  return `{${Object.keys(o).sort().map((k) => `${JSON.stringify(k)}:${canon(o[k], depth + 1)}`).join(',')}}`;
+}
+
+/** `canon(a) === canon(b)`, except a value that cannot be safely canonicalized (too deep, or
+ *  carrying a non-finite number) counts as NOT equal rather than throwing. Mirrors
+ *  `flywheel/receipts.ts`'s `canonEquals`. */
+export function canonEquals(a: unknown, b: unknown): boolean {
+  try {
+    return canon(a) === canon(b);
+  } catch {
+    return false;
+  }
 }
 
 export function digest(v: unknown): string {

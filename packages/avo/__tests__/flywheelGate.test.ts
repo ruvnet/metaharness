@@ -7,6 +7,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createHash, createPublicKey, verify as edVerify } from 'node:crypto';
 import {
   canon,
+  canonEquals,
   meetsPromotionRule,
   receiptsToGateInput,
   generateGateSigner,
@@ -16,6 +17,12 @@ import {
   type SignedReceipt,
   type GateInput,
 } from '../src/flywheelGate.js';
+
+function deepNest(n: number): unknown {
+  let o: unknown = { leaf: true };
+  for (let i = 0; i < n; i++) o = { next: o };
+  return o;
+}
 
 /** Verify a receipt exactly as the meta-llm gate's `receiptValid` does. */
 function receiptValid(r: SignedReceipt): boolean {
@@ -135,5 +142,59 @@ describe('ADR-271 — submitToFlywheelGate', () => {
     const fetchImpl = vi.fn(async () => new Response('forbidden', { status: 403 })) as unknown as typeof fetch;
     await expect(submitToFlywheelGate(gi as GateInput, { baseUrl: 'https://api.example.test', apiKey: 'bad', fetchImpl }))
       .rejects.toThrow(/flywheel gate 403/);
+  });
+});
+
+// Dream Cycle 2026-10-26 — this `canon()` is an "exact mirror" of the gate's (see module doc comment
+// above) and, until tonight, had neither hardening `@metaharness/flywheel`'s own `receipts.ts` shipped
+// on 2026-10-16 (depth bound) and 2026-10-21 (non-finite rejection). Disclosed-not-fixed in the
+// 2026-10-21 ledger row; closed here. Every case below proves the FIX (a clean rejection feeding real
+// `edSign`/`sha256hex` call sites), not just "didn't crash."
+describe('canon() — ported hardening (recursion depth + non-finite numbers)', () => {
+  it('canonicalizes normal, shallow values exactly as before (byte-identical)', () => {
+    expect(canon({ b: 2, a: 1 })).toBe('{"a":1,"b":2}');
+    expect(canon([1, 2, { a: 1 }])).toBe('[1,2,{"a":1}]');
+  });
+
+  it('still canonicalizes a reasonably-nested value (well under the bound), deterministically', () => {
+    expect(canon(deepNest(20))).toBe(canon(deepNest(20)));
+  });
+
+  it('throws a clear, bounded Error — not a native stack overflow — past the depth limit', () => {
+    expect(() => canon(deepNest(100_000))).toThrow(/exceeds max nesting depth/);
+  });
+
+  it('rejects NaN/Infinity/-Infinity instead of collapsing them to the same string as null', () => {
+    expect(() => canon(NaN)).toThrow(/non-finite/);
+    expect(() => canon(Infinity)).toThrow(/non-finite/);
+    expect(() => canon(-Infinity)).toThrow(/non-finite/);
+    // Pre-fix, all three of these (plus `null`) canonicalized to the identical `"null"` — a forged
+    // field could swap in NaN/Infinity for a legitimate null and still verify.
+  });
+
+  it('a non-finite field nested inside a signed-shaped payload is rejected the same way', () => {
+    expect(() => canon({ candidateGold: NaN, reasons: ['gold_regressed'] })).toThrow(/non-finite/);
+  });
+
+  it('canonEquals() is fail-closed: a value that cannot be canonicalized counts as NOT equal, never throws', () => {
+    expect(canonEquals({ a: 1 }, { a: 1 })).toBe(true);
+    expect(canonEquals({ a: 1 }, { a: 2 })).toBe(false);
+    expect(canonEquals({ a: NaN }, { a: null })).toBe(false); // the exact collision this fix closes
+    expect(canonEquals(deepNest(100_000), { a: 1 })).toBe(false);
+  });
+
+  it('a tampered NaN field cannot forge a receipt previously signed over a legitimate null value', () => {
+    // Pre-fix: canon({ v: NaN }) === canon({ v: null }) === '{"v":null}', so a signature over the
+    // null-valued payload would also verify over the NaN-valued one — the exact bypass this closes.
+    expect(() => canon({ v: NaN })).toThrow(/non-finite/);
+    expect(canon({ v: null })).toBe('{"v":null}');
+  });
+
+  it('manifest-hash binding (sha256hex(canon(manifest))) rejects a non-finite field instead of hashing a collided string', () => {
+    const gi = receiptsToGateInput(promoteSummary, generateGateSigner());
+    // The real call site (receiptsToGateInput → sha256hex(canon(baseline_manifest))) only ever sees
+    // finite fields today; this proves the choke point itself, independent of that caller, fails
+    // closed rather than silently hashing a NaN/null-collided string if a future caller passed one.
+    expect(() => canon({ ...gi.baseline_manifest, poisoned: NaN })).toThrow(/non-finite/);
   });
 });
