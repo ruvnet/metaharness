@@ -77,7 +77,14 @@ export function pairedOutcomesFromItemWins(baseline: Score, candidate: Score): P
   // An empty pairing (a zero-item suite, or `itemWins: []` on both sides) carries no per-item evidence;
   // returning `[]` would make `withSequentialEvidence` evaluate zero pairs (eValue 1 < threshold) and
   // reject every candidate. Treat it as "no pairing" so the rule degrades to its base rule.
-  if (!bw || !cw || bw.length === 0 || bw.length !== cw.length) return undefined;
+  //
+  // `Score.itemWins` is only a TypeScript type — nothing enforces it at runtime for a live Evaluator's
+  // return value or an untrusted `ReplayBundle` parsed from JSON. A non-array value that happens to carry
+  // a matching `.length` (a string is the simplest real case) passed the length-only guard below and then
+  // crashed on `.map` — `verifyReplayBundle` (replay.ts) calls this with no try/catch and must, per its
+  // own documented contract, always return a structured verdict and never throw. `Array.isArray` closes
+  // that without narrowing the honest `boolean[]` case at all.
+  if (!Array.isArray(bw) || !Array.isArray(cw) || bw.length === 0 || bw.length !== cw.length) return undefined;
   return bw.map((baselineWon, i) => ({ itemId: String(i), candidateWon: cw[i]!, baselineWon }));
 }
 
