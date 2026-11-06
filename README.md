@@ -47,6 +47,16 @@
 
 The model is replaceable. The harness is the product.
 
+<!-- ecosystem-cta:start -->
+### Explore the wider ecosystem
+
+[![MetaHarness: explore Cognitum One. Conceptual project-to-destination animation.](docs/assets/visuals/ecosystem-cta.svg)](https://cognitum.one/)
+
+Building a custom harness? Explore Cognitum One and ruOS.
+
+**[Explore Cognitum One](https://cognitum.one/) · [Try ruOS](https://ruos.cognitum.one/)**, an agentic desktop in your browser.
+<!-- ecosystem-cta:end -->
+
 ## What it gives you
 
 In under 60 seconds, in your browser, with nothing leaving your machine:
