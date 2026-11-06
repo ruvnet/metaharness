@@ -68,10 +68,28 @@ export function buildRepoScorecard(dir: string, generatedAt: string = new Date()
 
   // Compile confidence — signals a generated harness will build/run cleanly:
   // a detected language is the floor; build + test commands + CI raise it.
+  //
+  // Dream Cycle 2026-10-15 (generator-genome): the test-command term used to
+  // credit `profile.testCommands.length > 0` directly — but testCommands is
+  // inferred purely from language/manifest presence (e.g. any repo with a
+  // `pyproject.toml` unconditionally gets 'pytest' pushed in, with zero
+  // actual test files on disk). That's the exact "manifest implies tests"
+  // shortcut Dream Cycle 2026-08-25 (#229) already closed for the sibling
+  // `genome-scorers.ts::scoreTestConfidence` (gated on real directory
+  // evidence, `profile.hasVerifiedTestFiles`) and that `score.ts`'s sibling
+  // `scoreTestCoverage` avoids via a real `dirExists('tests'/...)` check —
+  // this was the one scorer in the family still on the unverified shortcut.
+  // Now requires either real verified test files OR an authored `npm test`
+  // script (a human-written signal, not inferred) — the same carve-out
+  // genome-scorers.ts's `resolveAgentTopology()` already applies via its own
+  // `authoredTestScript` check (genome-scorers.ts:63), extended here to
+  // `compileConfidence` specifically (scoreTestConfidence itself has no such
+  // carve-out — it is strictly `hasVerifiedTestFiles`-gated).
+  const hasRealTestSignal = profile.hasVerifiedTestFiles || profile.testCommands.includes('npm test');
   const compileConfidence = clamp100(
     (profile.languages.length ? 40 : 12) +
       (profile.buildCommands.length ? 25 : 0) +
-      (profile.testCommands.length ? 25 : 0) +
+      (hasRealTestSignal ? 25 : 0) +
       (profile.hasCi ? 10 : 0),
   );
 

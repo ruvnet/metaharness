@@ -105,6 +105,50 @@ describe('toolSafety actually differentiates MCP exposure (Dream Cycle 2026-09-1
   });
 });
 
+// Dream Cycle 2026-10-15 (generator-genome): before this fix, the test-command
+// term of compileConfidence credited `profile.testCommands.length > 0`
+// directly — but testCommands is populated purely from language/manifest
+// detection (analyze-repo.ts), independent of whether any test file exists on
+// disk. A repo with a test-capable manifest and ZERO real test files scored
+// the same 25-pt credit as a repo with real, verified tests.
+describe('compileConfidence requires real test evidence, not just a test-capable manifest (Dream Cycle 2026-10-15)', () => {
+  function fixture(opts: { name: string; manifest: string; content: string; withTestDir?: boolean; npmTestScript?: boolean }): string {
+    const dir = mkdtempSync(join(tmpdir(), `sc-compileconf-${opts.name}-`));
+    writeFileSync(join(dir, opts.manifest), opts.content);
+    writeFileSync(join(dir, 'README.md'), `# ${opts.name}\nA small library.\n`);
+    if (opts.npmTestScript) {
+      // a real, human-authored npm build+test script — the authoredTestScript
+      // carve-out genome-scorers.ts already applies.
+      writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: opts.name, scripts: { build: 'tsc', test: 'vitest run' } }));
+    }
+    if (opts.withTestDir) {
+      mkdirSync(join(dir, 'tests'), { recursive: true });
+      writeFileSync(join(dir, 'tests', 'test_x.py'), 'def test_x():\n    assert True\n');
+    }
+    return dir;
+  }
+
+  it('BUG REPRO: a manifest-only Python repo with ZERO real test files no longer gets full test-signal credit', () => {
+    const dir = fixture({ name: 'py-no-tests', manifest: 'pyproject.toml', content: '[project]\nname = "x"\n' });
+    const sc = buildRepoScorecard(dir, 'x');
+    // Pre-fix this was 90 (40 language + 25 build + 25 UNVERIFIED testCommands + 0 CI).
+    // Post-fix: the 25-pt test term requires real evidence, so it drops to 65.
+    expect(sc.compileConfidence).toBe(65);
+  });
+
+  it('a Python repo with a REAL tests/ directory still earns full test-signal credit', () => {
+    const dir = fixture({ name: 'py-with-tests', manifest: 'pyproject.toml', content: '[project]\nname = "x"\n', withTestDir: true });
+    const sc = buildRepoScorecard(dir, 'x');
+    expect(sc.compileConfidence).toBe(90);
+  });
+
+  it('an authored `npm test` script counts as real signal even without a tests/ dir (parity with genome-scorers.ts)', () => {
+    const dir = fixture({ name: 'ts-npm-test', manifest: 'tsconfig.json', content: '{}', npmTestScript: true });
+    const sc = buildRepoScorecard(dir, 'x');
+    expect(sc.compileConfidence).toBe(90);
+  });
+});
+
 describe('taskCoverage measures the repo, not the template (#171)', () => {
   let empty: string;
   let real: string;
