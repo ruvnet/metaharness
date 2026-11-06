@@ -82,16 +82,22 @@ if (mode === 'pack') {
     let response = await fetch(metadataUrl);
     if (response.status === 404) {
       run(npm, ['publish', path, '--provenance', '--access', 'public', '--ignore-scripts']);
-      for (let attempt = 0; attempt < 12; attempt++) {
-        response = await fetch(metadataUrl);
+      // npm may stage the publish for several minutes, and the registry CDN caches the
+      // 404s from this polling for up to 300 s, so poll for up to 15 minutes.
+      for (let attempt = 0; attempt < 90; attempt++) {
+        response = await fetch(metadataUrl, { headers: { 'cache-control': 'no-cache' } });
         if (response.ok) break;
-        await new Promise(r => setTimeout(r, 5000));
+        await new Promise(r => setTimeout(r, 10000));
       }
     }
     assert(response.ok, `${a.name}: registry metadata HTTP ${response.status}`);
     const metadata = await response.json();
-    const download = await fetch(metadata.dist.tarball);
-    assert(download.ok, `${a.name}: tarball download failed`);
+    let download = await fetch(metadata.dist.tarball);
+    for (let attempt = 0; !download.ok && attempt < 40; attempt++) {
+      await new Promise(r => setTimeout(r, 15000));
+      download = await fetch(metadata.dist.tarball, { headers: { 'cache-control': 'no-cache' } });
+    }
+    assert(download.ok, `${a.name}: tarball download failed (HTTP ${download.status})`);
     assert.equal(hash(Buffer.from(await download.arrayBuffer())), a.sha256, `${a.name}: public bytes differ`);
     console.log(`${a.name}@${a.version}: published bytes verified (${a.sha256})`);
   }
