@@ -1,8 +1,9 @@
 name: Publish
 
 on:
-  push:
-    tags: ['v*.*.*']
+  # Tag pushes no longer publish from here: a v* tag used to release every package in
+  # scripts/publish-workspace.mjs at once. Per-package releases (with provenance) use
+  # dream-release.yml ("Release") via <package>-vX.Y.Z tags. This full-set path is manual only.
   workflow_dispatch:
     inputs:
       tag:

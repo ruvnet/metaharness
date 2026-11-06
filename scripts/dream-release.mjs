@@ -1,4 +1,9 @@
-// Exact-artifact release for the Dream integration's public packages.
+// Exact-artifact npm release: pack once, smoke-test the installed tarballs, publish
+// those exact bytes with npm provenance, then verify the public bytes.
+//
+// RELEASE_PACKAGES selects the packages/<dir> set (space separated). It defaults to
+// the Dream set so `dream-vX.Y.Z` tags keep their four-package behaviour; per-package
+// tags (`<package>-vX.Y.Z`) pass a single directory from the release workflow.
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
@@ -12,50 +17,62 @@ const run = (command, args, cwd = root) => execFileSync(command, args, { cwd, en
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const mode = process.argv[2] ?? 'pack';
 const manifestPath = join(out, 'dream-artifacts.json');
-const packages = ['sdk', 'flywheel', 'agntcy', 'create-agent-harness'];
+export const DREAM_PACKAGES = ['sdk', 'flywheel', 'agntcy', 'create-agent-harness'];
+const packages = (process.env.RELEASE_PACKAGES ?? DREAM_PACKAGES.join(' ')).split(/\s+/).filter(Boolean);
+for (const dir of packages) assert.match(dir, /^[a-z0-9][a-z0-9._-]*$/, `invalid package directory: ${dir}`);
+const entryOf = pkg => (pkg.main ?? './dist/index.js').replace(/^\.\//, '');
 if (mode === 'pack') {
   mkdirSync(out, { recursive: true });
   const artifacts = packages.map(dir => {
     const pkg = JSON.parse(readFileSync(`packages/${dir}/package.json`, 'utf8'));
+    assert.notEqual(pkg.private, true, `${pkg.name}: private packages are not released`);
     assert.equal(pkg.repository?.url, 'https://github.com/ruvnet/metaharness.git', `${pkg.name}: repository URL must match provenance`);
     assert.equal(pkg.repository?.directory, `packages/${dir}`, `${pkg.name}: wrong repository directory`);
     const [packed] = JSON.parse(run(npm, ['pack', '--json', '--ignore-scripts', '--pack-destination', out], resolve('packages', dir)));
-    assert(packed.files.some(f => f.path === 'dist/index.js'), `${pkg.name}: missing compiled entry`);
+    assert(packed.files.some(f => f.path === entryOf(pkg)), `${pkg.name}: missing compiled entry ${entryOf(pkg)}`);
     return { name: pkg.name, version: pkg.version, file: packed.filename, sha256: hash(readFileSync(join(out, packed.filename))) };
   });
   writeFileSync(manifestPath, JSON.stringify({ sourceSha: run('git', ['rev-parse', 'HEAD']), artifacts }, null, 2) + '\n');
 } else if (mode === 'smoke') {
   const { artifacts } = JSON.parse(readFileSync(manifestPath, 'utf8'));
-  const dir = mkdtempSync(join(tmpdir(), 'dream-installed-'));
+  const names = new Set(artifacts.map(a => a.name));
+  const dir = mkdtempSync(join(tmpdir(), 'release-installed-'));
   try {
     // AGNTCY's generated protobuf dependencies are served by the public Buf registry.
     writeFileSync(join(dir, '.npmrc'), '@buf:registry=https://buf.build/gen/npm/v1/\n');
     writeFileSync(join(dir, 'package.json'), '{"private":true,"type":"module"}\n');
     for (const a of artifacts) assert.equal(hash(readFileSync(join(out, a.file))), a.sha256);
     run(npm, ['install', '--ignore-scripts', '--no-audit', '--no-fund', ...artifacts.map(a => join(out, a.file))], dir);
-    const smoke = `import assert from 'node:assert/strict';
-      import { makeSigner, verifyReceipt, canon } from '@metaharness/flywheel';
-      import { defineHarness } from '@metaharness/sdk';
-      import { oasfPublish } from '@metaharness/agntcy';
-      assert.equal(typeof oasfPublish.publishToDirectory, 'function');
+    // Every released package must import from its installed tarball.
+    const lines = ["import assert from 'node:assert/strict';"];
+    for (const a of artifacts) lines.push(`await import(${JSON.stringify(a.name)});`);
+    if (names.has('@metaharness/flywheel')) lines.push(`
+      const { makeSigner, verifyReceipt, canon } = await import('@metaharness/flywheel');
       const receipt = makeSigner().sign({ primaryDelta: 0.5 });
       assert(verifyReceipt(JSON.parse(JSON.stringify(receipt))));
       assert.throws(() => canon(NaN), /non-finite/);
-      assert.equal(defineHarness({name:'installed'}).name, 'installed');
       const { createRequire } = await import('node:module');
       const cjs = createRequire(import.meta.url)('@metaharness/flywheel');
-      assert(cjs.verifyReceipt(receipt));`;
-    writeFileSync(join(dir, 'smoke.mjs'), smoke);
+      assert(cjs.verifyReceipt(receipt));`);
+    if (names.has('@metaharness/sdk')) lines.push(`
+      const { defineHarness } = await import('@metaharness/sdk');
+      assert.equal(defineHarness({name:'installed'}).name, 'installed');`);
+    if (names.has('@metaharness/agntcy')) lines.push(`
+      const { oasfPublish } = await import('@metaharness/agntcy');
+      assert.equal(typeof oasfPublish.publishToDirectory, 'function');`);
+    writeFileSync(join(dir, 'smoke.mjs'), lines.join('\n'));
     run(process.execPath, ['smoke.mjs'], dir);
-    run(process.execPath, ['node_modules/metaharness/dist/bin.js', 'new', 'doctor', '--no-darwin'], dir);
-    const policy = JSON.parse(readFileSync(join(dir, 'doctor/.harness/mcp-policy.json'), 'utf8'));
-    assert.equal(policy.defaultDeny, true); assert.equal(policy.allowShell, false);
-    run(process.execPath, ['node_modules/metaharness/dist/harness-bin.js', 'doctor', join(dir, 'doctor')], dir);
-    console.log('Installed ESM/CJS receipt, SDK, CLI scaffold, MCP policy and doctor smoke passed.');
+    if (names.has('metaharness')) {
+      run(process.execPath, ['node_modules/metaharness/dist/bin.js', 'new', 'doctor', '--no-darwin'], dir);
+      const policy = JSON.parse(readFileSync(join(dir, 'doctor/.harness/mcp-policy.json'), 'utf8'));
+      assert.equal(policy.defaultDeny, true); assert.equal(policy.allowShell, false);
+      run(process.execPath, ['node_modules/metaharness/dist/harness-bin.js', 'doctor', join(dir, 'doctor')], dir);
+    }
+    console.log(`Installed-artifact smoke passed for ${[...names].join(', ')}.`);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 } else if (mode === 'publish') {
   assert.equal(process.env.GITHUB_ACTIONS, 'true', 'publication requires GitHub Actions');
-  assert.equal(process.env.GITHUB_WORKFLOW, 'Dream release', 'publication requires Dream release workflow');
+  assert.equal(process.env.GITHUB_WORKFLOW, 'Release', 'publication requires the Release workflow');
   const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
   assert.equal(manifest.sourceSha, run('git', ['rev-parse', 'HEAD']));
   for (const a of manifest.artifacts) {
