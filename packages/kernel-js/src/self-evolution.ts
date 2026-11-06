@@ -103,16 +103,34 @@ export class SelfEvolvingRouter {
   private weights: Record<RoutingTier, number> = { codemod: 1, small: 1, frontier: 1 };
   private history: RoutingHistoryEntry[] = [];
   private impl: { update(tier: string, reward: number): void; weight(tier: string): number; weights(): Record<string, number> } | null = null;
+  // Caches the in-flight load, not just the resolved result: two concurrent
+  // first calls to ensureLoaded() both see `this.impl === null` and would
+  // otherwise each construct their own LearnedWeights, silently discarding
+  // whichever instance (and any update already applied to it) loses the
+  // last-write-wins race on `this.impl`. Caching the promise itself means
+  // every concurrent caller awaits the same single construction.
+  private implPromise: Promise<void> | null = null;
 
   constructor(private config: SelfEvolvingConfig) {}
 
   async ensureLoaded(): Promise<void> {
     if (!this.config.enabled) return;
     if (this.impl) return;
-    const emergent = await loadEmergent();
-    if (emergent) {
-      this.impl = new emergent.LearnedWeights({ tiers: ['codemod', 'small', 'frontier'] });
-    }
+    this.implPromise ??= loadEmergent()
+      .then((emergent) => {
+        if (emergent) {
+          this.impl = new emergent.LearnedWeights({ tiers: ['codemod', 'small', 'frontier'] });
+        }
+      })
+      .catch((err) => {
+        // Don't let a transient construction failure permanently poison
+        // every future call with the same cached rejection — clear the
+        // cache so the next ensureLoaded() retries from scratch, matching
+        // pre-fix behavior (which always retried, since nothing was cached).
+        this.implPromise = null;
+        throw err;
+      });
+    return this.implPromise;
   }
 
   /**
