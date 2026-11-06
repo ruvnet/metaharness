@@ -1,20 +1,34 @@
 // SPDX-License-Identifier: MIT
 //
 // Tier-2 agent sandbox (ADR-106). Executes a variant's REAL surface code by
-// spawning `tier2-driver.js` in a child `node --experimental-strip-types`
-// process (so the child can import the variant's `.ts` surfaces). Shell-free
-// (`execFile`, argv split — no command injection), env-scrubbed (only PATH +
-// identifiers leak), and timeout-bounded — the same safety posture as the real
-// sandbox (ADR-071). The gate (`inspectVariant`) runs FIRST, exactly like the
+// spawning `tier2-driver.js` in an ISOLATED child `node` process (so the child
+// can import the variant's `.ts` surfaces). Isolation:
+//
+//   - Node permission model (`--permission`): filesystem READ limited to the
+//     driver file and the variant directory; NO filesystem write, child
+//     process, worker, native addon or WASI grants. On Node versions with a
+//     network permission, network is denied too.
+//   - `--disallow-code-generation-from-strings`: eval / Function-constructor
+//     style code construction throws.
+//   - `--max-old-space-size` heap cap; wall-clock timeout with SIGKILL.
+//   - shell-free (`execFile`), env-scrubbed (only identifiers), cwd = variant dir.
+//   - the driver re-verifies its own confinement and strips ambient globals
+//     before importing any variant module.
+//
+// If the runtime cannot provide this isolation (no permission model, no type
+// stripping), Tier-2 execution is REFUSED (exit 99, blockedActions set) — it
+// never falls back to running a variant unconfined. The gate (`inspectVariant`) runs FIRST, exactly like the
 // 'real' sandbox (`sandbox.ts`) and the LLM-agent sandbox
 // (`llm-agent-sandbox.ts`): a disqualified variant's surface files are never
 // imported/executed by `tier2-driver.js`.
 //
-// Requires Node ≥ 22 (`--experimental-strip-types`). On older Node or any child
-// error, the variant gets a clean "unsolved" trace rather than crashing the loop.
+// Requires Node ≥ 22 (`--experimental-strip-types` + `--permission`). A child
+// error is a clean "unsolved" trace rather than a crash of the loop.
 
 import { execFile } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { randomBytes } from 'node:crypto';
+import { existsSync, realpathSync } from 'node:fs';
+import { resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { inspectVariant } from './safety.js';
@@ -76,6 +90,103 @@ interface DriverOut {
   attemptsUsed: number;
   durationMs: number;
   log: string;
+  refused?: boolean;
+  reason?: string;
+}
+
+/** Default heap cap (MiB) for the isolated Tier-2 child. */
+export const TIER2_MAX_OLD_SPACE_MB = 256;
+
+/**
+ * The permission-model flag this runtime supports, or a reason it cannot
+ * isolate Tier-2 execution. Exported for tests and diagnostics.
+ */
+export function tier2IsolationSupport(
+  flags: ReadonlySet<string> = process.allowedNodeEnvironmentFlags,
+): { ok: true; permissionFlag: string } | { ok: false; reason: string } {
+  const permissionFlag = flags.has('--permission')
+    ? '--permission'
+    : flags.has('--experimental-permission')
+      ? '--experimental-permission'
+      : undefined;
+  if (!permissionFlag) return { ok: false, reason: `Node ${process.versions.node} has no permission model` };
+  if (!flags.has('--experimental-strip-types')) {
+    return { ok: false, reason: `Node ${process.versions.node} cannot strip TypeScript types` };
+  }
+  return { ok: true, permissionFlag };
+}
+
+/** Result of one isolated driver run. */
+export type IsolatedDriverResult =
+  | { kind: 'ok'; out: DriverOut }
+  | { kind: 'refused'; reason: string }
+  | { kind: 'error'; reason: string };
+
+/**
+ * Spawn the Tier-2 driver for `variantDir` in the isolated child process. This
+ * does NOT run the static gate — callers must (`runVariantTaskAgent` does). It
+ * is exported so the isolation layer can be tested on its own.
+ */
+export async function spawnIsolatedDriver(
+  variantDir: string,
+  task: Omit<AgentTask, 'id' | 'difficulty'> & Partial<Pick<AgentTask, 'id' | 'difficulty'>>,
+  opts: {
+    timeoutMs?: number;
+    maxOldSpaceMb?: number;
+    env?: NodeJS.ProcessEnv;
+    /** Override the runtime's flag set (tests / diagnostics). */
+    nodeFlags?: ReadonlySet<string>;
+  } = {},
+): Promise<IsolatedDriverResult> {
+  const support = tier2IsolationSupport(opts.nodeFlags);
+  if (!support.ok) return { kind: 'refused', reason: `isolation unavailable: ${support.reason}` };
+  if (!existsSync(DRIVER)) return { kind: 'refused', reason: 'isolation unavailable: tier2 driver not built' };
+
+  let dir: string;
+  let driver: string;
+  try {
+    dir = realpathSync(resolvePath(variantDir));
+    driver = realpathSync(DRIVER);
+  } catch {
+    return { kind: 'error', reason: 'variant directory unresolvable' };
+  }
+  // A comma would split an --allow-fs-read list on some Node versions.
+  if (dir.includes(',') || driver.includes(',')) {
+    return { kind: 'refused', reason: 'isolation unavailable: path contains a comma' };
+  }
+
+  const nonce = `@@T2-${randomBytes(12).toString('hex')}@@`;
+  const maxOld = Math.max(32, Math.floor(opts.maxOldSpaceMb ?? TIER2_MAX_OLD_SPACE_MB));
+  const args = [
+    support.permissionFlag,
+    `--allow-fs-read=${driver}`,
+    `--allow-fs-read=${dir}`,
+    '--disallow-code-generation-from-strings',
+    `--max-old-space-size=${maxOld}`,
+    '--experimental-strip-types',
+    '--no-warnings',
+    driver,
+    dir,
+    JSON.stringify(task),
+    nonce,
+  ];
+  try {
+    const { stdout } = await execFileAsync(process.execPath, args, {
+      timeout: opts.timeoutMs ?? 10_000,
+      killSignal: 'SIGKILL',
+      env: opts.env ?? {},
+      cwd: dir,
+      maxBuffer: 1 << 20,
+      windowsHide: true,
+    });
+    const line = stdout.split('\n').reverse().find((l) => l.startsWith(nonce));
+    if (!line) return { kind: 'error', reason: 'driver produced no result' };
+    const out = JSON.parse(line.slice(nonce.length)) as DriverOut;
+    if (out.refused) return { kind: 'refused', reason: out.reason ?? 'isolation unavailable' };
+    return { kind: 'ok', out };
+  } catch (e) {
+    return { kind: 'error', reason: `child error: ${(e as Error).message}`.slice(0, 200) };
+  }
 }
 
 /**
@@ -108,24 +219,34 @@ export async function runVariantTaskAgent(
     };
   }
 
+  // The child gets no PATH and no inherited variables — only identifiers.
   const scrubbedEnv: NodeJS.ProcessEnv = {
-    PATH: process.env.PATH,
     METAHARNESS_VARIANT: variant.id,
     METAHARNESS_TASK: task.id,
   };
-  let out: DriverOut = { solved: false, attemptsUsed: 0, durationMs: 0, log: '' };
-  let blocked = false;
-  try {
-    const { stdout } = await execFileAsync(
-      process.execPath,
-      ['--experimental-strip-types', '--no-warnings', DRIVER, variant.dir, JSON.stringify(task)],
-      { timeout: timeoutMs, env: scrubbedEnv, cwd: variant.dir, maxBuffer: 1 << 20 },
-    );
-    out = JSON.parse(stdout.trim() || '{}');
-  } catch (e) {
-    out = { solved: false, attemptsUsed: 0, durationMs: 0, log: `child error: ${(e as Error).message}`.slice(0, 200) };
-    blocked = false; // a child failure is an unsolved task, not a safety block
+  const res = await spawnIsolatedDriver(variant.dir, task, { timeoutMs, env: scrubbedEnv });
+
+  // ── Refuse rather than run unconfined. ──
+  if (res.kind === 'refused') {
+    return {
+      variantId: variant.id,
+      taskId: task.id,
+      startedAt: '1970-01-01T00:00:00.000Z',
+      finishedAt: '1970-01-01T00:00:00.000Z',
+      exitCode: DISQUALIFIED_EXIT_CODE,
+      stdout: '',
+      stderr: res.reason,
+      durationMs: 0,
+      timedOut: false,
+      blockedActions: [`tier2 ${res.reason}`],
+    };
   }
+
+  // A child failure is an unsolved task, not a safety block.
+  const out: DriverOut = res.kind === 'ok'
+    ? res.out
+    : { solved: false, attemptsUsed: 0, durationMs: 0, log: res.reason };
+  const blocked = false;
   const startedAt = '1970-01-01T00:00:00.000Z';
   return {
     variantId: variant.id,
