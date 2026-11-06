@@ -14,6 +14,11 @@ on:
         description: 'Existing release tag on main: <package>-vX.Y.Z (or dream-vX.Y.Z)'
         required: true
         type: string
+      accept_merged_pr_ci:
+        description: 'If the push-event CI run on the tag SHA is not green (e.g. stuck in the runner queue), accept CI from the merged PR head instead. Only allowed when that head has the identical tree and every check on it passed. Security must still pass on the tag SHA.'
+        required: false
+        default: false
+        type: boolean
 permissions:
   contents: read
 concurrency:
@@ -26,6 +31,8 @@ jobs:
     permissions:
       contents: write
       actions: read
+      checks: read
+      pull-requests: read
       id-token: write
     env:
       RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
@@ -70,14 +77,27 @@ jobs:
           echo "title=$title" >> "$GITHUB_OUTPUT"
       - name: Verify merged source and exact-SHA CI
         shell: bash
+        env:
+          ACCEPT_MERGED_PR_CI: ${{ inputs.accept_merged_pr_ci || false }}
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$(git rev-parse "$RELEASE_TAG^{commit}")"
           git merge-base --is-ancestor HEAD origin/main
-          for workflow in ci.yml security.yml; do
-            conclusion=$(gh run list --workflow "$workflow" --commit "$(git rev-parse HEAD)" --event push --limit 1 --json conclusion --jq '.[0].conclusion')
-            test "$conclusion" = success
-          done
+          sha="$(git rev-parse HEAD)"
+          run_ok() { test "$(gh run list --workflow "$1" --commit "$2" --event "$3" --limit 1 --json conclusion --jq '.[0].conclusion')" = success; }
+          run_ok security.yml "$sha" push
+          if ! run_ok ci.yml "$sha" push; then
+            test "$ACCEPT_MERGED_PR_CI" = true || { echo "::error::CI on $sha is not green"; exit 1; }
+            # Fallback: the squash-merged PR's head must carry the identical tree and fully green checks.
+            pr="$(gh api "repos/$GITHUB_REPOSITORY/commits/$sha/pulls" --jq '[.[]|select(.merged_at!=null)][0].number')"
+            head="$(gh pr view "$pr" --json headRefOid --jq .headRefOid)"
+            git fetch --no-tags origin "pull/$pr/head"
+            test "$(git rev-parse "$head^{tree}")" = "$(git rev-parse "$sha^{tree}")" || { echo "::error::PR #$pr head tree differs from $sha"; exit 1; }
+            run_ok ci.yml "$head" pull_request
+            bad="$(gh api "repos/$GITHUB_REPOSITORY/commits/$head/check-runs?per_page=100" --jq '[.check_runs[]|select(.conclusion!="success" and .conclusion!="skipped" and .conclusion!="neutral")]|length')"
+            test "$bad" = 0 || { echo "::error::PR #$pr head has $bad non-green checks"; exit 1; }
+            echo "::notice::push CI on $sha not green; accepted identical-tree PR #$pr head $head (all checks green)"
+          fi
           test "$(gh issue list --label release-blocker --state open --json number --jq length)" = 0
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
