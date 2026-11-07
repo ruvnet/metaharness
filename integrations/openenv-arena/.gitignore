@@ -1,0 +1,7 @@
+__pycache__/
+.pytest_cache/
+.venv/
+*.db
+*.db-shm
+*.db-wal
+local-runs/

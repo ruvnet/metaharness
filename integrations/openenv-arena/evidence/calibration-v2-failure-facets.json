@@ -1,0 +1,430 @@
+{
+  "embeddings_or_clustering_used": false,
+  "episodes": [
+    {
+      "attempt": 1,
+      "cell_contains_truncation": false,
+      "cell_truncated_seeds": [],
+      "eligible_for_execution_valid_mixed_cell": true,
+      "episode_failure": null,
+      "facets": [
+        {
+          "category": "missing_set_member",
+          "component": "applied_ids",
+          "missing_count": 1,
+          "omitted_event_kind": "posted_entry"
+        },
+        {
+          "balance_difference_equals_omitted_posted_entry": true,
+          "category": "arithmetic_balance_mismatch",
+          "component": "closing_cents",
+          "wrong_account_count": 1
+        }
+      ],
+      "manifest_digest": "1984942a2f1cc77adc9a2448d5ed08f0c8a0f66673ce8cb1ae67826e48325ee4",
+      "provider_finish_reasons": [
+        "stop",
+        "stop"
+      ],
+      "public_files_sha256": "c04ec81146d5b560e13dfa95faf32db66aca53e3a689cb1c4348b5f7da028fc8",
+      "reward": 0.5,
+      "seed": 600301,
+      "submitted_answer_sha256": "cb405458480a5516ed58a7da40f4495466b002de8f09563118b14040a1ef8b97",
+      "task_id": "finance_ledger-d3",
+      "trajectory_sha256": "7207707445745cd7bcdcb244091ef99f7f65658857a76036c0c437d7d9c45e14",
+      "wrong_components": [
+        "closing_cents",
+        "applied_ids"
+      ]
+    },
+    {
+      "attempt": 1,
+      "cell_contains_truncation": false,
+      "cell_truncated_seeds": [],
+      "eligible_for_execution_valid_mixed_cell": true,
+      "episode_failure": null,
+      "facets": [
+        {
+          "category": "arithmetic_sum_mismatch",
+          "component": "exposure",
+          "minutes_correct": true,
+          "route_correct": true,
+          "submitted_minus_route_edge_exposure_sum": 1
+        }
+      ],
+      "manifest_digest": "c7403c1ec54ba20e3629c775120b59b094ea31676ca1b50917fe0e107259c9fb",
+      "provider_finish_reasons": [
+        "stop",
+        "stop"
+      ],
+      "public_files_sha256": "a6128259b581ec6a2a2b3eac446e527e726496b11a4e53513377f0555bf1c60b",
+      "reward": 0.6666666666666666,
+      "seed": 600301,
+      "submitted_answer_sha256": "9f3d72aaa82a4b3c18d8c8ae3e2d42c8bcbc86630fd8634998a42aadea80a7dd",
+      "task_id": "math_route-d3",
+      "trajectory_sha256": "4c7397593533e260e5f039e142fe434d31367d9c169c872026f98e31bf7c1ffe",
+      "wrong_components": [
+        "exposure"
+      ]
+    },
+    {
+      "attempt": 1,
+      "cell_contains_truncation": false,
+      "cell_truncated_seeds": [],
+      "eligible_for_execution_valid_mixed_cell": true,
+      "episode_failure": null,
+      "facets": [
+        {
+          "affected_contact_count": 1,
+          "category": "record_update_constraint_error",
+          "component": "contacts.phone",
+          "matching_newer_phone_update_exists": true,
+          "submitted_phone_matches_unchanged_master": true
+        },
+        {
+          "category": "source_priority_constraint_error",
+          "component": "contacts.team",
+          "same_timestamp_as_winner": true,
+          "submitted_team_matches_lower_priority_update": true
+        }
+      ],
+      "manifest_digest": "757deaa925819b772b72369f0eebaf0ed0185c298fa0ddb8b28afb8e2b4a7d7f",
+      "provider_finish_reasons": [
+        "stop",
+        "stop"
+      ],
+      "public_files_sha256": "5fb8be976e06b833d3818dc60622dc16fb8ba960d8e0c6509431a2d16d9ceeb6",
+      "reward": 0.5,
+      "seed": 600301,
+      "submitted_answer_sha256": "743bf158806be05d573794c924a0af977a9c465c0c6dbd890c28bfdb7f758a78",
+      "task_id": "office_reconciliation-d3",
+      "trajectory_sha256": "2cf65d67b5b221027a2c99351172fe0aee3fa47997a03539c8f80bc233f48443",
+      "wrong_components": [
+        "contacts"
+      ]
+    },
+    {
+      "attempt": 1,
+      "cell_contains_truncation": false,
+      "cell_truncated_seeds": [],
+      "eligible_for_execution_valid_mixed_cell": true,
+      "episode_failure": null,
+      "facets": [
+        {
+          "accepted_mean_correct": true,
+          "all_supplied_median_values_correct": true,
+          "category": "missing_required_nested_keys",
+          "component": "medians",
+          "interpretation": "Output coverage ambiguity is plausible; this is not evidence of a weighted-mean arithmetic failure.",
+          "missing_count": 6,
+          "omissions_exactly_equal_quarantined_samples": true
+        }
+      ],
+      "manifest_digest": "6c610a3d43604d627b214dde60d0c4b763708b7bd3536b2b29183324da95bec3",
+      "provider_finish_reasons": [
+        "stop",
+        "stop"
+      ],
+      "public_files_sha256": "c7bb7e01afac10b32e5b1edbab2eec619a7b40039133f72a11562647d8abeb8a",
+      "reasoning_error_claim_supported": false,
+      "reward": 0.75,
+      "seed": 600201,
+      "submitted_answer_sha256": "c8c38c7f68842e25622597ec1aceb41213f1260f4461d220df8d0683100bf6db",
+      "task_id": "science_calibration-d2",
+      "trajectory_sha256": "270f7facd05ae8f90877529f12d5ce5c4692868b2e9d7393935e0b8db8da6589",
+      "wrong_components": [
+        "medians"
+      ]
+    },
+    {
+      "attempt": 2,
+      "cell_contains_truncation": false,
+      "cell_truncated_seeds": [],
+      "eligible_for_execution_valid_mixed_cell": true,
+      "episode_failure": null,
+      "facets": [
+        {
+          "accepted_mean_correct": true,
+          "all_supplied_median_values_correct": true,
+          "category": "missing_required_nested_keys",
+          "component": "medians",
+          "interpretation": "Output coverage ambiguity is plausible; this is not evidence of a weighted-mean arithmetic failure.",
+          "missing_count": 3,
+          "omissions_exactly_equal_quarantined_samples": true
+        }
+      ],
+      "manifest_digest": "6c610a3d43604d627b214dde60d0c4b763708b7bd3536b2b29183324da95bec3",
+      "provider_finish_reasons": [
+        "stop",
+        "stop"
+      ],
+      "public_files_sha256": "a789b2c80e7423925bc24850764c7b02dd79a5b0ec885899eddd56f5dd8ad69a",
+      "reasoning_error_claim_supported": false,
+      "reward": 0.75,
+      "seed": 600202,
+      "submitted_answer_sha256": "0f803fe223f37e7c6480d84e87e8325079f49a21d9e15464e44bd6cd2f0aa7e9",
+      "task_id": "science_calibration-d2",
+      "trajectory_sha256": "16f5bf3ef9307780eee43b4b4fbcbf5ae024b264213c84eaf97626bcc7850a7f",
+      "wrong_components": [
+        "medians"
+      ]
+    },
+    {
+      "attempt": 3,
+      "cell_contains_truncation": false,
+      "cell_truncated_seeds": [],
+      "eligible_for_execution_valid_mixed_cell": true,
+      "episode_failure": null,
+      "facets": [
+        {
+          "accepted_mean_correct": true,
+          "all_supplied_median_values_correct": true,
+          "category": "missing_required_nested_keys",
+          "component": "medians",
+          "interpretation": "Output coverage ambiguity is plausible; this is not evidence of a weighted-mean arithmetic failure.",
+          "missing_count": 4,
+          "omissions_exactly_equal_quarantined_samples": true
+        }
+      ],
+      "manifest_digest": "6c610a3d43604d627b214dde60d0c4b763708b7bd3536b2b29183324da95bec3",
+      "provider_finish_reasons": [
+        "stop",
+        "stop"
+      ],
+      "public_files_sha256": "f4d200f16e7e6555d87a5a86f822134eef1327595243ebb5a9fe7a06535e6c6e",
+      "reasoning_error_claim_supported": false,
+      "reward": 0.75,
+      "seed": 600203,
+      "submitted_answer_sha256": "3a3dbe460cd33212fb72a177777fa79e220b74e7b23fc849ac665cbe873435fa",
+      "task_id": "science_calibration-d2",
+      "trajectory_sha256": "2485f89b401f9fc91419fc6e35c2cfb219e8619358b6f81a2c1ed02853940c5b",
+      "wrong_components": [
+        "medians"
+      ]
+    },
+    {
+      "attempt": 0,
+      "cell_contains_truncation": false,
+      "cell_truncated_seeds": [],
+      "eligible_for_execution_valid_mixed_cell": true,
+      "episode_failure": null,
+      "facets": [
+        {
+          "accepted_mean_correct": true,
+          "all_supplied_median_values_correct": true,
+          "category": "missing_required_nested_keys",
+          "component": "medians",
+          "interpretation": "Output coverage ambiguity is plausible; this is not evidence of a weighted-mean arithmetic failure.",
+          "missing_count": 1,
+          "omissions_exactly_equal_quarantined_samples": true
+        }
+      ],
+      "manifest_digest": "bf4ed30d6921e8b650306ba3b3289b4d9727fdaef7fb935b9a60290e0a710d0d",
+      "provider_finish_reasons": [
+        "stop",
+        "stop"
+      ],
+      "public_files_sha256": "869d243a9d79df679d4e9e8eee022623092d283f0c37ec5b96d882f8c9301ea3",
+      "reasoning_error_claim_supported": false,
+      "reward": 0.75,
+      "seed": 600300,
+      "submitted_answer_sha256": "dd7ab5da9a0d55fa1da30e94c043fbc0029a12437d4b6d7eeaa5fb25f5876486",
+      "task_id": "science_calibration-d3",
+      "trajectory_sha256": "b020169c8e6da44b7ceed510b942befba23b9673d7dc76cad9cd1ae4ca61d2a8",
+      "wrong_components": [
+        "medians"
+      ]
+    },
+    {
+      "attempt": 1,
+      "cell_contains_truncation": false,
+      "cell_truncated_seeds": [],
+      "eligible_for_execution_valid_mixed_cell": true,
+      "episode_failure": null,
+      "facets": [
+        {
+          "accepted_mean_correct": true,
+          "all_supplied_median_values_correct": true,
+          "category": "missing_required_nested_keys",
+          "component": "medians",
+          "interpretation": "Output coverage ambiguity is plausible; this is not evidence of a weighted-mean arithmetic failure.",
+          "missing_count": 8,
+          "omissions_exactly_equal_quarantined_samples": true
+        }
+      ],
+      "manifest_digest": "bf4ed30d6921e8b650306ba3b3289b4d9727fdaef7fb935b9a60290e0a710d0d",
+      "provider_finish_reasons": [
+        "stop",
+        "stop"
+      ],
+      "public_files_sha256": "c9e7caa0311fd557dcc0fa2e05e19ac16578fee609a92f021da386a1841c9860",
+      "reasoning_error_claim_supported": false,
+      "reward": 0.75,
+      "seed": 600301,
+      "submitted_answer_sha256": "32d3f0d8e5dac3b27544aa7b01ee67d802bdc8904bb059d4be4abbe37f95b555",
+      "task_id": "science_calibration-d3",
+      "trajectory_sha256": "b57f1dedd4cc62cf66e8498de48f7084d147ab56cc476d28b99848d33b84908a",
+      "wrong_components": [
+        "medians"
+      ]
+    },
+    {
+      "attempt": 3,
+      "cell_contains_truncation": false,
+      "cell_truncated_seeds": [],
+      "eligible_for_execution_valid_mixed_cell": true,
+      "episode_failure": null,
+      "facets": [
+        {
+          "accepted_sample_error_count": 1,
+          "category": "statistic_value_error",
+          "complete_sample_key_set": true,
+          "component": "medians",
+          "quarantined_sample_error_count": 1,
+          "submitted_minus_oracle_deltas": [
+            -1,
+            -1
+          ],
+          "wrong_value_count": 2
+        },
+        {
+          "category": "arithmetic_aggregate_mismatch",
+          "component": "accepted_mean",
+          "denominator_correct": true,
+          "equals_weighted_mean_of_submitted_medians": true,
+          "interpretation": "The wrong final mean is numerically consistent with the supplied wrong median values; no internal causal trace was retained."
+        }
+      ],
+      "manifest_digest": "bf4ed30d6921e8b650306ba3b3289b4d9727fdaef7fb935b9a60290e0a710d0d",
+      "provider_finish_reasons": [
+        "stop",
+        "stop"
+      ],
+      "public_files_sha256": "0a33880e5f32ff721cb7706750153a3d872a66ce1ef2f5a0cda24b780cfb6b39",
+      "reward": 0.5,
+      "seed": 600303,
+      "submitted_answer_sha256": "9658f97c22df680248fce285198f71178bc647f82973c19b84e28cf51799280f",
+      "task_id": "science_calibration-d3",
+      "trajectory_sha256": "c67e8e207a2ba21e46a1e86effd566312064946a69d489522f852ec8146feb4d",
+      "wrong_components": [
+        "medians",
+        "accepted_mean"
+      ]
+    },
+    {
+      "attempt": 0,
+      "cell_contains_truncation": true,
+      "cell_truncated_seeds": [
+        600303
+      ],
+      "eligible_for_execution_valid_mixed_cell": false,
+      "episode_failure": null,
+      "exclusion_note": "This partial episode itself terminated normally, but its four-attempt cell includes a different truncated episode and must not contribute mixed-cell fitness.",
+      "facets": [
+        {
+          "category": "dependency_closure_constraint_error",
+          "component": "affected",
+          "omitted_transitive_consumer_count": 1
+        },
+        {
+          "category": "missing_required_order_member",
+          "component": "build_order",
+          "remaining_order_matches_oracle_order": true,
+          "same_missing_consumer_as_affected": true
+        }
+      ],
+      "manifest_digest": "26837189cd63d8ce6fc2a6df47ac69504d3799a891e4a1adac02aa0100de267d",
+      "provider_finish_reasons": [
+        "stop",
+        "stop"
+      ],
+      "public_files_sha256": "604aed51e5df6fb1fb76057285b569f32b835f13916a4f438615946aac1ec496",
+      "reward": 0.5,
+      "seed": 600300,
+      "submitted_answer_sha256": "5af433efe978ec6904dcb16f497f23a37681a1bf6ada40bfa81c13a7972456c2",
+      "task_id": "software_change-d3",
+      "trajectory_sha256": "aaf212a7d607fc4360b27c87805fd85aa88ce8ec327c4f2b6a0226d0d3a2e357",
+      "wrong_components": [
+        "affected",
+        "build_order"
+      ]
+    }
+  ],
+  "generator_changes": false,
+  "internal_reasoning_attribution": null,
+  "kind": "calibration_failure_facet_audit",
+  "limitations": [
+    "Posthoc answer-facet diagnosis is not a preregistered model-fitness or transfer result.",
+    "Provider-reported reasoning-token counts are not retained reasoning traces and cannot prove why an answer failed.",
+    "Public hashes establish artifact consistency, not independent attestation of remote model execution."
+  ],
+  "method": [
+    "Verify retained JSONL hash against download receipt.",
+    "Verify every audited trajectory SHA256 using the runner canonical JSON format.",
+    "Load task source from the pinned git commit without modifying the repository.",
+    "Compute independent oracle answers only from retained public virtual files, compare files and answers with the frozen generator, and reproduce recorded terminal grades.",
+    "Describe mismatched components and check explicit arithmetic/set relationships; do not infer hidden reasoning or publish full expected answers."
+  ],
+  "model_calls": 0,
+  "official_score": null,
+  "preregistered": false,
+  "promote": false,
+  "recommendations": [
+    {
+      "action": "Clarify the science prompt: medians must include every sample ID, including quarantined samples. Keep the verifier unchanged and evaluate the clarified source as a fresh source-bound candidate.",
+      "priority": 1,
+      "rationale": "Five science partials exactly exclude quarantined rows while all supplied medians and weighted means are correct. The existing output schema does not explicitly state inclusion of quarantined samples.",
+      "status": "recommendation_only_no_source_change"
+    },
+    {
+      "action": "Separate output completeness failures from arithmetic and constraint failures before choosing complexity knobs.",
+      "priority": 2,
+      "rationale": "The observed answer discrepancies support these distinct facets; they do not establish an internal reasoning mechanism."
+    },
+    {
+      "action": "Exclude software_change-d3 from mixed-cell fitness under this retained run.",
+      "priority": 3,
+      "rationale": "Seed600303 in the same cell has a recorded length termination; the seed600300 partial is not sufficient to make the cell eligible."
+    }
+  ],
+  "scope": "posthoc_descriptive_observable_answer_facets",
+  "source": {
+    "environment_commit": "f3d922974e47f87b1a6dae323e5c8f3c2905c201",
+    "episodes_bytes": 589509,
+    "episodes_file": "calibration-v2-episodes.jsonl",
+    "episodes_sha256": "bf8ff3cd6b440cd523dd3cecc9240b2f10f2a17e4260529b74d7709fa4710d31",
+    "frozen_environment_sha256": "d6882e2c9dabf1ee0fde75df0acdef85670598da633ce523cf54038fd40562a9",
+    "frozen_tasks_sha256": "94e29b6d884302f57e9440591cca5c07350cc4eb47d9e4e9f7a27689c519b781",
+    "gist_revision": "36277b41b125f68f2a82947636e525270679bd28",
+    "public_artifact_url": "https://gist.githubusercontent.com/ruvnet/00fb40aeabb35a893f140597e2695c1d/raw/55921b221f793168723df75e89531b9e1c0b5ee3/calibration-v2-episodes.jsonl",
+    "recorded_model_id": [
+      "qwen38"
+    ],
+    "recorded_model_revision": [
+      "1d4bf0f2"
+    ],
+    "runner_sha256_expected_from_prior_replay": "f04a50abad5947e1d271a23725fbc9754b460af8b310779900aad4140c917032"
+  },
+  "summary": {
+    "finance_posted_entry_omission": 1,
+    "math_exposure_sum_error": 1,
+    "office_record_selection_error": 1,
+    "omitted_quarantined_median_entries": 22,
+    "partial_episodes": 10,
+    "partial_science_episodes": 6,
+    "science_accepted_only_median_maps_with_correct_mean": 5,
+    "science_wrong_medians_and_wrong_mean": 1,
+    "software_closure_omission_in_truncation_excluded_cell": 1,
+    "total_v2_episodes": 64
+  },
+  "verification": {
+    "all_partial_episode_finish_reasons_stop": true,
+    "audited_partial_episodes": 10,
+    "oracle_answers_matched_frozen_expected": 10,
+    "outer_answer_field_sets_complete": 10,
+    "public_file_sets_matched_frozen_generator": 10,
+    "recorded_rewards_reproduced": 10,
+    "trajectory_hashes_matched": 10
+  },
+  "version": 1
+}

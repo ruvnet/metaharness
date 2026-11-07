@@ -1,0 +1,19 @@
+{
+  "source_commit": "bada4f0c07d79c30ba506ae6d6ff20956ec7df25",
+  "run_url": "https://github.com/ruvnet/metaharness/actions/runs/37858042127",
+  "job_id": 113586873666,
+  "runner": "ubuntu-24.04",
+  "platform": "linux/amd64",
+  "image_build": "passed",
+  "network_isolated_readonly_controls": {
+    "passed": 61,
+    "failed": 0
+  },
+  "native_openenv_runtime": {
+    "passed": 6,
+    "total": 6
+  },
+  "public_image": "not_published_in_this_run",
+  "model_performance": "unmeasured",
+  "arena_submission": null
+}

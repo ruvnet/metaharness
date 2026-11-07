@@ -1,0 +1,6 @@
+*
+!Dockerfile
+!requirements.lock
+!openenv.yaml
+!arena_env/
+!arena_env/*.py

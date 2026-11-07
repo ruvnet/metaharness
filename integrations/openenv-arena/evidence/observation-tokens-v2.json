@@ -1,0 +1,310 @@
+{
+  "kind": "observation_token_measurement",
+  "source_commit": "f3d922974e47f87b1a6dae323e5c8f3c2905c201",
+  "generator_version": 2,
+  "model": "Qwen/Qwen3.8-27B",
+  "model_revision": "1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0",
+  "tokenizer_sha256": "0997f410c57a1f4e53b09e4be8f4a172d90edd9564368fb0847030937229b9f3",
+  "tokenizers_version": "0.22.2",
+  "method": "Full native observation model encoded as ensure_ascii=True spaced JSON, no special tokens. Reset exempt from completion budget. No chat template, model generation or reasoning tokens. Production serialization and timing unverified; not model calibration. Timings are this local CPU run only.",
+  "episodes": [
+    {
+      "task_id": "software_change-d2",
+      "seed": 400400,
+      "reset_tokens": 269,
+      "read_all_tokens": 665,
+      "terminal_tokens": 49,
+      "reset_ms": 2.615
+    },
+    {
+      "task_id": "software_change-d2",
+      "seed": 400401,
+      "reset_tokens": 269,
+      "read_all_tokens": 689,
+      "terminal_tokens": 49,
+      "reset_ms": 103.341
+    },
+    {
+      "task_id": "software_change-d2",
+      "seed": 400402,
+      "reset_tokens": 269,
+      "read_all_tokens": 682,
+      "terminal_tokens": 49,
+      "reset_ms": 0.85
+    },
+    {
+      "task_id": "software_change-d2",
+      "seed": 400403,
+      "reset_tokens": 269,
+      "read_all_tokens": 738,
+      "terminal_tokens": 49,
+      "reset_ms": 0.792
+    },
+    {
+      "task_id": "industrial_schedule-d2",
+      "seed": 400400,
+      "reset_tokens": 293,
+      "read_all_tokens": 395,
+      "terminal_tokens": 50,
+      "reset_ms": 0.279
+    },
+    {
+      "task_id": "industrial_schedule-d2",
+      "seed": 400401,
+      "reset_tokens": 293,
+      "read_all_tokens": 424,
+      "terminal_tokens": 50,
+      "reset_ms": 0.215
+    },
+    {
+      "task_id": "industrial_schedule-d2",
+      "seed": 400402,
+      "reset_tokens": 293,
+      "read_all_tokens": 350,
+      "terminal_tokens": 50,
+      "reset_ms": 1.138
+    },
+    {
+      "task_id": "industrial_schedule-d2",
+      "seed": 400403,
+      "reset_tokens": 293,
+      "read_all_tokens": 424,
+      "terminal_tokens": 50,
+      "reset_ms": 0.258
+    },
+    {
+      "task_id": "science_calibration-d2",
+      "seed": 400400,
+      "reset_tokens": 285,
+      "read_all_tokens": 547,
+      "terminal_tokens": 49,
+      "reset_ms": 0.18
+    },
+    {
+      "task_id": "science_calibration-d2",
+      "seed": 400401,
+      "reset_tokens": 285,
+      "read_all_tokens": 521,
+      "terminal_tokens": 49,
+      "reset_ms": 0.14
+    },
+    {
+      "task_id": "science_calibration-d2",
+      "seed": 400402,
+      "reset_tokens": 285,
+      "read_all_tokens": 565,
+      "terminal_tokens": 49,
+      "reset_ms": 0.21
+    },
+    {
+      "task_id": "science_calibration-d2",
+      "seed": 400403,
+      "reset_tokens": 285,
+      "read_all_tokens": 526,
+      "terminal_tokens": 49,
+      "reset_ms": 0.129
+    },
+    {
+      "task_id": "office_reconciliation-d2",
+      "seed": 400400,
+      "reset_tokens": 255,
+      "read_all_tokens": 1435,
+      "terminal_tokens": 50,
+      "reset_ms": 0.185
+    },
+    {
+      "task_id": "office_reconciliation-d2",
+      "seed": 400401,
+      "reset_tokens": 255,
+      "read_all_tokens": 1435,
+      "terminal_tokens": 50,
+      "reset_ms": 0.179
+    },
+    {
+      "task_id": "office_reconciliation-d2",
+      "seed": 400402,
+      "reset_tokens": 255,
+      "read_all_tokens": 1433,
+      "terminal_tokens": 50,
+      "reset_ms": 0.167
+    },
+    {
+      "task_id": "office_reconciliation-d2",
+      "seed": 400403,
+      "reset_tokens": 255,
+      "read_all_tokens": 1435,
+      "terminal_tokens": 50,
+      "reset_ms": 0.178
+    },
+    {
+      "task_id": "finance_ledger-d2",
+      "seed": 400400,
+      "reset_tokens": 314,
+      "read_all_tokens": 1094,
+      "terminal_tokens": 50,
+      "reset_ms": 0.158
+    },
+    {
+      "task_id": "finance_ledger-d2",
+      "seed": 400401,
+      "reset_tokens": 314,
+      "read_all_tokens": 1166,
+      "terminal_tokens": 50,
+      "reset_ms": 0.191
+    },
+    {
+      "task_id": "finance_ledger-d2",
+      "seed": 400402,
+      "reset_tokens": 314,
+      "read_all_tokens": 1028,
+      "terminal_tokens": 50,
+      "reset_ms": 0.143
+    },
+    {
+      "task_id": "finance_ledger-d2",
+      "seed": 400403,
+      "reset_tokens": 314,
+      "read_all_tokens": 1028,
+      "terminal_tokens": 50,
+      "reset_ms": 0.139
+    },
+    {
+      "task_id": "math_route-d2",
+      "seed": 400400,
+      "reset_tokens": 273,
+      "read_all_tokens": 986,
+      "terminal_tokens": 49,
+      "reset_ms": 0.265
+    },
+    {
+      "task_id": "math_route-d2",
+      "seed": 400401,
+      "reset_tokens": 273,
+      "read_all_tokens": 742,
+      "terminal_tokens": 49,
+      "reset_ms": 0.132
+    },
+    {
+      "task_id": "math_route-d2",
+      "seed": 400402,
+      "reset_tokens": 273,
+      "read_all_tokens": 823,
+      "terminal_tokens": 49,
+      "reset_ms": 0.126
+    },
+    {
+      "task_id": "math_route-d2",
+      "seed": 400403,
+      "reset_tokens": 273,
+      "read_all_tokens": 941,
+      "terminal_tokens": 49,
+      "reset_ms": 0.138
+    },
+    {
+      "task_id": "security_triage-d2",
+      "seed": 400400,
+      "reset_tokens": 293,
+      "read_all_tokens": 1413,
+      "terminal_tokens": 50,
+      "reset_ms": 0.172
+    },
+    {
+      "task_id": "security_triage-d2",
+      "seed": 400401,
+      "reset_tokens": 293,
+      "read_all_tokens": 1413,
+      "terminal_tokens": 50,
+      "reset_ms": 0.164
+    },
+    {
+      "task_id": "security_triage-d2",
+      "seed": 400402,
+      "reset_tokens": 293,
+      "read_all_tokens": 1413,
+      "terminal_tokens": 50,
+      "reset_ms": 0.161
+    },
+    {
+      "task_id": "security_triage-d2",
+      "seed": 400403,
+      "reset_tokens": 293,
+      "read_all_tokens": 1413,
+      "terminal_tokens": 50,
+      "reset_ms": 0.172
+    },
+    {
+      "task_id": "media_timeline-d2",
+      "seed": 400400,
+      "reset_tokens": 351,
+      "read_all_tokens": 898,
+      "terminal_tokens": 49,
+      "reset_ms": 0.194
+    },
+    {
+      "task_id": "media_timeline-d2",
+      "seed": 400401,
+      "reset_tokens": 351,
+      "read_all_tokens": 896,
+      "terminal_tokens": 49,
+      "reset_ms": 0.175
+    },
+    {
+      "task_id": "media_timeline-d2",
+      "seed": 400402,
+      "reset_tokens": 351,
+      "read_all_tokens": 893,
+      "terminal_tokens": 49,
+      "reset_ms": 0.178
+    },
+    {
+      "task_id": "media_timeline-d2",
+      "seed": 400403,
+      "reset_tokens": 351,
+      "read_all_tokens": 900,
+      "terminal_tokens": 49,
+      "reset_ms": 0.154
+    }
+  ],
+  "summary": [
+    {
+      "task_id": "software_change-d2",
+      "max_observation_completion_tokens": 787,
+      "max_reset_ms": 103.341
+    },
+    {
+      "task_id": "industrial_schedule-d2",
+      "max_observation_completion_tokens": 474,
+      "max_reset_ms": 1.138
+    },
+    {
+      "task_id": "science_calibration-d2",
+      "max_observation_completion_tokens": 614,
+      "max_reset_ms": 0.21
+    },
+    {
+      "task_id": "office_reconciliation-d2",
+      "max_observation_completion_tokens": 1485,
+      "max_reset_ms": 0.185
+    },
+    {
+      "task_id": "finance_ledger-d2",
+      "max_observation_completion_tokens": 1216,
+      "max_reset_ms": 0.191
+    },
+    {
+      "task_id": "math_route-d2",
+      "max_observation_completion_tokens": 1035,
+      "max_reset_ms": 0.265
+    },
+    {
+      "task_id": "security_triage-d2",
+      "max_observation_completion_tokens": 1463,
+      "max_reset_ms": 0.172
+    },
+    {
+      "task_id": "media_timeline-d2",
+      "max_observation_completion_tokens": 949,
+      "max_reset_ms": 0.194
+    }
+  ]
+}
