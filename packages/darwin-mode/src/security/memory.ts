@@ -27,6 +27,7 @@ import type {
   SecurityVectorMeta,
 } from './types.js';
 import type { CorpusSite } from './corpus.js';
+import { gateFinding } from './policy.js';
 import { clamp, cosine, embed, round6 } from './util.js';
 
 /** A stored vector: its embedding plus typed metadata and payload. */
@@ -137,43 +138,63 @@ export class RuvSecurityMemory {
     return { indexed: sites.length };
   }
 
-  /** Record a confirmed finding + its patch into long-term memory. */
+  /**
+   * Record a confirmed finding + its patch into long-term memory.
+   *
+   * Gated before persisting (ADR-155 §safety controls): `runSwarm` already gates
+   * findings via `gateOutputs()` before they reach here, so this is a no-op for
+   * it. `compounding.ts`/`ablation.ts` call this directly with raw, corpus-derived
+   * findings that never passed that gate — without this, unsafe content in
+   * `evidence`/`patch`/`test` could be persisted into `confirmedFindings`/
+   * `patches` and later resurface via retrieval/export. Note `gateFinding` only
+   * redacts those three fields, not `weakness`/`file`/`symbol`/`id` — sufficient
+   * for every caller today (those are controlled-vocabulary classification
+   * strings, never attacker-influenced text), not a claim that the whole
+   * `Finding` is sanitized. The `exploitCodeAllowed` invariant pins `finding` to
+   * never trigger `gateFinding`'s drop case, so `safe` is never null in practice;
+   * the fallback keeps this a safe no-op if that invariant is ever violated
+   * upstream.
+   */
   writeConfirmed(finding: Finding): void {
+    const safe = gateFinding(finding).finding;
+    if (!safe) return;
     const meta: SecurityVectorMeta = {
-      repo: finding.repo,
-      commit: finding.commit,
+      repo: safe.repo,
+      commit: safe.commit,
       language: 'ts',
-      path: finding.file,
-      symbol: finding.symbol,
+      path: safe.file,
+      symbol: safe.symbol,
       chunkType: 'function',
-      riskTags: [finding.weakness],
-      findingId: finding.id,
+      riskTags: [safe.weakness],
+      findingId: safe.id,
       verdict: 'confirmed',
     };
-    this.confirmedFindings.add(`${finding.weakness} ${finding.symbol ?? ''} ${finding.file}`, meta, finding);
-    if (finding.patch && finding.test) {
-      this.patches.add(`${finding.weakness} ${finding.patch}`, meta, {
-        weakness: finding.weakness,
-        patch: finding.patch,
-        test: finding.test,
+    this.confirmedFindings.add(`${safe.weakness} ${safe.symbol ?? ''} ${safe.file}`, meta, safe);
+    if (safe.patch && safe.test) {
+      this.patches.add(`${safe.weakness} ${safe.patch}`, meta, {
+        weakness: safe.weakness,
+        patch: safe.patch,
+        test: safe.test,
       });
     }
   }
 
-  /** Record a rejected hypothesis (negative memory). */
+  /** Record a rejected hypothesis (negative memory). Gated — see {@link writeConfirmed}. */
   writeFalsePositive(finding: Finding): void {
+    const safe = gateFinding(finding).finding;
+    if (!safe) return;
     const meta: SecurityVectorMeta = {
-      repo: finding.repo,
-      commit: finding.commit,
+      repo: safe.repo,
+      commit: safe.commit,
       language: 'ts',
-      path: finding.file,
-      symbol: finding.symbol,
+      path: safe.file,
+      symbol: safe.symbol,
       chunkType: 'function',
-      riskTags: [finding.weakness],
-      findingId: finding.id,
+      riskTags: [safe.weakness],
+      findingId: safe.id,
       verdict: 'false_positive',
     };
-    this.falsePositives.add(`${finding.weakness} ${finding.symbol ?? ''} ${finding.file}`, meta, finding);
+    this.falsePositives.add(`${safe.weakness} ${safe.symbol ?? ''} ${safe.file}`, meta, safe);
   }
 
   /** Record a winning genome keyed by the repo profile it succeeded on. */
