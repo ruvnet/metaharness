@@ -89,28 +89,33 @@ export function buildThreatModel(dir: string, generatedAt: string = new Date().t
   // `.claude/settings.json`'s flat `permissions.allow`/`.deny` arrays are
   // Claude Code's own shape. 7 of the other 9 generator hosts (codex,
   // hermes, openclaw, copilot, opencode, github-actions, prime-agent) have
-  // no flat per-tool allow/deny concept on disk at all — for those, the
-  // *only* place a tool surface is declared is `.harness/mcp-policy.json`'s
-  // role-keyed `allowedTools: { <role>: string[] }` map (confirmed live:
-  // packages/arc-agi-3-chatgpt declares a real 23-tool, 3-role surface this
-  // way, with no `.claude/settings.json` at all). Reporting `0` in that case
-  // fabricates a "nothing is allowed" fact instead of admitting the format
-  // wasn't inspected (CWE-636, "Not Failing Securely").
+  // no flat per-tool allow/deny concept on disk at all, and none of this
+  // generator's scaffold templates ever emit a role-scoped policy either —
+  // but a hand-authored harness targeting one of those hosts can and does
+  // declare its tool surface via `.harness/mcp-policy.json`'s role-keyed
+  // `allowedTools: { <role>: string[] }` map instead (confirmed live:
+  // packages/arc-agi-3-chatgpt declares a real 17-unique-tool, 3-role
+  // surface this way, with no `.claude/settings.json` at all). Reporting
+  // `0` in that case fabricates a "nothing is allowed" fact instead of
+  // admitting the format wasn't inspected (CWE-636, "Not Failing Securely").
   const settingsHasPermissions = settings != null && typeof settings === 'object' && settings.permissions != null;
   const policyAllowedTools = policy?.allowedTools;
   const roleScopedToolSurface = (() => {
     if (!policyAllowedTools || typeof policyAllowedTools !== 'object' || Array.isArray(policyAllowedTools)) {
       return null;
     }
-    const roles = Object.keys(policyAllowedTools as Record<string, unknown>);
+    // Only count a role toward `roles` when its value is actually an
+    // array — a malformed/non-array role entry contributes no tools and
+    // must not inflate the reported role count either (critic-found edge
+    // case: a stale/malformed role shouldn't overstate "N role(s)").
+    let roleCount = 0;
     const tools = new Set<string>();
-    for (const role of roles) {
-      const list = (policyAllowedTools as Record<string, unknown>)[role];
-      if (Array.isArray(list)) {
-        for (const t of list) if (typeof t === 'string') tools.add(t);
-      }
+    for (const list of Object.values(policyAllowedTools as Record<string, unknown>)) {
+      if (!Array.isArray(list)) continue;
+      roleCount++;
+      for (const t of list) if (typeof t === 'string') tools.add(t);
     }
-    return tools.size > 0 ? { tools: tools.size, roles: roles.length } : null;
+    return tools.size > 0 ? { tools: tools.size, roles: roleCount } : null;
   })();
   const roleScopedOnly = !settingsHasPermissions && roleScopedToolSurface !== null;
 
