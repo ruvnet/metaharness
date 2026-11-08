@@ -6,7 +6,8 @@
 //   node packages/kernel-js/bench/memory-rvf-bench.mjs [N] [DIM] [QUERIES]
 //
 // Seeded synthetic data: N uniform random vectors in [-1, 1]^DIM, cosine metric.
-// Writes in batches of 500, plus 200 single-call inserts. Measures after reopening from disk.
+// Writes in batches of 500, plus 200 single-call inserts (each with its storedAt metadata on
+// @ruvector/rvf >= 0.4.7). Measures after reopening from disk.
 
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -15,7 +16,9 @@ import { dirname, join } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { createRvfBackend } from '../dist/memory-rvf.js';
 
-const rvfVersion = () => { const req = createRequire(import.meta.url); let d = dirname(req.resolve('@ruvector/rvf')); while (!d.endsWith('rvf')) d = dirname(d); return JSON.parse(readFileSync(join(d, 'package.json'), 'utf8')).version; };
+const pkgVersion = (name, from = import.meta.url) => { const req = createRequire(from); let d = dirname(req.resolve(name)); while (!d.endsWith(name.split('/')[1])) d = dirname(d); return { dir: d, version: JSON.parse(readFileSync(join(d, 'package.json'), 'utf8')).version }; };
+const rvf = pkgVersion('@ruvector/rvf');
+const rvfNode = pkgVersion('@ruvector/rvf-node', join(rvf.dir, 'package.json'));
 
 const N = Number(process.argv[2] ?? 10000);
 const DIM = Number(process.argv[3] ?? 128);
@@ -81,7 +84,7 @@ try {
   await r.close();
 
   console.log(JSON.stringify({
-    rvf: rvfVersion(),
+    rvf: rvf.version, rvf_node: rvfNode.version, metadata: w.metadataSupported,
     node: process.version, N, DIM, queries: Q, k: K, size,
     recall_at_10: r4(hnsw.recall), p50_recall_ms: r4(hnsw.p50), p95_recall_ms: r4(hnsw.p95),
     exact_recall_at_10: r4(exact.recall), exact_p50_recall_ms: r4(exact.p50),
