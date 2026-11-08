@@ -57,8 +57,12 @@ ruvector-core = { version = "0.1.31", default-features = false, features = ["hns
 candle-core = { version = "0.11.0", git = "https://github.com/huggingface/candle", rev = "70f72e9cfdbfc570846ca363ead2135394af3e9a", optional = true }
 candle-nn = { version = "0.11.0", git = "https://github.com/huggingface/candle", rev = "70f72e9cfdbfc570846ca363ead2135394af3e9a", optional = true }
 # This integration uses core/holdem, not the asynchronous arena. Keep the
-# other previous defaults; arena alone pins vulnerable Tokio ~1.43.
-rs_poker = { version = "5", default-features = false, features = ["serde", "omaha", "open-hand-history"], optional = true }
+# other previous defaults; arena alone pins vulnerable Tokio ~1.43 (RUSTSEC-
+# 2026-0386). Upper-bounded below 5.1.0: that release's core bitset module
+# uses u64::isolate_lowest_one, which needs a newer std than this workspace's
+# pinned Rust 1.88 (rust-toolchain.toml) -- unrelated to the arena/Tokio fix,
+# discovered while applying it. Raise this bound once the toolchain moves.
+rs_poker = { version = ">=5.0.0, <5.1.0", default-features = false, features = ["serde", "omaha", "open-hand-history"], optional = true }
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }

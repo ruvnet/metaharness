@@ -6,7 +6,11 @@
 // trace is identical and the behavioural manifold collapses (measured:
 // nicheEntropy=0, ADR-099). This runner makes the trace a PURE FUNCTION of the
 // variant's surface parameters, so a mutation to retryPolicy / contextBuilder /
-// toolPolicy actually changes the outcome — activating ADR-091/092/094/097/100.
+// memoryPolicy actually changes the outcome — activating ADR-091/092/094/097/100.
+// (ADR-101's original param list named toolPolicy instead of memoryPolicy;
+// ADR-102's as-built doc swapped it. `toolPolicy`, `reviewer`, and
+// `scorePolicy` are still extracted nowhere in this Tier-1 runner — disclosed,
+// not fixed, in the Dream Cycle 2026-10-12 report.)
 //
 // It does NOT call an LLM, compile, or shell out: it extracts the surface
 // parameters with the SAME regexes the DeterministicMutator writes, then
@@ -102,14 +106,34 @@ export interface SimResult {
 }
 
 /**
+ * Memory-policy effect on required attempts (ADR-102 §Tier-1 params). A
+ * strict keep-policy (threshold > 0.5) discards more candidate memory, so the
+ * agent re-discovers already-seen state and needs one extra verified attempt
+ * past the task's normal failing-attempt count; a lenient policy (< 0.5)
+ * retains more, saving one attempt. The baseline template's `threshold = 0.5`
+ * (memory_policy.ts) maps to penalty 0 — byte-identical to pre-fix behaviour
+ * for every variant that doesn't mutate this surface.
+ */
+function memoryPenalty(threshold: number): number {
+  if (threshold > 0.5) return 1;
+  if (threshold < 0.5) return -1;
+  return 0;
+}
+
+/**
  * Simulate a scripted agent loop. Outcome is a deterministic function of the
  * surface params and the task: the agent must (a) see enough context and
- * (b) retry past the task's failing attempts. The log records plan steps,
- * context builds, and retry decisions — so verbosity/repetition/duration all
- * vary by surface, populating the behavioural phenotype (ADR-091).
+ * (b) retry past the task's failing attempts, adjusted by its memory policy's
+ * keep-threshold (ADR-102). The log records plan steps, context builds, and
+ * retry decisions — so verbosity/repetition/duration all vary by surface,
+ * populating the behavioural phenotype (ADR-091).
  */
 export function simulateAgentLoop(params: SurfaceParams, task: MockTask): SimResult {
   const sees = params.contextWindow >= task.requiredContext;
+  // No floor needed: `attempt` only ever ranges over 0,1,2,…, so
+  // `attempt >= requiredAttempts` already saturates correctly (solves at the
+  // first attempt) once requiredAttempts drops to 0 or below.
+  const requiredAttempts = task.failAttempts + memoryPenalty(params.memoryThreshold);
   const lines: string[] = [];
   for (let s = 0; s < params.planSteps; s++) lines.push(`plan: step ${s}`);
   let attemptsUsed = 0;
@@ -117,8 +141,9 @@ export function simulateAgentLoop(params: SurfaceParams, task: MockTask): SimRes
   for (let attempt = 0; attempt < params.maxAttempts; attempt++) {
     attemptsUsed = attempt + 1;
     lines.push(`ctx: built window ${params.contextWindow}`);
-    // Solvable once we are past the failing attempts AND we can see the bug.
-    if (sees && attempt >= task.failAttempts) {
+    // Solvable once we are past the (memory-policy-adjusted) failing attempts
+    // AND we can see the bug.
+    if (sees && attempt >= requiredAttempts) {
       lines.push('verify: PASS');
       solved = true;
       break;
