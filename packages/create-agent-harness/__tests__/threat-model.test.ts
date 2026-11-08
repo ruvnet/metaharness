@@ -183,3 +183,91 @@ describe('buildThreatModel — mcpInUse / scanMcp detection-surface consistency'
     expect(tm.exitCode).toBe(2);
   });
 });
+
+describe('buildThreatModel — allowedTools/deniedTools vs. role-scoped mcp-policy.json (non-claude-code hosts)', () => {
+  async function makeRoleScopedHarness(policyExtra: Record<string, unknown> = {}): Promise<string> {
+    // No `.claude/settings.json` at all — matches real non-claude-code
+    // harnesses (e.g. packages/arc-agi-3-chatgpt), which declare their MCP
+    // tool surface only via `.harness/mcp-policy.json`.
+    const dir = await mkdtemp(join(tmpdir(), 'threat-model-role-'));
+    await mkdir(join(dir, '.harness'), { recursive: true });
+    await writeFile(
+      join(dir, '.harness', 'mcp-policy.json'),
+      JSON.stringify({
+        defaultDeny: true,
+        auditLog: true,
+        allowedTools: {
+          actor: ['tool_a', 'tool_b', 'tool_c'],
+          boss: ['tool_c', 'tool_d'], // tool_c shared across roles -> dedup to 4 unique
+        },
+        ...policyExtra,
+      }),
+      'utf-8',
+    );
+    return dir;
+  }
+
+  it('BUG REPRO (pre-fix would report 0/0): reports null, not a fabricated 0, for a role-scoped-only policy', async () => {
+    const dir = await makeRoleScopedHarness();
+    const tm = buildThreatModel(dir);
+    expect(tm.allowedTools).toBeNull();
+    expect(tm.deniedTools).toBeNull();
+    expect(tm.roleScopedToolSurface).toEqual({ tools: 4, roles: 2 });
+  });
+
+  it('formatThreatModel prints an explicit N/A note (with the real tool/role counts), not "0"', async () => {
+    const dir = await makeRoleScopedHarness();
+    const tm = buildThreatModel(dir);
+    const text = formatThreatModel(tm).join('\n');
+    expect(text).toContain('Allowed tools:        N/A — role-scoped mcp-policy.json declares 4 tool(s) across 2 role(s)');
+    expect(text).not.toContain('Allowed tools:        0');
+    expect(text).not.toContain('Denied tools:         0');
+  });
+
+  it('other fields (dangerousPermissions/secretsReachable/verdict/exitCode) are unaffected by the null tool counters', async () => {
+    const dir = await makeRoleScopedHarness({ allowNetwork: true, allowFileWrite: true });
+    const tm = buildThreatModel(dir);
+    expect(tm.networkAccess).toBe(true);
+    expect(tm.fileWrite).toBe(true);
+    expect(tm.verdict).toBe('medium');
+    expect(tm.exitCode).toBe(1);
+  });
+
+  it('regression: claude-code harnesses with an explicit permissions block still get real flat counts, never null', async () => {
+    const dir = await makeHarness({
+      policy: { defaultDeny: true, auditLog: true },
+      allow: ['Read(*)', 'Bash(npm test)'],
+      deny: ['Read(./.env)'],
+      servers: { bot: { command: 'npx' } },
+    });
+    const tm = buildThreatModel(dir);
+    expect(tm.allowedTools).toBe(2);
+    expect(tm.deniedTools).toBe(1);
+    expect(tm.roleScopedToolSurface).toBeNull();
+  });
+
+  it('regression: an EMPTY permissions block ({ allow: [], deny: [] }) still reports a real 0, not N/A — empty-and-declared is a genuine default-deny fact for claude-code', async () => {
+    const dir = await makeHarness({ policy: { defaultDeny: true, auditLog: true }, allow: [], deny: [], servers: { bot: { command: 'npx' } } });
+    const tm = buildThreatModel(dir);
+    expect(tm.allowedTools).toBe(0);
+    expect(tm.deniedTools).toBe(0);
+    expect(tm.roleScopedToolSurface).toBeNull();
+  });
+
+  it('a role-scoped policy with an empty allowedTools map ({}) does not spuriously suppress the real (zero) flat count', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'threat-model-role-empty-'));
+    await mkdir(join(dir, '.harness'), { recursive: true });
+    await writeFile(
+      join(dir, '.harness', 'mcp-policy.json'),
+      JSON.stringify({ defaultDeny: true, auditLog: true, allowedTools: {} }),
+      'utf-8',
+    );
+    const tm = buildThreatModel(dir);
+    // No settings.json permissions block, and allowedTools has no real
+    // tools in it either -> nothing to report either way, but it must be
+    // the genuine flat-count path (0), not a fabricated role-scoped note.
+    expect(tm.allowedTools).toBe(0);
+    expect(tm.deniedTools).toBe(0);
+    expect(tm.roleScopedToolSurface).toBeNull();
+  });
+});

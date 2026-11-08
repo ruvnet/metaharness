@@ -35,8 +35,16 @@ export interface ThreatModel {
   generatedAt: string;
   dir: string;
   mcpInUse: boolean;
-  allowedTools: number;
-  deniedTools: number;
+  // `null` means "not counted" (no flat allow/deny data to count), not "zero
+  // tools granted" — see roleScopedToolSurface below. Collapsing those two
+  // facts into a bare `0` is the bug this field's nullability fixes.
+  allowedTools: number | null;
+  deniedTools: number | null;
+  // Populated only when allowedTools/deniedTools are null because the only
+  // tool-surface declaration found is `.harness/mcp-policy.json`'s
+  // role-keyed `allowedTools` map (the shape every non-claude-code host
+  // uses) rather than `.claude/settings.json`'s flat allow/deny arrays.
+  roleScopedToolSurface: { tools: number; roles: number } | null;
   dangerousPermissions: number;
   secretsReachable: boolean;
   networkAccess: boolean;
@@ -78,8 +86,36 @@ export function buildThreatModel(dir: string, generatedAt: string = new Date().t
   const allow: string[] = settings?.permissions?.allow ?? [];
   const deny: string[] = settings?.permissions?.deny ?? [];
 
-  const allowedTools = allow.length;
-  const deniedTools = deny.length;
+  // `.claude/settings.json`'s flat `permissions.allow`/`.deny` arrays are
+  // Claude Code's own shape. 7 of the other 9 generator hosts (codex,
+  // hermes, openclaw, copilot, opencode, github-actions, prime-agent) have
+  // no flat per-tool allow/deny concept on disk at all — for those, the
+  // *only* place a tool surface is declared is `.harness/mcp-policy.json`'s
+  // role-keyed `allowedTools: { <role>: string[] }` map (confirmed live:
+  // packages/arc-agi-3-chatgpt declares a real 23-tool, 3-role surface this
+  // way, with no `.claude/settings.json` at all). Reporting `0` in that case
+  // fabricates a "nothing is allowed" fact instead of admitting the format
+  // wasn't inspected (CWE-636, "Not Failing Securely").
+  const settingsHasPermissions = settings != null && typeof settings === 'object' && settings.permissions != null;
+  const policyAllowedTools = policy?.allowedTools;
+  const roleScopedToolSurface = (() => {
+    if (!policyAllowedTools || typeof policyAllowedTools !== 'object' || Array.isArray(policyAllowedTools)) {
+      return null;
+    }
+    const roles = Object.keys(policyAllowedTools as Record<string, unknown>);
+    const tools = new Set<string>();
+    for (const role of roles) {
+      const list = (policyAllowedTools as Record<string, unknown>)[role];
+      if (Array.isArray(list)) {
+        for (const t of list) if (typeof t === 'string') tools.add(t);
+      }
+    }
+    return tools.size > 0 ? { tools: tools.size, roles: roles.length } : null;
+  })();
+  const roleScopedOnly = !settingsHasPermissions && roleScopedToolSurface !== null;
+
+  const allowedTools = roleScopedOnly ? null : allow.length;
+  const deniedTools = roleScopedOnly ? null : deny.length;
 
   const policyDefaultDeny = policy ? policy.defaultDeny === true : null;
   const auditLog = policy ? policy.auditLog === true : null;
@@ -126,6 +162,7 @@ export function buildThreatModel(dir: string, generatedAt: string = new Date().t
     mcpInUse,
     allowedTools,
     deniedTools,
+    roleScopedToolSurface: roleScopedOnly ? roleScopedToolSurface : null,
     dangerousPermissions,
     secretsReachable,
     networkAccess,
@@ -157,8 +194,16 @@ export function formatThreatModel(tm: ThreatModel): string[] {
     out.push('Verdict: clean (exit 0)');
     return out;
   }
-  out.push(`  Allowed tools:        ${tm.allowedTools}`);
-  out.push(`  Denied tools:         ${tm.deniedTools}`);
+  if (tm.allowedTools === null || tm.deniedTools === null) {
+    const note = tm.roleScopedToolSurface
+      ? `N/A — role-scoped mcp-policy.json declares ${tm.roleScopedToolSurface.tools} tool(s) across ${tm.roleScopedToolSurface.roles} role(s), not flat allow/deny`
+      : 'N/A — role-scoped mcp-policy.json, not flat allow/deny';
+    out.push(`  Allowed tools:        ${note}`);
+    out.push(`  Denied tools:         ${note}`);
+  } else {
+    out.push(`  Allowed tools:        ${tm.allowedTools}`);
+    out.push(`  Denied tools:         ${tm.deniedTools}`);
+  }
   out.push(`  Dangerous permissions: ${tm.dangerousPermissions}`);
   out.push(`  Secrets reachable:    ${yn(tm.secretsReachable)}`);
   out.push(`  Network access:       ${yn(tm.networkAccess)}`);
