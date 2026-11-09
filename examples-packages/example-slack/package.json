@@ -2,11 +2,14 @@
   "name": "@metaharness/example-slack",
   "version": "0.2.0",
   "description": "MetaHarness Slack SDK showcase \u2014 channel triage, scoped-token notify, and a /triage slash-command bot wired to @slack/web-api + @slack/bolt (npx @metaharness/example-slack my-bot)",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/examples-packages/example-slack",
+  "homepage": "https://ruv.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "url": "git+https://github.com/ruvnet/metaharness.git",
     "directory": "examples-packages/example-slack"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
   },
   "license": "MIT",
   "author": "rUv <ruv@ruv.net>",

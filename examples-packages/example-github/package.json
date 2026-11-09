@@ -2,11 +2,14 @@
   "name": "@metaharness/example-github",
   "version": "0.2.0",
   "description": "MetaHarness example \u2014 GitHub PR review, issue triage, and release notes harness, read-only by default (npx @metaharness/example-github my-bot)",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/examples-packages/example-github",
+  "homepage": "https://ruv.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "url": "git+https://github.com/ruvnet/metaharness.git",
     "directory": "examples-packages/example-github"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
   },
   "license": "MIT",
   "author": "rUv <ruv@ruv.net>",
