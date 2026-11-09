@@ -40,6 +40,13 @@
     "README.md",
     "LICENSE"
   ],
+  "metaharness": {
+    "wasmArtifacts": [
+      "pkg/package.json",
+      "pkg/ruflo_kernel_wasm.js",
+      "pkg/ruflo_kernel_wasm_bg.wasm"
+    ]
+  },
   "scripts": {
     "build": "tsc",
     "test": "vitest run",

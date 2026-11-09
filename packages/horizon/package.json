@@ -25,6 +25,11 @@
     "wasm",
     "README.md"
   ],
+  "metaharness": {
+    "wasmArtifacts": [
+      "wasm/horizon_core.wasm"
+    ]
+  },
   "publishConfig": {
     "access": "public"
   },

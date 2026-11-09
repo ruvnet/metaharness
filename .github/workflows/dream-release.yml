@@ -71,6 +71,7 @@ jobs:
             if (p.version !== process.env.VERSION) throw new Error('tag/package version mismatch: ' + p.name + '@' + p.version);"
           test -f "docs/releases/$RELEASE_TAG.md" || { echo "::error::missing docs/releases/$RELEASE_TAG.md"; exit 1; }
           echo "dirs=$dirs" >> "$GITHUB_OUTPUT"
+          echo "wasm=$(RELEASE_PACKAGES="$dirs" node scripts/wasm-artifacts.mjs needs-wasm)" >> "$GITHUB_OUTPUT"
           echo "dream=$([[ "$prefix" == dream ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
           if [[ "$prefix" == dream ]]; then title="MetaHarness $version — Dream integration and security fixes"
           else title="$(node -p "require('./packages/$primary/package.json').name")@$version"; fi
@@ -103,6 +104,24 @@ jobs:
         with:
           node-version: '22'
           registry-url: https://registry.npmjs.org
+      # Packages that declare metaharness.wasmArtifacts ship gitignored wasm, so it has to be
+      # built here; without this step @metaharness/horizon 0.2.1 was published with no wasm.
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4
+        if: steps.pkg.outputs.wasm == 'true'
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32
+        if: steps.pkg.outputs.wasm == 'true'
+        with:
+          shared-key: release-wasm
+      - name: Install pinned wasm tools (crates.io only)
+        if: steps.pkg.outputs.wasm == 'true'
+        run: bash scripts/install-wasm-tools.sh
+      - name: Build declared wasm artifacts
+        if: steps.pkg.outputs.wasm == 'true'
+        env:
+          RELEASE_PACKAGES: ${{ steps.pkg.outputs.dirs }}
+        run: node scripts/wasm-artifacts.mjs build
       - name: Build, test, audit, and seal packages
         env:
           RELEASE_PACKAGES: ${{ steps.pkg.outputs.dirs }}
