@@ -173,6 +173,34 @@ describe('multi-generation improvement proof', () => {
     expect(verdict.independentConfirmation).toBe(true);
   });
 
+  it('treats an improver-yield delta that is mathematically exactly at the policy threshold as meeting it, regardless of which integer (wins, attempts) pair produced it', () => {
+    // 3/20 - 2/20 === 0.04999999999999999 in IEEE-754 double arithmetic, a few ULPs short of
+    // the 0.05 default `minImproverYieldDelta` even though the true lift is exactly 1/20 = 0.05
+    // (the same magnitude of noise the existing fixture above already surfaces at 0.1, see
+    // `0.09999999999999998`/`0.10000000000000003`). A generation whose child earns exactly one
+    // more successful successor than its parent out of 20 attempts — a realistic small-N case,
+    // not a contrived one — must not be rejected for falling "short" of a threshold it actually
+    // meets exactly.
+    // probe()'s shared `budget` fixture already has attempts: 20, which is what makes
+    // 3 wins - 2 wins land on 0.04999999999999999 below; spelled out for clarity.
+    expect(budget.attempts).toBe(20);
+    const e = makeEvidence();
+    const g1 = e.generations[0]!;
+    g1.parentImprover = probe(2, 0.04, 0.02, 220_000);
+    g1.childImprover = probe(3, 0.06, 0.03, 220_000);
+    g1.reviewerAttestations = attest(e.runId, g1);
+    // Gen 2's parentImprover must byte-match gen 1's recorded childImprover (chain continuity).
+    const g2 = e.generations[1]!;
+    g2.parentImprover = { ...g1.childImprover, budget: { ...g1.childImprover.budget } };
+    g2.reviewerAttestations = attest(e.runId, g2);
+
+    const verdict = verifyMultiGenerationEvidence(e, expectation(e));
+    expect(verdict.derived[0]!.improverYieldDelta).toBe(0.04999999999999999);
+    expect(verdict.failures).not.toContain('gen1:improver_yield_not_improved');
+    expect(verdict.pass).toBe(true);
+    expect(verdict.recursiveImproverEvidence).toBe(true);
+  });
+
   it('does not accept a self-applied independent-confirmation label', () => {
     const e = makeEvidence('independent_confirmation');
     const verdict = verifyMultiGenerationEvidence(e, {
