@@ -206,7 +206,9 @@ describe('scaffold — ADR-022 default-deny mcp-policy.json (Dream Cycle 2026-10
       const report = scanMcp(target);
       expect(report.findings.some(f => f.id === 'no-policy'), `template ${t} still flags no-policy`).toBe(false);
     }
-  });
+    // 20 full scaffolds to disk in one test: Windows file I/O under parallel test
+    // load can exceed the 5 s default, so this test gets an explicit budget.
+  }, 30_000);
 });
 
 describe('detectRufloProject', () => {
