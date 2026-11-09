@@ -1,12 +1,15 @@
 {
   "name": "@metaharness/host-copilot",
-  "version": "0.1.3",
-  "description": "GitHub Copilot (VSCode) host adapter for agent-harness-generator. Emits .vscode/mcp.json for the Copilot MCP client (ADR-032).",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator",
+  "version": "0.1.4",
+  "description": "GitHub Copilot (VS Code) host adapter for MetaHarness: emits .vscode/mcp.json for the Copilot MCP client from a harness spec.",
+  "homepage": "https://ruv.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "url": "https://github.com/ruvnet/metaharness.git",
     "directory": "packages/host-copilot"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
   },
   "license": "MIT",
   "type": "module",
@@ -29,14 +32,14 @@
     "lint": "tsc --noEmit"
   },
   "keywords": [
+    "metaharness",
     "agent-harness",
     "github-copilot",
     "copilot",
     "vscode",
     "mcp",
-    "host-adapter",
-    "ruflo",
-    "ADR-032"
+    "model-context-protocol",
+    "host-adapter"
   ],
   "publishConfig": {
     "access": "public"

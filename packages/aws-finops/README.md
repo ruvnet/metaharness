@@ -1,5 +1,53 @@
 # @metaharness/aws-finops
 
+<!-- ruv-seo:start (ADR-356) -->
+`@metaharness/aws-finops` applies the Darwin Shield pattern to AWS cost: a cheap model proposes Terraform patches, and a deterministic oracle accepts a patch only if `terraform validate`/`plan` succeeds, `checkov` reports no new failures, and `infracost` shows the modeled monthly bill going down. It never touches live infrastructure.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. ESM only (`import`, not `require`). The core is dependency-free and runs offline on captured tool output; the `terraform`, `checkov` and `infracost` binaries are optional and skipped when absent.
+
+## Quickstart
+
+```bash
+npm install @metaharness/aws-finops
+cat > quickstart.mjs <<'JS'
+import { verifyProposal } from '@metaharness/aws-finops';
+
+// Tool output you would normally capture from terraform, checkov and infracost.
+const policy = { passed: 12, failed: 0, failedKeys: [] };
+const delta = { baselineMonthlyUsd: 140, patchedMonthlyUsd: 98, diffMonthlyUsd: -42 };
+const proposal = { address: 'aws_ebs_volume.data', kind: 'gp2-to-gp3', rationale: 'gp3 is cheaper', requiresUtilizationEvidence: false };
+
+const ok = verifyProposal({ buildOk: true, delta, policyBefore: policy, policyAfter: policy, proposal });
+console.log('accepted:', ok.accepted); for (const r of ok.reasons) console.log('  ' + r);
+
+const broke = verifyProposal({
+  buildOk: true, delta, policyBefore: policy, proposal,
+  policyAfter: { passed: 11, failed: 1, failedKeys: ['CKV_AWS_3@aws_ebs_volume.data'] },
+});
+console.log('accepted:', broke.accepted); for (const r of broke.reasons) console.log('  ' + r);
+JS
+node quickstart.mjs
+```
+
+Expected output:
+
+```text
+accepted: true
+  PASS build: terraform validate/plan ok
+  PASS compliance: no new checkov failures
+  PASS savings: modeled bill drops 42 USD/month
+accepted: false
+  PASS build: terraform validate/plan ok
+  REJECT compliance: patch introduces 1 new checkov failure(s): CKV_AWS_3@aws_ebs_volume.data
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — the Darwin Mode loop and Darwin Shield oracle this harness is modeled on.
+
+**Fit:** standalone — no published `@metaharness` package depends on it, and it has no runtime dependencies of its own. It reuses the Darwin Shield oracle pattern by design rather than importing `@metaharness/darwin`.
+<!-- ruv-seo:end -->
+
+## Reference
+
 > **Freeze the model. Evolve the harness. Let a deterministic oracle prove the bill went down.**
 > The Darwin Shield primitives (ADR-155/167), re-pointed from defensive security to AWS cost optimization — **ADR-168**.
 

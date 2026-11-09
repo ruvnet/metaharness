@@ -1,12 +1,15 @@
 {
   "name": "@metaharness/example-fhir",
-  "version": "0.2.0",
-  "description": "MetaHarness example \u2014 FHIR R4 agent harness pre-wired to fhir-kit-client (SMART on FHIR); reads Patient/Observation/Device from a public sandbox EHR (npx @metaharness/example-fhir my-bot)",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/examples-packages/example-fhir",
+  "version": "0.2.1",
+  "description": "MetaHarness example — FHIR R4 agent harness pre-wired to fhir-kit-client (SMART on FHIR); reads Patient/Observation/Device from a public sandbox EHR (npx @metaharness/example-fhir my-bot)",
+  "homepage": "https://ruv.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "url": "https://github.com/ruvnet/metaharness.git",
     "directory": "examples-packages/example-fhir"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
   },
   "license": "MIT",
   "author": "rUv <ruv@ruv.net>",
@@ -36,7 +39,8 @@
     "scaffold",
     "agent-harness",
     "clinical",
-    "hl7"
+    "hl7",
+    "agent-scaffold"
   ],
   "publishConfig": {
     "access": "public"

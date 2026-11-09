@@ -132,6 +132,15 @@ const CHECKS = {
       '@metaharness/host-pi-dev',
       '@metaharness/host-prime-agent',
       '@metaharness/host-rvm',
+      // Published on their own semver through per-package Release tags; they sat at
+      // 0.1.0 only by coincidence and moved to 0.1.1 with the ADR-356 metadata release.
+      '@metaharness/aws-finops',
+      '@metaharness/field-memory',
+      '@metaharness/oo-agents',
+      '@metaharness/radio',
+      '@metaharness/turn-credit',
+      '@metaharness/vertical-base',
+      '@metaharness/vertical-trading',
     ]);
     for (const p of packages) {
       if (!p.isDirectory()) continue;

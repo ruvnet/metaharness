@@ -1,5 +1,43 @@
 # @metaharness/example-web3
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness scaffold for Blockchain / web3 — read-chain, event streaming, and simulate-tx on Ethereum Sepolia testnet via viem.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This package does not install the third-party SDK; the scaffold tells you to run `npm install viem` yourself. This is the `@metaharness/example-web3` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/example-web3 my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 17
+Manifest: ./my-bot/.harness/manifest.json
+
+@metaharness/example-web3 — scaffolded "my-bot" for: claude-code
+Wrote 6 bespoke showcase file(s) per project (agents/, .harness/mcp-policy.json, commands/, .env.example).
+
+Next steps:
+  cd my-bot && npm install
+  npm install viem
+  cp .env.example .env   # then fill in: RPC_URL (testnet), WALLET_PRIVATE_KEY (optional, testnet only)
+  npm run doctor
+  # then in your host run:  /web3-read "<your request>"
+
+Read-only / sandbox by default. Re-run with --allow-mutations to enable writes (see README -> Safety).
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — evolve the scaffolded harness against its own tests instead of hand-tuning it.
+<!-- ruv-seo:end -->
+
+## Reference
+
 **A MetaHarness scaffold that wires a multi-agent harness to the Ethereum ecosystem via viem — reading balances, streaming events, and simulating transactions on a testnet, safely by default.**
 
 > **Illustrative output disclaimer.** The agents scaffolded by this package

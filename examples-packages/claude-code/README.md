@@ -1,5 +1,36 @@
 # MetaHarness × Claude Code workspace + plugin
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — Claude Code workspace + plugin scaffold with CLAUDE.md, .claude/, and MCP wiring.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/claude-code` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/claude-code my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 17
+Manifest: ./my-bot/.harness/manifest.json
+
+Next steps:
+  cd my-bot && npm install
+  npm run doctor
+  claude -p --plugin-dir . "summarize the repo and propose a first task"
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/host-claude-code`](https://www.npmjs.com/package/@metaharness/host-claude-code) — the adapter that writes this host's config, if you want to generate it from your own code.
+<!-- ruv-seo:end -->
+
+## Reference
+
 A one-command scaffold that drops a ready-to-edit Claude Code workspace into a new directory: `CLAUDE.md`, a `.claude/` settings tree, MCP server stubs, and a minimal plugin layout you can load with `claude -p --plugin-dir`. This is the smallest useful starting point for building a Claude Code-hosted agent — not a multi-agent vertical, not a runtime, and not a chat UI. It's the workspace you wish `claude init` produced.
 
 Use this when you want to ship a Claude Code agent that has opinions: custom slash commands, scoped tool permissions, a project-pinned MCP config, and a plugin folder you can iterate on without polluting your global `~/.claude` config.

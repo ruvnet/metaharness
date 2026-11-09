@@ -1,12 +1,15 @@
 {
   "name": "@metaharness/host-hermes",
-  "version": "0.1.4",
-  "description": "Hermes Agent (NousResearch) host adapter for agent-harness-generator (MCP + <think>/<tool_call> scrubbing)",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator",
+  "version": "0.1.5",
+  "description": "Hermes Agent (Nous Research) host adapter for MetaHarness: MCP wiring plus scrubbing of <think> and <tool_call> blocks.",
+  "homepage": "https://ruv.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "url": "https://github.com/ruvnet/metaharness.git",
     "directory": "packages/host-hermes"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
   },
   "license": "MIT",
   "type": "module",
@@ -28,12 +31,14 @@
     "lint": "tsc --noEmit"
   },
   "keywords": [
+    "metaharness",
     "agent-harness",
     "hermes-agent",
     "nous-research",
     "mcp",
+    "model-context-protocol",
     "host-adapter",
-    "ruflo"
+    "tool-calling"
   ],
   "publishConfig": {
     "access": "public"

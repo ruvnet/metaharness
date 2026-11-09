@@ -1,12 +1,15 @@
 {
   "name": "@metaharness/kernel",
-  "version": "0.1.6",
-  "description": "Cross-platform kernel for the agent-harness-generator — wasm primary, NAPI-RS native fallback",
-  "homepage": "https://github.com/ruvnet/metaharness",
+  "version": "0.1.7",
+  "description": "Cross-platform kernel for MetaHarness harnesses: the HarnessSpec and HostAdapter contract, memory backends, and a WASM-first runtime with NAPI-RS native and pure-JS fallbacks.",
+  "homepage": "https://ruv.io",
   "repository": {
     "type": "git",
     "url": "https://github.com/ruvnet/metaharness.git",
     "directory": "packages/kernel-js"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
   },
   "license": "MIT",
   "author": "rUv <ruv@ruv.net>",
@@ -44,11 +47,15 @@
     "build:wasm": "RUSTFLAGS= wasm-pack build ../../crates/kernel-wasm --target nodejs --release --out-dir ../../packages/kernel-js/pkg && rm -f pkg/.gitignore && node -e \"const f=require('fs');const j=require('./pkg/package.json');j.type='commonjs';f.writeFileSync('./pkg/package.json',JSON.stringify(j,null,2)+'\\n')\""
   },
   "keywords": [
+    "metaharness",
     "agent-harness",
-    "mcp",
-    "wasm",
     "kernel",
-    "ruflo"
+    "wasm",
+    "napi-rs",
+    "mcp",
+    "host-adapter",
+    "agent-memory",
+    "rvf"
   ],
   "publishConfig": {
     "access": "public"

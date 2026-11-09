@@ -1,5 +1,49 @@
 # @metaharness/host-rvm
 
+<!-- ruv-seo:start (ADR-356) -->
+Turns a MetaHarness harness spec into an RVM (Agentic Virtual Machine) deployment: a partition manifest, a capability-token table derived from the harness permissions, a WASM guest descriptor, and an install script.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. ESM only (`import`, not `require`). Pure JavaScript with no native build step; `@metaharness/kernel` is used only for its `HarnessSpec` and `HostAdapter` types.
+
+## Quickstart
+
+```bash
+npm install @metaharness/host-rvm
+```
+
+Save this as `quickstart.mjs` and run `node quickstart.mjs`:
+
+```js
+import adapter from '@metaharness/host-rvm';
+
+const files = adapter.generateConfig({
+  name: 'my-bot',
+  description: 'demo harness',
+  mcpServers: [{ name: 'my-bot', command: ['node', './bin/mcp.js'] }],
+});
+console.log(`host: ${adapter.name}`);
+for (const [path, body] of Object.entries(files)) {
+  console.log(`${path}  (${body.split('\n').length} lines)`);
+}
+```
+
+Expected output:
+
+```text
+host: rvm
+rvm-partition.toml  (17 lines)
+capability-table.json  (2 lines)
+wasm-guest.json  (27 lines)
+install-rvm.sh  (28 lines)
+```
+
+**Next:** [`@metaharness/rvm`](https://www.npmjs.com/package/@metaharness/rvm) — scaffold a complete, doctor-checked harness for this host in one command (`npx @metaharness/rvm my-bot`).
+
+**Where it fits:** `npx metaharness new <name> --host rvm` adds this package as a dependency of the generated harness, and the generated `__tests__/smoke.test.ts` imports it, so `npm test` in that harness fails if the adapter is missing or broken.
+<!-- ruv-seo:end -->
+
+## Reference
+
 [RVM](https://github.com/ruvnet/rvm) — the Agentic Virtual Machine — host adapter for the [agent-harness-generator](https://github.com/ruvnet/agent-harness-generator) project.
 
 > Agents don't fit in VMs. They need something that understands how they think.

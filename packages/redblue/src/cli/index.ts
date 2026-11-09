@@ -12,7 +12,8 @@
 // @metaharness/weight-eft/cli). The `redblue` / `metaharness-redblue` bins call
 // dispatch and then print / exit — behavior is unchanged for direct CLI use.
 
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { readFileSync, writeFileSync, existsSync, realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { AttackFamily, ModelClient, RedBlueConfig } from '../types.js';
 import { loadConfigFromString, defaultConfig, ALL_FAMILIES } from '../config/loader.js';
@@ -537,7 +538,16 @@ export async function dispatch(sub: string | undefined, args: string[]): Promise
 }
 
 // Direct CLI entry (when invoked as the `redblue` / `metaharness-redblue` bin).
-const isMain = import.meta.url === `file://${process.argv[1]}`;
+// npm installs bins as symlinks, so compare real paths: a raw `file://${argv[1]}`
+// check never matches through node_modules/.bin and the CLI silently did nothing.
+const isMain = (() => {
+  if (!process.argv[1]) return false;
+  try {
+    return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return false;
+  }
+})();
 if (isMain) {
   const [, , sub, ...rest] = process.argv;
   dispatch(sub, rest)

@@ -1,9 +1,38 @@
 # MetaHarness: legal vertical
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — contract redline, citation check, and risk rating drafts for Claude Code.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/legal` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/legal my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 23
+Manifest: ./my-bot/.harness/manifest.json
+
+Next steps:
+  cd my-bot && npm install
+  harness doctor   # verify Claude Code + MCP wiring, then drop contracts into inputs/
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — evolve the scaffolded harness against its own tests instead of hand-tuning it.
+<!-- ruv-seo:end -->
+
+## Reference
+
 > ⚠️ **Illustrative output.** Transcripts and validation/run output shown in this README are
 > representative examples, not captured from a specific run — actual output depends on your
 > environment, models, and inputs. Run the commands to see real results.
-
 
 A ready-made Claude Code harness for drafting contract redlines, sanity-checking citations, and producing first-pass risk ratings. Scaffolds a multi-agent setup wired for legal review workflows: an intake agent that reads the document, a redline drafter, a citation/authority checker, and a risk rater that classifies clauses by severity. Aimed at legal-ops teams, in-house counsel, and lawtech builders who want a working starting point instead of a blank repo. This is a drafting aid — it does not give legal advice, does not replace attorney review, and every output is meant to be checked by a qualified human before it leaves your office.
 

@@ -1,5 +1,48 @@
 # @metaharness/host-copilot
 
+<!-- ruv-seo:start (ADR-356) -->
+Turns a MetaHarness harness spec into the files GitHub Copilot in VS Code reads: `.vscode/mcp.json` for the Copilot MCP client, `.github/copilot-instructions.md`, and an install runbook.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. ESM only (`import`, not `require`). Pure JavaScript with no native build step; `@metaharness/kernel` is used only for its `HarnessSpec` and `HostAdapter` types.
+
+## Quickstart
+
+```bash
+npm install @metaharness/host-copilot
+```
+
+Save this as `quickstart.mjs` and run `node quickstart.mjs`:
+
+```js
+import adapter from '@metaharness/host-copilot';
+
+const files = adapter.generateConfig({
+  name: 'my-bot',
+  description: 'demo harness',
+  mcpServers: [{ name: 'my-bot', command: ['node', './bin/mcp.js'] }],
+});
+console.log(`host: ${adapter.name}`);
+for (const [path, body] of Object.entries(files)) {
+  console.log(`${path}  (${body.split('\n').length} lines)`);
+}
+```
+
+Expected output:
+
+```text
+host: copilot
+.vscode/mcp.json  (19 lines)
+install.md  (29 lines)
+.github/copilot-instructions.md  (4 lines)
+```
+
+**Next:** [`@metaharness/copilot`](https://www.npmjs.com/package/@metaharness/copilot) — scaffold a complete, doctor-checked harness for this host in one command (`npx @metaharness/copilot my-bot`).
+
+**Where it fits:** `npx metaharness new <name> --host copilot` adds this package as a dependency of the generated harness, and the generated `__tests__/smoke.test.ts` imports it, so `npm test` in that harness fails if the adapter is missing or broken.
+<!-- ruv-seo:end -->
+
+## Reference
+
 > GitHub Copilot (VSCode) host adapter for [agent-harness-generator](https://github.com/ruvnet/agent-harness-generator).
 > The 7th host adapter, per [ADR-032](https://github.com/ruvnet/agent-harness-generator/blob/main/docs/adrs/ADR-032-host-copilot.md).
 

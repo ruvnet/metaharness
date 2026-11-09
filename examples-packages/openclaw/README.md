@@ -1,9 +1,39 @@
 # MetaHarness × OpenClaw .openclaw/ config
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — minimal scaffold wired to OpenClaw's .openclaw/ config.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/openclaw` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/openclaw my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 15
+Manifest: ./my-bot/.harness/manifest.json
+
+Next steps:
+  1. cd my-bot
+  2. npm install
+  3. harness doctor   # verify the .openclaw/ config
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/host-openclaw`](https://www.npmjs.com/package/@metaharness/host-openclaw) — the adapter that writes this host's config, if you want to generate it from your own code.
+<!-- ruv-seo:end -->
+
+## Reference
+
 > ⚠️ **Illustrative output.** Transcripts and validation/run output shown in this README are
 > representative examples, not captured from a specific run — actual output depends on your
 > environment, models, and inputs. Run the commands to see real results.
-
 
 A minimal MetaHarness scaffold pre-wired for [OpenClaw](https://github.com/openclaw), the open-source AI coding host that reads its configuration from a `.openclaw/` directory. Run one command and you get a working harness folder with the right config file layout, a starter agent, and the doctor/validate tooling that ships with MetaHarness. This is for developers who want to bootstrap an OpenClaw-compatible project without copy-pasting a config tree from another repo. It does NOT install OpenClaw itself, ship a model, or run any agent for you — it scaffolds the static files you need so `openclaw` (or any OpenClaw-compatible runner) finds a valid configuration on first launch.
 

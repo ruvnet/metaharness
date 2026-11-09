@@ -1,5 +1,50 @@
 # @metaharness/weight-eft
 
+<!-- ruv-seo:start (ADR-356) -->
+
+Turns your coding agent's past runs into LoRA training data: SFT rows from gold-resolved trajectories and DPO pairs from the same model's resolved and failed attempts, with an eval-holdout contamination guard and reward-hack filtering. Training itself is a GPU-gated dry-run plan unless you opt in.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. ESM only (`import`, not `require`). Pure JavaScript, no native build step. Export and planning are offline and free; `train --train` needs a GPU host or endpoint.
+
+## Quickstart
+
+```bash
+mkdir demo && cd demo && npm init -y >/dev/null
+npm install @metaharness/weight-eft
+cat > quickstart.mjs <<'EOF'
+import { exportTrainingData } from '@metaharness/weight-eft';
+const sys = { role: 'system', content: 'You are a SWE agent.' };
+const issue = { role: 'user', content: 'Issue: RST writer ignores header_rows.' };
+const archive = [
+  { instance_id: 'demo-1', model: 'z-ai/glm-5.2', tier: 'cheap', resolved: true, sample: 0,
+    model_patch: 'diff --git a/a.py b/a.py\n+fix\n',
+    messages: [sys, issue, { role: 'assistant', content: 'Final patch submitted.' }] },
+  { instance_id: 'demo-1', model: 'z-ai/glm-5.2', tier: 'cheap', resolved: false, sample: 1,
+    model_patch: '', messages: [sys, issue, { role: 'assistant', content: 'Could not fix it.' }] },
+  { instance_id: 'held-out-1', model: 'z-ai/glm-5.2', tier: 'cheap', resolved: true, sample: 0,
+    model_patch: 'diff --git a/b.py b/b.py\n+fix\n', messages: [sys, issue] },
+];
+const { sft, dpo, report } = exportTrainingData(archive, { evalHoldout: ['held-out-1'] });
+console.log('SFT rows:', sft.length, '| DPO pairs:', dpo.length, '| excluded by holdout:', report.excludedByHoldout);
+console.log('SFT instances:', report.sftInstanceIds.join(', '));
+EOF
+node quickstart.mjs
+```
+
+Expected output:
+
+```text
+SFT rows: 1 | DPO pairs: 1 | excluded by holdout: 1
+SFT instances: demo-1
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — produces the run archives this package exports from.
+
+**Where it fits:** `metaharness` depends on it and forwards `npx metaharness weight-eft <export|train|eval|status>` to `@metaharness/weight-eft/cli` (`packages/create-agent-harness/src/index.ts`).
+<!-- ruv-seo:end -->
+
+## Reference
+
 > **Make cheap open-source LLMs solve more coding tasks on their own.** Fine-tune them (LoRA) on your AI agent's *past successful runs*, so your pipeline calls expensive frontier models (GPT, Claude) **less often** — and your cost-per-fix drops.
 
 [![npm version](https://img.shields.io/npm/v/@metaharness/weight-eft.svg)](https://www.npmjs.com/package/@metaharness/weight-eft)

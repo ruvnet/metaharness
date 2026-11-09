@@ -1,5 +1,43 @@
 # @metaharness/example-iot
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — IoT/robotics telemetry agent with guarded actuation over MQTT and ROS 2 rosbridge.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This package does not install the third-party SDK; the scaffold tells you to run `npm install mqtt` yourself. This is the `@metaharness/example-iot` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/example-iot my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 17
+Manifest: ./my-bot/.harness/manifest.json
+
+@metaharness/example-iot — scaffolded "my-bot" for: claude-code
+Wrote 6 bespoke showcase file(s) per project (agents/, .harness/mcp-policy.json, commands/, .env.example).
+
+Next steps:
+  cd my-bot && npm install
+  npm install mqtt
+  cp .env.example .env   # then fill in: MQTT_URL, MQTT_USERNAME, MQTT_PASSWORD
+  npm run doctor
+  # then in your host run:  /iot-telemetry "<your request>"
+
+Read-only / sandbox by default. Re-run with --allow-mutations to enable writes (see README -> Safety).
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — evolve the scaffolded harness against its own tests instead of hand-tuning it.
+<!-- ruv-seo:end -->
+
+## Reference
+
 **IoT and robotics telemetry agent with guarded actuation — scaffold in one command.**
 
 > **Illustrative output notice:** The agents, prompts, and tool calls generated

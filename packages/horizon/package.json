@@ -1,7 +1,16 @@
 {
   "name": "@metaharness/horizon",
-  "version": "0.2.1",
-  "description": "Deterministic long-horizon control with Rust/WASM halt and command guards, real tool execution receipts, full checkpoints, and flush-before-compaction.",
+  "version": "0.2.2",
+  "description": "Deterministic long-horizon agent control: Rust/WASM halt and command guards, real tool-execution receipts, full checkpoints, and flush-before-compaction.",
+  "homepage": "https://ruv.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/metaharness.git",
+    "directory": "packages/horizon"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -28,14 +37,15 @@
     "lint": "tsc --noEmit"
   },
   "keywords": [
+    "metaharness",
     "long-horizon",
-    "adk",
     "halt-controller",
     "command-guard",
     "context-compaction",
+    "checkpoints",
     "wasm-sandbox",
     "agent-harness",
-    "metaharness"
+    "receipts"
   ],
   "license": "Apache-2.0",
   "devDependencies": {

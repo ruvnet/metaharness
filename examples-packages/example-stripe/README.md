@@ -1,5 +1,43 @@
 # @metaharness/example-stripe
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness scaffold for Stripe billing agents — subscriptions, refunds, and webhook handling in test mode by default.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This package does not install the third-party SDK; the scaffold tells you to run `npm install stripe` yourself. This is the `@metaharness/example-stripe` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/example-stripe my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 17
+Manifest: ./my-bot/.harness/manifest.json
+
+@metaharness/example-stripe — scaffolded "my-bot" for: claude-code
+Wrote 6 bespoke showcase file(s) per project (agents/, .harness/mcp-policy.json, commands/, .env.example).
+
+Next steps:
+  cd my-bot && npm install
+  npm install stripe
+  cp .env.example .env   # then fill in: STRIPE_API_KEY (use sk_test_… for test mode)
+  npm run doctor
+  # then in your host run:  /stripe-billing "<your request>"
+
+Read-only / sandbox by default. Re-run with --allow-mutations to enable writes (see README -> Safety).
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — evolve the scaffolded harness against its own tests instead of hand-tuning it.
+<!-- ruv-seo:end -->
+
+## Reference
+
 > Agent harness scaffold pre-wired to the Stripe billing API — subscriptions, refunds, and webhook handling in TEST MODE by default.
 
 > **Illustrative output**: This package scaffolds example agent harness code for educational and prototyping purposes. The generated harness exercises the Stripe test environment only by default. It is **not** a production-ready payment integration, is **not** PCI-DSS certified, and **must not** be used to process real payments without a full security and compliance review.

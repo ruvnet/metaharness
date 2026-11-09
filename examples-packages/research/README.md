@@ -1,9 +1,39 @@
 # MetaHarness: research vertical
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — multi-agent research dossier scaffold for Claude Code with scout, web search, grading, synthesis.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/research` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/research my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 29
+Manifest: ./my-bot/.harness/manifest.json
+
+Next steps:
+  1. cd my-bot && npm install
+  2. npm run doctor    # verify Claude Code + MCP servers
+  3. Open in Claude Code and run /research <your topic>
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — evolve the scaffolded harness against its own tests instead of hand-tuning it.
+<!-- ruv-seo:end -->
+
+## Reference
+
 > ⚠️ **Illustrative output.** Transcripts and validation/run output shown in this README are
 > representative examples, not captured from a specific run — actual output depends on your
 > environment, models, and inputs. Run the commands to see real results.
-
 
 A ready-made multi-agent research harness for Claude Code. One command scaffolds a project with six specialized agents — scout, web-searcher, source-grader, synthesizer, fact-checker, citer — wired through tiered model routing (haiku for fan-out, sonnet for synthesis, opus for adversarial fact-checking) so you can run deep, multi-source, cited research the moment `npm install` finishes. It is **not** a hosted SaaS, a search API, or a finished UI — it is the prompts, agent definitions, hooks, and Claude Code settings you'd otherwise spend a weekend writing.
 

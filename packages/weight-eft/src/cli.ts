@@ -9,6 +9,8 @@
 // --train AND a GPU/endpoint are present; `eval` folds outcome JSON into the
 // cost-Pareto delta; `status` prints the recipe + guard summary.
 
+import { realpathSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { exportTrainingData, sftToJsonl, dpoToJsonl } from './export.js';
@@ -195,7 +197,16 @@ export async function dispatch(sub: string | undefined, args: string[]): Promise
 }
 
 // Direct CLI entry (when invoked as the `weight-eft` bin).
-const isMain = import.meta.url === `file://${process.argv[1]}`;
+// npm installs bins as symlinks, so compare real paths: a raw `file://${argv[1]}`
+// check never matches through node_modules/.bin and the CLI silently did nothing.
+const isMain = (() => {
+  if (!process.argv[1]) return false;
+  try {
+    return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return false;
+  }
+})();
 if (isMain) {
   const [, , sub, ...rest] = process.argv;
   dispatch(sub, rest)

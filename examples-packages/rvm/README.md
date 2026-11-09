@@ -1,9 +1,38 @@
 # MetaHarness × RVM deployment-target partition
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — minimal agent harness pre-wired for the RVM deployment-target partition.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/rvm` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/rvm my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 15
+Manifest: ./my-bot/.harness/manifest.json
+
+Next steps:
+  cd my-bot && npm install
+  harness doctor   # verify the rvm partition is wired correctly
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/host-rvm`](https://www.npmjs.com/package/@metaharness/host-rvm) — the adapter that writes this host's config, if you want to generate it from your own code.
+<!-- ruv-seo:end -->
+
+## Reference
+
 > ⚠️ **Illustrative output.** Transcripts and validation/run output shown in this README are
 > representative examples, not captured from a specific run — actual output depends on your
 > environment, models, and inputs. Run the commands to see real results.
-
 
 A minimal, opinionated agent-harness scaffold pre-configured for the RVM deployment-target partition. This scaffold gives you a working `claude -p`-style harness on disk in seconds: agents folder, MCP server wiring, settings.json with the RVM host conventions baked in, and a `harness doctor` health-check pass. It is intentionally minimal — it does NOT ship a vertical multi-agent template (no pre-built researcher/coder/tester crew), and it does NOT install or configure your underlying RVM runtime. Bring your own agents, bring your own runtime; this just gets the harness shape right.
 

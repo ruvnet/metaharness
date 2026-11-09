@@ -1,7 +1,16 @@
 {
   "name": "@metaharness/radio",
-  "version": "0.1.0",
-  "description": "Passive-awareness swarm bus for agent harness pods — threads, non-blocking mentions, and background watchers that fold teammate discoveries in at step boundaries (AgentRadio, arXiv:2607.28430). Freeze the model, evolve the comms policy.",
+  "version": "0.1.1",
+  "description": "Passive-awareness bus for agent pods: threads, non-blocking mentions and background watchers that fold teammate discoveries in at step boundaries (AgentRadio).",
+  "homepage": "https://ruv.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/metaharness.git",
+    "directory": "packages/radio"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -25,12 +34,14 @@
     "flywheel": "node scripts/flywheel-radio.mjs"
   },
   "keywords": [
+    "metaharness",
     "multi-agent",
     "swarm",
     "agent-communication",
     "passive-awareness",
+    "message-bus",
     "agent-harness",
-    "metaharness"
+    "agentradio"
   ],
   "license": "MIT",
   "devDependencies": {

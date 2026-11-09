@@ -1,5 +1,36 @@
 # MetaHarness × GitHub Actions
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — GitHub Actions CI/CD harness (.github/workflows + composite action.yml, non-interactive, ADR-033).
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/github-actions` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/github-actions my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 16
+Manifest: ./my-bot/.harness/manifest.json
+
+Next steps:
+  cd my-bot
+  git add .github && git commit -m "add harness workflow" && git push
+  # Add ANTHROPIC_API_KEY as a repo secret, then run from the Actions tab.
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/host-github-actions`](https://www.npmjs.com/package/@metaharness/host-github-actions#evaluate-a-harness-in-github-actions) — add the tested `harness-eval` workflow that runs `npm test`, `harness doctor` and `harness score` on every push.
+<!-- ruv-seo:end -->
+
+## Reference
+
 A one-command scaffold for a **non-interactive** agent harness that runs on
 the GitHub Actions runner — no human at the keyboard. It drops a trigger
 workflow and a reusable composite action into `.github/`, wires least-privilege

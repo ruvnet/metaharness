@@ -1,5 +1,43 @@
 # @metaharness/example-aws
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness AWS infra agent scaffold — S3, EC2, Lambda, DynamoDB, STS with dry-run-by-default and STS role auth.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This package does not install the third-party SDK; the scaffold tells you to run `npm install @aws-sdk/client-s3 @aws-sdk/client-ec2 @aws-sdk/credential-providers` yourself. This is the `@metaharness/example-aws` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/example-aws my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 17
+Manifest: ./my-bot/.harness/manifest.json
+
+@metaharness/example-aws — scaffolded "my-bot" for: claude-code
+Wrote 6 bespoke showcase file(s) per project (agents/, .harness/mcp-policy.json, commands/, .env.example).
+
+Next steps:
+  cd my-bot && npm install
+  npm install @aws-sdk/client-s3 @aws-sdk/client-ec2 @aws-sdk/credential-providers
+  cp .env.example .env   # then fill in: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION
+  npm run doctor
+  # then in your host run:  /aws-infra "<your request>"
+
+Read-only / sandbox by default. Re-run with --allow-mutations to enable writes (see README -> Safety).
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — evolve the scaffolded harness against its own tests instead of hand-tuning it.
+<!-- ruv-seo:end -->
+
+## Reference
+
 **AWS infra agent, scaffolded in one command — S3, EC2, Lambda, DynamoDB, STS.**
 
 > **Illustrative output only.** The harness scaffolded by this package demonstrates how a metaharness agent can interact with AWS services. It is not a production-ready infrastructure tool, not audited for security compliance, and not a substitute for proper IAM design, CloudTrail enablement, or AWS Well-Architected review. All mutation operations (instance launch, S3 write, Lambda invoke, DynamoDB write) are disabled by default and require an explicit opt-in flag.

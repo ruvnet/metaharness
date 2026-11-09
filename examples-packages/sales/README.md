@@ -1,5 +1,35 @@
 # MetaHarness: sales vertical
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — sales pipeline pod (qualifier, opener, closer) for Claude Code.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/sales` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/sales my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 33
+Manifest: ./my-bot/.harness/manifest.json
+
+Sales pod scaffolded into ./my-bot
+Next: cd my-bot && npm install && harness doctor
+Then: claude -p --plugin-dir my-bot "Run the sales pipeline on lead: <your lead>"
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — evolve the scaffolded harness against its own tests instead of hand-tuning it.
+<!-- ruv-seo:end -->
+
+## Reference
+
 A ready-made multi-agent sales pipeline pod scaffolded onto Claude Code. Spawns three specialized agents — a **qualifier** (lead scoring), an **opener** (first-touch outreach), and a **closer** (negotiation and follow-through) — wired together with shared memory, MCP tooling, and tier-routed model selection. This scaffold gives you a working harness directory you can run, validate, and extend. It does NOT ship a CRM, send live email, or include any contact data — bring your own pipeline source and outbound transport.
 
 ## Quickstart

@@ -1,5 +1,43 @@
 # @metaharness/example-nasa
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — Space/satellites agent harness pre-wired to NASA Open APIs and satellite.js TLE orbital mechanics.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This package does not install the third-party SDK; the scaffold tells you to run `npm install satellite.js` yourself. This is the `@metaharness/example-nasa` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/example-nasa my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 17
+Manifest: ./my-bot/.harness/manifest.json
+
+@metaharness/example-nasa — scaffolded "my-bot" for: claude-code
+Wrote 6 bespoke showcase file(s) per project (agents/, .harness/mcp-policy.json, commands/, .env.example).
+
+Next steps:
+  cd my-bot && npm install
+  npm install satellite.js
+  cp .env.example .env   # then fill in: NASA_API_KEY (DEMO_KEY works for low rate)
+  npm run doctor
+  # then in your host run:  /nasa-passes "<your request>"
+
+Read-only / sandbox by default. Re-run with --allow-mutations to enable writes (see README -> Safety).
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — evolve the scaffolded harness against its own tests instead of hand-tuning it.
+<!-- ruv-seo:end -->
+
+## Reference
+
 **Space-data agent harness — APOD imagery, EONET Earth events, and satellite pass prediction from TLE**
 
 > **Illustrative output notice**: All agent responses, pass-prediction times, and event summaries in this README are example outputs generated during development. Actual results depend on live NASA API data and current TLE epochs. This showcase is not certified for operational satellite tracking or any safety-critical aerospace application.

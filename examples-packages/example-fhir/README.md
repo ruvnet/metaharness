@@ -1,5 +1,43 @@
 # @metaharness/example-fhir
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — FHIR R4 agent harness pre-wired to fhir-kit-client (SMART on FHIR); reads Patient/Observation/Device from a public sandbox EHR.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This package does not install the third-party SDK; the scaffold tells you to run `npm install fhir-kit-client` yourself. This is the `@metaharness/example-fhir` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/example-fhir my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 17
+Manifest: ./my-bot/.harness/manifest.json
+
+@metaharness/example-fhir — scaffolded "my-bot" for: claude-code
+Wrote 6 bespoke showcase file(s) per project (agents/, .harness/mcp-policy.json, commands/, .env.example).
+
+Next steps:
+  cd my-bot && npm install
+  npm install fhir-kit-client
+  cp .env.example .env   # then fill in: FHIR_BASE_URL (public sandbox EHR)
+  npm run doctor
+  # then in your host run:  /fhir-query "<your request>"
+
+Read-only / sandbox by default. Re-run with --allow-mutations to enable writes (see README -> Safety).
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — evolve the scaffolded harness against its own tests instead of hand-tuning it.
+<!-- ruv-seo:end -->
+
+## Reference
+
 > One-command FHIR R4 agent harness — reads Patient / Observation / Device from a public sandbox EHR, drives multi-agent clinical queries, and verifies every result before reporting done.
 
 > ⚠️ **Illustrative output.** Transcripts and sample output shown in this README are representative examples, not captured from a live run — actual output depends on your environment, models, and the state of the public sandbox. Run the commands to see real results.

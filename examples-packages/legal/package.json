@@ -1,12 +1,15 @@
 {
   "name": "@metaharness/legal",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MetaHarness example — contract redline, citation check, and risk rating drafts for Claude Code (npx @metaharness/legal my-bot)",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/examples-packages/legal",
+  "homepage": "https://ruv.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "url": "https://github.com/ruvnet/metaharness.git",
     "directory": "examples-packages/legal"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
   },
   "license": "MIT",
   "author": "rUv <ruv@ruv.net>",
@@ -23,14 +26,13 @@
   "keywords": [
     "metaharness",
     "agent-harness",
-    "agent-harness-generator",
     "legal",
-    "vertical",
     "claude-code",
     "ai-agent",
     "mcp",
     "npx",
-    "scaffold"
+    "scaffold",
+    "agent-scaffold"
   ],
   "publishConfig": {
     "access": "public"

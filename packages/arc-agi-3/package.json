@@ -36,8 +36,8 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
-    "@metaharness/harness": "0.2.0",
-    "@metaharness/kernel": "0.1.6"
+    "@metaharness/harness": "0.2.1",
+    "@metaharness/kernel": "0.1.7"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

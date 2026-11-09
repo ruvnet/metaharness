@@ -1,9 +1,38 @@
 # MetaHarness × pi.dev AGENTS.md harness
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — pi.dev AGENTS.md harness with a minimal scaffold ready for pi.dev agents.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/pi-dev` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/pi-dev my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 16
+Manifest: ./my-bot/.harness/manifest.json
+
+Scaffolded pi.dev harness in ./my-bot
+Next: cd my-bot && npm install
+Then: harness doctor
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/host-pi-dev`](https://www.npmjs.com/package/@metaharness/host-pi-dev) — the adapter that writes this host's config, if you want to generate it from your own code.
+<!-- ruv-seo:end -->
+
+## Reference
+
 > ⚠️ **Illustrative output.** Transcripts and validation/run output shown in this README are
 > representative examples, not captured from a specific run — actual output depends on your
 > environment, models, and inputs. Run the commands to see real results.
-
 
 A one-shot scaffold that drops a pi.dev-ready agent harness into a new folder. It wires up the `AGENTS.md` contract that pi.dev workers read on startup, ships a minimal template (no opinionated multi-agent vertical), and leaves you with a clean working directory you can commit immediately. This is for engineers who already know they want pi.dev as their host runtime and just want the boilerplate done. It does NOT include domain-specific agents, evaluation harnesses, or pre-baked workflows — pick a vertical package if you want that.
 

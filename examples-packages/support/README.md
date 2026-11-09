@@ -1,5 +1,35 @@
 # MetaHarness: support vertical
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — customer-support multi-agent template (triager, KB-searcher, responder, escalator) for Claude Code.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/support` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/support my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 26
+Manifest: ./my-bot/.harness/manifest.json
+
+Scaffolded support harness at ./my-bot
+Next: cd my-bot && npm install && harness doctor
+Then: claude -p --plugin-dir my-bot "Triage ticket: <paste ticket here>"
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — evolve the scaffolded harness against its own tests instead of hand-tuning it.
+<!-- ruv-seo:end -->
+
+## Reference
+
 A ready-made customer-support multi-agent template for Claude Code. Scaffolds a four-agent pipeline — triager, KB-searcher, responder, escalator — wired with tier-routed model selection, shared memory, and the MCP servers a support workflow actually needs. It is opinionated about pipeline shape and agent boundaries; it is not a hosted product, not a ticketing system, and not a CRM. You bring the knowledge base, the inbox, and the escalation channel; the scaffold gives you the agents and the glue.
 
 ## Quickstart
