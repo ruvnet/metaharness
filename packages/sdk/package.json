@@ -1,12 +1,15 @@
 {
   "name": "@metaharness/sdk",
-  "version": "0.1.1",
-  "description": "Convenience helpers for harness authors \u2014 defineHarness, defineAgent, defineSkill, defineTool. Light wrappers around @metaharness/kernel.",
-  "homepage": "https://github.com/ruvnet/metaharness",
+  "version": "0.1.2",
+  "description": "Helpers for harness authors: defineHarness, defineAgent, defineSkill and defineTool, thin typed wrappers around @metaharness/kernel.",
+  "homepage": "https://ruv.io",
   "repository": {
     "type": "git",
     "url": "https://github.com/ruvnet/metaharness.git",
     "directory": "packages/sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
   },
   "license": "MIT",
   "author": "rUv <ruv@ruv.net>",
@@ -29,10 +32,15 @@
     "lint": "tsc --noEmit"
   },
   "keywords": [
+    "metaharness",
     "agent-harness",
     "sdk",
-    "kernel",
-    "ruflo"
+    "typescript",
+    "define-harness",
+    "define-agent",
+    "tools",
+    "skills",
+    "kernel"
   ],
   "publishConfig": {
     "access": "public"

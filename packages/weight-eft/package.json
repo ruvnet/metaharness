@@ -1,7 +1,16 @@
 {
   "name": "@metaharness/weight-eft",
-  "version": "0.1.2",
-  "description": "Fine-tune cheap open-source LLMs (GLM, Qwen, DeepSeek) on your AI coding agent's successful runs with LoRA (SFT + DPO) so your model cascade escalates to expensive frontier models (GPT, Claude) less often — cutting cost-per-resolved. Turns run history into portable training data (OpenAI/TRL/axolotl JSONL) with a built-in contamination guard and reward-hacking filter.",
+  "version": "0.1.3",
+  "description": "Fine-tune cheap open models on your coding agent's successful runs with LoRA (SFT + DPO) so the cascade escalates to frontier models less often. Exports TRL/axolotl JSONL with contamination guards.",
+  "homepage": "https://ruv.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/metaharness.git",
+    "directory": "packages/weight-eft"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -29,44 +38,24 @@
     "lint": "tsc --noEmit"
   },
   "keywords": [
-    "llm",
+    "metaharness",
     "lora",
     "fine-tuning",
     "peft",
     "sft",
     "dpo",
-    "rlhf-alternative",
     "model-distillation",
-    "knowledge-distillation",
-    "ai-agents",
-    "coding-agent",
-    "agentic",
-    "llm-agent",
-    "swe-bench",
-    "llm-routing",
     "model-cascade",
-    "cost-optimization",
-    "llm-cost",
-    "openrouter",
-    "qwen",
-    "deepseek",
+    "coding-agent",
     "training-data",
     "jsonl",
     "trl",
     "axolotl",
-    "unsloth",
-    "self-improving",
-    "weight-eft",
-    "metaharness"
+    "cost-optimization",
+    "llm"
   ],
   "author": "rUv <ruv@ruv.net>",
   "license": "MIT",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/packages/weight-eft#readme",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator",
-    "directory": "packages/weight-eft"
-  },
   "engines": {
     "node": ">=20.0.0"
   },

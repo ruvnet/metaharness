@@ -1,12 +1,15 @@
 {
   "name": "@metaharness/opencode",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MetaHarness example — minimal OpenCode .opencode/ config scaffold for agent harnesses (npx @metaharness/opencode my-bot)",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/examples-packages/opencode",
+  "homepage": "https://ruv.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "url": "https://github.com/ruvnet/metaharness.git",
     "directory": "examples-packages/opencode"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
   },
   "license": "MIT",
   "author": "rUv <ruv@ruv.net>",
@@ -23,13 +26,12 @@
   "keywords": [
     "metaharness",
     "agent-harness",
-    "agent-harness-generator",
     "opencode",
-    "host",
     "ai-agent",
     "mcp",
     "npx",
-    "scaffold"
+    "scaffold",
+    "agent-scaffold"
   ],
   "publishConfig": {
     "access": "public"

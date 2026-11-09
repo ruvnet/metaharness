@@ -1,5 +1,36 @@
 # MetaHarness: gaming vertical
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — ready-made game-design pod (concept, mechanics, balance, playtest) for Claude Code.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/gaming` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/gaming my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 33
+Manifest: ./my-bot/.harness/manifest.json
+
+  Next steps:
+    cd my-bot
+    npm install && harness doctor
+    claude -p --plugin-dir . "/pitch a co-op deckbuilder set on a generation ship"
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — evolve the scaffolded harness against its own tests instead of hand-tuning it.
+<!-- ruv-seo:end -->
+
+## Reference
+
 A ready-made multi-agent game-design pod scaffolded as a Claude Code harness. One command drops a working `claude-code` plugin directory on disk with four specialist agents wired up — a concept lead, a mechanics designer, a balance analyst, and a playtest critic — plus the project settings, slash commands, and MCP plumbing needed to actually run them. Aimed at solo designers, game-jam teams, and studios who want a structured pod for ideation and iteration instead of a single generalist prompt. This is a scaffold, not a game engine: it does not ship Unity/Unreal/Godot integrations, no asset pipeline, no live ops — it gives you the design loop, you bring the runtime.
 
 ## Quickstart

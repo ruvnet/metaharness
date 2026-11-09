@@ -1,5 +1,43 @@
 # @metaharness/projects
 
+<!-- ruv-seo:start (ADR-356) -->
+
+Building blocks for Darwin Mode that treat an agent harness as a structured policy rather than a prompt: a default policy and validator, durable checkpoints, cost-attributing traces, tiered memory, typed handoffs, protected-path safety rails and human review gates.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. ESM only (`import`, not `require`). Pure JavaScript, no native build step. Dependency-free (Node built-ins only).
+
+## Quickstart
+
+```bash
+mkdir demo && cd demo && npm init -y >/dev/null
+npm install @metaharness/projects
+cat > quickstart.mjs <<'EOF'
+import { defaultPolicy, validatePolicy, isProtectedPath } from '@metaharness/projects';
+const policy = defaultPolicy();
+console.log('coder:', policy.coderModel, '| reviewer:', policy.reviewerModel, '| maxRetries:', policy.maxRetries);
+console.log('default policy problems:', validatePolicy(policy));
+console.log('bad policy problems:', validatePolicy({ ...policy, maxRetries: -1 }));
+console.log('protected .github/workflows/ci.yml:', isProtectedPath('.github/workflows/ci.yml'));
+EOF
+node quickstart.mjs
+```
+
+Expected output:
+
+```text
+coder: cheap | reviewer: frontier_on_failure | maxRetries: 2
+default policy problems: []
+bad policy problems: [ 'maxRetries out of range 0..6' ]
+protected .github/workflows/ci.yml: true
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — the evolution loop that mutates these policies and promotes only children that beat the parent.
+
+**Fit:** standalone — no published `@metaharness` package imports it today (`@metaharness/aws-finops` mirrors one helper, `round6`, instead of importing it). It is a library of primitives you compose yourself; use it directly next to `@metaharness/darwin`.
+<!-- ruv-seo:end -->
+
+## Reference
+
 > **Darwin Mode mutates structured policies, not prompts.**
 > Borrowed-pattern integration program for Darwin Mode — ADR-156…166.
 

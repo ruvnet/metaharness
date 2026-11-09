@@ -1,5 +1,43 @@
 # @metaharness/example-slack
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness Slack SDK showcase — channel triage, scoped-token notify, and a /triage slash-command bot wired to @slack/web-api + @slack/bolt.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This package does not install the third-party SDK; the scaffold tells you to run `npm install @slack/web-api` yourself. This is the `@metaharness/example-slack` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/example-slack my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 17
+Manifest: ./my-bot/.harness/manifest.json
+
+@metaharness/example-slack — scaffolded "my-bot" for: claude-code
+Wrote 6 bespoke showcase file(s) per project (agents/, .harness/mcp-policy.json, commands/, .env.example).
+
+Next steps:
+  cd my-bot && npm install
+  npm install @slack/web-api
+  cp .env.example .env   # then fill in: SLACK_BOT_TOKEN
+  npm run doctor
+  # then in your host run:  /slack-triage "<your request>"
+
+Read-only / sandbox by default. Re-run with --allow-mutations to enable writes (see README -> Safety).
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — evolve the scaffolded harness against its own tests instead of hand-tuning it.
+<!-- ruv-seo:end -->
+
+## Reference
+
 > Channel triage, scoped-token notify, and a `/triage` slash-command bot — pre-wired to `@slack/web-api` + `@slack/bolt`, safe by default, runnable on every metaharness host in one command.
 
 > **Illustrative output.** The agents in this scaffold produce classifications and draft messages based on your Slack channel history. All output is for demonstration purposes. No messages are sent unless you explicitly opt in with `--allow-send` and `HARNESS_ALLOW_SEND=true`. This is not a production-ready application and has not been audited for compliance with Slack's Terms of Service or any regulated-industry data requirements.

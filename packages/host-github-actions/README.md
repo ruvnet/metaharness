@@ -1,5 +1,111 @@
 # @metaharness/host-github-actions
 
+<!-- ruv-seo:start (ADR-356) -->
+![@metaharness/host-github-actions flow: HarnessSpec, adapter generateConfig, workflow plus composite action, eval job running test, doctor and score, harness-score.json artifact](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/host-github-actions.svg)
+
+`@metaharness/host-github-actions` turns a MetaHarness harness spec into a GitHub Actions workflow and a reusable composite action, so the harness runs non-interactively in CI with a least-privilege `GITHUB_TOKEN`. The recipe below adds a second workflow that evaluates the harness on every push and pull request.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows for generating files; the generated workflows run on GitHub-hosted `ubuntu-latest` runners. ESM only (`import`, not `require`). Depends on `@metaharness/kernel` for the `HostAdapter` contract.
+
+## Quickstart
+
+```bash
+mkdir demo && cd demo && npm init -y >/dev/null
+npm install @metaharness/host-github-actions
+cat > quickstart.mjs <<'JS'
+import adapter from '@metaharness/host-github-actions';
+
+const files = adapter.generateConfig({
+  name: 'release-bot',
+  description: 'cuts releases on tag push',
+  permissions: { allow: ['create-pr', 'label-issue'] },
+});
+console.log(Object.keys(files));
+const wf = files['.github/workflows/release-bot.yml'];
+console.log(wf.slice(wf.indexOf('permissions:'), wf.indexOf('concurrency:')).trim());
+JS
+node quickstart.mjs
+```
+
+Expected output:
+
+```text
+[
+  '.github/workflows/release-bot.yml',
+  '.github/actions/release-bot/action.yml',
+  'install.md'
+]
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+```
+
+The adapter starts from `contents: read` and grants only the scopes the policy's allow-list implies (here `create-pr` and `label-issue`).
+
+## Evaluate a harness in GitHub Actions
+
+Scaffold a harness for this host, then add the workflow below. `npx metaharness new <name> --host github-actions` already lists `@metaharness/host-github-actions` as a dependency, and the generated `npm test` imports it, so the eval job exercises this package on every run.
+
+```bash
+npx metaharness@0.4.22 new my-bot --host github-actions --no-darwin
+cd my-bot && mkdir -p .github/workflows
+# save the YAML below as .github/workflows/harness-eval.yml, commit and push
+```
+
+```yaml
+# Evaluate a MetaHarness agent harness on every push and pull request.
+name: harness-eval
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      # Installs @metaharness/kernel and @metaharness/host-github-actions.
+      - run: npm install --no-audit --no-fund
+      # Boots the kernel and imports the GitHub Actions host adapter.
+      - run: npm test
+      # Structural check: manifest hash, kernel dependency, host artifacts.
+      - run: npx -y -p metaharness@0.4.22 harness doctor .
+      # 5-dimension scorecard, 0-100, grade A/B/C/F. Exits 1 below grade B,
+      # so it reports without failing the job; drop continue-on-error to gate.
+      - name: harness score
+        continue-on-error: true
+        run: npx -y -p metaharness@0.4.22 harness score . --out harness-score.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: harness-score
+          path: harness-score.json
+```
+
+Expected job log on a fresh scaffold (excerpt):
+
+```text
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+Result: HEALTHY (/home/runner/work/<repo>/<repo>)
+  Harness Score: 60
+Verdict: C (exit 1)
+Artifact harness-score has been successfully uploaded!
+```
+
+`harness doctor` accepts GitHub Actions harnesses from `metaharness` 0.4.22; 0.4.21 and earlier reported "at least one host artifact present" as FAIL for this host. This recipe is opt-in: `metaharness` does not add the eval workflow for you.
+
+**Next:** [`@metaharness/github-actions`](https://www.npmjs.com/package/@metaharness/github-actions) — the one-command scaffold (`npx @metaharness/github-actions my-bot`) for a GitHub Actions harness.
+<!-- ruv-seo:end -->
+
+## Reference
+
 The **9th host adapter** for [agent-harness-generator](https://github.com/ruvnet/agent-harness-generator) — GitHub Actions (ADR-033).
 
 The eight other hosts are interactive: a human starts a session and sees the

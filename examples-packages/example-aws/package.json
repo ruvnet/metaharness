@@ -1,12 +1,15 @@
 {
   "name": "@metaharness/example-aws",
-  "version": "0.2.0",
-  "description": "MetaHarness AWS infra agent scaffold \u2014 S3, EC2, Lambda, DynamoDB, STS with dry-run-by-default and STS role auth (npx @metaharness/example-aws my-bot)",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/examples-packages/example-aws",
+  "version": "0.2.1",
+  "description": "MetaHarness AWS infra agent scaffold — S3, EC2, Lambda, DynamoDB, STS with dry-run-by-default and STS role auth (npx @metaharness/example-aws my-bot)",
+  "homepage": "https://ruv.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "url": "https://github.com/ruvnet/metaharness.git",
     "directory": "examples-packages/example-aws"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
   },
   "license": "MIT",
   "author": "rUv <ruv@ruv.net>",
@@ -36,7 +39,9 @@
     "npx",
     "scaffold",
     "infra",
-    "dry-run"
+    "dry-run",
+    "agent-harness",
+    "agent-scaffold"
   ],
   "publishConfig": {
     "access": "public"

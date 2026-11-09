@@ -1,9 +1,39 @@
 # MetaHarness: coding vertical
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — engineering pod scaffold (architect, implementer, reviewer, test-writer) for Claude Code.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/coding` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/coding my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 31
+Manifest: ./my-bot/.harness/manifest.json
+
+Next steps:
+  cd my-bot && npm install
+  harness doctor
+  claude --plugin-dir . "Ship your first feature"
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — evolve the scaffolded harness against its own tests instead of hand-tuning it.
+<!-- ruv-seo:end -->
+
+## Reference
+
 > ⚠️ **Illustrative output.** Transcripts and validation/run output shown in this README are
 > representative examples, not captured from a specific run — actual output depends on your
 > environment, models, and inputs. Run the commands to see real results.
-
 
 A ready-made multi-agent engineering pod for Claude Code. One command scaffolds a working harness with four specialized agents — architect, implementer, reviewer, test-writer — wired into Claude Code's plugin directory layout with sensible permissions, hooks, and tier-appropriate model routing. Use it when you want a starting point for shipping real code with AI pair-programmers instead of staring at a blank `.claude/` folder. It does NOT install a runtime, does NOT call a model on its own, and does NOT lock you into any specific MCP server — it is a scaffold, not a service.
 

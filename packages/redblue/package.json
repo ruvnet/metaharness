@@ -1,7 +1,16 @@
 {
   "name": "@metaharness/redblue",
-  "version": "0.1.6",
-  "description": "AI red-teaming for the AI agents & LLM apps you own: stress-test them with adversarial models to find security failures (prompt injection, tool misuse / excessive agency, data leakage, jailbreaks, denial-of-wallet), auto-patch (blue team), retest, and get a board-ready report. Operationalizes NIST AI RMF + OWASP LLM Top-10 as repeatable tests. Safe by design — capability-contained: no real credentials, no live external targets, no shell, no arbitrary network. Dependency-free (Node built-ins).",
+  "version": "0.1.7",
+  "description": "AI red-teaming for agents and LLM apps you own: adversarial tests for prompt injection, tool misuse, data leakage and jailbreaks, auto-patch, retest, and a report. No shell, no live targets.",
+  "homepage": "https://ruv.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/metaharness.git",
+    "directory": "packages/redblue"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -30,49 +39,25 @@
     "lint": "tsc --noEmit"
   },
   "keywords": [
-    "llm",
+    "metaharness",
     "red-team",
     "blue-team",
-    "adversarial",
-    "ai-security",
     "ai-red-teaming",
     "llm-security",
     "agent-security",
-    "llm-evaluation",
-    "llm-testing",
-    "security-testing",
-    "penetration-testing",
-    "owasp-llm",
-    "nist-ai-rmf",
     "prompt-injection",
     "jailbreak",
-    "tool-misuse",
     "excessive-agency",
     "data-leakage",
-    "llm-vulnerability",
-    "guardrails",
-    "llm-safety",
+    "owasp-llm",
+    "nist-ai-rmf",
+    "security-testing",
+    "llm-evaluation",
     "ai-safety",
-    "ai-agents",
-    "agentic",
-    "agent-harness",
-    "defensive-security",
-    "openrouter",
-    "metaharness",
-    "hackerone",
-    "cwe",
-    "cvss",
-    "vulnerability-report",
-    "bug-bounty"
+    "agent-harness"
   ],
   "author": "rUv <ruv@ruv.net>",
   "license": "MIT",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/packages/redblue#readme",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator",
-    "directory": "packages/redblue"
-  },
   "engines": {
     "node": ">=20.0.0"
   },

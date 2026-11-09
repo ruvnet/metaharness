@@ -1,5 +1,43 @@
 # @metaharness/example-gcp
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — Google Cloud Platform scaffold wired to Cloud Storage, BigQuery dry-run, and Vertex AI Gemini inference.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This package does not install the third-party SDK; the scaffold tells you to run `npm install @google-cloud/storage @google-cloud/bigquery` yourself. This is the `@metaharness/example-gcp` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/example-gcp my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 17
+Manifest: ./my-bot/.harness/manifest.json
+
+@metaharness/example-gcp — scaffolded "my-bot" for: claude-code
+Wrote 7 bespoke showcase file(s) per project (agents/, .harness/mcp-policy.json, commands/, .env.example).
+
+Next steps:
+  cd my-bot && npm install
+  npm install @google-cloud/storage @google-cloud/bigquery
+  cp .env.example .env   # then fill in: GOOGLE_APPLICATION_CREDENTIALS, GCP_PROJECT
+  npm run doctor
+  # then in your host run:  /gcp-ops "<your request>"
+
+Read-only / sandbox by default. Re-run with --allow-mutations to enable writes (see README -> Safety).
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — evolve the scaffolded harness against its own tests instead of hand-tuning it.
+<!-- ruv-seo:end -->
+
+## Reference
+
 **A one-command MetaHarness scaffold wired to Google Cloud Storage, BigQuery, and Vertex AI (Gemini) — read-only and safe by default.**
 
 > **Illustrative output disclaimer.** This package scaffolds an example agent harness for demonstration and learning purposes. All code, queries, and AI-generated outputs are illustrative. No compliance, certification, or production readiness is implied or guaranteed. Do not use the scaffolded harness for regulated workloads (PHI, PCI, export-controlled data) without a full independent security review.

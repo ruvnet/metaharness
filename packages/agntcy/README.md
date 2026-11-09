@@ -1,5 +1,43 @@
 # @metaharness/agntcy — AGNTCY build-time integration
 
+<!-- ruv-seo:start (ADR-356) -->
+`@metaharness/agntcy` connects a generated MetaHarness agent to AGNTCY at build time: it builds DID identity records and verifiable-credential badges, exports OASF capability records, publishes to an AGNTCY Directory, maps telemetry to OpenTelemetry semantic attributes, and compiles a free-text objective into a bounded CASA authority envelope. It compiles and exports; it never enforces at run time.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. ESM only (`import`, not `require`). No native build step. Its `agntcy-dir` dependency pulls generated protobuf packages from the public Buf registry, so add `@buf:registry=https://buf.build/gen/npm/v1/` to your `.npmrc` before installing. Directory publishing needs a reachable Directory server; everything in the quickstart runs offline.
+
+## Quickstart
+
+```bash
+echo '@buf:registry=https://buf.build/gen/npm/v1/' >> .npmrc
+npm install @metaharness/agntcy
+cat > quickstart.mjs <<'JS'
+import { casa } from '@metaharness/agntcy';
+
+const env = casa.compileObjectiveToEnvelope('Review the open pull requests and post review comments');
+console.log('allow:', env.allow.join(', ') || '(none)');
+console.log('deny: ', env.deny.join(', '));
+console.log('budget_usd:', env.budget_usd);
+console.log('valid:', casa.isCasaEnvelope(env));
+JS
+node quickstart.mjs
+```
+
+Expected output:
+
+```text
+allow: repository.read
+deny:  deployment.create, git.push, secret.export
+budget_usd: 5
+valid: true
+```
+
+**Next:** [`metaharness`](https://www.npmjs.com/package/metaharness) — scaffold and score the harness whose `harness score` and `harness genome` facts the OASF record projects.
+
+**Fit:** standalone — an optional build-time peer by design (ADR-002, ADR-240). No published `@metaharness` package depends on it; install it explicitly next to a generated harness when you need AGNTCY identity, OASF export or CASA envelopes.
+<!-- ruv-seo:end -->
+
+## Reference
+
 > **Optional peer package. Never a hard kernel dependency.** MetaHarness generates
 > and evolves harnesses without this package present; every harness you have
 > already generated keeps working if `@metaharness/agntcy` is never installed,

@@ -1,5 +1,43 @@
 # @metaharness/example-bio
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — bioinformatics harness with gene lookup, PubMed literature retrieval, and genomic sequence fetch via NCBI E-utilities and Ensembl REST.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This package does not install the third-party SDK; the scaffold tells you to run `npm install (NCBI E-utilities / Ensembl REST \u2014 no npm SDK; uses fetch)` yourself. This is the `@metaharness/example-bio` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/example-bio my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 17
+Manifest: ./my-bot/.harness/manifest.json
+
+@metaharness/example-bio — scaffolded "my-bot" for: claude-code
+Wrote 6 bespoke showcase file(s) per project (agents/, .harness/mcp-policy.json, commands/, .env.example).
+
+Next steps:
+  cd my-bot && npm install
+  npm install (NCBI E-utilities / Ensembl REST — no npm SDK; uses fetch)
+  cp .env.example .env   # then fill in: NCBI_API_KEY (optional, raises rate limit)
+  npm run doctor
+  # then in your host run:  /bio-lookup "<your request>"
+
+Read-only / sandbox by default. Re-run with --allow-mutations to enable writes (see README -> Safety).
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — evolve the scaffolded harness against its own tests instead of hand-tuning it.
+<!-- ruv-seo:end -->
+
+## Reference
+
 **One command to scaffold a bioinformatics agent harness — gene lookup, PubMed literature retrieval, and genomic sequence fetch, wired to NCBI E-utilities and the Ensembl REST API.**
 
 > **Illustrative output notice.** The responses shown in this README are representative examples of what the scaffolded harness produces against the live NCBI and Ensembl public APIs. Actual results depend on the current state of those databases. This package is for educational and prototyping purposes only — see the [Safety](#safety) section.

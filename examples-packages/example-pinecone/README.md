@@ -1,5 +1,43 @@
 # MetaHarness x Pinecone — RAG memory agent
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — Pinecone RAG memory agent scaffold with tiered routing, MCP default-deny, and verification gate.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This package does not install the third-party SDK; the scaffold tells you to run `npm install @pinecone-database/pinecone` yourself. This is the `@metaharness/example-pinecone` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/example-pinecone my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 17
+Manifest: ./my-bot/.harness/manifest.json
+
+@metaharness/example-pinecone — scaffolded "my-bot" for: claude-code
+Wrote 6 bespoke showcase file(s) per project (agents/, .harness/mcp-policy.json, commands/, .env.example).
+
+Next steps:
+  cd my-bot && npm install
+  npm install @pinecone-database/pinecone
+  cp .env.example .env   # then fill in: PINECONE_API_KEY
+  npm run doctor
+  # then in your host run:  /pinecone-rag "<your request>"
+
+Read-only / sandbox by default. Re-run with --allow-mutations to enable writes (see README -> Safety).
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — evolve the scaffolded harness against its own tests instead of hand-tuning it.
+<!-- ruv-seo:end -->
+
+## Reference
+
 Scaffold a production-pattern RAG memory harness pre-wired to Pinecone's serverless vector database — across every MetaHarness host — with one command.
 
 > **Illustrative output.** The scaffolded harness, all code samples in this README, and any agent responses shown are illustrative. They demonstrate integration patterns, not verified production behaviour. Pinecone API responses depend on your live data and index state.

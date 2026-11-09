@@ -1,5 +1,50 @@
 # @metaharness/workspace-probe
 
+<!-- ruv-seo:start (ADR-356) -->
+
+Turns `@metaharness/workspace-lens` interpretability receipts into a single `workspace_probe` score, and vetoes a prompt or policy mutation whose internal workspace gets worse (for example, a critical concept starts firing) even when its final answer looks fine.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. ESM only (`import`, not `require`). Pure JavaScript, no native build step. Depends on `@metaharness/workspace-lens`; a real lens is fitted offline on an open-weight model (the quickstart uses a tiny synthetic one).
+
+## Quickstart
+
+```bash
+mkdir demo && cd demo && npm init -y >/dev/null
+npm install @metaharness/workspace-probe @metaharness/workspace-lens
+cat > quickstart.mjs <<'EOF'
+import { WorkspaceLens, buildReceipt } from '@metaharness/workspace-lens';
+import { workspaceProbeScore, gradeMutationByWorkspace } from '@metaharness/workspace-probe';
+// A tiny synthetic lens (a real one is fitted offline on an open-weight model).
+const lens = WorkspaceLens.fromArtifact({
+  lensId: 'jlens-demo', modelId: 'synth-3d', dModel: 3,
+  vocab: ['ok', 'wrong', 'exfiltrate'],
+  unembed: [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+  layers: [{ layer: 5, jacobian: [[1, 0, 0], [0, 1, 0], [0, 0, 1]] }],
+});
+const concepts = [{ concept: 'exfiltration', modelId: 'synth-3d', vector: [0, 0, 1], critical: true }];
+const clean = buildReceipt(lens, 'summarize the doc', [{ layer: 5, position: 4, h: [0, 5, 0] }], { createdAt: '2026-07-07T00:00:00Z', concepts });
+const leaky = buildReceipt(lens, 'summarize the doc', [{ layer: 5, position: 4, h: [0, 0, 9] }], { createdAt: '2026-07-07T00:00:01Z', concepts });
+console.log('baseline probe:', JSON.stringify(workspaceProbeScore([clean, clean])));
+const verdict = gradeMutationByWorkspace([clean, clean], [clean, leaky]);
+console.log('mutation verdict:', JSON.stringify({ keep: verdict.keep, reasons: verdict.reasons }));
+EOF
+node quickstart.mjs
+```
+
+Expected output:
+
+```text
+baseline probe: {"n":2,"score":1,"meanDrift":0,"flagRate":0,"criticalRate":0,"cleanFraction":1}
+mutation verdict: {"keep":false,"reasons":["mutation raised the critical-trigger rate 0.000 → 0.500","mutation lowered the clean-workspace fraction 1.000 → 0.500 (> -0.05)"]}
+```
+
+**Next:** [`@metaharness/workspace-lens`](https://www.npmjs.com/package/@metaharness/workspace-lens) — the primitive that produces the receipts.
+
+**Fit:** standalone — no published `@metaharness` package depends on it yet; it is the bridge you call from your own Darwin or flywheel gate.
+<!-- ruv-seo:end -->
+
+## Reference
+
 **Evaluation + Darwin-Mode bridge for [`@metaharness/workspace-lens`](https://www.npmjs.com/package/@metaharness/workspace-lens).**
 Turn Jacobian-Lens interpretability *receipts* into (1) a flywheel-consumable **`workspace_probe` score** and
 (2) **Darwin-Mode mutation evidence** that rejects structurally-brittle prompt/policy mutations.

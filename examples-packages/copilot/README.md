@@ -1,9 +1,39 @@
 # MetaHarness × VSCode/Copilot mcp.json
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — VSCode/Copilot mcp.json scaffold for agentic workflows.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/copilot` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/copilot my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 17
+Manifest: ./my-bot/.harness/manifest.json
+
+Next steps:
+  cd my-bot && npm install
+  harness doctor   # verify VSCode + mcp.json are wired up
+  code .           # open in VSCode and enable Copilot MCP servers
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/host-copilot`](https://www.npmjs.com/package/@metaharness/host-copilot) — the adapter that writes this host's config, if you want to generate it from your own code.
+<!-- ruv-seo:end -->
+
+## Reference
+
 > ⚠️ **Illustrative output.** Transcripts and validation/run output shown in this README are
 > representative examples, not captured from a specific run — actual output depends on your
 > environment, models, and inputs. Run the commands to see real results.
-
 
 A minimal scaffold that wires up GitHub Copilot in VSCode with MCP (Model Context Protocol) servers via `mcp.json`. This is for developers who already use Copilot Chat in VSCode and want to extend it with custom tools, file-system context, and MCP-backed integrations without hand-rolling configuration files. It does NOT ship a custom Copilot model, agent runtime, or replacement for Copilot Chat — it just generates the config layer that VSCode's Copilot reads on startup.
 

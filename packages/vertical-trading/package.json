@@ -1,12 +1,15 @@
 {
   "name": "@metaharness/vertical-trading",
-  "version": "0.1.0",
-  "description": "Trading harness vertical pack — paper-mode-default, circuit breakers, fractional-Kelly position sizing, 5-agent pipeline (market-watcher / signal-gen / risk-checker / executor / postmortem)",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator",
+  "version": "0.1.1",
+  "description": "Trading vertical pack for MetaHarness: paper mode by default, circuit breakers, fractional-Kelly sizing, and a five-agent pipeline from market watcher to postmortem.",
+  "homepage": "https://ruv.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "url": "https://github.com/ruvnet/metaharness.git",
     "directory": "packages/vertical-trading"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
   },
   "license": "MIT",
   "type": "module",
@@ -29,12 +32,15 @@
     "lint": "tsc --noEmit"
   },
   "keywords": [
+    "metaharness",
     "agent-harness",
     "vertical-pack",
     "trading",
+    "paper-trading",
     "quant",
-    "backtesting",
-    "ruflo"
+    "risk-management",
+    "circuit-breaker",
+    "kelly-criterion"
   ],
   "publishConfig": {
     "access": "public"

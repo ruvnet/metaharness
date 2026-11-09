@@ -1,7 +1,16 @@
 {
   "name": "@metaharness/agntcy",
-  "version": "0.1.1",
-  "description": "AGNTCY (Cisco Outshift / Linux Foundation Internet of Cognition) build-time integration for generated MetaHarness agents: AGNTCY identity (W3C DID + verifiable-credential badges signed into the ADR-011 witness manifest), OASF capability-record export and real AGNTCY Directory publishing via the official `agntcy-dir` SDK (push/publish/lookup, live-tested against a real Directory server), AGNTCY semantic observability (OpenTelemetry semantic-convention attributes for agent/coordination/authorization/model-route/memory-provenance/evaluation spans), and the CASA intent-to-authority-envelope compiler (deterministic free-text-objective -> bounded allow/deny/budget/expiry schema, enforcement owned by the runtime, never by this package). Optional peer package per ADR-002 kernel-boundary discipline and ADR-240 SS5 -- never a hard kernel dependency. Identity-provider calls remain a config-gated stub pending a real AGNTCY Identity JS/TS SDK (Go-only today, verified) -- see README.md \"Status\".",
+  "version": "0.1.2",
+  "description": "AGNTCY build-time integration for MetaHarness agents: DID identity badges, OASF capability records, Agent Directory publishing, OpenTelemetry semantic attributes, and the CASA intent compiler.",
+  "homepage": "https://ruv.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/metaharness.git",
+    "directory": "packages/agntcy"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -22,31 +31,21 @@
     "lint": "tsc --noEmit"
   },
   "keywords": [
+    "metaharness",
     "agntcy",
-    "outshift",
-    "internet-of-cognition",
     "oasf",
-    "casa",
-    "slim",
-    "identity",
+    "agent-directory",
     "did",
     "verifiable-credentials",
     "opentelemetry",
     "observability",
-    "agent-directory",
-    "agent-harness",
-    "metaharness",
-    "authorization",
-    "provenance"
+    "casa",
+    "agent-identity",
+    "provenance",
+    "agent-harness"
   ],
   "author": "rUv <ruv@ruv.net>",
   "license": "MIT",
-  "homepage": "https://github.com/ruvnet/metaharness/tree/main/packages/agntcy#readme",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ruvnet/metaharness.git",
-    "directory": "packages/agntcy"
-  },
   "engines": {
     "node": ">=20.0.0"
   },

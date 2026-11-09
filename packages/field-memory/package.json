@@ -1,7 +1,16 @@
 {
   "name": "@metaharness/field-memory",
-  "version": "0.1.0",
-  "description": "Governed packed-multihead attractor memory for agent routing. Encodes verified aggregate outcomes as a cost-aware routing field without exposing raw episodes or requiring a native vector dependency.",
+  "version": "0.1.1",
+  "description": "Governed attractor memory for agent routing: encodes verified aggregate outcomes as a cost-aware routing field, without raw episodes or a native vector dependency.",
+  "homepage": "https://ruv.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/metaharness.git",
+    "directory": "packages/field-memory"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -23,22 +32,17 @@
     "lint": "tsc --noEmit"
   },
   "keywords": [
-    "agent",
+    "metaharness",
+    "agent-memory",
     "attractor-memory",
     "associative-memory",
     "field-memory",
     "routing",
     "ruvector",
-    "metaharness"
+    "agent-harness"
   ],
   "author": "rUv <ruv@ruv.net>",
   "license": "MIT",
-  "homepage": "https://github.com/ruvnet/metaharness/tree/main/packages/field-memory#readme",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ruvnet/metaharness.git",
-    "directory": "packages/field-memory"
-  },
   "engines": {
     "node": ">=20.0.0"
   },

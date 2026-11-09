@@ -1,9 +1,38 @@
 # MetaHarness: trading vertical
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — quant trading harness with non-bypassable risk gate, paper-by-default.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/trading` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/trading my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 27
+Manifest: ./my-bot/.harness/manifest.json
+
+Next steps:
+  cd my-bot && npm install
+  harness doctor   # confirm risk gate + paper-trading defaults are wired
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — evolve the scaffolded harness against its own tests instead of hand-tuning it.
+<!-- ruv-seo:end -->
+
+## Reference
+
 > ⚠️ **Illustrative output.** Transcripts and validation/run output shown in this README are
 > representative examples, not captured from a specific run — actual output depends on your
 > environment, models, and inputs. Run the commands to see real results.
-
 
 A ready-made multi-agent scaffold for quantitative trading workflows on top of Claude Code. Ships a research → strategy → risk → execution pipeline with a non-bypassable risk gate and paper-trading defaults, so you can iterate on signals and backtests without accidentally wiring real capital. Intended for quants, algo-trading hobbyists, and trading-platform integrators who want a sane starting point. It does NOT include broker credentials, a live order router, or any market-data subscription — bring your own broker adapter when you're ready to flip from paper to live.
 

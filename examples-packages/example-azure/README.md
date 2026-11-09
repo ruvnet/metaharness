@@ -1,5 +1,43 @@
 # @metaharness/example-azure
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — Microsoft Azure scaffold: resource management, Blob storage, and Azure OpenAI via DefaultAzureCredential.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This package does not install the third-party SDK; the scaffold tells you to run `npm install @azure/identity @azure/arm-resources @azure/storage-blob` yourself. This is the `@metaharness/example-azure` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/example-azure my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 17
+Manifest: ./my-bot/.harness/manifest.json
+
+@metaharness/example-azure — scaffolded "my-bot" for: claude-code
+Wrote 7 bespoke showcase file(s) per project (agents/, .harness/mcp-policy.json, commands/, .env.example).
+
+Next steps:
+  cd my-bot && npm install
+  npm install @azure/identity @azure/arm-resources @azure/storage-blob
+  cp .env.example .env   # then fill in: AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_SUBSCRIPTION_ID
+  npm run doctor
+  # then in your host run:  /azure-ops "<your request>"
+
+Read-only / sandbox by default. Re-run with --allow-mutations to enable writes (see README -> Safety).
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — evolve the scaffolded harness against its own tests instead of hand-tuning it.
+<!-- ruv-seo:end -->
+
+## Reference
+
 **MetaHarness scaffold for Microsoft Azure — resource management, Blob storage, and Azure OpenAI via DefaultAzureCredential**
 
 > **Illustrative output.** Code samples and example transcripts shown in this README are representative — actual output depends on your Azure subscription, resource configuration, deployed models, and environment. Run the commands to see real results.

@@ -1,5 +1,43 @@
 # @metaharness/example-datadog
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness scaffold for Datadog incident triage: generates a read-only AI triage bot wired to the Datadog API.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This package does not install the third-party SDK; the scaffold tells you to run `npm install @datadog/datadog-api-client` yourself. This is the `@metaharness/example-datadog` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/example-datadog my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 17
+Manifest: ./my-bot/.harness/manifest.json
+
+@metaharness/example-datadog — scaffolded "my-bot" for: claude-code
+Wrote 6 bespoke showcase file(s) per project (agents/, .harness/mcp-policy.json, commands/, .env.example).
+
+Next steps:
+  cd my-bot && npm install
+  npm install @datadog/datadog-api-client
+  cp .env.example .env   # then fill in: DD_API_KEY, DD_APP_KEY, DD_SITE
+  npm run doctor
+  # then in your host run:  /dd-triage "<your request>"
+
+Read-only / sandbox by default. Re-run with --allow-mutations to enable writes (see README -> Safety).
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — evolve the scaffolded harness against its own tests instead of hand-tuning it.
+<!-- ruv-seo:end -->
+
+## Reference
+
 **Incident triage from metrics, logs, and monitors — powered by the Datadog API and MetaHarness.**
 
 > ⚠️ **Illustrative output.** This scaffold generates an AI-assisted triage bot for demonstration purposes. All findings are AI-generated and must be reviewed by a human before acting on them. This is not a production incident-management system.

@@ -1,5 +1,43 @@
 # @metaharness/example-github
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — GitHub PR review, issue triage, and release notes harness, read-only by default.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This package does not install the third-party SDK; the scaffold tells you to run `npm install @octokit/rest` yourself. This is the `@metaharness/example-github` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/example-github my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 17
+Manifest: ./my-bot/.harness/manifest.json
+
+@metaharness/example-github — scaffolded "my-bot" for: claude-code
+Wrote 7 bespoke showcase file(s) per project (agents/, .harness/mcp-policy.json, commands/, .env.example).
+
+Next steps:
+  cd my-bot && npm install
+  npm install @octokit/rest
+  cp .env.example .env   # then fill in: GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO
+  npm run doctor
+  # then in your host run:  /review-pr "<your request>"
+
+Read-only / sandbox by default. Re-run with --allow-mutations to enable writes (see README -> Safety).
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — evolve the scaffolded harness against its own tests instead of hand-tuning it.
+<!-- ruv-seo:end -->
+
+## Reference
+
 **AI-agent harness for GitHub — PR review, issue triage, and release notes, read-only by default.**
 
 > **Illustrative output.** Transcripts and sample output shown in this README are representative examples, not captured from a specific run. Actual output depends on your environment, models, token scopes, and repository content. Run the commands to see real results.

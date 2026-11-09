@@ -1,5 +1,62 @@
 # @metaharness/flywheel
 
+<!-- ruv-seo:start (ADR-356) -->
+![@metaharness/flywheel loop: candidate harness change, run against a frozen baseline, measure lift, signed receipt with lineage, promote or reject](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/flywheel.svg)
+
+`@metaharness/flywheel` runs the promotion loop for a self-improving agent harness: a proposer suggests a change to one policy lever, your evaluator scores it against the current winner, a frozen gate decides whether to promote, and every promotion is an Ed25519-signed receipt that anyone can replay.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. ESM and CommonJS builds, typed. Runtime dependency-free (Node `crypto` only). The proposer and evaluator are your own async functions, so it runs offline unless they call a model.
+
+## Quickstart
+
+```bash
+mkdir demo && cd demo && npm init -y >/dev/null
+npm install @metaharness/flywheel
+cat > quickstart.mjs <<'JS'
+import { runFlywheelGenerations, meetsPromotionRule, makeSigner, verifyReplayBundle } from '@metaharness/flywheel';
+
+// Toy domain: a policy scores better the more of these rules it contains.
+const rules = ['cite sources', 'answer in JSON', 'check units'];
+const evaluator = async (policy) => {
+  const hits = rules.filter((r) => Object.values(policy).join(' ').includes(r)).length;
+  return { primary: hits / rules.length, noopRate: 1 - hits / rules.length, costPerWin: 1, regressed: false };
+};
+// Toy proposer: appends the next missing rule to the lever it is asked to improve.
+const proposer = async (base, target) => {
+  const missing = rules.find((r) => !Object.values(base.policy).join(' ').includes(r)) ?? '';
+  return `${base.policy[target]} ${missing}`.trim();
+};
+
+const result = await runFlywheelGenerations({
+  rootPolicy: { reasoning: '', format: '' },
+  proposer, evaluator, promotionRule: meetsPromotionRule,
+  holdout: { id: 'holdout', items: [1] },
+  maxGenerations: 4,
+  signer: makeSigner(),
+  now: (g) => `2026-01-01T00:00:0${g}Z`,
+});
+
+console.log('lift curve:', result.liftCurve.map((p) => p.primary.toFixed(2)).join(' -> '));
+console.log('promotions:', result.promotions.length);
+const verdict = verifyReplayBundle(result.replayBundle);
+console.log('replay verifies:', verdict.pass);
+JS
+node quickstart.mjs
+```
+
+Expected output:
+
+```text
+lift curve: 0.00 -> 0.33 -> 0.67 -> 1.00
+promotions: 3
+replay verifies: true
+```
+
+**Next:** [`@metaharness/redblue`](https://www.npmjs.com/package/@metaharness/redblue) — red-team each promoted harness so a capability gain never hides a security regression.
+<!-- ruv-seo:end -->
+
+## Reference
+
 **A verifiable self-improvement loop for agent harnesses.**
 _Freeze the model. Evolve the harness. Promote only what proves lift._
 

@@ -1,5 +1,43 @@
 # @metaharness/example-supabase
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness SDK showcase — RLS-aware Supabase data agent (anon vs service-role, pgvector RAG, verification-gated).
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This package does not install the third-party SDK; the scaffold tells you to run `npm install @supabase/supabase-js` yourself. This is the `@metaharness/example-supabase` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/example-supabase my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 17
+Manifest: ./my-bot/.harness/manifest.json
+
+@metaharness/example-supabase — scaffolded "my-bot" for: claude-code
+Wrote 6 bespoke showcase file(s) per project (agents/, .harness/mcp-policy.json, commands/, .env.example).
+
+Next steps:
+  cd my-bot && npm install
+  npm install @supabase/supabase-js
+  cp .env.example .env   # then fill in: SUPABASE_URL, SUPABASE_ANON_KEY
+  npm run doctor
+  # then in your host run:  /supabase-query "<your request>"
+
+Read-only / sandbox by default. Re-run with --allow-mutations to enable writes (see README -> Safety).
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — evolve the scaffolded harness against its own tests instead of hand-tuning it.
+<!-- ruv-seo:end -->
+
+## Reference
+
 **RLS-aware data agent over Postgres + Auth + Storage — anon vs. service-role keys, pgvector RAG, verification-gated output.**
 
 > **Illustrative output disclaimer**: This package scaffolds an *example* agent harness. The queries, RLS policy snippets, and pgvector patterns shown in generated files are illustrative. They demonstrate the integration pattern; they are not a production-hardened data access layer and have not been reviewed for GDPR, SOC 2, or any other compliance framework. Review Supabase's security documentation before connecting an agent to production data.

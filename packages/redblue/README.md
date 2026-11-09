@@ -1,5 +1,39 @@
 # @metaharness/redblue — AI Red/Blue Team Harness
 
+<!-- ruv-seo:start (ADR-356) -->
+![@metaharness/redblue loop: red team adversarial probes, finding, blue team auto-patch, retest with the same probes, report mapped to NIST and OWASP](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/redblue.svg)
+
+`@metaharness/redblue` red-teams AI agents and LLM apps that you own: it runs adversarial test families (prompt injection, tool misuse, data exfiltration, role confusion, cost amplification and more) against a loopback or test target, patches the failures, retests with the same probes, and writes a report.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. CLI `redblue` (alias `metaharness-redblue`) plus an ESM library. Network, shell and real credentials are disabled at config load, and the target must be a loopback or test host. The real judge is a model and needs `OPENROUTER_API_KEY`; `--mock-judge` is a $0 test fixture, not the product judge.
+
+## Quickstart
+
+```bash
+mkdir demo && cd demo && npm init -y >/dev/null
+npm install @metaharness/redblue
+npx redblue init
+npx redblue patch --mock-judge
+```
+
+Expected output (temp path shortened to `./`):
+
+```text
+Wrote sample config to ./redblue.yaml
+SAFETY: network/shell/real-credentials are hard-off; target must be a loopback/test host.
+{
+  "patch_reduction_rate": 1,
+  "gates_passed": false
+}
+```
+
+`redblue run --mock-judge --out report.json` writes the per-test findings; `redblue report --in report.json` renders them.
+
+**Next:** [`@metaharness/workspace-lens`](https://www.npmjs.com/package/@metaharness/workspace-lens) — when an attack lands on an open-weight model, look at what its internal workspace was doing.
+<!-- ruv-seo:end -->
+
+## Reference
+
 > **Stress-test the AI agents & LLM apps you own with adversarial models, find security failures (prompt injection, tool misuse, data leakage, jailbreaks), auto-patch them, retest, and get a board-ready report — safely (capability-contained).** For AI/ML engineers, app developers, and security teams shipping LLM-powered products.
 
 [![npm version](https://img.shields.io/npm/v/@metaharness/redblue.svg)](https://www.npmjs.com/package/@metaharness/redblue)

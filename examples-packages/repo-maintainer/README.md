@@ -1,5 +1,36 @@
 # MetaHarness: repo-maintainer vertical
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — open-source repo maintainer vertical (triage, review, release) for Claude Code.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/repo-maintainer` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/repo-maintainer my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 35
+Manifest: ./my-bot/.harness/manifest.json
+
+Scaffolded my-bot. Next steps:
+  cd my-bot && npm install
+  harness doctor
+  claude -p --plugin-dir . "/triage #1"
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — evolve the scaffolded harness against its own tests instead of hand-tuning it.
+<!-- ruv-seo:end -->
+
+## Reference
+
 A ready-made multi-agent template that scaffolds an open-source repo maintenance bot on top of Claude Code. The vertical ships three coordinated agents — a triager, a reviewer, and a release manager — wired to GitHub MCP, settings.json permissions for `gh` and `git`, and a routing config that pushes the expensive work onto Sonnet/Opus while keeping triage cheap on Haiku. It is for maintainers who want an opinionated starting point instead of assembling agents, prompts, and MCP servers by hand. It does NOT replace human review on merges, automate destructive git operations, or open PRs without your confirmation — the default permission mode requires acceptEdits.
 
 ## Quickstart

@@ -1,12 +1,15 @@
 {
   "name": "@metaharness/example-pinecone",
-  "version": "0.2.0",
-  "description": "MetaHarness example \u2014 Pinecone RAG memory agent scaffold with tiered routing, MCP default-deny, and verification gate (npx @metaharness/example-pinecone my-bot)",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/examples-packages/example-pinecone",
+  "version": "0.2.1",
+  "description": "MetaHarness example — Pinecone RAG memory agent scaffold with tiered routing, MCP default-deny, and verification gate (npx @metaharness/example-pinecone my-bot)",
+  "homepage": "https://ruv.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "url": "https://github.com/ruvnet/metaharness.git",
     "directory": "examples-packages/example-pinecone"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
   },
   "license": "MIT",
   "author": "rUv <ruv@ruv.net>",
@@ -32,7 +35,9 @@
     "scaffold",
     "retrieval-augmented-generation",
     "semantic-search",
-    "embeddings"
+    "embeddings",
+    "agent-harness",
+    "agent-scaffold"
   ],
   "publishConfig": {
     "access": "public"

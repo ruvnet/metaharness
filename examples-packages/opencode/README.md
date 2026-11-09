@@ -1,9 +1,38 @@
 # MetaHarness × OpenCode .opencode/ config
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — minimal OpenCode .opencode/ config scaffold for agent harnesses.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/opencode` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/opencode my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 16
+Manifest: ./my-bot/.harness/manifest.json
+
+Next steps:
+  cd my-bot && npm install
+  harness doctor   # verify OpenCode config + CLI are wired
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/host-opencode`](https://www.npmjs.com/package/@metaharness/host-opencode) — the adapter that writes this host's config, if you want to generate it from your own code.
+<!-- ruv-seo:end -->
+
+## Reference
+
 > ⚠️ **Illustrative output.** Transcripts and validation/run output shown in this README are
 > representative examples, not captured from a specific run — actual output depends on your
 > environment, models, and inputs. Run the commands to see real results.
-
 
 A minimal MetaHarness scaffold wired for the OpenCode host. It drops a ready-to-edit `.opencode/` config tree into a fresh project directory so you can run agents through OpenCode without hand-building the boilerplate. This is for developers who already use OpenCode (or want to try it) and want a working starting point in one command. It is not a multi-agent vertical template — there are no pre-built domain agents, no embedded MCP server farm, and no opinionated workflow. You get the harness skeleton; you bring the intent.
 

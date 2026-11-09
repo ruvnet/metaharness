@@ -1,9 +1,38 @@
 # MetaHarness × OpenAI Codex / Codex CLI
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — minimal OpenAI Codex / Codex CLI agent scaffold with doctor, validate, and host config.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/codex` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/codex my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 16
+Manifest: ./my-bot/.harness/manifest.json
+
+Scaffold ready at ./my-bot
+Next: cd my-bot && npm install
+Then: harness doctor
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/host-codex`](https://www.npmjs.com/package/@metaharness/host-codex) — the adapter that writes this host's config, if you want to generate it from your own code.
+<!-- ruv-seo:end -->
+
+## Reference
+
 > ⚠️ **Illustrative output.** Transcripts and validation/run output shown in this README are
 > representative examples, not captured from a specific run — actual output depends on your
 > environment, models, and inputs. Run the commands to see real results.
-
 
 A minimal, opinionated scaffold for building agent harnesses that target the OpenAI Codex CLI. It generates a ready-to-run project directory with a host-specific `codex.config.json`, a starter agent, lifecycle hooks, and the `harness` doctor/validate tooling baked in. This is for developers who want a clean starting point for a Codex-driven agent and do not want to hand-wire config, prompts, and validation. It is not a multi-agent vertical template, a UI, or a hosted runtime — you supply the logic, this gives you the skeleton.
 

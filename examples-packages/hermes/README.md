@@ -1,9 +1,38 @@
 # MetaHarness × Hermes cli-config harness
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — Hermes cli-config harness scaffold for AI agents.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/hermes` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/hermes my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 17
+Manifest: ./my-bot/.harness/manifest.json
+
+Scaffolded my-bot with the Hermes minimal harness.
+Next: cd my-bot && npm install
+Then: npm run doctor
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/host-hermes`](https://www.npmjs.com/package/@metaharness/host-hermes) — the adapter that writes this host's config, if you want to generate it from your own code.
+<!-- ruv-seo:end -->
+
+## Reference
+
 > ⚠️ **Illustrative output.** Transcripts and validation/run output shown in this README are
 > representative examples, not captured from a specific run — actual output depends on your
 > environment, models, and inputs. Run the commands to see real results.
-
 
 A one-shot scaffolder that drops a minimal, working Hermes-integrated agent harness into a fresh directory. It wires up the host-specific config file Hermes expects, a baseline `harness.json`, and the bare-minimum agent + MCP plumbing so you can run `harness doctor` and get a green check in under a minute. It is intentionally NOT a multi-agent template, a vertical solution, or an opinionated framework — it is the smallest viable starting point for building a Hermes-driven CLI agent.
 

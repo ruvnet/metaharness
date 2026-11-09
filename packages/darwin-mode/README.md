@@ -1,5 +1,50 @@
 # @metaharness/darwin
 
+<!-- ruv-seo:start (ADR-356) -->
+![Darwin Mode loop: parent harness policy, mutate children, run each in a sandbox, deterministic oracle, promote only if it beats the parent](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/darwin.svg)
+
+`@metaharness/darwin` keeps the model fixed and evolves the harness around it: it mutates one part of the harness policy at a time (planner, tool policy, context builder, reviewer, score policy), runs every child in a sandbox, and promotes a child only when a deterministic oracle says it beats its parent.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. CLI `metaharness-darwin`, plus ESM library exports (`.`, `./gepa`, `./contrastive`). `--sandbox mock` runs offline with no keys; `--sandbox real` runs your harness's real tests and model calls.
+
+## Quickstart
+
+```bash
+mkdir demo && cd demo && npm init -y >/dev/null
+npm install metaharness @metaharness/darwin
+npx metaharness new demo --no-darwin
+npx metaharness-darwin evolve demo --sandbox mock --generations 2 --children 3
+```
+
+Expected output of the last command (the mock sandbox is deterministic, so a fresh scaffold prints the same leaderboard):
+
+```text
+Darwin Mode — leaderboard
+  0.875  g2_v5  [contextBuilder]  safety=1.00  pass=0.80 ◀ winner
+  0.765  baseline  [planner]  safety=1.00  pass=0.60
+  0.765  g1_v0  [planner]  safety=1.00  pass=0.60
+  0.765  g1_v1  [toolPolicy]  safety=1.00  pass=0.60
+  0.765  g1_v2  [reviewer]  safety=1.00  pass=0.60
+  0.765  g2_v0  [reviewer]  safety=1.00  pass=0.60
+  0.765  g2_v1  [planner]  safety=1.00  pass=0.60
+  0.765  g2_v3  [toolPolicy]  safety=1.00  pass=0.60
+  0.765  g2_v4  [scorePolicy]  safety=1.00  pass=0.60
+  0.545  g2_v2  [contextBuilder]  safety=1.00  pass=0.20
+
+Winner: g2_v5
+Lineage: baseline → g1_v0 → g2_v5
+Delta over baseline: +0.110
+
+Artifacts: ./demo/.metaharness
+```
+
+The mock scores show the mechanics only; they are not a benchmark result. Children are immutable, so a second `evolve` into the same directory stops with `child id already exists`; scaffold a fresh harness or remove `.metaharness/` first.
+
+**Next:** [`@metaharness/flywheel`](https://www.npmjs.com/package/@metaharness/flywheel) — the frozen promotion gate, signed receipts and replayable lineage behind "promote only what proves lift".
+<!-- ruv-seo:end -->
+
+## Reference
+
 > **An LLM supercharger and cost optimizer.** Keep your model frozen — evolve the
 > harness around it so a *cheap* model performs like an expensive one, for a fraction
 > of the cost.

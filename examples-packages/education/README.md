@@ -1,9 +1,38 @@
 # MetaHarness: education vertical
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — tutor pod that teaches over a curriculum with planner, tutor, and grader agents.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/education` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/education my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 33
+Manifest: ./my-bot/.harness/manifest.json
+
+Next steps:
+  cd my-bot && npm install
+  harness doctor && claude -p --plugin-dir . "Teach me the chain rule"
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — evolve the scaffolded harness against its own tests instead of hand-tuning it.
+<!-- ruv-seo:end -->
+
+## Reference
+
 > ⚠️ **Illustrative output.** Transcripts and validation/run output shown in this README are
 > representative examples, not captured from a specific run — actual output depends on your
 > environment, models, and inputs. Run the commands to see real results.
-
 
 A ready-made Claude Code scaffold for a multi-agent tutoring pod. You get a planner that sequences a curriculum, a tutor that delivers lessons and answers questions, and a grader that checks understanding with rubric-backed feedback — all wired into Claude Code with sensible model tiers, memory, and slash commands. This is a starting template for educators, EdTech prototypers, and self-learners building a focused study companion. It is not a full LMS, not a content library, and does not ship pre-built curricula — you bring the syllabus, the pod runs the lessons.
 

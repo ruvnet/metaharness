@@ -1,5 +1,46 @@
 # @metaharness/jujutsu — version-control-for-agents capability + dual-state bridge
 
+<!-- ruv-seo:start (ADR-356) -->
+`@metaharness/jujutsu` gives each agent its own branch of both its code and its memory: it wraps `agentic-jujutsu` (jj op-log, lock-free coordination, trajectories) and pairs every jj branch with an `agenticow` copy-on-write memory branch, so spawn, learn, revert and merge move both together.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. ESM only (`import`, not `require`). `agentic-jujutsu`, the `jj` CLI and `agenticow` are optional peers; without them `probe()` reports them absent and the in-memory providers still run the full lifecycle, as the quickstart shows (output below is from a machine without the peers).
+
+## Quickstart
+
+```bash
+npm install @metaharness/jujutsu
+cat > quickstart.mjs <<'JS'
+import { probe, DualStateBridge, MockOpProvider, MockMemoryProvider } from '@metaharness/jujutsu';
+
+// What is installed? (agentic-jujutsu, the jj CLI and agenticow are optional peers.)
+const cap = await probe();
+console.log('opLog:', cap.opLog, '| jjCli:', cap.jjCli, '| memory:', cap.memory);
+
+// The dual-state lifecycle, on the in-memory providers (no peers needed).
+const bridge = new DualStateBridge(new MockOpProvider(), new MockMemoryProvider());
+await bridge.spawn('alice');
+const learned = await bridge.learn('alice', 0.95, 'tests green');
+console.log('learn:', JSON.stringify({ opCount: learned.opCount, ingested: learned.ingested }));
+console.log('merge:', JSON.stringify(await bridge.merge('alice')));
+JS
+node quickstart.mjs
+```
+
+Expected output:
+
+```text
+opLog: false | jjCli: false | memory: false
+learn: {"opCount":3,"ingested":3}
+merge: {"ingested":3,"deleted":0}
+```
+
+**Next:** [`metaharness`](https://www.npmjs.com/package/metaharness) — scaffold the harness whose agents get these dual-state branches.
+
+**Fit:** standalone — a removable augmentation by design (ADR-150). No published `@metaharness` package depends on it; add it to a harness explicitly.
+<!-- ruv-seo:end -->
+
+## Reference
+
 > **Give each agent its own branch — of *both* its code and its memory.** Wraps
 > [`agentic-jujutsu`](https://www.npmjs.com/package/agentic-jujutsu) (lock-free
 > jj/Jujutsu op-log, QuantumDAG agent coordination, ReasoningBank trajectories,

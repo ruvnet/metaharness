@@ -1,7 +1,16 @@
 {
   "name": "@metaharness/workspace-probe",
-  "version": "0.1.1",
-  "description": "Evaluation + Darwin-Mode bridge for @metaharness/workspace-lens: turn Jacobian-Lens interpretability receipts into a flywheel-consumable workspace_probe score, and reject structurally-brittle prompt/policy mutations (final answer up, workspace grip down). Pure, dependency-light, deterministic.",
+  "version": "0.1.2",
+  "description": "Evaluation bridge for @metaharness/workspace-lens: turns interpretability receipts into a flywheel workspace_probe score and rejects brittle prompt or policy mutations.",
+  "homepage": "https://ruv.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/metaharness.git",
+    "directory": "packages/workspace-probe"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -25,15 +34,14 @@
     "lint": "tsc --noEmit"
   },
   "keywords": [
-    "jacobian-lens",
+    "metaharness",
     "workspace-lens",
+    "jacobian-lens",
     "interpretability",
     "darwin-mode",
-    "mutation-evidence",
     "flywheel",
-    "eval",
+    "evaluation",
     "ai-safety",
-    "metaharness",
     "agent-harness"
   ],
   "license": "MIT",

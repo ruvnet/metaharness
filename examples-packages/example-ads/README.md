@@ -1,5 +1,43 @@
 # @metaharness/example-ads
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — Google Ads + Meta Marketing API harness, campaign/spend analysis read-only by default, mutations gated.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This package does not install the third-party SDK; the scaffold tells you to run `npm install google-ads-api` yourself. This is the `@metaharness/example-ads` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/example-ads my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 17
+Manifest: ./my-bot/.harness/manifest.json
+
+@metaharness/example-ads — scaffolded "my-bot" for: claude-code
+Wrote 6 bespoke showcase file(s) per project (agents/, .harness/mcp-policy.json, commands/, .env.example).
+
+Next steps:
+  cd my-bot && npm install
+  npm install google-ads-api
+  cp .env.example .env   # then fill in: GOOGLE_ADS_DEVELOPER_TOKEN, GOOGLE_ADS_CLIENT_ID, GOOGLE_ADS_CLIENT_SECRET, META_ACCESS_TOKEN
+  npm run doctor
+  # then in your host run:  /ads-report "<your request>"
+
+Read-only / sandbox by default. Re-run with --allow-mutations to enable writes (see README -> Safety).
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — evolve the scaffolded harness against its own tests instead of hand-tuning it.
+<!-- ruv-seo:end -->
+
+## Reference
+
 > Multi-agent scaffold for Google Ads + Meta Marketing API — campaign and spend analysis, read-only by default, mutations gated.
 
 > ⚠️ **Illustrative output.** Transcripts, metric values, and validation output shown in this README are representative examples, not captured from a specific run. Actual output depends on your environment, models, credentials, and ad account data. Run the commands to see real results.

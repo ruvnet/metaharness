@@ -1,12 +1,15 @@
 {
   "name": "@metaharness/example-huggingface",
-  "version": "0.2.0",
-  "description": "MetaHarness example \u2014 Hugging Face SDK showcase: model/dataset discovery, serverless inference, and Space exploration (npx @metaharness/example-huggingface my-bot)",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/examples-packages/example-huggingface",
+  "version": "0.2.1",
+  "description": "MetaHarness example — Hugging Face SDK showcase: model/dataset discovery, serverless inference, and Space exploration (npx @metaharness/example-huggingface my-bot)",
+  "homepage": "https://ruv.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "url": "https://github.com/ruvnet/metaharness.git",
     "directory": "examples-packages/example-huggingface"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
   },
   "license": "MIT",
   "author": "rUv <ruv@ruv.net>",
@@ -32,7 +35,9 @@
     "scaffold",
     "model-discovery",
     "serverless-inference",
-    "spaces"
+    "spaces",
+    "agent-harness",
+    "agent-scaffold"
   ],
   "publishConfig": {
     "access": "public"

@@ -1,7 +1,16 @@
 {
   "name": "@metaharness/flywheel",
-  "version": "0.1.13",
-  "description": "A verifiable self-improvement loop for agent harnesses. Freeze the model. Evolve the harness. Promote only what proves lift.",
+  "version": "0.1.14",
+  "description": "Verifiable self-improvement loop for agent harnesses: run candidates, compare against a frozen baseline, and promote only what proves lift, with signed receipts and lineage.",
+  "homepage": "https://ruv.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/metaharness.git",
+    "directory": "packages/flywheel"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
+  },
   "type": "module",
   "main": "./dist/cjs/index.js",
   "module": "./dist/index.js",
@@ -33,23 +42,19 @@
     "verify:dual": "npm run build && node scripts/verify-dual.mjs"
   },
   "keywords": [
-    "agent",
-    "harness",
+    "metaharness",
+    "agent-harness",
     "self-improvement",
     "flywheel",
-    "promotion",
+    "promotion-gate",
     "lineage",
     "receipts",
-    "metaharness"
+    "evaluation",
+    "ai-agent"
   ],
   "license": "MIT",
   "devDependencies": {
     "typescript": "^5.4.0",
     "vitest": "^4.1.12"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ruvnet/metaharness.git",
-    "directory": "packages/flywheel"
   }
 }

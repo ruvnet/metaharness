@@ -1,7 +1,16 @@
 {
   "name": "@metaharness/oo-agents",
-  "version": "0.1.0",
-  "description": "Object-oriented agents with a Rust/WASM code-as-action sandbox \u2014 a TypeScript clone of NOOA (NVIDIA-NeMo/labs-OO-Agents): the agent is a class; fields are state, methods are capabilities, docs are prompts, schemas are contracts, and the model acts by writing code in a fuel-limited wasm cell VM.",
+  "version": "0.1.1",
+  "description": "Object-oriented agents with a Rust/WASM code-as-action sandbox: the agent is a class, methods are capabilities, and the model acts by writing code in a fuel-limited cell VM.",
+  "homepage": "https://ruv.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/metaharness.git",
+    "directory": "packages/oo-agents"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -26,12 +35,14 @@
     "lint": "tsc --noEmit"
   },
   "keywords": [
+    "metaharness",
     "oo-agents",
     "nooa",
     "code-as-action",
     "wasm-sandbox",
+    "object-oriented",
     "agent-harness",
-    "metaharness"
+    "typescript"
   ],
   "license": "Apache-2.0",
   "dependencies": {

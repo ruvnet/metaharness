@@ -1,9 +1,38 @@
 # MetaHarness: devops vertical
 
+<!-- ruv-seo:start (ADR-356) -->
+MetaHarness example — Claude Code incident-response vertical with responder, runbook-runner, escalator, postmortem agents.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/devops` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
+
+## Quickstart
+
+```bash
+npx @metaharness/devops my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1
+```
+
+Expected output (npm notices removed, temp path shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 26
+Manifest: ./my-bot/.harness/manifest.json
+
+Next: cd my-bot && npm install
+Then: npm run doctor
+Run:  claude -p --plugin-dir my-bot "page: <your incident here>"
+Result: HEALTHY (./my-bot)
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — evolve the scaffolded harness against its own tests instead of hand-tuning it.
+<!-- ruv-seo:end -->
+
+## Reference
+
 > ⚠️ **Illustrative output.** Transcripts and validation/run output shown in this README are
 > representative examples, not captured from a specific run — actual output depends on your
 > environment, models, and inputs. Run the commands to see real results.
-
 
 A ready-made multi-agent scaffold for incident response on top of Claude Code. It provisions four specialized agents — `responder`, `runbook-runner`, `escalator`, and `postmortem` — wired together with tiered model routing, project-scoped settings, and a `harness doctor` health check. Use it to bootstrap an on-call assistant that triages alerts, executes runbooks, escalates when stuck, and writes the postmortem afterward.
 
