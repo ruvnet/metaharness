@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 220" width="900" height="220" role="img" aria-labelledby="title desc">
+  <title id="title">MetaHarness agent evaluation in GitHub Actions</title>
+  <desc id="desc">Manual dispatch runs a baseline and candidate against the same labeled cases, and a safety gate determines the exit result.</desc>
+  <style>
+    text { font-family: system-ui, sans-serif; }
+    .node { fill: #16263b; stroke: #68dfbe; stroke-width: 2; }
+    .arrow { stroke: #68dfbe; stroke-width: 3; fill: none; stroke-dasharray: 6 5; animation: flow 1.8s linear 3; }
+    @keyframes flow { to { stroke-dashoffset: -22; } }
+    @media (prefers-reduced-motion: reduce) { .arrow { animation: none; } }
+  </style>
+  <rect x="0" y="0" width="900" height="220" rx="24" fill="#0a1424"/>
+  <text x="36" y="48" fill="#eef8ff" font-size="27" font-weight="700">Agent evaluation in GitHub Actions</text>
+  <text x="36" y="80" fill="#adc3d8" font-size="16">Manual run · read-only permissions · no model keys</text>
+  <path class="arrow" d="M226 143h45m171 0h44m172 0h42"/>
+  <path stroke="#68dfbe" stroke-width="3" fill="none" d="m265 136 7 7-7 7m215-14 7 7-7 7m213-14 7 7-7 7"/>
+  <rect class="node" x="36" y="113" width="190" height="60" rx="12"/>
+  <rect class="node" x="274" y="113" width="168" height="60" rx="12"/>
+  <rect class="node" x="488" y="113" width="170" height="60" rx="12"/>
+  <rect class="node" x="701" y="113" width="163" height="60" rx="12"/>
+  <g fill="#eef8ff" font-size="16" text-anchor="middle">
+    <text x="131" y="150">Dispatch</text><text x="358" y="150">Baseline</text><text x="573" y="150">Candidate</text><text x="782" y="150">Safety gate</text>
+  </g>
+</svg>

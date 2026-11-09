@@ -11,7 +11,11 @@ the harness must complete a task autonomously, emit structured output, and exit
 cleanly. It is not an interactive workspace — for that, use
 `@metaharness/claude-code` or one of the other host wrappers.
 
-## Quickstart
+## Run a read-only evaluation
+
+For a working baseline and candidate comparison, use the [agent evaluation quickstart](https://github.com/ruvnet/metaharness/tree/main/packages/host-github-actions#quickstart-evaluate-an-agent-policy-in-ci). It emits a manual workflow, uses no model credentials, and fails when the candidate violates the fixture's safety gate.
+
+## General purpose scaffold
 
 ```bash
 npx @metaharness/github-actions@latest my-bot
@@ -19,14 +23,12 @@ cd my-bot
 git add .github && git commit -m "add harness workflow" && git push
 ```
 
-Then add your model-provider key as a repo secret
-(`Settings → Secrets and variables → Actions → ANTHROPIC_API_KEY`) and run it
-from the **Actions** tab, or by commenting on an issue.
+The generated composite action is a scaffold; replace its placeholder with a reviewed entrypoint. Remove the issue-comment trigger before enabling a model-provider secret in a public repository, then start with manual dispatch from the **Actions** tab.
 
 ## What you get
 
 - `.github/workflows/<name>.yml` — the trigger workflow. Default triggers are
-  `workflow_dispatch` + `issue_comment` (the safest pair); `push`,
+  `workflow_dispatch` + `issue_comment` in the general scaffold; `push`,
   `pull_request`, and `schedule` are commented-out opt-ins.
 - `.github/actions/<name>/action.yml` — a reusable composite action the
   workflow calls, so the harness logic works across multiple workflows.

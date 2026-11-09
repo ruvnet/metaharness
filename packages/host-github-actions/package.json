@@ -1,11 +1,11 @@
 {
   "name": "@metaharness/host-github-actions",
   "version": "0.1.4",
-  "description": "GitHub Actions host adapter for agent-harness-generator. Emits .github/workflows/<name>.yml + a composite action.yml for non-interactive CI/CD agent harnesses (ADR-033).",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator",
+  "description": "GitHub Actions host adapter for MetaHarness. Scaffold an agent harness or run a read-only baseline and candidate evaluation in CI.",
+  "homepage": "https://ruv.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "url": "git+https://github.com/ruvnet/metaharness.git",
     "directory": "packages/host-github-actions"
   },
   "license": "MIT",
@@ -20,6 +20,8 @@
   },
   "files": [
     "dist/**",
+    "examples/**",
+    "assets/**",
     "README.md",
     "LICENSE"
   ],
@@ -29,15 +31,14 @@
     "lint": "tsc --noEmit"
   },
   "keywords": [
+    "agent-evaluation",
     "agent-harness",
     "github-actions",
     "ci-cd",
-    "workflow",
-    "composite-action",
-    "non-interactive",
     "host-adapter",
-    "ruflo",
-    "ADR-033"
+    "composite-action",
+    "policy-testing",
+    "metaharness"
   ],
   "publishConfig": {
     "access": "public"
@@ -52,5 +53,8 @@
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
   }
 }
