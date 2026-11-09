@@ -1,8 +1,8 @@
 {
   "name": "metaharness",
   "version": "0.4.21",
-  "description": "MetaHarness \u2014 mint a custom AI agent harness from any repo. Browser Studio + `npx metaharness` CLI. Runs on Claude Code, Codex, pi.dev, Hermes, OpenClaw, RVM, Prime Agent.",
-  "homepage": "https://github.com/ruvnet/metaharness",
+  "description": "MetaHarness — mint a custom AI agent harness from any repo. Browser Studio + `npx metaharness` CLI. Runs on Claude Code, Codex, pi.dev, Hermes, OpenClaw, RVM, Prime Agent.",
+  "homepage": "https://ruv.io",
   "repository": {
     "type": "git",
     "url": "https://github.com/ruvnet/metaharness.git",
@@ -92,7 +92,9 @@
     "agent-runtime",
     "agent-factory",
     "vertical-ai",
-    "ai-tooling"
+    "ai-tooling",
+    "agent-evaluation",
+    "github-actions"
   ],
   "publishConfig": {
     "access": "public"
@@ -126,5 +128,8 @@
   },
   "optionalDependencies": {
     "@ruvector/ruvllm": "^4.1.0"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
   }
 }

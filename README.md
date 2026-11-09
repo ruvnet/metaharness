@@ -47,6 +47,10 @@
 
 The model is replaceable. The harness is the product.
 
+### Run an agent evaluation in GitHub Actions
+
+Use the [GitHub Actions host adapter quickstart](packages/host-github-actions/README.md#quickstart-evaluate-an-agent-policy-in-ci) to compare a baseline with a candidate on a labeled fixture, then run the same read-only gate in CI. The example starts manually and uses no model keys.
+
 ## What it gives you
 
 In under 60 seconds, in your browser, with nothing leaving your machine:

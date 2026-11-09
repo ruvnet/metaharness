@@ -2,10 +2,10 @@
   "name": "@metaharness/github-actions",
   "version": "0.1.0",
   "description": "MetaHarness example — GitHub Actions CI/CD harness (.github/workflows + composite action.yml, non-interactive, ADR-033) (npx @metaharness/github-actions my-bot)",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/examples-packages/github-actions",
+  "homepage": "https://ruv.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "url": "git+https://github.com/ruvnet/metaharness.git",
     "directory": "examples-packages/github-actions"
   },
   "license": "MIT",
@@ -36,5 +36,8 @@
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
   }
 }
