@@ -101,6 +101,29 @@ Artifact harness-score has been successfully uploaded!
 
 `harness doctor` accepts GitHub Actions harnesses from `metaharness` 0.4.22; 0.4.21 and earlier reported "at least one host artifact present" as FAIL for this host. This recipe is opt-in: `metaharness` does not add the eval workflow for you.
 
+### Compare a candidate policy against a baseline
+
+A second, keyless recipe contributed in #480. It scaffolds a manual-only `Agent evaluation` workflow (read-only token, pinned actions, five-minute limit) whose composite action scores a baseline and a candidate policy on the same five labelled cases. It exits 1 when the candidate scores lower than the baseline or allows anything it should not. It refuses to overwrite existing files.
+
+```bash
+mkdir demo && cd demo && npm init -y >/dev/null
+npm install --ignore-scripts @metaharness/host-github-actions
+curl -sSfO https://raw.githubusercontent.com/ruvnet/metaharness/main/packages/host-github-actions/examples/scaffold-evaluation.mjs
+node scaffold-evaluation.mjs
+node .github/actions/agent-evaluation/evaluate.mjs
+```
+
+Expected output (the same JSON line appears in the job log on a GitHub-hosted runner):
+
+```text
+Created .github/workflows/agent-evaluation.yml
+Created .github/actions/agent-evaluation/action.yml
+Created .github/actions/agent-evaluation/evaluate.mjs
+{"cases":5,"baselineCorrect":2,"candidateCorrect":5,"unsafeAllows":0,"pass":true}
+```
+
+The policies and cases are an illustrative fixture, not a model measurement. Replace them with your own versioned fixtures.
+
 **Next:** [`@metaharness/github-actions`](https://www.npmjs.com/package/@metaharness/github-actions) — the one-command scaffold (`npx @metaharness/github-actions my-bot`) for a GitHub Actions harness.
 <!-- ruv-seo:end -->
 
