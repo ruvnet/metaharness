@@ -4,6 +4,7 @@ import { meetsPromotionRule } from '../src/gate.js';
 import {
   sequentialEvidence,
   withSequentialEvidence,
+  pairedOutcomesFromItemWins,
   type PairedOutcome,
 } from '../src/sequential.js';
 import type { PromotionEvidence, Score } from '../src/types.js';
@@ -189,5 +190,41 @@ describe('withSequentialEvidence', () => {
     expect(decision.reasons.some((r) => r.startsWith('insufficient_sequential_evidence'))).toBe(
       true,
     );
+  });
+});
+
+describe('pairedOutcomesFromItemWins', () => {
+  it('pairs two honest boolean[] itemWins vectors by index', () => {
+    const base = score({ itemWins: [true, false, true] });
+    const cand = score({ itemWins: [true, true, false] });
+    expect(pairedOutcomesFromItemWins(base, cand)).toEqual([
+      pair('0', true, true),
+      pair('1', true, false),
+      pair('2', false, true),
+    ]);
+  });
+
+  it('returns undefined when either side omits itemWins', () => {
+    expect(pairedOutcomesFromItemWins(score(), score({ itemWins: [true] }))).toBeUndefined();
+  });
+
+  it('returns undefined on length mismatch', () => {
+    expect(
+      pairedOutcomesFromItemWins(score({ itemWins: [true] }), score({ itemWins: [true, false] })),
+    ).toBeUndefined();
+  });
+
+  it('returns undefined on an empty itemWins (degrades to the base rule, not a 0-pair reject)', () => {
+    expect(pairedOutcomesFromItemWins(score({ itemWins: [] }), score({ itemWins: [] }))).toBeUndefined();
+  });
+
+  // Regression (Dream Cycle 2026-11-06): `itemWins` is only a TS type — nothing enforces it at runtime.
+  // A non-array value with a matching `.length` (a string is the simplest case) used to pass the old
+  // length-only guard and then throw on `.map`. Must degrade to `undefined`, never throw.
+  it('returns undefined (never throws) when itemWins is a non-array value with a matching .length', () => {
+    const base = score({ itemWins: 'ab' as unknown as boolean[] });
+    const cand = score({ itemWins: 'cd' as unknown as boolean[] });
+    expect(() => pairedOutcomesFromItemWins(base, cand)).not.toThrow();
+    expect(pairedOutcomesFromItemWins(base, cand)).toBeUndefined();
   });
 });
