@@ -24,6 +24,8 @@ export * from './numeric-mutator.js';
 export * from './numeric-archive.js';
 export * from './numeric-evaluator.js';
 export * from './numeric-evolve.js';
+export * from './numeric-surrogate.js';
+export * from './fann-surrogate.js';
 export * as bench from './bench/index.js';
 export * as security from './security/index.js';
 //# sourceMappingURL=index.d.ts.map
