@@ -1335,3 +1335,19 @@ L2 logistic regression vs a ruv-fann ensemble (d -> 6 Tanh -> 1 Sigmoid, 5 membe
 - **Decision:** not shipped. The empty-patch gate stays the only escalation trigger: it is the one signal with
   100% precision. A useful non-empty gate needs an execution signal (repo tests run against the patch, ADR-178
   Signal A), not a learned score over patch shape.
+
+## 66. ruv-fann follow-ups 2-5: no committed dataset large enough to measure any of them (2026-11-10)
+
+After the numeric-genome surrogate (0.14.0) and the escalation predictor (section 65), four more places for a
+small learned model were checked against the data actually in this repository. None can be measured offline.
+
+| Idea | Data found | Why it cannot be validated |
+|---|---|---|
+| Learned AVO route policy (replace the 0.5/0.3/0.2 score in `GovernedAutonomyRouter`) | `bench/swebench/results/arm-*.jsonl`: 100 instances; Darwin arm 5 resolved, AVO arms 13-14 resolved; 27 instances submitted by both arms, of which AVO-only wins are 1-2 | About 10 positive "AVO wins" labels in total, and the policy's inputs (`complexity`, `failedAttempts`, `estimatedValue`, `evaluatorReliability`) were never logged per instance |
+| Surrogate for the seven-surface prompt-genome loop | One promoted genome in `genomes/`; 118 candidate commits across six flywheel bundles from six unrelated domains | No archive of scored variants from a real evolve run; the only per-candidate feature is the mutated surface name |
+| Dense head in `@metaharness/router` | DRACO routing dataset: 20 queries | The router README already records that kernel ridge regression ties k-NN at n=20 (the data ceiling); a network cannot be validated on 20 rows |
+| Early-stopping predictor ahead of the flywheel gate | 118 candidate commits, none with per-item results | Needs per-task outcome sequences to learn from a prefix; also `flywheel/src/sequential.ts` already provides a statistical early-stopping rule, which is the principled tool for this |
+
+What would unblock each: log the route inputs and both arms' outcomes on a few hundred instances (idea 2);
+keep `archive.json` from real `evolve` runs (idea 3); a routing dataset in the hundreds of queries (idea 4);
+store per-item outcomes in flywheel receipts (idea 5). The first three need paid model runs.
