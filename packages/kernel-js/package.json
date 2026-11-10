@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/kernel",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Cross-platform kernel for MetaHarness harnesses: the HarnessSpec and HostAdapter contract, memory backends, and a WASM-first runtime with NAPI-RS native and pure-JS fallbacks.",
   "homepage": "https://ruv.io",
   "repository": {

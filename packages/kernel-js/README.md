@@ -3,7 +3,7 @@
 <!-- ruv-seo:start (ADR-356) -->
 `@metaharness/kernel` is the shared runtime contract for MetaHarness: the `HarnessSpec` and `HostAdapter` types, MCP server validation, a hash-chained `SessionLog`, and memory backends, behind one `loadKernel()` that picks a native, WASM or pure-JS backend.
 
-**Supported environments:** Node.js 20+ on Linux, macOS and Windows. ESM only (`import`, not `require`). `loadKernel()` prefers an installed per-platform native package, then WASM, then a dependency-free JavaScript backend; the native packages are optional peers that are not yet on npm, and the published tarball currently resolves to the JS backend, as the output below shows. `@ruvector/rvf` is an optional peer for the persistent `memory-rvf` backend.
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. ESM only (`import`, not `require`). `loadKernel()` prefers an installed per-platform native package, then WASM, then a dependency-free JavaScript backend; the native packages are optional peers that are not yet on npm, so a plain install resolves to the bundled WASM backend, as the output below shows. `kernelInfo().version` is the version of the compiled Rust kernel, not the npm package. `@ruvector/rvf` is an optional peer for the persistent `memory-rvf` backend.
 
 ## Quickstart
 
@@ -27,7 +27,7 @@ node quickstart.mjs
 Expected output:
 
 ```text
-kernel 0.1.7 (js backend)
+kernel 0.1.0 (wasm backend)
 valid spec  -> ok
 broken spec -> mcp: server name is empty
 ```
