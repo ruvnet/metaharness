@@ -43,6 +43,8 @@ The mock scores show the mechanics only; they are not a benchmark result. Childr
 **Next:** [`@metaharness/flywheel`](https://www.npmjs.com/package/@metaharness/flywheel) — the frozen promotion gate, signed receipts and replayable lineage behind "promote only what proves lift".
 <!-- ruv-seo:end -->
 
+**New in 0.14.0:** an optional [`ruv-fann`](https://www.npmjs.com/package/ruv-fann) neural surrogate that pre-screens numeric-genome candidates before your evaluator runs. See [Numeric genomes and the ruv-fann surrogate](#numeric-genomes-and-the-ruv-fann-surrogate-0140).
+
 ## Reference
 
 > **An LLM supercharger and cost optimizer.** Keep your model frozen — evolve the
@@ -304,6 +306,172 @@ The package also re-exports the building blocks behind `evolve`: `profileRepo`,
 `CodeGenerator`, `runVariantTask` / `runVariantTasks`, `scoreVariant` /
 `scoreWeights`, `Archive`, `inspectVariant` / `validateGeneratedCode`, plus the
 `SURFACES`, `FILE_BY_SURFACE`, and `APPROVED_FILES` constants.
+
+## Numeric genomes and the ruv-fann surrogate (0.14.0)
+
+`evolveNumeric` evolves a bounded vector of named numbers (training hyperparameters, thresholds, weights) against a metric that **your** command computes. Darwin never trains or scores anything for this kind: it calls your evaluator once per candidate and treats the result as evidence.
+
+```bash
+# genome.json: { "learning_rate": {"min":1e-5,"max":1e-1,"scale":"log","type":"float"},
+#                "batch_size":    {"min":1,"max":64,"scale":"log","type":"int"} }
+# The evaluator reads {"variantId": "...", "genome": {...}} on stdin and prints {"primary": <higher is better>} on stdout.
+npx metaharness-darwin evolve-numeric . --genome genome.json --evaluator "node eval.mjs" \
+  --generations 8 --children 4
+```
+
+### Rank many, evaluate few
+
+The evaluator is the expensive step. With a surrogate, each generation proposes several times more candidates than it can afford to evaluate, a small neural network trained on the archive's own scored genomes ranks them, and only the best-ranked reach your evaluator. The network is [`ruv-fann`](https://www.npmjs.com/package/ruv-fann) (Rust compiled to WebAssembly, runs locally, no network calls).
+
+![Each generation: scored genomes train a small ruv-fann network, four times as many candidates are proposed, the network ranks them, only the top picks go to the external evaluator, and their real scores return to the archive](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/darwin-surrogate.svg)
+
+```bash
+npm install ruv-fann@0.1.2     # optional peer; needs Node 20.9+
+npx metaharness-darwin evolve-numeric . --genome genome.json --evaluator "node eval.mjs" \
+  --generations 8 --children 4 --surrogate fann
+```
+
+```ts
+import { evolveNumeric, createFannSurrogate, ShellEvaluator } from '@metaharness/darwin';
+
+const model = await createFannSurrogate({ ensemble: 4 });
+try {
+  const result = await evolveNumeric({
+    genomeSpec,
+    evaluator: new ShellEvaluator({ command: ['node', 'eval.mjs'], cwd: process.cwd() }),
+    generations: 8,
+    childrenPerGeneration: 4,
+    workRoot: '.metaharness-numeric',
+    surrogate: { model },
+  });
+  console.log(result.winner?.variant.genome, result.surrogate);
+} finally {
+  model.dispose();
+}
+```
+
+What the surrogate can and cannot do:
+
+- **It only orders candidates.** Every archived score comes from your evaluator, and promotion compares evaluator scores. A poor surrogate costs search efficiency, never correctness.
+- **The evaluator budget per parent does not change.** Each parent still gets `childrenPerGeneration` evaluations.
+- **It fails open.** Too few scored rows, a declined fit, a failed trust gate or an error all leave that generation exactly as the unscreened loop would run it, and the reason is recorded in `result.surrogate.fallbacks`.
+- **It is reproducible.** Weights start from a seeded initialisation and are refit from scratch, so the same archive and seed give the same ranking. On `ruv-fann` 0.1.2 the SIMD and non-SIMD backends produce bit-identical results.
+- **Without `surrogate`, nothing changes.** `ruv-fann` is never loaded, and the run is identical to 0.13.
+
+![Twelve mutation candidates are proposed for one parent; the surrogate predicts a score for each; one explore slot and the two best-predicted are evaluated; the other nine are never evaluated](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/darwin-surrogate-screen.svg)
+
+### Pre-screen settings (`surrogate: { ... }`)
+
+| Option | CLI flag | Default | What it does |
+|---|---|---|---|
+| `model` | `--surrogate fann` | (required) | The surrogate. Any object implementing `NumericSurrogate` (`fit`, `predict`) works; `createFannSurrogate()` is the bundled one. |
+| `oversample` | `--surrogate-oversample` | `4` | Mutation candidates proposed per evaluated slot. Higher leans harder on the model. |
+| `minRows` | `--surrogate-min-rows` | `12` | Scored genomes required before the surrogate is consulted. |
+| `exploreSlots` | `--surrogate-explore-slots` | `1` | Slots per parent that keep the candidate the unscreened loop would have picked, whatever the prediction. `0` trusts the model fully. |
+| `warmupGenerations` | `--surrogate-warmup` | `0` | Generations that always run unscreened. |
+| `refitEvery` | `--surrogate-refit-every` | `1` | Refit every N generations and reuse the fit in between. |
+| `trust.minSpearman` | `--surrogate-min-spearman` | off | Trust gate: the model must rank a held-out slice of the archive at least this well (Spearman, −1 to 1) or the generation runs unscreened. Costs one extra fit. |
+| `trust.holdoutFraction` | `--surrogate-holdout` | `0.25` | Share of rows held out for the trust gate. |
+| `onGeneration` | (logged to stderr) | none | Callback with what the pre-screen did each generation, for logs and receipts. |
+
+### Model settings (`createFannSurrogate({ ... })`)
+
+| Option | CLI flag | Default | What it does |
+|---|---|---|---|
+| `hidden` | `--surrogate-hidden 16,8` | `8` | Hidden-layer width, or one width per layer. |
+| `activation` | `--surrogate-activation` | `Tanh` | `Tanh`, `Sigmoid`, `SigmoidSymmetric` or `ReLU`. |
+| `steepness` | (API only) | `1` | Activation steepness for the hidden layers. |
+| `optimizer` | `--surrogate-optimizer` | `adamw` | `adamw` or `sgd` (full batch). |
+| `learningRate` | `--surrogate-lr` | `0.03` | Step size. |
+| `epochs` | `--surrogate-epochs` | `300` | Requested epochs. Lowered automatically to fit `ruv-fann`'s per-call work budget; `lastFit.epochs` reports what ran. |
+| `maxRows` | `--surrogate-max-rows` | `256` | Train on only the most recent rows. |
+| `targetTransform` | `--surrogate-target` | `standardize` | `rank` trains on score ranks instead of values: use it when the metric has outliers or a heavy tail. |
+| `ensemble` | `--surrogate-ensemble` | `1` | Train N networks from different seeds and average them (1 to 16). |
+| `explorationWeight` | `--surrogate-explore-weight` | `0` | Adds `weight × disagreement` across the ensemble to each prediction, favouring regions the members disagree on. Needs `ensemble >= 2`. |
+| `seed` | `--surrogate-seed` | `0` (CLI: `--seed`) | Seed for weight initialisation. |
+| `simd` | `--surrogate-no-simd` | `auto` | WebAssembly SIMD when available. |
+
+### Advanced configurations
+
+Starting points for three situations. They are untuned: measure on your own evaluator before relying on one.
+
+```ts
+// Expensive, noisy evaluator: only screen once the model has proven it can rank.
+surrogate: {
+  model: await createFannSurrogate({ ensemble: 4, targetTransform: 'rank' }),
+  minRows: 20,
+  warmupGenerations: 2,
+  trust: { minSpearman: 0.3, holdoutFraction: 0.25 },
+  onGeneration: (e) => console.error(JSON.stringify(e)),
+}
+
+// Many parameters, larger archive: a deeper model, refit less often.
+surrogate: {
+  model: await createFannSurrogate({ hidden: [32, 16], epochs: 500, learningRate: 0.01, maxRows: 512 }),
+  oversample: 8,
+  refitEvery: 2,
+}
+
+// Rugged landscape: reward ensemble disagreement and keep two unscreened slots per parent.
+surrogate: {
+  model: await createFannSurrogate({ ensemble: 6, explorationWeight: 1 }),
+  exploreSlots: 2,
+}
+```
+
+```bash
+npx metaharness-darwin evolve-numeric . --genome genome.json --evaluator "node eval.mjs" \
+  --generations 12 --children 4 --surrogate fann \
+  --surrogate-ensemble 4 --surrogate-target rank --surrogate-min-rows 20 \
+  --surrogate-warmup 2 --surrogate-min-spearman 0.3
+```
+
+To plug in a different model, implement the port:
+
+```ts
+import type { NumericSurrogate, SurrogateRow } from '@metaharness/darwin';
+
+const mine: NumericSurrogate = {
+  async fit(rows: readonly SurrogateRow[]) { /* rows[i].features are in [0,1]; return false to decline */ return true; },
+  predict(features) { return features.map(() => 0); },
+};
+```
+
+### Measured effect
+
+A paired benchmark on synthetic objectives (not a real training workload): 100 seeds, 6 parameters, 10 generations, 4 children per parent, each seed run with and without the surrogate. Regret is the distance of the best score found from the known optimum; lower is better.
+
+| Objective | Surrogate settings | Regret, unscreened | Regret, surrogate | Change | Win / tie / loss | Sign-test p | Evaluations, unscreened / surrogate |
+|---|---|---|---|---|---|---|---|
+| sphere | defaults | 0.0579 | 0.0439 | −24.2% | 61 / 4 / 35 | 0.0103 | 64.72 / 66.36 |
+| sphere | `ensemble=4` | 0.0579 | 0.0413 | −28.7% | 68 / 6 / 26 | <0.0001 | 64.72 / 66.04 |
+| sphere | `ensemble=4, explorationWeight=1` | 0.0579 | 0.0408 | −29.5% | 70 / 2 / 28 | <0.0001 | 64.72 / 66.24 |
+| sphere | `ensemble=4, oversample=8` | 0.0579 | 0.0392 | −32.3% | 74 / 0 / 26 | <0.0001 | 64.72 / 67 |
+| sphere | `ensemble=4, exploreSlots=0` | 0.0579 | 0.0387 | −33.1% | 73 / 2 / 25 | <0.0001 | 64.72 / 66.36 |
+| sphere | `ensemble=4, minRows=6` | 0.0579 | 0.0396 | −31.6% | 69 / 4 / 27 | <0.0001 | 64.72 / 66.32 |
+| ellipsoid | defaults | 0.1138 | 0.0981 | −13.8% | 54 / 9 / 37 | 0.0929 | 66.92 / 67.64 |
+| ellipsoid | `ensemble=4` | 0.1138 | 0.0929 | −18.4% | 62 / 6 / 32 | 0.0026 | 66.92 / 67.84 |
+| ellipsoid | `ensemble=4, explorationWeight=1` | 0.1138 | 0.1005 | −11.7% | 61 / 5 / 34 | 0.0073 | 66.92 / 67.72 |
+| ellipsoid | `ensemble=4, oversample=8` | 0.1138 | 0.1071 | −5.9% | 52 / 6 / 42 | 0.3533 | 66.92 / 68.2 |
+| ellipsoid | `ensemble=4, exploreSlots=0` | 0.1138 | 0.1015 | −10.8% | 60 / 3 / 37 | 0.0250 | 66.92 / 68.6 |
+| ellipsoid | `ensemble=4, minRows=6` | 0.1138 | 0.0906 | −20.5% | 60 / 6 / 34 | 0.0095 | 66.92 / 67.84 |
+| coupled | defaults | 0.0477 | 0.0395 | −17.1% | 56 / 2 / 42 | 0.1888 | 65.32 / 65.92 |
+| coupled | `ensemble=4` | 0.0477 | 0.0381 | −20.2% | 59 / 4 / 37 | 0.0315 | 65.32 / 65.92 |
+| coupled | `ensemble=4, explorationWeight=1` | 0.0477 | 0.0400 | −16.0% | 61 / 2 / 37 | 0.0197 | 65.32 / 66.12 |
+| coupled | `ensemble=4, oversample=8` | 0.0477 | 0.0383 | −19.6% | 61 / 1 / 38 | 0.0265 | 65.32 / 66.88 |
+| coupled | `ensemble=4, exploreSlots=0` | 0.0477 | 0.0386 | −19.0% | 61 / 4 / 35 | 0.0103 | 65.32 / 66.96 |
+| coupled | `ensemble=4, minRows=6` | 0.0477 | 0.0366 | −23.3% | 57 / 5 / 38 | 0.0642 | 65.32 / 66.4 |
+
+How to read it:
+
+- The surrogate run ended with lower mean regret in all 18 rows, by 6% to 33%, and won more seeds than it lost in every row. Three rows are not significant at p < 0.05, and the p-values are not corrected for the 18 comparisons.
+- It still lost 25 to 42 of every 100 seeds. Expect a better average, not a better result every run.
+- The budget is equal per parent, not in total: surrogate runs promoted children more often, so they carried two parents more often and used about 1% to 3% more evaluations.
+- These are smooth objectives the network can model. A noisy or discontinuous metric, or an archive too small to learn from, may show no benefit, which is what the trust gate is for.
+
+Treat the feature as experimental until you have measured it on your own evaluator. Reproduce the table from a repository checkout with `npm run bench:surrogate` (about five minutes); the output is deterministic and saved in [`bench/results/numeric-surrogate.txt`](https://github.com/ruvnet/metaharness/blob/main/packages/darwin-mode/bench/results/numeric-surrogate.txt).
+
+**Start each run from a clean work directory.** `evolveNumeric` reloads an existing `archive.json`, and variant ids repeat between runs, so a reused `.metaharness-numeric` mixes old genomes with new scores. This applies with or without a surrogate.
 
 ## GEPA — the prompt-policy learning engine (`@metaharness/darwin/gepa`, ADR-228)
 

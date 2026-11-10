@@ -16,7 +16,8 @@ import { join } from 'node:path';
 import { mapLimit } from './evolve.js';
 import { paretoFront } from './pareto.js';
 import { NumericArchive } from './numeric-archive.js';
-import { crossoverGenome, defaultGenome, makeVariant, mutateGenome } from './numeric-mutator.js';
+import { crossoverGenome, defaultGenome, genomeToUnitVector, makeVariant, mutateGenome } from './numeric-mutator.js';
+import { DEFAULT_SURROGATE_EXPLORE_SLOTS, DEFAULT_SURROGATE_MIN_ROWS, DEFAULT_SURROGATE_OVERSAMPLE, fitSurrogate, selectByPrediction, surrogateRowsFromArchive, validateSurrogateConfig, } from './numeric-surrogate.js';
 const DEFAULT_CONCURRENCY = 4;
 const DEFAULT_SIGMA = 0.2;
 async function ensureWorkRoot(workRoot) {
@@ -35,6 +36,13 @@ function genomeDistance(a, baseline) {
     return Math.sqrt(sum);
 }
 export async function evolveNumeric(config) {
+    const surrogate = config.surrogate;
+    if (surrogate)
+        validateSurrogateConfig(surrogate);
+    const oversample = surrogate?.oversample ?? DEFAULT_SURROGATE_OVERSAMPLE;
+    const report = { generationsScreened: 0, candidatesRanked: 0, candidatesSelected: 0, fallbacks: [] };
+    let surrogateFitted = false;
+    let lastHoldoutSpearman;
     await ensureWorkRoot(config.workRoot);
     const archive = new NumericArchive(join(config.workRoot, 'archive.json'));
     await archive.load();
@@ -51,8 +59,42 @@ export async function evolveNumeric(config) {
     for (let generation = 1; generation <= config.generations; generation++) {
         const children = [];
         const canCross = config.crossover === true && parents.length >= 2;
+        // Surrogate pre-screen (opt-in): decide whether this generation is screened.
+        // Any reason it is not — warm-up, too few rows, a declined/failed fit —
+        // leaves the generation exactly as the unscreened loop would run it.
+        let screen = false;
+        let fallbackReason;
+        let rowCount = 0;
+        if (surrogate) {
+            const mutationSlots = config.childrenPerGeneration - (canCross ? 1 : 0);
+            const rows = surrogateRowsFromArchive(archive.all(), config.genomeSpec);
+            rowCount = rows.length;
+            if (mutationSlots < 1)
+                fallbackReason = 'no mutation slots to screen';
+            else if (generation <= (surrogate.warmupGenerations ?? 0))
+                fallbackReason = 'warm-up generation';
+            else if (rows.length < (surrogate.minRows ?? DEFAULT_SURROGATE_MIN_ROWS)) {
+                fallbackReason = `${rows.length} scored rows < minRows ${surrogate.minRows ?? DEFAULT_SURROGATE_MIN_ROWS}`;
+            }
+            else if (surrogateFitted && (generation - 1) % (surrogate.refitEvery ?? 1) !== 0) {
+                screen = true; // reuse the previous fit
+            }
+            else {
+                const outcome = await fitSurrogate(surrogate.model, rows, surrogate.trust);
+                surrogateFitted = outcome.ready;
+                if (outcome.ready) {
+                    screen = true;
+                    lastHoldoutSpearman = outcome.holdoutSpearman;
+                }
+                else
+                    fallbackReason = outcome.reason;
+            }
+        }
+        let rankedThisGeneration = 0;
+        let selectedThisGeneration = 0;
         for (let pIdx = 0; pIdx < parents.length; pIdx++) {
             const parent = parents[pIdx];
+            const pool = [];
             for (let localIndex = 0; localIndex < config.childrenPerGeneration; localIndex++) {
                 const index = pIdx * config.childrenPerGeneration + localIndex;
                 if (canCross && localIndex === 0) {
@@ -63,10 +105,58 @@ export async function evolveNumeric(config) {
                         : `crossover: no param adopted from ${other.id} (identical to ${parent.id})`));
                 }
                 else {
-                    const { genome, mutatedParams } = mutateGenome(parent.genome, config.genomeSpec, seed, generation, index, sigma);
-                    children.push(makeVariant(parent, generation, index, genome, mutatedParams, mutatedParams.length > 0 ? `perturbed [${mutatedParams.join(', ')}]` : 'no-op perturbation (clamped to parent)'));
+                    pool.push({ index, ...mutateGenome(parent.genome, config.genomeSpec, seed, generation, index, sigma) });
                 }
             }
+            const slots = pool.length;
+            const summaryOf = (c) => c.mutatedParams.length > 0 ? `perturbed [${c.mutatedParams.join(', ')}]` : 'no-op perturbation (clamped to parent)';
+            let picked = pool.map((candidate) => ({ candidate, note: '' }));
+            if (screen && surrogate && slots > 0) {
+                // The unscreened loop's own candidates stay first in the pool; the extra
+                // proposals take indices past every unscreened index, so ids never collide.
+                const extraPerParent = slots * (oversample - 1);
+                const extraBase = parents.length * config.childrenPerGeneration + pIdx * extraPerParent;
+                for (let j = 0; j < extraPerParent; j++) {
+                    const index = extraBase + j;
+                    pool.push({ index, ...mutateGenome(parent.genome, config.genomeSpec, seed, generation, index, sigma) });
+                }
+                try {
+                    const predictions = surrogate.model.predict(pool.map((c) => genomeToUnitVector(c.genome, config.genomeSpec)));
+                    if (predictions.length !== pool.length)
+                        throw new Error(`predict returned ${predictions.length} values for ${pool.length} candidates`);
+                    const explore = Math.min(surrogate.exploreSlots ?? DEFAULT_SURROGATE_EXPLORE_SLOTS, slots - 1);
+                    picked = selectByPrediction(predictions, slots, explore).map((pick) => ({
+                        candidate: pool[pick.poolIndex],
+                        note: pick.kind === 'explore'
+                            ? ` [surrogate: explore slot, rank ${pick.rank}/${pool.length}]`
+                            : ` [surrogate: rank ${pick.rank}/${pool.length}, predicted ${Number(pick.predicted.toPrecision(4))}]`,
+                    }));
+                    rankedThisGeneration += pool.length;
+                    selectedThisGeneration += picked.length;
+                }
+                catch (error) {
+                    // Fail open: keep this parent's unscreened candidates.
+                    picked = pool.slice(0, slots).map((candidate) => ({ candidate, note: '' }));
+                    screen = false;
+                    surrogateFitted = false;
+                    fallbackReason = `surrogate error: ${error.message}`;
+                }
+            }
+            for (const { candidate, note } of picked) {
+                children.push(makeVariant(parent, generation, candidate.index, candidate.genome, candidate.mutatedParams, summaryOf(candidate) + note));
+            }
+        }
+        if (surrogate) {
+            if (rankedThisGeneration > 0) {
+                report.generationsScreened += 1;
+                report.candidatesRanked += rankedThisGeneration;
+                report.candidatesSelected += selectedThisGeneration;
+            }
+            if (fallbackReason !== undefined)
+                report.fallbacks.push({ generation, reason: fallbackReason });
+            surrogate.onGeneration?.(fallbackReason === undefined
+                ? { generation, screened: true, rows: rowCount, ranked: rankedThisGeneration, selected: selectedThisGeneration, holdoutSpearman: lastHoldoutSpearman }
+                : { generation, screened: false, reason: fallbackReason });
         }
         for (const child of children)
             archive.addVariant(child);
@@ -108,6 +198,7 @@ export async function evolveNumeric(config) {
         records: archive.all(),
         generations: config.generations,
         winnerLineage,
+        ...(surrogate ? { surrogate: report } : {}),
     };
 }
 //# sourceMappingURL=numeric-evolve.js.map

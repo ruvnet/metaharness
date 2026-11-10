@@ -58,6 +58,18 @@ function fromUnit(unit, spec) {
     value = Math.min(spec.max, Math.max(spec.min, value));
     return spec.type === 'int' ? Math.round(value) : value;
 }
+/**
+ * Encode a genome as a vector in unit-interval space, one entry per parameter
+ * in `genomeSpec` key order (`log`-scale parameters are encoded in log space,
+ * exactly as the mutator perturbs them). A parameter missing from the genome
+ * encodes as the midpoint. This is the feature encoding surrogate models see.
+ */
+export function genomeToUnitVector(genome, genomeSpec) {
+    return Object.entries(genomeSpec).map(([name, spec]) => {
+        const value = genome[name];
+        return value === undefined ? 0.5 : Math.min(1, Math.max(0, toUnit(value, spec)));
+    });
+}
 /** Each parameter's bounds midpoint (or explicit `default`) — the baseline genome. */
 export function defaultGenome(genomeSpec) {
     const out = {};

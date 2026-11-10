@@ -54,6 +54,8 @@ export * from './numeric-mutator.js';
 export * from './numeric-archive.js';
 export * from './numeric-evaluator.js';
 export * from './numeric-evolve.js';
+export * from './numeric-surrogate.js';
+export * from './fann-surrogate.js';
 // The benchmark + SOTA "Darwin Plus" layer (ADR-076…081) is namespaced to avoid
 // name collisions (e.g. scoreWeights) with the lightweight ADR-072 scorer.
 export * as bench from './bench/index.js';

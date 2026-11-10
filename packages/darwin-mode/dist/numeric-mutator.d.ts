@@ -1,4 +1,11 @@
 import type { NumericGenome, NumericGenomeSpec, NumericVariant } from './numeric-types.js';
+/**
+ * Encode a genome as a vector in unit-interval space, one entry per parameter
+ * in `genomeSpec` key order (`log`-scale parameters are encoded in log space,
+ * exactly as the mutator perturbs them). A parameter missing from the genome
+ * encodes as the midpoint. This is the feature encoding surrogate models see.
+ */
+export declare function genomeToUnitVector(genome: NumericGenome, genomeSpec: NumericGenomeSpec): number[];
 /** Each parameter's bounds midpoint (or explicit `default`) — the baseline genome. */
 export declare function defaultGenome(genomeSpec: NumericGenomeSpec): NumericGenome;
 /**
