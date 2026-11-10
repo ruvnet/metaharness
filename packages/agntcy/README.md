@@ -41,6 +41,8 @@ echo '@buf:registry=https://buf.build/gen/npm/v1/' >> .npmrc
 npm install agntcy-dir @bufbuild/protobuf @buf/agntcy_dir.bufbuild_es
 ```
 
+The SDK's `@connectrpc/connect-node` dependency declares Node.js 22 or later, so npm skips the optional SDK on Node 20; install it explicitly as above if you publish from Node 20.
+
 Without the SDK, `publishToDirectory()` returns `{ published: false, reason }` with this install hint; it never throws and never fakes success.
 
 **Next:** [`metaharness`](https://www.npmjs.com/package/metaharness) — scaffold and score the harness whose `harness score` and `harness genome` facts the OASF record projects.

@@ -12,7 +12,13 @@
 // server configured, bad schema) is always exercised regardless.
 
 import { describe, it, expect, afterEach } from 'vitest';
-import { Client, Config } from 'agntcy-dir';
+// The Directory SDK is an optional dependency (it is skipped, for example, where
+// its @connectrpc/connect-node dependency's Node >=22 engine is not met), so the
+// suites that drive the real SDK run only when it is installed. Everything else
+// in this file runs everywhere.
+const sdk: typeof import('agntcy-dir') | null = await import('agntcy-dir').catch(() => null);
+const Client = sdk?.Client as typeof import('agntcy-dir').Client;
+const Config = sdk?.Config as typeof import('agntcy-dir').Config;
 import { connect } from 'node:net';
 import { publishToDirectory, __allMappedIdsExistInTaxonomy, KNOWN_AGENT_SKILLS, TAXONOMY } from '../publish.js';
 import type { OasfRecord } from '../record.js';
@@ -102,7 +108,7 @@ describe('taxonomy mapping — real data, not guesses', () => {
   });
 });
 
-describe('publishToDirectory — real TLS/auth wiring (not the insecure default)', () => {
+describe.runIf(sdk)('publishToDirectory — real TLS/auth wiring (not the insecure default)', () => {
   it('engages the SDK\'s real TLS transport when authMode is configured — fails closed with a TLS-specific reason, proving it is not silently using plaintext', async () => {
     // authMode: 'tls' with no cert files configured hits a real, deterministic
     // validation error INSIDE agntcy-dir's own createTLSTransport() — this
@@ -172,7 +178,7 @@ describe('publishToDirectory — fail-closed behavior (no live server needed)', 
     expect(result.reason).toMatch(/invalid OasfRecord/);
   });
 
-  it('reports a clear failure reason (not a throw) when the configured server is unreachable', async () => {
+  it.runIf(sdk)('reports a clear failure reason (not a throw) when the configured server is unreachable', async () => {
     const result = await publishToDirectory(VALID_RECORD, {
       name: 'test-harness',
       version: '0.0.1',
@@ -183,7 +189,7 @@ describe('publishToDirectory — fail-closed behavior (no live server needed)', 
   });
 });
 
-describe.runIf(serverReachable || process.env.CI !== 'true')('publishToDirectory — live server integration', () => {
+describe.runIf(sdk && (serverReachable || process.env.CI !== 'true'))('publishToDirectory — live server integration', () => {
   it.skipIf(!serverReachable)('pushes and publishes a real record to a real running Directory server, then it is lookup-able', async () => {
     const uniqueName = `metaharness-agntcy-test-${Date.now()}`;
     const result = await publishToDirectory(VALID_RECORD, {

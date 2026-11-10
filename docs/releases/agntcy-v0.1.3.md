@@ -16,6 +16,9 @@ Package: `@metaharness/agntcy@0.1.3` only.
 - Without the SDK, `publishToDirectory()` returns `{ published: false, reason }`, and the
   reason names the `.npmrc` line and the install command. With the SDK installed,
   behaviour is unchanged.
+- On Node 20, npm also skips the optional SDK because `@connectrpc/connect-node` declares
+  Node >=22; install it explicitly to publish from Node 20. The SDK-driven test suites in
+  this repo now run only where the SDK is installed.
 - The installed-artifact release smoke now also installs the tarball in a directory with
   no `.npmrc` and runs the CASA path, so this cannot regress silently.
 - README: the `.npmrc` step moved from the quickstart into a "Directory publishing
