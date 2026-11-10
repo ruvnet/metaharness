@@ -84,6 +84,21 @@ if (mode === 'pack') {
       assert.equal(policy.defaultDeny, true); assert.equal(policy.allowShell, false);
       run(process.execPath, ['node_modules/metaharness/dist/harness-bin.js', 'doctor', join(dir, 'doctor')], dir);
     }
+    if (names.has('@metaharness/agntcy')) {
+      // A consumer with no @buf registry line must still install the tarball and use
+      // everything except Directory publishing (the SDK is an optional dependency).
+      const bare = mkdtempSync(join(tmpdir(), 'release-agntcy-bare-'));
+      try {
+        writeFileSync(join(bare, 'package.json'), '{"private":true,"type":"module"}\n');
+        const a = artifacts.find(x => x.name === '@metaharness/agntcy');
+        run(npm, ['install', '--ignore-scripts', '--no-audit', '--no-fund', join(out, a.file)], bare);
+        writeFileSync(join(bare, 'smoke.mjs'), `import assert from 'node:assert/strict';
+          const { casa, oasfPublish } = await import('@metaharness/agntcy');
+          assert(casa.isCasaEnvelope(casa.compileObjectiveToEnvelope('Review the open pull requests')));
+          assert.equal(typeof oasfPublish.publishToDirectory, 'function');`);
+        run(process.execPath, ['smoke.mjs'], bare);
+      } finally { rmSync(bare, { recursive: true, force: true }); }
+    }
     console.log(`Installed-artifact smoke passed for ${[...names].join(', ')}.`);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 } else if (mode === 'publish') {

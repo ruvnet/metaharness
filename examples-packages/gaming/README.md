@@ -1,6 +1,8 @@
 # MetaHarness: gaming vertical
 
 <!-- ruv-seo:start (ADR-356) -->
+![@metaharness/gaming flow: npx @metaharness/gaming my-bot scaffolds the example files and the .harness manifest, then harness doctor reports HEALTHY](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/example-scaffold.svg)
+
 MetaHarness example — ready-made game-design pod (concept, mechanics, balance, playtest) for Claude Code.
 
 **Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/gaming` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.

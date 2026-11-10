@@ -1,6 +1,8 @@
 # MetaHarness × pi.dev AGENTS.md harness
 
 <!-- ruv-seo:start (ADR-356) -->
+![@metaharness/pi-dev flow: npx @metaharness/pi-dev my-bot scaffolds the example files and the .harness manifest, then harness doctor reports HEALTHY](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/example-scaffold.svg)
+
 MetaHarness example — pi.dev AGENTS.md harness with a minimal scaffold ready for pi.dev agents.
 
 **Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/pi-dev` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.

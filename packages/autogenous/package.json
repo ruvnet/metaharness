@@ -1,7 +1,16 @@
 {
   "name": "@metaharness/autogenous",
   "version": "0.1.0",
-  "description": "Autogenous radio-moe policy-evolution adapter for @metaharness/flywheel — bounded independence weights, frozen safety gates, and governed promotion.",
+  "description": "Autogenous radio-moe policy-evolution adapter for @metaharness/flywheel: bounded independence weights, frozen safety gates and governed promotion.",
+  "homepage": "https://ruv.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/metaharness.git",
+    "directory": "packages/autogenous"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -30,7 +39,8 @@
     "policy-evolution",
     "radio-moe",
     "governed-evolution",
-    "agent-harness"
+    "agent-harness",
+    "safety-gates"
   ],
   "license": "MIT",
   "dependencies": {
