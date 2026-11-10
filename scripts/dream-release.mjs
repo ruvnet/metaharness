@@ -10,6 +10,7 @@ import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync } from 'nod
 import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import assert from 'node:assert/strict';
+import { checkWasmInPack } from './wasm-artifacts.mjs';
 const root = process.cwd();
 const out = resolve('dist-release');
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
@@ -30,6 +31,8 @@ if (mode === 'pack') {
     assert.equal(pkg.repository?.directory, `packages/${dir}`, `${pkg.name}: wrong repository directory`);
     const [packed] = JSON.parse(run(npm, ['pack', '--json', '--ignore-scripts', '--pack-destination', out], resolve('packages', dir)));
     assert(packed.files.some(f => f.path === entryOf(pkg)), `${pkg.name}: missing compiled entry ${entryOf(pkg)}`);
+    // Fail the release when a declared wasm file is not in the tarball (horizon 0.2.1 shipped without it).
+    checkWasmInPack(pkg, packed.files);
     return { name: pkg.name, version: pkg.version, file: packed.filename, sha256: hash(readFileSync(join(out, packed.filename))) };
   });
   writeFileSync(manifestPath, JSON.stringify({ sourceSha: run('git', ['rev-parse', 'HEAD']), artifacts }, null, 2) + '\n');
@@ -57,6 +60,19 @@ if (mode === 'pack') {
     if (names.has('@metaharness/sdk')) lines.push(`
       const { defineHarness } = await import('@metaharness/sdk');
       assert.equal(defineHarness({name:'installed'}).name, 'installed');`);
+    // Packages that ship wasm must answer from the wasm, not a fallback.
+    if (names.has('@metaharness/horizon')) lines.push(`
+      const { HorizonCore, CommandGuard } = await import('@metaharness/horizon');
+      const guard = new CommandGuard(await HorizonCore.load());
+      assert.equal(guard.classify('ls').verdict, 'allow');`);
+    if (names.has('@metaharness/oo-agents')) lines.push(`
+      const { CellVm } = await import('@metaharness/oo-agents');
+      assert.equal(typeof (await CellVm.load()), 'object');`);
+    if (names.has('@metaharness/kernel')) lines.push(`
+      process.env.METAHARNESS_KERNEL_BACKEND = 'wasm';
+      const { loadKernel } = await import('@metaharness/kernel');
+      assert.equal((await loadKernel()).backend, 'wasm');
+      delete process.env.METAHARNESS_KERNEL_BACKEND;`);
     if (names.has('@metaharness/agntcy')) lines.push(`
       const { oasfPublish } = await import('@metaharness/agntcy');
       assert.equal(typeof oasfPublish.publishToDirectory, 'function');`);

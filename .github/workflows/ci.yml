@@ -81,17 +81,14 @@ jobs:
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32
         with:
           shared-key: wasm-${{ matrix.os }}
-      - name: Install wasm-pack (Linux / macOS)
-        if: runner.os != 'Windows'
+      - name: Install pinned wasm tools (crates.io only)
+        # wasm-pack 0.13.1, wasm-bindgen-cli (= the Cargo.toml pin) and wasm-opt, each via
+        # `cargo install --locked` with retries, on every OS. The old curl installer and
+        # wasm-pack's on-demand wasm-bindgen/binaryen downloads came from GitHub release
+        # assets, which returned 504s and turned main CI red on 7136c872. --locked keeps
+        # transitives within the 1.88 toolchain pin. rust-cache keeps ~/.cargo/bin warm.
         shell: bash
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-      - name: Install wasm-pack (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        # Pin wasm-pack 0.13.1 and use its own Cargo.lock (--locked). Unlocked,
-        # cargo resolves the newest transitives (e.g. uuid 1.27 needs rustc 1.89)
-        # which exceed our 1.88 workspace toolchain pin and fail the install.
-        run: cargo install wasm-pack --version 0.13.1 --locked
+        run: bash scripts/install-wasm-tools.sh
       - name: Install wasm-tools
         # Pin to a version compatible with workspace rust 1.88 — newer
         # wasm-tools rev their MSRV aggressively (1.252 needed 1.85,
@@ -143,6 +140,8 @@ jobs:
         run: npx vitest run __tests__/dream-explicit-new.test.ts --maxWorkers=2
       - name: CI aggregate requires every job, including Dream
         run: npx vitest run __tests__/ci-aggregate.test.ts --maxWorkers=2
+      - name: Wasm release invariants (horizon 0.2.1 shipped without its wasm)
+        run: npx vitest run __tests__/wasm-release.test.ts --maxWorkers=2
       - name: Every package with a build script is in the build phases
         run: npx vitest run __tests__/build-ordered-coverage.test.ts --maxWorkers=2
       - name: Path-handling guard (the /tmp Windows bug regression test)
