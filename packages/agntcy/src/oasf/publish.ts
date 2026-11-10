@@ -53,9 +53,12 @@
 // ids now push successfully, and sending BOTH `id` and the taxonomy's own
 // dotted `name` together (self-documenting, not id-only) also now works.
 
-import { Client, Config } from 'agntcy-dir';
-import { create } from '@bufbuild/protobuf';
-import { RecordRefsSchema, PublishRequestSchema } from '@buf/agntcy_dir.bufbuild_es/agntcy/dir/routing/v1/routing_service_pb.js';
+// The Directory SDK is an OPTIONAL dependency: `agntcy-dir` depends on
+// `@buf/agntcy_dir.bufbuild_es`, which only the Buf registry serves, so a plain
+// `npm install @metaharness/agntcy` without an `@buf:registry` line in
+// .npmrc cannot install it. Only publishToDirectory() needs it, so it is loaded
+// lazily there; everything else in this package works without it.
+import type { Config } from 'agntcy-dir';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import type { OasfRecord } from './record.js';
@@ -223,11 +226,43 @@ function projectAnnotations(record: OasfRecord): Record<string, string> {
   return annotations;
 }
 
+const SDK_INSTALL_HINT =
+  'Directory publishing needs the optional AGNTCY Directory SDK. Add ' +
+  '"@buf:registry=https://buf.build/gen/npm/v1/" to .npmrc, then run ' +
+  '"npm install agntcy-dir @bufbuild/protobuf @buf/agntcy_dir.bufbuild_es".';
+
+type DirectorySdk = {
+  Client: typeof import('agntcy-dir').Client;
+  Config: typeof import('agntcy-dir').Config;
+  create: typeof import('@bufbuild/protobuf').create;
+  RecordRefsSchema: typeof import('@buf/agntcy_dir.bufbuild_es/agntcy/dir/routing/v1/routing_service_pb.js').RecordRefsSchema;
+  PublishRequestSchema: typeof import('@buf/agntcy_dir.bufbuild_es/agntcy/dir/routing/v1/routing_service_pb.js').PublishRequestSchema;
+};
+
+async function loadDirectorySdk(): Promise<DirectorySdk | { error: string }> {
+  try {
+    const [dir, protobuf, routing] = await Promise.all([
+      import('agntcy-dir'),
+      import('@bufbuild/protobuf'),
+      import('@buf/agntcy_dir.bufbuild_es/agntcy/dir/routing/v1/routing_service_pb.js'),
+    ]);
+    return {
+      Client: dir.Client,
+      Config: dir.Config,
+      create: protobuf.create,
+      RecordRefsSchema: routing.RecordRefsSchema,
+      PublishRequestSchema: routing.PublishRequestSchema,
+    };
+  } catch (err) {
+    return { error: `${SDK_INSTALL_HINT} (${err instanceof Error ? err.message : String(err)})` };
+  }
+}
+
 /** Rebuild a Config with a different serverAddress by re-running the real
  * constructor (see the call site's comment for why a plain property
  * assignment is wrong here) — every other field carries over unchanged. */
-function withServerAddress(config: Config, serverAddress: string): Config {
-  return new Config(
+function withServerAddress(ConfigCtor: DirectorySdk['Config'], config: Config, serverAddress: string): Config {
+  return new ConfigCtor(
     serverAddress,
     config.spiffeEndpointSocket,
     config.authMode,
@@ -288,8 +323,13 @@ export async function publishToDirectory(record: OasfRecord, target: PublishTarg
   // plaintext, `https://` for tls/x509/jwt/oidc); a plain property assignment
   // skips that entirely and the transport layer then throws `Invalid URL` on
   // the un-prefixed address (caught by this file's own live-server test).
-  const loaded = target.config ?? Config.loadFromEnv();
-  const config = withServerAddress(loaded, serverAddress);
+  const sdk = await loadDirectorySdk();
+  if ('error' in sdk) {
+    return { published: false, reason: sdk.error };
+  }
+  const { Client, Config: ConfigCtor, create, RecordRefsSchema, PublishRequestSchema } = sdk;
+  const loaded = target.config ?? ConfigCtor.loadFromEnv();
+  const config = withServerAddress(ConfigCtor, loaded, serverAddress);
   if (config.authMode === 'oidc') {
     return {
       published: false,

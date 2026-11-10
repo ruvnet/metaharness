@@ -1,6 +1,8 @@
 # @metaharness/example-bio
 
 <!-- ruv-seo:start (ADR-356) -->
+![@metaharness/example-bio flow: npx @metaharness/example-bio my-bot scaffolds the example files and the .harness manifest, then harness doctor reports HEALTHY](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/example-scaffold.svg)
+
 MetaHarness example — bioinformatics harness with gene lookup, PubMed literature retrieval, and genomic sequence fetch via NCBI E-utilities and Ensembl REST.
 
 **Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This package does not install the third-party SDK; the scaffold tells you to run `npm install (NCBI E-utilities / Ensembl REST \u2014 no npm SDK; uses fetch)` yourself. This is the `@metaharness/example-bio` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.

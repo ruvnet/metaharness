@@ -1,7 +1,16 @@
 {
   "name": "@metaharness/evals-extract",
   "version": "0.1.0",
-  "description": "Structured-extraction benchmark adapter for @metaharness/flywheel — evolve the extraction policy, not the model. Doc-type routing, JSON-schema verifier stack, field normalization, calibration, and a stricter composite promotion gate.",
+  "description": "Structured-extraction benchmark adapter for @metaharness/flywheel: evolve the extraction policy, not the model, with JSON-schema verifiers and a strict promotion gate.",
+  "homepage": "https://ruv.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/metaharness.git",
+    "directory": "packages/evals-extract"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -11,7 +20,10 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -20,7 +32,18 @@
     "test": "vitest run",
     "lint": "tsc --noEmit"
   },
-  "keywords": ["extraction", "structured-extraction", "json-schema", "benchmark", "eval", "flywheel", "metaharness", "policy-evolution", "llm", "agent-harness"],
+  "keywords": [
+    "extraction",
+    "structured-extraction",
+    "json-schema",
+    "benchmark",
+    "eval",
+    "flywheel",
+    "metaharness",
+    "policy-evolution",
+    "llm",
+    "agent-harness"
+  ],
   "license": "MIT",
   "dependencies": {
     "@metaharness/flywheel": "^0.1.1"

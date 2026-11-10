@@ -1,6 +1,8 @@
 # @metaharness/host-copilot
 
 <!-- ruv-seo:start (ADR-356) -->
+![@metaharness/host-copilot flow: a HarnessSpec goes through the adapter's generateConfig() into a map of host files (config and MCP wiring) that the copilot host loads](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/host-adapter.svg)
+
 Turns a MetaHarness harness spec into the files GitHub Copilot in VS Code reads: `.vscode/mcp.json` for the Copilot MCP client, `.github/copilot-instructions.md`, and an install runbook.
 
 **Supported environments:** Node.js 20+ on Linux, macOS and Windows. ESM only (`import`, not `require`). Pure JavaScript with no native build step; `@metaharness/kernel` is used only for its `HarnessSpec` and `HostAdapter` types.

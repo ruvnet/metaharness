@@ -1,5 +1,52 @@
 # @ruvnet/agent-harness-generator
 
+<!-- ruv-seo:start (ADR-356) -->
+![@ruvnet/agent-harness-generator flow: npx metaharness new my-bot, scaffold the .harness manifest, host config, harness doctor, harness score](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/metaharness.svg)
+
+`@ruvnet/agent-harness-generator` is the library form of the MetaHarness generator: it re-exports `scaffold()`, `validateHarnessName()`, `HOSTS`, `TEMPLATES` and the rendering and fingerprinting helpers from [`metaharness`](https://www.npmjs.com/package/metaharness), so your code can generate a harness without shelling out to the CLI.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. ESM only (`import`, not `require`). No native build step. Since 0.1.4 it pins `metaharness` 0.4.22, which stages the scaffold next to the target directory, so `scaffold()` works when the target is on a different filesystem from the OS temp directory (0.1.3 failed there with `EXDEV`).
+
+## Quickstart
+
+```bash
+npm install @ruvnet/agent-harness-generator
+```
+
+Save this as `quickstart.mjs` and run `node quickstart.mjs`:
+
+```js
+import { scaffold, validateHarnessName, HOSTS, TEMPLATES } from '@ruvnet/agent-harness-generator';
+
+console.log(`hosts: ${HOSTS.length}, templates: ${TEMPLATES.length}`);
+console.log('name valid:', validateHarnessName('my-bot').valid);
+const result = await scaffold({
+  name: 'my-bot',
+  template: 'vertical:coding',
+  host: 'claude-code',
+  targetDir: './my-bot',
+  generatorVersion: '0.4.22',
+});
+console.log(`wrote ${result.paths.length} files`);
+console.log(`manifest: ${result.manifestPath}`);
+```
+
+Expected output:
+
+```text
+hosts: 10, templates: 20
+name valid: true
+wrote 31 files
+manifest: my-bot/.harness/manifest.json
+```
+
+Then `npx -y -p metaharness harness doctor my-bot | tail -1` prints `Result: HEALTHY (…/my-bot)`.
+
+**Next:** [`metaharness`](https://www.npmjs.com/package/metaharness) — the CLI this package wraps, with `harness doctor`, `harness score`, `harness genome` and the other inspection commands.
+<!-- ruv-seo:end -->
+
+## Reference
+
 > Library / core package for the **Agent Harness Generator**. Pair with
 > [`metaharness`](https://www.npmjs.com/package/metaharness) for the CLI.
 
@@ -34,7 +81,7 @@ const result = await scaffold({
   force: true,
   generatorVersion: '0.1.0',
 });
-console.log(`wrote ${result.files.length} files`);
+console.log(`wrote ${result.paths.length} files`);
 ```
 
 ## What's exported

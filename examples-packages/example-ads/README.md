@@ -1,6 +1,8 @@
 # @metaharness/example-ads
 
 <!-- ruv-seo:start (ADR-356) -->
+![@metaharness/example-ads flow: npx @metaharness/example-ads my-bot scaffolds the example files and the .harness manifest, then harness doctor reports HEALTHY](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/example-scaffold.svg)
+
 MetaHarness example — Google Ads + Meta Marketing API harness, campaign/spend analysis read-only by default, mutations gated.
 
 **Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This package does not install the third-party SDK; the scaffold tells you to run `npm install google-ads-api` yourself. This is the `@metaharness/example-ads` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.

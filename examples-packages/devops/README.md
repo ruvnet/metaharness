@@ -1,6 +1,8 @@
 # MetaHarness: devops vertical
 
 <!-- ruv-seo:start (ADR-356) -->
+![@metaharness/devops flow: npx @metaharness/devops my-bot scaffolds the example files and the .harness manifest, then harness doctor reports HEALTHY](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/example-scaffold.svg)
+
 MetaHarness example — Claude Code incident-response vertical with responder, runbook-runner, escalator, postmortem agents.
 
 **Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/devops` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.

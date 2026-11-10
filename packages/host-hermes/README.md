@@ -1,6 +1,8 @@
 # @metaharness/host-hermes
 
 <!-- ruv-seo:start (ADR-356) -->
+![@metaharness/host-hermes flow: a HarnessSpec goes through the adapter's generateConfig() into a map of host files (config and MCP wiring) that the hermes host loads](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/host-adapter.svg)
+
 Turns a MetaHarness harness spec into a Hermes Agent (Nous Research) `cli-config.yaml` plus optional MCP server files, and exports `scrubHermesBlocks()` to strip `<think>` and `<tool_call>` blocks from Hermes output.
 
 **Supported environments:** Node.js 20+ on Linux, macOS and Windows. ESM only (`import`, not `require`). Pure JavaScript with no native build step; `@metaharness/kernel` is used only for its `HarnessSpec` and `HostAdapter` types.

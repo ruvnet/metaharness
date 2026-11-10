@@ -1,6 +1,8 @@
 # @metaharness/host-rvm
 
 <!-- ruv-seo:start (ADR-356) -->
+![@metaharness/host-rvm flow: a HarnessSpec goes through the adapter's generateConfig() into a map of host files (config and MCP wiring) that the rvm host loads](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/host-adapter.svg)
+
 Turns a MetaHarness harness spec into an RVM (Agentic Virtual Machine) deployment: a partition manifest, a capability-token table derived from the harness permissions, a WASM guest descriptor, and an install script.
 
 **Supported environments:** Node.js 20+ on Linux, macOS and Windows. ESM only (`import`, not `require`). Pure JavaScript with no native build step; `@metaharness/kernel` is used only for its `HarnessSpec` and `HostAdapter` types.

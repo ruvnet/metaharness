@@ -1,6 +1,8 @@
 # MetaHarness × VSCode/Copilot mcp.json
 
 <!-- ruv-seo:start (ADR-356) -->
+![@metaharness/copilot flow: npx @metaharness/copilot my-bot scaffolds the example files and the .harness manifest, then harness doctor reports HEALTHY](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/example-scaffold.svg)
+
 MetaHarness example — VSCode/Copilot mcp.json scaffold for agentic workflows.
 
 **Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/copilot` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
