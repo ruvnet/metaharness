@@ -22,11 +22,9 @@ Package: `@metaharness/agntcy@0.1.3` only.
   (optional)" section; the quickstart output was captured from a clean install of the
   packed 0.1.3 tarball with no `.npmrc`. Adds a small animated flow diagram.
 
-## Known limitation
-
-- `PublishTarget.config` is typed as the SDK's `Config`, so a TypeScript consumer that
-  compiles with `skipLibCheck: false` and has not installed the SDK gets
-  `TS2307: Cannot find module 'agntcy-dir'` from `dist/oasf/publish.d.ts`. Install the SDK
-  (see the README) or keep `skipLibCheck` on. JavaScript consumers are unaffected.
+- `PublishTarget.config` is now typed by a structural `DirectoryConfig` interface (the
+  fields this package reads from the SDK's `Config`), so the package builds and its `.d.ts`
+  files type-check without the SDK installed. A real `agntcy-dir` `Config` instance is still
+  what you pass.
 
 No API changes. Directory publishing still needs the SDK and the Buf registry line.

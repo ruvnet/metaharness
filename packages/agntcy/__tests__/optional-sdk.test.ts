@@ -39,6 +39,13 @@ describe('@metaharness/agntcy without the optional Directory SDK', () => {
     expect(pkg.optionalDependencies?.['@buf/agntcy_dir.bufbuild_es']).toBeDefined();
   });
 
+  it('never names the optional modules in a form tsc resolves, so it builds and type-checks without them', () => {
+    const src = readFileSync(fileURLToPath(new URL('../src/oasf/publish.ts', import.meta.url)), 'utf8');
+    for (const id of ['agntcy-dir', '@bufbuild/protobuf', '@buf/agntcy_dir.bufbuild_es']) {
+      expect(src).not.toMatch(new RegExp(`from '${id}|import\\('${id}`));
+    }
+  });
+
   it('loads the entry point and runs the CASA quickstart', async () => {
     mockSdkMissing();
     const mod = await import('../src/index.js');

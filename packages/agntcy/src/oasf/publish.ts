@@ -58,7 +58,31 @@
 // `npm install @metaharness/agntcy` without an `@buf:registry` line in
 // .npmrc cannot install it. Only publishToDirectory() needs it, so it is loaded
 // lazily there; everything else in this package works without it.
-import type { Config } from 'agntcy-dir';
+//
+// Nothing here references the SDK's types either, so this package type-checks
+// (and its .d.ts files resolve for consumers) when the SDK is not installed.
+// `DirectoryConfig` is the structural subset of the SDK's `Config` class this
+// file reads; pass a real `Config` instance from `agntcy-dir`.
+export interface DirectoryConfig {
+  serverAddress: string;
+  spiffeEndpointSocket: string;
+  authMode: string;
+  jwtAudience: string;
+  tlsCaFile: string;
+  tlsCertFile: string;
+  tlsKeyFile: string;
+  authToken: string;
+  tlsServerName: string;
+  tlsSkipVerify: boolean;
+  oidcIssuer: string;
+  oidcClientId: string;
+  oidcClientSecret: string;
+  oidcRedirectUri: string;
+  oidcCallbackPort: number;
+  oidcAuthTimeout: number;
+  oidcScopes: string[];
+  oidcAccessToken: string;
+}
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import type { OasfRecord } from './record.js';
@@ -101,7 +125,7 @@ export interface PublishTarget {
    * PKCE login this synchronous publish call has no way to drive — pass a
    * `Config` with a pre-cached `authToken` instead if OIDC is your auth mode.
    */
-  config?: Config;
+  config?: DirectoryConfig;
 }
 
 interface TaxonomyLeaf {
@@ -231,20 +255,30 @@ const SDK_INSTALL_HINT =
   '"@buf:registry=https://buf.build/gen/npm/v1/" to .npmrc, then run ' +
   '"npm install agntcy-dir @bufbuild/protobuf @buf/agntcy_dir.bufbuild_es".';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 type DirectorySdk = {
-  Client: typeof import('agntcy-dir').Client;
-  Config: typeof import('agntcy-dir').Config;
-  create: typeof import('@bufbuild/protobuf').create;
-  RecordRefsSchema: typeof import('@buf/agntcy_dir.bufbuild_es/agntcy/dir/routing/v1/routing_service_pb.js').RecordRefsSchema;
-  PublishRequestSchema: typeof import('@buf/agntcy_dir.bufbuild_es/agntcy/dir/routing/v1/routing_service_pb.js').PublishRequestSchema;
+  Client: any;
+  Config: (new (...args: unknown[]) => DirectoryConfig) & { loadFromEnv(): DirectoryConfig };
+  create: (schema: unknown, init: unknown) => unknown;
+  RecordRefsSchema: unknown;
+  PublishRequestSchema: unknown;
 };
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+// Specifiers live in variables so tsc does not try to resolve the optional
+// modules at build time (they may be absent from the build environment too).
+const SDK_SPECIFIERS = {
+  dir: 'agntcy-dir',
+  protobuf: '@bufbuild/protobuf',
+  routing: '@buf/agntcy_dir.bufbuild_es/agntcy/dir/routing/v1/routing_service_pb.js',
+} as const;
 
 async function loadDirectorySdk(): Promise<DirectorySdk | { error: string }> {
   try {
     const [dir, protobuf, routing] = await Promise.all([
-      import('agntcy-dir'),
-      import('@bufbuild/protobuf'),
-      import('@buf/agntcy_dir.bufbuild_es/agntcy/dir/routing/v1/routing_service_pb.js'),
+      import(SDK_SPECIFIERS.dir as string),
+      import(SDK_SPECIFIERS.protobuf as string),
+      import(SDK_SPECIFIERS.routing as string),
     ]);
     return {
       Client: dir.Client,
@@ -261,7 +295,7 @@ async function loadDirectorySdk(): Promise<DirectorySdk | { error: string }> {
 /** Rebuild a Config with a different serverAddress by re-running the real
  * constructor (see the call site's comment for why a plain property
  * assignment is wrong here) — every other field carries over unchanged. */
-function withServerAddress(ConfigCtor: DirectorySdk['Config'], config: Config, serverAddress: string): Config {
+function withServerAddress(ConfigCtor: DirectorySdk['Config'], config: DirectoryConfig, serverAddress: string): DirectoryConfig {
   return new ConfigCtor(
     serverAddress,
     config.spiffeEndpointSocket,
