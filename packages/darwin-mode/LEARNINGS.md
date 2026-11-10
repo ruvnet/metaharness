@@ -1298,3 +1298,40 @@ Ran the three arms on the clean SWE-rebench instances to test the "coordinator b
 **GENOME ALLELE ADDED (per directive):** `ornith-1.0-9b` is now a documented LOCAL allele in `bench/swebench/evolve-arch.mjs` `MODELS` (baseCost=$0, singleResolve prior=13 from this probe). Use it in any solver via `--model ornith-1.0-9b --base-url http://localhost:11434/v1 --api-key-env NONE`. It can be evolved into cascades/xbo genomes later (e.g. a free-local cold base under a paid escalation tier) once the under-finalization is addressed.
 
 **Artifacts:** `bench/swerebench/{matched15,score-ornith15}.json`, `predictions-ornith15.jsonl`, `ornith-single-report.json`, `ornith-run.log`, `ornith-goldeval.log`; model at `~/models/ornith-1.0-9b-Q4_K_M.gguf` (sha256 `5720d1f6…6087b106`, 5.63 GB) + `~/models/Ornith.Modelfile`; ollama model `ornith-1.0-9b:latest`.
+
+## 65. Post-solve escalation predictor (patch features, logistic and ruv-fann): measured weak, not shipped (2026-11-10)
+
+Question: the cascade escalates a cheap attempt to the frontier model only when the patch is empty. Can a
+non-empty cheap patch that will fail gold evaluation be recognised from the patch, so it is escalated too?
+ADR-169's pre-solve router (issue text only) was a null (AUC 0.505); this used post-solve patch features.
+
+Method (`bench/swebench/escalation-predictor.mjs`, $0, offline): 2,437 labelled non-empty patches from the 14
+committed (predictions, gold report) pairs on Lite-300; 16 patch features + 5 issue features + in-fold repo/run
+base rates; instance-grouped 5-fold CV x 10 repeats (an instance is never in train and test, across all runs);
+L2 logistic regression vs a ruv-fann ensemble (d -> 6 Tanh -> 1 Sigmoid, 5 members). Results in
+`bench/swebench/escalation-predictor-results.json`.
+
+| Target run | Best logistic AUC | Best ruv-fann AUC |
+|---|---|---|
+| e1-agentic-v4pro-300 (the agentic cheap tier) | 0.592 | 0.601 |
+| agentic-v4pro-300 | 0.599 | 0.593 |
+| 3tier-300 | 0.686 | 0.670 |
+| v4pro-hybrid-300 | 0.724 | 0.717 |
+
+- **Weak signal on the tier that matters.** On the agentic cheap tier the predictor reaches AUC ~0.59-0.60.
+  Flagging the 40 lowest-scored of its 185 non-empty patches catches 23 failures (58% precision) against a 44%
+  base failure rate. The search/replace-repair scaffolds are more predictable (0.67-0.72), mostly through
+  repo/run base rates.
+- **ruv-fann did not beat logistic regression** on any target (differences are within the repeat-to-repeat
+  spread of 0.01-0.03). With ~20 scalar features and a few thousand rows there is nothing for a hidden layer to add.
+- **Agreement between two independent cheap runs is no stronger.** Line-level Jaccard between the e1 patch and
+  the sibling agentic-v4pro-300 patch: single-feature AUC 0.583; resolved rate 71% when overlap >= 0.6 vs 42%
+  with no sibling patch.
+- **The simulated cascade gain comes from escalating more, not from the predictor.** Opus 4.8 resolved 18/51
+  of the cheap tier's unresolved non-empty patches. Escalating the 40 lowest-scored non-empty patches is worth
+  about +8 resolved of 300 if the frontier never breaks an instance the cheap tier had solved, +4.7 if it keeps
+  80% of them; random selection of 40 is worth about +6.2 and +1.7 under the same assumptions. The frontier's
+  outcome on cheap-RESOLVED instances was never measured, so the sign of the net effect is not established.
+- **Decision:** not shipped. The empty-patch gate stays the only escalation trigger: it is the one signal with
+  100% precision. A useful non-empty gate needs an execution signal (repo tests run against the patch, ADR-178
+  Signal A), not a learned score over patch shape.
