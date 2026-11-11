@@ -66,12 +66,30 @@ export function buildRepoScorecard(dir: string, generatedAt: string = new Date()
   // Harness fit — how confidently the recommended archetype matches this repo.
   const harnessFit = clamp100(plan.confidence * 100);
 
+  // "Can test" credit requires REAL evidence, not just a language/manifest-
+  // inferred `testCommands` entry. analyze-repo.ts pushes 'pytest'/'cargo
+  // test'/'go test ./...' into testCommands unconditionally for any repo with
+  // the matching manifest file (pyproject.toml, Cargo.toml, go.mod) — zero
+  // actual test files required — so a repo could earn full test credit here
+  // purely from a manifest, identically to a repo with real committed tests.
+  // This is the same "manifest implies tests" bug class already fixed in this
+  // package's sibling scorers: genome-scorers.ts's resolveAgentTopology's
+  // `authoredTestScript` gate (Dream Cycle 2026-09-15, #314, merged) and its
+  // scorePublishReadiness (Dream Cycle 2026-10-30, #451, open) — both of
+  // which also carve out `testCommands.includes('npm test')` specifically,
+  // since that ONE entry is NOT language-inferred: analyze-repo.ts only
+  // pushes it when package.json declares a real, authored `scripts.test`.
+  // `buildRepoScorecard` (this function) was the one sibling in the family
+  // still crediting the raw, unverified signal — in TWO of its six
+  // dimensions (compileConfidence below and taskCoverage further down).
+  const hasRealTestSignal = !!profile.hasVerifiedTestFiles || profile.testCommands.includes('npm test');
+
   // Compile confidence — signals a generated harness will build/run cleanly:
   // a detected language is the floor; build + test commands + CI raise it.
   const compileConfidence = clamp100(
     (profile.languages.length ? 40 : 12) +
       (profile.buildCommands.length ? 25 : 0) +
-      (profile.testCommands.length ? 25 : 0) +
+      (hasRealTestSignal ? 25 : 0) +
       (profile.hasCi ? 10 : 0),
   );
 
@@ -86,7 +104,7 @@ export function buildRepoScorecard(dir: string, generatedAt: string = new Date()
   const taskCoverage = clamp100(
     Math.min(profile.tokens.length, 30) * 2 + // repo work-vocabulary breadth (0-60)
       (profile.languages.length ? 12 : 0) + // a detected implementation language
-      (profile.testCommands.length ? 12 : 0) + // tests define coverable work
+      (hasRealTestSignal ? 12 : 0) + // tests define coverable work — real evidence only, see hasRealTestSignal above
       (profile.buildCommands.length ? 8 : 0) + // a build step to wire around
       (profile.hasCi ? 8 : 0) + // CI to hook into
       (hasDocs ? 6 : 0), // docs describing the work

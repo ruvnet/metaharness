@@ -172,6 +172,67 @@ describe('taskCoverage measures the repo, not the template (#171)', () => {
   });
 });
 
+// Dream Cycle 2026-11-10 (generator-genome): compileConfidence and
+// taskCoverage credited `profile.testCommands.length > 0` directly, which
+// analyze-repo.ts populates purely from manifest/language detection — e.g.
+// ANY repo with a pyproject.toml gets 'pytest' pushed into testCommands
+// unconditionally, with zero real test files required. That is the same
+// "manifest implies tests" bug class already fixed in this package's sibling
+// scorers (genome-scorers.ts's resolveAgentTopology #314, scorePublishReadiness
+// #451) — this function was the one sibling still on the raw signal, in two
+// of its six dimensions.
+describe('compileConfidence/taskCoverage require real test evidence, not just a manifest-inferred test command (Dream Cycle 2026-11-10)', () => {
+  function pyRepoWithoutTests(label: string): string {
+    const dir = mkdtempSync(join(tmpdir(), `sc-pytests-${label}-`));
+    // pyproject.toml alone makes analyze-repo.ts push buildCommands=['pip
+    // install -e .'] and testCommands=['pytest'] — purely from the manifest,
+    // no test files anywhere in this fixture.
+    writeFileSync(join(dir, 'pyproject.toml'), '[project]\nname = "x"\n');
+    return dir;
+  }
+
+  function pyRepoWithRealTests(label: string): string {
+    const dir = pyRepoWithoutTests(label);
+    mkdirSync(join(dir, 'tests'), { recursive: true });
+    writeFileSync(join(dir, 'tests', 'test_x.py'), 'def test_x():\n    assert True\n');
+    return dir;
+  }
+
+  it('BUG REPRO: a manifest-only repo (no real test files) must NOT score identically to an otherwise-identical repo with real test files', () => {
+    const manifestOnly = pyRepoWithoutTests('a');
+    const withRealTests = pyRepoWithRealTests('b');
+    try {
+      const scManifestOnly = buildRepoScorecard(manifestOnly, 'x');
+      const scWithTests = buildRepoScorecard(withRealTests, 'x');
+      // Pre-fix, both scored IDENTICALLY (90/36) because testCommands.length
+      // was the only signal consulted, and a manifest alone satisfies it.
+      // Post-fix, the manifest-only repo must score strictly lower on both
+      // dimensions — it has earned no real test credit.
+      expect(scManifestOnly.compileConfidence).toBeLessThan(scWithTests.compileConfidence);
+      expect(scManifestOnly.taskCoverage).toBeLessThan(scWithTests.taskCoverage);
+      // Pin the real-evidence repo's values so a future change can't silently
+      // regress the "keep crediting verified tests" half of the fix.
+      expect(scWithTests.compileConfidence).toBe(90);
+      expect(scWithTests.taskCoverage).toBe(36);
+      // And pin the manifest-only repo's corrected (lower) values.
+      expect(scManifestOnly.compileConfidence).toBe(65);
+      expect(scManifestOnly.taskCoverage).toBe(24);
+    } finally {
+      rmSync(manifestOnly, { recursive: true, force: true });
+      rmSync(withRealTests, { recursive: true, force: true });
+    }
+  });
+
+  it('the npm-test authored-script carve-out still credits test commands with no dedicated test dir (no regression vs. the existing acme-sdk fixture)', () => {
+    // `repo` (top-level fixture) has package.json scripts.test = 'vitest run'
+    // — an AUTHORED npm test script, not a language-inferred one — and no
+    // tests/ directory. This must keep earning full test credit via the
+    // testCommands.includes('npm test') carve-out, same as pre-fix.
+    const sc = buildRepoScorecard(repo, 'x');
+    expect(sc.compileConfidence).toBeGreaterThanOrEqual(80);
+  });
+});
+
 describe('formatRepoScorecard', () => {
   it('renders the 6-line card', () => {
     const lines = formatRepoScorecard(buildRepoScorecard(repo, 'x'));
