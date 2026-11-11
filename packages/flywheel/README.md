@@ -89,7 +89,7 @@ identities. Missing or malformed independent evidence is INCONCLUSIVE. The built
 file limiter supports Linux/macOS; Windows requires another durable adapter and fails
 closed without one. `budget.spent()` remains a research soft boundary.
 
-See [the production contract and examples](../../docs/flywheel/production-controls.md)
+See [the production contract and examples](https://github.com/ruvnet/metaharness/blob/main/docs/flywheel/production-controls.md)
 for configuration, trust assumptions, recovery, reproductions and offline benchmarks.
 Signatures and passing synthetic tests do not prove real-world evaluator independence
 or live production improvement.
