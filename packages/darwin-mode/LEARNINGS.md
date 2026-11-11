@@ -1298,3 +1298,56 @@ Ran the three arms on the clean SWE-rebench instances to test the "coordinator b
 **GENOME ALLELE ADDED (per directive):** `ornith-1.0-9b` is now a documented LOCAL allele in `bench/swebench/evolve-arch.mjs` `MODELS` (baseCost=$0, singleResolve prior=13 from this probe). Use it in any solver via `--model ornith-1.0-9b --base-url http://localhost:11434/v1 --api-key-env NONE`. It can be evolved into cascades/xbo genomes later (e.g. a free-local cold base under a paid escalation tier) once the under-finalization is addressed.
 
 **Artifacts:** `bench/swerebench/{matched15,score-ornith15}.json`, `predictions-ornith15.jsonl`, `ornith-single-report.json`, `ornith-run.log`, `ornith-goldeval.log`; model at `~/models/ornith-1.0-9b-Q4_K_M.gguf` (sha256 `5720d1f6…6087b106`, 5.63 GB) + `~/models/Ornith.Modelfile`; ollama model `ornith-1.0-9b:latest`.
+
+## 65. Post-solve escalation predictor (patch features, logistic and ruv-fann): measured weak, not shipped (2026-11-10)
+
+Question: the cascade escalates a cheap attempt to the frontier model only when the patch is empty. Can a
+non-empty cheap patch that will fail gold evaluation be recognised from the patch, so it is escalated too?
+ADR-169's pre-solve router (issue text only) was a null (AUC 0.505); this used post-solve patch features.
+
+Method (`bench/swebench/escalation-predictor.mjs`, $0, offline): 2,437 labelled non-empty patches from the 14
+committed (predictions, gold report) pairs on Lite-300; 16 patch features + 5 issue features + in-fold repo/run
+base rates; instance-grouped 5-fold CV x 10 repeats (an instance is never in train and test, across all runs);
+L2 logistic regression vs a ruv-fann ensemble (d -> 6 Tanh -> 1 Sigmoid, 5 members). Results in
+`bench/swebench/escalation-predictor-results.json`.
+
+| Target run | Best logistic AUC | Best ruv-fann AUC |
+|---|---|---|
+| e1-agentic-v4pro-300 (the agentic cheap tier) | 0.592 | 0.601 |
+| agentic-v4pro-300 | 0.599 | 0.593 |
+| 3tier-300 | 0.686 | 0.670 |
+| v4pro-hybrid-300 | 0.724 | 0.717 |
+
+- **Weak signal on the tier that matters.** On the agentic cheap tier the predictor reaches AUC ~0.59-0.60.
+  Flagging the 40 lowest-scored of its 185 non-empty patches catches 23 failures (58% precision) against a 44%
+  base failure rate. The search/replace-repair scaffolds are more predictable (0.67-0.72), mostly through
+  repo/run base rates.
+- **ruv-fann did not beat logistic regression** on any target (differences are within the repeat-to-repeat
+  spread of 0.01-0.03). With ~20 scalar features and a few thousand rows there is nothing for a hidden layer to add.
+- **Agreement between two independent cheap runs is no stronger.** Line-level Jaccard between the e1 patch and
+  the sibling agentic-v4pro-300 patch: single-feature AUC 0.583; resolved rate 71% when overlap >= 0.6 vs 42%
+  with no sibling patch.
+- **The simulated cascade gain comes from escalating more, not from the predictor.** Opus 4.8 resolved 18/51
+  of the cheap tier's unresolved non-empty patches. Escalating the 40 lowest-scored non-empty patches is worth
+  about +8 resolved of 300 if the frontier never breaks an instance the cheap tier had solved, +4.7 if it keeps
+  80% of them; random selection of 40 is worth about +6.2 and +1.7 under the same assumptions. The frontier's
+  outcome on cheap-RESOLVED instances was never measured, so the sign of the net effect is not established.
+- **Decision:** not shipped. The empty-patch gate stays the only escalation trigger: it is the one signal with
+  100% precision. A useful non-empty gate needs an execution signal (repo tests run against the patch, ADR-178
+  Signal A), not a learned score over patch shape.
+
+## 66. ruv-fann follow-ups 2-5: no committed dataset large enough to measure any of them (2026-11-10)
+
+After the numeric-genome surrogate (0.14.0) and the escalation predictor (section 65), four more places for a
+small learned model were checked against the data actually in this repository. None can be measured offline.
+
+| Idea | Data found | Why it cannot be validated |
+|---|---|---|
+| Learned AVO route policy (replace the 0.5/0.3/0.2 score in `GovernedAutonomyRouter`) | `bench/swebench/results/arm-*.jsonl`: 100 instances; Darwin arm 5 resolved, AVO arms 13-14 resolved; 27 instances submitted by both arms, of which AVO-only wins are 1-2 | About 10 positive "AVO wins" labels in total, and the policy's inputs (`complexity`, `failedAttempts`, `estimatedValue`, `evaluatorReliability`) were never logged per instance |
+| Surrogate for the seven-surface prompt-genome loop | One promoted genome in `genomes/`; 118 candidate commits across six flywheel bundles from six unrelated domains | No archive of scored variants from a real evolve run; the only per-candidate feature is the mutated surface name |
+| Dense head in `@metaharness/router` | DRACO routing dataset: 20 queries | The router README already records that kernel ridge regression ties k-NN at n=20 (the data ceiling); a network cannot be validated on 20 rows |
+| Early-stopping predictor ahead of the flywheel gate | 118 candidate commits, none with per-item results | Needs per-task outcome sequences to learn from a prefix; also `flywheel/src/sequential.ts` already provides a statistical early-stopping rule, which is the principled tool for this |
+
+What would unblock each: log the route inputs and both arms' outcomes on a few hundred instances (idea 2);
+keep `archive.json` from real `evolve` runs (idea 3); a routing dataset in the hundreds of queries (idea 4);
+store per-item outcomes in flywheel receipts (idea 5). The first three need paid model runs.
