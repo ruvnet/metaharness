@@ -26,7 +26,8 @@
   },
   "files": [
     "dist/**",
-    "README.md"
+    "README.md",
+    "AGENTS.md"
   ],
   "scripts": {
     "build": "tsc",
