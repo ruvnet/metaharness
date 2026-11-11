@@ -38,6 +38,7 @@ import { createProductionPromotionRule } from './production-gate.js';
 import { verifyReceipt, canonEquals } from './receipts.js';
 import { gateFingerprint } from './gate.js';
 import { pairedOutcomesFromItemWins } from './sequential.js';
+import { validateReplayBundle } from './validate-bundle.js';
 import type { ReplayBundle, PromotionRule, LineageCommit, Score } from './types.js';
 
 // A bundle is untrusted external JSON — `baselineScore != null` only proves the field exists, not that
@@ -93,10 +94,35 @@ export interface ReplayVerdict {
   chainSummary: string;
 }
 
+// `bundle` is typed `ReplayBundle`, but TypeScript's type system does not run at runtime: this function
+// is the documented entry point for an INDEPENDENT reviewer with no trust in the producer (see file
+// header) and is re-exported from index.ts for exactly that direct, non-CLI use. cli.ts's own
+// `loadBundle()` already runs every bundle it reads through `validateReplayBundle()` before calling this
+// function — but a caller that imports `verifyReplayBundle` straight from the package (an external
+// reviewer's own script, a CI step, another package) gets no such gate. A non-array `chain`/`all_commits`,
+// or a non-array `parents` on a chain node, previously reached this function's own iteration/property
+// access and threw an uncaught TypeError — breaking this function's own documented "always return a
+// verdict, never throw" contract (disclosed, not fixed, in the 2026-10-21 ledger entry) from a DIFFERENT
+// root cause than the 2026-10-16 canon()-depth fix: malformed top-level/array shape, not unbounded
+// recursion — canon()'s depth bound does not touch this. Running the same structural/numeric-domain gate
+// here, not just in the CLI, makes `verifyReplayBundle` itself fail closed for every caller.
 export function verifyReplayBundle(
   bundle: ReplayBundle,
   opts: { pinnedGateFingerprint?: string; pinnedPublicKey?: string; promotionRule?: PromotionRule } = {},
 ): ReplayVerdict {
+  const shape = validateReplayBundle(bundle);
+  if (!shape.valid) {
+    return {
+      pass: false,
+      checks: {
+        productionBindings: false, receipts: false, reachesRoot: false, contiguousParents: false,
+        allPromoted: false, gateUnchanged: false, gateReExecutes: false, allCommitsReceipts: false,
+        sealedFieldsAuthentic: false,
+      },
+      failures: ['invalid_bundle', ...shape.errors],
+      chainSummary: '',
+    };
+  }
   const failures: string[] = [];
   const chain = bundle.chain;
   const production = !!opts.pinnedPublicKey || isProductionBundle(bundle);
