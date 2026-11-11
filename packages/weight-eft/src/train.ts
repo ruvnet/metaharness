@@ -113,7 +113,11 @@ export function defaultDetectGpu(): { available: boolean; detail: string } {
 
 /** Validate a base model is in the tunable 7-14B band (refuse 32B). */
 export function assertTunableSize(base: BaseModelSpec): void {
-  if (base.paramsB < MIN_PARAMS_B || base.paramsB > MAX_PARAMS_B) {
+  // `!Number.isFinite` catches NaN/±Infinity up front: `NaN < MIN` and `NaN > MAX`
+  // are BOTH false (IEEE-754), so without this the range check below silently
+  // no-ops on a non-numeric --params-b instead of refusing the out-of-band model
+  // it exists to catch (CWE-1284; cf. CVE-2026-54235, the same shape in vLLM).
+  if (!Number.isFinite(base.paramsB) || base.paramsB < MIN_PARAMS_B || base.paramsB > MAX_PARAMS_B) {
     throw new Error(
       `weight-eft: base model ${base.id} is ${base.paramsB}B — outside the tunable [${MIN_PARAMS_B}, ${MAX_PARAMS_B}]B band. ` +
         `Pick a 7-14B class model (Qwen2.5-Coder-7B / GLM-4-9B); 32B q4 spills a 16GB GPU (§59).`,
