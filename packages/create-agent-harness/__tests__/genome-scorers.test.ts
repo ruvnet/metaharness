@@ -269,12 +269,52 @@ describe('scorePublishReadiness', () => {
   // #200 CLOSED this gap. Inverted rather than deleted, so the fix stays pinned
   // from the other side: a python repo now earns the same language credit as any
   // other, which is what let it clear genome.ts's 0.75 'ready' threshold.
+  // `hasVerifiedTestFiles: true` added here (Dream Cycle 2026-10-30) so this
+  // test keeps isolating #200's language-credit point — see the dedicated
+  // tests below for tonight's own `can test` real-evidence fix.
   it('#200 closed the gap: python/go now earn language credit like any other language', () => {
-    const p = profile({ languages: ['python'], buildCommands: ['pytest --collect-only'], testCommands: ['pytest'], hasCi: true });
+    const p = profile({
+      languages: ['python'],
+      buildCommands: ['pytest --collect-only'],
+      testCommands: ['pytest'],
+      hasCi: true,
+      hasVerifiedTestFiles: true,
+    });
     const score = scorePublishReadiness(p, plan());
     // language(0.3) + build(0.2) + test(0.15) + ci(0.2) + policy.defaultDeny(0.05) = 0.9
     expect(score).toBeCloseTo(0.9);
     expect(score).toBeGreaterThanOrEqual(0.75); // clears the 'ready' threshold
+  });
+
+  // Dream Cycle 2026-10-30: `can test` now requires real evidence
+  // (hasVerifiedTestFiles), not just a language-inferred testCommands entry.
+  // This is the exact pre-fix shape of the test above, minus
+  // hasVerifiedTestFiles — pytest is pushed by analyze-repo.ts purely from
+  // detecting a `pyproject.toml`/`setup.py`, with zero real test files.
+  it('does NOT credit "can test" for language-inferred testCommands with no verified test files', () => {
+    const withBogusTests = profile({
+      languages: ['python'],
+      buildCommands: ['pytest --collect-only'],
+      testCommands: ['pytest'],
+      hasCi: true,
+      hasVerifiedTestFiles: false,
+    });
+    const withRealTests = { ...withBogusTests, hasVerifiedTestFiles: true };
+    const scoreBogus = scorePublishReadiness(withBogusTests, plan());
+    const scoreReal = scorePublishReadiness(withRealTests, plan());
+    // language(0.3) + build(0.2) + ci(0.2) + policy.defaultDeny(0.05) = 0.75, no test credit
+    expect(scoreBogus).toBeCloseTo(0.75);
+    expect(scoreReal).toBeCloseTo(0.9); // the +0.15 "can test" credit applies
+    expect(scoreReal - scoreBogus).toBeCloseTo(0.15);
+  });
+
+  // `npm test` is authored evidence (analyze-repo.ts only pushes it when
+  // package.json declares a real `scripts.test`), so it earns "can test"
+  // credit even without a verified test DIRECTORY — mirrors
+  // resolveAgentTopology's existing authoredTestScript carve-out.
+  it('DOES credit "can test" for an authored `npm test` script with no verified test directory', () => {
+    const p = profile({ languages: ['typescript'], testCommands: ['npm test'], hasVerifiedTestFiles: false });
+    expect(scorePublishReadiness(p, plan())).toBeCloseTo(0.3 + 0.15 + 0.05);
   });
 
   it('credits buildCommands, testCommands, hasCi, and policy.defaultDeny independently', () => {
