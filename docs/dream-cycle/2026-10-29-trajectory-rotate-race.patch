@@ -1,0 +1,58 @@
+diff --git a/packages/kernel-js/src/trajectory.ts b/packages/kernel-js/src/trajectory.ts
+index c3a7798..b57edc6 100644
+--- a/packages/kernel-js/src/trajectory.ts
++++ b/packages/kernel-js/src/trajectory.ts
+@@ -23,10 +23,31 @@ export interface TrajectoryRecord {
+ }
+ 
+ export class TrajectoryStore {
++  /** Serializes append()/rotateIfLarger() against each other on this
++   * instance, so a rotation's rename()-then-writeFile('') window can never
++   * interleave with a concurrent append() — the same TOCTOU-class fix
++   * `session.ts`'s `enqueue()` already applies to `SessionLog`. Without
++   * this, an append() that opens its fd after the rename but before the
++   * post-rotation writeFile('') truncates the record it just wrote: the
++   * record lands in the new (soon-to-be-truncated) file, not the rotated
++   * `.1` archive, and is silently discarded. Always resolves (an
++   * operation's own failure is delivered through the promise `enqueue`
++   * returns to its caller, never through this chain, so one failed
++   * append()/rotateIfLarger() can't wedge the queue for the next). */
++  private queue: Promise<unknown> = Promise.resolve();
++
+   constructor(private path: string) {}
+ 
++  private enqueue<T>(op: () => Promise<T>): Promise<T> {
++    const result = this.queue.then(op, op);
++    this.queue = result.then(() => undefined, () => undefined);
++    return result;
++  }
++
+   async append(record: TrajectoryRecord): Promise<void> {
+-    await appendFile(this.path, JSON.stringify(record) + '\n', 'utf-8');
++    return this.enqueue(async () => {
++      await appendFile(this.path, JSON.stringify(record) + '\n', 'utf-8');
++    });
+   }
+ 
+   async readAll(): Promise<TrajectoryRecord[]> {
+@@ -37,12 +58,14 @@ export class TrajectoryStore {
+ 
+   /** Rotate the file if it exceeds maxBytes. Old data goes to `<path>.1`. */
+   async rotateIfLarger(maxBytes: number): Promise<boolean> {
+-    if (!existsSync(this.path)) return false;
+-    const s = await stat(this.path);
+-    if (s.size <= maxBytes) return false;
+-    await rename(this.path, this.path + '.1');
+-    await writeFile(this.path, '', 'utf-8');
+-    return true;
++    return this.enqueue(async () => {
++      if (!existsSync(this.path)) return false;
++      const s = await stat(this.path);
++      if (s.size <= maxBytes) return false;
++      await rename(this.path, this.path + '.1');
++      await writeFile(this.path, '', 'utf-8');
++      return true;
++    });
+   }
+ 
+   async size(): Promise<number> {
