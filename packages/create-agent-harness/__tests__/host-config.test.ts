@@ -131,6 +131,32 @@ describe('hostConfigFiles (ADR-045)', () => {
   it('unknown host id emits nothing (no throw)', () => {
     expect(hostConfigFiles('does-not-exist', base)).toEqual([]);
   });
+
+  // Regression (dream-cycle 2026-11-04, ADR-247 §2.2): the real
+  // @metaharness/host-prime-agent adapter never silently drops a non-empty
+  // deny-list — it emits SANDBOX-REQUIRED.md and prepends a warning banner
+  // to the install runbook. This scaffold-time mirror had neither,
+  // regardless of policy, because every generated harness's deny-list is
+  // non-empty by default (policyLists()'s baseline Read(./.env)/Bash(rm:*)/
+  // etc. rules), the real adapter's fail-closed check always fires in
+  // practice — making this mirror's silent omission a 100%-reproducible gap,
+  // not an edge case.
+  it('prime-agent emits SANDBOX-REQUIRED.md enumerating the deny-list (ADR-247 §2.2)', () => {
+    const files = hostConfigFiles('prime-agent', base);
+    const sandbox = files.find((f) => f.path === 'SANDBOX-REQUIRED.md');
+    expect(sandbox).toBeDefined();
+    expect(sandbox!.content).toContain('# SANDBOX REQUIRED');
+    expect(sandbox!.content).toContain('`Read(./.env)`');
+    expect(sandbox!.content).toContain('`Bash(rm:*)`');
+  });
+
+  it('prime-agent prepends the sandbox warning banner to install-prime-agent.md', () => {
+    const files = hostConfigFiles('prime-agent', base);
+    const runbook = files.find((f) => f.path === 'install-prime-agent.md')!;
+    expect(runbook.content).toContain('WARNING — SANDBOX REQUIRED');
+    expect(runbook.content).toContain('See `SANDBOX-REQUIRED.md` for details.');
+  });
+
 });
 
 describe('scaffold wires host config (ADR-045 end-to-end)', () => {

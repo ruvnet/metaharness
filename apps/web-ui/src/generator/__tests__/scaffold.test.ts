@@ -201,5 +201,25 @@ describe('buildScaffold', () => {
       ));
       expect(json.permission.bash['*']).toBe('allow');
     });
+
+    // Regression (dream-cycle 2026-11-04, ADR-247 §2.2): mirrors the CLI
+    // host-config.ts fix — the real @metaharness/host-prime-agent adapter
+    // never silently drops a non-empty deny-list; this web-UI mirror had no
+    // SANDBOX-REQUIRED.md and no warning banner at all, regardless of
+    // policy. Every harness's deny-list is non-empty by default
+    // (policyLists()'s baseline Read(./.env)/Bash(rm:*) rules), so this gap
+    // was 100% reproducible, not an edge case.
+    it('prime-agent emits SANDBOX-REQUIRED.md enumerating the deny-list (ADR-247 §2.2)', () => {
+      const sandbox = fileFor({ ...base, hosts: ['prime-agent'] }, 'SANDBOX-REQUIRED.md');
+      expect(sandbox).toContain('# SANDBOX REQUIRED');
+      expect(sandbox).toContain('`Read(./.env)`');
+      expect(sandbox).toContain('`Bash(rm:*)`');
+    });
+
+    it('prime-agent prepends the sandbox warning banner to install-prime-agent.md', () => {
+      const runbook = fileFor({ ...base, hosts: ['prime-agent'] }, 'install-prime-agent.md');
+      expect(runbook).toContain('WARNING — SANDBOX REQUIRED');
+      expect(runbook).toContain('See `SANDBOX-REQUIRED.md` for details.');
+    });
   });
 });
