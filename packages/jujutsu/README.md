@@ -1,6 +1,8 @@
 # @metaharness/jujutsu — version-control-for-agents capability + dual-state bridge
 
 <!-- ruv-seo:start (ADR-356) -->
+![@metaharness/jujutsu flow: spawn a jj branch plus an agenticow copy-on-write fork, learn the op-log into memory, query across branches with native ANN, revert the delta, merge by promoting into the base](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/jujutsu.svg)
+
 `@metaharness/jujutsu` gives each agent its own branch of both its code and its memory: it wraps `agentic-jujutsu` (jj op-log, lock-free coordination, trajectories) and pairs every jj branch with an `agenticow` copy-on-write memory branch, so spawn, learn, revert and merge move both together.
 
 **Supported environments:** Node.js 20+ on Linux, macOS and Windows. ESM only (`import`, not `require`). `agentic-jujutsu`, the `jj` CLI and `agenticow` are optional peers; without them `probe()` reports them absent and the in-memory providers still run the full lifecycle, as the quickstart shows (output below is from a machine without the peers).
@@ -52,7 +54,7 @@ merge: {"ingested":3,"deleted":0}
 ```bash
 npm i @metaharness/jujutsu
 # optional native peers (removable augmentation — ADR-150):
-npm i agentic-jujutsu agenticow
+npm i agentic-jujutsu agenticow@0.3.1   # the agenticow peer is pinned to 0.3.1
 ```
 
 ## Why
