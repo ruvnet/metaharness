@@ -182,4 +182,38 @@ describe('buildThreatModel — mcpInUse / scanMcp detection-surface consistency'
     expect(tm.secretsReachable).toBe(true);
     expect(tm.exitCode).toBe(2);
   });
+
+  it('BUG REPRO (Dream Cycle 2026-11-03): secretsReachable is true for a real shipped-template-shaped settings.json with NO Read rule in `allow` and NO .env deny guard', async () => {
+    // Every one of this repo's 20 shipped `templates/*/.claude/settings.json.tmpl`
+    // never lists a `Read` rule in `permissions.allow` (confirmed by direct
+    // inspection) — Claude Code's own deny-first-then-ask-then-allow precedence
+    // means Read needs no allow entry to work. A prior `hasReadAllow` gate on
+    // `secretsReachable` required that never-shipped allow shape, so the field
+    // was permanently `false` for every real generated harness regardless of
+    // whether `.env` was actually guarded. This fixture mirrors the real
+    // `minimal` template's allow list exactly, with its `deny` guard removed.
+    const dir = await makeHarness({
+      policy: { defaultDeny: true, auditLog: true, requireApprovalForDangerous: true, toolTimeoutMs: 30000, maxToolCallsPerTurn: 8 },
+      allow: ['Bash(npx demo*)', 'mcp__demo__*'],
+      deny: [],
+      servers: { demo: { command: 'npx' } },
+    });
+    const tm = buildThreatModel(dir);
+    expect(tm.secretsReachable).toBe(true);
+    expect(tm.verdict).toBe('high');
+    expect(tm.exitCode).toBe(2);
+  });
+
+  it('secretsReachable stays false when the minimal template\'s real deny guard (Read(./.env), Read(./.env.*)) is present, even with no Read rule in allow', async () => {
+    const dir = await makeHarness({
+      policy: { defaultDeny: true, auditLog: true, requireApprovalForDangerous: true, toolTimeoutMs: 30000, maxToolCallsPerTurn: 8 },
+      allow: ['Bash(npx demo*)', 'mcp__demo__*'],
+      deny: ['Read(./.env)', 'Read(./.env.*)'],
+      servers: { demo: { command: 'npx' } },
+    });
+    const tm = buildThreatModel(dir);
+    expect(tm.secretsReachable).toBe(false);
+    expect(tm.verdict).toBe('clean');
+    expect(tm.exitCode).toBe(0);
+  });
 });
