@@ -24,14 +24,17 @@
 // Testing-by-betting / e-processes. An e-value is a non-negative random
 // variable with expectation <= 1 under the null hypothesis ("this candidate is
 // no better than baseline"). By Ville's inequality, P(sup_t E_t >= 1/alpha)
-// <= alpha, so you may stop and reject at ANY time — no pre-registered sample
-// size, no alpha spending schedule, and no penalty for peeking. That is exactly
-// the property a flywheel needs, because it peeks by construction.
+// <= alpha for ONE fixed comparison, assuming the paired signs satisfy the
+// conditional null. This does NOT cover adaptively selected candidates, repeated
+// comparison families, contaminated holdouts, or dependent sign processes by
+// itself. production-gate.ts uses fresh disjoint suites and a fixed-family alpha
+// allocation; the trusted evaluator must establish the statistical assumptions.
 //
 // The bet here is deliberately simple and assumption-light: per paired item,
 // a candidate win against a baseline loss multiplies the e-value up, the
 // reverse multiplies it down, and ties leave it unchanged.
 
+import { bindGateManifest, gateFingerprint } from './gate.js';
 import type { PairedOutcome, PromotionDecision, PromotionEvidence, PromotionRule, Score } from './types.js';
 
 export type { PairedOutcome } from './types.js';
@@ -95,11 +98,11 @@ export function sequentialEvidence(
   const alpha = config.alpha ?? DEFAULT_ALPHA;
   const lambda = config.lambda ?? DEFAULT_LAMBDA;
 
-  if (!(alpha > 0 && alpha < 1)) throw new RangeError('alpha must be in (0, 1)');
-  if (!(lambda > 0 && lambda < 1)) throw new RangeError('lambda must be in (0, 1)');
+  if (typeof alpha !== 'number' || !(alpha > 0 && alpha < 1)) throw new RangeError('alpha must be in (0, 1)');
+  if (typeof lambda !== 'number' || !(lambda > 0 && lambda < 1)) throw new RangeError('lambda must be in (0, 1)');
 
   const threshold = 1 / alpha;
-  let eValue = 1;
+  let logEValue = 0;
   let informativePairs = 0;
 
   for (const o of outcomes) {
@@ -107,12 +110,12 @@ export function sequentialEvidence(
     informativePairs++;
     // Under the null, a discordant pair favors either arm with probability 1/2,
     // so E[multiplier] = 1 and the process is a non-negative martingale.
-    eValue *= o.candidateWon ? 1 + lambda : 1 - lambda;
+    logEValue += o.candidateWon ? Math.log1p(lambda) : Math.log1p(-lambda);
   }
 
   return {
-    significant: eValue >= threshold,
-    eValue,
+    significant: logEValue >= -Math.log(alpha),
+    eValue: Math.exp(logEValue),
     threshold,
     informativePairs,
     totalPairs: outcomes.length,
@@ -122,8 +125,10 @@ export function sequentialEvidence(
 /**
  * Compose a frozen gate with a sequential-evidence requirement.
  *
- * The returned rule is still a plain `PromotionRule`, so it fingerprints and
- * freezes exactly like the default one. A candidate must satisfy BOTH: every
+ * The returned rule is still a plain `PromotionRule`; its fingerprint additionally
+ * binds a snapshot of alpha/lambda, helper source and the base fingerprint. This
+ * research wrapper does not establish independent evaluation. A candidate with
+ * nonempty paired evidence must satisfy BOTH: every
  * clause of `baseRule`, and evidence strong enough to survive having been
  * looked at repeatedly.
  *
@@ -163,13 +168,16 @@ export function withSequentialEvidence(
   baseRule: PromotionRule,
   config: SequentialConfig = {},
 ): PromotionRule {
-  return function sequentialPromotionRule(evidence: PromotionEvidence): PromotionDecision {
+  // Snapshot configuration before observations; mutating the caller's object cannot change this gate.
+  const frozen = Object.freeze({ alpha: config.alpha ?? DEFAULT_ALPHA, lambda: config.lambda ?? DEFAULT_LAMBDA });
+  sequentialEvidence([], frozen); // validate even when evidence is absent
+  const rule = function sequentialPromotionRule(evidence: PromotionEvidence): PromotionDecision {
     const base = baseRule(evidence);
     const outcomes = evidence.pairedOutcomes;
 
     if (!outcomes || outcomes.length === 0) return base;
 
-    const verdict = sequentialEvidence(outcomes, config);
+    const verdict = sequentialEvidence(outcomes, frozen);
     if (verdict.significant) return base;
 
     return {
@@ -180,4 +188,5 @@ export function withSequentialEvidence(
       ],
     };
   };
+  return bindGateManifest(rule, { version: 1, kind: 'research-sequential', ...frozen, base: gateFingerprint(baseRule), helper: sequentialEvidence.toString() });
 }

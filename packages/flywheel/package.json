@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/flywheel",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "description": "Verifiable self-improvement loop for agent harnesses: run candidates, compare against a frozen baseline, and promote only what proves lift, with signed receipts and lineage.",
   "homepage": "https://ruv.io",
   "repository": {
