@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/jujutsu",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Version control for agents in MetaHarness: wraps agentic-jujutsu (jj op-log, lock-free coordination, signed trajectories) and bridges it to agenticow copy-on-write memory branches.",
   "homepage": "https://ruv.io",
   "repository": {
@@ -54,11 +54,12 @@
     "node": ">=20.0.0"
   },
   "devDependencies": {
+    "agenticow": "0.3.1",
     "typescript": "^5.4.0",
     "vitest": "^4.1.12"
   },
   "peerDependencies": {
-    "agenticow": "^0.2.0",
+    "agenticow": "0.3.1",
     "agentic-jujutsu": "^2.3.6"
   },
   "peerDependenciesMeta": {
