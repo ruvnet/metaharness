@@ -1,4 +1,5 @@
 import type { Policy } from '@metaharness/flywheel';
+import { CEILINGS, DEFAULT_INDEPENDENCE_WEIGHTS } from 'radio-moe';
 
 /** The only radio-moe parameters Autogenous currently authorizes evolution to change. */
 export const AUTOGENOUS_MUTATION_TARGETS = [
@@ -11,16 +12,28 @@ export const AUTOGENOUS_MUTATION_TARGETS = [
 
 export type AutogenousMutationTarget = (typeof AUTOGENOUS_MUTATION_TARGETS)[number];
 
-/** Constitutional bounds copied from radio-moe's mesh-evolve.ts CEILINGS. */
-export const AUTOGENOUS_CEILINGS = {
-  weightMin: 0,
-  weightMax: 0.8,
-  quorumMin: 1.5,
-  quorumMax: 4,
-} as const;
+/** Constitutional bounds: radio-moe's own mesh-evolve `CEILINGS`, imported rather than copied. */
+export const AUTOGENOUS_CEILINGS = CEILINGS;
 
-/** Frozen until Autogenous adds a dedicated accuracy-band benchmark. */
-export const FROZEN_SAME_ACCURACY_BAND = 0.2;
+/** Frozen until Autogenous adds a dedicated accuracy-band benchmark (radio-moe default). */
+export const FROZEN_SAME_ACCURACY_BAND: number = requireNumber(
+  DEFAULT_INDEPENDENCE_WEIGHTS.sameAccuracyBand,
+  'radio-moe DEFAULT_INDEPENDENCE_WEIGHTS.sameAccuracyBand',
+);
+
+function requireNumber(value: number | undefined, name: string): number {
+  // Fail at import rather than evolve against a silently invented default.
+  if (typeof value !== 'number' || !Number.isFinite(value)) throw new Error(`${name} is missing`);
+  return value;
+}
+
+/** radio-moe `evolveMesh`'s default start quorum (radio-moe exports no constant for it). */
+export const ROOT_QUORUM_THRESHOLD = 2;
+
+const W_MIN = CEILINGS.weightMin;
+const W_MAX = CEILINGS.weightMax;
+const Q_MIN = CEILINGS.quorumMin;
+const Q_MAX = CEILINGS.quorumMax;
 
 export interface AutogenousMeshGenome {
   weights: {
@@ -33,17 +46,17 @@ export interface AutogenousMeshGenome {
   quorumThreshold: number;
 }
 
-/** Shipped radio-moe defaults, before any project-local champion is applied. */
+/** Shipped radio-moe defaults (`DEFAULT_INDEPENDENCE_WEIGHTS`), before any project-local champion. */
 export function rootGenome(): AutogenousMeshGenome {
   return {
     weights: {
-      sameProvider: 0.4,
-      sameArch: 0.35,
-      sameSize: 0.1,
-      sourceJaccard: 0.15,
+      sameProvider: DEFAULT_INDEPENDENCE_WEIGHTS.sameProvider,
+      sameArch: DEFAULT_INDEPENDENCE_WEIGHTS.sameArch,
+      sameSize: DEFAULT_INDEPENDENCE_WEIGHTS.sameSize,
+      sourceJaccard: DEFAULT_INDEPENDENCE_WEIGHTS.sourceJaccard,
       sameAccuracyBand: FROZEN_SAME_ACCURACY_BAND,
     },
-    quorumThreshold: 2,
+    quorumThreshold: ROOT_QUORUM_THRESHOLD,
   };
 }
 
@@ -75,13 +88,13 @@ export function policyToGenome(policy: Policy): AutogenousMeshGenome {
   const defaults = rootGenome();
   return {
     weights: {
-      sameProvider: bounded(policy.sameProvider, defaults.weights.sameProvider, 0, 0.8),
-      sameArch: bounded(policy.sameArch, defaults.weights.sameArch, 0, 0.8),
-      sameSize: bounded(policy.sameSize, defaults.weights.sameSize, 0, 0.8),
-      sourceJaccard: bounded(policy.sourceJaccard, defaults.weights.sourceJaccard, 0, 0.8),
+      sameProvider: bounded(policy.sameProvider, defaults.weights.sameProvider, W_MIN, W_MAX),
+      sameArch: bounded(policy.sameArch, defaults.weights.sameArch, W_MIN, W_MAX),
+      sameSize: bounded(policy.sameSize, defaults.weights.sameSize, W_MIN, W_MAX),
+      sourceJaccard: bounded(policy.sourceJaccard, defaults.weights.sourceJaccard, W_MIN, W_MAX),
       sameAccuracyBand: FROZEN_SAME_ACCURACY_BAND,
     },
-    quorumThreshold: bounded(policy.quorumThreshold, defaults.quorumThreshold, 1.5, 4),
+    quorumThreshold: bounded(policy.quorumThreshold, defaults.quorumThreshold, Q_MIN, Q_MAX),
   };
 }
 
@@ -99,7 +112,7 @@ export function policyViolations(policy: Policy): string[] {
       violations.push(`invalid_number:${target}`);
       continue;
     }
-    const [min, max] = target === 'quorumThreshold' ? [1.5, 4] : [0, 0.8];
+    const [min, max] = target === 'quorumThreshold' ? [Q_MIN, Q_MAX] : [W_MIN, W_MAX];
     if (value < min || value > max) violations.push(`out_of_bounds:${target}`);
   }
   return violations;
@@ -110,7 +123,7 @@ export function clampLever(target: string, proposed: string, current: string): s
   const fallback = Number(current);
   const parsed = Number(proposed);
   const value = Number.isFinite(parsed) ? parsed : Number.isFinite(fallback) ? fallback : 0;
-  return String(target === 'quorumThreshold' ? clamp(value, 1.5, 4) : clamp(value, 0, 0.8));
+  return String(target === 'quorumThreshold' ? clamp(value, Q_MIN, Q_MAX) : clamp(value, W_MIN, W_MAX));
 }
 
 function bounded(raw: string | undefined, fallback: number, min: number, max: number): number {
