@@ -113,6 +113,12 @@ export function defaultDetectGpu(): { available: boolean; detail: string } {
 
 /** Validate a base model is in the tunable 7-14B band (refuse 32B). */
 export function assertTunableSize(base: BaseModelSpec): void {
+  if (!Number.isFinite(base.paramsB)) {
+    throw new Error(
+      `weight-eft: base model ${base.id} has a non-finite paramsB (${base.paramsB}) — ` +
+        `refusing to guess a size. Pass a finite --params-b in the tunable [${MIN_PARAMS_B}, ${MAX_PARAMS_B}]B band.`,
+    );
+  }
   if (base.paramsB < MIN_PARAMS_B || base.paramsB > MAX_PARAMS_B) {
     throw new Error(
       `weight-eft: base model ${base.id} is ${base.paramsB}B — outside the tunable [${MIN_PARAMS_B}, ${MAX_PARAMS_B}]B band. ` +
