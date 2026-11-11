@@ -3,3 +3,4 @@ export * from './genome.js';
 export * from './score.js';
 export * from './evaluator.js';
 export * from './gate.js';
+export * from './admission.js';
