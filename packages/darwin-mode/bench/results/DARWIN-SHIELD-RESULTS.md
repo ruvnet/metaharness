@@ -22,7 +22,7 @@ Corpus: `darwin-shield-bench@1.0.0` — 10 ground-truth vulns, 9 decoys. 50 evol
 - ✅ **Unsafe outputs = 0** — champion=0, baselines=0,0,0
 - ✅ **Cost increase ≤ 2× fixed harness** — 1.758929×
 - ✅ **All runs reproducible from receipts** — B0=593274e6 B1=2589863b B2=92a56965 B3=5991a555
-- ✅ **Champion beats every baseline on fitness** — B3 0.93275 vs [0.5665, 0.1365, 0.598]
+- ✅ **Champion beats every baseline on fitness (statistically, not point estimate)** — B0 lower95=0.23625, B1 lower95=0.40625, B2 lower95=0.20225
 - ✅ **Beyond SOTA: champion STATISTICALLY beats the previous champion** — lower95 0.20225 > 0, meanDelta 0.287181, p=0, unsafe-regression=false
 - ✅ **Compounding: false-positive repeat-rate drop ≥ 35%** — −100% (cold 4 → warm 0)
 - ✅ **Compounding: patch-reuse improvement ≥ 20%** — +100%
