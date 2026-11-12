@@ -148,6 +148,15 @@ export function runBenchmark(config: BenchConfig = {}): BenchReport {
   // unsafe-output regression (ADR-155 addendum, grounded in ADR-079 SGM).
   const statisticalPromotion = decidePromotion(b2genome, champion.genome, corpus, b2FpRate, { seed });
 
+  // The same statistical certification — not a bare point estimate — applies to
+  // EVERY baseline (B0, B1, B2), per the ADR-155 addendum's "beat the previous
+  // champion and all baselines... with statistical certification" requirement.
+  // B2's decision is already computed above; reuse it instead of re-running the
+  // bootstrap a second time for the same pair.
+  const baselinePromotions: PromotionDecision[] = baselines.map((b) =>
+    b === b2 ? statisticalPromotion : decidePromotion(b.genome, champion.genome, corpus, b2FpRate, { seed }),
+  );
+
   // Cross-run compounding: memory makes the next run smarter (ADR-155 §advanced
   // ruVector integration acceptance test). The real moat is not one run's score.
   const compounding = measureCompounding(corpus, b2FpRate, seed);
@@ -193,9 +202,11 @@ export function runBenchmark(config: BenchConfig = {}): BenchReport {
       detail: [...baselines, champion].map((b) => `${b.name.split(' ')[0]}=${b.reproHash}`).join(' '),
     },
     {
-      name: 'Champion beats every baseline on fitness',
-      pass: baselines.every((b) => champion.breakdown.fitness > b.breakdown.fitness),
-      detail: `B3 ${champion.breakdown.fitness} vs [${baselines.map((b) => b.breakdown.fitness).join(', ')}]`,
+      name: 'Champion beats every baseline on fitness (statistically, not point estimate)',
+      pass: baselinePromotions.every((p) => p.promote),
+      detail: baselines
+        .map((b, i) => `${b.name.split(' ')[0]} lower95=${round6(baselinePromotions[i].lower95)}`)
+        .join(', '),
     },
     {
       name: 'Beyond SOTA: champion STATISTICALLY beats the previous champion',

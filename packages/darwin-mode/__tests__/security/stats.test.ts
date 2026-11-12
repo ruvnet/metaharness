@@ -63,6 +63,17 @@ describe('bootstrapDelta — paired, seeded, deterministic', () => {
   it('handles empty input safely', () => {
     expect(bootstrapDelta([], [0.5], { seed: 0 }).promote).toBe(false);
   });
+
+  it('a noisy-but-higher mean sample is NOT statistically certified (why a bare ">" gate is insufficient)', () => {
+    // meanNext > meanPrev — a bare point-estimate comparison would say "beats".
+    const prev = [0.10, 0.90, 0.05, 0.95, 0.10];
+    const next = [0.15, 0.85, 0.10, 0.90, 0.95];
+    const meanOf = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+    expect(meanOf(next)).toBeGreaterThan(meanOf(prev));
+    const b = bootstrapDelta(prev, next, { seed: 0 });
+    expect(b.lower95).toBeLessThanOrEqual(0);
+    expect(b.promote).toBe(false);
+  });
 });
 
 describe('perRepoFitness — a per-repo sample distribution', () => {
