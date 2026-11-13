@@ -28,8 +28,11 @@ afterEach(() => {
 
 // Builds a fixture that scores 100/100 on repo-understanding, agent-usefulness,
 // test-coverage, and publish-readiness, with `.harness/mcp-policy.json`'s
-// shell/network/file-write flags controlled by the caller.
-function fixture(mcpPolicy: Record<string, unknown>): string {
+// shell/network/file-write flags controlled by the caller. An optional
+// `.claude/settings.json` (read only by `scanMcp()`, never by the
+// policy-boolean walk above it) lets a test grant a risk `mcp-policy.json`
+// itself has no field for.
+function fixture(mcpPolicy: Record<string, unknown>, settingsPermissions?: { allow?: string[]; deny?: string[] }): string {
   const d = mkdtempSync(join(tmpdir(), 'score-mcp-risk-'));
   dirs.push(d);
 
@@ -46,6 +49,12 @@ function fixture(mcpPolicy: Record<string, unknown>): string {
   writeFileSync(join(d, '.harness', 'witness.json'), JSON.stringify({ signed: true }));
   writeFileSync(join(d, '.harness', 'mcp-policy.json'), JSON.stringify(mcpPolicy));
   writeFileSync(join(d, 'sbom.json'), JSON.stringify({ components: [] }));
+  if (settingsPermissions) {
+    mkdirSync(join(d, '.claude'), { recursive: true });
+    writeFileSync(join(d, '.claude', 'settings.json'), JSON.stringify({
+      permissions: { allow: settingsPermissions.allow ?? [], deny: settingsPermissions.deny ?? ['Read(./.env)'] },
+    }));
+  }
 
   mkdirSync(join(d, 'src', 'agents'), { recursive: true });
   for (let i = 0; i < 4; i++) writeFileSync(join(d, 'src', 'agents', `a${i}.ts`), '');
@@ -102,5 +111,83 @@ describe('buildScorecard grade cap — mcpRisk High must never coexist with Grad
     expect(sc.overall).toBe(97);
     expect(sc.grade).toBe('A');
     expect(sc.exitCode).toBe(0);
+  });
+});
+
+describe('scoreMcpSafety sees .claude/settings.json risks the policy file cannot express (2026-11-13)', () => {
+  it('BUG REPRO (pre-fix: Grade A despite a wildcard tool permission): safe mcp-policy.json + mcp__*__* in settings.json', () => {
+    const d = fixture(
+      { defaultDeny: true, auditLog: true, allowShell: false, allowNetwork: false, allowFileWrite: false },
+      { allow: ['mcp__*__*'] },
+    );
+    const sc = buildScorecard(d);
+    // The policy file alone says everything is gated — but settings.json grants every tool on every
+    // MCP server, a HIGH finding (`wildcard-tool-perm`) scanMcp() already detects. mcpRisk must not
+    // stay 'Low', and the existing 09-20 grade cap must therefore fire.
+    expect(sc.badges.mcpRisk).toBe('High');
+    expect(sc.grade).toBe('C');
+    expect(sc.exitCode).toBe(1);
+  });
+
+  it('BUG REPRO (pre-fix: Grade A despite unrestricted Bash): safe mcp-policy.json + Bash(*) in settings.json', () => {
+    const d = fixture(
+      { defaultDeny: true, auditLog: true, allowShell: false, allowNetwork: false, allowFileWrite: false },
+      { allow: ['Bash(*)'] },
+    );
+    const sc = buildScorecard(d);
+    expect(sc.badges.mcpRisk).toBe('High');
+    expect(sc.grade).toBe('C');
+    expect(sc.exitCode).toBe(1);
+  });
+
+  it('BUG REPRO (pre-fix: mcpRisk stayed Low): safe policy + a risky-but-not-wildcard Bash allow-rule escalates to Medium', () => {
+    const d = fixture(
+      { defaultDeny: true, auditLog: true, allowShell: false, allowNetwork: false, allowFileWrite: false },
+      { allow: ['Bash(curl *)'], deny: ['Read(./.env)'] },
+    );
+    const sc = buildScorecard(d);
+    // `risky-bash-allow` is a MEDIUM scanMcp() finding (narrower than the HIGH `unrestricted-bash-allow`/
+    // `wildcard-tool-perm`); mcpRisk escalates Low -> Medium, not capped (the grade cap only fires on
+    // High), but the badge itself must stop reading 'Low'.
+    expect(sc.badges.mcpRisk).toBe('Medium');
+  });
+
+  it('regression: other scanMcp() findings unrelated to settings.json tool/shell grants (e.g. missing timeout/call-budget/secret-guard) do NOT escalate mcpRisk — only wildcard/bash settings.json risks do', () => {
+    // No .claude/settings.json at all: scanMcp() will report `no-secret-guard` (deny=[] implicitly) and
+    // the policy omits requireApprovalForDangerous/toolTimeoutMs/maxToolCallsPerTurn, so scanMcp()'s
+    // OWN worst severity is 'medium' here — but none of that is a settings.json tool/shell permission
+    // grant, so scoreMcpSafety() must stay 'Low', exactly as it did before this fix.
+    const d = fixture({ defaultDeny: true, auditLog: true, allowShell: false, allowNetwork: false, allowFileWrite: false });
+    const sc = buildScorecard(d);
+    expect(sc.badges.mcpRisk).toBe('Low');
+    const mcp = sc.dimensions.find((x) => x.name === 'MCP safety')!;
+    expect(mcp.score).toBe(100);
+    expect(sc.grade).toBe('A');
+    expect(sc.exitCode).toBe(0);
+  });
+
+  it('regression: a safe policy with a safe settings.json (existing default-deny rule) stays Low/Grade A, byte-identical to before this fix', () => {
+    const d = fixture(
+      { defaultDeny: true, auditLog: true, allowShell: false, allowNetwork: false, allowFileWrite: false },
+      { allow: ['mcp__bot__*'], deny: ['Read(./.env)'] },
+    );
+    const sc = buildScorecard(d);
+    expect(sc.badges.mcpRisk).toBe('Low');
+    const mcp = sc.dimensions.find((x) => x.name === 'MCP safety')!;
+    expect(mcp.score).toBe(100);
+    expect(sc.overall).toBe(100);
+    expect(sc.grade).toBe('A');
+    expect(sc.exitCode).toBe(0);
+  });
+
+  it('regression: an already-High policy-level risk (shell allowed) is unaffected by the new settings.json check', () => {
+    const d = fixture(
+      { defaultDeny: true, auditLog: true, allowShell: true, allowNetwork: false, allowFileWrite: false },
+      { allow: ['mcp__bot__*'], deny: ['Read(./.env)'] },
+    );
+    const sc = buildScorecard(d);
+    expect(sc.badges.mcpRisk).toBe('High');
+    expect(sc.grade).toBe('C');
+    expect(sc.exitCode).toBe(1);
   });
 });
