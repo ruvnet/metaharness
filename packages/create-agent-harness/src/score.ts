@@ -185,7 +185,8 @@ function scoreMcpSafety(dir: string): McpScore {
   // "In use" is decided by scanMcp()'s mcpEnabled, which also sees a server
   // registered only in .claude/settings.json (#280). A present-but-unparseable
   // .mcp.json must still count as in-use so it cannot fail open to 'None'.
-  const hasMcp = scanMcp(dir).mcpEnabled || policyPresent || fileExists(dir, '.mcp.json');
+  const scan = scanMcp(dir);
+  const hasMcp = scan.mcpEnabled || policyPresent || fileExists(dir, '.mcp.json');
   if (!hasMcp) {
     signals.push('MCP not in use (mode=off — safest)');
     return { name: 'MCP safety', weight: 0.2, score: 100, signals, mcpRisk: 'None' };
@@ -223,6 +224,34 @@ function scoreMcpSafety(dir: string): McpScore {
   } else {
     if (risk !== 'High') risk = 'Medium';
     signals.push('file-write ALLOWED');
+  }
+  // The policy-boolean walk above can only ever see what
+  // `.harness/mcp-policy.json` itself declares. `scanMcp()` (already called
+  // above for `mcpEnabled`) additionally inspects `.claude/settings.json`'s
+  // `permissions.allow` for risks no policy-file field can express: a
+  // wildcard tool permission (`wildcard-tool-perm`, e.g. `mcp__*__*`/`*`) or
+  // an unrestricted/risky shell allow-rule (`unrestricted-bash-allow`/
+  // `risky-bash-allow`, e.g. `Bash(*)`). A harness can report a perfectly
+  // safe policy (defaultDeny:true, every allow* false) while settings.json
+  // grants exactly one of these — scoreMcpSafety() used to have no way to
+  // see that, so `mcpRisk` stayed 'Low'/'Medium' and the 2026-09-20
+  // grade-cap fix (#336/#337) never got a chance to fire. Deliberately
+  // scoped to these 3 settings.json-only finding ids (not `scan.worst`
+  // wholesale): several *other* scanMcp() findings (`no-approval-gate`,
+  // `no-timeout`, `no-call-budget`, `no-secret-guard`) are driven by policy
+  // fields or settings.json's `deny` list this function doesn't otherwise
+  // score, and `no-secret-guard` in particular fires merely from an absent
+  // `.claude/settings.json` — escalating on those would flag real harnesses
+  // (and break every pre-existing fixture here) for gaps unrelated to this
+  // bug. Escalate (never downgrade) to match the real settings.json grant.
+  const hasHighSettingsRisk = scan.findings.some((f) => f.id === 'wildcard-tool-perm' || f.id === 'unrestricted-bash-allow');
+  const hasMediumSettingsRisk = scan.findings.some((f) => f.id === 'risky-bash-allow');
+  if (hasHighSettingsRisk && risk !== 'High') {
+    risk = 'High';
+    signals.push('settings.json grants a HIGH-severity MCP tool/shell permission scanMcp() detects (not visible in mcp-policy.json alone)');
+  } else if (hasMediumSettingsRisk && risk === 'Low') {
+    risk = 'Medium';
+    signals.push('settings.json grants a risky shell allow-rule scanMcp() detects (not visible in mcp-policy.json alone)');
   }
   return { name: 'MCP safety', weight: 0.2, score: Math.min(100, s), signals, mcpRisk: risk };
 }
