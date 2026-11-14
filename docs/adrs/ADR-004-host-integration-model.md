@@ -103,7 +103,7 @@ This is the reference adapter. It is the integration surface ruflo ships today, 
 - **Hooks.** The harness ships a plugin-supplied `hooks/hooks.json`. Reference: https://code.claude.com/docs/en/hooks.
   - **Three-level shape:** `event → matcher → handler[]`.
   - **Five handler types:** `command`, `http`, `mcp_tool`, `prompt`, `agent`.
-  - **Events:** `SessionStart`, `Setup`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `Stop`, `SubagentStart`, `SubagentStop`, `FileChanged`.
+  - **Events (corrected 2026-11-14 — see note below):** `SessionStart`, `Setup`, `UserPromptSubmit`, `UserPromptExpansion`, `PreToolUse`, `PermissionRequest`, `PermissionDenied`, `PostToolUse`, `PostToolUseFailure`, `PostToolBatch`, `Notification`, `MessageDisplay`, `SubagentStart`, `SubagentStop`, `TaskCreated`, `TaskCompleted`, `Stop`, `StopFailure`, `TeammateIdle`, `InstructionsLoaded`, `ConfigChange`, `CwdChanged`, `DirectoryAdded`, `FileChanged`, `WorktreeCreate`, `WorktreeRemove`, `PreCompact`, `PostCompact`, `PreModelSwitch`, `PostModelSwitch`, `Elicitation`, `ElicitationResult`, `SessionEnd` (33 total).
   - **Matchers** use a pseudo-DSL — e.g. `"Bash(rm *)"` to match a `Bash` tool call invoking `rm`. The adapter generates matchers from harness-config rules.
   - **Hook output to influence the model:** hooks emit JSON on stdout. Recognised fields include `hookSpecificOutput.permissionDecision` (`"deny" | "allow" | "ask" | "defer"`), `additionalContext` (string the model sees), and `updatedInput` (rewrites the tool input before the call proceeds).
 - **Skills.** Writes `.claude/skills/<id>/SKILL.md` for each selected skill. Skill discovery is automatic in Claude Code.
@@ -315,6 +315,25 @@ For each of `@metaharness/host-claude-code`, `@metaharness/host-codex`, `@metaha
 
 10. **Cross-host memory continuity** — a harness with two adapters (Claude Code + Codex). A trajectory recorded under Claude Code is retrieved under Codex (via the shared `@metaharness/kernel/memory`). End-to-end fixture lives in `packages/test-harness/tests/cross-host/`.
 11. **Capability-gating in composer** — the generator with two selected hosts disables features that one of the hosts cannot support. UI snapshot test.
+
+**Note added 2026-11-14 (Dream Cycle, #503/#504):** the original 10-event
+list above (`SessionStart`…`FileChanged`) was this ADR's 2026-06-13
+research snapshot. Live-fetched the current official docs
+(`https://code.claude.com/docs/en/hooks`) tonight while independently
+verifying a `@metaharness/sdk` validation fix, and found the real,
+current Claude Code hook surface has grown to 33 events — the original 10
+are all still valid subset members (no renames among them; in particular
+`PostToolUseFailure` is still correct and is a *different* event from the
+newer `StopFailure`, not a rename of it), but 23 real events were missing
+entirely (`SessionEnd`, `Notification`, `PreCompact`, `PostCompact`,
+`PermissionRequest`, `PermissionDenied`, etc. — full list above). This
+means any code that treated the original 10 as exhaustive (the
+`HookDef['event']` TypeScript union and the `HOOK_EVENTS` runtime
+allowlist in `packages/sdk/src/index.ts`, prior to tonight's fix) was
+under-restrictive by omission, not wrong about the 10 it did list — fixed
+in the same PR. Source: a single live fetch of the official docs page,
+2026-11-14; re-verify before trusting this list long-term, as Claude
+Code's hook surface is evidently still growing.
 
 ## References
 

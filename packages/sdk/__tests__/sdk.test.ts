@@ -8,6 +8,7 @@ import {
   defineHook,
   defineMcpServer,
   defineHarness,
+  type HookDef,
 } from '../src/index.js';
 
 describe('defineAgent', () => {
@@ -162,7 +163,34 @@ describe('defineHook', () => {
     expect(Object.isFrozen(h)).toBe(true);
   });
 
+  it('accepts every documented Claude Code hook event (33, re-verified 2026-11-14 against the live official docs — see ADR-004)', () => {
+    const events = [
+      'SessionStart', 'Setup', 'UserPromptSubmit', 'UserPromptExpansion',
+      'PreToolUse', 'PermissionRequest', 'PermissionDenied', 'PostToolUse',
+      'PostToolUseFailure', 'PostToolBatch', 'Notification', 'MessageDisplay',
+      'SubagentStart', 'SubagentStop', 'TaskCreated', 'TaskCompleted',
+      'Stop', 'StopFailure', 'TeammateIdle', 'InstructionsLoaded',
+      'ConfigChange', 'CwdChanged', 'DirectoryAdded', 'FileChanged',
+      'WorktreeCreate', 'WorktreeRemove', 'PreCompact', 'PostCompact',
+      'PreModelSwitch', 'PostModelSwitch', 'Elicitation', 'ElicitationResult',
+      'SessionEnd',
+    ] as const;
+    expect(events.length).toBe(33);
+    for (const event of events) {
+      expect(defineHook({ event, handler: 'h' }).event).toBe(event);
+    }
+  });
+
   it('rejects missing handler', () => {
     expect(() => defineHook({ event: 'PreToolUse', handler: '' })).toThrow();
+  });
+
+  it('rejects an unknown/typo\'d event instead of letting it reach a host adapter silently', () => {
+    expect(() => defineHook({
+      event: 'PreToolUser' as HookDef['event'], handler: 'block-rm',
+    })).toThrow(/hook event must be one of/);
+    expect(() => defineHook({
+      event: 'onPreToolUse' as HookDef['event'], handler: 'block-rm',
+    })).toThrow(/PreToolUse/);
   });
 });
