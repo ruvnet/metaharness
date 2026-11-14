@@ -59,6 +59,26 @@ export interface HarnessDef {
 
 const NAME_RE = /^[a-z][a-z0-9-]*$/;
 
+// Mirrors HookDef['event'] and host-claude-code's own documented hook
+// surface (packages/host-claude-code/src/index.ts header comment) — the
+// only host adapter that currently projects `event` verbatim into a real
+// config file (`.claude/settings.json`'s hooks map key). Kept as an
+// explicit list rather than `Object.keys` on the type (types vanish at
+// runtime) so a typo'd event is rejected here instead of silently
+// surviving as a dead settings.json key that Claude Code never fires.
+const HOOK_EVENTS: ReadonlySet<HookDef['event']> = new Set([
+  'SessionStart',
+  'UserPromptSubmit',
+  'PreToolUse',
+  'PostToolUse',
+  'PostToolUseFailure',
+  'Stop',
+  'SubagentStart',
+  'SubagentStop',
+  'FileChanged',
+  'Setup',
+]);
+
 function ensureKebab(name: string, label: string): void {
   if (!NAME_RE.test(name)) {
     throw new Error(`${label} name must be kebab-case [a-z0-9-], starting with a letter: got "${name}"`);
@@ -102,6 +122,11 @@ export function defineTool(def: { name: string; server: string; description: str
 
 export function defineHook(def: HookDef): HookDef {
   if (!def.event) throw new Error('hook event is required');
+  if (!HOOK_EVENTS.has(def.event)) {
+    throw new Error(
+      `hook event must be one of ${[...HOOK_EVENTS].join('|')}: got "${def.event}"`,
+    );
+  }
   if (!def.handler) throw new Error('hook handler is required');
   return Object.freeze({ ...def });
 }
