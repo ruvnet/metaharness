@@ -163,12 +163,19 @@ describe('defineHook', () => {
     expect(Object.isFrozen(h)).toBe(true);
   });
 
-  it('accepts every documented Claude Code hook event', () => {
+  it('accepts every documented Claude Code hook event (33, re-verified 2026-11-14 against the live official docs — see ADR-004)', () => {
     const events = [
-      'SessionStart', 'UserPromptSubmit', 'PreToolUse', 'PostToolUse',
-      'PostToolUseFailure', 'Stop', 'SubagentStart', 'SubagentStop',
-      'FileChanged', 'Setup',
+      'SessionStart', 'Setup', 'UserPromptSubmit', 'UserPromptExpansion',
+      'PreToolUse', 'PermissionRequest', 'PermissionDenied', 'PostToolUse',
+      'PostToolUseFailure', 'PostToolBatch', 'Notification', 'MessageDisplay',
+      'SubagentStart', 'SubagentStop', 'TaskCreated', 'TaskCompleted',
+      'Stop', 'StopFailure', 'TeammateIdle', 'InstructionsLoaded',
+      'ConfigChange', 'CwdChanged', 'DirectoryAdded', 'FileChanged',
+      'WorktreeCreate', 'WorktreeRemove', 'PreCompact', 'PostCompact',
+      'PreModelSwitch', 'PostModelSwitch', 'Elicitation', 'ElicitationResult',
+      'SessionEnd',
     ] as const;
+    expect(events.length).toBe(33);
     for (const event of events) {
       expect(defineHook({ event, handler: 'h' }).event).toBe(event);
     }

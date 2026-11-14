@@ -33,8 +33,26 @@ export interface ToolDef {
   readonly handler?: (args: Record<string, unknown>) => Promise<unknown>;
 }
 
+// The full, current Claude Code hook event surface — 33 events, re-verified
+// 2026-11-14 against the live official docs (https://code.claude.com/docs/en/hooks;
+// see ADR-004's 2026-11-14 note). An earlier 2026-06-13 research snapshot
+// (ADR-004) listed only the first 10 of these; that snapshot was a correct
+// subset, not wrong, but incomplete — fixed here so this union (and the
+// runtime HOOK_EVENTS check below) doesn't under-restrict what's actually
+// a much larger, and evidently still-growing, event surface.
+export type HookEvent =
+  | 'SessionStart' | 'Setup' | 'UserPromptSubmit' | 'UserPromptExpansion'
+  | 'PreToolUse' | 'PermissionRequest' | 'PermissionDenied' | 'PostToolUse'
+  | 'PostToolUseFailure' | 'PostToolBatch' | 'Notification' | 'MessageDisplay'
+  | 'SubagentStart' | 'SubagentStop' | 'TaskCreated' | 'TaskCompleted'
+  | 'Stop' | 'StopFailure' | 'TeammateIdle' | 'InstructionsLoaded'
+  | 'ConfigChange' | 'CwdChanged' | 'DirectoryAdded' | 'FileChanged'
+  | 'WorktreeCreate' | 'WorktreeRemove' | 'PreCompact' | 'PostCompact'
+  | 'PreModelSwitch' | 'PostModelSwitch' | 'Elicitation' | 'ElicitationResult'
+  | 'SessionEnd';
+
 export interface HookDef {
-  readonly event: 'SessionStart' | 'UserPromptSubmit' | 'PreToolUse' | 'PostToolUse' | 'PostToolUseFailure' | 'Stop' | 'SubagentStart' | 'SubagentStop' | 'FileChanged' | 'Setup';
+  readonly event: HookEvent;
   readonly matcher?: string;
   readonly handler: string;
 }
@@ -59,24 +77,23 @@ export interface HarnessDef {
 
 const NAME_RE = /^[a-z][a-z0-9-]*$/;
 
-// Mirrors HookDef['event'] and host-claude-code's own documented hook
-// surface (packages/host-claude-code/src/index.ts header comment) — the
-// only host adapter that currently projects `event` verbatim into a real
-// config file (`.claude/settings.json`'s hooks map key). Kept as an
-// explicit list rather than `Object.keys` on the type (types vanish at
-// runtime) so a typo'd event is rejected here instead of silently
-// surviving as a dead settings.json key that Claude Code never fires.
-const HOOK_EVENTS: ReadonlySet<HookDef['event']> = new Set([
-  'SessionStart',
-  'UserPromptSubmit',
-  'PreToolUse',
-  'PostToolUse',
-  'PostToolUseFailure',
-  'Stop',
-  'SubagentStart',
-  'SubagentStop',
-  'FileChanged',
-  'Setup',
+// Mirrors HookEvent and host-claude-code's own documented hook surface
+// (packages/host-claude-code/src/index.ts header comment) — the only host
+// adapter that currently projects `event` verbatim into a real config file
+// (`.claude/settings.json`'s hooks map key). Kept as an explicit list
+// rather than `Object.keys` on the type (types vanish at runtime) so a
+// typo'd event is rejected here instead of silently surviving as a dead
+// settings.json key that Claude Code never fires.
+const HOOK_EVENTS: ReadonlySet<HookEvent> = new Set<HookEvent>([
+  'SessionStart', 'Setup', 'UserPromptSubmit', 'UserPromptExpansion',
+  'PreToolUse', 'PermissionRequest', 'PermissionDenied', 'PostToolUse',
+  'PostToolUseFailure', 'PostToolBatch', 'Notification', 'MessageDisplay',
+  'SubagentStart', 'SubagentStop', 'TaskCreated', 'TaskCompleted',
+  'Stop', 'StopFailure', 'TeammateIdle', 'InstructionsLoaded',
+  'ConfigChange', 'CwdChanged', 'DirectoryAdded', 'FileChanged',
+  'WorktreeCreate', 'WorktreeRemove', 'PreCompact', 'PostCompact',
+  'PreModelSwitch', 'PostModelSwitch', 'Elicitation', 'ElicitationResult',
+  'SessionEnd',
 ]);
 
 function ensureKebab(name: string, label: string): void {
