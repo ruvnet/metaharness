@@ -1,0 +1,8 @@
+import {it,expect} from 'vitest';import {readFileSync} from 'node:fs';import {newsCoverageTrend,aoiConvergence,scoreAOI} from '../src/domains/aoi-escalation.js';import {createAOIHandlers} from '../src/domains/aoi.js';
+const golden=JSON.parse(readFileSync(new URL('./fixtures/aoi/escalation-golden.json',import.meta.url),'utf8'));
+it('matches pinned upstream normalized seven-day news windows',()=>expect(newsCoverageTrend(golden.timeline,new Date(golden.now))).toEqual(golden.trend));
+it('matches pinned upstream four-offset antimeridian convergence',()=>expect(aoiConvergence(golden.scoped,180)).toEqual(golden.convergence));
+it('refuses imbalanced intake and malformed timelines',()=>{expect(newsCoverageTrend([])).toHaveProperty('error');const t=structuredClone(golden.timeline);t[0].data.slice(0,7).forEach((p:any)=>p.norm=0);expect(newsCoverageTrend(t,new Date(golden.now)).error).toContain('intake too uneven')});
+it('missing convergence domain is unknown, never a quiet zero',()=>{const r=aoiConvergence({earthquakes:{items:[]}});expect(r.score).toBeNull();expect(r.inputs_failed).toContain('wildfires')});
+it('structural baseline zero caps fully measured AOI at80',()=>{expect(scoreAOI(1e6,1e6,1e6,1e6,1e6,1e6).score).toBe(80);expect(scoreAOI(null,0,0,null,0,0).unavailable_components).toEqual(['news','convergence'])});
+it('handler exposes unknown and zero-filled inputs explicitly',async()=>{const h=createAOIHandlers();h.intel_aoi_define({name:'Ocean',lat:0,lon:0,radius_km:10});const r=await h.intel_aoi_escalation({name:'Ocean'});expect(r.unavailable_components).toEqual(['news','convergence']);expect(r.zero_filled_components).toEqual(['military','conflict','social_unrest']);expect(r.score_ceiling).toBe(0);expect(r.convergence_signal.score).toBeNull()});

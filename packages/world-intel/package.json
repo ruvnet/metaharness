@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/world-intel",
-  "version": "0.2.0",
+  "version": "0.1.0",
   "private": true,
   "description": "Native TypeScript World Intel compatibility port with MetaHarness governance and AssemblyScript WASM. Parity work in progress.",
   "type": "module",
@@ -39,7 +39,10 @@
   "dependencies": {
     "@metaharness/harness": "0.2.1",
     "@modelcontextprotocol/sdk": "1.32.2",
+    "@pdf-lib/fontkit": "1.1.1",
     "fast-xml-parser": "5.12.1",
+    "pdf-lib": "1.17.1",
+    "saxes": "6.0.0",
     "zod": "4.6.7"
   },
   "devDependencies": {
@@ -55,5 +58,9 @@
     "wasmArtifacts": [
       "wasm/geo.wasm"
     ]
+  },
+  "optionalDependencies": {
+    "@huggingface/transformers": "4.3.2",
+    "onnxruntime-web": "1.22.0-dev.20250409-89f8206ba4"
   }
 }

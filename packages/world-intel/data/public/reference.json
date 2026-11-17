@@ -1,0 +1,130 @@
+{
+  "_AI_FEEDS": [
+    [
+      "arXiv cs.AI",
+      "https://rss.arxiv.org/rss/cs.AI",
+      "research"
+    ],
+    [
+      "arXiv cs.LG",
+      "https://rss.arxiv.org/rss/cs.LG",
+      "research"
+    ],
+    [
+      "arXiv cs.CL",
+      "https://rss.arxiv.org/rss/cs.CL",
+      "research"
+    ],
+    [
+      "HuggingFace Blog",
+      "https://huggingface.co/blog/feed.xml",
+      "industry"
+    ],
+    [
+      "The Gradient",
+      "https://thegradient.pub/rss/",
+      "analysis"
+    ],
+    [
+      "Import AI",
+      "https://importai.substack.com/feed",
+      "newsletter"
+    ]
+  ],
+  "_AI_LABS": [
+    "openai",
+    "anthropic",
+    "google",
+    "deepmind",
+    "meta",
+    "mistral",
+    "xai",
+    "cohere",
+    "stability",
+    "midjourney",
+    "nvidia",
+    "microsoft",
+    "apple",
+    "hugging face",
+    "databricks",
+    "together",
+    "groq"
+  ],
+  "_HEALTH_FEEDS": [
+    [
+      "WHO",
+      "https://www.who.int/rss-feeds/news-english.xml"
+    ],
+    [
+      "CDC",
+      "https://tools.cdc.gov/api/v2/resources/media/132608.rss"
+    ],
+    [
+      "Outbreak News",
+      "https://outbreaknewstoday.com/feed/"
+    ]
+  ],
+  "HIGH_CONCERN_PATHOGENS": [
+    "anthrax",
+    "avian influenza",
+    "bird flu",
+    "chikungunya",
+    "cholera",
+    "dengue",
+    "ebola",
+    "h5n1",
+    "hantavirus",
+    "lassa",
+    "marburg",
+    "mers",
+    "mpox",
+    "nipah",
+    "plague",
+    "polio",
+    "rift valley",
+    "sars",
+    "yellow fever",
+    "zika"
+  ],
+  "_STATUS_FEEDS": [
+    {
+      "provider": "AWS",
+      "url": "https://status.aws.amazon.com/rss/all.rss",
+      "icon": "aws"
+    },
+    {
+      "provider": "Azure",
+      "url": "https://azurestatuscdn.azureedge.net/en-us/status/feed/",
+      "icon": "azure"
+    },
+    {
+      "provider": "GCP",
+      "url": "https://status.cloud.google.com/feed.atom",
+      "icon": "gcp"
+    },
+    {
+      "provider": "Cloudflare",
+      "url": "https://www.cloudflarestatus.com/history.rss",
+      "icon": "cloudflare"
+    },
+    {
+      "provider": "GitHub",
+      "url": "https://www.githubstatus.com/history.rss",
+      "icon": "github"
+    }
+  ],
+  "_SEVERITY_KEYWORDS": {
+    "major": "critical",
+    "outage": "critical",
+    "disruption": "high",
+    "degraded": "high",
+    "degradation": "high",
+    "elevated error": "high",
+    "partial": "medium",
+    "intermittent": "medium",
+    "investigating": "medium",
+    "resolved": "resolved",
+    "monitoring": "low",
+    "maintenance": "info"
+  }
+}

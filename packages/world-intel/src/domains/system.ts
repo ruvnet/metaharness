@@ -1,0 +1,7 @@
+// SPDX-License-Identifier: MIT
+import {readFileSync} from 'node:fs';
+import type {DomainHandlers} from '../domain-runtime.js';
+const sources=JSON.parse(readFileSync(new URL('../../data/public/sources.json',import.meta.url),'utf8'));
+export interface SystemTelemetry {scope?:()=>unknown;circuitBreakers:()=>unknown;cacheStats:()=>unknown;cacheFreshness:()=>unknown}
+/** Actual supplied runtime telemetry only; provider availability is never fabricated. */
+export function createSystemHandlers(options:{telemetry?:SystemTelemetry;vectorStats?:()=>unknown|Promise<unknown>}={}):DomainHandlers{return{intel_status:async()=>({circuit_breakers:options.telemetry?.circuitBreakers()??{available:false,reason:'Native adapters do not yet expose a unified circuit-breaker registry'},cache:options.telemetry?.cacheStats()??{available:false,reason:'Per-adapter bounded caches; aggregate metrics unavailable'},cache_freshness:options.telemetry?.cacheFreshness()??{available:false,reason:'Unified per-source cache freshness not configured'},...(options.telemetry?.scope?{telemetry_scope:options.telemetry.scope(),data_gaps:['Unified telemetry covers runtime-backed adapters; other adapter caches are not included.']}:{ }),vector_store:options.vectorStats?await options.vectorStats():{enabled:false,error:'Vector store not configured; supply explicit local store and embedding provider'},sources,...(!options.telemetry?{degraded:true,data_gaps:['Shared persistent-cache/circuit-breaker telemetry is not upstream-equivalent.']}:{})})};}

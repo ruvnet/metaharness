@@ -1,0 +1,90 @@
+{
+  "CBP_SOURCE": "cbp",
+  "CBP_DATASET_PAGE": "https://www.cbp.gov/document/stats/nationwide-encounters",
+  "CBP_STATS_PAGE": "https://www.cbp.gov/newsroom/stats/nationwide-encounters",
+  "CBP_REGIONS": {
+    "southwest": "Southwest Land Border",
+    "northern": "Northern Land Border",
+    "other": "Other"
+  },
+  "CBP_COMPONENTS": {
+    "usbp": "U.S. Border Patrol",
+    "ofo": "Office of Field Operations"
+  },
+  "_CBP_COLUMNS": {
+    "fiscal_year": "Fiscal Year",
+    "month": "Month (abbv)",
+    "component": "Component",
+    "region": "Land Border Region",
+    "demographic": "Demographic",
+    "citizenship": "Citizenship",
+    "encounter_type": "Encounter Type",
+    "count": "Encounter Count"
+  },
+  "_CBP_DIMS": [
+    "region",
+    "component",
+    "encounter_type",
+    "demographic",
+    "citizenship"
+  ],
+  "_CBP_PAGE_CAVEATS": [
+    "Encounter data includes U.S. Border Patrol Title 8 apprehensions, Office of Field Operations Title 8 inadmissibles, and all Title 42 expulsions for fiscal years 2020 to date. Data is available for the Northern Land Border, Southwest Land Border, and Nationwide (i.e., air, land, and sea modes of transportation) encounters.",
+    "Data is extracted from live CBP systems and data sources. Statistical information is subject to change due to corrections, systems changes, change in data definition, additional information, or encounters pending final review. Final statistics are available at the conclusion of each fiscal year."
+  ],
+  "_CBP_STATS_CAVEATS": [
+    "Note: Nationwide encounters are the sum of CBP encounters across all areas of responsibility including Northern Land Border, Southwest Land Border, OFO non-land border ports of entry (e.g., airports, seaports), and USBP sectors that do not share a land border with Canada or Mexico (e.g., Miami Sector).",
+    "To ensure that law enforcement sensitive statistics are not publicly released, modifications to data filters have been made that may alter the format of data previously obtained from this dashboard."
+  ],
+  "_CBP_DEFINITIONS": {
+    "encounter_types": {
+      "Apprehensions": "Apprehensions refers to the physical control or temporary detainment of a person by USBP between POEs who is not lawfully in the U.S. which may or may not result in an arrest.",
+      "Inadmissibles": "Inadmissibles refers to individuals encountered at ports of entry (POEs) by OFO who are seeking lawful admission into the United States (U.S.) but are determined to be inadmissible, individuals presenting themselves to seek humanitarian protection under our laws, and individuals who withdraw an application for admission and return to their countries of origin within a short timeframe.",
+      "Expulsions": "Title 42 Expulsions refers to individuals encountered by USBP and OFO and expelled to the country of last transit or home country in the interest of public health under Title 42 U.S.C. 265 from March 21, 2020 to May 11, 2023."
+    },
+    "demographics": {
+      "Accompanied Minors": "Accompanied Minors (AM)",
+      "FMUA": "Individuals in a Family Unit (FMUA)",
+      "Single Adults": "Single Adults",
+      "UAC": "Unaccompanied Alien Children (UAC) / Single Minors"
+    },
+    "source": "Quoted from https://www.cbp.gov/newsroom/stats/nationwide-encounters as captured 2026-10-17."
+  },
+  "_CBP_MEASURE": "CBP encounters per calendar month: U.S. Border Patrol (USBP) Title 8 apprehensions between ports of entry, Office of Field Operations (OFO) Title 8 inadmissibles at ports of entry, and Title 42 expulsions (21 March 2020 to 11 May 2023).",
+  "_CBP_UNIT": "encounters (enforcement events) per calendar month",
+  "_CBP_DATE_SEMANTICS": "Each figure counts the encounters in one calendar month. CBP labels months by fiscal year (1 October to 30 September), so October to December belong to the next fiscal year: FY2026 October is October 2025. '(FYTD)' is CBP's label for the fiscal year in progress. A fiscal year's period_end is 30 September, except for the year the file ends in, where it is the last day of the file's last month (the data end). Figures are as of the file's posting (dataset.file_date) and can change in later files until CBP's fiscal-year close.",
+  "_CBP_NOTES": [
+    "Flow, not stock: these are events per period. The UNHCR and World Bank migration tools report year-end stocks of people; the two measures do not add, subtract or compare.",
+    "Encounters are events, not unique people: CBP's file has no person identifier, so one person encountered twice is counted twice. (Tool note from the file's structure; the CBP pages read on 2026-10-17 do not say it in these words.)",
+    "CBP's file lists only non-zero cells (no count of 0 appears and counts of 1 are published), so a month in the file with no row for this selection is reported as 0. Months the file does not contain are never listed or filled in (see dataset.coverage).",
+    "OTHER is CBP's bucket for every citizenship it does not name; it is reported as other_citizenships_latest_month and never ranked as a country.",
+    "Region 'other' is CBP's 'Other' land border region: OFO ports of entry away from the land borders (CBP's nationwide note gives airports and seaports as examples; the file also has a Preclearance Field Office) and the Miami, New Orleans and Ramey Border Patrol sectors."
+  ],
+  "_CBP_TERMS": "Public domain unless a copyright is indicated; CBP asks to be cited as the source (https://www.cbp.gov/site-policy-notices/copyright-notice).",
+  "UK_SOURCE": "uk-home-office",
+  "UK_PUBLICATION_PATH": "/government/publications/migrants-detected-crossing-the-english-channel-in-small-boats",
+  "UK_PUBLICATION_PAGE": "https://www.gov.uk/government/publications/migrants-detected-crossing-the-english-channel-in-small-boats",
+  "UK_CONTENT_API": "https://www.gov.uk/api/content/government/publications/migrants-detected-crossing-the-english-channel-in-small-boats",
+  "_UK_MEASURE": "Migrants and boats detected crossing the English Channel in small boats and arriving in the UK (Home Office provisional operational data): per day (table SB_01) and per week (table SB_02, which adds migrants and events prevented by French authorities).",
+  "_UK_UNIT": "people (migrants) and boats per day or week; preventions per week",
+  "_UK_DATE_SEMANTICS": "SB_01 'Date' is the day of arrival. SB_02 'Week ending' is the Sunday that closes a Monday-to-Sunday week (period_start is six days earlier); the Home Office notes the activity may have occurred on any day within that week. Months, years and year to date are this tool's sums of SB_01 days. Year to date runs from 1 January to the file's last day; prior_year is the same calendar dates a year earlier (29 February compares with 28 February). prior_year and the changes are given only when every day of both spans has an SB_01 row, so neither side is a partial sum; the spans differ by one day when one of them holds 29 February. year_to_date.complete, days_reported and days_in_period describe the current span. dataset.public_updated_at is when GOV.UK last changed the publication.",
+  "_UK_NOTES": [
+    "Flow, not stock: these are events per period. The UNHCR and World Bank migration tools report year-end stocks of people; the two measures do not add, subtract or compare.",
+    "Arrivals are counted when detected and the file has no person identifier, so a person who crosses more than once is counted each time. (Tool note, not a Home Office statement.)",
+    "'-' in the file means no figure is published; it is returned as null, never 0 (dataset.coverage gives the first date with a figure). A month, year or week sum is null when any day in it is null.",
+    "Months, years and year to date are sums of the SB_01 daily rows computed here, not Home Office publications; the quarterly 'Illegal entry routes to the UK' statistics hold the final figures."
+  ],
+  "_UK_TERMS": "Open Government Licence v3.0 (GOV.UK terms); the time series is Crown copyright.",
+  "_UK_COLUMN_LABELS": {
+    "migrants": "Migrants arrived",
+    "boats": "Boats arrived",
+    "uncontrolled": "Boats arrived - involved in uncontrolled landings",
+    "prevented": "Migrants prevented",
+    "events": "Events prevented"
+  },
+  "provenance": {
+    "commit": "fdebf9a8de6e00ed688053dd647cafedc179708b",
+    "source": "src/world_intel_mcp/sources/border_crossings.py",
+    "license": "MIT, Phoenix AGI; see THIRD_PARTY_NOTICES.md"
+  }
+}

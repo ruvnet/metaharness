@@ -4,7 +4,7 @@
 import type {DomainHandlers} from '../domain-runtime.js';
 import {pyRound} from './markets.js';
 type Row=Record<string,any>;
-export type AcledReason='acled_unconfigured'|'acled_auth_failed'|'acled_fetch_failed';
+export type AcledReason='acled_unconfigured'|'acled_auth_failed'|'acled_fetch_failed'|'acled_stale';
 export interface AcledResult {data:Row|null;reason?:AcledReason}
 export interface IntelligenceOptions {
  fetch?:typeof globalThis.fetch;now?:()=>number;timeoutMs?:number;maxBytes?:number;
@@ -12,7 +12,7 @@ export interface IntelligenceOptions {
  /** Caller supplies an explicitly configured LLM adapter; no localhost probe by default. */
  generateBrief?:(prompt:string)=>Promise<string>;
 }
-const messages:Record<AcledReason,string>={acled_unconfigured:'ACLED credentials not configured (ACLED_EMAIL + ACLED_PASSWORD)',acled_auth_failed:'ACLED sign-in failed: ACLED_EMAIL and ACLED_PASSWORD are set, but the token request was refused or did not complete',acled_fetch_failed:'ACLED fetch failed (rate limited, API error, or malformed response)'};
+const messages:Record<AcledReason,string>={acled_stale:'ACLED live fetch failed; only expired cached data is available, not scored as current activity',acled_unconfigured:'ACLED credentials not configured (ACLED_EMAIL + ACLED_PASSWORD)',acled_auth_failed:'ACLED sign-in failed: ACLED_EMAIL and ACLED_PASSWORD are set, but the token request was refused or did not complete',acled_fetch_failed:'ACLED fetch failed (rate limited, API error, or malformed response)'};
 const baselines:Record<string,number>={Syria:5000,Yemen:3000,Ukraine:8000,Myanmar:4000,Somalia:2500,Nigeria:3500,'DR Congo':3000,Afghanistan:2000,Iraq:1500,Mali:2000,'Burkina Faso':2500,Ethiopia:2000,Sudan:3000,'South Sudan':1500,Cameroon:1000,Mozambique:800,Pakistan:1200,India:1000,Colombia:1500,Mexico:4000};
 const day=(n:number)=>new Date(n).toISOString().slice(0,10);
 const stamp=(n:number)=>new Date(n).toISOString().replace(/\.\d{3}Z$/,'Z');

@@ -1,3 +1,4 @@
+import {realpathSync} from 'node:fs';
 import { describe,it,expect } from 'vitest';
 import { mkdtempSync,rmSync,symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -11,7 +12,7 @@ registerHistoryExtractor('fixture',p=>p.points);
 const outcome=(value:number,collected_at=1000)=>({source:'fixture',collected_at,payload:{points:[{series_key:'value',value,observed_at:'2024-01',published_at:'2024-02-02T00:00:00Z'}]}});
 describe.skipIf(!supportsSqlite)('dated SQLite history',()=>{
  it('persists dates and successive revisions, not unchanged observations',()=>{
-  const dir=mkdtempSync(join(tmpdir(),'history-'));const path=join(dir,'history.sqlite');
+  const dir=mkdtempSync(join(realpathSync(tmpdir()),'history-'));const path=join(dir,'history.sqlite');
   let store=new HistoryStore(path,options);
   try{
    expect(store.recordCycle([outcome(1)]).observations_stored).toBe(1);
@@ -52,7 +53,7 @@ describe.skipIf(!supportsSqlite)('dated SQLite history',()=>{
   }finally{store.close();}
  });
  it('rejects symlink database destinations',()=>{
-  const dir=mkdtempSync(join(tmpdir(),'history-link-'));try{symlinkSync(join(dir,'target'),join(dir,'link'));expect(()=>new HistoryStore(join(dir,'link'))).toThrow('symlinks');}finally{rmSync(dir,{recursive:true,force:true});}
+  const dir=mkdtempSync(join(realpathSync(tmpdir()),'history-link-'));try{symlinkSync(join(dir,'target'),join(dir,'link'));expect(()=>new HistoryStore(join(dir,'link'))).toThrow('symlinks');}finally{rmSync(dir,{recursive:true,force:true});}
  });
  it('keeps handlers opt-in and exact tool names',()=>{
   const h=createHistoryHandlers(undefined);expect(Object.keys(h)).toEqual(['intel_collection_health','intel_capture_history','intel_series_history','intel_revisions']);

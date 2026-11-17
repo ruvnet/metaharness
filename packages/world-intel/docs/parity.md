@@ -30,7 +30,7 @@ The source-adapter subset uses different names and/or shapes from upstream in pl
 npm run build
 node --experimental-strip-types scripts/parity-audit.ts
 # Refresh the conservative evidence snapshot after rebuilding and running tests:
-node --experimental-strip-types scripts/parity-audit.ts --refresh
+node --experimental-strip-types scripts/parity-audit.ts --configured --refresh
 node --experimental-strip-types scripts/parity-audit.ts --require-complete
 # Optionally verify every captured source digest against a local pinned checkout:
 node --experimental-strip-types scripts/parity-audit.ts --upstream=/path/to/world-intel-mcp
@@ -236,32 +236,32 @@ At capture, no full semantic-parity evidence set had been established. This sect
 
 ## Reviewed implementation snapshot
 
-The default registry advertises **83 of 160** upstream tool names with exact input schemas, plus 29 prompts and 3 resources. All 220 tests across 24 files passed on 2026-11-17 in this workspace. This is selected fixture/transport validation, **not 100% parity**, and no live provider coverage is implied. Run the audit again after integration changes; `data/parity.json` contains the exact missing-name list and prompt-by-prompt unimplemented references.
+The default registry advertises **83 of 160** upstream tool names with exact input schemas, plus 29 prompts and 3 resources. All 584 tests across 62 files passed on 2026-11-17 in this workspace. This is selected fixture/transport validation, **not 100% parity**, and no live provider coverage is implied. Run the audit again after integration changes; `data/parity.json` contains the exact missing-name list and prompt-by-prompt unimplemented references.
 
-Four history handlers exist behind an explicitly configured `HistoryStore`; they are not advertised or counted in the default no-store audit. No store is silently created by the audit. A present source file without default registry wiring is likewise not counted.
+With explicit file-backed HistoryStore and NativeVectorStore instances, the registry advertises **160 of 160** pinned tool names with exact input schemas. `--configured` creates isolated temporary SQLite stores for inspection, closes them, and removes their directory; it supplies no embedding provider and invokes no tool handlers or providers. Default mode creates no persistent store. Registration alone does not mean a semantic model, observations, credentials, or history exist.
 
 | Domain | Default registered | Upstream target |
 | --- | ---: | ---: |
 | markets | 16 | 16 |
 | hazards | 12 | 12 |
-| conflict | 8 | 9 |
-| infrastructure | 2 | 14 |
-| society | 9 | 21 |
-| prediction_markets | 0 | 3 |
-| intelligence | 2 | 15 |
+| conflict | 9 | 9 |
+| infrastructure | 14 | 14 |
+| society | 21 | 21 |
+| prediction_markets | 3 | 3 |
+| intelligence | 15 | 15 |
 | geospatial | 12 | 12 |
-| synthesis | 4 | 8 |
-| news_signals | 0 | 3 |
+| synthesis | 8 | 8 |
+| news_signals | 3 | 3 |
 | finance | 12 | 12 |
 | liquidity | 5 | 5 |
-| news_market | 0 | 1 |
+| news_market | 1 | 1 |
 | vector | 0 | 8 |
-| aoi | 0 | 13 |
+| aoi | 13 | 13 |
 | history | 0 | 4 |
 | lagged_connections | 0 | 1 |
 | day_timeline | 0 | 1 |
 | history_backfill | 0 | 1 |
-| system | 0 | 1 |
+| system | 1 | 1 |
 
 ### Explicit review dispositions and divergences
 
@@ -271,7 +271,31 @@ Four history handlers exist behind an explicitly configured `HistoryStore`; they
 - MetaHarness wraps responses with governance receipts and marks degraded/error provider outputs as MCP errors. This is an intentional integration-layer divergence from plain upstream result delivery.
 - Transport deadlines, maximum payloads, fixed source allowlists, and finite argument bounds are intentional safety limits. Upstream retry/cache/stale fallback and all malformed-provider branches have not been certified equivalent.
 - Prompt rendering/argument fixtures pass, but prompts referencing missing tools cannot complete their research plans. The manifest records those references. The source-health resource describes actual local coverage rather than fabricating upstream health.
-- Migration is unimplemented: four UNHCR/World Bank handlers require porting annual-stock, pagination, country/region resolution, surge/history and net-flow semantics; two border handlers additionally require the upstream CBP/Home Office file-discovery, CSV/XLSX parsing and freshness/safety rules. No generic response or schema-only handler substitutes for these six capabilities.
+- Migration/displacement now has five native UNHCR/World Bank handlers and 22 targeted tests, including extracted pinned upstream numeric assertions. Incomplete paginated downloads fail closed instead of silently returning partial totals. Historical queries use annual publisher series, not fabricated local history. CBP and Home Office border tools use native CSV and bounded streaming ODS-in-ZIP readers, with captured publisher assertions and adversarial parser tests. ODS is restricted to UTF-8 rather than every XML encoding; stale dataset fallback defaults to a configurable 30-day maximum; dataset caches are process-local. These intentional differences are not hidden as full equivalence.
 - Fixture evidence is deliberately narrower than exhaustive output/error/state equivalence. `verified` remains zero and `--require-complete` must fail until every declared evidence requirement is genuinely established.
 
 - Write permissions are explicitly gated rather than inherited from upstream defaults: persistent state mutations and tracked-keyword changes require the parity server's `allowWrites` option. Nested degraded/stale outputs are rejected by governance instead of letting a healthy-looking outer response conceal failed inputs. These are intentional permission/trust-boundary changes, not accidental claims of identical upstream behavior.
+
+## Operational coverage is not name coverage
+
+The configured schema audit exercises 160 actual MCP registrations and records source/test evidence for each, but leaves all 160 at selected-fixture status, with zero exhaustive `verified` entries. The complete gate remains failing deliberately. The audit exposes `runtimeConstraints` alongside counts so a successful name/schema check cannot be mistaken for live operational certification.
+
+| Capability | Necessary runtime condition | Audit disposition |
+| --- | --- | --- |
+| Semantic search/similarity/cross-correlation and collector vector writes | Explicit compatible BAAI/bge-small-en-v1.5 embedding provider plus local vector store | Store schema inspected; embedding not supplied or downloaded by audit |
+| Capture/series/revisions, lagged connections, day timeline and backfill | File-backed history store and real recorded/provider observations | Empty temporary store configured; no invented historical series |
+| ACLED, FIRMS, EIA, FRED, TomTom, Windy and authenticated UCDP | Explicit provider configuration and credentials where required | None supplied in audit; keyed availability remains unverified |
+| Country brief generation | Explicit LLM adapter, or clearly disclosed deterministic/no-model path | No local-model endpoint probed by audit |
+| AOI definitions, snapshots, cohort and temporal baselines | Explicit write capability; durable storage if persistence is required | Defaults may be process-local; no state mutations invoked by audit |
+| System health | Actual adapter telemetry and configured store statistics | Store wiring corrected; unified circuit-breaker/cache telemetry still explicitly unavailable |
+| Strategic posture | Valid inputs across all nine weighted domains | Missing/degraded domain yields UNKNOWN/null composite, not zero-risk substitution |
+
+Strategic posture documents producer-field repairs in `contract_adjustments`: ongoing outages versus the missing `outage_count`, returned cyber sample counts versus missing `threat_count`, and climate zone anomaly fields versus the consumer's missing anomaly-list shape. This fixes misleading silent zeroes but is an intentional departure from upstream latent field mismatches.
+
+### Trust-boundary review
+
+The initial top-level-only write gate could be bypassed by a read composite calling a mutating dependency. The corrected AsyncLocalStorage capability follows asynchronous registry dispatch; denied requests and concurrent authorized requests remain isolated. Registry dependency closures reference the wrapped handler map. Direct exported low-level factory functions remain library primitives; applications must use the governed registry/server boundary when enforcing permissions.
+
+Collector vector ingestion now rejects explicit stale, degraded, warming, and nested unaccepted provider state, rather than checking only top-level `error`/`_stale`. Failed outcomes may still be retained in dated capture history as failure evidence; they are not silently indexed as healthy current observations. This does not establish the truth of healthy-looking upstream data.
+
+Known limitations still require review before claiming full compatibility: complete malformed-input/error equivalence across every adapter; process-local versus durable baseline/cache behavior; all provider fallback/rate-limit/circuit-breaker semantics; complete live coverage; full resource telemetry; and exact semantic embedding-model behavior.

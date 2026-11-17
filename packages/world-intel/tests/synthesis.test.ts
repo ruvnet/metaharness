@@ -1,3 +1,4 @@
+import {realpathSync} from 'node:fs';
 // SPDX-License-Identifier: MIT
 import {describe,it,expect} from 'vitest';
 import {mkdtempSync,rmSync} from 'node:fs';import {join} from 'node:path';import {tmpdir} from 'node:os';
@@ -18,7 +19,7 @@ describe('native synthesis ports',()=>{
   const r=newsClusters({items,feeds_failed:1,degraded:true},.3,now,()=> 'one publisher');expect(r).toMatchObject({cluster_count:1,singleton_count:1,total_items:3,degraded:true,feeds_failed:1});expect(r.clusters[0]).toMatchObject({outlet_count:1,size:2});
  });
  it.skipIf(Number(process.versions.node.split('.')[0])<22 || (Number(process.versions.node.split('.')[0])===22 && Number(process.versions.node.split('.')[1])<13))('warms baselines, detects ratio/z spikes, and persists compatible SQLite rows',()=>{
-  const dir=mkdtempSync(join(tmpdir(),'intel-spikes-'));const path=join(dir,'kw.db');let store=new SqliteBaselineStore(path);let detector=new KeywordSpikeDetector(store,now);
+  const dir=mkdtempSync(join(realpathSync(tmpdir()),'intel-spikes-'));const path=join(dir,'kw.db');let store=new SqliteBaselineStore(path);let detector=new KeywordSpikeDetector(store,now);
   for(let i=0;i<3;i++)expect(detector.detect({quake:2})).toEqual([]);expect(detector.detect({quake:8})).toEqual([{keyword:'quake',current_count:8,baseline_mean:2,ratio:4,z_score:null,detection:'ratio'}]);store.close();store=new SqliteBaselineStore(path);expect(store.get('quake')[0]).toBe(4);detector=new KeywordSpikeDetector(store,now);expect(detector.detect({quake:30})[0].detection).toBe('z_score');store.close();rmSync(dir,{recursive:true});
  });
  it('uses actual injected news dependencies, with no fabricated feed',async()=>{

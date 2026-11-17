@@ -5,3 +5,8 @@ export * from './harness.js';
 export * from './registry.js';
 export * from './parity-server.js';
 export * from './domain-runtime.js';
+export * from './configured-runtime.js';
+export * from './history.js';
+export * from './vector-store.js';
+export * from './local-embedding.js';
+export * from './source-runtime.js';

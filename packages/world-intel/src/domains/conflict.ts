@@ -28,7 +28,8 @@ const fields=(r:Row,keys:string[])=>Object.fromEntries(keys.map(k=>[k,r[k]??null
 const iso=(d:Date)=>d.toISOString().replace(/\.\d{3}Z$/,'Z');
 const integer=(v:unknown,fallback:number,max=100000)=>{if(v===undefined)return fallback;if(typeof v!=='number'||!Number.isSafeInteger(v)||v<1||v>max)throw new Error(`Expected integer in 1..${max}`);return v;};
 const pyInt=(v:unknown,fallback=0)=>{if(typeof v==='number'&&Number.isFinite(v))return Math.trunc(v);if(typeof v==='boolean')return Number(v);if(typeof v==='string'&&/^[+-]?\d+$/.test(v.trim()))return Number(v);return fallback;};
-export function createConflictHandlers(options:{transport?:ConflictTransport;credentials?:ConflictCredentials;now?:()=>Date;maxPages?:number}={}):DomainHandlers{
+export interface ConflictOptions {transport?:ConflictTransport;credentials?:ConflictCredentials;now?:()=>Date;maxPages?:number}
+export function createConflictClient(options:ConflictOptions={}){
  const transport=options.transport??createConflictTransport(),credentials={...options.credentials},now=options.now??(()=>new Date());const maxPages=options.maxPages??1000;
  if(!Number.isSafeInteger(maxPages)||maxPages<1||maxPages>10000)throw new Error('maxPages must be 1..10000');
  let access:string|undefined,expires=0,refresh=credentials.acledRefreshToken,inflight:Promise<string|undefined>|undefined;
@@ -40,7 +41,19 @@ export function createConflictHandlers(options:{transport?:ConflictTransport;cre
   }return undefined;})();try{return await inflight;}finally{inflight=undefined;}
  }
  const safeGet=async(url:URL,headers:Record<string,string>,ttl:number)=>{try{return await transport.get(url,headers,ttl);}catch{return null;}};
- return {
+ /** Raw ACLED query shares this instance's OAuth lock/cache; no credentials enter tool arguments. */
+ const acledQuery=async(params:Record<string,string|number>,ttl=900):Promise<import('./intelligence.js').AcledResult>=>{
+  const allowed=new Set(['limit','event_date','event_date_where','country','event_type','event_type_where']);
+  if(Object.keys(params).some(k=>!allowed.has(k))||!Number.isSafeInteger(params.limit)||Number(params.limit)<0||Number(params.limit)>100000||Object.values(params).some(v=>typeof v==='string'&&(v.length>500||/[\x00-\x1f]/.test(v))))throw new Error('Invalid bounded ACLED query');
+  if(!Number.isFinite(ttl)||ttl<0||ttl>86400)throw new Error('Invalid ACLED cache duration');
+  const token=await getToken();if(!token)return {data:null,reason:credentials.acledEmail&&credentials.acledPassword||credentials.acledRefreshToken?'acled_auth_failed':'acled_unconfigured'};
+  const url=new URL(ACLED);for(const [k,v]of Object.entries(params))url.searchParams.set(k,String(v));const answer=await safeGet(url,{Authorization:`Bearer ${token}`},ttl),data=row(answer?.data);
+  if(!data||!(Array.isArray(data.data)||(params.limit===0&&Number.isFinite(Number(data.count)))))return {data:null,reason:'acled_fetch_failed'};
+  // Composites score current activity: expired copies are explicitly unavailable, never fresh zeros.
+  if(answer?.staleAgeSeconds!==undefined)return {data:null,reason:'acled_stale'};
+  return {data:structuredClone(data)};
+ };
+ const handlers:DomainHandlers={
   intel_acled_events:async args=>{
    const date=now(),days=integer(args.days,7),limit=integer(args.limit,100),country=args.country?String(args.country):null;
    const token=await getToken();let reason:string|undefined;
@@ -70,4 +83,6 @@ export function createConflictHandlers(options:{transport?:ConflictTransport;cre
    return {...base,...(gaps.length?{degraded:true,reason:failed.length?'ucdp_partial':'ucdp_stale',pages_failed:failed,pages_total:total,data_gaps:gaps}:{}),...(stalePages.length?{_stale:true,stale_pages:stalePages}:{})};
   },
  };
+ return {handlers,acledQuery};
 }
+export function createConflictHandlers(options:ConflictOptions={}):DomainHandlers{return createConflictClient(options).handlers;}

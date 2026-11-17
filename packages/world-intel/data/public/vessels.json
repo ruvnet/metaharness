@@ -1,0 +1,59 @@
+{
+  "STRATEGIC_WATERWAYS": [
+    {
+      "name": "Strait of Hormuz",
+      "lat": 26.57,
+      "lon": 56.25,
+      "throughput": "21M bbl/day oil"
+    },
+    {
+      "name": "Strait of Malacca",
+      "lat": 2.5,
+      "lon": 101.8,
+      "throughput": "25% global trade"
+    },
+    {
+      "name": "Suez Canal",
+      "lat": 30.46,
+      "lon": 32.34,
+      "throughput": "12% global trade"
+    },
+    {
+      "name": "Panama Canal",
+      "lat": 9.08,
+      "lon": -79.68,
+      "throughput": "5% global trade"
+    },
+    {
+      "name": "Bab-el-Mandeb",
+      "lat": 12.58,
+      "lon": 43.33,
+      "throughput": "4.8M bbl/day oil"
+    },
+    {
+      "name": "Taiwan Strait",
+      "lat": 24.0,
+      "lon": 119.5,
+      "throughput": "88% advanced chips"
+    },
+    {
+      "name": "Strait of Gibraltar",
+      "lat": 35.96,
+      "lon": -5.5,
+      "throughput": "Mediterranean access"
+    },
+    {
+      "name": "GIUK Gap",
+      "lat": 62.0,
+      "lon": -15.0,
+      "throughput": "NATO submarine choke"
+    },
+    {
+      "name": "Bosphorus",
+      "lat": 41.12,
+      "lon": 29.05,
+      "throughput": "3M bbl/day oil"
+    }
+  ],
+  "_VESSEL_MATCHING_RULE": "A warning is credited to a waterway only when a position stated in its text (read in full, before the 500-character cut) lies within proximity_km of the waterway's reference point. A warning that states no readable position is credited to no waterway: its area code names at least a whole NAVAREA (area_codes), far wider than proximity_km. Naval ones are listed in unplaced_naval_warnings with the reason. status counts the naval-keyword warnings credited to the waterway; it reads stale when the feed's newest warning is older than stale_after_days and unknown when the feed is unavailable or how current it is cannot be checked (feed_stale null: no usable issue date, or no active warnings at all). total_nearby counts credited warnings of any topic."
+}

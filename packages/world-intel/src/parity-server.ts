@@ -1,3 +1,5 @@
+import {attachedSourceRuntime} from './source-runtime.js';
+import {MUTATING_TOOLS} from './execution-policy.js';
 // SPDX-License-Identifier: MIT
 import { readFileSync } from 'node:fs';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
@@ -28,7 +30,7 @@ function validate(schema:Schema,value:unknown,path='arguments',depth=0):void {
   }
 }
 export interface ParityServerOptions {handlers:DomainHandlers;allowWrites?:boolean;healthSnapshot?:()=>unknown}
-const WRITES=new Set(['intel_keyword_spikes','intel_aoi_define','intel_aoi_update','intel_aoi_delete','intel_aoi_define_polygon','intel_aoi_define_corridor','intel_aoi_changes','intel_collect','intel_history_backfill','intel_generate_report']);
+const WRITES=MUTATING_TOOLS;
 export function createParityServer(options:ParityServerOptions):Server {
   const known=new Map(snapshot.tools.map(t=>[t.name,t]));
   for(const name of Object.keys(options.handlers)) if(!known.has(name)) throw new Error(`Handler not in pinned upstream: ${name}`);
@@ -40,7 +42,7 @@ export function createParityServer(options:ParityServerOptions):Server {
   server.setRequestHandler(ListPromptsRequestSchema,async()=>({prompts:listPrompts()}));
   server.setRequestHandler(GetPromptRequestSchema,async r=>getPrompt(r.params.name,r.params.arguments));
   server.setRequestHandler(ListResourcesRequestSchema,async()=>({resources:listResources()}));
-  server.setRequestHandler(ReadResourceRequestSchema,async r=>readResource(r.params.uri,{domains,implementedTools:implemented,healthSnapshot:options.healthSnapshot}));
+  server.setRequestHandler(ReadResourceRequestSchema,async r=>readResource(r.params.uri,{domains,implementedTools:implemented,healthSnapshot:options.healthSnapshot??(attachedSourceRuntime(options.handlers)?()=>attachedSourceRuntime(options.handlers)!.health():undefined)}));
   server.setRequestHandler(CallToolRequestSchema,async r=>{
     try {
       const {name}=r.params;const handler=options.handlers[name];const def=known.get(name);
@@ -48,7 +50,7 @@ export function createParityServer(options:ParityServerOptions):Server {
       const args=r.params.arguments??{};
       if(JSON.stringify(args).length>64000) throw new Error('Arguments exceed 64 KB limit');
       validate(def.inputSchema,args);
-      const run=await runDomainTool(name,args,handler,!WRITES.has(name)||options.allowWrites===true);
+      const run=await runDomainTool(name,args,handler,!WRITES.has(name)||options.allowWrites===true,options.allowWrites===true);
       const result=run.steps[0]?.output.output??{error:'Tool did not produce output'};
       return {isError:!run.success,content:[{type:'text' as const,text:JSON.stringify(result,null,2)}],_meta:{governance:{accepted:run.success,receiptsValid:run.receiptsValid,receipts:run.receipts},upstreamCommit:snapshot.upstream.commit}};
     } catch(error) {return {isError:true,content:[{type:'text' as const,text:JSON.stringify({error:error instanceof Error?error.message:'Call failed'})}]};}

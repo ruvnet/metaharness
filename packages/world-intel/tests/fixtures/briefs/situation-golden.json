@@ -1,0 +1,142 @@
+[
+  {
+    "input": {},
+    "metrics": {
+      "earthquakes": 0,
+      "max_magnitude": 0,
+      "military_aircraft": 0,
+      "conflicts": 0,
+      "fire_clusters": 0,
+      "cyber_threats": 0,
+      "posture_score": 0,
+      "risk_level": "unknown",
+      "alerts": 0,
+      "kp_index": null,
+      "outbreaks": 0,
+      "total_aircraft": 0,
+      "avg_congestion": 0,
+      "top_headlines": []
+    },
+    "sources": [],
+    "citations": {},
+    "fallback": "THREAT POSTURE: UNKNOWN (score 0/100) with 0 active alerts.\nMILITARY: 0 aircraft tracked. CONFLICT: 0 active events.\nSEISMIC: 0 earthquakes (max M0). FIRES: 0 clusters.\nCYBER: 0 IOCs. HEALTH: 0 high-concern outbreaks.\nSPACE: Kp unavailable (no reading). AIR TRAFFIC: 0 airborne. CONGESTION: 0%."
+  },
+  {
+    "input": {
+      "earthquakes": {
+        "count": 1,
+        "earthquakes": [
+          {
+            "magnitude": 5.5,
+            "place": "Test",
+            "url": "https://example.test/quake",
+            "time": "2026-01-01"
+          }
+        ]
+      },
+      "military_flights": {
+        "count": 2
+      },
+      "space_weather": {
+        "current_kp": 3.5
+      },
+      "disease_outbreaks": {
+        "high_concern_count": 1,
+        "items": [
+          {
+            "title": "Alert",
+            "is_high_concern": true,
+            "link": "https://example.test/health"
+          }
+        ]
+      },
+      "strategic_posture": {
+        "composite_score": 44.5,
+        "risk_level": "moderate"
+      },
+      "news_feed": {
+        "items": [
+          {
+            "title": "News",
+            "link": "https://example.test/news"
+          }
+        ]
+      }
+    },
+    "metrics": {
+      "earthquakes": 1,
+      "max_magnitude": 5.5,
+      "military_aircraft": 2,
+      "conflicts": 0,
+      "fire_clusters": 0,
+      "cyber_threats": 0,
+      "posture_score": 44,
+      "risk_level": "moderate",
+      "alerts": 0,
+      "kp_index": 3.5,
+      "outbreaks": 1,
+      "total_aircraft": 0,
+      "avg_congestion": 0,
+      "top_headlines": [
+        "News"
+      ]
+    },
+    "sources": [
+      {
+        "n": 1,
+        "domain": "earthquakes",
+        "description": "M5.5 earthquake, Test",
+        "url": "https://example.test/quake",
+        "timestamp": "2026-01-01"
+      },
+      {
+        "n": 2,
+        "domain": "military",
+        "description": "2 military aircraft currently tracked"
+      },
+      {
+        "n": 3,
+        "domain": "posture",
+        "description": "Composite risk score 44.5/100 (moderate)"
+      },
+      {
+        "n": 4,
+        "domain": "space_weather",
+        "description": "Kp index 3.5"
+      },
+      {
+        "n": 5,
+        "domain": "health",
+        "description": "Alert",
+        "url": "https://example.test/health"
+      },
+      {
+        "n": 6,
+        "domain": "news",
+        "description": "News",
+        "url": "https://example.test/news"
+      }
+    ],
+    "citations": {
+      "earthquakes": [
+        1
+      ],
+      "military_aircraft": [
+        2
+      ],
+      "posture": [
+        3
+      ],
+      "kp_index": [
+        4
+      ],
+      "outbreaks": [
+        5
+      ],
+      "headlines": [
+        6
+      ]
+    },
+    "fallback": "THREAT POSTURE: MODERATE (score 44/100) with 0 active alerts.[3]\nMILITARY: 2 aircraft tracked. CONFLICT: 0 active events.[2]\nSEISMIC: 1 earthquakes (max M5.5). FIRES: 0 clusters.[1]\nCYBER: 0 IOCs. HEALTH: 1 high-concern outbreaks.[5]\nSPACE: Kp 3.5. AIR TRAFFIC: 0 airborne. CONGESTION: 0%.[4]"
+  }
+]

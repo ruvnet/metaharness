@@ -1,0 +1,95 @@
+{
+  "series": [
+    {
+      "series_key": "lag_fixture:a",
+      "source": "lag_fixture",
+      "label": null,
+      "unit": null,
+      "rows": 100,
+      "rows_without_observed_at": 0,
+      "rows_coarser_than_grid": 0,
+      "rows_unreadable_observed_at": 0,
+      "revised_observed_at": 0,
+      "dated_observations": 100,
+      "periods": 100,
+      "periods_outside_window": 0,
+      "first_period": "2026-01-01",
+      "last_period": "2026-04-10",
+      "median_period_gap": 1.0,
+      "points_after_transform": 100,
+      "lag1_autocorrelation": -0.1125,
+      "lag1_pairs": 99,
+      "change_interval_days": null
+    },
+    {
+      "series_key": "lag_fixture:b",
+      "source": "lag_fixture",
+      "label": null,
+      "unit": null,
+      "rows": 100,
+      "rows_without_observed_at": 0,
+      "rows_coarser_than_grid": 0,
+      "rows_unreadable_observed_at": 0,
+      "revised_observed_at": 0,
+      "dated_observations": 100,
+      "periods": 100,
+      "periods_outside_window": 0,
+      "first_period": "2026-01-03",
+      "last_period": "2026-04-12",
+      "median_period_gap": 1.0,
+      "points_after_transform": 100,
+      "lag1_autocorrelation": -0.1125,
+      "lag1_pairs": 99,
+      "change_interval_days": null
+    }
+  ],
+  "pairs": [
+    {
+      "a": "lag_fixture:a",
+      "b": "lag_fixture:b",
+      "lags_tested": 7,
+      "lags_not_tested": 0,
+      "strongest": [
+        {
+          "lag": 2,
+          "timing": "A leads B by 2 days",
+          "r": 1.0,
+          "direction": "same",
+          "n": 100,
+          "p": 0.0,
+          "q": 0.0,
+          "n_effective_ar1": 97.5,
+          "p_ar1": 0.0,
+          "q_ar1": 0.0,
+          "q_by": 0.0,
+          "significant": true,
+          "significant_if_independent": true,
+          "serial_correlation_dominates": false
+        }
+      ],
+      "significant": [
+        {
+          "lag": 2,
+          "timing": "A leads B by 2 days",
+          "r": 1.0,
+          "direction": "same",
+          "n": 100,
+          "p": 0.0,
+          "q": 0.0,
+          "n_effective_ar1": 97.5,
+          "p_ar1": 0.0,
+          "q_ar1": 0.0,
+          "q_by": 0.0,
+          "significant": true,
+          "significant_if_independent": true,
+          "serial_correlation_dominates": false
+        }
+      ],
+      "not_tested": []
+    }
+  ],
+  "tests_run": 7,
+  "tests_not_run": 0,
+  "significant_tests": 1,
+  "significant_tests_if_independent": 1
+}

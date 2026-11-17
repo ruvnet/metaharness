@@ -1,8 +1,9 @@
+import type { SourceRuntime, SourceRule } from '../source-runtime.js';
 // MIT native TypeScript port of selected finance contracts from marc-shade/world-intel-mcp.
 // Pinned upstream fdebf9a8de6e00ed688053dd647cafedc179708b; see THIRD_PARTY_NOTICES.md.
 import { createMarketHandlers, pyRound } from './markets.js';
 export type FinanceObject = Record<string, any>;
-export interface FinanceOptions { fetch?: typeof globalThis.fetch; now?: () => number; timeoutMs?: number; maxBytes?: number; fredApiKey?: string; secUserAgent?: string }
+export interface FinanceOptions { sourceRuntime?:SourceRuntime; fetch?: typeof globalThis.fetch; now?: () => number; timeoutMs?: number; maxBytes?: number; fredApiKey?: string; secUserAgent?: string }
 export type FinanceHandler = (args: FinanceObject) => Promise<FinanceObject>;
 const record = (v: any): FinanceObject => v && typeof v === 'object' && !Array.isArray(v) ? v : {};
 const list = (v: any): any[] => Array.isArray(v) ? v : [];
@@ -23,12 +24,20 @@ const PATHS: Record<string, RegExp> = {
   'api.gdeltproject.org': /^\/api\/v2\/doc\/doc$/,
   'api.github.com': /^\/search\/repositories$/,
 };
+const FINANCE_SOURCES:Record<string,string>={'api.frankfurter.dev':'ecb-forex','query1.finance.yahoo.com':'yahoo-finance','api.fiscaldata.treasury.gov':'treasury','api.stlouisfed.org':'fred','efts.sec.gov':'sec-edgar','www.sec.gov':'sec-edgar','data.sec.gov':'sec-edgar','api.gdeltproject.org':'gdelt','api.github.com':'github'};
+export function financeSourceRules():Record<string,SourceRule>{
+ const rules:Record<string,SourceRule>={};
+ for(const [host,source] of Object.entries(FINANCE_SOURCES)){
+  const prior=rules[source];rules[source]={origins:[...prior?.origins??[],'https://'+host],path:prior?.path?new RegExp('(?:'+prior.path.source+')|(?:'+PATHS[host].source+')'):PATHS[host]};
+ }
+ return rules;
+}
 /** Rechecked at the transport boundary, including nondefault ports and fragments. */
 export function validateFinanceUrl(url: URL): void {
   if (url.protocol !== 'https:' || url.port || url.username || url.password || url.hash || !PATHS[url.hostname]?.test(url.pathname) || url.href.length > 4096) throw new Error('Finance URL outside fixed allowlist');
 }
 /** Fixed endpoints, bounded cache/bytes/deadline, no redirects or inherited credentials. */
-class FinanceTransport {
+export class FinanceTransport {
   readonly now: () => number; private readonly fetcher: typeof globalThis.fetch;
   private readonly cache = new Map<string, { data: any; at: number }>();
   private last = 0; private queue: Promise<void> = Promise.resolve();
@@ -39,6 +48,14 @@ class FinanceTransport {
     validateFinanceUrl(url);
     const sec = /(^|\.)sec.gov$/.test(url.hostname);
     if (sec && (!this.options.secUserAgent || /[\r\n]/.test(this.options.secUserAgent) || !/[^\s@]+@[^\s@]+\.[^\s@]+/.test(this.options.secUserAgent))) throw new Error('SEC requires an explicitly configured contact User-Agent; secUserAgent is not configured');
+    if(this.options.sourceRuntime){
+      const data=await this.options.sourceRuntime.getJson(url,{source:FINANCE_SOURCES[url.hostname],cacheTtl:ttl,
+        timeoutSeconds:(this.options.timeoutMs??15000)/1000,maxBytes:this.options.maxBytes??4000000,
+        validateUrl:validateFinanceUrl,followRedirects:false,
+        headers:{Accept:'application/json','User-Agent':sec?this.options.secUserAgent!:'metaharness-world-intel/0.2.0'}});
+      if(data===null)throw new Error('Finance provider unavailable');
+      return data;
+    }
     const key = url.href; const cached = this.cache.get(key);
     if (cached && this.now() - cached.at < ttl * 1000) return structuredClone(cached.data);
     if (!this.options.fetch) {

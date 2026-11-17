@@ -83,7 +83,9 @@ export function createMilitaryFlightHandlers(options: MilitaryFlightOptions = {}
             headers.set('Authorization', `Basic ${Buffer.from(`${options.openskyAuth.clientId}:${options.openskyAuth.clientSecret}`, 'utf8').toString('base64')}`);
         return fetcher(input, { ...init, headers });
     };
-    const tr = options.transport ? null : new MarketTransport({ ...options, fetch: options.openskyAuth ? authenticatedFetch : options.fetch }), transport = options.transport ?? tr!, now = options.now ?? Date.now, stamp = (value = now()) => new Date(value).toISOString().replace(/\.000Z$/, '+00:00').replace(/Z$/, '+00:00');
+    const tr = options.transport ? null : new MarketTransport({ ...options,
+        headersByOrigin:options.openskyAuth?{...options.headersByOrigin,'https://opensky-network.org':{...options.headersByOrigin?.['https://opensky-network.org'],Authorization:`Basic ${Buffer.from(`${options.openskyAuth.clientId}:${options.openskyAuth.clientSecret}`,'utf8').toString('base64')}`}}:options.headersByOrigin,
+        fetch: options.openskyAuth ? authenticatedFetch : options.fetch }), transport = options.transport ?? tr!, now = options.now ?? Date.now, stamp = (value = now()) => new Date(value).toISOString().replace(/\.000Z$/, '+00:00').replace(/Z$/, '+00:00');
     const json = async (url: URL) => { let value: unknown = null; try {
         value = await transport.json(url, 300);
     }
