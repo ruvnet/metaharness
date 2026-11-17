@@ -1,0 +1,21 @@
+{
+  "name": "@metaharness/energy",
+  "version": "0.1.0",
+  "description": "Experimental bounded pairwise energy search and independently validated agent assignment",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
+  "files": ["dist/**", "README.md", "LICENSE"],
+  "scripts": {
+    "build": "tsc",
+    "lint": "tsc --noEmit",
+    "test": "vitest run",
+    "benchmark": "node bench/assignment.mjs"
+  },
+  "repository": { "type": "git", "url": "https://github.com/ruvnet/metaharness.git", "directory": "packages/energy" },
+  "homepage": "https://ruv.io",
+  "license": "MIT",
+  "engines": { "node": ">=20" },
+  "devDependencies": { "typescript": "^5.4.0", "vitest": "^4.1.12" }
+}

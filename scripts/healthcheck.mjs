@@ -136,6 +136,7 @@ const CHECKS = {
       // 0.1.0 only by coincidence and moved to 0.1.1 with the ADR-356 metadata release.
       '@metaharness/aws-finops',
       '@metaharness/field-memory',
+      '@metaharness/energy',
       '@metaharness/oo-agents',
       '@metaharness/radio',
       '@metaharness/turn-credit',
