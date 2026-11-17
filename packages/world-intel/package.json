@@ -5,14 +5,51 @@
   "description": "TypeScript public-source intelligence MCP with MetaHarness governance and a reproducible AssemblyScript WASM geospatial kernel. Initial subset, not upstream parity.",
   "type": "module",
   "license": "MIT",
-  "repository": {"type":"git","url":"https://github.com/ruvnet/metaharness.git","directory":"packages/world-intel"},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/metaharness.git",
+    "directory": "packages/world-intel"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "exports": {".": "./dist/index.js", "./mcp":"./dist/mcp.js"},
-  "bin": {"world-intel-ts":"dist/cli.js"},
-  "files": ["dist", "wasm/geo.wasm", "wasm/geo.ts", "README.md", "THIRD_PARTY_NOTICES.md"],
-  "scripts": {"build":"tsc", "build:wasm":"asc wasm/geo.ts --outFile wasm/geo.wasm --runtime stub --optimize --noAssert", "test":"vitest run", "lint":"tsc --noEmit", "smoke:live":"node dist/cli.js --live-smoke"},
-  "dependencies": {"@metaharness/harness":"0.2.1", "@modelcontextprotocol/sdk":"1.32.2", "zod":"4.6.7"},
-  "devDependencies": {"typescript":"5.9.3", "@types/node":"22.19.0", "vitest":"4.1.12", "assemblyscript":"0.27.31"},
-  "engines": {"node":">=22"}
+  "exports": {
+    ".": "./dist/index.js",
+    "./mcp": "./dist/mcp.js"
+  },
+  "bin": {
+    "world-intel-ts": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "wasm/geo.wasm",
+    "wasm/geo.ts",
+    "README.md",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "build:wasm": "asc wasm/geo.ts --outFile wasm/geo.wasm --runtime stub --optimize --noAssert",
+    "test": "vitest run",
+    "lint": "tsc --noEmit",
+    "smoke:live": "node dist/cli.js --live-smoke"
+  },
+  "dependencies": {
+    "@metaharness/harness": "0.2.1",
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "@types/node": "22.19.0",
+    "vitest": "4.1.12",
+    "assemblyscript": "0.27.31"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "metaharness": {
+    "wasmArtifacts": [
+      "wasm/geo.wasm"
+    ]
+  }
 }

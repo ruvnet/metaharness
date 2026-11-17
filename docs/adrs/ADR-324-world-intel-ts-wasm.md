@@ -1,6 +1,6 @@
 # ADR-324: TypeScript World Intel with bounded WASM kernels
 
-Status: Proposed, initial implementation. Date: 2026-11-17.
+**Status**: Proposed, initial implementation. Date: 2026-11-17.
 
 ## Context
 
@@ -23,3 +23,7 @@ Inventory upstream capabilities, prioritize concrete use cases, and port adapter
 ## Rollback
 
 Revert this isolated package, lockfile registration and ordered-build entry. No production data migration, credential, installation or deployed service is touched.
+
+## Consequences
+
+The initial reviewed subset does not establish upstream parity. Subsequent ports must preserve exact schemas, output semantics, source errors, prompts and resources, with reproducible per-tool fixtures and honest coverage. Runtime remains TypeScript plus WASM; no Python bridge or fabricated successful placeholders.
