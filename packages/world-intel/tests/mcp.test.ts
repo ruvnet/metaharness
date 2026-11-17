@@ -8,7 +8,7 @@ import { WorldIntelClient } from '../src/sources.js';
 async function connection() {
   let calls = 0;
   const fake = {
-    earthquakes: async () => { calls++; return { data: [{ id: 'fixture' }], provenance: { source: 'fixture', stale: false, fetchedAt: '2026-11-17T00:00:00Z', url: 'https://earthquake.usgs.gov/fixture', cacheAgeMs: 0, warnings: [] } }; },
+    earthquakes: async () => { calls++; return { data: [{ id: 'fixture' }], provenance: { source: 'usgs', stale: false, fetchedAt: new Date().toISOString(), url: 'https://earthquake.usgs.gov/fdsnws/event/1/query', cacheAgeMs: 0, warnings: [] } }; },
     weatherAlerts: async () => { throw new Error('Provider unavailable'); },
     indicator: async () => ({ data: [], provenance: { source: 'fixture', stale: true, fetchedAt: '2026-11-16T00:00:00Z', url: 'https://api.worldbank.org/fixture', cacheAgeMs: 999999, warnings: ['stale fallback'] } }),
   } as unknown as WorldIntelClient;

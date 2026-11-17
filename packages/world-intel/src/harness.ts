@@ -16,9 +16,18 @@ export async function runIntelObservation<T>(query: () => Promise<Observation<T>
     }
   }}]);
   const verifiers = new VerifierRegistry().register(predicateVerifier('fresh-cited-observation', 'schema', value => {
-    if (typeof value !== 'object' || value === null || !('provenance' in value)) return false;
+    if (typeof value !== 'object' || value === null || !('data' in value) || !('provenance' in value)) return false;
     const p = (value as Observation<T>).provenance;
-    return p.stale === false && Number.isFinite(Date.parse(p.fetchedAt)) && p.url.startsWith('https://');
+    if (!p || typeof p !== 'object' || p.stale !== false || typeof p.fetchedAt !== 'string' || typeof p.url !== 'string' || !Array.isArray(p.warnings)) return false;
+    const age = Date.now() - Date.parse(p.fetchedAt);
+    if (!Number.isFinite(age) || age < -1000 || age > 300_000 || !Number.isFinite(p.cacheAgeMs) || p.cacheAgeMs < 0 || p.cacheAgeMs > 300_000) return false;
+    try {
+      const url = new URL(p.url);
+      if (url.username || url.password || url.hash) return false;
+      return (p.source === 'usgs' && url.origin === 'https://earthquake.usgs.gov' && url.pathname === '/fdsnws/event/1/query')
+        || (p.source === 'noaa' && url.origin === 'https://api.weather.gov' && url.pathname === '/alerts/active')
+        || (p.source === 'worldbank' && url.origin === 'https://api.worldbank.org' && /^\/v2\/country\/[A-Z]{2}\/indicator\/[A-Z0-9.]{1,64}$/.test(url.pathname));
+    } catch { return false; }
   }, 'Missing provenance or stale observation; do not promote to a current brief'));
   const kernel = new HarnessKernel({
     pool, verifiers,
