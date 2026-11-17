@@ -1,0 +1,402 @@
+[
+  {
+    "name": "Shanghai",
+    "country": "China",
+    "iso3": "CHN",
+    "lat": 30.63,
+    "lon": 122.07,
+    "type": "container",
+    "throughput": "49.7M TEU",
+    "notes": "World's busiest port"
+  },
+  {
+    "name": "Singapore",
+    "country": "Singapore",
+    "iso3": "SGP",
+    "lat": 1.26,
+    "lon": 103.83,
+    "type": "container",
+    "throughput": "39.4M TEU",
+    "notes": "Malacca Strait transshipment hub"
+  },
+  {
+    "name": "Ningbo-Zhoushan",
+    "country": "China",
+    "iso3": "CHN",
+    "lat": 29.87,
+    "lon": 121.87,
+    "type": "container",
+    "throughput": "35.3M TEU",
+    "notes": "Cargo tonnage #1 globally"
+  },
+  {
+    "name": "Shenzhen",
+    "country": "China",
+    "iso3": "CHN",
+    "lat": 22.48,
+    "lon": 113.92,
+    "type": "container",
+    "throughput": "30.0M TEU",
+    "notes": "Pearl River Delta hub"
+  },
+  {
+    "name": "Guangzhou",
+    "country": "China",
+    "iso3": "CHN",
+    "lat": 22.94,
+    "lon": 113.58,
+    "type": "container",
+    "throughput": "24.6M TEU",
+    "notes": "South China industrial port"
+  },
+  {
+    "name": "Busan",
+    "country": "South Korea",
+    "iso3": "KOR",
+    "lat": 35.08,
+    "lon": 129.08,
+    "type": "container",
+    "throughput": "22.7M TEU",
+    "notes": "Northeast Asia transshipment"
+  },
+  {
+    "name": "Qingdao",
+    "country": "China",
+    "iso3": "CHN",
+    "lat": 36.07,
+    "lon": 120.38,
+    "type": "container",
+    "throughput": "27.0M TEU",
+    "notes": "North China hub"
+  },
+  {
+    "name": "Rotterdam",
+    "country": "Netherlands",
+    "iso3": "NLD",
+    "lat": 51.89,
+    "lon": 4.29,
+    "type": "container",
+    "throughput": "14.8M TEU",
+    "notes": "Europe's largest port"
+  },
+  {
+    "name": "Antwerp-Bruges",
+    "country": "Belgium",
+    "iso3": "BEL",
+    "lat": 51.27,
+    "lon": 4.34,
+    "type": "container",
+    "throughput": "14.0M TEU",
+    "notes": "Europe's #2 port"
+  },
+  {
+    "name": "Tanjung Pelepas",
+    "country": "Malaysia",
+    "iso3": "MYS",
+    "lat": 1.37,
+    "lon": 103.55,
+    "type": "container",
+    "throughput": "11.2M TEU",
+    "notes": "Maersk hub, Johor Strait"
+  },
+  {
+    "name": "Los Angeles/Long Beach",
+    "country": "United States",
+    "iso3": "USA",
+    "lat": 33.73,
+    "lon": -118.27,
+    "type": "container",
+    "throughput": "9.9M TEU",
+    "notes": "US West Coast gateway"
+  },
+  {
+    "name": "Hamburg",
+    "country": "Germany",
+    "iso3": "DEU",
+    "lat": 53.53,
+    "lon": 9.97,
+    "type": "container",
+    "throughput": "8.7M TEU",
+    "notes": "Germany's main seaport"
+  },
+  {
+    "name": "Jebel Ali",
+    "country": "UAE",
+    "iso3": "ARE",
+    "lat": 25.01,
+    "lon": 55.06,
+    "type": "container",
+    "throughput": "14.7M TEU",
+    "notes": "Largest port in Middle East"
+  },
+  {
+    "name": "Colombo",
+    "country": "Sri Lanka",
+    "iso3": "LKA",
+    "lat": 6.95,
+    "lon": 79.84,
+    "type": "container",
+    "throughput": "7.3M TEU",
+    "notes": "Indian Ocean transshipment"
+  },
+  {
+    "name": "Piraeus",
+    "country": "Greece",
+    "iso3": "GRC",
+    "lat": 37.94,
+    "lon": 23.62,
+    "type": "container",
+    "throughput": "5.3M TEU",
+    "notes": "COSCO-operated, BRI gateway"
+  },
+  {
+    "name": "Ras Tanura",
+    "country": "Saudi Arabia",
+    "iso3": "SAU",
+    "lat": 26.64,
+    "lon": 50.17,
+    "type": "oil",
+    "throughput": "6.5M bbl/day",
+    "notes": "World's largest oil terminal"
+  },
+  {
+    "name": "Kharg Island",
+    "country": "Iran",
+    "iso3": "IRN",
+    "lat": 29.24,
+    "lon": 50.33,
+    "type": "oil",
+    "throughput": "5.0M bbl/day",
+    "notes": "Iran's main oil export terminal"
+  },
+  {
+    "name": "Basra Oil Terminal",
+    "country": "Iraq",
+    "iso3": "IRQ",
+    "lat": 29.68,
+    "lon": 48.8,
+    "type": "oil",
+    "throughput": "3.5M bbl/day",
+    "notes": "Iraq's primary export point"
+  },
+  {
+    "name": "Fujairah",
+    "country": "UAE",
+    "iso3": "ARE",
+    "lat": 25.15,
+    "lon": 56.36,
+    "type": "oil",
+    "throughput": "3.0M bbl/day",
+    "notes": "Bypasses Hormuz, bunkering hub"
+  },
+  {
+    "name": "Houston Ship Channel",
+    "country": "United States",
+    "iso3": "USA",
+    "lat": 29.73,
+    "lon": -95.27,
+    "type": "oil",
+    "throughput": "2.0M bbl/day",
+    "notes": "US Gulf Coast refining hub"
+  },
+  {
+    "name": "Novorossiysk",
+    "country": "Russia",
+    "iso3": "RUS",
+    "lat": 44.72,
+    "lon": 37.77,
+    "type": "oil",
+    "throughput": "1.5M bbl/day",
+    "notes": "Russia's largest Black Sea port"
+  },
+  {
+    "name": "Ras Laffan",
+    "country": "Qatar",
+    "iso3": "QAT",
+    "lat": 25.93,
+    "lon": 51.53,
+    "type": "lng",
+    "throughput": "77M tons LNG/yr",
+    "notes": "World's largest LNG port"
+  },
+  {
+    "name": "Sabine Pass",
+    "country": "United States",
+    "iso3": "USA",
+    "lat": 29.73,
+    "lon": -93.86,
+    "type": "lng",
+    "throughput": "30M tons LNG/yr",
+    "notes": "Largest US LNG export terminal"
+  },
+  {
+    "name": "Gladstone",
+    "country": "Australia",
+    "iso3": "AUS",
+    "lat": -23.84,
+    "lon": 151.27,
+    "type": "lng",
+    "throughput": "25M tons LNG/yr",
+    "notes": "Queensland LNG hub"
+  },
+  {
+    "name": "Bonny Island",
+    "country": "Nigeria",
+    "iso3": "NGA",
+    "lat": 4.43,
+    "lon": 7.17,
+    "type": "lng",
+    "throughput": "22M tons LNG/yr",
+    "notes": "Nigeria LNG (NLNG)"
+  },
+  {
+    "name": "Changi Naval Base",
+    "country": "Singapore",
+    "iso3": "SGP",
+    "lat": 1.33,
+    "lon": 104.0,
+    "type": "naval",
+    "throughput": "N/A",
+    "notes": "Republic of Singapore Navy HQ"
+  },
+  {
+    "name": "Toulon",
+    "country": "France",
+    "iso3": "FRA",
+    "lat": 43.12,
+    "lon": 5.93,
+    "type": "naval",
+    "throughput": "N/A",
+    "notes": "French Med fleet, carrier CdG"
+  },
+  {
+    "name": "Karachi",
+    "country": "Pakistan",
+    "iso3": "PAK",
+    "lat": 24.85,
+    "lon": 66.98,
+    "type": "naval",
+    "throughput": "N/A",
+    "notes": "Pakistan Navy HQ"
+  },
+  {
+    "name": "Visakhapatnam",
+    "country": "India",
+    "iso3": "IND",
+    "lat": 17.69,
+    "lon": 83.3,
+    "type": "naval",
+    "throughput": "N/A",
+    "notes": "Eastern Naval Command, submarine base"
+  },
+  {
+    "name": "Port Hedland",
+    "country": "Australia",
+    "iso3": "AUS",
+    "lat": -20.31,
+    "lon": 118.58,
+    "type": "bulk",
+    "throughput": "575M tons/yr",
+    "notes": "Iron ore \u2014 world's largest bulk port"
+  },
+  {
+    "name": "Hay Point",
+    "country": "Australia",
+    "iso3": "AUS",
+    "lat": -21.28,
+    "lon": 149.28,
+    "type": "bulk",
+    "throughput": "120M tons coal/yr",
+    "notes": "Thermal/coking coal export"
+  },
+  {
+    "name": "Richards Bay",
+    "country": "South Africa",
+    "iso3": "ZAF",
+    "lat": -28.78,
+    "lon": 32.09,
+    "type": "bulk",
+    "throughput": "91M tons/yr",
+    "notes": "Africa's largest coal terminal"
+  },
+  {
+    "name": "Mombasa",
+    "country": "Kenya",
+    "iso3": "KEN",
+    "lat": -4.04,
+    "lon": 39.65,
+    "type": "mixed",
+    "throughput": "37M tons/yr",
+    "notes": "East Africa gateway, BRI terminal"
+  },
+  {
+    "name": "Djibouti (Doraleh)",
+    "country": "Djibouti",
+    "iso3": "DJI",
+    "lat": 11.59,
+    "lon": 43.09,
+    "type": "mixed",
+    "throughput": "12M tons/yr",
+    "notes": "Horn of Africa hub, Chinese-built"
+  },
+  {
+    "name": "Gwadar",
+    "country": "Pakistan",
+    "iso3": "PAK",
+    "lat": 25.12,
+    "lon": 62.33,
+    "type": "mixed",
+    "throughput": "1M tons/yr",
+    "notes": "CPEC, Chinese-operated"
+  },
+  {
+    "name": "Hambantota",
+    "country": "Sri Lanka",
+    "iso3": "LKA",
+    "lat": 6.12,
+    "lon": 81.11,
+    "type": "mixed",
+    "throughput": "5M tons/yr",
+    "notes": "Chinese 99-year lease, BRI debt-trap"
+  },
+  {
+    "name": "Chabahar",
+    "country": "Iran",
+    "iso3": "IRN",
+    "lat": 25.3,
+    "lon": 60.64,
+    "type": "mixed",
+    "throughput": "8.5M tons/yr",
+    "notes": "India-operated, bypasses Pakistan"
+  },
+  {
+    "name": "Duqm",
+    "country": "Oman",
+    "iso3": "OMN",
+    "lat": 19.67,
+    "lon": 57.7,
+    "type": "mixed",
+    "throughput": "20M tons/yr",
+    "notes": "Outside Hormuz, UK/China interests"
+  },
+  {
+    "name": "Salalah",
+    "country": "Oman",
+    "iso3": "OMN",
+    "lat": 16.95,
+    "lon": 54.0,
+    "type": "container",
+    "throughput": "4.0M TEU",
+    "notes": "Arabian Sea transshipment"
+  },
+  {
+    "name": "Dar es Salaam",
+    "country": "Tanzania",
+    "iso3": "TZA",
+    "lat": -6.83,
+    "lon": 39.29,
+    "type": "mixed",
+    "throughput": "18M tons/yr",
+    "notes": "East Africa corridor"
+  }
+]

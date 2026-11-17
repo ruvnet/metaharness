@@ -27,3 +27,7 @@ Revert this isolated package, lockfile registration and ordered-build entry. No 
 ## Consequences
 
 The initial reviewed subset does not establish upstream parity. Subsequent ports must preserve exact schemas, output semantics, source errors, prompts and resources, with reproducible per-tool fixtures and honest coverage. Runtime remains TypeScript plus WASM; no Python bridge or fabricated successful placeholders.
+
+## Native compatibility expansion
+
+The owner subsequently requested full pinned upstream parity. The package now has an exact160-tool inventory,29 prompt templates and3 resource contracts, native per-domain handlers, optional SQLite history, bounded source parsers, and a pinned-schema MCP registry. Only implemented handlers are advertised. The audit compares actual protocol registration, checks all source hashes, and has a deliberately failing `--require-complete` gate until every behavior/evidence criterion is satisfied. Registration and fixture coverage must not be called exhaustive parity. Conservative explicit errors, write gating and network bounds intentionally differ from some upstream behavior and remain recorded gaps.

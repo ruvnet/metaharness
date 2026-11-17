@@ -1,0 +1,2369 @@
+{
+  "source": {
+    "repository": "https://github.com/marc-shade/world-intel-mcp",
+    "commit": "fdebf9a8de6e00ed688053dd647cafedc179708b",
+    "license": "MIT",
+    "copyright": "Copyright (c) 2025-2026 Phoenix AGI"
+  },
+  "prompts": [
+    {
+      "arguments": [
+        {
+          "required": true,
+          "default": null,
+          "absent": null,
+          "choices": [],
+          "kind": "text",
+          "minimum": null,
+          "maximum": null,
+          "name": "country",
+          "description": "Country name as the sources spell it, e.g. Sudan"
+        },
+        {
+          "required": false,
+          "default": "30",
+          "absent": null,
+          "choices": [],
+          "kind": "int",
+          "minimum": 1,
+          "maximum": 365,
+          "name": "days",
+          "description": "Length of each comparison window in days"
+        }
+      ],
+      "derived": [
+        [
+          "span",
+          "days",
+          2
+        ]
+      ],
+      "name": "conflict-trend",
+      "title": "Conflict trend in one country against the previous period",
+      "domain": "conflict",
+      "question": "How has organized violence in {country} changed over the last {days} days, and is it more or less intense than the {days} days before that?",
+      "steps": [
+        {
+          "args": [
+            [
+              "days",
+              "{span}"
+            ],
+            [
+              "limit",
+              1000
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_ucdp_events",
+          "purpose": "UCDP events of all three types (state-based, non-state and one-sided; see type_of_violence_label) for every country. It needs UCDP_ACCESS_TOKEN: without it, or when the API refuses it, the tool returns an error with reason ucdp_unconfigured or ucdp_fetch_failed, which is missing data, not zero events. It has no country filter, so keep the events in {country} yourself, split them at {days} days ago by date_start, and say that you filtered. limit is the page size and every page is requested, so it does not cap the result. When a page could not be fetched the result carries reason ucdp_partial and pages_failed: its count and fatalities are then lower bounds, so say the list is incomplete"
+        },
+        {
+          "args": [
+            [
+              "country",
+              "{country}"
+            ],
+            [
+              "days",
+              "{span}"
+            ],
+            [
+              "limit",
+              1000
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_acled_events",
+          "purpose": "ACLED events in {country} over both windows. It needs ACLED_EMAIL and ACLED_PASSWORD; without them it returns an error naming them. limit caps the result: a count equal to the limit means the list may have been cut off, so say so or call again with a higher limit"
+        },
+        {
+          "args": [
+            [
+              "country",
+              "{country}"
+            ],
+            [
+              "days",
+              "{span}"
+            ],
+            [
+              "limit",
+              1000
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_unrest_events",
+          "purpose": "protests and riots in {country} (also ACLED, same credentials), kept apart from armed violence. Nearby duplicates are merged: count plus deduplicated is what was fetched, and when that equals the limit the list may have been cut off"
+        }
+      ],
+      "limits": [
+        "Event datasets are revised and arrive late, so the most recent days are the least complete. A quiet final week is not proof of calm.",
+        "UCDP is read from one pinned GED release (gedevents/25.1), which holds events only up to its own cutoff. The tool states neither that cutoff nor a marker when your window lies after it: it drops the older events and returns count 0. Check the latest date_start UCDP returned; when count is 0, or the newest event is well before the window ends, UCDP has no data for that span, which is missing data, not zero events.",
+        "Count events and fatalities separately: fewer events with more deaths is not de-escalation.",
+        "ACLED and UCDP define an event differently. Compare each source with itself across the two windows, never one source's count against the other's."
+      ]
+    },
+    {
+      "arguments": [],
+      "derived": [],
+      "name": "hotspot-escalation",
+      "title": "Which hotspots are escalating and why",
+      "domain": "conflict",
+      "question": "Which of the built-in hotspots score highest for escalation right now, and which measured component drives each score?",
+      "steps": [
+        {
+          "tool": "intel_hotspot_escalation",
+          "purpose": "scores and their components for the 22 hotspots",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_military_surge",
+          "purpose": "foreign military aircraft concentrations against baseline",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_theater_posture",
+          "purpose": "military aircraft presence by theater",
+          "args": [],
+          "only_if": null
+        }
+      ],
+      "limits": [
+        "Escalation scores are weighted heuristics against fixed baselines, renormalized over the components actually measured. They are not probabilities of war. List the unavailable_components.",
+        "The escalation score's military component is 0 at every hotspot whatever the aircraft data, during a flight outage too, and unavailable_components does not list it: take military activity from intel_military_surge and intel_theater_posture instead.",
+        "Aircraft tracking sees only aircraft that broadcast a position, and many military flights do not, so counts are a floor. A theater that no flight source answered for is listed in intel_theater_posture's unavailable_theaters, and its regions in intel_military_surge's unchecked_regions: its count is unknown, not zero. With no source answering anywhere, both tools return an error."
+      ]
+    },
+    {
+      "arguments": [],
+      "derived": [],
+      "name": "market-risk-snapshot",
+      "title": "Cross-asset risk picture today",
+      "domain": "markets",
+      "question": "What does the current risk picture look like across equities, volatility, the dollar, rates and crypto?",
+      "steps": [
+        {
+          "tool": "intel_macro_signals",
+          "purpose": "Fear and Greed, VIX, DXY, gold, 10-year yield, BTC dominance",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_sector_heatmap",
+          "purpose": "which US equity sectors are leading and lagging",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_yield_curve",
+          "purpose": "curve shape and spreads",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_macro_composite",
+          "purpose": "the composite score and the inputs it weighs",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_liquidity_board",
+          "purpose": "keyless liquidity readings (Fed balance sheet, Treasury General Account, reverse repo, net liquidity, money supply), each with its units and observation date",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_net_liquidity",
+          "purpose": "only if liquidity matters to the answer: the weekly US net liquidity series behind the board's row, with its formula",
+          "args": [],
+          "only_if": null
+        }
+      ],
+      "limits": [
+        "Report current readings and their recent change only. Quote the composite score next to its inputs, since it is a weighted summary of them."
+      ]
+    },
+    {
+      "arguments": [],
+      "derived": [],
+      "name": "yield-curve-check",
+      "title": "Is the Treasury curve inverted, and by how much",
+      "domain": "markets",
+      "question": "Is the US Treasury yield curve inverted today, by how much, and how has the 10-year minus 2-year spread moved recently?",
+      "steps": [
+        {
+          "tool": "intel_yield_curve",
+          "purpose": "maturities, the 2s10s and 3m10y spreads and the inversion flag",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "args": [
+            [
+              "series_id",
+              "T10Y2Y"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_fred_series",
+          "purpose": "the spread's recent daily history (needs FRED_API_KEY)"
+        },
+        {
+          "tool": "intel_central_bank_rates",
+          "purpose": "the policy rate the short end is anchored to",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "args": [
+            [
+              "provider",
+              "fred"
+            ],
+            [
+              "series",
+              [
+                "T10Y2Y"
+              ]
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_history_backfill",
+          "purpose": "only if FRED_API_KEY is not set: loads the T10Y2Y history from FRED's keyless graph CSV into the history store (it stores no unit for this series; a failed fetch is an error capture)"
+        },
+        {
+          "args": [
+            [
+              "series_key",
+              "backfill:fred:T10Y2Y"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_series_history",
+          "purpose": "only after that backfill: the stored T10Y2Y observations with their observed_at dates"
+        }
+      ],
+      "limits": [
+        "Spreads are in percentage points. A move from 0.10 to 0.30 is 0.20 points, not a 200 percent rise.",
+        "Without FRED_API_KEY the curve falls back to four Yahoo maturities (3M, 5Y, 10Y, 30Y) with no observation dates, so spread_2s10s comes back null. Say so; do not swap in another spread without saying which.",
+        "An inverted curve describes today's yields. It is not a recession forecast."
+      ]
+    },
+    {
+      "arguments": [],
+      "derived": [],
+      "name": "central-bank-compare",
+      "title": "Where major central bank policy rates stand",
+      "domain": "markets",
+      "question": "Where do the Federal Reserve, ECB and Bank of England policy rates stand now, how has the US federal funds rate moved recently, and what did the other major central banks last set, as of the dates on record?",
+      "steps": [
+        {
+          "tool": "intel_central_bank_rates",
+          "purpose": "rates for 15 central banks; each entry carries its source (fred or curated) and as_of date",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "args": [
+            [
+              "series_id",
+              "DFF"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_fred_series",
+          "purpose": "the daily effective federal funds rate history (needs FRED_API_KEY)"
+        },
+        {
+          "tool": "intel_major_crosses",
+          "purpose": "the major currency cross rates: how they sit against each other today",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "args": [
+            [
+              "provider",
+              "fred"
+            ],
+            [
+              "series",
+              [
+                "DFF"
+              ]
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_history_backfill",
+          "purpose": "only if FRED_API_KEY is not set: loads the effective federal funds rate history from FRED's keyless graph CSV into the history store (a failed fetch is an error capture)"
+        },
+        {
+          "args": [
+            [
+              "series_key",
+              "backfill:fred:DFF"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_series_history",
+          "purpose": "only after that backfill: the stored observations of that rate with their observed_at dates"
+        }
+      ],
+      "limits": [
+        "Only the Fed, ECB and BoE rates can be live, read from FRED when FRED_API_KEY is set (source fred). The other twelve come from a hand-kept table dated 2024-11 to 2025-02 (source curated): report them as stale, with their as_of dates, never as current.",
+        "fred_available only says that FRED_API_KEY is set, not that FRED answered. A curated Fed, ECB or BoE entry means the FRED read failed or the key is missing.",
+        "The live Fed figure is the effective rate (DFF) and the live BoE figure is SONIA, an overnight market rate that tracks Bank Rate; the curated Fed entry is the upper bound of the target range. Do not read a gap between a live and a curated figure as a policy change.",
+        "Rate changes are in percentage points or basis points (one point is 100 basis points), not percent of the rate."
+      ]
+    },
+    {
+      "arguments": [
+        {
+          "required": true,
+          "default": null,
+          "absent": null,
+          "choices": [],
+          "kind": "text",
+          "minimum": null,
+          "maximum": null,
+          "name": "symbol",
+          "description": "Quote currency, ISO code such as EUR"
+        },
+        {
+          "required": false,
+          "default": "USD",
+          "absent": null,
+          "choices": [],
+          "kind": "text",
+          "minimum": null,
+          "maximum": null,
+          "name": "base",
+          "description": "Base currency, ISO code"
+        },
+        {
+          "required": false,
+          "default": "30",
+          "absent": null,
+          "choices": [],
+          "kind": "int",
+          "minimum": 1,
+          "maximum": 365,
+          "name": "days",
+          "description": "Days of history"
+        }
+      ],
+      "derived": [],
+      "name": "fx-move",
+      "title": "A currency pair's move and the coverage around it",
+      "domain": "markets",
+      "question": "How has {symbol} moved against {base} over the last {days} days, and what news coverage ran alongside the largest daily moves?",
+      "steps": [
+        {
+          "args": [
+            [
+              "base",
+              "{base}"
+            ],
+            [
+              "symbol",
+              "{symbol}"
+            ],
+            [
+              "days",
+              "{days}"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_forex_timeseries",
+          "purpose": "daily ECB reference rates. Each rate is units of {symbol} per 1 {base}, and trend.change_pct is the change in that number: a positive change means one {base} buys more {symbol}, so {symbol} weakened against {base}. Say which way you quote the move"
+        },
+        {
+          "tool": "intel_major_crosses",
+          "purpose": "where the pair sits among the majors today",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "args": [
+            [
+              "query",
+              {
+                "what": "the currency's name, such as yen or euro"
+              }
+            ],
+            [
+              "mode",
+              "artlist"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_gdelt_search",
+          "purpose": "recent articles about the currency. The tool has no date parameter and searches GDELT's default window, so keep the articles whose seendate falls on or just after the dates of the largest moves, and say how many matched"
+        }
+      ],
+      "limits": [
+        "ECB reference rates are published once per business day. A weekend or holiday has no observation, which is not a zero change.",
+        "An empty rates list with a null trend means the fetch failed, not that the currency was flat.",
+        "News published alongside a move is context. Timing alone does not show that the news caused the move."
+      ]
+    },
+    {
+      "arguments": [
+        {
+          "required": true,
+          "default": null,
+          "absent": null,
+          "choices": [],
+          "kind": "text",
+          "minimum": null,
+          "maximum": null,
+          "name": "ticker",
+          "description": "Stock ticker, e.g. AAPL"
+        }
+      ],
+      "derived": [],
+      "name": "company-events",
+      "title": "A company's recent disclosures and results",
+      "domain": "markets",
+      "question": "What material events has {ticker} disclosed recently, and how did its reported results compare with estimates?",
+      "steps": [
+        {
+          "args": [
+            [
+              "query",
+              "{ticker}"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_company_profile",
+          "purpose": "quote, sector and recent news"
+        },
+        {
+          "args": [
+            [
+              "ticker",
+              "{ticker}"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_company_filings",
+          "purpose": "recent 10-K, 10-Q and 8-K filings"
+        },
+        {
+          "args": [
+            [
+              "symbol",
+              "{ticker}"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_earnings_surprise",
+          "purpose": "actual against estimated earnings"
+        },
+        {
+          "tool": "intel_news_market_reaction",
+          "purpose": "companies named in recent news story clusters with the stock's move on the story's session against a benchmark. If {ticker} is not listed, no recent cluster was mapped to it, which is not the same as no news",
+          "args": [],
+          "only_if": null
+        }
+      ],
+      "limits": [
+        "A filing date is when the company filed, not when the event happened; give both when the filing states the event date.",
+        "No buy, sell or hold view: describe what was disclosed."
+      ]
+    },
+    {
+      "arguments": [],
+      "derived": [],
+      "name": "energy-pressure",
+      "title": "Energy prices from futures to the pump",
+      "domain": "markets",
+      "question": "Are energy prices rising for producers and for consumers, and is any chokepoint exposure relevant to the move?",
+      "steps": [
+        {
+          "tool": "intel_commodity_quotes",
+          "purpose": "crude oil and natural gas futures",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_energy_prices",
+          "purpose": "EIA crude and gas prices (needs EIA_API_KEY)",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_gas_prices",
+          "purpose": "AAA US retail gasoline and diesel averages",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_trade_routes",
+          "purpose": "oil flows through the major chokepoints",
+          "args": [],
+          "only_if": null
+        }
+      ],
+      "limits": [
+        "Futures, wholesale and retail pump prices are different measures with different dates. Never join them into one series.",
+        "Chokepoint oil flows are curated reference values, not live tanker counts."
+      ]
+    },
+    {
+      "arguments": [],
+      "derived": [],
+      "name": "crypto-structure",
+      "title": "Crypto market structure today",
+      "domain": "markets",
+      "question": "What is the state of the crypto market today: prices, stablecoin pegs, spot ETF trading and Bitcoin's trend indicators?",
+      "steps": [
+        {
+          "tool": "intel_crypto_quotes",
+          "purpose": "prices and market caps of the largest coins",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_stablecoin_status",
+          "purpose": "whether the major stablecoins hold their peg",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_etf_flows",
+          "purpose": "Bitcoin spot ETF prices and trading volume",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_btc_technicals",
+          "purpose": "moving averages, Mayer Multiple and distance from the highest daily price of the last 200 days (ath_in_period, not the all-time high)",
+          "args": [],
+          "only_if": null
+        }
+      ],
+      "limits": [
+        "intel_etf_flows reports prices and trading volume, not creations or redemptions. Volume is not net flow.",
+        "Technical indicators summarize past prices; they do not predict the next move."
+      ]
+    },
+    {
+      "arguments": [
+        {
+          "required": false,
+          "default": "5.5",
+          "absent": null,
+          "choices": [],
+          "kind": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "name": "min_magnitude",
+          "description": "Smallest magnitude to include"
+        },
+        {
+          "required": false,
+          "default": "48",
+          "absent": null,
+          "choices": [],
+          "kind": "int",
+          "minimum": 1,
+          "maximum": 720,
+          "name": "hours",
+          "description": "Lookback in hours"
+        }
+      ],
+      "derived": [],
+      "name": "earthquake-exposure",
+      "title": "Recent strong earthquakes near people",
+      "domain": "hazards",
+      "question": "Which earthquakes of magnitude {min_magnitude} or more in the last {hours} hours struck near large populations, and did any raise a disaster alert?",
+      "steps": [
+        {
+          "args": [
+            [
+              "min_magnitude",
+              "{min_magnitude}"
+            ],
+            [
+              "hours",
+              "{hours}"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_earthquakes",
+          "purpose": "the earthquakes, newest first and at most 50 by default, so a count of 50 means older ones may have been cut off; call again with a higher limit to check"
+        },
+        {
+          "args": [
+            [
+              "event_types",
+              [
+                "earthquake"
+              ]
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_population_exposure",
+          "purpose": "major cities within radius_km (default 200) of recent events. It ignores the magnitude and hours above: it fetches its own list of M4.5 and larger quakes from the last 48 hours, at most 50, and names only the nearest of them for each city, so a city's event_detail (\"M<magnitude> <place>\") can name a smaller aftershock while a step-1 event is also within reach. Before dropping a city, compare its lat and lon with each step-1 event and keep it if any lies within radius_km; check events_analyzed: 0 can mean its fetch failed"
+        },
+        {
+          "args": [
+            [
+              "event_type",
+              "EQ"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_disaster_alerts",
+          "purpose": "the GDACS alert level of the same events"
+        }
+      ],
+      "limits": [
+        "Exposure knows only 105 major cities, each with at least 1.4 million people. It is not a casualty estimate and misses everyone outside those cities.",
+        "Magnitudes and locations are revised in the first hours after an event; say when you read them."
+      ]
+    },
+    {
+      "arguments": [
+        {
+          "required": false,
+          "default": null,
+          "absent": "the United States",
+          "choices": [],
+          "kind": "text",
+          "minimum": null,
+          "maximum": null,
+          "name": "us_area",
+          "description": "Two-letter US state code, e.g. TX"
+        },
+        {
+          "required": false,
+          "default": null,
+          "absent": "Europe",
+          "choices": [],
+          "kind": "text",
+          "minimum": null,
+          "maximum": null,
+          "name": "europe_country",
+          "description": "Meteoalarm country, e.g. france"
+        }
+      ],
+      "derived": [],
+      "name": "severe-weather",
+      "title": "Severe weather warnings in the covered regions",
+      "domain": "hazards",
+      "question": "What severe weather warnings are active in {us_area} and in {europe_country}, and are any tropical cyclones active?",
+      "steps": [
+        {
+          "args": [
+            [
+              "area",
+              "{us_area}"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_weather_alerts",
+          "purpose": "US National Weather Service alerts"
+        },
+        {
+          "args": [
+            [
+              "country",
+              "{europe_country}"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_meteoalarm_alerts",
+          "purpose": "European warnings, one country per call; without country it lists the countries it covers"
+        },
+        {
+          "tool": "intel_cyclones",
+          "purpose": "Atlantic and eastern and central Pacific storms from the National Hurricane Center",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_jtwc_cyclones",
+          "purpose": "western Pacific, Indian Ocean and Southern Hemisphere storms from JTWC",
+          "args": [],
+          "only_if": null
+        }
+      ],
+      "limits": [
+        "NWS covers the US and Meteoalarm covers its participating European countries only. No alert outside those areas says nothing about the weather there.",
+        "NHC and JTWC cover different basins and can label the same storm differently. Match storms by position and time before counting."
+      ]
+    },
+    {
+      "arguments": [
+        {
+          "required": false,
+          "default": null,
+          "absent": "all FIRMS regions",
+          "choices": [
+            "north_america",
+            "south_america",
+            "europe",
+            "africa",
+            "middle_east",
+            "south_asia",
+            "east_asia",
+            "southeast_asia",
+            "oceania"
+          ],
+          "kind": "text",
+          "minimum": null,
+          "maximum": null,
+          "name": "region",
+          "description": "FIRMS region: north_america, south_america, europe, africa, middle_east, south_asia, east_asia, southeast_asia or oceania"
+        }
+      ],
+      "derived": [],
+      "name": "wildfire-situation",
+      "title": "Wildfire activity and the conditions around it",
+      "domain": "hazards",
+      "question": "How active are wildfires in {region} now, and are temperatures or rainfall abnormal there?",
+      "steps": [
+        {
+          "args": [
+            [
+              "region",
+              "{region}"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_wildfires",
+          "purpose": "satellite fire detections (needs NASA_FIRMS_API_KEY)"
+        },
+        {
+          "args": [
+            [
+              "category",
+              "wildfires"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_environmental_events",
+          "purpose": "named fires NASA EONET tracks"
+        },
+        {
+          "tool": "intel_climate_anomalies",
+          "purpose": "temperature and precipitation against the prior year",
+          "args": [],
+          "only_if": null
+        }
+      ],
+      "limits": [
+        "FIRMS detections are satellite heat signatures, not mapped fire perimeters; one large fire produces many detections.",
+        "Without NASA_FIRMS_API_KEY the fire tool returns an error. With a key set, a region FIRMS did not answer is named in failed_regions and carries its own error (its count of 0 is not a measurement), and every region failing is an error. Report either as missing data, not zero fires.",
+        "Climate anomalies are measured against the prior year, not a long-term normal."
+      ]
+    },
+    {
+      "arguments": [],
+      "derived": [],
+      "name": "space-weather-impact",
+      "title": "Space weather and coincident outages",
+      "domain": "hazards",
+      "question": "How strong is current geomagnetic and solar activity, and are internet or cloud outages being reported at the same time?",
+      "steps": [
+        {
+          "tool": "intel_space_weather",
+          "purpose": "Kp index, flare class, solar wind and SWPC alerts",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_internet_outages",
+          "purpose": "internet outages reported over the last 7 days",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_service_status",
+          "purpose": "active incidents at the major cloud providers",
+          "args": [],
+          "only_if": null
+        }
+      ],
+      "limits": [
+        "An outage at the same time as a storm does not show the storm caused it; most outages have local causes.",
+        "An empty outage list can mean that both outage sources failed; the tool does not always say so.",
+        "Kp runs 0 to 9 on a quasi-logarithmic scale: Kp 8 is far more than twice Kp 4."
+      ]
+    },
+    {
+      "arguments": [
+        {
+          "required": true,
+          "default": null,
+          "absent": null,
+          "choices": [],
+          "kind": "text",
+          "minimum": null,
+          "maximum": null,
+          "name": "country",
+          "description": "Country name, e.g. Sudan"
+        },
+        {
+          "required": false,
+          "default": "origin",
+          "absent": null,
+          "choices": [
+            "origin",
+            "host"
+          ],
+          "kind": "text",
+          "minimum": null,
+          "maximum": null,
+          "name": "role",
+          "description": "origin (its people abroad, plus IDPs) or host (people it hosts)"
+        }
+      ],
+      "derived": [],
+      "name": "displacement-history",
+      "title": "A country's displacement record since 1951",
+      "domain": "migration",
+      "question": "How has displacement linked to {country} as {role} changed since records began, and which years saw the largest waves?",
+      "steps": [
+        {
+          "args": [
+            [
+              "country",
+              "{country}"
+            ],
+            [
+              "role",
+              "{role}"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_migration_history",
+          "purpose": "the yearly record"
+        },
+        {
+          "args": [
+            [
+              "origin",
+              "{country}"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_migration_flows",
+          "purpose": "the latest year's largest corridors out of {country}; for the host view call it with destination {country} instead"
+        },
+        {
+          "tool": "intel_displacement_summary",
+          "purpose": "UNHCR's global displacement totals, for context",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "args": [
+            [
+              "citizenship",
+              {
+                "what": "the country as CBP names it, in capitals, e.g. MEXICO"
+              }
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_us_border_encounters",
+          "purpose": "only for the origin view: US CBP encounters per month of {country} citizens, a flow of events (not people, not a stock) that never adds to the displacement figures above"
+        }
+      ],
+      "limits": [
+        "UNHCR figures are year-end stocks (people displaced at the end of each year), not arrivals during the year. A change between two years is a net change in the stock.",
+        "UNHCR revises past years. Say which reporting year you used."
+      ]
+    },
+    {
+      "arguments": [
+        {
+          "required": false,
+          "default": null,
+          "absent": "the latest year with data",
+          "choices": [],
+          "kind": "int",
+          "minimum": 1951,
+          "maximum": 2100,
+          "name": "year",
+          "description": "Reporting year"
+        }
+      ],
+      "derived": [],
+      "name": "migration-surges",
+      "title": "The largest year-over-year displacement changes",
+      "domain": "migration",
+      "question": "Which origins and corridors had the largest year-over-year change in displacement in {year}, and how does that compare with net migration from all causes?",
+      "steps": [
+        {
+          "args": [
+            [
+              "year",
+              "{year}"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_migration_surges",
+          "purpose": "the largest increases and decreases against the year before"
+        },
+        {
+          "tool": "intel_net_migration",
+          "purpose": "World Bank net migration for the leading countries",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_humanitarian_summary",
+          "purpose": "HDX crisis datasets for the leading origins",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_us_border_encounters",
+          "purpose": "only if the question turns to arrivals in the US: CBP encounters per month with same-month prior-year change, a flow of events, not a stock",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_uk_small_boat_arrivals",
+          "purpose": "only if the question turns to arrivals in the UK: Home Office small boat crossings with year to date against last year, a flow of arrivals, not a stock",
+          "args": [],
+          "only_if": null
+        }
+      ],
+      "limits": [
+        "World Bank net migration counts every reason, work included; UNHCR counts forcibly displaced people. Show them side by side and never add them together.",
+        "The mass, major and notable levels are the tool's stated thresholds, not official designations."
+      ]
+    },
+    {
+      "arguments": [
+        {
+          "required": false,
+          "default": "bizjet",
+          "absent": null,
+          "choices": [
+            "bizjet",
+            "military"
+          ],
+          "kind": "text",
+          "minimum": null,
+          "maximum": null,
+          "name": "cohort",
+          "description": "bizjet or military"
+        },
+        {
+          "required": false,
+          "default": "global",
+          "absent": null,
+          "choices": [
+            "global",
+            "conus",
+            "north_america",
+            "europe",
+            "middle_east",
+            "east_asia"
+          ],
+          "kind": "text",
+          "minimum": null,
+          "maximum": null,
+          "name": "region",
+          "description": "global, conus, north_america, europe, middle_east or east_asia"
+        }
+      ],
+      "derived": [],
+      "name": "airspace-anomaly",
+      "title": "Unusual business jet or military air activity",
+      "domain": "aviation",
+      "question": "Is {cohort} air activity over {region} unusual for this time of the week, and if so, where did the extra aircraft come from?",
+      "steps": [
+        {
+          "args": [
+            [
+              "cohort",
+              "{cohort}"
+            ],
+            [
+              "region",
+              "{region}"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_jet_cohort_snapshot",
+          "purpose": "the current picture; this call also builds the tracked cohort"
+        },
+        {
+          "args": [
+            [
+              "cohort",
+              "{cohort}"
+            ],
+            [
+              "region",
+              "{region}"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_jet_activity_anomaly",
+          "purpose": "the latest half-hour against the same slot on earlier weeks"
+        },
+        {
+          "args": [
+            [
+              "cohort",
+              "{cohort}"
+            ],
+            [
+              "region",
+              "{region}"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_jet_excess_origins",
+          "purpose": "only if step 2 flags an excess: where the extra departures came from"
+        },
+        {
+          "tool": "intel_military_flights",
+          "purpose": "for the military cohort, a second source of positions",
+          "args": [],
+          "only_if": null
+        }
+      ],
+      "limits": [
+        "ADS-B shows only aircraft whose transponders volunteer receivers pick up; many military and some private aircraft do not broadcast a usable position, so counts are a floor.",
+        "When intel_military_flights reports source none, no flight source answered: it carries error, degraded and reason military_flights_unavailable, and its empty aircraft list is unknown, not an empty sky.",
+        "An anomaly is a deviation from the same slot on earlier weeks. It is not evidence of anyone's intent.",
+        "The anomaly check needs a learned cohort; a fresh install reports that gap first."
+      ]
+    },
+    {
+      "arguments": [],
+      "derived": [],
+      "name": "airport-disruption",
+      "title": "US airport delays and their likely weather context",
+      "domain": "aviation",
+      "question": "Which major US airports have delays now, and is severe weather active near them?",
+      "steps": [
+        {
+          "tool": "intel_airport_delays",
+          "purpose": "FAA delays at 20 major US airports",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_aviation_domestic",
+          "purpose": "the airborne traffic snapshot for scale",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_weather_alerts",
+          "purpose": "NWS alerts for the states of the delayed airports",
+          "args": [],
+          "only_if": null
+        }
+      ],
+      "limits": [
+        "FAA data covers major US airports only.",
+        "The airborne total is a snapshot of aircraft OpenSky receives, not a count of all flights."
+      ]
+    },
+    {
+      "arguments": [],
+      "derived": [],
+      "name": "cyber-landscape",
+      "title": "Current cyber threat landscape",
+      "domain": "cyber",
+      "question": "What does the current cyber threat picture look like: newly known-exploited vulnerabilities, active malware infrastructure, and which threat actors are in the headlines?",
+      "steps": [
+        {
+          "tool": "intel_cyber_threats",
+          "purpose": "Feodo, CISA KEV, SANS and URLhaus indicators",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_keyword_spikes",
+          "purpose": "CVE and APT names rising in headlines against baseline",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_extract_entities",
+          "purpose": "CVEs, APT groups and organizations in recent headlines",
+          "args": [],
+          "only_if": null
+        }
+      ],
+      "limits": [
+        "Feeds list reported indicators and known-exploited vulnerabilities. A listing is not attribution and does not show that any particular organization was hit.",
+        "Keyword spikes measure mentions in headlines, not attack volume."
+      ]
+    },
+    {
+      "arguments": [
+        {
+          "required": true,
+          "default": null,
+          "absent": null,
+          "choices": [],
+          "kind": "text",
+          "minimum": null,
+          "maximum": null,
+          "name": "country",
+          "description": "Country name, e.g. Sudan"
+        },
+        {
+          "required": false,
+          "default": null,
+          "absent": "no ASN or prefix",
+          "choices": [],
+          "kind": "text",
+          "minimum": null,
+          "maximum": null,
+          "name": "resource",
+          "description": "An ASN or prefix to check, e.g. AS3333"
+        }
+      ],
+      "derived": [],
+      "name": "internet-disruption",
+      "title": "Internet disruption in one country",
+      "domain": "infrastructure",
+      "question": "Is internet connectivity in {country} disrupted now, and could a cable corridor failure explain it?",
+      "steps": [
+        {
+          "tool": "intel_internet_outages",
+          "purpose": "outages over the last 7 days; keep those in {country}",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "args": [
+            [
+              "resource",
+              "{resource}"
+            ]
+          ],
+          "only_if": "resource",
+          "tool": "intel_bgp_status",
+          "purpose": "routing visibility for that network"
+        },
+        {
+          "tool": "intel_cable_health",
+          "purpose": "the condition of the six cable corridors",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_cascade_analysis",
+          "purpose": "which countries depend on an at-risk corridor",
+          "args": [],
+          "only_if": null
+        }
+      ],
+      "limits": [
+        "An empty outage list, an all-clear corridor reading or zero cable warnings can each be a failed fetch: when the warning feed is down every corridor reads clear. Check failing_sources in intel://guide/source-health before calling {country} connected: it lists every source whose last call failed, even before its circuit breaker opens.",
+        "Cascade analysis is a simulation over curated cable dependencies, not a measurement of a real outage.",
+        "BGP status checks one ASN or prefix at a time; it is not a global hijack detector."
+      ]
+    },
+    {
+      "arguments": [],
+      "derived": [],
+      "name": "cloud-incidents",
+      "title": "Cloud provider incidents and the regions involved",
+      "domain": "infrastructure",
+      "question": "Which cloud providers report active incidents, and which of their regions are involved?",
+      "steps": [
+        {
+          "tool": "intel_service_status",
+          "purpose": "active incidents at AWS, Azure, GCP, Cloudflare and GitHub",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_cloud_regions",
+          "purpose": "where the named cloud regions are",
+          "args": [],
+          "only_if": null
+        }
+      ],
+      "limits": [
+        "Status pages are published by the providers themselves and can lag or understate an incident."
+      ]
+    },
+    {
+      "arguments": [],
+      "derived": [],
+      "name": "maritime-chokepoints",
+      "title": "Pressure on maritime chokepoints",
+      "domain": "maritime",
+      "question": "Are navigational warnings building at the strategic waterways, and is shipping stress rising in markets?",
+      "steps": [
+        {
+          "tool": "intel_vessel_snapshot",
+          "purpose": "a warning-based status for the nine strategic waterways",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_nav_warnings",
+          "purpose": "the warning texts behind the status",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_trade_routes",
+          "purpose": "what share of oil and trade each chokepoint carries",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_shipping_index",
+          "purpose": "a stress score from shipping-linked ETF and equity prices",
+          "args": [],
+          "only_if": null
+        }
+      ],
+      "limits": [
+        "The vessel snapshot counts navigational warnings, not ships. A warning counts at a waterway only when a position its text states lies within 300 km of the waterway's reference point (matching_rule states the rule).",
+        "A naval warning that states no readable position counts at no waterway and changes no status. It is listed in unplaced_naval_warnings with the reason: read those before calling any waterway clear.",
+        "A waterway status of unknown means the warning feed was unavailable (error, degraded and reason say why), not a quiet sea. A status of stale means the feed's newest warning is older than stale_after_days: the counts describe the feed's last update (status_as_of), not today. Check feed_stale and newest_issue_date before calling any status current.",
+        "The navarea filter of intel_nav_warnings takes NGA area codes (4, 12, A, P, C), their series names, or IV and XII for 4 and 12. Other NAVAREAs arrive inside the A, P and C series, and asking for one returns an error with reason navarea_not_carried, not a count of 0.",
+        "The shipping stress score is a market proxy, not a freight rate."
+      ]
+    },
+    {
+      "arguments": [
+        {
+          "required": true,
+          "default": null,
+          "absent": null,
+          "choices": [],
+          "kind": "text",
+          "minimum": null,
+          "maximum": null,
+          "name": "name",
+          "description": "A name for the area"
+        },
+        {
+          "required": true,
+          "default": null,
+          "absent": null,
+          "choices": [],
+          "kind": "number",
+          "minimum": -90,
+          "maximum": 90,
+          "name": "lat",
+          "description": "Centre latitude in degrees"
+        },
+        {
+          "required": true,
+          "default": null,
+          "absent": null,
+          "choices": [],
+          "kind": "number",
+          "minimum": -180,
+          "maximum": 180,
+          "name": "lon",
+          "description": "Centre longitude in degrees"
+        },
+        {
+          "required": true,
+          "default": null,
+          "absent": null,
+          "choices": [],
+          "kind": "number",
+          "minimum": 1,
+          "maximum": 2000,
+          "name": "radius_km",
+          "description": "Radius in kilometres"
+        }
+      ],
+      "derived": [],
+      "name": "aoi-watch-setup",
+      "title": "Start watching an area of interest",
+      "domain": "aoi",
+      "question": "Set up a watch on {name} (centre {lat}, {lon}, radius {radius_km} km): what is inside it now, and what should later checks compare against?",
+      "steps": [
+        {
+          "args": [
+            [
+              "name",
+              "{name}"
+            ],
+            [
+              "lat",
+              "{lat}"
+            ],
+            [
+              "lon",
+              "{lon}"
+            ],
+            [
+              "radius_km",
+              "{radius_km}"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_aoi_define",
+          "purpose": "saves the area"
+        },
+        {
+          "args": [
+            [
+              "name",
+              {
+                "what": "a name for the polygon"
+              }
+            ],
+            [
+              "vertices",
+              {
+                "what": "3 to 64 [lat, lon] vertices"
+              }
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_aoi_define_polygon",
+          "purpose": "only if a circle does not fit the area (a border region or a strait): define it under another name as a polygon of [lat, lon] vertices, and use that name in the steps below"
+        },
+        {
+          "args": [
+            [
+              "name",
+              {
+                "what": "a name for the corridor"
+              }
+            ],
+            [
+              "waypoints",
+              {
+                "what": "2 to 64 [lat, lon] waypoints"
+              }
+            ],
+            [
+              "width_km",
+              {
+                "what": "the total width in km, 1 to 500"
+              }
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_aoi_define_corridor",
+          "purpose": "only if the area is a route (a shipping lane or cable run): define it under another name as a corridor of waypoints with a width, and use that name in the steps below"
+        },
+        {
+          "args": [
+            [
+              "name",
+              "{name}"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_aoi_brief",
+          "purpose": "the cited picture inside {name} today"
+        },
+        {
+          "args": [
+            [
+              "name",
+              "{name}"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_aoi_changes",
+          "purpose": "the first change detection call records a baseline for {name}"
+        }
+      ],
+      "limits": [
+        "The first change check records a baseline and claims nothing entered or left.",
+        "A domain that fails is listed in data_gaps and left out of the diff; a wildfire region FIRMS did not answer is listed as partial coverage. Never read a failed domain as everything leaving. A whole domain departing at once with no data_gaps entry is still unconfirmed: check failing_sources in intel://guide/source-health and say it could not be confirmed.",
+        "Each intel_aoi_changes call compares with the snapshot saved by the call before it (yours or a collector AOI sweep) and then replaces that snapshot."
+      ]
+    },
+    {
+      "arguments": [
+        {
+          "required": true,
+          "default": null,
+          "absent": null,
+          "choices": [],
+          "kind": "text",
+          "minimum": null,
+          "maximum": null,
+          "name": "name",
+          "description": "The AOI name"
+        }
+      ],
+      "derived": [],
+      "name": "aoi-review",
+      "title": "What changed in a watched area",
+      "domain": "aoi",
+      "question": "What entered or left {name} since the last snapshot, and is the area escalating?",
+      "steps": [
+        {
+          "tool": "intel_aoi_list",
+          "purpose": "confirm {name} is among the defined areas of interest and see its shape",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "args": [
+            [
+              "name",
+              "{name}"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_aoi_changes",
+          "purpose": "new, departed and unchanged items since the previous snapshot, and previous_taken_at, when that snapshot was saved"
+        },
+        {
+          "args": [
+            [
+              "name",
+              "{name}"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_aoi_escalation",
+          "purpose": "the escalation score and its components for {name}"
+        },
+        {
+          "args": [
+            [
+              "name",
+              "{name}"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_aoi_brief",
+          "purpose": "cited detail behind any change worth reporting"
+        },
+        {
+          "tool": "intel_aoi_digest",
+          "purpose": "only if asked about every watched area: the change sweep across all defined AOIs in one call. It advances each AOI's snapshot as step 2 does, so never run both for {name}",
+          "args": [],
+          "only_if": null
+        }
+      ],
+      "limits": [
+        "Changes are relative to the previous snapshot, whenever it was saved; give previous_taken_at.",
+        "Every intel_aoi_changes call saves a new snapshot. Call it once: a retried call compares with the snapshot the first call just saved and reports that nothing changed.",
+        "A domain that fails, earthquakes and wildfires included, is listed in data_gaps and left out of the changes; a wildfire region FIRMS did not answer is listed as partial coverage. A whole domain departing at once with no data_gaps entry is still unconfirmed: check failing_sources in intel://guide/source-health and report it as unconfirmed.",
+        "News for an AOI is found by place name near its centre, so a nearby place with the same name can leak in."
+      ]
+    },
+    {
+      "arguments": [
+        {
+          "required": true,
+          "default": null,
+          "absent": null,
+          "choices": [],
+          "kind": "text",
+          "minimum": null,
+          "maximum": null,
+          "name": "topic",
+          "description": "Search terms for the story"
+        }
+      ],
+      "derived": [],
+      "name": "story-breadth",
+      "title": "How widely a story is covered and how that changed",
+      "domain": "news",
+      "question": "How much coverage has {topic} received, how has that changed over time, and which story clusters carry it?",
+      "steps": [
+        {
+          "args": [
+            [
+              "query",
+              "{topic}"
+            ],
+            [
+              "mode",
+              "timelinevol"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_gdelt_search",
+          "purpose": "coverage volume over time"
+        },
+        {
+          "args": [
+            [
+              "query",
+              "{topic}"
+            ],
+            [
+              "mode",
+              "artlist"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_gdelt_search",
+          "purpose": "the articles themselves"
+        },
+        {
+          "tool": "intel_news_clusters",
+          "purpose": "the clusters of related stories in the RSS set",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_news_feed",
+          "purpose": "the latest items from the RSS feeds",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_top_stories",
+          "purpose": "stories carried by at least three distinct outlets in the RSS feeds over the last 24 hours, ranked by outlet count: breadth across outlets",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_situations",
+          "purpose": "situations between and inside countries ranked by how many RSS headlines cover them",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "args": [
+            [
+              "country",
+              {
+                "what": "the country the story is about"
+              }
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_hostility_timeline",
+          "purpose": "only if the story is about one country or a pair: per-day GDELT article counts for it, where a day GDELT did not return is null and listed in data_gaps"
+        }
+      ],
+      "limits": [
+        "Report the timelinevol series as GDELT returns it and compare it with itself over time. Do not state a unit for it or call it an article count.",
+        "Coverage volume measures attention, not truth or importance.",
+        "The RSS set is a fixed list of feeds. A story missing there may still be covered elsewhere."
+      ]
+    },
+    {
+      "arguments": [
+        {
+          "required": false,
+          "default": null,
+          "absent": "all countries",
+          "choices": [],
+          "kind": "text",
+          "minimum": null,
+          "maximum": null,
+          "name": "country",
+          "description": "ISO alpha-3 country code, e.g. FRA"
+        }
+      ],
+      "derived": [],
+      "name": "election-watch",
+      "title": "Upcoming elections and the signals around them",
+      "domain": "politics",
+      "question": "Which elections are coming up in {country}, and what do current signals show around them?",
+      "steps": [
+        {
+          "args": [
+            [
+              "country",
+              "{country}"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_election_calendar",
+          "purpose": "entries from a hand-kept election table of 18 rows dated 2025-01 to 2029-04, each with a status and a proximity risk"
+        },
+        {
+          "args": [
+            [
+              "country",
+              "{country}"
+            ]
+          ],
+          "only_if": "country",
+          "tool": "intel_country_dossier",
+          "purpose": "economy, sanctions, news and conflict context. It knows only the 50 countries in its own table and returns an error for others. Its sanctions section lists sanctions-list entries whose remarks name the country, which is not an exposure screen; match_count null means the sanctions list could not be read, not zero matches"
+        },
+        {
+          "tool": "intel_social_signals",
+          "purpose": "discussion velocity on the tracked subreddits",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_prediction_markets",
+          "purpose": "the 20 active Polymarket questions with the most 24-hour volume. It has no topic filter, so most will be about other things: keep any about this election and say so if there are none",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "args": [
+            [
+              "category",
+              "Elections"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_kalshi_markets",
+          "purpose": "Kalshi open markets in its Elections category, ranked by volume; keep only those about this election"
+        },
+        {
+          "args": [
+            [
+              "category",
+              "Elections"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_prediction_compare",
+          "purpose": "the same Elections markets on Kalshi and Polymarket side by side with the price gap; match_confidence ranks pairs and is not a probability"
+        }
+      ],
+      "limits": [
+        "The calendar is a fixed table, not a feed. An empty list means the country is not in it, not that no election is due; say the calendar does not cover it.",
+        "Entries with status past have already happened. Leave them out of upcoming elections: their proximity risk scores the days after an election like the days before it.",
+        "The country filter also matches part of a country name (RUS returns Belarus), so keep only entries whose iso3 is the code you asked for.",
+        "Proximity risk rises as an election nears; it is a stated heuristic, not a forecast of unrest or of the result.",
+        "Reddit and prediction markets reflect their own participants, not the electorate."
+      ]
+    },
+    {
+      "arguments": [
+        {
+          "required": true,
+          "default": null,
+          "absent": null,
+          "choices": [],
+          "kind": "text",
+          "minimum": null,
+          "maximum": null,
+          "name": "query",
+          "description": "Name to search for"
+        }
+      ],
+      "derived": [],
+      "name": "sanctions-screen",
+      "title": "Search the OFAC sanctions list for a name",
+      "domain": "finance",
+      "question": "Does {query} appear on the US Treasury OFAC SDN list, and under which programs?",
+      "steps": [
+        {
+          "args": [
+            [
+              "query",
+              "{query}"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_sanctions_search",
+          "purpose": "name matches on the SDN sanctions list"
+        },
+        {
+          "args": [
+            [
+              "query",
+              {
+                "what": "the matched company's name or ticker"
+              }
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_company_profile",
+          "purpose": "only if a match is a listed company: who it is"
+        }
+      ],
+      "limits": [
+        "If total_entities is 0, the list could not be read. That is a failed search, not a clean result. Otherwise total_entities counts the entries read before the search stopped, not the size of the list.",
+        "Only the primary name of each entry is searched, not its aliases, so a listed party under another spelling will not match.",
+        "Results stop at the limit (default 50): a count equal to the limit means more names may have matched, so search again with a higher limit before saying how many did.",
+        "Matching is by substring on names. A name match is not an identity match, and this is not a compliance screening service. Never answer that a party is not sanctioned.",
+        "The SDN list changes. Say when you searched."
+      ]
+    },
+    {
+      "arguments": [],
+      "derived": [],
+      "name": "disease-watch",
+      "title": "Disease outbreak reports",
+      "domain": "health",
+      "question": "Which disease outbreaks are being reported now, and which involve high-concern pathogens?",
+      "steps": [
+        {
+          "tool": "intel_disease_outbreaks",
+          "purpose": "WHO, ProMED and CIDRAP outbreak reports",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_humanitarian_summary",
+          "purpose": "crisis datasets for the affected countries",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_news_feed",
+          "purpose": "recent news coverage, for context only",
+          "args": [],
+          "only_if": null
+        }
+      ],
+      "limits": [
+        "Outbreak reports arrive after cases occur and case counts are revised. Give each report's date.",
+        "Reporting is uneven across countries. Fewer reports does not mean fewer cases."
+      ]
+    },
+    {
+      "arguments": [
+        {
+          "required": true,
+          "default": null,
+          "absent": null,
+          "choices": [],
+          "kind": "text",
+          "minimum": null,
+          "maximum": null,
+          "name": "topic",
+          "description": "Natural language topic"
+        },
+        {
+          "required": false,
+          "default": "168",
+          "absent": null,
+          "choices": [],
+          "kind": "int",
+          "minimum": 1,
+          "maximum": 87600,
+          "name": "hours",
+          "description": "How far back to search, in hours"
+        }
+      ],
+      "derived": [],
+      "name": "history-recall",
+      "title": "What the stored history says about a topic",
+      "domain": "history",
+      "question": "What has this server stored about {topic} over the last {hours} hours, and has anything similar been recorded before?",
+      "steps": [
+        {
+          "args": [
+            [
+              "hours",
+              "{hours}"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_domain_summary",
+          "purpose": "what is stored per category in your window, with the earliest timestamp inside that window"
+        },
+        {
+          "args": [
+            [
+              "hours",
+              87600
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_domain_summary",
+          "purpose": "the same over ten years: its earliest timestamps show when storage began for each domain"
+        },
+        {
+          "args": [
+            [
+              "query",
+              "{topic}"
+            ],
+            [
+              "hours",
+              "{hours}"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_semantic_search",
+          "purpose": "the stored entries closest in wording to the topic"
+        },
+        {
+          "tool": "intel_timeline",
+          "purpose": "the stored entries in time order for the matching domain",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "args": [
+            [
+              "text",
+              {
+                "what": "the text of the strongest match from step 3"
+              }
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_similar_events",
+          "purpose": "earlier stored events similar to the strongest match"
+        },
+        {
+          "tool": "intel_series_history",
+          "purpose": "the numeric series the history store holds (a separate store from the vector store), with observed_at, published_at and collected_at for each",
+          "args": [],
+          "only_if": null
+        },
+        {
+          "tool": "intel_collection_health",
+          "purpose": "the collector's run log per source: last success, consecutive failures and whether it is overdue, which says how complete that history is",
+          "args": [],
+          "only_if": null
+        }
+      ],
+      "limits": [
+        "History exists only for what the collector stored while it was running. The earliest timestamp in step 1 is only the earliest inside your window; use step 2 before calling anything the first or the largest.",
+        "Semantic search ranks by similarity of wording. A high score is not a factual match.",
+        "If the vector store is not available these tools return an error; say that history could not be read."
+      ]
+    },
+    {
+      "arguments": [
+        {
+          "required": true,
+          "default": null,
+          "absent": null,
+          "choices": [],
+          "kind": "text",
+          "minimum": null,
+          "maximum": null,
+          "name": "country",
+          "description": "ISO alpha-3 country code, e.g. UKR"
+        }
+      ],
+      "derived": [],
+      "name": "country-overview",
+      "title": "One country across economy, stability and markets",
+      "domain": "country",
+      "question": "What is the current picture in {country} across economy, stability, active signals and its stock market?",
+      "steps": [
+        {
+          "args": [
+            [
+              "country",
+              "{country}"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_country_dossier",
+          "purpose": "economy, elections, sanctions, news and conflict. It knows only the 50 countries in its own table and returns an error for others. Its sanctions section lists sanctions-list entries whose remarks name the country, which is not an exposure screen; match_count null means the sanctions list could not be read, not zero matches"
+        },
+        {
+          "args": [
+            [
+              "country_code",
+              "{country}"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_instability_index",
+          "purpose": "the index with its four components. It takes 50 ISO alpha-3 codes and returns an error listing them for any other. Each input it could not obtain is named in data_gaps and its component is null; index_is_lower_bound then means the total counts the missing parts as zero"
+        },
+        {
+          "args": [
+            [
+              "country",
+              {
+                "what": "the country's English name"
+              }
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_signal_summary",
+          "purpose": "active signals; this tool takes the country's name, not its code"
+        },
+        {
+          "args": [
+            [
+              "country",
+              "{country}"
+            ]
+          ],
+          "only_if": null,
+          "tool": "intel_country_stocks",
+          "purpose": "its main stock index; countries without a mapped index return an error that lists the ones covered"
+        }
+      ],
+      "limits": [
+        "The instability index is a weighted composite with country multipliers. Quote its components, not only the total. Its ucdp_floor comes from a static baseline table, not from current UCDP data: a total at the floor says nothing about this month.",
+        "World Bank figures in the dossier are annual and often a year or more old. Give the year of each.",
+        "The dossier's elections section reads a hand-kept election table: empty means the country is not covered, not that no vote is due, and its match on part of a name can add another country's election, so keep only entries whose iso3 is {country}."
+      ]
+    }
+  ],
+  "commonLimits": [
+    "A tool that returns an error, a note or a data_gaps entry has told you what is missing: report it as missing. Missing data is never zero, calm or peace.",
+    "Many tools do not mark a failure. When every upstream request fails they return an empty list, a zero count, a neutral score, a LOW risk label, an all-clear status or a false flag. Read an empty list or a zero as nothing returned, not nothing happened, and confirm with a second tool before calling a place quiet.",
+    "Give each figure the date it describes (the observation date) as well as when it was fetched; they are often different. If a tool gives no observation date, say so.",
+    "Describe what the data show. This server does not forecast prices, give trading advice or prove causation."
+  ],
+  "answerShape": "Answer with: the place, period and measure you used; each number with its unit (or say the source states none) and date; the comparison you were asked for; every data gap; and one line on what this data cannot tell.",
+  "guideIntro": "# World Intelligence MCP: research guide\n\nThis server answers questions about the world with live public data:\nmarkets, conflict, hazards, migration, aviation, cyber, infrastructure,\nnews and more. This guide is generated from the running server: {tools}\ntools in {domains} domains, and {prompts} worked research prompts.\n\nOther resources: `intel://guide/source-health` (which sources are\nfailing, stale or missing keys right now) and `intel://guide/measures`\n(what the numbers mean and how they mislead).\n\n## How to ask a strong question\n\n- Name the period: \"the last 30 days against the 30 days before\", not\n  \"recently\".\n- Name the comparison: an earlier period, another place, or a stated\n  baseline.\n- Name the measure: event count or fatalities, price level or percentage\n  change, people displaced at year end or arrivals during the year.\n- Name the place: a country (many tools take an ISO-3 code), a region, a\n  bounding box, or a saved area of interest.\n\nA question with all four can be answered from tool output. A question\nwith none of them invites a story.\n\n## What an answer from this server contains\n\n- Values as the sources published them. Most responses name their source\n  and carry a fetch timestamp; the date a value describes is often earlier\n  than the fetch, so give both. Some tools return no observation date at\n  all; say so rather than using the fetch time.\n- Failures, sometimes. Some tools return `error`, `degraded` or\n  `data_gaps` when a source is down or not configured. Many do not: when\n  every upstream request fails they return an empty list, a zero count, a\n  neutral score, a LOW risk label, an all-clear status or a false flag,\n  with no marker. Read an empty list or a zero count as nothing returned,\n  not nothing happened, and confirm with a second tool before calling a\n  place quiet. `failing_sources` in the source-health resource names the\n  sources whose last call failed.\n- Citations. Briefs and digests number their sources.\n- Old copies, counted. When a live fetch fails and an older cached copy\n  exists, that copy is served. Dictionary responses carry `_stale` and\n  `_stale_age_seconds`, but tools that reshape a response do not always\n  pass the marker through. `stale_serves` in the source-health resource\n  counts every stale copy this process served, per source.\n\n## What this server will not do\n\n- Trade, place orders, or say what to buy or sell.\n- Forecast prices, elections or wars. Escalation, instability, risk and\n  composite scores are weighted summaries of current readings against\n  stated baselines, not probabilities.\n- Prove causation. Series that move together, or one shortly after the\n  other, may share a cause or be coincidence.\n- Show history it did not record. Collected history (semantic search,\n  timelines, baselines, area change detection) covers only the time the\n  collector or server was running and storing. The exception is\n  intel_history_backfill, which loads FRED and ECB publisher history\n  into the history store for intel_series_history, intel_revisions and\n  intel_day_timeline. Those values are the publisher's current vintage,\n  so revisions made before the backfill do not show.\n- Use keyed sources without their keys. Tools marked [needs ...] in the\n  list below return an error naming the variable when it is not set; a\n  few others fall back to a keyless source with less detail.\n  `without_key` in the source-health resource says which, and whether\n  each variable is set.\n- See what its sources do not publish. Aircraft without a broadcast\n  position, unlisted outlets, and regions outside a feed's coverage are\n  absent, which is not the same as quiet.\n- Confirm identities. A sanctions or entity name match is a text match.\n",
+  "measures": "# Measures glossary\n\nWhat the numbers returned by this server's tools mean, and the mistakes\nthey invite.\n\n## Amount outstanding versus flow\n\nAn amount outstanding (a stock) is a level at one moment: people\ndisplaced at the end of a year, a central bank's balance sheet, money\nsupply. A flow is what happened during a period: arrivals during a year,\nfund inflows in a week, fatalities in a month. Never add a stock to a\nflow. A change in a stock is a net figure: a displaced population that\ngrew by 100,000 may have had 300,000 arrivals and 200,000 returns.\n\n## Growth versus acceleration\n\nGrowth is how fast a level changes (prices 3 percent higher than a year\nearlier). Acceleration is how fast the growth rate itself changes\n(growth up from 2 to 3 percent). Slower growth is still growth: inflation\nfalling from 4 to 3 percent means prices are still rising, only more\nslowly.\n\n## Percent versus percentage points\n\nA rate that moves from 4 percent to 5 percent rose by 1 percentage\npoint, which is a 25 percent increase in the rate itself. Yields,\nspreads, policy rates and shares are compared in points; one point is\n100 basis points.\n\n## Seasonally adjusted\n\nMany series repeat a calendar pattern: holiday spending, winter heating,\nsummer travel. A seasonally adjusted series has the expected pattern\nremoved, so one month can be compared with the month before. An\nunadjusted series should be compared with the same period a year\nearlier. Never compare an adjusted figure with an unadjusted one; check\nwhich a series is before comparing.\n\n## Observation, publication and collection dates\n\n- Observation date: the period a value describes (March unemployment,\n  the day an event took place).\n- Publication date: when the publisher released it, often weeks after\n  the observation, with revisions later still.\n- Collection date: when this server fetched or saved it.\n\nA value fetched today can describe last month or last year; annual\ndatasets such as World Bank indicators often trail by a year or more.\nReport the observation date. The fetch time only tells you how fresh the\ncopy is. Some tools return no observation date; say so.\n\n## Revisions\n\nFirst releases are estimates. Economic series, event datasets and\ndisplacement figures are revised after publication, sometimes by more\nthan the change being discussed. Say which release you used.\n\n## Correlation and timing offsets\n\nTwo series that move together, or where one tends to move a few days\nbefore the other, may share a cause, may be linked in either direction,\nor may be coincidence. Coincidence becomes likely when many pairs or\nmany offsets are tried and only the best is reported. A lead or lag found\nin one sample describes that sample. None of this shows that one thing\ncaused the other.\n\n## Composite scores\n\nEscalation, instability, risk, macro composite and stress scores are\nweighted combinations of current inputs against stated baselines. They\nsummarize their inputs and are not probabilities. Some add a fixed amount\nfrom a static country table: the instability index's `ucdp_floor` and\n`displacement_boost` come from a baseline risk table, not from current\ndata, so a floor score says nothing about this week. Report the\ncomponents with the score; a null component was not measured.\n\n## Missing data is not zero\n\nMany tools report a source that failed, is not configured, or does not\ncover a place with an error, a note or a `data_gaps` entry. That means\nunknown, not none. Many tools do not: when every upstream request fails\nthey return an empty list, a zero count, a neutral score, a LOW risk\nlabel, an all-clear status or a false flag, so an empty list or a zero\nmeans nothing was returned, not that nothing happened. Zero events from a fetch that worked, in a region the source\ncovers and for a query that matched the place, is a measurement; zero\nevents in a region it does not cover is nothing at all.\n",
+  "keyedSources": [
+    {
+      "needed_by": [
+        "intel_acled_events",
+        "intel_unrest_events",
+        "intel_risk_scores",
+        "intel_instability_index"
+      ],
+      "source": "ACLED",
+      "env": [
+        "ACLED_EMAIL",
+        "ACLED_PASSWORD"
+      ],
+      "without_key": "ACLED event, unrest and risk tools return an error naming the missing credentials, and so does intel_instability_index without a country_code. With a country_code the index still scores, without its unrest and conflict inputs, and lists acled_unconfigured in data_gaps. When both are set but the sign-in request fails, the error says ACLED sign-in failed instead (reason acled_auth_failed)."
+    },
+    {
+      "needed_by": [
+        "intel_ucdp_events"
+      ],
+      "source": "UCDP",
+      "env": [
+        "UCDP_ACCESS_TOKEN"
+      ],
+      "without_key": "intel_ucdp_events still sends the request; the API refuses it, and the tool returns an error with reason ucdp_unconfigured."
+    },
+    {
+      "needed_by": [
+        "intel_wildfires"
+      ],
+      "source": "NASA FIRMS",
+      "env": [
+        "NASA_FIRMS_API_KEY"
+      ],
+      "without_key": "intel_wildfires returns an error."
+    },
+    {
+      "needed_by": [
+        "intel_energy_prices",
+        "intel_residential_natgas",
+        "intel_electricity_rates"
+      ],
+      "source": "EIA",
+      "env": [
+        "EIA_API_KEY"
+      ],
+      "without_key": "Energy prices, residential natural gas and electricity rates return an error."
+    },
+    {
+      "needed_by": [
+        "intel_fred_series"
+      ],
+      "source": "FRED",
+      "env": [
+        "FRED_API_KEY"
+      ],
+      "without_key": "intel_fred_series returns an error; the yield curve falls back to four Yahoo maturities with no 2s10s spread and no observation dates; central bank rates come only from a hand-kept table dated 2024-11 to 2025-02."
+    },
+    {
+      "needed_by": [],
+      "source": "Cloudflare Radar",
+      "env": [
+        "CLOUDFLARE_API_TOKEN"
+      ],
+      "without_key": "Internet outages fall back to the IODA public API."
+    },
+    {
+      "needed_by": [],
+      "source": "OpenSky",
+      "env": [
+        "OPENSKY_CLIENT_ID",
+        "OPENSKY_CLIENT_SECRET",
+        "OPENSKY_USERNAME",
+        "OPENSKY_PASSWORD"
+      ],
+      "without_key": "Requests are anonymous, with OpenSky's lower anonymous limits."
+    },
+    {
+      "needed_by": [
+        "intel_traffic_flow",
+        "intel_traffic_incidents"
+      ],
+      "source": "TomTom",
+      "env": [
+        "TOMTOM_API_KEY"
+      ],
+      "without_key": "Traffic flow and incident tools return an error."
+    },
+    {
+      "needed_by": [
+        "intel_webcams"
+      ],
+      "source": "Windy Webcams",
+      "env": [
+        "WINDY_API_KEY"
+      ],
+      "without_key": "intel_webcams returns an error."
+    }
+  ],
+  "resources": [
+    {
+      "uri": "intel://guide",
+      "name": "research-guide",
+      "title": "Research guide",
+      "description": "How to ask this server a strong question, what an answer contains, what it will not do, the worked prompts, and every tool by domain (generated from the live registry).",
+      "mimeType": "text/markdown"
+    },
+    {
+      "uri": "intel://guide/source-health",
+      "name": "source-health",
+      "title": "Source health",
+      "description": "Circuit breakers, cache freshness, stale serves and which keyed sources are configured. Read-only; starts no fetches.",
+      "mimeType": "application/json"
+    },
+    {
+      "uri": "intel://guide/measures",
+      "name": "measures-glossary",
+      "title": "Measures glossary",
+      "description": "Stock versus flow, growth versus acceleration, percentage points, seasonal adjustment, the three dates, correlation versus causation, missing data versus zero.",
+      "mimeType": "text/markdown"
+    }
+  ],
+  "domainTitles": {
+    "markets": "Markets and economy",
+    "hazards": "Natural hazards and space",
+    "conflict": "Conflict and military",
+    "infrastructure": "Infrastructure and transport",
+    "society": "News, society and migration",
+    "intelligence": "Intelligence analysis",
+    "geospatial": "Static geospatial datasets",
+    "synthesis": "NLP and strategic synthesis",
+    "finance": "Business finance",
+    "vector": "Stored history (vector store)",
+    "aoi": "Areas of interest, briefs and reports",
+    "system": "System",
+    "prediction_markets": "Prediction markets",
+    "news_signals": "News signals",
+    "liquidity": "Liquidity and money",
+    "news_market": "News and market reaction",
+    "history": "Stored history (history store)",
+    "lagged_connections": "Lagged connections between stored series",
+    "day_timeline": "Day timeline",
+    "history_backfill": "History backfill"
+  },
+  "healthScope": [
+    "circuit_breakers covers requests made by this server process since it started; the collector, dashboard and CLI keep their own. An empty map means no requests yet, not that every source is healthy.",
+    "failing_sources lists every source whose last call from this process failed, whether or not its breaker has opened. In circuit_breakers, failures is the count of failed calls since the last success (0 after a success), and a breaker opens only after several failures in a row; total_successes and total_failures count every call since the process started.",
+    "stale_serves counts, per source, the stale cached copies this process served when a live fetch failed, whatever the payload type.",
+    "cache_freshness reads the cache database: the newest entry per key prefix, written by whichever process fetched it. A fresh entry shows a recent successful fetch, not that the collector is on schedule.",
+    "cache.requested_path is the database this process was configured to use; when it could not be opened, cache.fell_back is true and db_path is a temporary database that no other process shares. cache.available is false when the database could not be read at all. cache.moved is true when the file at db_path is gone, or is not the file this process first read, while this process still holds the old one open: its numbers then come from a file no other process shares. A file replaced before this resource was first read is not detected.",
+    "keyed_sources says whether each variable is set in this server's environment. It never shows values and does not check that a key works.",
+    "Not read here: vector store statistics (intel_vector_stats) and the collector's run history (intel_collection_health). Reading this resource starts no fetches."
+  ],
+  "serverInstructions": "Read the intel://guide resource before your first tool call: it maps research questions to tools, says what the data cannot support, and marks the tools that need an API key. prompts/list has worked research prompts. intel://guide/source-health shows which sources are failing, serving stale copies or missing keys. Many tools do not mark a failure: an empty list, a zero, a LOW label, an all-clear or a false flag can mean a source failed, not that nothing happened.",
+  "casefold": {
+    "µ": "μ",
+    "ß": "ss",
+    "ŉ": "ʼn",
+    "ſ": "s",
+    "ǰ": "ǰ",
+    "ͅ": "ι",
+    "ΐ": "ΐ",
+    "ΰ": "ΰ",
+    "ς": "σ",
+    "ϐ": "β",
+    "ϑ": "θ",
+    "ϕ": "φ",
+    "ϖ": "π",
+    "ϰ": "κ",
+    "ϱ": "ρ",
+    "ϵ": "ε",
+    "և": "եւ",
+    "Ꭰ": "Ꭰ",
+    "Ꭱ": "Ꭱ",
+    "Ꭲ": "Ꭲ",
+    "Ꭳ": "Ꭳ",
+    "Ꭴ": "Ꭴ",
+    "Ꭵ": "Ꭵ",
+    "Ꭶ": "Ꭶ",
+    "Ꭷ": "Ꭷ",
+    "Ꭸ": "Ꭸ",
+    "Ꭹ": "Ꭹ",
+    "Ꭺ": "Ꭺ",
+    "Ꭻ": "Ꭻ",
+    "Ꭼ": "Ꭼ",
+    "Ꭽ": "Ꭽ",
+    "Ꭾ": "Ꭾ",
+    "Ꭿ": "Ꭿ",
+    "Ꮀ": "Ꮀ",
+    "Ꮁ": "Ꮁ",
+    "Ꮂ": "Ꮂ",
+    "Ꮃ": "Ꮃ",
+    "Ꮄ": "Ꮄ",
+    "Ꮅ": "Ꮅ",
+    "Ꮆ": "Ꮆ",
+    "Ꮇ": "Ꮇ",
+    "Ꮈ": "Ꮈ",
+    "Ꮉ": "Ꮉ",
+    "Ꮊ": "Ꮊ",
+    "Ꮋ": "Ꮋ",
+    "Ꮌ": "Ꮌ",
+    "Ꮍ": "Ꮍ",
+    "Ꮎ": "Ꮎ",
+    "Ꮏ": "Ꮏ",
+    "Ꮐ": "Ꮐ",
+    "Ꮑ": "Ꮑ",
+    "Ꮒ": "Ꮒ",
+    "Ꮓ": "Ꮓ",
+    "Ꮔ": "Ꮔ",
+    "Ꮕ": "Ꮕ",
+    "Ꮖ": "Ꮖ",
+    "Ꮗ": "Ꮗ",
+    "Ꮘ": "Ꮘ",
+    "Ꮙ": "Ꮙ",
+    "Ꮚ": "Ꮚ",
+    "Ꮛ": "Ꮛ",
+    "Ꮜ": "Ꮜ",
+    "Ꮝ": "Ꮝ",
+    "Ꮞ": "Ꮞ",
+    "Ꮟ": "Ꮟ",
+    "Ꮠ": "Ꮠ",
+    "Ꮡ": "Ꮡ",
+    "Ꮢ": "Ꮢ",
+    "Ꮣ": "Ꮣ",
+    "Ꮤ": "Ꮤ",
+    "Ꮥ": "Ꮥ",
+    "Ꮦ": "Ꮦ",
+    "Ꮧ": "Ꮧ",
+    "Ꮨ": "Ꮨ",
+    "Ꮩ": "Ꮩ",
+    "Ꮪ": "Ꮪ",
+    "Ꮫ": "Ꮫ",
+    "Ꮬ": "Ꮬ",
+    "Ꮭ": "Ꮭ",
+    "Ꮮ": "Ꮮ",
+    "Ꮯ": "Ꮯ",
+    "Ꮰ": "Ꮰ",
+    "Ꮱ": "Ꮱ",
+    "Ꮲ": "Ꮲ",
+    "Ꮳ": "Ꮳ",
+    "Ꮴ": "Ꮴ",
+    "Ꮵ": "Ꮵ",
+    "Ꮶ": "Ꮶ",
+    "Ꮷ": "Ꮷ",
+    "Ꮸ": "Ꮸ",
+    "Ꮹ": "Ꮹ",
+    "Ꮺ": "Ꮺ",
+    "Ꮻ": "Ꮻ",
+    "Ꮼ": "Ꮼ",
+    "Ꮽ": "Ꮽ",
+    "Ꮾ": "Ꮾ",
+    "Ꮿ": "Ꮿ",
+    "Ᏸ": "Ᏸ",
+    "Ᏹ": "Ᏹ",
+    "Ᏺ": "Ᏺ",
+    "Ᏻ": "Ᏻ",
+    "Ᏼ": "Ᏼ",
+    "Ᏽ": "Ᏽ",
+    "ᏸ": "Ᏸ",
+    "ᏹ": "Ᏹ",
+    "ᏺ": "Ᏺ",
+    "ᏻ": "Ᏻ",
+    "ᏼ": "Ᏼ",
+    "ᏽ": "Ᏽ",
+    "ᲀ": "в",
+    "ᲁ": "д",
+    "ᲂ": "о",
+    "ᲃ": "с",
+    "ᲄ": "т",
+    "ᲅ": "т",
+    "ᲆ": "ъ",
+    "ᲇ": "ѣ",
+    "ᲈ": "ꙋ",
+    "ẖ": "ẖ",
+    "ẗ": "ẗ",
+    "ẘ": "ẘ",
+    "ẙ": "ẙ",
+    "ẚ": "aʾ",
+    "ẛ": "ṡ",
+    "ẞ": "ss",
+    "ὐ": "ὐ",
+    "ὒ": "ὒ",
+    "ὔ": "ὔ",
+    "ὖ": "ὖ",
+    "ᾀ": "ἀι",
+    "ᾁ": "ἁι",
+    "ᾂ": "ἂι",
+    "ᾃ": "ἃι",
+    "ᾄ": "ἄι",
+    "ᾅ": "ἅι",
+    "ᾆ": "ἆι",
+    "ᾇ": "ἇι",
+    "ᾈ": "ἀι",
+    "ᾉ": "ἁι",
+    "ᾊ": "ἂι",
+    "ᾋ": "ἃι",
+    "ᾌ": "ἄι",
+    "ᾍ": "ἅι",
+    "ᾎ": "ἆι",
+    "ᾏ": "ἇι",
+    "ᾐ": "ἠι",
+    "ᾑ": "ἡι",
+    "ᾒ": "ἢι",
+    "ᾓ": "ἣι",
+    "ᾔ": "ἤι",
+    "ᾕ": "ἥι",
+    "ᾖ": "ἦι",
+    "ᾗ": "ἧι",
+    "ᾘ": "ἠι",
+    "ᾙ": "ἡι",
+    "ᾚ": "ἢι",
+    "ᾛ": "ἣι",
+    "ᾜ": "ἤι",
+    "ᾝ": "ἥι",
+    "ᾞ": "ἦι",
+    "ᾟ": "ἧι",
+    "ᾠ": "ὠι",
+    "ᾡ": "ὡι",
+    "ᾢ": "ὢι",
+    "ᾣ": "ὣι",
+    "ᾤ": "ὤι",
+    "ᾥ": "ὥι",
+    "ᾦ": "ὦι",
+    "ᾧ": "ὧι",
+    "ᾨ": "ὠι",
+    "ᾩ": "ὡι",
+    "ᾪ": "ὢι",
+    "ᾫ": "ὣι",
+    "ᾬ": "ὤι",
+    "ᾭ": "ὥι",
+    "ᾮ": "ὦι",
+    "ᾯ": "ὧι",
+    "ᾲ": "ὰι",
+    "ᾳ": "αι",
+    "ᾴ": "άι",
+    "ᾶ": "ᾶ",
+    "ᾷ": "ᾶι",
+    "ᾼ": "αι",
+    "ι": "ι",
+    "ῂ": "ὴι",
+    "ῃ": "ηι",
+    "ῄ": "ήι",
+    "ῆ": "ῆ",
+    "ῇ": "ῆι",
+    "ῌ": "ηι",
+    "ῒ": "ῒ",
+    "ΐ": "ΐ",
+    "ῖ": "ῖ",
+    "ῗ": "ῗ",
+    "ῢ": "ῢ",
+    "ΰ": "ΰ",
+    "ῤ": "ῤ",
+    "ῦ": "ῦ",
+    "ῧ": "ῧ",
+    "ῲ": "ὼι",
+    "ῳ": "ωι",
+    "ῴ": "ώι",
+    "ῶ": "ῶ",
+    "ῷ": "ῶι",
+    "ῼ": "ωι",
+    "ꭰ": "Ꭰ",
+    "ꭱ": "Ꭱ",
+    "ꭲ": "Ꭲ",
+    "ꭳ": "Ꭳ",
+    "ꭴ": "Ꭴ",
+    "ꭵ": "Ꭵ",
+    "ꭶ": "Ꭶ",
+    "ꭷ": "Ꭷ",
+    "ꭸ": "Ꭸ",
+    "ꭹ": "Ꭹ",
+    "ꭺ": "Ꭺ",
+    "ꭻ": "Ꭻ",
+    "ꭼ": "Ꭼ",
+    "ꭽ": "Ꭽ",
+    "ꭾ": "Ꭾ",
+    "ꭿ": "Ꭿ",
+    "ꮀ": "Ꮀ",
+    "ꮁ": "Ꮁ",
+    "ꮂ": "Ꮂ",
+    "ꮃ": "Ꮃ",
+    "ꮄ": "Ꮄ",
+    "ꮅ": "Ꮅ",
+    "ꮆ": "Ꮆ",
+    "ꮇ": "Ꮇ",
+    "ꮈ": "Ꮈ",
+    "ꮉ": "Ꮉ",
+    "ꮊ": "Ꮊ",
+    "ꮋ": "Ꮋ",
+    "ꮌ": "Ꮌ",
+    "ꮍ": "Ꮍ",
+    "ꮎ": "Ꮎ",
+    "ꮏ": "Ꮏ",
+    "ꮐ": "Ꮐ",
+    "ꮑ": "Ꮑ",
+    "ꮒ": "Ꮒ",
+    "ꮓ": "Ꮓ",
+    "ꮔ": "Ꮔ",
+    "ꮕ": "Ꮕ",
+    "ꮖ": "Ꮖ",
+    "ꮗ": "Ꮗ",
+    "ꮘ": "Ꮘ",
+    "ꮙ": "Ꮙ",
+    "ꮚ": "Ꮚ",
+    "ꮛ": "Ꮛ",
+    "ꮜ": "Ꮜ",
+    "ꮝ": "Ꮝ",
+    "ꮞ": "Ꮞ",
+    "ꮟ": "Ꮟ",
+    "ꮠ": "Ꮠ",
+    "ꮡ": "Ꮡ",
+    "ꮢ": "Ꮢ",
+    "ꮣ": "Ꮣ",
+    "ꮤ": "Ꮤ",
+    "ꮥ": "Ꮥ",
+    "ꮦ": "Ꮦ",
+    "ꮧ": "Ꮧ",
+    "ꮨ": "Ꮨ",
+    "ꮩ": "Ꮩ",
+    "ꮪ": "Ꮪ",
+    "ꮫ": "Ꮫ",
+    "ꮬ": "Ꮬ",
+    "ꮭ": "Ꮭ",
+    "ꮮ": "Ꮮ",
+    "ꮯ": "Ꮯ",
+    "ꮰ": "Ꮰ",
+    "ꮱ": "Ꮱ",
+    "ꮲ": "Ꮲ",
+    "ꮳ": "Ꮳ",
+    "ꮴ": "Ꮴ",
+    "ꮵ": "Ꮵ",
+    "ꮶ": "Ꮶ",
+    "ꮷ": "Ꮷ",
+    "ꮸ": "Ꮸ",
+    "ꮹ": "Ꮹ",
+    "ꮺ": "Ꮺ",
+    "ꮻ": "Ꮻ",
+    "ꮼ": "Ꮼ",
+    "ꮽ": "Ꮽ",
+    "ꮾ": "Ꮾ",
+    "ꮿ": "Ꮿ",
+    "ﬀ": "ff",
+    "ﬁ": "fi",
+    "ﬂ": "fl",
+    "ﬃ": "ffi",
+    "ﬄ": "ffl",
+    "ﬅ": "st",
+    "ﬆ": "st",
+    "ﬓ": "մն",
+    "ﬔ": "մե",
+    "ﬕ": "մի",
+    "ﬖ": "վն",
+    "ﬗ": "մխ"
+  }
+}

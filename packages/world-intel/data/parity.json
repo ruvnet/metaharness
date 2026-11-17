@@ -1,0 +1,3048 @@
+{
+  "schemaVersion": 1,
+  "upstreamCommit": "fdebf9a8de6e00ed688053dd647cafedc179708b",
+  "inventorySha256": "70b2ba9585a83af04937a3c2e65f55e5c251142e7e06a0b6ff62d288c3e3c5e7",
+  "goal": "100% tool, prompt, resource, input/output/error and state semantics parity, implemented in TypeScript and WASM only. Inventory is not implementation.",
+  "acceptance": {
+    "toolRequirements": [
+      "exact_input_schema",
+      "native_ts_dispatch",
+      "output_fixture_equivalence",
+      "error_fixture_equivalence",
+      "state_and_side_effect_equivalence",
+      "credential_and_provider_gap_disclosure"
+    ],
+    "promptRequirements": [
+      "argument_validation_equivalence",
+      "rendering_equivalence",
+      "all_referenced_tools_implemented"
+    ],
+    "resourceRequirements": [
+      "content_and_schema_equivalence",
+      "dynamic_health_truthfulness"
+    ],
+    "liveCoverageIsSeparate": true,
+    "upstreamPythonRuntimeAllowed": false,
+    "unsupportedToolsMustNotBeAdvertised": true
+  },
+  "tools": [
+    {
+      "name": "intel_market_quotes",
+      "domain": "markets",
+      "handlerSha256": "b6cbd63ce6bb5c76f41e7732d6fe559ab9e5e8f04c69caef2776e4cec5580a08",
+      "status": "fixture_verified",
+      "implementedTool": "intel_market_quotes",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/markets.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/markets.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_crypto_quotes",
+      "domain": "markets",
+      "handlerSha256": "90c5a4f8e763e6ac02d981ee8164176841bdef60a9004c740511eda10a553fe4",
+      "status": "fixture_verified",
+      "implementedTool": "intel_crypto_quotes",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/markets.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/markets.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_stablecoin_status",
+      "domain": "markets",
+      "handlerSha256": "623f98909a3f7aa2ea7b844e640b8b3e3735c0f9bee9594ad24e91e3a7c7cfbc",
+      "status": "fixture_verified",
+      "implementedTool": "intel_stablecoin_status",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/markets.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/markets.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_etf_flows",
+      "domain": "markets",
+      "handlerSha256": "73a41f22b442e334454f38a2202e99b0e6cd3aae64f89e0477b1b47d71957a4f",
+      "status": "fixture_verified",
+      "implementedTool": "intel_etf_flows",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/markets.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/markets.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_sector_heatmap",
+      "domain": "markets",
+      "handlerSha256": "f16a22ed424f3d7fc0687378079e087f5236e8fc0bba245b5a70a75691c1a219",
+      "status": "fixture_verified",
+      "implementedTool": "intel_sector_heatmap",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/finance.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/markets.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_macro_signals",
+      "domain": "markets",
+      "handlerSha256": "f61ddb8e939e9cc8f7f0a0f3dda14aa617119ffac7ac6acbee345e6083a270cd",
+      "status": "fixture_verified",
+      "implementedTool": "intel_macro_signals",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/finance.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/markets.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_commodity_quotes",
+      "domain": "markets",
+      "handlerSha256": "2c48c51110ae6200a3e15891169afd954c6cc77ed048765f069ac44b409afc3c",
+      "status": "fixture_verified",
+      "implementedTool": "intel_commodity_quotes",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/markets.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/markets.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_gas_prices",
+      "domain": "markets",
+      "handlerSha256": "9d62413b1639a6940446611e01de2d59391b6d1e874d165bf89d53fcf1e18652",
+      "status": "fixture_verified",
+      "implementedTool": "intel_gas_prices",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/markets.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/markets.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_residential_natgas",
+      "domain": "markets",
+      "handlerSha256": "4becdf33c214f79b694db6eb754f46e530fa24c2b375a66daee711e97bcc5421",
+      "status": "fixture_verified",
+      "implementedTool": "intel_residential_natgas",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/markets.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/markets.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_electricity_rates",
+      "domain": "markets",
+      "handlerSha256": "40f5a58545824d7fd0a5cc2954cb660fd89e0e51a3aaac15545c8db58421264c",
+      "status": "fixture_verified",
+      "implementedTool": "intel_electricity_rates",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/markets.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/markets.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_energy_prices",
+      "domain": "markets",
+      "handlerSha256": "d8a561fdb67d1c036c0d6d792badc7a05d862fcef89e67f7b800f10a94ca0766",
+      "status": "fixture_verified",
+      "implementedTool": "intel_energy_prices",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/markets.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/markets.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_fred_series",
+      "domain": "markets",
+      "handlerSha256": "5524d65c9449ac71896f65068b366fa5da0b35ce3864288782928e5d59132df9",
+      "status": "fixture_verified",
+      "implementedTool": "intel_fred_series",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/markets.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/markets.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_world_bank_indicators",
+      "domain": "markets",
+      "handlerSha256": "5101ed5077972e4ffaf040bfaaf9a4934b18d7b2ce2f408c3abf343a3f7d7f95",
+      "status": "fixture_verified",
+      "implementedTool": "intel_world_bank_indicators",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/markets.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/markets.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_country_stocks",
+      "domain": "markets",
+      "handlerSha256": "a6419c88187737dfef006b688b96830e122c9187254041378d4dae4ddb36e5a6",
+      "status": "fixture_verified",
+      "implementedTool": "intel_country_stocks",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/markets.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/markets.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_btc_technicals",
+      "domain": "markets",
+      "handlerSha256": "1a6a3b5405e1eefef0a98b7d63c222a5044ed871a95133f67430a5adf09797df",
+      "status": "fixture_verified",
+      "implementedTool": "intel_btc_technicals",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/finance.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/markets.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_central_bank_rates",
+      "domain": "markets",
+      "handlerSha256": "02814aba16e529062201c5c0c3b88042ebef938f47c3f8c85bd8b8efd97f7558",
+      "status": "fixture_verified",
+      "implementedTool": "intel_central_bank_rates",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/markets.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/markets.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_earthquakes",
+      "domain": "hazards",
+      "handlerSha256": "cfad7f0624034388e387967dbfbc883c7e33ae531604100052f497c0a646b08d",
+      "status": "fixture_verified",
+      "implementedTool": "intel_earthquakes",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/hazards.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/hazards.test.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/mcp.test.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/parity-server.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_wildfires",
+      "domain": "hazards",
+      "handlerSha256": "43dfa974a65c3b135406dab6b1c7f72a8a76be264ee285883a7824d15b25507b",
+      "status": "fixture_verified",
+      "implementedTool": "intel_wildfires",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/hazards.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/hazards.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_climate_anomalies",
+      "domain": "hazards",
+      "handlerSha256": "b3d9a2637472bdd6e51c9dafe293e2127b5d46f5cc6641ae5bf24953aa4a3bab",
+      "status": "fixture_verified",
+      "implementedTool": "intel_climate_anomalies",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/hazards.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/hazards.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_space_weather",
+      "domain": "hazards",
+      "handlerSha256": "8979a4330383e436f5c3e337bcf414778523571ee01cfc3ef99916c2077ebb99",
+      "status": "fixture_verified",
+      "implementedTool": "intel_space_weather",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/hazards.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/hazards.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_environmental_events",
+      "domain": "hazards",
+      "handlerSha256": "f46ca2862453888c55866c72cb5ecf56b33805e2ca2b684b8906e73dae7d309f",
+      "status": "fixture_verified",
+      "implementedTool": "intel_environmental_events",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/hazards.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/hazards.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_disaster_alerts",
+      "domain": "hazards",
+      "handlerSha256": "1fa98206ee7cca12a968894b2b3e6d122a5f8ffc3992f107c4dc117e1ea162d4",
+      "status": "fixture_verified",
+      "implementedTool": "intel_disaster_alerts",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/hazards.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/hazards.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_weather_alerts",
+      "domain": "hazards",
+      "handlerSha256": "341b3d3afabeb1b11aadd792b4babdcac4ec356875825ab569fd374b887f2384",
+      "status": "fixture_verified",
+      "implementedTool": "intel_weather_alerts",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/hazards.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/hazards.test.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/mcp.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_launch_schedule",
+      "domain": "hazards",
+      "handlerSha256": "dcfcd396b438f6ebca58573fa24134200cae8cc2ec80fa050cc2e53a856fdfdf",
+      "status": "fixture_verified",
+      "implementedTool": "intel_launch_schedule",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/hazards.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/hazards.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_volcano_activity",
+      "domain": "hazards",
+      "handlerSha256": "fe05d9deaa9249926d86f5b19171f9102deed2a1c8d97c3efe854375af1a0cde",
+      "status": "fixture_verified",
+      "implementedTool": "intel_volcano_activity",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/hazards.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/hazards.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_cyclones",
+      "domain": "hazards",
+      "handlerSha256": "6ace9f8541ab1f46e2949f0194dc10b9918c5971661588ce70db3df9d1ec83a8",
+      "status": "fixture_verified",
+      "implementedTool": "intel_cyclones",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/hazards.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/hazards.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_meteoalarm_alerts",
+      "domain": "hazards",
+      "handlerSha256": "7aafe4afd6868dbc522aefca709b383a84a7a540c449a3d9f19b0219990c7a10",
+      "status": "fixture_verified",
+      "implementedTool": "intel_meteoalarm_alerts",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/hazards.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/hazards.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_jtwc_cyclones",
+      "domain": "hazards",
+      "handlerSha256": "9e4795bc111d7ea2c3b83c40e6311b2a89e5f04d57660e0d6f3b96e7d33b547a",
+      "status": "fixture_verified",
+      "implementedTool": "intel_jtwc_cyclones",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/hazards.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/hazards.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_acled_events",
+      "domain": "conflict",
+      "handlerSha256": "8ad9cedf8d3b30e6fcfab75faefacd0666e5a7d38a91b668d0e24baefc2b0f96",
+      "status": "fixture_verified",
+      "implementedTool": "intel_acled_events",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/conflict.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/conflict.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_ucdp_events",
+      "domain": "conflict",
+      "handlerSha256": "cb999074fdeac32ae1be7441704ecfae9428795effd3b5be169b3bc18bab9ac0",
+      "status": "fixture_verified",
+      "implementedTool": "intel_ucdp_events",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/conflict.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/conflict.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_humanitarian_summary",
+      "domain": "conflict",
+      "handlerSha256": "872a8859bfa4d040268a3ebb9ae59bb615bc53cf9ec1e11ceae3e157cba95138",
+      "status": "fixture_verified",
+      "implementedTool": "intel_humanitarian_summary",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/security.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/security.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_military_flights",
+      "domain": "conflict",
+      "handlerSha256": "035cc2dbf669834734752d22e61d24c9299b77e6e17e64c50c63152e70216ab4",
+      "status": "fixture_verified",
+      "implementedTool": "intel_military_flights",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/military-flights.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/military-flights.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_theater_posture",
+      "domain": "conflict",
+      "handlerSha256": "3632883aca3d30c59d9a8be5cd1dddce54972ca1c6420e8cd872e8341b9a08a7",
+      "status": "fixture_verified",
+      "implementedTool": "intel_theater_posture",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/strategic.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/strategic.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_aircraft_details",
+      "domain": "conflict",
+      "handlerSha256": "91f41cf3b06b81ccdbdd12738a7f5c3a2c440b3eeceb7373f3366da5a5f5671e",
+      "status": "fixture_verified",
+      "implementedTool": "intel_aircraft_details",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/security.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/security.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_aircraft_batch",
+      "domain": "conflict",
+      "handlerSha256": "4b4ed395975c20a35b509897189e79e8e25b09b2c77f9cf9135e7413ae0396eb",
+      "status": "fixture_verified",
+      "implementedTool": "intel_aircraft_batch",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/security.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/security.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_nuclear_monitor",
+      "domain": "conflict",
+      "handlerSha256": "668794ba5947dc1e3619ae9c17ece62b8ad6cca239360587c20e3d307f290a91",
+      "status": "fixture_verified",
+      "implementedTool": "intel_nuclear_monitor",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/strategic.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/strategic.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_usni_fleet",
+      "domain": "conflict",
+      "handlerSha256": "e40e1e9d740f41d32b4193ed0624e0a213592c9b038f729a30271267d218ae35",
+      "status": "implemented",
+      "implementedTool": "intel_usni_fleet",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/strategic.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_internet_outages",
+      "domain": "infrastructure",
+      "handlerSha256": "66b6261cb30c6a8cc1ac78a4bd5d09ef87dcc05f5b359d0b405979bb19a41107",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_cable_health",
+      "domain": "infrastructure",
+      "handlerSha256": "92edf3fdafc8bc5c8b98006847bd9eacd1f58a945a7aa802802cfc8f62d95b22",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_nav_warnings",
+      "domain": "infrastructure",
+      "handlerSha256": "09ba2922e2c358a69936da42494608653344ec5bfd7f840d749b91f11f9a80b9",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_airport_delays",
+      "domain": "infrastructure",
+      "handlerSha256": "59147c5e98d46bf654cbfb11dfe897525e0f899e97098e0f6779dedb6f69ad20",
+      "status": "fixture_verified",
+      "implementedTool": "intel_airport_delays",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/aviation.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/aviation.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_aviation_domestic",
+      "domain": "infrastructure",
+      "handlerSha256": "010c39f4e08f527a37340a3c5a62807f237b265489804d2b2bb76ed9592f2562",
+      "status": "fixture_verified",
+      "implementedTool": "intel_aviation_domestic",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/aviation.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/aviation.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_traffic_flow",
+      "domain": "infrastructure",
+      "handlerSha256": "94d32a105779f21b66f441a249a96bce14d154a7650de0f4b48e441de45c9006",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_traffic_incidents",
+      "domain": "infrastructure",
+      "handlerSha256": "33b9c8620ed782f0eb319e0103d4aad93d9072f519371110130d1aa3d1685937",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_webcams",
+      "domain": "infrastructure",
+      "handlerSha256": "1d0b203c83bffcc92fd53a3f87c5d6d57dbbe9d6705fec53c555c25be438e14b",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_shipping_index",
+      "domain": "infrastructure",
+      "handlerSha256": "0ebe9318151069331b8bff80d13a1c74dc0b10906cfa8560e7f691f6e285b591",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_service_status",
+      "domain": "infrastructure",
+      "handlerSha256": "3d9bd4f0c7f2bd9fb6bd8b9c07911e05c9729e5e86f4e94490fb788f6328c0f1",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_bgp_status",
+      "domain": "infrastructure",
+      "handlerSha256": "1599d85c130a848b50d82ebd8826b133bff760743f1837adbf3751baa2e2e79c",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_jet_cohort_snapshot",
+      "domain": "infrastructure",
+      "handlerSha256": "97f384a212e909277c140c227fcf710c7a0ce5345c09012e8be53a8f01f4570a",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_jet_activity_anomaly",
+      "domain": "infrastructure",
+      "handlerSha256": "2ad6acef2ae9036955dfc93795b36a27ef394b1e1cff750fd52072598f2e6a65",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_jet_excess_origins",
+      "domain": "infrastructure",
+      "handlerSha256": "bf9fafe0ac002b24b1338cf67aeabf35e17b5931307bcd4ac8a67d696016beac",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_prediction_markets",
+      "domain": "society",
+      "handlerSha256": "862eef189351b4710ccd368a19899483520e708f91dcd25ca8b4098b745556b1",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_displacement_summary",
+      "domain": "society",
+      "handlerSha256": "676f2da1259a10fec31f80dfa7e25c013b49e0080f0284f2d95cecb1117258f1",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_migration_flows",
+      "domain": "society",
+      "handlerSha256": "704fd17a43dd283984087b6c00931df8286ee9b311d2b57a33be2aa75e71625d",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_migration_surges",
+      "domain": "society",
+      "handlerSha256": "dfae2b4974fe9a4e94ae3e215b35e4df7a2dfbe8e2a86841e1835be72bf019e2",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_migration_history",
+      "domain": "society",
+      "handlerSha256": "f28b698d8a66e6933a5496a995bcbf760672e4ea7419254c811fbd209ddd7db1",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_net_migration",
+      "domain": "society",
+      "handlerSha256": "067b3f59b987f00f8e0c12490c88d05c3d4f68c949450e3bf5a02cb5bc8db849",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_us_border_encounters",
+      "domain": "society",
+      "handlerSha256": "62e295c57b166e81ee5a5e5b149bef1c4444fc24d34ef08150222156cabe989d",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_uk_small_boat_arrivals",
+      "domain": "society",
+      "handlerSha256": "abe9a66be381a7169ccc87af5c88f50cbce8b43d95209157cc4aece4c8cee886",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_cyber_threats",
+      "domain": "society",
+      "handlerSha256": "853da849cc0c469f76bceb27b12f630f1a41bbb1f829b9779e36108dec306302",
+      "status": "fixture_verified",
+      "implementedTool": "intel_cyber_threats",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/security.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/security.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_news_feed",
+      "domain": "society",
+      "handlerSha256": "16bfa8c66555596137c5f92785733031275db17abfb727f4c82046cbc78bb733",
+      "status": "implemented",
+      "implementedTool": "intel_news_feed",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/news.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_trending_keywords",
+      "domain": "society",
+      "handlerSha256": "ed0110001c7ab7c250494ecf1c6cbc0e4cbc1b08a6e0d05b2d377cf2e63cc7c2",
+      "status": "implemented",
+      "implementedTool": "intel_trending_keywords",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/news.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_gdelt_search",
+      "domain": "society",
+      "handlerSha256": "afdb06f32c5565d22b6c6b3b0c849ecedb4edd8c727c262257486cc07a1f873a",
+      "status": "implemented",
+      "implementedTool": "intel_gdelt_search",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/news.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_ai_releases",
+      "domain": "society",
+      "handlerSha256": "8b59066a70e3e1dc73574e56781e5788a8e977e390fce0cdcdc3b84a4d3235c9",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_disease_outbreaks",
+      "domain": "society",
+      "handlerSha256": "21b972d3d93ea5a96b0bc7d16440955a4aa4e8558a2f602b06df26c34cd10142",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_sanctions_search",
+      "domain": "society",
+      "handlerSha256": "85d73342447554ae03e9d59a6d1af95951a97ab82fa13d1c60425a6d0d94714d",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_election_calendar",
+      "domain": "society",
+      "handlerSha256": "9b79619c19645a517fc4d160ba44b71916cad3de33106fcaf1bc68243c4fa312",
+      "status": "fixture_verified",
+      "implementedTool": "intel_election_calendar",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/elections.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/elections.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_social_signals",
+      "domain": "society",
+      "handlerSha256": "308ce813f794753924976a46ddcd0dbd877611463148afbda557884b6397cedc",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_hacker_news",
+      "domain": "society",
+      "handlerSha256": "ace601bacf5ba4aee46b2bcb6965d11f948127c37e25e1d00d5176a5a94783bd",
+      "status": "fixture_verified",
+      "implementedTool": "intel_hacker_news",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/tech.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/tech.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_trending_repos",
+      "domain": "society",
+      "handlerSha256": "e968eb2de883ccf9b155bc5616e8375f59d4f59c7df7bda6b796764e0923ca59",
+      "status": "fixture_verified",
+      "implementedTool": "intel_trending_repos",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/tech.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/tech.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_arxiv_papers",
+      "domain": "society",
+      "handlerSha256": "08084a938462a2966d5de08a105dedbd33c23a3bccfa50a64821b1d0093d85b8",
+      "status": "fixture_verified",
+      "implementedTool": "intel_arxiv_papers",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/tech.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/tech.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_usa_spending",
+      "domain": "society",
+      "handlerSha256": "d3cd0cf05a8cd91cccfcb7221251a06b29134d478b09b325dbefc72375be5da2",
+      "status": "fixture_verified",
+      "implementedTool": "intel_usa_spending",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/tech.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/tech.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_kalshi_markets",
+      "domain": "prediction_markets",
+      "handlerSha256": "1fd25acd097a4f90e355847a8951451a2fb0c2de7c0d41232865ba2d62d90734",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_prediction_compare",
+      "domain": "prediction_markets",
+      "handlerSha256": "21dfa6aab5ae19cfe23f5b5ac3c4e139ee5bb9d041e1ff2a913729ebdbf9b505",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_prediction_settled",
+      "domain": "prediction_markets",
+      "handlerSha256": "50ae2e2e8b6b78819f39c2bc2bcc4d54235af061577cdb7fe33f0b9c688afcf3",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_country_brief",
+      "domain": "intelligence",
+      "handlerSha256": "771738e1ec254e8f88c184c4f111ac70ccb55ad7061dad5926f0c0f07128994e",
+      "status": "implemented",
+      "implementedTool": "intel_country_brief",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/intelligence.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_country_dossier",
+      "domain": "intelligence",
+      "handlerSha256": "82d668530790ff6f9475888ff6964378922c6b04fb1b1eb5a7e467a348da882d",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_risk_scores",
+      "domain": "intelligence",
+      "handlerSha256": "44f0fc4da00e1b1099b08054a2cfec79c31b1189e4ae29f652b85b5305c7e011",
+      "status": "fixture_verified",
+      "implementedTool": "intel_risk_scores",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/intelligence.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/intelligence.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_instability_index",
+      "domain": "intelligence",
+      "handlerSha256": "9a2989fca0766e495e54b41b737c0b3a7b86aca4a33b951fa432f491dff12cc7",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_signal_convergence",
+      "domain": "intelligence",
+      "handlerSha256": "a4d85d99e1ace4bf5f65c897d6a6c72e8af26b2df667338d27608fccfd623aca",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_focal_points",
+      "domain": "intelligence",
+      "handlerSha256": "17f55141b78996f1fe064ae170ec8205e425cd54e028afa494bb49dbcc08dca6",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_signal_summary",
+      "domain": "intelligence",
+      "handlerSha256": "db056cd517e7ab1beb8972c80918f6c6a3a165572c5b619796f41d5eef39aad4",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_temporal_anomalies",
+      "domain": "intelligence",
+      "handlerSha256": "3cb1a05bf9c8bd56fc46aa01ee9008292e85442c9d8a072fec5b7b32011e11a6",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_unrest_events",
+      "domain": "intelligence",
+      "handlerSha256": "11dcee667b7587e278b24fd609002b67e576b348ef984164a3be09fb29efb479",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_hotspot_escalation",
+      "domain": "intelligence",
+      "handlerSha256": "c3103c02e020b3d12567cb86211c81524bbc7e275a91b94979110b5acd7483f6",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_military_surge",
+      "domain": "intelligence",
+      "handlerSha256": "bfe8af6a8fa3d045c9d88c4ffa7a862f7d865ab0cb6eefe70dd670d967cac25d",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_vessel_snapshot",
+      "domain": "intelligence",
+      "handlerSha256": "955b540bc83ba104e939114b8cc6796f4e9957ec80a1d278f0f80bf29557915a",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_cascade_analysis",
+      "domain": "intelligence",
+      "handlerSha256": "94b4950a48df4312856f6d927d44f9b41e5c319ff6dd765376b1230aa0f2240a",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_alert_digest",
+      "domain": "intelligence",
+      "handlerSha256": "c41c36a5ec289fb33ed08aa34267890e67f4ae4d91b155e21dd431bce815b51a",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_weekly_trends",
+      "domain": "intelligence",
+      "handlerSha256": "d25798e010c65f7d4cc7b0c8056fd6d3e2193223ff0a6dc5146c05f178444338",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_military_bases",
+      "domain": "geospatial",
+      "handlerSha256": "8c3589ec8993a3131b922a0c76db2ed47e58ec07c4319e5b6f8b485bd83ae1c1",
+      "status": "fixture_verified",
+      "implementedTool": "intel_military_bases",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/registry.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/geospatial.test.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/parity-server.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_strategic_ports",
+      "domain": "geospatial",
+      "handlerSha256": "50196ae6a9220c78c563a608739868b727956c3a047ec68952abacbdc9be21f4",
+      "status": "implemented",
+      "implementedTool": "intel_strategic_ports",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/registry.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_pipelines",
+      "domain": "geospatial",
+      "handlerSha256": "a58f57cf758c2ae36bb913e6ebff5710dd9f2ee0b736b20fbd162d8aea35418d",
+      "status": "implemented",
+      "implementedTool": "intel_pipelines",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/registry.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_nuclear_facilities",
+      "domain": "geospatial",
+      "handlerSha256": "9d4f2e9715d6d649ce299036da2d235818286f1083672748a5a253fefec97a67",
+      "status": "implemented",
+      "implementedTool": "intel_nuclear_facilities",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/registry.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_undersea_cables",
+      "domain": "geospatial",
+      "handlerSha256": "32c4615971a92617234b2d4111d97c5e44b6807622fe8c3fcc05e2b1415ab985",
+      "status": "implemented",
+      "implementedTool": "intel_undersea_cables",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/registry.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_ai_datacenters",
+      "domain": "geospatial",
+      "handlerSha256": "706afa77fb3c5696a438ebccf1bacc78701f728c7d736b447c53f0845760dfe9",
+      "status": "implemented",
+      "implementedTool": "intel_ai_datacenters",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/registry.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_spaceports",
+      "domain": "geospatial",
+      "handlerSha256": "fc4d0bf6a560b87c1f84dfe942f2b82d705992ebc04eef864b09ee5bde90bc93",
+      "status": "implemented",
+      "implementedTool": "intel_spaceports",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/registry.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_critical_minerals",
+      "domain": "geospatial",
+      "handlerSha256": "6e9a1431c057c3fe5c401eb2cc9de3e00f3cc2c47d9f8ac3368583857e1d9dce",
+      "status": "implemented",
+      "implementedTool": "intel_critical_minerals",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/registry.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_stock_exchanges",
+      "domain": "geospatial",
+      "handlerSha256": "ae5df04f6de511731c7795722d33e75a079993209700e19a200a9101be6c3081",
+      "status": "implemented",
+      "implementedTool": "intel_stock_exchanges",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/registry.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_trade_routes",
+      "domain": "geospatial",
+      "handlerSha256": "fe09999837bc35d97628383130c577d8988c352ceac2e9f93dcbf162e62ec9b0",
+      "status": "implemented",
+      "implementedTool": "intel_trade_routes",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/registry.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_cloud_regions",
+      "domain": "geospatial",
+      "handlerSha256": "6b5cde45ce8a52557be72a9e2dc28b49c85b77f1279b2bbcd0fac255534db139",
+      "status": "implemented",
+      "implementedTool": "intel_cloud_regions",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/registry.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_financial_centers",
+      "domain": "geospatial",
+      "handlerSha256": "c0eee32625fd2d67b43a8c553ce9ba3112a678b901f70725277e86bc185500a6",
+      "status": "implemented",
+      "implementedTool": "intel_financial_centers",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/registry.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_extract_entities",
+      "domain": "synthesis",
+      "handlerSha256": "e73bf6e4bc01091562b382c5120f180cf507f7c6058779280a8dcc1e5fff836a",
+      "status": "fixture_verified",
+      "implementedTool": "intel_extract_entities",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/synthesis.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/synthesis.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_classify_event",
+      "domain": "synthesis",
+      "handlerSha256": "9a6608c553c5bc50bd067c2b7a359f58eb839e4b81d701d3c93799b8651d4cd5",
+      "status": "implemented",
+      "implementedTool": "intel_classify_event",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/synthesis.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_news_clusters",
+      "domain": "synthesis",
+      "handlerSha256": "e1b5780f7b415786260a4ebe7f9061bb6aab089132300ec8d4fbab82ff2382ca",
+      "status": "implemented",
+      "implementedTool": "intel_news_clusters",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/synthesis.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_keyword_spikes",
+      "domain": "synthesis",
+      "handlerSha256": "9b43ac3cd8037c03764eeec5ed41ec2e44e1a319f389ba13470e1baade0700c9",
+      "status": "fixture_verified",
+      "implementedTool": "intel_keyword_spikes",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/synthesis.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/news.test.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/parity-server.test.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/synthesis.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_strategic_posture",
+      "domain": "synthesis",
+      "handlerSha256": "5fc334c67c61e0a8824072052064fe8721c42f2a2d0eeb2ba5af942a19ba5f37",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_world_brief",
+      "domain": "synthesis",
+      "handlerSha256": "07f19b83002a9f9009e5102b3d17cee238e75029e40a06791a6f2e2364acba3d",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_fleet_report",
+      "domain": "synthesis",
+      "handlerSha256": "79617c07c4fed43f5c09b2ca21c0be8290adba156058b834858f88313ee48722",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_population_exposure",
+      "domain": "synthesis",
+      "handlerSha256": "5f1936101eded911a518df84cc6caf4ef670a35079324d425d1a81203310214d",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_hostility_timeline",
+      "domain": "news_signals",
+      "handlerSha256": "6f2af0d66f85b9dc80cfc55fc10b64d5af037eaaf7aec21c5fa79da4390e0ff6",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_situations",
+      "domain": "news_signals",
+      "handlerSha256": "dac630ffff92a3d1466bc19c0c20e02914666cc21c9938f28782614b4797221c",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_top_stories",
+      "domain": "news_signals",
+      "handlerSha256": "9f000697c26d1bfeb166b6995aef582b1f22961d399de2dd48896d7de8b08f23",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_forex_rates",
+      "domain": "finance",
+      "handlerSha256": "d514623217e8f0de01d195d46656490d4ec42b45e1b58f239891e6dc198f18a1",
+      "status": "fixture_verified",
+      "implementedTool": "intel_forex_rates",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/finance.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/finance.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_forex_timeseries",
+      "domain": "finance",
+      "handlerSha256": "09c90f6148ea6963a1a7e566bc0db3779b733543e2c682a37e39b272e7c744cb",
+      "status": "fixture_verified",
+      "implementedTool": "intel_forex_timeseries",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/finance.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/finance.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_major_crosses",
+      "domain": "finance",
+      "handlerSha256": "c02e72d728a59e363e05cb3c72cee9fbd3903c802a96f1a97f3f4d9e85db9135",
+      "status": "fixture_verified",
+      "implementedTool": "intel_major_crosses",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/finance.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/finance.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_yield_curve",
+      "domain": "finance",
+      "handlerSha256": "4be37c0aafb9bb2c00fc7a81ff1313c384acd9149530fec9d86d41e49896f73e",
+      "status": "fixture_verified",
+      "implementedTool": "intel_yield_curve",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/finance.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/finance.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_bond_indices",
+      "domain": "finance",
+      "handlerSha256": "3809ae70e6aabd75f7ced7afc329b4270e7a14a2bf07ca8d5a547ab49912f00f",
+      "status": "fixture_verified",
+      "implementedTool": "intel_bond_indices",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/finance.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/finance.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_earnings_calendar",
+      "domain": "finance",
+      "handlerSha256": "1e87c292b030cbf77d9ae3afeff748b2ead405b2d9a424c8d327b338fafb098b",
+      "status": "fixture_verified",
+      "implementedTool": "intel_earnings_calendar",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/finance.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/finance.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_earnings_surprise",
+      "domain": "finance",
+      "handlerSha256": "9ff3a8a83a4829f3d596a8685c79f2593a81a398a41e694673e266335e95970b",
+      "status": "fixture_verified",
+      "implementedTool": "intel_earnings_surprise",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/finance.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/finance.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_sec_filings",
+      "domain": "finance",
+      "handlerSha256": "f859569f6b2d632f349b891094e2313a98ba88b885ff4884521f17e3605127fc",
+      "status": "fixture_verified",
+      "implementedTool": "intel_sec_filings",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/finance.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/finance.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_company_filings",
+      "domain": "finance",
+      "handlerSha256": "34fd5d9e8960c0e48687e4b2c585b9eb5d3a39bf546ccadf6bca70f951b5385d",
+      "status": "fixture_verified",
+      "implementedTool": "intel_company_filings",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/finance.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/finance.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_recent_8k",
+      "domain": "finance",
+      "handlerSha256": "4d97ad815bd53c8a167e5af59887fdf70ace4592dcc5af6b613473dfd042eec3",
+      "status": "fixture_verified",
+      "implementedTool": "intel_recent_8k",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/finance.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/finance.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_company_profile",
+      "domain": "finance",
+      "handlerSha256": "658a70bbaedf33785edb6016227b04106fcdda911a35602095da68c4fd87a51e",
+      "status": "fixture_verified",
+      "implementedTool": "intel_company_profile",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/finance.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/finance.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_macro_composite",
+      "domain": "finance",
+      "handlerSha256": "c43eb7d379a73b7b973a3c1beeb1895f5c1cce38f1561a4774278761e43f96fc",
+      "status": "implemented",
+      "implementedTool": "intel_macro_composite",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/finance.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_liquidity_board",
+      "domain": "liquidity",
+      "handlerSha256": "74ea7bc5fb54860afea7e28d362583dbf97e0781cd66074b62ccb14bb9ba81d2",
+      "status": "fixture_verified",
+      "implementedTool": "intel_liquidity_board",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/liquidity.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/liquidity.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_net_liquidity",
+      "domain": "liquidity",
+      "handlerSha256": "18f18126e23a4b0c7fa642c3288893d85551c9057d4ffc70a1c27ac4997b5ef7",
+      "status": "fixture_verified",
+      "implementedTool": "intel_net_liquidity",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/liquidity.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/liquidity.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_money_supply",
+      "domain": "liquidity",
+      "handlerSha256": "355400962eba80552cf12b34a52fa28e6e11a6b650078ab8b8eaf8ad4b46cc11",
+      "status": "fixture_verified",
+      "implementedTool": "intel_money_supply",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/liquidity.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/liquidity.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_fed_liquidity_series",
+      "domain": "liquidity",
+      "handlerSha256": "c0285acbbf5155148a66e90e3130787b3a16e7970d50d789f2b54e72f0a16dac",
+      "status": "fixture_verified",
+      "implementedTool": "intel_fed_liquidity_series",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/liquidity.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/liquidity.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_ecb_series",
+      "domain": "liquidity",
+      "handlerSha256": "746bfdc48f9037e531b93e99b4029c7219e6583151f4ef176be4d99c307c8c82",
+      "status": "fixture_verified",
+      "implementedTool": "intel_ecb_series",
+      "evidence": [
+        {
+          "kind": "exact_input_schema",
+          "path": "src/parity-server.ts"
+        },
+        {
+          "kind": "native_ts_dispatch",
+          "path": "src/domains/liquidity.ts"
+        },
+        {
+          "kind": "named_fixture_tests",
+          "path": "tests/liquidity.test.ts"
+        }
+      ],
+      "notes": "Native registration and exact advertised input schema checked offline. Named fixture tests, where linked, cover selected cases only; no claim of exhaustive output/error/state equivalence or live provider verification."
+    },
+    {
+      "name": "intel_news_market_reaction",
+      "domain": "news_market",
+      "handlerSha256": "3750d2ee1672d72a869ce5e23975f995403076ca7cdbda380c549ae1d4823ec4",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_semantic_search",
+      "domain": "vector",
+      "handlerSha256": "226642c3eacb273b180398cd355eeb3763c4fb1c1bd5b4a773a103cd265edd9f",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_similar_events",
+      "domain": "vector",
+      "handlerSha256": "ffa915ae2dd666f0c3e621ef2554d383bb701e9abc56ae19028d0c340078ab8c",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_timeline",
+      "domain": "vector",
+      "handlerSha256": "e0c474effca1e1619998bc272745e8b37b11f86f210aad089974bd60c37be6a2",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_vector_stats",
+      "domain": "vector",
+      "handlerSha256": "8143f24896ccd69ef24bb80612523ec03c86ce5e2e0a4c1212b9dde241d26884",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_collect",
+      "domain": "vector",
+      "handlerSha256": "c224fd6254f74ca096b58e05a982fbf2d17ab3c812be1bdf085f8cba40dd0382",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_cross_correlate",
+      "domain": "vector",
+      "handlerSha256": "9638933394960f2324c8d1af3f14a67cd4e9d4fc31f44b17784544c211eec157",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_domain_summary",
+      "domain": "vector",
+      "handlerSha256": "664f21d510db0962d6e520a4d888caeb887616c4cdfddb97c0f65590e145d5ca",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_trend_detection",
+      "domain": "vector",
+      "handlerSha256": "31e6a298b7e5507547b9e1a978924e5202fd4a5bc983007031a797c8b7e20898",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_daily_digest",
+      "domain": "aoi",
+      "handlerSha256": "6eb9bd4f0ac89bfa6406bc9ed492b7566fd3c351fb9b7fee0b8376eeb93cc87c",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_aoi_define",
+      "domain": "aoi",
+      "handlerSha256": "cc11b35574ec155229209eea4e81090e0b1357ae2eab337dbbbd56fa84ec4724",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_aoi_list",
+      "domain": "aoi",
+      "handlerSha256": "26738f0798ebb923ce6e1ec2bc1c5f680e167ef9d11c92703d96fb17c659317c",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_aoi_delete",
+      "domain": "aoi",
+      "handlerSha256": "b4166a413684d2ea1af361805782abc89475e83cd93e39694c53328cf143da84",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_aoi_brief",
+      "domain": "aoi",
+      "handlerSha256": "64d51fdf8aa597da26a72e62cb90a0005a1b4a6ca1a27a92c017781db453d1af",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_aoi_escalation",
+      "domain": "aoi",
+      "handlerSha256": "6460904fb0aaab7cc6dd85bd43424970120b0635d8f67c4343b8f5fd172169ee",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_aoi_update",
+      "domain": "aoi",
+      "handlerSha256": "0c57a64340ffa26dda497803aa658636ce9f3f0c212bb8dc958c8617653d66e1",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_aoi_define_polygon",
+      "domain": "aoi",
+      "handlerSha256": "3283e530a48b41302ebd9753811ee3bf5388e57ce5fded15454ecaac1b690f65",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_aoi_define_corridor",
+      "domain": "aoi",
+      "handlerSha256": "bd5e2a64552cc8d93768f5b622a7f9bfcf057b6093da7c72b4281105af43afc8",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_aoi_changes",
+      "domain": "aoi",
+      "handlerSha256": "7ad257cfab544ab2db2c06e56d69dd7ea1f427cd225673cf197c676bd21fee56",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_aoi_digest",
+      "domain": "aoi",
+      "handlerSha256": "47a8c0470bd069a10cd2b81f767fe0566615bcddb3fce68e04931e8a48dd4f95",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_situation_brief",
+      "domain": "aoi",
+      "handlerSha256": "ff5db8303ef9179e68bda6d19c4f095944f6292d0fe97b8bd69bce1fdf875925",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_generate_report",
+      "domain": "aoi",
+      "handlerSha256": "3dc9b8cf90552fc98ec4b14324b0468808c4dbc9a4c995853e520c13f0bce8f4",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_collection_health",
+      "domain": "history",
+      "handlerSha256": "99039065c9ba9c2503929fef40bd1769df8eb649bfaabd58eb6acbca8529dba5",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_capture_history",
+      "domain": "history",
+      "handlerSha256": "d07c32a31e9b5262a953963b50818a588a641728e57f048534f545e5f5c53db2",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_series_history",
+      "domain": "history",
+      "handlerSha256": "bd7ad394cdbab3ebbc6888028c7bed4d208da360cfa2fe4e076c1edefb2ca3c1",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_revisions",
+      "domain": "history",
+      "handlerSha256": "4c9bf929e04e1c281a71b9447e3c75e8e1dad5dea76c1f77158ab16a05c7e5b1",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_lagged_connections",
+      "domain": "lagged_connections",
+      "handlerSha256": "f2d71ecedbaf6c8ca920f6f77a87e946aed1918d6e1eb0a7f874506764536e75",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_day_timeline",
+      "domain": "day_timeline",
+      "handlerSha256": "ceaae42b5feb672309b05917039b49b352a5beb9c7b92b1ad2992a36844d7947",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_history_backfill",
+      "domain": "history_backfill",
+      "handlerSha256": "af4fc1d7a780b5acbad7e167a4ed1ae46c23a2473d56b89823d3521aa2fb146e",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    },
+    {
+      "name": "intel_status",
+      "domain": "system",
+      "handlerSha256": "7fa1ebafd5f3052ead9f38e5a06e992a0a04fb2c5c90d99e40e7a06b94917a52",
+      "status": "missing",
+      "implementedTool": null,
+      "evidence": [],
+      "notes": "Not advertised by the default native registry. Configured-store-only capabilities may exist but are not part of this default surface."
+    }
+  ],
+  "prompts": [
+    {
+      "name": "conflict-trend",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [
+        "intel_unrest_events"
+      ],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "hotspot-escalation",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [
+        "intel_hotspot_escalation",
+        "intel_military_surge"
+      ],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "market-risk-snapshot",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "yield-curve-check",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [
+        "intel_history_backfill",
+        "intel_series_history"
+      ],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "central-bank-compare",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [
+        "intel_history_backfill",
+        "intel_series_history"
+      ],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "fx-move",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "company-events",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [
+        "intel_news_market_reaction"
+      ],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "energy-pressure",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "crypto-structure",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "earthquake-exposure",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [
+        "intel_population_exposure"
+      ],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "severe-weather",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "wildfire-situation",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "space-weather-impact",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [
+        "intel_internet_outages",
+        "intel_service_status"
+      ],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "displacement-history",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [
+        "intel_migration_history",
+        "intel_migration_flows",
+        "intel_displacement_summary",
+        "intel_us_border_encounters"
+      ],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "migration-surges",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [
+        "intel_migration_surges",
+        "intel_net_migration",
+        "intel_us_border_encounters",
+        "intel_uk_small_boat_arrivals"
+      ],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "airspace-anomaly",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [
+        "intel_jet_cohort_snapshot",
+        "intel_jet_activity_anomaly",
+        "intel_jet_excess_origins"
+      ],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "airport-disruption",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "cyber-landscape",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "internet-disruption",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [
+        "intel_internet_outages",
+        "intel_bgp_status",
+        "intel_cable_health",
+        "intel_cascade_analysis"
+      ],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "cloud-incidents",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [
+        "intel_service_status"
+      ],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "maritime-chokepoints",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [
+        "intel_vessel_snapshot",
+        "intel_nav_warnings",
+        "intel_shipping_index"
+      ],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "aoi-watch-setup",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [
+        "intel_aoi_define",
+        "intel_aoi_define_polygon",
+        "intel_aoi_define_corridor",
+        "intel_aoi_brief",
+        "intel_aoi_changes"
+      ],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "aoi-review",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [
+        "intel_aoi_list",
+        "intel_aoi_changes",
+        "intel_aoi_escalation",
+        "intel_aoi_brief",
+        "intel_aoi_digest"
+      ],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "story-breadth",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [
+        "intel_top_stories",
+        "intel_situations",
+        "intel_hostility_timeline"
+      ],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "election-watch",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [
+        "intel_country_dossier",
+        "intel_social_signals",
+        "intel_prediction_markets",
+        "intel_kalshi_markets",
+        "intel_prediction_compare"
+      ],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "sanctions-screen",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [
+        "intel_sanctions_search"
+      ],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "disease-watch",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [
+        "intel_disease_outbreaks"
+      ],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "history-recall",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [
+        "intel_domain_summary",
+        "intel_semantic_search",
+        "intel_timeline",
+        "intel_similar_events",
+        "intel_series_history",
+        "intel_collection_health"
+      ],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    },
+    {
+      "name": "country-overview",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_rendering_and_argument_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "missingReferencedTools": [
+        "intel_country_dossier",
+        "intel_instability_index",
+        "intel_signal_summary"
+      ],
+      "notes": "Rendering/validation fixtures exist; referenced tool completeness and exhaustive rendering equivalence are not certified."
+    }
+  ],
+  "resources": [
+    {
+      "uri": "intel://guide",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_resource_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "notes": "Native resources and selected fixtures exist. Local source health intentionally differs from upstream and does not claim unobserved provider health."
+    },
+    {
+      "uri": "intel://guide/source-health",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_resource_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "notes": "Native resources and selected fixtures exist. Local source health intentionally differs from upstream and does not claim unobserved provider health."
+    },
+    {
+      "uri": "intel://guide/measures",
+      "status": "fixture_verified",
+      "evidence": [
+        {
+          "kind": "selected_resource_tests",
+          "path": "tests/guide.test.ts"
+        }
+      ],
+      "notes": "Native resources and selected fixtures exist. Local source health intentionally differs from upstream and does not claim unobserved provider health."
+    }
+  ],
+  "auditSnapshot": {
+    "mode": "default_registry_no_credentials_no_store",
+    "registeredTools": 83,
+    "advertisedPrompts": 29,
+    "advertisedResources": 3,
+    "missingTools": [
+      "intel_internet_outages",
+      "intel_cable_health",
+      "intel_nav_warnings",
+      "intel_traffic_flow",
+      "intel_traffic_incidents",
+      "intel_webcams",
+      "intel_shipping_index",
+      "intel_service_status",
+      "intel_bgp_status",
+      "intel_jet_cohort_snapshot",
+      "intel_jet_activity_anomaly",
+      "intel_jet_excess_origins",
+      "intel_prediction_markets",
+      "intel_displacement_summary",
+      "intel_migration_flows",
+      "intel_migration_surges",
+      "intel_migration_history",
+      "intel_net_migration",
+      "intel_us_border_encounters",
+      "intel_uk_small_boat_arrivals",
+      "intel_ai_releases",
+      "intel_disease_outbreaks",
+      "intel_sanctions_search",
+      "intel_social_signals",
+      "intel_kalshi_markets",
+      "intel_prediction_compare",
+      "intel_prediction_settled",
+      "intel_country_dossier",
+      "intel_instability_index",
+      "intel_signal_convergence",
+      "intel_focal_points",
+      "intel_signal_summary",
+      "intel_temporal_anomalies",
+      "intel_unrest_events",
+      "intel_hotspot_escalation",
+      "intel_military_surge",
+      "intel_vessel_snapshot",
+      "intel_cascade_analysis",
+      "intel_alert_digest",
+      "intel_weekly_trends",
+      "intel_strategic_posture",
+      "intel_world_brief",
+      "intel_fleet_report",
+      "intel_population_exposure",
+      "intel_hostility_timeline",
+      "intel_situations",
+      "intel_top_stories",
+      "intel_news_market_reaction",
+      "intel_semantic_search",
+      "intel_similar_events",
+      "intel_timeline",
+      "intel_vector_stats",
+      "intel_collect",
+      "intel_cross_correlate",
+      "intel_domain_summary",
+      "intel_trend_detection",
+      "intel_daily_digest",
+      "intel_aoi_define",
+      "intel_aoi_list",
+      "intel_aoi_delete",
+      "intel_aoi_brief",
+      "intel_aoi_escalation",
+      "intel_aoi_update",
+      "intel_aoi_define_polygon",
+      "intel_aoi_define_corridor",
+      "intel_aoi_changes",
+      "intel_aoi_digest",
+      "intel_situation_brief",
+      "intel_generate_report",
+      "intel_collection_health",
+      "intel_capture_history",
+      "intel_series_history",
+      "intel_revisions",
+      "intel_lagged_connections",
+      "intel_day_timeline",
+      "intel_history_backfill",
+      "intel_status"
+    ],
+    "note": "Snapshot refreshed by offline protocol inspection. Fixture status identifies selected tests, not exhaustive parity; rerun tests independently."
+  }
+}

@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: MIT
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { createWorldIntelServer } from './mcp.js';
+import { createParityServer } from './parity-server.js';
+import { createNativeRegistry } from './registry.js';
 import { WorldIntelClient } from './sources.js';
 import { runIntelObservation } from './harness.js';
 
@@ -14,7 +15,7 @@ async function main(): Promise<void> {
     return;
   }
   if (args.length !== 0) throw new Error('Usage: metaharness-world-intel [--live-smoke]');
-  await createWorldIntelServer().connect(new StdioServerTransport());
+  await createParityServer({handlers:createNativeRegistry()}).connect(new StdioServerTransport());
 }
 main().catch((error: unknown) => {
   console.error(error instanceof Error ? error.message : 'World Intel failed');

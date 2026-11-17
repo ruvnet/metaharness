@@ -1,49 +1,48 @@
 # @metaharness/world-intel
 
-TypeScript-first public intelligence for MetaHarness, with a real AssemblyScript-generated WebAssembly geospatial kernel. No Python runtime, model, key, listener or paid API is required.
+Native TypeScript World Intel compatibility port with MetaHarness governance and a reproducible AssemblyScript WASM geospatial kernel. No Python runtime. **100% parity is the goal, not the current result.**
 
-**This is an initial implementation, not a drop-in port of upstream's 160 tools.** It currently implements USGS earthquakes, US NWS active weather alerts, four annual World Bank indicators, local capability status, and two geospatial primitives. Upstream dashboard, history, prompts/resources, financial/conflict/aircraft tools, persistent geofences and remote ChatGPT transport are not implemented.
+Pinned upstream: `marc-shade/world-intel-mcp` `fdebf9a8de6e00ed688053dd647cafedc179708b` (0.11.0, MIT). The checked-in inventory preserves all 160 tool schemas, 29 prompts, three resources, source hashes and attribution. Inventory does not imply implementation. `tools/list` advertises only handlers actually wired into the native registry; missing tools are not simulated.
 
 ## Build and run
 
-Node 22+. From this directory:
+Node >=22.13 is required for durable SQLite features. From this directory:
 
 ```sh
 npm ci --workspaces=false --ignore-scripts
 npm run build:wasm
 npm run build
 npm test
-npm run smoke:live # explicit live USGS request
-node dist/cli.js   # native MCP stdio, stdout reserved for protocol
+npm run audit:parity
+npm run audit:complete # intentionally fails until all parity requirements are met
+node dist/cli.js       # native MCP stdio, no HTTP listener
+npm run smoke:live     # explicit live USGS check of the original governed client
 ```
 
-The package-local lock allows isolated validation. The repository root lock also registers the workspace; its ordered build runs this after `@metaharness/harness`. Use the root installation for local sibling-package development. The package remains private until review.
+The isolated package lock and root workspace lock are checked in. The root ordered build runs this after `@metaharness/harness`. The package remains private and the PR is a draft.
 
-MCP tools: `intel_earthquakes`, `intel_weather_alerts`, `intel_indicator`, `intel_status`. Every data call runs through the actual MetaHarness policy gate and provenance/freshness verifier and includes hash-chained governance receipts. Verification checks structure and freshness, **not independent factual corroboration**. Zero API spend means no paid provider call, not zero infrastructure cost. No claim of useful self-learning or autonomous optimization.
+## Implemented surfaces
+
+The native registry covers static geospatial datasets; markets/liquidity/finance; hazards and cyclone forecast parsing; public technology sources; news and NLP; elections; cyber/humanitarian/aircraft metadata; and conflict adapters. The exact implemented set is computed by `audit:parity`, not a hard-coded marketing count. Four history tools can additionally be registered with an explicitly supplied `HistoryStore`. The server exposes all 29 prompt templates and three resource interfaces, but some templates reference tools still missing from this port.
+
+Each tool call passes through the actual MetaHarness policy and verifier, with hash-chained receipts in MCP `_meta.governance`. Normal tool content retains upstream-shaped results. The verifier rejects explicit source errors/degraded/stale results, including nested provider flags; it is **not independent factual corroboration**, full schema equivalence or a guarantee that unmarked source data is fresh. Unsupported tools remain absent.
+
+The original four-tool `./mcp` module and typed `WorldIntelClient` are retained for compatibility with the initial slice. The CLI uses the new pinned-schema registry. They are separate interfaces; the original camelCase API is not upstream parity.
 
 ## TS + WASM division
 
-TypeScript owns transport, schemas, API adapters, caching, MCP and MetaHarness orchestration. WASM handles deterministic spherical distance and antimeridian-aware bounding-box checks. AssemblyScript source is compiled reproducibly, no Rust/Python build needed. WASM has no host imports or network capabilities. A TS fallback is explicit and parity-tested, not silently substituted. No speedup claim is made.
+TypeScript implements adapters, schemas, parsers, storage, MCP and orchestration. AssemblyScript compiles the spherical distance and antimeridian-aware bounding-box primitives to real WASM with no host imports or network. The TS fallback is explicit and tested; no performance claim is made. Static upstream dataset filters intentionally retain upstream filtering semantics rather than inventing a WASM path.
 
-```ts
-import { readFile } from 'node:fs/promises';
-import { WorldIntelClient, runIntelObservation, loadGeoWasm } from './dist/index.js';
-const run = await runIntelObservation(() => new WorldIntelClient().earthquakes({limit: 3}));
-const geo = await loadGeoWasm(await readFile('./wasm/geo.wasm'));
-console.log(run.success, run.receiptsValid, geo.backend);
-```
+## Boundaries and gaps
 
-## Trust and data semantics
+- Fixed provider endpoints, bounded payloads/timeouts and no arbitrary-URL tool. Data is untrusted, never instructions.
+- Optional keys, ACLED authorization and SEC contact identity must be explicitly supplied by the caller. No environment-secret discovery. No provider accounts, purchases or API permissions are created.
+- Mutation-capable calls (including keyword baseline updates) are denied unless the server is explicitly configured with `allowWrites:true`.
+- Runtime construction makes no network calls or persistent writes. History and persistent keyword baselines require explicit storage construction.
+- Safety improvements are disclosed as parity differences: stricter input/network limits and explicit degraded errors instead of upstream silent-empty fallback. The upstream keyword-spike `word`/`keyword` bug is fixed, not reproduced.
+- Shared persistent cache/circuit-breaker behavior, several optional provider branches, dashboard, remote transport, vector analytics and many composite/geofence tools still need implementation or equivalence evidence. See `data/parity.json` and `docs/parity.md`.
+- The compatibility military-flight adapter preserves upstream mislabeled ADSB feet/knots fields named `altitude_m`/`velocity_ms`; do not interpret these as SI units without a source-specific conversion. This defect remains an explicit correctness gap.
+- Fixture tests are not live-provider coverage. No full live sweep or 100% equivalence claim is made.
+- This is stdio only. No production deployment, ruOS/ChatGPT configuration change or public listener is performed by this PR.
 
-- Fixed HTTPS origins and paths; no arbitrary URL tool, credentials or redirects. Arguments are bounded, requests timeout, bodies and cache size are limited.
-- Provider output is untrusted data, never instructions. Observation time and retrieval time are separate; annual economic indicators are not live market measurements.
-- Cache entries are cloned to prevent accidental mutation. Stale fallback must be explicit and bounded. MetaHarness rejects stale data for promotion to a current brief, even when directly requested.
-- No alerts is not proof of safety; NWS coverage is US-only. Source errors are surfaced, not converted into empty successful observations.
-- Geospatial distance is spherical straight-line distance, not road distance, legal boundaries, surveillance or billable mileage.
-- This is stdio only. Do not expose it via an unauthenticated public bridge. Existing ruOS authentication can mediate a future install; no production configuration is changed by this PR.
-
-## Porting next
-
-Each new source needs a schema, fixed endpoint, fixtures, rate/response bounds, timestamps and source citations, negative tests and a separately recorded live check. Keep unsupported tools absent instead of returning fabricated empty data. Add persistence, authenticated remote MCP, operational sources and higher-level research only in separately reviewed slices. See `docs/adrs/ADR-324-world-intel-ts-wasm.md`.
-
-See `THIRD_PARTY_NOTICES.md` for the MIT upstream attribution. Public API terms and availability remain the providers' responsibility; no blanket unrestricted-use assertion is made.
+See `THIRD_PARTY_NOTICES.md` for the full upstream MIT notice. Provider terms remain applicable; public API access does not imply unrestricted reuse.

@@ -1,8 +1,8 @@
 {
   "name": "@metaharness/world-intel",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "TypeScript public-source intelligence MCP with MetaHarness governance and a reproducible AssemblyScript WASM geospatial kernel. Initial subset, not upstream parity.",
+  "description": "Native TypeScript World Intel compatibility port with MetaHarness governance and AssemblyScript WASM. Parity work in progress.",
   "type": "module",
   "license": "MIT",
   "repository": {
@@ -24,28 +24,32 @@
     "wasm/geo.wasm",
     "wasm/geo.ts",
     "README.md",
-    "THIRD_PARTY_NOTICES.md"
+    "THIRD_PARTY_NOTICES.md",
+    "data/**"
   ],
   "scripts": {
     "build": "tsc",
     "build:wasm": "asc wasm/geo.ts --outFile wasm/geo.wasm --runtime stub --optimize --noAssert",
     "test": "vitest run",
     "lint": "tsc --noEmit",
-    "smoke:live": "node dist/cli.js --live-smoke"
+    "smoke:live": "node dist/cli.js --live-smoke",
+    "audit:parity": "node --experimental-strip-types scripts/parity-audit.ts",
+    "audit:complete": "node --experimental-strip-types scripts/parity-audit.ts --require-complete"
   },
   "dependencies": {
     "@metaharness/harness": "0.2.1",
     "@modelcontextprotocol/sdk": "1.32.2",
+    "fast-xml-parser": "5.12.1",
     "zod": "4.6.7"
   },
   "devDependencies": {
-    "typescript": "5.9.3",
     "@types/node": "22.19.0",
-    "vitest": "4.1.12",
-    "assemblyscript": "0.27.31"
+    "assemblyscript": "0.27.31",
+    "typescript": "5.9.3",
+    "vitest": "4.1.12"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.13"
   },
   "metaharness": {
     "wasmArtifacts": [

@@ -11,3 +11,11 @@
 - Scoped GitHub workflow added; its remote result must be checked independently.
 
 Independent review found and fixed a provenance-validation gap: missing/null provenance, wrong source/origin, old/future timestamps and invalid cache ages now fail closed with verified rejection receipts. Current-brief promotion enforces a five-minute retrieval-age ceiling.
+
+## Native compatibility expansion checkpoint
+
+The new default CLI is the pinned-schema native registry, not the original four-tool adapter. The offline parity audit checks the exact160-tool/29-prompt/3-resource snapshot,259 pinned source hashes, actual MCP registration and schemas, and per-tool evidence. The complete gate intentionally fails: unimplemented and partially verified behavior remains. See machine-readable `data/parity.json` and run `npm run audit:parity` for the authoritative current counts.
+
+Additional checks: native per-domain fixtures and real SDK in-memory protocol tests; MetaHarness success/rejection receipts including nested stale/degraded flags and write-policy denial; bounded forecast ZIP/CRC/expansion/issuance parsing; optional SQLite persistence/revision tests; fixed-origin custom-port rejection; reproducible WASM unchanged. Production dependency audit returned zero vulnerabilities. This is scoped package evidence, not a full monorepo CI claim.
+
+Live checks of the new hazard adapters: USGS3 events, NWS1 alert, EONET1 event, NHC valid empty active-storm list. These four source calls succeeded without explicit degraded/error flags. Forecast tracks/cones were fixture-tested, not live-tested; no all-provider sweep claimed. No deployment or merge performed.
