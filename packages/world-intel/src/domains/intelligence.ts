@@ -1,3 +1,4 @@
+import {type SourceRuntime, type SourceRule, recordingStaleServes} from '../source-runtime.js';
 // SPDX-License-Identifier: MIT
 // Native port of country brief/risk scoring, upstream fdebf9a8. Phoenix AGI MIT.
 // See THIRD_PARTY_NOTICES.md. Optional integrations are explicit, never fabricated.
@@ -7,6 +8,7 @@ type Row=Record<string,any>;
 export type AcledReason='acled_unconfigured'|'acled_auth_failed'|'acled_fetch_failed'|'acled_stale';
 export interface AcledResult {data:Row|null;reason?:AcledReason}
 export interface IntelligenceOptions {
+ sourceRuntime?:SourceRuntime;
  fetch?:typeof globalThis.fetch;now?:()=>number;timeoutMs?:number;maxBytes?:number;
  acledQuery?:(params:Record<string,string|number>)=>Promise<AcledResult>;
  /** Caller supplies an explicitly configured LLM adapter; no localhost probe by default. */
@@ -23,7 +25,8 @@ export class IntelligenceClient {
  private async indicator(code:string,indicator:string):Promise<Row[]>{
   const url=new URL(`https://api.worldbank.org/v2/country/${code}/indicator/${indicator}`);url.search=new URLSearchParams({format:'json',per_page:'5',date:'2020:2025'}).toString();
   const key=url.href,cached=this.cache.get(key);let data:any;
-  if(cached&&this.now()-cached.at<86400000)data=structuredClone(cached.data);
+  if(this.options.sourceRuntime){try{const result=await recordingStaleServes(()=>this.options.sourceRuntime!.getJson(url,{source:'worldbank',cacheTtl:86400,maxBytes:this.options.maxBytes??4_000_000,timeoutSeconds:(this.options.timeoutMs??15000)/1000,followRedirects:false}));if(result.staleServes.length)return [];data=result.value;}catch{return [];}}
+  else if(cached&&this.now()-cached.at<86400000)data=structuredClone(cached.data);
   else{
    const controller=new AbortController();let timer:ReturnType<typeof setTimeout>|undefined;
    try{
@@ -62,3 +65,5 @@ export class IntelligenceClient {
  }
 }
 export function createIntelligenceHandlers(client=new IntelligenceClient()):DomainHandlers{return {intel_country_brief:a=>client.countryBrief(String(a.country_code??'US')),intel_risk_scores:a=>client.riskScores(Number(a.limit??20))};}
+
+export function intelligenceSourceRules():Record<string,SourceRule>{return {worldbank:{origins:['https://api.worldbank.org'],path:/^\/v2\/country\/[A-Za-z]{2}\/indicator\/(?:NY\.GDP\.MKTP\.CD|FP\.CPI\.TOTL\.ZG)$/}};}

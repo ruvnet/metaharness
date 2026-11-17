@@ -30,26 +30,26 @@ import { createInstabilityHandlers } from './domains/instability.js';
 import { createIntelligenceCompositeHandlers, type TemporalBaseline } from './domains/intelligence-composites.js';
 import { createPredictionHandlers } from './domains/prediction.js';
 import { createBorderHandlers } from './domains/borders.js';
-import { createEconomicsHandlers } from './domains/economics.js';
+import { createEconomicsHandlers, economicsSourceRules } from './domains/economics.js';
 import { createMaritimeHandlers } from './domains/maritime.js';
 import { createInfrastructureHandlers,INFRASTRUCTURE_ENDPOINTS } from './domains/infrastructure.js';
 import { createPublicSourceHandlers,publicSourceRules } from './domains/public-sources.js';
 // SPDX-License-Identifier: MIT
 import type { DomainHandlers } from './domain-runtime.js';
 import { geospatialHandlers } from './domains/geospatial.js';
-import { createHazardHandlers } from './domains/hazards.js';
+import { createHazardHandlers, hazardSourceRules } from './domains/hazards.js';
 import { createMarketHandlers,marketSourceRules, type MarketOptions } from './domains/markets.js';
 import { createLiquidityHandlers } from './domains/liquidity.js';
 import { createFinanceHandlers,financeSourceRules, type FinanceOptions } from './domains/finance.js';
-import { createTechHandlers } from './domains/tech.js';
+import { createTechHandlers, techSourceRules } from './domains/tech.js';
 import { createNewsHandlers, NewsClient, outletFor,newsSourceRules } from './domains/news.js';
 import { createSynthesisHandlers } from './domains/synthesis.js';
 import { createHistoryHandlers } from './domains/history.js';
 import { createSecurityHandlers } from './domains/security.js';
 import { createElectionHandlers } from './domains/elections.js';
-import { createConflictHandlers, createConflictClient } from './domains/conflict.js';
+import { createConflictHandlers, createConflictClient, conflictSourceRules } from './domains/conflict.js';
 import { createAviationHandlers } from './domains/aviation.js';
-import { createIntelligenceHandlers, IntelligenceClient } from './domains/intelligence.js';
+import { createIntelligenceHandlers, IntelligenceClient, intelligenceSourceRules } from './domains/intelligence.js';
 import { createStrategicHandlers } from './domains/strategic.js';
 import { createMilitaryFlightHandlers } from './domains/military-flights.js';
 import type { HistoryStore } from './history.js';
@@ -58,10 +58,10 @@ export interface NativeRegistryOptions {sourceRuntime?:SourceRuntime;markets?:Ma
 export function createNativeRegistry(options:NativeRegistryOptions={}):DomainHandlers {
  const sourceRuntime=options.sourceRuntime??new SourceRuntime({rules:nativeSourceRules()});const news=options.news??new NewsClient({sourceRuntime});const markets={...options.markets,sourceRuntime:sourceRuntime??options.markets?.sourceRuntime},finance={...options.finance,sourceRuntime:sourceRuntime??options.finance?.sourceRuntime};
  const military=createMilitaryFlightHandlers(markets);
- const conflict=createConflictClient(options.conflict);
- const handlers:DomainHandlers={...geospatialHandlers,...createAviationHandlers(),...createIntelligenceHandlers(options.intelligence??new IntelligenceClient({acledQuery:conflict.acledQuery})),...military,...createStrategicHandlers({militaryFlights:military.intel_military_flights}),...conflict.handlers,...createElectionHandlers(),...createSecurityHandlers(),...createHazardHandlers(options.hazards),...createMarketHandlers(markets),...createLiquidityHandlers(markets),...createFinanceHandlers(finance),...createTechHandlers(),...createNewsHandlers(news),...createSynthesisHandlers({newsFeed:a=>news.newsFeed(a),trendingKeywords:a=>news.trendingKeywords(a),outletFor})};
+ const conflict=createConflictClient({...options.conflict,sourceRuntime});
+ const handlers:DomainHandlers={...geospatialHandlers,...createAviationHandlers(),...createIntelligenceHandlers(options.intelligence??new IntelligenceClient({acledQuery:conflict.acledQuery,sourceRuntime})),...military,...createStrategicHandlers({militaryFlights:military.intel_military_flights}),...conflict.handlers,...createElectionHandlers(),...createSecurityHandlers(),...createHazardHandlers({...options.hazards,sourceRuntime}),...createMarketHandlers(markets),...createLiquidityHandlers(markets),...createFinanceHandlers(finance),...createTechHandlers({sourceRuntime}),...createNewsHandlers(news),...createSynthesisHandlers({newsFeed:a=>news.newsFeed(a),trendingKeywords:a=>news.trendingKeywords(a),outletFor})};
  const jetStore=options.jetStore?.store??new MemoryCohortStore();
- Object.assign(handlers,createPublicSourceHandlers({...options.publicSources,sourceRuntime:sourceRuntime??options.publicSources?.sourceRuntime}),createInfrastructureHandlers({...options.infrastructure,sourceRuntime:sourceRuntime??options.infrastructure?.sourceRuntime}),createMaritimeHandlers({sourceRuntime}),createEconomicsHandlers(),createBorderHandlers(),createPredictionHandlers(markets),createJetSnapshotHandlers({...options.jetStore,store:jetStore,sourceRuntime:sourceRuntime??options.jetStore?.sourceRuntime}),createJetActivityHandlers({store:jetStore}),createJetOriginHandlers({store:jetStore}));
+ Object.assign(handlers,createPublicSourceHandlers({...options.publicSources,sourceRuntime:sourceRuntime??options.publicSources?.sourceRuntime}),createInfrastructureHandlers({...options.infrastructure,sourceRuntime:sourceRuntime??options.infrastructure?.sourceRuntime}),createMaritimeHandlers({sourceRuntime}),createEconomicsHandlers({sourceRuntime}),createBorderHandlers(),createPredictionHandlers(markets),createJetSnapshotHandlers({...options.jetStore,store:jetStore,sourceRuntime:sourceRuntime??options.jetStore?.sourceRuntime}),createJetActivityHandlers({store:jetStore}),createJetOriginHandlers({store:jetStore}));
  const call=async(name:string,args:Record<string,unknown>):Promise<Record<string,any>>=>{const handler=handlers[name];if(!handler)return{error:`Native dependency not implemented: ${name}`,degraded:true};const value=await handler(args);if(!value||typeof value!=='object'||Array.isArray(value))return{error:`Invalid native dependency result: ${name}`,degraded:true};return value as Record<string,any>;};
  Object.assign(handlers,createVesselHandlers(call),createSystemHandlers({telemetry:sourceRuntime?sourceRuntimeTelemetry(sourceRuntime):undefined,vectorStats:options.vector?()=>options.vector!.collectionStats():undefined}),createHostilityHandlers({timeline:(q,m,d)=>news.gdeltTimeline(q,m,d)}));
  Object.assign(handlers,createConvergenceHandlers());
@@ -83,4 +83,4 @@ export function createNativeRegistry(options:NativeRegistryOptions={}):DomainHan
 }
 
 /** All URLs are pinned provider endpoints; constructing policies starts no fetches. */
-export function nativeSourceRules():Record<string,SourceRule>{return mergeSourceRules(marketSourceRules(),financeSourceRules(),newsSourceRules(),publicSourceRules([...INFRASTRUCTURE_ENDPOINTS,'https://nominatim.openstreetmap.org/reverse','https://api.adsb.lol/v2/mil','https://api.adsb.lol/v2/type/'+jetRef.BIZJET_TYPES.join(',')]));}
+export function nativeSourceRules():Record<string,SourceRule>{return mergeSourceRules(hazardSourceRules(),techSourceRules(),economicsSourceRules(),intelligenceSourceRules(),conflictSourceRules(),marketSourceRules(),financeSourceRules(),newsSourceRules(),publicSourceRules([...INFRASTRUCTURE_ENDPOINTS,'https://nominatim.openstreetmap.org/reverse','https://api.adsb.lol/v2/mil','https://api.adsb.lol/v2/type/'+jetRef.BIZJET_TYPES.join(',')]));}

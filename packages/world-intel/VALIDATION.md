@@ -56,3 +56,21 @@ Scoped world-intel and security CI checks passed on the earlier `d21` revision a
 Earlier isolated production dependency audits reported zero vulnerabilities, while a root-workspace audit had three moderate entries in pre-existing HTTP-related dependencies. Dependencies and locks have since evolved; rerun the relevant audits instead of treating that historical result as current. Stdio does not instantiate an HTTP server, but that is not a blanket security guarantee.
 
 No npm publication, production deployment, ruOS/ChatGPT configuration change, full monorepo test pass, exact behavioral parity, performance gain or autonomous-learning improvement is claimed by this document.
+
+## Native160 checkpoint, commit c66f6b8
+
+- Full suite with explicit local pinned Qdrant BGE assets: **623 tests / 70 files passed**. Without assets:622 passed, one visibly skipped integration test. No model assets are committed or automatically downloaded.
+- Actual ONNX WASM vs official FastEmbed0.7.0 development oracle: six fixtures, exact token IDs, all elements within0.0003, cosine above0.999999, identical fixture corpus rankings. This is measured tolerance-based evidence, not bit-identical or exhaustive semantic parity.
+- Root healthcheck:8/8 healthy. Own previous version mismatch and macOS temporary-directory symlink test failures were corrected.
+- Fresh isolated npmci/build/lint/test checkpoint:608 tests passed before final shared-runtime hardening.
+- Isolated production npm audit:zero vulnerabilities. Rebuilt WASM remains byte-identical at the hash above.
+- Remote scoped World Intel workflow44018498755 passed at c66f6b8. Broader CI/security were still running when checked; no all-CI claim.
+
+## Operational expansion validation
+
+- Full package suite: **777 tests / 76 files passed**, including real local pinned BGE WASM fixtures. With no model assets, one integration test is explicitly skipped.
+
+- All 87 pinned executable CLI commands dispatch in fixture tests through real MetaHarness governance. Dashboard implements 15 route registrations/14 unique paths and 47 progressive source factories. Explicit collector lifecycle preserves 61-source roster and cadence; no live listener or collector was started.
+- Full ordered monorepo build passed. Root healthcheck tests11/11 passed; root dependency audit now reports zero vulnerabilities after compatible Hono4.13.19/@hono-node-server2.1.8 lock updates.
+- Corrected Node20 SQLite-only test gating and Windows file-URL/path/POSIX-permission assumptions exposed by the previous checkpoint CI. Remote rerun remains necessary.
+- Pure mocked HTTP/SSE tests are not browser-rendering/live-provider certification. Exact terminal Rich formatting and infrastructure identity remain documented differences.

@@ -10,3 +10,6 @@ export * from './history.js';
 export * from './vector-store.js';
 export * from './local-embedding.js';
 export * from './source-runtime.js';
+export * from './collector-daemon.js';
+export * from './dashboard.js';
+export * from './dashboard-http.js';

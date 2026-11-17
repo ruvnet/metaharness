@@ -41,7 +41,7 @@ These are stdio servers, not HTTP listeners. `--data-dir` creates SQLite stores 
 
 The 15 storage-dependent tools comprise seven vector query/statistics tools, the collector, four capture/history tools, and three history analysis/backfill tools. Empty stores are empty: a tool name does not imply a populated archive or enough baseline observations.
 
-Semantic search, similarity, cross-correlation and vector ingestion additionally need a compatible embedding provider. The optional local adapter uses `@huggingface/transformers` tokenization and `onnxruntime-web` WASM inference. The supplied directory must contain `config.json`, `tokenizer.json`, `tokenizer_config.json` and `onnx/model.onnx` for BGE-small-en-v1.5. There are **no automatic model downloads**. Shape validation and injected-runtime tests do not authenticate model weights or establish exact upstream embedding equivalence; use verified local assets. Library callers may instead supply an explicit embedding provider.
+Semantic search, similarity, cross-correlation and vector ingestion additionally need a compatible embedding provider. The optional local adapter uses `@huggingface/transformers` tokenization and `onnxruntime-web` WASM inference. The supplied directory must contain `config.json`, `tokenizer.json`, `tokenizer_config.json` and `onnx/model.onnx` for BGE-small-en-v1.5. There are **no automatic model downloads**. The adapter rejects unknown model/tokenizer hashes against pinned official manifests. Six official FastEmbed reference fixtures match token IDs and rankings with vector tolerance0.0003, not bit-identical or exhaustive equivalence; see LOCAL_EMBEDDINGS.md. Library callers may instead supply an explicit embedding provider.
 
 Optional provider credentials, ACLED authorization, SEC contact User-Agent and other integrations are supplied through the library's registry/runtime options. The CLI does not discover environment secrets or expose credential flags. Storage/model configuration alone does not enable every keyed provider.
 
@@ -62,9 +62,27 @@ TypeScript implements adapters, schemas, parsing, SQLite storage, MCP and orches
 - Provider endpoints are restricted; payloads, deadlines, archives and parser expansion are bounded. Retrieved data is never treated as instructions.
 - The default registry makes no network calls or persistent writes during construction. Explicit storage construction writes local database schemas; explicit model configuration loads local assets.
 - Safety changes are disclosed as parity differences: stricter input/network limits, explicit missing-data errors, transitive write permissions and refusal to label unknown risk as low risk. Known producer/consumer field mismatches are repaired with disclosure rather than hidden zeroes.
-- Shared cache/circuit-breaker behavior, optional provider branches, every malformed/error path, embedding identity/outputs and full live coverage still need equivalence evidence. The dashboard and remote transport are not supplied by this stdio package.
+- Shared cache/circuit-breaker behavior, optional provider branches, every malformed/error path, all embedding inputs and full live coverage still need equivalence evidence. The separate dashboard is an explicit-start HTTP surface, not a deployed service or remote MCP transport.
 - Military compatibility fields preserve upstream ADSB feet/knots under misleading `altitude_m`/`velocity_ms` labels. Do not interpret those source values as SI without conversion.
 - Native HTML/PDF report support is not a claim of pixel-identical upstream rendering. Durable file output requires configured storage and write permission.
 - No ruOS/ChatGPT installation, public listener, production deployment or merge is performed by running the validation suite.
 
 See [validation checkpoints](VALIDATION.md), [parity evidence](docs/parity.md), `data/parity.json` and `THIRD_PARTY_NOTICES.md`. Public API access does not remove provider terms or attribution obligations.
+
+## Explicit operational entrypoints
+
+```sh
+# Start a write-authorized collector explicitly; --once limits it to one cycle.
+node dist/collector-cli.js --data-dir ./world-intel-data --allow-writes --once
+
+# Start the dashboard explicitly on loopback. No daemon starts with it.
+node dist/dashboard-main.js --data-dir ./world-intel-data --host 127.0.0.1 --port 8501
+```
+
+The collector defaults to serial cycles with a 300-second wait after each completed cycle when `--once` is absent. Optional local embedding assets are configured with `--embedding-model-dir`. Without them, history collection remains available but vector ingestion reports its missing provider rather than generating substitute embeddings.
+
+The dashboard ports the pinned UI/routes and progressive SSE using explicit configured stores. Loopback Host/Origin checks are intentional hardening. Starting a remote binding requires an explicit `--allow-remote`; this is not authentication or a production deployment recipe. No listener or background collector was started during development tests. See `docs/collector-daemon.md` and dashboard evidence for limitations.
+
+## Upstream command-line surface
+
+`node dist/intel-cli-main.js --help` lists all 87 pinned executable commands, including nested AOI/history/backfill commands. The `intel-ts` bin uses the same dispatcher. Commands preserve parsed defaults and aliases and run through MetaHarness governance; `--receipts` prints governance evidence to stderr. State-changing commands require explicit `--allow-writes` and configured storage. JSON output replaces upstream Rich tables; no terminal-layout identity is claimed.

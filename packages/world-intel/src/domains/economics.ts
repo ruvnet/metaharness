@@ -1,10 +1,11 @@
+import {type SourceRuntime, type SourceRule, recordingStaleServes} from '../source-runtime.js';
 // SPDX-License-Identifier: MIT
 // Native port of migration.py/displacement.py at fdebf9a8; Phoenix AGI. See THIRD_PARTY_NOTICES.md.
 import {readFileSync} from 'node:fs';
 import type {DomainHandlers} from '../domain-runtime.js';
 import {pyRound} from './markets.js';
 type Row=Record<string,any>;
-export interface EconomicsOptions {fetch?:typeof globalThis.fetch;now?:()=>number;timeoutMs?:number;maxBytes?:number}
+export interface EconomicsOptions {sourceRuntime?:SourceRuntime;fetch?:typeof globalThis.fetch;now?:()=>number;timeoutMs?:number;maxBytes?:number}
 const tier:Record<string,Row>=JSON.parse(readFileSync(new URL('../../data/synthesis/reference.json',import.meta.url),'utf8')).TIER1_COUNTRIES;
 export const UNHCR_MEASURE='UNHCR year-end stock: people from the origin present in the destination at the end of the year (refugees + asylum seekers + others in need of international protection). Year-over-year change = net arrivals minus returns, onward movement, naturalisation and deaths; not a crossing count.';
 export const WB_MEASURE='World Bank SM.POP.NETM: immigrants minus emigrants over the year, citizens and non-citizens, all reasons (work, family, study, forced). Positive = net inflow. Source is the UN World Population Prospects: modelled values, and the most recent years can be WPP projections rather than observed counts.';
@@ -28,6 +29,7 @@ class MigrationTransport {
   async json(base: string, params: Record<string, any> = {}, ttl = 1800): Promise<any> {
     const url = new URL(base); for (const [key, value] of Object.entries(params)) if (value !== undefined && value !== null) url.searchParams.set(key, String(value));
     validateMigrationUrl(url);
+    if(this.options.sourceRuntime){const {value,staleServes}=await recordingStaleServes(()=>this.options.sourceRuntime!.getJson(url,{source:url.hostname==='api.unhcr.org'?'unhcr':'worldbank',cacheTtl:ttl,maxBytes:this.options.maxBytes??4_000_000,timeoutSeconds:(this.options.timeoutMs??15000)/1000,followRedirects:false,validateUrl:validateMigrationUrl}));if(value===null||staleServes.length)throw Error('Migration provider unavailable or expired');return value;}
     const sec = false;
     const key = url.href; const cached = this.cache.get(key);
     if (cached && this.now() - cached.at < ttl * 1000) return structuredClone(cached.data);
@@ -131,3 +133,5 @@ export function createEconomicsHandlers(options:EconomicsOptions={}):DomainHandl
  };
  return handlers;
 }
+
+export function economicsSourceRules():Record<string,SourceRule>{return {unhcr:{origins:['https://api.unhcr.org'],path:/^\/population\/v1\/(countries|population)\/$/},worldbank:{origins:['https://api.worldbank.org'],path:/^\/v2\/country(?:\/(?:all|[A-Z]{3})\/indicator\/(?:SP\.POP\.TOTL|SM\.POP\.TOTL|SM\.POP\.NETM))?$/}};}

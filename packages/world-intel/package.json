@@ -17,7 +17,10 @@
     "./mcp": "./dist/mcp.js"
   },
   "bin": {
-    "world-intel-ts": "dist/cli.js"
+    "world-intel-ts": "dist/cli.js",
+    "world-intel-collect": "dist/collector-cli.js",
+    "world-intel-dashboard": "dist/dashboard-main.js",
+    "intel-ts": "dist/intel-cli-main.js"
   },
   "files": [
     "dist",

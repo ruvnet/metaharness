@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// POSIX mode 0600 applies on Unix. Windows uses inherited directory ACLs; Node mode bits do not provide POSIX-equivalent protection.
 // Lost-cycle journal contract from World Intel history.py, native filesystem implementation.
 import {openSync,closeSync,lstatSync,fstatSync,readFileSync,writeFileSync,fsyncSync,renameSync,unlinkSync,constants} from 'node:fs';
 import {randomBytes} from 'node:crypto';

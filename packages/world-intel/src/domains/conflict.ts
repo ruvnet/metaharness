@@ -1,3 +1,4 @@
+import {type SourceRuntime, type SourceRule, recordingStaleServes} from '../source-runtime.js';
 // SPDX-License-Identifier: MIT
 // Native port of pinned marc-shade/world-intel-mcp sources/conflict.py (MIT).
 import type {DomainHandlers} from '../domain-runtime.js';
@@ -7,7 +8,7 @@ export interface ConflictAnswer {data:unknown;fetchedAt?:number;staleAgeSeconds?
 export interface ConflictTransport {get(url:URL,headers:Record<string,string>,ttl:number):Promise<ConflictAnswer|null>;token(form:URLSearchParams):Promise<unknown>}
 export interface ConflictCredentials {acledEmail?:string;acledPassword?:string;acledRefreshToken?:string;ucdpAccessToken?:string}
 /** Credentials live only in the caller's injected instance, never environment/global storage. */
-export function createConflictTransport(fetcher:typeof fetch=fetch):ConflictTransport {
+export function createConflictTransport(fetcher:typeof fetch=fetch,sourceRuntime?:SourceRuntime):ConflictTransport {
  const cache=new Map<string,{data:unknown;time:number}>();
  async function request(url:URL,init:RequestInit):Promise<unknown>{
   const response=await fetcher(url,{...init,redirect:'error',credentials:'omit',signal:AbortSignal.timeout(30000)});if(!response.ok)throw new Error('Provider request failed');
@@ -16,6 +17,7 @@ export function createConflictTransport(fetcher:typeof fetch=fetch):ConflictTran
  }
  return {
   async get(url,headers,ttl){if(url.username||url.password||url.hash||url.origin+url.pathname!==ACLED&&url.origin+url.pathname!==UCDP)throw new Error('Unapproved conflict endpoint');
+   if(sourceRuntime){const o={source:url.hostname==='acleddata.com'?'acled':'ucdp',cacheTtl:ttl,maxBytes:8_000_000,timeoutSeconds:30,followRedirects:false,headers:{Accept:'application/json',...headers}};const {value,staleServes}=await recordingStaleServes(()=>sourceRuntime.getJson(url,o));if(value===null)return null;const meta=sourceRuntime.cache.getStaleMeta(sourceRuntime.cacheIdentity(url,o));return {data:value,...(meta?{fetchedAt:meta[1]}:{}),...(staleServes.length?{staleAgeSeconds:staleServes[0]!.age_seconds}:{})};}
    // The instance is credential-scoped; token rotation must not cross credential sets.
    const key=url.href+'\n'+JSON.stringify(headers),old=cache.get(key),now=Date.now()/1000;if(old&&now-old.time<ttl)return {data:old.data,fetchedAt:old.time};
    try{const data=await request(url,{headers:{Accept:'application/json',...headers}});if(cache.size>=500)cache.delete(cache.keys().next().value!);cache.set(key,{data,time:now});return {data,fetchedAt:now};}catch{return old?{data:old.data,fetchedAt:old.time,staleAgeSeconds:Math.max(0,now-old.time)}:null;}
@@ -28,9 +30,9 @@ const fields=(r:Row,keys:string[])=>Object.fromEntries(keys.map(k=>[k,r[k]??null
 const iso=(d:Date)=>d.toISOString().replace(/\.\d{3}Z$/,'Z');
 const integer=(v:unknown,fallback:number,max=100000)=>{if(v===undefined)return fallback;if(typeof v!=='number'||!Number.isSafeInteger(v)||v<1||v>max)throw new Error(`Expected integer in 1..${max}`);return v;};
 const pyInt=(v:unknown,fallback=0)=>{if(typeof v==='number'&&Number.isFinite(v))return Math.trunc(v);if(typeof v==='boolean')return Number(v);if(typeof v==='string'&&/^[+-]?\d+$/.test(v.trim()))return Number(v);return fallback;};
-export interface ConflictOptions {transport?:ConflictTransport;credentials?:ConflictCredentials;now?:()=>Date;maxPages?:number}
+export interface ConflictOptions {sourceRuntime?:SourceRuntime;transport?:ConflictTransport;credentials?:ConflictCredentials;now?:()=>Date;maxPages?:number}
 export function createConflictClient(options:ConflictOptions={}){
- const transport=options.transport??createConflictTransport(),credentials={...options.credentials},now=options.now??(()=>new Date());const maxPages=options.maxPages??1000;
+ const transport=options.transport??createConflictTransport(fetch,options.sourceRuntime),credentials={...options.credentials},now=options.now??(()=>new Date());const maxPages=options.maxPages??1000;
  if(!Number.isSafeInteger(maxPages)||maxPages<1||maxPages>10000)throw new Error('maxPages must be 1..10000');
  let access:string|undefined,expires=0,refresh=credentials.acledRefreshToken,inflight:Promise<string|undefined>|undefined;
  async function getToken():Promise<string|undefined>{
@@ -86,3 +88,5 @@ export function createConflictClient(options:ConflictOptions={}){
  return {handlers,acledQuery};
 }
 export function createConflictHandlers(options:ConflictOptions={}):DomainHandlers{return createConflictClient(options).handlers;}
+
+export function conflictSourceRules():Record<string,SourceRule>{return {acled:{origins:['https://acleddata.com'],path:/^\/api\/acled\/read$/},ucdp:{origins:['https://ucdpapi.pcr.uu.se'],path:/^\/api\/gedevents\/25\.1$/}};}

@@ -1,0 +1,3422 @@
+{
+  "upstreamCommit": "fdebf9a8de6e00ed688053dd647cafedc179708b",
+  "commands": [
+    {
+      "path": [
+        "markets"
+      ],
+      "function": "markets_cmd",
+      "description": "Stock market index quotes.",
+      "target": "intel_market_quotes",
+      "parameters": [
+        {
+          "name": "symbols",
+          "aliases": [
+            "--symbols",
+            "-s"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": true,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "symbols": "sym_list"
+      }
+    },
+    {
+      "path": [
+        "crypto"
+      ],
+      "function": "crypto",
+      "description": "Top cryptocurrency prices.",
+      "target": "intel_crypto_quotes",
+      "parameters": [
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit",
+            "-n"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 20,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "limit": "limit"
+      }
+    },
+    {
+      "path": [
+        "macro"
+      ],
+      "function": "macro",
+      "description": "7-signal macro dashboard.",
+      "target": "intel_macro_signals",
+      "parameters": [],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "energy"
+      ],
+      "function": "energy",
+      "description": "Oil and natural gas prices (EIA).",
+      "target": "intel_energy_prices",
+      "parameters": [],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "gas-prices"
+      ],
+      "function": "gas_prices",
+      "description": "US retail gasoline & diesel prices (AAA, daily).",
+      "target": "intel_gas_prices",
+      "parameters": [],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "natgas"
+      ],
+      "function": "natgas",
+      "description": "US residential natural gas prices (EIA).",
+      "target": "intel_residential_natgas",
+      "parameters": [],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "electricity"
+      ],
+      "function": "electricity",
+      "description": "US electricity retail rates (EIA).",
+      "target": "intel_electricity_rates",
+      "parameters": [
+        {
+          "name": "state",
+          "aliases": [
+            "--state",
+            "-s"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "state": "state"
+      }
+    },
+    {
+      "path": [
+        "fred"
+      ],
+      "function": "fred",
+      "description": "FRED economic data series (e.g., UNRATE, GDP, CPIAUCSL).",
+      "target": "intel_fred_series",
+      "parameters": [
+        {
+          "name": "series_id",
+          "aliases": [],
+          "positional": true,
+          "type": "string",
+          "default": null,
+          "required": true,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit",
+            "-n"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 30,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "series_id": "series_id",
+        "limit": "limit"
+      }
+    },
+    {
+      "path": [
+        "earthquakes"
+      ],
+      "function": "earthquakes",
+      "description": "Recent earthquakes (USGS).",
+      "target": "intel_earthquakes",
+      "parameters": [
+        {
+          "name": "min_mag",
+          "aliases": [
+            "--min-mag",
+            "-m"
+          ],
+          "positional": false,
+          "type": "float",
+          "default": 4.5,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "hours",
+          "aliases": [
+            "--hours",
+            "-h"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 24,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "min_magnitude": "min_mag",
+        "hours": "hours"
+      }
+    },
+    {
+      "path": [
+        "fires"
+      ],
+      "function": "fires",
+      "description": "Active wildfires (NASA FIRMS).",
+      "target": "intel_wildfires",
+      "parameters": [
+        {
+          "name": "region",
+          "aliases": [
+            "--region",
+            "-r"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "region": "region"
+      }
+    },
+    {
+      "path": [
+        "conflicts"
+      ],
+      "function": "conflicts",
+      "description": "Armed conflict events (ACLED).",
+      "target": "intel_acled_events",
+      "parameters": [
+        {
+          "name": "country",
+          "aliases": [
+            "--country",
+            "-c"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "days",
+          "aliases": [
+            "--days",
+            "-d"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 7,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "country": "country",
+        "days": "days"
+      }
+    },
+    {
+      "path": [
+        "flights"
+      ],
+      "function": "flights",
+      "description": "Military aircraft tracking (OpenSky).",
+      "target": "intel_military_flights",
+      "parameters": [
+        {
+          "name": "bbox",
+          "aliases": [
+            "--bbox",
+            "-b"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "bbox": "bbox"
+      }
+    },
+    {
+      "path": [
+        "posture"
+      ],
+      "function": "posture",
+      "description": "Military theater posture (5 theaters).",
+      "target": "intel_theater_posture",
+      "parameters": [],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "outages"
+      ],
+      "function": "outages",
+      "description": "Internet outages (Cloudflare Radar).",
+      "target": "intel_internet_outages",
+      "parameters": [],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "cables"
+      ],
+      "function": "cables",
+      "description": "Undersea cable corridor health (NGA).",
+      "target": "intel_cable_health",
+      "parameters": [],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "warnings"
+      ],
+      "function": "warnings",
+      "description": "Navigational warnings (NGA Maritime Safety).",
+      "target": "intel_nav_warnings",
+      "parameters": [
+        {
+          "name": "navarea",
+          "aliases": [
+            "--navarea",
+            "-n"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "navarea": "navarea"
+      }
+    },
+    {
+      "path": [
+        "climate"
+      ],
+      "function": "climate_cmd",
+      "description": "Climate anomalies (15 global zones vs. prior year).",
+      "target": "intel_climate_anomalies",
+      "parameters": [],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "news"
+      ],
+      "function": "news_cmd",
+      "description": "Intelligence news from 119 RSS feeds across 24 categories.",
+      "target": "intel_news_feed",
+      "parameters": [
+        {
+          "name": "category",
+          "aliases": [
+            "--category",
+            "-c"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": [
+            "geopolitics",
+            "security",
+            "technology",
+            "finance",
+            "military",
+            "science",
+            "think_tanks",
+            "middle_east",
+            "asia_pacific",
+            "africa",
+            "latin_america",
+            "multilingual",
+            "energy",
+            "government",
+            "crisis",
+            "europe",
+            "south_asia",
+            "health",
+            "central_asia",
+            "arctic",
+            "maritime",
+            "space",
+            "nuclear",
+            "climate"
+          ],
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit",
+            "-n"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 30,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "category": "category",
+        "limit": "limit"
+      }
+    },
+    {
+      "path": [
+        "trending"
+      ],
+      "function": "trending",
+      "description": "Trending keywords from recent news.",
+      "target": "intel_trending_keywords",
+      "parameters": [
+        {
+          "name": "min_count",
+          "aliases": [
+            "--min-count",
+            "-m"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 3,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "min_count": "min_count"
+      }
+    },
+    {
+      "path": [
+        "gdelt"
+      ],
+      "function": "gdelt",
+      "description": "Search GDELT 2.0 global news database.",
+      "target": "intel_gdelt_search",
+      "parameters": [
+        {
+          "name": "query",
+          "aliases": [],
+          "positional": true,
+          "type": "string",
+          "default": "conflict",
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "mode",
+          "aliases": [
+            "--mode",
+            "-m"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": "artlist",
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": [
+            "artlist",
+            "timelinevol"
+          ],
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit",
+            "-n"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 20,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "query": "query",
+        "mode": "mode",
+        "limit": "limit"
+      }
+    },
+    {
+      "path": [
+        "hostility"
+      ],
+      "function": "hostility_cmd",
+      "description": "Daily coverage and hostile coverage of a country or pair (GDELT).",
+      "target": "intel_hostility_timeline",
+      "parameters": [
+        {
+          "name": "country",
+          "aliases": [],
+          "positional": true,
+          "type": "string",
+          "default": null,
+          "required": true,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "other",
+          "aliases": [],
+          "positional": true,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "days",
+          "aliases": [
+            "--days",
+            "-d"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 14,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "country": "country",
+        "other": "other",
+        "days": "days"
+      }
+    },
+    {
+      "path": [
+        "situations"
+      ],
+      "function": "situations_cmd",
+      "description": "Ranked situations between and inside countries (RSS headlines).",
+      "target": "intel_situations",
+      "parameters": [
+        {
+          "name": "hours",
+          "aliases": [
+            "--hours",
+            "-H"
+          ],
+          "positional": false,
+          "type": "float",
+          "default": 24.0,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "sort",
+          "aliases": [
+            "--sort",
+            "-s"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": "covered",
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": [
+            "covered",
+            "hostile",
+            "change"
+          ],
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "kind",
+          "aliases": [
+            "--kind",
+            "-k"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": "all",
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": [
+            "all",
+            "between",
+            "inside"
+          ],
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit",
+            "-n"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 20,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "hours": "hours",
+        "sort": "sort",
+        "kind": "kind",
+        "limit": "limit"
+      }
+    },
+    {
+      "path": [
+        "top-stories"
+      ],
+      "function": "top_stories_cmd",
+      "description": "Stories carried by many outlets, plus who gained attention.",
+      "target": "intel_top_stories",
+      "parameters": [
+        {
+          "name": "hours",
+          "aliases": [
+            "--hours",
+            "-H"
+          ],
+          "positional": false,
+          "type": "float",
+          "default": 24.0,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "min_outlets",
+          "aliases": [
+            "--min-outlets",
+            "-m"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 3,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit",
+            "-n"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 10,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "hours": "hours",
+        "min_outlets": "min_outlets",
+        "limit": "limit"
+      }
+    },
+    {
+      "path": [
+        "predictions"
+      ],
+      "function": "predictions",
+      "description": "Prediction market movers (Polymarket).",
+      "target": "intel_prediction_markets",
+      "parameters": [
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit",
+            "-n"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 20,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "limit": "limit"
+      }
+    },
+    {
+      "path": [
+        "kalshi"
+      ],
+      "function": "kalshi",
+      "description": "Kalshi open markets by volume (public market data).",
+      "target": "intel_kalshi_markets",
+      "parameters": [
+        {
+          "name": "category",
+          "aliases": [
+            "--category",
+            "-c"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "series",
+          "aliases": [
+            "--series",
+            "-s"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit",
+            "-n"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 20,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "pages",
+          "aliases": [
+            "--pages"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 3,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "category": "category",
+        "series": "series",
+        "limit": "limit",
+        "pages": "pages"
+      }
+    },
+    {
+      "path": [
+        "prediction-compare"
+      ],
+      "function": "prediction_compare",
+      "description": "Same event on Kalshi and Polymarket, side by side.",
+      "target": "intel_prediction_compare",
+      "parameters": [
+        {
+          "name": "category",
+          "aliases": [
+            "--category",
+            "-c"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "series",
+          "aliases": [
+            "--series",
+            "-s"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "polymarket_limit",
+          "aliases": [
+            "--polymarket-limit"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 300,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "min_confidence",
+          "aliases": [
+            "--min-confidence"
+          ],
+          "positional": false,
+          "type": "float",
+          "default": 0.6,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit",
+            "-n"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 25,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "category": "category",
+        "series": "series",
+        "polymarket_limit": "polymarket_limit",
+        "min_confidence": "min_confidence",
+        "limit": "limit"
+      }
+    },
+    {
+      "path": [
+        "prediction-settled"
+      ],
+      "function": "prediction_settled",
+      "description": "Settled markets scored against pre-close prices (Brier).",
+      "target": "intel_prediction_settled",
+      "parameters": [
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit",
+            "-n"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 25,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "offsets",
+          "aliases": [
+            "--offset"
+          ],
+          "positional": false,
+          "type": "float",
+          "default": null,
+          "required": false,
+          "multiple": true,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "kalshi_category",
+          "aliases": [
+            "--kalshi-category"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": "Economics",
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "kalshi_series",
+          "aliases": [
+            "--kalshi-series"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "limit": "limit",
+        "offsets_hours": "list(offsets) or None",
+        "kalshi_category": "kalshi_category",
+        "kalshi_series": "kalshi_series"
+      }
+    },
+    {
+      "path": [
+        "displacement"
+      ],
+      "function": "displacement_cmd",
+      "description": "UNHCR displacement statistics.",
+      "target": "intel_displacement_summary",
+      "parameters": [
+        {
+          "name": "year",
+          "aliases": [
+            "--year",
+            "-y"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "year": "year"
+      }
+    },
+    {
+      "path": [
+        "migration-flows"
+      ],
+      "function": "migration_flows_cmd",
+      "description": "Largest UNHCR origin -> destination corridors (year-end stocks).",
+      "target": "intel_migration_flows",
+      "parameters": [
+        {
+          "name": "year",
+          "aliases": [
+            "--year",
+            "-y"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "origin",
+          "aliases": [
+            "--origin",
+            "-o"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "destination",
+          "aliases": [
+            "--destination",
+            "-d"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit",
+            "-n"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 25,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "min_people",
+          "aliases": [
+            "--min-people"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 0,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "year": "year",
+        "origin": "origin",
+        "destination": "destination",
+        "limit": "limit",
+        "min_people": "min_people"
+      }
+    },
+    {
+      "path": [
+        "migration-surges"
+      ],
+      "function": "migration_surges_cmd",
+      "description": "Year-over-year jumps in people displaced from each origin.",
+      "target": "intel_migration_surges",
+      "parameters": [
+        {
+          "name": "year",
+          "aliases": [
+            "--year",
+            "-y"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "min_change",
+          "aliases": [
+            "--min-change"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 50000,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit",
+            "-n"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 20,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "year": "year",
+        "min_change": "min_change",
+        "limit": "limit"
+      }
+    },
+    {
+      "path": [
+        "migration-history"
+      ],
+      "function": "migration_history_cmd",
+      "description": "One country's UNHCR displacement series and its largest waves.",
+      "target": "intel_migration_history",
+      "parameters": [
+        {
+          "name": "country",
+          "aliases": [],
+          "positional": true,
+          "type": "string",
+          "default": null,
+          "required": true,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "role",
+          "aliases": [
+            "--role",
+            "-r"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": "origin",
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": [
+            "origin",
+            "host"
+          ],
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "year_from",
+          "aliases": [
+            "--from"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 1951,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "year_to",
+          "aliases": [
+            "--to"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "country": "country",
+        "role": "role",
+        "year_from": "year_from",
+        "year_to": "year_to"
+      }
+    },
+    {
+      "path": [
+        "net-migration"
+      ],
+      "function": "net_migration_cmd",
+      "description": "World Bank net migration, all reasons (immigrants minus emigrants).",
+      "target": "intel_net_migration",
+      "parameters": [
+        {
+          "name": "country",
+          "aliases": [
+            "--country",
+            "-c"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "region",
+          "aliases": [
+            "--region",
+            "-r"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit",
+            "-n"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 20,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "country": "country",
+        "region": "region",
+        "limit": "limit"
+      }
+    },
+    {
+      "path": [
+        "delays"
+      ],
+      "function": "delays",
+      "description": "US airport delays (FAA).",
+      "target": "intel_airport_delays",
+      "parameters": [],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "threats"
+      ],
+      "function": "threats",
+      "description": "Cyber threat intelligence (4 feeds).",
+      "target": "intel_cyber_threats",
+      "parameters": [
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit",
+            "-n"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 30,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "limit": "limit"
+      }
+    },
+    {
+      "path": [
+        "brief"
+      ],
+      "function": "brief",
+      "description": "Country intelligence brief (LLM + data).",
+      "target": "intel_country_brief",
+      "parameters": [
+        {
+          "name": "country_code",
+          "aliases": [],
+          "positional": true,
+          "type": "string",
+          "default": "US",
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "country_code": "country_code"
+      }
+    },
+    {
+      "path": [
+        "dossier"
+      ],
+      "function": "dossier",
+      "description": "Comprehensive country intelligence dossier.",
+      "target": "intel_country_dossier",
+      "parameters": [
+        {
+          "name": "country",
+          "aliases": [
+            "--country",
+            "-c"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": "US",
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "country": "country"
+      }
+    },
+    {
+      "path": [
+        "risk"
+      ],
+      "function": "risk",
+      "description": "Country risk scores (ACLED-based).",
+      "target": "intel_risk_scores",
+      "parameters": [
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit",
+            "-n"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 20,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "limit": "limit"
+      }
+    },
+    {
+      "path": [
+        "instability"
+      ],
+      "function": "instability",
+      "description": "Country Instability Index (0-100).",
+      "target": "intel_instability_index",
+      "parameters": [
+        {
+          "name": "country_code",
+          "aliases": [],
+          "positional": true,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "country_code": "country_code"
+      }
+    },
+    {
+      "path": [
+        "btc"
+      ],
+      "function": "btc",
+      "description": "Bitcoin technical indicators (SMA, Mayer, cross signals).",
+      "target": "intel_btc_technicals",
+      "parameters": [],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "central-banks"
+      ],
+      "function": "central_banks_cmd",
+      "description": "Central bank policy rates (15 banks).",
+      "target": "intel_central_bank_rates",
+      "parameters": [],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "liquidity"
+      ],
+      "function": "liquidity_cmd",
+      "description": "Liquidity board: Fed balance sheet, TGA, RRP, net liquidity, M2, euro M1-M3.",
+      "target": "intel_liquidity_board",
+      "parameters": [
+        {
+          "name": "sort",
+          "aliases": [
+            "--sort"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": "biggest_move",
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": [
+            "biggest_move",
+            "newest"
+          ],
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "sort": "sort"
+      }
+    },
+    {
+      "path": [
+        "net-liquidity"
+      ],
+      "function": "net_liquidity_cmd",
+      "description": "US net liquidity = WALCL - WDTGAL - RRPONTSYD, weekly, USD billions.",
+      "target": "intel_net_liquidity",
+      "parameters": [
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit",
+            "-n"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 12,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "start",
+          "aliases": [
+            "--start"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "limit": "limit",
+        "start": "start"
+      }
+    },
+    {
+      "path": [
+        "money-supply"
+      ],
+      "function": "money_supply_cmd",
+      "description": "Money supply: US M2 and euro area M1/M2/M3, never summed.",
+      "target": "intel_money_supply",
+      "parameters": [
+        {
+          "name": "region",
+          "aliases": [
+            "--region"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": "all",
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": [
+            "all",
+            "us",
+            "euro_area"
+          ],
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit",
+            "-n"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 6,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "region": "region",
+        "limit": "limit"
+      }
+    },
+    {
+      "path": [
+        "fed-liquidity"
+      ],
+      "function": "fed_liquidity_cmd",
+      "description": "One keyless FRED liquidity series (WALCL, WDTGAL, WTREGEN, RRPONTSYD, M2SL).",
+      "target": "intel_fed_liquidity_series",
+      "parameters": [
+        {
+          "name": "series_id",
+          "aliases": [],
+          "positional": true,
+          "type": "string",
+          "default": null,
+          "required": true,
+          "multiple": false,
+          "nargs": 1,
+          "choices": [
+            "M2SL",
+            "RRPONTSYD",
+            "WALCL",
+            "WDTGAL",
+            "WTREGEN"
+          ],
+          "caseSensitive": false,
+          "callback": null
+        },
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit",
+            "-n"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 20,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "start",
+          "aliases": [
+            "--start"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "series_id": "series_id",
+        "limit": "limit",
+        "start": "start"
+      }
+    },
+    {
+      "path": [
+        "ecb-series"
+      ],
+      "function": "ecb_series_cmd",
+      "description": "ECB Data Portal series by SDMX key (BSI money, ILM Eurosystem balance sheet).",
+      "target": "intel_ecb_series",
+      "parameters": [
+        {
+          "name": "key",
+          "aliases": [],
+          "positional": true,
+          "type": "string",
+          "default": null,
+          "required": true,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "dataset",
+          "aliases": [
+            "--dataset",
+            "-d"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": "BSI",
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": [
+            "BSI",
+            "ILM"
+          ],
+          "caseSensitive": false,
+          "callback": null
+        },
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit",
+            "-n"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 12,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "start",
+          "aliases": [
+            "--start"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "dataset": "dataset",
+        "key": "key",
+        "limit": "limit",
+        "start": "start"
+      }
+    },
+    {
+      "path": [
+        "shipping"
+      ],
+      "function": "shipping_cmd",
+      "description": "Shipping index (BDI, tanker, container ETFs).",
+      "target": "intel_shipping_index",
+      "parameters": [],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "news-reaction"
+      ],
+      "function": "news_reaction",
+      "description": "Market move on the session of each story naming a company or country.",
+      "target": "intel_news_market_reaction",
+      "parameters": [
+        {
+          "name": "category",
+          "aliases": [
+            "--category",
+            "-c"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit",
+            "-n"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 150,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "min_size",
+          "aliases": [
+            "--min-size"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 2,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "max_age_hours",
+          "aliases": [
+            "--max-age-hours"
+          ],
+          "positional": false,
+          "type": "float",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "no_countries",
+          "aliases": [
+            "--no-countries"
+          ],
+          "positional": false,
+          "type": "boolean",
+          "default": false,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "category": "category",
+        "limit": "limit",
+        "min_cluster_size": "min_size",
+        "include_countries": "not no_countries"
+      }
+    },
+    {
+      "path": [
+        "social"
+      ],
+      "function": "social_cmd",
+      "description": "Reddit social signals (worldnews, geopolitics).",
+      "target": "intel_social_signals",
+      "parameters": [],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "disease"
+      ],
+      "function": "disease_cmd",
+      "description": "Disease outbreaks (WHO/ProMED/CIDRAP).",
+      "target": "intel_disease_outbreaks",
+      "parameters": [],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "elections"
+      ],
+      "function": "elections_cmd",
+      "description": "Election calendar with risk scoring.",
+      "target": "intel_election_calendar",
+      "parameters": [
+        {
+          "name": "country",
+          "aliases": [
+            "--country",
+            "-c"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "country": "country"
+      }
+    },
+    {
+      "path": [
+        "nuclear"
+      ],
+      "function": "nuclear_cmd",
+      "description": "Nuclear test site seismic monitor.",
+      "target": "intel_nuclear_monitor",
+      "parameters": [
+        {
+          "name": "hours",
+          "aliases": [
+            "--hours",
+            "-h"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 72,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "hours": "hours"
+      }
+    },
+    {
+      "path": [
+        "space"
+      ],
+      "function": "space_cmd",
+      "description": "Space weather (NOAA/SWPC).",
+      "target": "intel_space_weather",
+      "parameters": [],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "sanctions"
+      ],
+      "function": "sanctions_cmd",
+      "description": "Search OFAC SDN sanctions list.",
+      "target": "intel_sanctions_search",
+      "parameters": [
+        {
+          "name": "query",
+          "aliases": [],
+          "positional": true,
+          "type": "string",
+          "default": null,
+          "required": true,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "country",
+          "aliases": [
+            "--country",
+            "-c"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "query": "query",
+        "country": "country"
+      }
+    },
+    {
+      "path": [
+        "ai-watch"
+      ],
+      "function": "ai_watch_cmd",
+      "description": "AI model and paper releases tracker.",
+      "target": "intel_ai_releases",
+      "parameters": [],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "fleet"
+      ],
+      "function": "fleet_cmd",
+      "description": "USNI Fleet Tracker (Navy disposition).",
+      "target": "intel_usni_fleet",
+      "parameters": [],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "hn"
+      ],
+      "function": "hn_cmd",
+      "description": "Top Hacker News stories.",
+      "target": "intel_hacker_news",
+      "parameters": [
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit",
+            "-n"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 20,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "limit": "limit"
+      }
+    },
+    {
+      "path": [
+        "gh-trending"
+      ],
+      "function": "gh_trending_cmd",
+      "description": "Trending GitHub repositories.",
+      "target": "intel_trending_repos",
+      "parameters": [
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit",
+            "-n"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 15,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "limit": "limit"
+      }
+    },
+    {
+      "path": [
+        "arxiv"
+      ],
+      "function": "arxiv_cmd",
+      "description": "Recent arXiv papers.",
+      "target": "intel_arxiv_papers",
+      "parameters": [
+        {
+          "name": "query",
+          "aliases": [
+            "--query",
+            "-q"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": "cs.AI",
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit",
+            "-n"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 10,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "query": "query",
+        "limit": "limit"
+      }
+    },
+    {
+      "path": [
+        "spending"
+      ],
+      "function": "spending_cmd",
+      "description": "US federal spending (USAspending.gov).",
+      "target": "intel_usa_spending",
+      "parameters": [
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit",
+            "-n"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 15,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "limit": "limit"
+      }
+    },
+    {
+      "path": [
+        "bases"
+      ],
+      "function": "bases_cmd",
+      "description": "Military bases worldwide (70 bases).",
+      "target": "intel_military_bases",
+      "parameters": [
+        {
+          "name": "operator",
+          "aliases": [
+            "--operator",
+            "-o"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "country",
+          "aliases": [
+            "--country",
+            "-c"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "operator": "operator",
+        "country": "country"
+      }
+    },
+    {
+      "path": [
+        "exchanges"
+      ],
+      "function": "exchanges_cmd",
+      "description": "Global stock exchanges (82 exchanges).",
+      "target": "intel_stock_exchanges",
+      "parameters": [
+        {
+          "name": "tier",
+          "aliases": [
+            "--tier",
+            "-t"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": [
+            "mega",
+            "major",
+            "mid",
+            "small"
+          ],
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "country",
+          "aliases": [
+            "--country",
+            "-c"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "tier": "tier",
+        "country": "country"
+      }
+    },
+    {
+      "path": [
+        "traffic"
+      ],
+      "function": "traffic",
+      "description": "Real-time traffic congestion for 20 major cities (TomTom).",
+      "target": "intel_traffic_flow",
+      "parameters": [],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "incidents"
+      ],
+      "function": "incidents",
+      "description": "Major traffic incidents across strategic regions (TomTom).",
+      "target": "intel_traffic_incidents",
+      "parameters": [],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "air-traffic"
+      ],
+      "function": "air_traffic_cmd",
+      "description": "Global air traffic snapshot (OpenSky).",
+      "target": "intel_aviation_domestic",
+      "parameters": [],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "webcams"
+      ],
+      "function": "webcams_cmd",
+      "description": "Public webcam locations worldwide (Windy).",
+      "target": "intel_webcams",
+      "parameters": [
+        {
+          "name": "category",
+          "aliases": [
+            "--category",
+            "-c"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": "traffic",
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit",
+            "-n"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 20,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "category": "category",
+        "limit": "limit"
+      },
+      "legacyPaths": [
+        [
+          "webcams-cmd"
+        ]
+      ]
+    },
+    {
+      "path": [
+        "status"
+      ],
+      "function": "status",
+      "description": "Data source health and cache stats.",
+      "target": "$status",
+      "parameters": [],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "guide"
+      ],
+      "function": "guide_cmd",
+      "description": "Print the research guide the MCP server serves as intel://guide.",
+      "target": "$guide",
+      "parameters": [
+        {
+          "name": "measures",
+          "aliases": [
+            "--measures"
+          ],
+          "positional": false,
+          "type": "boolean",
+          "default": false,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "sync"
+      ],
+      "function": "sync_cmd",
+      "description": "Force refresh a data source cache.",
+      "target": "$sync",
+      "parameters": [
+        {
+          "name": "source",
+          "aliases": [],
+          "positional": true,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "dashboard"
+      ],
+      "function": "dashboard",
+      "description": "Launch the live intelligence dashboard.",
+      "target": "$dashboard",
+      "parameters": [
+        {
+          "name": "port",
+          "aliases": [
+            "--port"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 8501,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "host",
+          "aliases": [
+            "--host"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": "127.0.0.1",
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "report"
+      ],
+      "function": "report",
+      "description": "Generate a PDF or HTML intelligence report.",
+      "target": "intel_generate_report",
+      "parameters": [
+        {
+          "name": "output",
+          "aliases": [
+            "--output",
+            "-o"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "title",
+          "aliases": [
+            "--title",
+            "-t"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "fmt",
+          "aliases": [
+            "--format"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": "pdf",
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": [
+            "pdf",
+            "html"
+          ],
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "sections",
+          "aliases": [
+            "--sections",
+            "-s"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "aoi",
+        "define"
+      ],
+      "function": "aoi_define",
+      "description": "Define a point-radius AOI.",
+      "target": "intel_aoi_define",
+      "parameters": [
+        {
+          "name": "name",
+          "aliases": [],
+          "positional": true,
+          "type": "string",
+          "default": null,
+          "required": true,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "lat",
+          "aliases": [
+            "--lat"
+          ],
+          "positional": false,
+          "type": "float",
+          "default": null,
+          "required": true,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "lon",
+          "aliases": [
+            "--lon"
+          ],
+          "positional": false,
+          "type": "float",
+          "default": null,
+          "required": true,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "radius_km",
+          "aliases": [
+            "--radius-km"
+          ],
+          "positional": false,
+          "type": "float",
+          "default": null,
+          "required": true,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "aoi",
+        "define-polygon"
+      ],
+      "function": "aoi_define_polygon",
+      "description": "Define a polygon AOI from repeated --vertex LAT,LON.",
+      "target": "intel_aoi_define_polygon",
+      "parameters": [
+        {
+          "name": "name",
+          "aliases": [],
+          "positional": true,
+          "type": "string",
+          "default": null,
+          "required": true,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "vertices",
+          "aliases": [
+            "--vertex"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": true,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": "_parse_latlon_pairs"
+        }
+      ],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "aoi",
+        "define-corridor"
+      ],
+      "function": "aoi_define_corridor",
+      "description": "Define a corridor AOI from repeated --waypoint LAT,LON plus a width.",
+      "target": "intel_aoi_define_corridor",
+      "parameters": [
+        {
+          "name": "name",
+          "aliases": [],
+          "positional": true,
+          "type": "string",
+          "default": null,
+          "required": true,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "waypoints",
+          "aliases": [
+            "--waypoint"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": true,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": "_parse_latlon_pairs"
+        },
+        {
+          "name": "width_km",
+          "aliases": [
+            "--width-km"
+          ],
+          "positional": false,
+          "type": "float",
+          "default": null,
+          "required": true,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "aoi",
+        "list"
+      ],
+      "function": "aoi_list_cmd",
+      "description": "List defined AOIs.",
+      "target": "intel_aoi_list",
+      "parameters": [],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "aoi",
+        "update"
+      ],
+      "function": "aoi_update",
+      "description": "Rename an AOI and/or change a circle's center or radius.",
+      "target": "intel_aoi_update",
+      "parameters": [
+        {
+          "name": "name",
+          "aliases": [],
+          "positional": true,
+          "type": "string",
+          "default": null,
+          "required": true,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "new_name",
+          "aliases": [
+            "--new-name"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "lat",
+          "aliases": [
+            "--lat"
+          ],
+          "positional": false,
+          "type": "float",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "lon",
+          "aliases": [
+            "--lon"
+          ],
+          "positional": false,
+          "type": "float",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "radius_km",
+          "aliases": [
+            "--radius-km"
+          ],
+          "positional": false,
+          "type": "float",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "aoi",
+        "delete"
+      ],
+      "function": "aoi_delete",
+      "description": "Delete a defined AOI.",
+      "target": "intel_aoi_delete",
+      "parameters": [
+        {
+          "name": "name",
+          "aliases": [],
+          "positional": true,
+          "type": "string",
+          "default": null,
+          "required": true,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "aoi",
+        "brief"
+      ],
+      "function": "aoi_brief",
+      "description": "Cited brief for a defined AOI (data gaps included).",
+      "target": "intel_aoi_brief",
+      "parameters": [
+        {
+          "name": "name",
+          "aliases": [],
+          "positional": true,
+          "type": "string",
+          "default": null,
+          "required": true,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "name": "name"
+      }
+    },
+    {
+      "path": [
+        "aoi",
+        "escalation"
+      ],
+      "function": "aoi_escalation",
+      "description": "Escalation score (0-100) for a defined AOI.",
+      "target": "intel_aoi_escalation",
+      "parameters": [
+        {
+          "name": "name",
+          "aliases": [],
+          "positional": true,
+          "type": "string",
+          "default": null,
+          "required": true,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "name": "name"
+      }
+    },
+    {
+      "path": [
+        "aoi",
+        "changes"
+      ],
+      "function": "aoi_changes",
+      "description": "What entered or left a defined AOI since the last sweep.",
+      "target": "intel_aoi_changes",
+      "parameters": [
+        {
+          "name": "name",
+          "aliases": [],
+          "positional": true,
+          "type": "string",
+          "default": null,
+          "required": true,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {
+        "name": "name"
+      }
+    },
+    {
+      "path": [
+        "history",
+        "health"
+      ],
+      "function": "history_health",
+      "description": "Per-source collection health from the collector's run log.",
+      "target": "intel_collection_health",
+      "parameters": [
+        {
+          "name": "source",
+          "aliases": [
+            "--source"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "history",
+        "captures"
+      ],
+      "function": "history_captures",
+      "description": "A source's earlier captures, newest first.",
+      "target": "intel_capture_history",
+      "parameters": [
+        {
+          "name": "source",
+          "aliases": [],
+          "positional": true,
+          "type": "string",
+          "default": null,
+          "required": true,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 20,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "capture_id",
+          "aliases": [
+            "--capture-id"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "history",
+        "series"
+      ],
+      "function": "history_series",
+      "description": "One series' observations (three dates), or the list of series.",
+      "target": "intel_series_history",
+      "parameters": [
+        {
+          "name": "series_key",
+          "aliases": [],
+          "positional": true,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "source",
+          "aliases": [
+            "--source"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "history",
+        "revisions"
+      ],
+      "function": "history_revisions",
+      "description": "Values a later capture changed for the same observed_at.",
+      "target": "intel_revisions",
+      "parameters": [
+        {
+          "name": "source",
+          "aliases": [
+            "--source"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "series_key",
+          "aliases": [
+            "--series"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 100,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "history",
+        "connections"
+      ],
+      "function": "history_connections",
+      "description": "Correlation between stored series at leads and lags.\n\nLag +k compares the first series of a pair at period t with the second\nat t+k, so the first leads by k. A connection is not a cause.",
+      "target": "intel_lagged_connections",
+      "parameters": [
+        {
+          "name": "series_keys",
+          "aliases": [],
+          "positional": true,
+          "type": "string",
+          "default": null,
+          "required": true,
+          "multiple": false,
+          "nargs": -1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "grid",
+          "aliases": [
+            "--grid"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": "day",
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": [
+            "day",
+            "week",
+            "month"
+          ],
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "transform",
+          "aliases": [
+            "--transform"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": "changes",
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": [
+            "changes",
+            "levels"
+          ],
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "max_lag",
+          "aliases": [
+            "--max-lag"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 5,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "min_overlap",
+          "aliases": [
+            "--min-overlap"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": 30,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "q",
+          "aliases": [
+            "--q"
+          ],
+          "positional": false,
+          "type": "float",
+          "default": 0.05,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "start",
+          "aliases": [
+            "--start"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "end",
+          "aliases": [
+            "--end"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "history",
+        "day"
+      ],
+      "function": "history_day",
+      "description": "What the history store recorded for one UTC day (YYYY-MM-DD).",
+      "target": "intel_day_timeline",
+      "parameters": [
+        {
+          "name": "day",
+          "aliases": [],
+          "positional": true,
+          "type": "string",
+          "default": null,
+          "required": true,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "by",
+          "aliases": [
+            "--by"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": "collected",
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": [
+            "collected",
+            "observed"
+          ],
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "source",
+          "aliases": [
+            "--source"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "limit",
+          "aliases": [
+            "--limit"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "per_source",
+          "aliases": [
+            "--per-source"
+          ],
+          "positional": false,
+          "type": "integer",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "history",
+        "backfill",
+        "fred"
+      ],
+      "function": "backfill_fred_cmd",
+      "description": "Load FRED graph CSV series (up to 5).\n\nFor example: intel history backfill fred WALCL RRPONTSYD DGS10 --start 2020-01-01",
+      "target": "intel_history_backfill",
+      "parameters": [
+        {
+          "name": "series_ids",
+          "aliases": [],
+          "positional": true,
+          "type": "string",
+          "default": null,
+          "required": true,
+          "multiple": false,
+          "nargs": -1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "start",
+          "aliases": [
+            "--start"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {}
+    },
+    {
+      "path": [
+        "history",
+        "backfill",
+        "ecb"
+      ],
+      "function": "backfill_ecb_cmd",
+      "description": "Load ECB Data Portal series (up to 2 keys).\n\nEach key is DATASET.KEY, for example BSI.M.U2.Y.V.M30.X.1.U2.2300.Z01.E\n(euro area M3); a key with + alternatives loads every series it matches.",
+      "target": "intel_history_backfill",
+      "parameters": [
+        {
+          "name": "keys",
+          "aliases": [],
+          "positional": true,
+          "type": "string",
+          "default": null,
+          "required": true,
+          "multiple": false,
+          "nargs": -1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        },
+        {
+          "name": "start",
+          "aliases": [
+            "--start"
+          ],
+          "positional": false,
+          "type": "string",
+          "default": null,
+          "required": false,
+          "multiple": false,
+          "nargs": 1,
+          "choices": null,
+          "caseSensitive": true,
+          "callback": null
+        }
+      ],
+      "mapping": {}
+    }
+  ]
+}

@@ -2,7 +2,8 @@
 // Local-only BGE tokenizer + ONNX WASM inference; never downloads model weights.
 import {createHash} from 'node:crypto';
 import {statSync,readFileSync} from 'node:fs';
-import {resolve,join} from 'node:path';
+import {resolve,join,sep} from 'node:path';
+import {pathToFileURL} from 'node:url';
 import {createRequire} from 'node:module';
 import {UPSTREAM_EMBEDDING_MODEL,type EmbeddingProvider} from './vector-store.js';
 export interface LocalEmbeddingRuntime {
@@ -22,7 +23,7 @@ async function loadRuntime(directory:string):Promise<LocalEmbeddingRuntime>{
  hf.env.allowRemoteModels=false;hf.env.allowLocalModels=true;hf.env.useFSCache=false;
  const require=createRequire(import.meta.url),ortEntry=require.resolve(ortName);
  const wasmDir=resolve(ortEntry,'..');
- ort.env.wasm.wasmPaths=wasmDir+'/';ort.env.wasm.numThreads=1;ort.env.wasm.proxy=false;
+ ort.env.wasm.wasmPaths=pathToFileURL(wasmDir+sep).href;ort.env.wasm.numThreads=1;ort.env.wasm.proxy=false;
  const tokenizer=await hf.AutoTokenizer.from_pretrained(directory,{local_files_only:true});
  const session=await ort.InferenceSession.create(new Uint8Array(readFileSync(join(directory,'onnx/model.onnx'))),{executionProviders:['wasm'],graphOptimizationLevel:'all'});
  return {async tokenize(text){return tokenizer(text,{padding:true,truncation:true,max_length:512});},async run(inputs){const feeds:Record<string,unknown>={};for(const name of session.inputNames){const input=inputs[name];if(!input)throw new Error(`BGE model input missing: ${name}`);feeds[name]=new ort.Tensor('int64',BigInt64Array.from(input.data as ArrayLike<bigint>,v=>BigInt(v)),input.dims);}const outputs=await session.run(feeds),output=outputs.last_hidden_state??outputs[session.outputNames[0]];return output;},async dispose(){await session.release();}};

@@ -1,12 +1,14 @@
+import {type SourceRuntime, type SourceRule} from '../source-runtime.js';
 // SPDX-License-Identifier: MIT
 // Native port of pinned World Intel public technology sources. Upstream MIT notice retained.
 import type {DomainHandlers} from '../domain-runtime.js';
 export interface TechTransport {json(url:URL):Promise<unknown>;text(url:URL):Promise<string>}
 const paths:Record<string,RegExp>={'hacker-news.firebaseio.com':/^\/v0\/(topstories|item\/[0-9]+)\.json$/,'api.github.com':/^\/search\/repositories$/,'export.arxiv.org':/^\/api\/query$/,'api.usaspending.gov':/^\/api\/v2\/agency\/list\/$/};
-export function createTechTransport(fetcher:typeof fetch=fetch):TechTransport {
+export function createTechTransport(fetcher:typeof fetch=fetch,sourceRuntime?:SourceRuntime):TechTransport {
  const cache=new Map<string,{at:number;value:string}>();
  async function text(url:URL):Promise<string>{
   if(url.protocol!=='https:'||url.port||url.hash||url.username||url.password||!paths[url.hostname]?.test(url.pathname)) throw new Error('Unapproved public source');
+  if(sourceRuntime){const value=await sourceRuntime.getText(url,{source:TECH_NAMES[url.hostname]!,cacheTtl:300,maxBytes:2_000_000,timeoutSeconds:20,followRedirects:false});if(value===null)throw Error('Technology provider unavailable');return value;}
   const key=url.href, old=cache.get(key);if(old&&Date.now()-old.at<300000)return old.value;
   const response=await fetcher(url,{redirect:'error',credentials:'omit',signal:AbortSignal.timeout(20000),headers:{Accept:'application/json, application/atom+xml','User-Agent':'metaharness-world-intel/0.2.0'}});
   if(!response.ok)throw new Error(`HTTP ${response.status}`);
@@ -30,8 +32,8 @@ export function parseArxiv(xml:string):Record<string,unknown>[] {
   return {id:url.includes('/abs/')?url.split('/abs/').at(-1):url,title:(get('title')??'').trim().replace(/\s+/g,' '),summary,authors:[...e.matchAll(/<author>\s*<name>(.*?)<\/name>/g)].slice(0,5).map(x=>x[1]),categories:[...e.matchAll(/<category[^>]*term="([^"]*)"/g)].slice(0,5).map(x=>x[1]),published:get('published')??null,updated:get('updated')??null,pdf_url:e.match(/<link[^>]*title="pdf"[^>]*href="([^"]*)"/)?.[1]??null,url};
  });
 }
-export function createTechHandlers(options:{transport?:TechTransport;now?:()=>Date}={}):DomainHandlers{
- const transport=options.transport??createTechTransport(),now=options.now??(()=>new Date());
+export function createTechHandlers(options:{sourceRuntime?:SourceRuntime;transport?:TechTransport;now?:()=>Date}={}):DomainHandlers{
+ const transport=options.transport??createTechTransport(fetch,options.sourceRuntime),now=options.now??(()=>new Date());
  const failure=(source:string,key:string,error:unknown,extra={})=>({[key]:[],count:0,source,timestamp:iso(now),...extra,error:error instanceof Error?error.message:String(error),degraded:true});
  return {
   intel_hacker_news:async args=>{
@@ -52,3 +54,6 @@ export function createTechHandlers(options:{transport?:TechTransport;now?:()=>Da
   intel_usa_spending:async args=>{const limit=integer(args.limit,25,1000),date=now(),fiscal_year=date.getUTCMonth()>=9?date.getUTCFullYear():date.getUTCFullYear()-1;const url=new URL('https://api.usaspending.gov/api/v2/agency/list/?sort=obligated_amount&order=desc');try{const data=row(await transport.json(url));if(!Array.isArray(data.results))throw new Error('Invalid agency response');const agencies=data.results.filter((x:any)=>!args.agency||String(x.agency_name??'').toLowerCase().includes(String(args.agency).toLowerCase())).slice(0,limit).map((x:any)=>({name:x.agency_name??'',abbreviation:x.abbreviation??'',obligated_amount:x.obligated_amount??null,budget_authority:x.budget_authority_amount??null,percentage_of_total:x.percentage_of_total_budget_authority??null}));return {agencies,count:agencies.length,total_obligated:agencies.reduce((n:number,a:any)=>n+(a.obligated_amount||0),0),fiscal_year,source:'usaspending',timestamp:iso(now)};}catch(e){return failure('usaspending','agencies',e,{fiscal_year});}},
  };
 }
+
+const TECH_NAMES:Record<string,string>={'hacker-news.firebaseio.com':'hackernews','api.github.com':'github','export.arxiv.org':'arxiv','api.usaspending.gov':'usaspending'};
+export function techSourceRules():Record<string,SourceRule>{return Object.fromEntries(Object.entries(paths).map(([host,path])=>[TECH_NAMES[host]!,{origins:['https://'+host],path}]));}

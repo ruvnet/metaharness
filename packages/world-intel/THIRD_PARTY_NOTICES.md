@@ -1,6 +1,6 @@
 # Upstream attribution
 
-Inspired by marc-shade/world-intel-mcp, commit fdebf9a8de6e00ed688053dd647cafedc179708b. This is a separately implemented initial subset, not an official or full port. Upstream license retained below.
+Native TypeScript compatibility implementation derived from marc-shade/world-intel-mcp, commit fdebf9a8de6e00ed688053dd647cafedc179708b. Includes ported algorithms, reference datasets, schemas, prompts, and the adapted dashboard HTML. This is not an official upstream release; exhaustive semantic parity is not certified. The upstream MIT license is retained below. Bundled DejaVu font notices are in data/fonts/LICENSE-DejaVu.txt.
 
 MIT License
 

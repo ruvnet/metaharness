@@ -1,0 +1,1077 @@
+{
+  "upstreamCommit": "fdebf9a8de6e00ed688053dd647cafedc179708b",
+  "routes": [
+    {
+      "path": "/",
+      "handler": "index",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/overview",
+      "handler": "api_overview",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/stream",
+      "handler": "api_stream",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/static",
+      "handler": "api_static",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/aois",
+      "handler": "api_aois",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/migration",
+      "handler": "api_migration",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/liquidity-board",
+      "handler": "api_liquidity_board",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/situations",
+      "handler": "api_situations",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/top-stories",
+      "handler": "api_top_stories",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/collection-health",
+      "handler": "api_collection_health",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/health",
+      "handler": "api_health",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/report/pdf",
+      "handler": "api_report_pdf",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/sse/vector-analytics",
+      "handler": "sse_vector_analytics",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/vector-search",
+      "handler": "api_vector_search",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/vector-search",
+      "handler": "api_vector_search_options",
+      "methods": [
+        "OPTIONS"
+      ]
+    }
+  ],
+  "streamSources": [
+    "market_quotes",
+    "crypto_quotes",
+    "macro_signals",
+    "sector_heatmap",
+    "earthquakes",
+    "military_flights",
+    "cyber_threats",
+    "news_feed",
+    "trending_keywords",
+    "nav_warnings",
+    "internet_outages",
+    "cable_health",
+    "wildfires",
+    "prediction_markets",
+    "airport_delays",
+    "climate_anomalies",
+    "energy_prices",
+    "gas_prices",
+    "residential_natgas",
+    "electricity_rates",
+    "stablecoin_status",
+    "etf_flows",
+    "acled_events",
+    "ucdp_events",
+    "displacement",
+    "risk_scores",
+    "signal_convergence",
+    "space_weather",
+    "ai_watch",
+    "disease_outbreaks",
+    "election_calendar",
+    "shipping_index",
+    "social_signals",
+    "nuclear_monitor",
+    "alert_digest",
+    "weekly_trends",
+    "service_status",
+    "strategic_posture",
+    "fleet_report",
+    "usni_fleet",
+    "population_exposure",
+    "domestic_flights",
+    "traffic_flow",
+    "traffic_incidents",
+    "webcams",
+    "btc_technicals",
+    "central_bank_rates"
+  ],
+  "cliCommands": [
+    {
+      "parent": "click",
+      "kind": "group",
+      "name": "main",
+      "function": "main"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "markets",
+      "function": "markets_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "crypto",
+      "function": "crypto"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "macro",
+      "function": "macro"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "energy",
+      "function": "energy"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "gas-prices",
+      "function": "gas_prices"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "natgas",
+      "function": "natgas"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "electricity",
+      "function": "electricity"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "fred",
+      "function": "fred"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "earthquakes",
+      "function": "earthquakes"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "fires",
+      "function": "fires"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "conflicts",
+      "function": "conflicts"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "flights",
+      "function": "flights"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "posture",
+      "function": "posture"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "outages",
+      "function": "outages"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "cables",
+      "function": "cables"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "warnings",
+      "function": "warnings"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "climate",
+      "function": "climate_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "news",
+      "function": "news_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "trending",
+      "function": "trending"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "gdelt",
+      "function": "gdelt"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "hostility",
+      "function": "hostility_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "situations",
+      "function": "situations_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "top-stories",
+      "function": "top_stories_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "predictions",
+      "function": "predictions"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "kalshi",
+      "function": "kalshi"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "prediction-compare",
+      "function": "prediction_compare"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "prediction-settled",
+      "function": "prediction_settled"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "displacement",
+      "function": "displacement_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "migration-flows",
+      "function": "migration_flows_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "migration-surges",
+      "function": "migration_surges_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "migration-history",
+      "function": "migration_history_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "net-migration",
+      "function": "net_migration_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "delays",
+      "function": "delays"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "threats",
+      "function": "threats"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "brief",
+      "function": "brief"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "dossier",
+      "function": "dossier"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "risk",
+      "function": "risk"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "instability",
+      "function": "instability"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "btc",
+      "function": "btc"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "central-banks",
+      "function": "central_banks_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "liquidity",
+      "function": "liquidity_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "net-liquidity",
+      "function": "net_liquidity_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "money-supply",
+      "function": "money_supply_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "fed-liquidity",
+      "function": "fed_liquidity_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "ecb-series",
+      "function": "ecb_series_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "shipping",
+      "function": "shipping_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "news-reaction",
+      "function": "news_reaction"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "social",
+      "function": "social_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "disease",
+      "function": "disease_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "elections",
+      "function": "elections_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "nuclear",
+      "function": "nuclear_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "space",
+      "function": "space_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "sanctions",
+      "function": "sanctions_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "ai-watch",
+      "function": "ai_watch_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "fleet",
+      "function": "fleet_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "hn",
+      "function": "hn_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "gh-trending",
+      "function": "gh_trending_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "arxiv",
+      "function": "arxiv_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "spending",
+      "function": "spending_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "bases",
+      "function": "bases_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "exchanges",
+      "function": "exchanges_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "traffic",
+      "function": "traffic"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "incidents",
+      "function": "incidents"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "air-traffic",
+      "function": "air_traffic_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "webcams-cmd",
+      "function": "webcams_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "status",
+      "function": "status"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "guide",
+      "function": "guide_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "sync",
+      "function": "sync_cmd"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "dashboard",
+      "function": "dashboard"
+    },
+    {
+      "parent": "main",
+      "kind": "command",
+      "name": "report",
+      "function": "report"
+    },
+    {
+      "parent": "main",
+      "kind": "group",
+      "name": "aoi",
+      "function": "aoi_group"
+    },
+    {
+      "parent": "aoi_group",
+      "kind": "command",
+      "name": "define",
+      "function": "aoi_define"
+    },
+    {
+      "parent": "aoi_group",
+      "kind": "command",
+      "name": "define-polygon",
+      "function": "aoi_define_polygon"
+    },
+    {
+      "parent": "aoi_group",
+      "kind": "command",
+      "name": "define-corridor",
+      "function": "aoi_define_corridor"
+    },
+    {
+      "parent": "aoi_group",
+      "kind": "command",
+      "name": "list",
+      "function": "aoi_list_cmd"
+    },
+    {
+      "parent": "aoi_group",
+      "kind": "command",
+      "name": "update",
+      "function": "aoi_update"
+    },
+    {
+      "parent": "aoi_group",
+      "kind": "command",
+      "name": "delete",
+      "function": "aoi_delete"
+    },
+    {
+      "parent": "aoi_group",
+      "kind": "command",
+      "name": "brief",
+      "function": "aoi_brief"
+    },
+    {
+      "parent": "aoi_group",
+      "kind": "command",
+      "name": "escalation",
+      "function": "aoi_escalation"
+    },
+    {
+      "parent": "aoi_group",
+      "kind": "command",
+      "name": "changes",
+      "function": "aoi_changes"
+    },
+    {
+      "parent": "main",
+      "kind": "group",
+      "name": "history",
+      "function": "history_group"
+    },
+    {
+      "parent": "history_group",
+      "kind": "command",
+      "name": "health",
+      "function": "history_health"
+    },
+    {
+      "parent": "history_group",
+      "kind": "command",
+      "name": "captures",
+      "function": "history_captures"
+    },
+    {
+      "parent": "history_group",
+      "kind": "command",
+      "name": "series",
+      "function": "history_series"
+    },
+    {
+      "parent": "history_group",
+      "kind": "command",
+      "name": "revisions",
+      "function": "history_revisions"
+    },
+    {
+      "parent": "history_group",
+      "kind": "command",
+      "name": "connections",
+      "function": "history_connections"
+    },
+    {
+      "parent": "history_group",
+      "kind": "command",
+      "name": "day",
+      "function": "history_day"
+    },
+    {
+      "parent": "history_group",
+      "kind": "group",
+      "name": "backfill",
+      "function": "backfill_group"
+    },
+    {
+      "parent": "backfill_group",
+      "kind": "command",
+      "name": "fred",
+      "function": "backfill_fred_cmd"
+    },
+    {
+      "parent": "backfill_group",
+      "kind": "command",
+      "name": "ecb",
+      "function": "backfill_ecb_cmd"
+    }
+  ],
+  "reference": {
+    "INTEL_HOTSPOTS": {
+      "tehran": {
+        "lat": 35.69,
+        "lon": 51.39,
+        "baseline_escalation": 3,
+        "associated_countries": [
+          "IRN",
+          "ISR"
+        ]
+      },
+      "kyiv": {
+        "lat": 50.45,
+        "lon": 30.52,
+        "baseline_escalation": 5,
+        "associated_countries": [
+          "UKR",
+          "RUS"
+        ]
+      },
+      "taipei": {
+        "lat": 25.03,
+        "lon": 121.57,
+        "baseline_escalation": 3,
+        "associated_countries": [
+          "TWN",
+          "CHN"
+        ]
+      },
+      "pyongyang": {
+        "lat": 39.02,
+        "lon": 125.75,
+        "baseline_escalation": 3,
+        "associated_countries": [
+          "PRK",
+          "KOR"
+        ]
+      },
+      "gaza": {
+        "lat": 31.42,
+        "lon": 34.35,
+        "baseline_escalation": 5,
+        "associated_countries": [
+          "PSE",
+          "ISR"
+        ]
+      },
+      "kabul": {
+        "lat": 34.53,
+        "lon": 69.17,
+        "baseline_escalation": 3,
+        "associated_countries": [
+          "AFG",
+          "PAK"
+        ]
+      },
+      "damascus": {
+        "lat": 33.51,
+        "lon": 36.29,
+        "baseline_escalation": 4,
+        "associated_countries": [
+          "SYR",
+          "IRN",
+          "ISR"
+        ]
+      },
+      "khartoum": {
+        "lat": 15.59,
+        "lon": 32.53,
+        "baseline_escalation": 5,
+        "associated_countries": [
+          "SDN"
+        ]
+      },
+      "sanaa": {
+        "lat": 15.37,
+        "lon": 44.19,
+        "baseline_escalation": 4,
+        "associated_countries": [
+          "YEM"
+        ]
+      },
+      "naypyidaw": {
+        "lat": 19.76,
+        "lon": 96.07,
+        "baseline_escalation": 3,
+        "associated_countries": [
+          "MMR"
+        ]
+      },
+      "baghdad": {
+        "lat": 33.31,
+        "lon": 44.37,
+        "baseline_escalation": 3,
+        "associated_countries": [
+          "IRQ",
+          "IRN"
+        ]
+      },
+      "mogadishu": {
+        "lat": 2.05,
+        "lon": 45.32,
+        "baseline_escalation": 4,
+        "associated_countries": [
+          "SOM"
+        ]
+      },
+      "addis_ababa": {
+        "lat": 9.02,
+        "lon": 38.75,
+        "baseline_escalation": 3,
+        "associated_countries": [
+          "ETH"
+        ]
+      },
+      "kinshasa": {
+        "lat": -4.32,
+        "lon": 15.31,
+        "baseline_escalation": 3,
+        "associated_countries": [
+          "COD"
+        ]
+      },
+      "bamako": {
+        "lat": 12.64,
+        "lon": -8,
+        "baseline_escalation": 3,
+        "associated_countries": [
+          "MLI"
+        ]
+      },
+      "ouagadougou": {
+        "lat": 12.37,
+        "lon": -1.52,
+        "baseline_escalation": 3,
+        "associated_countries": [
+          "BFA"
+        ]
+      },
+      "beirut": {
+        "lat": 33.89,
+        "lon": 35.5,
+        "baseline_escalation": 4,
+        "associated_countries": [
+          "LBN",
+          "ISR"
+        ]
+      },
+      "hormuz_strait": {
+        "lat": 26.57,
+        "lon": 56.25,
+        "baseline_escalation": 3,
+        "associated_countries": [
+          "IRN",
+          "OMN"
+        ]
+      },
+      "south_china_sea": {
+        "lat": 15,
+        "lon": 115,
+        "baseline_escalation": 3,
+        "associated_countries": [
+          "CHN",
+          "PHL",
+          "VNM"
+        ]
+      },
+      "crimea": {
+        "lat": 44.95,
+        "lon": 34.1,
+        "baseline_escalation": 4,
+        "associated_countries": [
+          "UKR",
+          "RUS"
+        ]
+      },
+      "bab_el_mandeb": {
+        "lat": 12.58,
+        "lon": 43.33,
+        "baseline_escalation": 4,
+        "associated_countries": [
+          "YEM",
+          "DJI",
+          "ERI"
+        ]
+      },
+      "suez_canal": {
+        "lat": 30.46,
+        "lon": 32.34,
+        "baseline_escalation": 2,
+        "associated_countries": [
+          "EGY"
+        ]
+      }
+    },
+    "STRATEGIC_WATERWAYS": [
+      {
+        "name": "Strait of Hormuz",
+        "lat": 26.57,
+        "lon": 56.25,
+        "throughput": "21M bbl/day oil"
+      },
+      {
+        "name": "Strait of Malacca",
+        "lat": 2.5,
+        "lon": 101.8,
+        "throughput": "25% global trade"
+      },
+      {
+        "name": "Suez Canal",
+        "lat": 30.46,
+        "lon": 32.34,
+        "throughput": "12% global trade"
+      },
+      {
+        "name": "Panama Canal",
+        "lat": 9.08,
+        "lon": -79.68,
+        "throughput": "5% global trade"
+      },
+      {
+        "name": "Bab-el-Mandeb",
+        "lat": 12.58,
+        "lon": 43.33,
+        "throughput": "4.8M bbl/day oil"
+      },
+      {
+        "name": "Taiwan Strait",
+        "lat": 24,
+        "lon": 119.5,
+        "throughput": "88% advanced chips"
+      },
+      {
+        "name": "Strait of Gibraltar",
+        "lat": 35.96,
+        "lon": -5.5,
+        "throughput": "Mediterranean access"
+      },
+      {
+        "name": "GIUK Gap",
+        "lat": 62,
+        "lon": -15,
+        "throughput": "NATO submarine choke"
+      },
+      {
+        "name": "Bosphorus",
+        "lat": 41.12,
+        "lon": 29.05,
+        "throughput": "3M bbl/day oil"
+      }
+    ],
+    "CABLE_CORRIDORS": {
+      "transatlantic_north": {
+        "lat_range": [
+          35,
+          55
+        ],
+        "lon_range": [
+          -70,
+          -5
+        ],
+        "cables": [
+          "TAT-14",
+          "AC-1",
+          "MAREA",
+          "Dunant"
+        ]
+      },
+      "transatlantic_south": {
+        "lat_range": [
+          -5,
+          35
+        ],
+        "lon_range": [
+          -50,
+          0
+        ],
+        "cables": [
+          "SAex1",
+          "SACS",
+          "EllaLink"
+        ]
+      },
+      "transpacific": {
+        "lat_range": [
+          20,
+          50
+        ],
+        "lon_range": [
+          120,
+          -120
+        ],
+        "cables": [
+          "FASTER",
+          "Unity",
+          "SJC"
+        ]
+      },
+      "asia_europe": {
+        "lat_range": [
+          -5,
+          35
+        ],
+        "lon_range": [
+          30,
+          120
+        ],
+        "cables": [
+          "SEA-ME-WE 6",
+          "AAE-1",
+          "FLAG"
+        ]
+      },
+      "red_sea": {
+        "lat_range": [
+          10,
+          30
+        ],
+        "lon_range": [
+          30,
+          50
+        ],
+        "cables": [
+          "FALCON",
+          "EIG",
+          "AAE-1"
+        ]
+      },
+      "mediterranean": {
+        "lat_range": [
+          30,
+          45
+        ],
+        "lon_range": [
+          -5,
+          35
+        ],
+        "cables": [
+          "SEA-ME-WE 3/4",
+          "MedNautilus"
+        ]
+      }
+    },
+    "NET_LIQUIDITY_METHOD": {
+      "formula": "net_liquidity = WALCL - WDTGAL - RRPONTSYD, in USD billions: WALCL and WDTGAL are USD millions divided by 1,000; RRPONTSYD is already USD billions",
+      "components": {
+        "WALCL": {
+          "term": "Federal Reserve total assets",
+          "observed": "Wednesday level",
+          "units": "USD millions",
+          "conversion": "divided by 1,000 to USD billions"
+        },
+        "WDTGAL": {
+          "term": "Treasury General Account",
+          "observed": "Wednesday level",
+          "units": "USD millions",
+          "conversion": "divided by 1,000 to USD billions"
+        },
+        "RRPONTSYD": {
+          "term": "Fed overnight reverse repo",
+          "observed": "daily, business days",
+          "units": "USD billions",
+          "conversion": "none: already USD billions",
+          "alignment": "the value for the WALCL Wednesday; when blank on or after 2013-09-23, Tuesday only; no fallback before that date. Reported per point as reverse_repo_observed_at; never a later day"
+        }
+      },
+      "alignment": "One point per WALCL Wednesday. WDTGAL must be reported for that same Wednesday. RRPONTSYD is taken from that Wednesday, or when that day is blank on or after 2013-09-23, from Tuesday only; before that date a blank Wednesday has no fallback. Each point names the RRP date used. Weeks without an aligned TGA or RRP value are skipped and counted, never filled with zero.",
+      "tga_choice": "The Treasury General Account term is WDTGAL (Wednesday level), not WTREGEN (week average), so all three terms describe the same Wednesday. WTREGEN is not a drop-in replacement: subtracting a week average from Wednesday-level total assets mixes two different measures. WTREGEN is served on its own by intel_fed_liquidity_series."
+    }
+  }
+}

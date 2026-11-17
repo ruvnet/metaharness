@@ -26,6 +26,6 @@ export function createConfiguredRuntime(dataDirectory:string,options:NativeRegis
  const write=async(name:string,bytes:Uint8Array)=>{if(basename(name)!==name||!/^report-\d{8}-\d{6}\.(?:html|pdf)$/.test(name))throw Error('Unsafe report filename');if(bytes.byteLength>16000000)throw Error('Report exceeds16MB limit');const directory=explicitDataDirectory(join(root,'reports')),path=join(directory,name),fd=openSync(path,constants.O_CREAT|constants.O_EXCL|constants.O_WRONLY|constants.O_NOFOLLOW,0o600);try{let at=0;while(at<bytes.length)at+=writeSync(fd,bytes,at,bytes.length-at);}finally{closeSync(fd);}return path;};
  const sourceRuntime=options.sourceRuntime??own(new SourceRuntime({rules:nativeSourceRules(),cache:new SqliteSourceCache(join(root,'cache.sqlite')),...(options.embedding?{vectorStore:vector}:{})}));
  const handlers=createNativeRegistry({...options,sourceRuntime,history,vector,aoi:{...options.aoi,store:aoi},jetStore:{...options.jetStore,store:cohorts},temporal:new TemporalBaseline(baselines),readBaselines:async()=>baselines.snapshot(),reports:{write,pdf:createNativePDFRenderer(),...options.reports}});
- return{handlers,history,vector,root,sourceRuntime,healthSnapshot:()=>sourceRuntime.health(),close};
+ return{handlers,history,vector,aoi,root,sourceRuntime,healthSnapshot:()=>sourceRuntime.health(),close};
  }catch(error){try{close()}catch{/* Preserve the original initialization failure after attempting every cleanup. */}throw error}
 }

@@ -1,3 +1,4 @@
+import {type SourceRuntime, type SourceRule} from '../source-runtime.js';
 import { attachForecasts, createForecastTransport, type ForecastTransport } from './cyclone-forecasts.js';
 import { XMLParser } from 'fast-xml-parser';
 /** Native TypeScript ports of upstream seismology/weather/environmental/launches/space_weather (MIT). */
@@ -5,10 +6,12 @@ type Obj = Record<string, any>;
 type Args = Record<string, unknown>;
 export type HazardTransport = ((url: URL, ttlSeconds: number, format?: 'json' | 'text') => Promise<unknown>) & { fetchedAt?: (url: URL) => number | undefined };
 const ORIGINS = new Set(['https://earthquake.usgs.gov','https://api.weather.gov','https://eonet.gsfc.nasa.gov','https://www.gdacs.org','https://ll.thespacedevs.com','https://services.swpc.noaa.gov','https://archive-api.open-meteo.com','https://www.nhc.noaa.gov','https://volcano.si.edu','https://feeds.meteoalarm.org','https://www.metoc.navy.mil','https://firms.modaps.eosdis.nasa.gov']);
-export function createHazardTransport(fetchFn: typeof fetch = fetch): HazardTransport {
+export function createHazardTransport(fetchFn: typeof fetch = fetch, sourceRuntime?: SourceRuntime): HazardTransport {
+  const stamps=new Map<string,number>();
   const cache=new Map<string,{time:number;value:unknown}>();
   const transport: HazardTransport = async (url,ttl,format='json') => {
     if(!ORIGINS.has(url.origin)||url.username||url.password||url.hash||url.href.length>4096) throw new Error('Unapproved hazard origin');
+    if(sourceRuntime){const o={source:hazardSource(url),cacheTtl:ttl,maxBytes:4_000_000,timeoutSeconds:15,followRedirects:false,headers:{'User-Agent':'metaharness-world-intel','Accept':'application/json, application/geo+json'}};const data=await (format==='text'?sourceRuntime.getText(url,o):sourceRuntime.getJson(url,o));if(data===null)throw Error('Hazard provider unavailable');const meta=sourceRuntime.cache.getStaleMeta(sourceRuntime.cacheIdentity(url,o,format));if(meta){if(stamps.size>=128)stamps.delete(stamps.keys().next().value!);stamps.set(url.href,meta[1]*1000);}return data;}
     const key=format+url.href, old=cache.get(key); if(old && Date.now()-old.time<ttl*1000) return structuredClone(old.value);
     const controller=new AbortController();let timer:ReturnType<typeof setTimeout>|undefined;let reader:ReadableStreamDefaultReader<Uint8Array>|undefined;
     const deadline=new Promise<never>((_,reject)=>{timer=setTimeout(()=>{controller.abort();void reader?.cancel().catch(()=>{});reject(Error('Hazard request timed out'));},15000);});
@@ -24,7 +27,7 @@ export function createHazardTransport(fetchFn: typeof fetch = fetch): HazardTran
     })()]);}finally{if(timer)clearTimeout(timer);}
     if(cache.size>=128)cache.delete(cache.keys().next().value!);cache.set(key,{time:Date.now(),value});return structuredClone(value);
   };
-  transport.fetchedAt = url => cache.get('json'+url.href)?.time;
+  transport.fetchedAt = url => sourceRuntime?stamps.get(url.href):cache.get('json'+url.href)?.time;
   return transport;
 }
 const CLIMATE_ZONES: Record<string,{lat:number;lon:number;name:string}> = {"arctic": {"lat": 80.0, "lon": 0.0, "name": "Arctic (Svalbard)"}, "subarctic_siberia": {"lat": 65.0, "lon": 100.0, "name": "Subarctic Siberia"}, "northern_europe": {"lat": 55.0, "lon": 15.0, "name": "Northern Europe"}, "mediterranean": {"lat": 38.0, "lon": 20.0, "name": "Mediterranean Basin"}, "sahel": {"lat": 14.0, "lon": 0.0, "name": "Sahel Region"}, "middle_east": {"lat": 30.0, "lon": 45.0, "name": "Middle East"}, "south_asia": {"lat": 25.0, "lon": 78.0, "name": "South Asia (India)"}, "east_asia": {"lat": 35.0, "lon": 116.0, "name": "East Asia (Beijing)"}, "southeast_asia": {"lat": 2.0, "lon": 105.0, "name": "Southeast Asia"}, "australia": {"lat": -25.0, "lon": 135.0, "name": "Central Australia"}, "amazon": {"lat": -3.0, "lon": -60.0, "name": "Amazon Basin"}, "us_midwest": {"lat": 40.0, "lon": -90.0, "name": "US Midwest"}, "us_southwest": {"lat": 33.0, "lon": -112.0, "name": "US Southwest"}, "antarctica": {"lat": -75.0, "lon": 0.0, "name": "Antarctica"}, "pacific_enso": {"lat": 0.0, "lon": -150.0, "name": "Pacific ENSO Region"}};
@@ -47,8 +50,8 @@ function point(g:Obj):[number|null,number|null]{
   if(!ring.length||ring.some(p=>!Array.isArray(p)||p.length<2||typeof p[0]!=='number'||typeof p[1]!=='number'))return [null,null];
   return [Number((ring.reduce((s,p)=>s+p[1],0)/ring.length).toFixed(4)),Number((ring.reduce((s,p)=>s+p[0],0)/ring.length).toFixed(4))];
 }
-export function createHazardHandlers(options:{transport?:HazardTransport;now?:()=>Date;firmsApiKey?:string;forecastTransport?:ForecastTransport}={}) {
-  const transport=options.transport??createHazardTransport(),now=options.now??(()=>new Date()),forecastTransport=options.forecastTransport??createForecastTransport();
+export function createHazardHandlers(options:{sourceRuntime?:SourceRuntime;transport?:HazardTransport;now?:()=>Date;firmsApiKey?:string;forecastTransport?:ForecastTransport}={}) {
+  const transport=options.transport??createHazardTransport(fetch,options.sourceRuntime),now=options.now??(()=>new Date()),forecastTransport=options.forecastTransport??createForecastTransport();
   const freshness=new WeakMap<object,number>();
   async function get(base:string,params:Record<string,unknown>={},ttl=300):Promise<unknown>{const url=new URL(base);for(const[k,v]of Object.entries(params))if(v!==undefined&&v!==null&&v!=='')url.searchParams.set(k,String(v));const data=await transport(url,ttl);if(data&&typeof data==='object')freshness.set(data,transport.fetchedAt?.(url)??+now());return data;}
   async function xml(url:string,ttl:number):Promise<Obj>{const raw=await transport(new URL(url),ttl,'text');if(typeof raw!=='string'||raw.length>4_000_000||/<!DOCTYPE|<!ENTITY/i.test(raw))throw Error('Unsafe XML');const parsed=new XMLParser({ignoreAttributes:false,parseTagValue:false,processEntities:true}).parse(raw);const feed=parsed?.rss?.channel??parsed?.feed;if(!feed)throw Error('Unrecognized feed');return feed;}
@@ -147,3 +150,7 @@ export function createHazardHandlers(options:{transport?:HazardTransport;now?:()
     },
   };
 }
+
+const HAZARD_NAMES:Record<string,string>={'earthquake.usgs.gov':'usgs','api.weather.gov':'nws','eonet.gsfc.nasa.gov':'eonet','www.gdacs.org':'gdacs','ll.thespacedevs.com':'launch-library','services.swpc.noaa.gov':'swpc','archive-api.open-meteo.com':'open-meteo','www.nhc.noaa.gov':'nhc','volcano.si.edu':'gvp','feeds.meteoalarm.org':'meteoalarm','www.metoc.navy.mil':'jtwc','firms.modaps.eosdis.nasa.gov':'nasa-firms'};
+function hazardSource(url:URL){return HAZARD_NAMES[url.hostname]!;}
+export function hazardSourceRules():Record<string,SourceRule>{return Object.fromEntries([...ORIGINS].map(origin=>[hazardSource(new URL(origin)),{origins:[origin]}]));}
