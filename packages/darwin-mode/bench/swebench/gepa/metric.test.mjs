@@ -107,6 +107,26 @@ test('classifyFailure precedence covers all 6 classes + resolved', () => {
   assert.equal(classifyFailure({ analysis: a6, patch: '', goldPatchFiles: null, maxSteps: 12 }), 6);
 });
 
+// Disclosed 2026-11-12 (banked runner-up, dream-cycle darwin-evolution night), closed 2026-11-17.
+// This is the canonical source `evaluate-genome.mjs` actually imports — kept behavior-identical
+// with the src/gepa/metric.ts TS port per this file's own header comment. See that file's mirror
+// test for the full rationale: class 6 (budget-exhaustion) must stay reachable even when
+// goldPatchFiles is known and the gold file was read, not permanently shadowed by class 4.
+test('classifyFailure: class 6 (budget-exhaustion) is reachable even when goldPatchFiles is known and the gold file was read (regression for the class-4/class-6 precedence bug)', () => {
+  const gold = ['src/parser.py'];
+  const steps = [T('read', { path: 'src/parser.py' })];
+  for (let i = 0; i < 10; i++) steps.push(T('read', { path: `other${i}.py` }));
+  steps.push(T('line_edit', { path: 'src/parser.py' }, 'line_edit src/parser.py: replaced lines 1-1 (+1 chars)'));
+  const a = analyzeTranscript(steps); // 12 steps total, 1 edit landed, gold file read
+  assert.equal(a.steps, 12);
+  assert.equal(a.editsLanded, 1);
+  assert.equal(
+    classifyFailure({ analysis: a, patch: PATCH, goldPatchFiles: gold, maxSteps: 12 }),
+    6,
+    'edits landed + steps >= maxSteps must classify as budget-exhaustion (6), not wrong-fix (4), even when the gold file was read',
+  );
+});
+
 test('makeFeedback: ASI cites steps, files, gold gap, penalties, class hint, teacher pairing', () => {
   const analysis = analyzeTranscript([T('grep', { pattern: 'x' }), T('grep', { pattern: 'y' }), T('read', { path: 'utils.py' })]);
   const scored = computeInstanceScore({ analysis, patch: '', cost: 0.02, goldPatchFiles: ['src/parser.py'] });

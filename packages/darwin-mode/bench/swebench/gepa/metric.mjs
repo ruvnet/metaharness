@@ -118,8 +118,13 @@ export function classifyFailure({ goldResolved = false, analysis, patch = '', go
     : null;
   if (readGold === false) return 1;                                                      // never even looked at the fix site
   if (a.runTestsFails >= 3 && a.runTestsPasses === 0) return 5;                          // hammering failing tests
-  if (!ps.empty && readGold) return 4;                                                   // right place, wrong fix
+  // Disclosed 2026-11-12, fixed 2026-11-17 (dream-cycle darwin-evolution): budget-exhaustion (6)
+  // MUST be checked before wrong-fix (4) — otherwise, whenever goldPatchFiles is known (the
+  // production case: evaluate-genome.mjs always has the gold patch) and the agent read/touched
+  // the gold file, `!ps.empty && readGold` fires first and class 6 becomes permanently
+  // unreachable. "ran out of steps" is an exogenous constraint, not a correctness verdict.
   if (a.editsLanded > 0 && a.steps >= maxSteps) return 6;                                // ran out of road
+  if (!ps.empty && readGold) return 4;                                                   // right place, wrong fix
   return ps.empty ? 3 : 4;
 }
 
