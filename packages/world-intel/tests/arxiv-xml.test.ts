@@ -1,0 +1,10 @@
+import {describe,it,expect} from 'vitest';
+import {parseArxiv} from '../src/domains/tech.js';
+describe('bounded Atom parsing: intentional pinned-upstream regex bug fixes',()=>{
+ for(const prefix of ['', 'atom:'])it(`handles ${prefix||'default'} namespace, attributes in either order and escaped text`,()=>{
+  const xml=`<${prefix}feed xmlns${prefix?':atom':''}="http://www.w3.org/2005/Atom"><${prefix}entry><${prefix}id>https://arxiv.org/abs/1234.5678</${prefix}id><${prefix}title> A &amp; B&#10; C </${prefix}title><${prefix}summary><![CDATA[ Plain <text> ]]></${prefix}summary><${prefix}author><${prefix}name>Alice &amp; Bob</${prefix}name></${prefix}author><${prefix}category term='cs.AI'/><${prefix}link href='https://arxiv.org/pdf/1234.5678?a=1&amp;b=2' type="application/pdf" title='pdf'/></${prefix}entry></${prefix}feed>`;
+  expect(parseArxiv(xml)).toEqual([{id:'1234.5678',url:'https://arxiv.org/abs/1234.5678',title:'A & B C',summary:'Plain <text>',authors:['Alice & Bob'],categories:['cs.AI'],published:null,updated:null,pdf_url:'https://arxiv.org/pdf/1234.5678?a=1&b=2'}]);
+ });
+ it('accepts title-before-href and preserves five-author/category caps and Unicode summary boundary',()=>{const xml='<entry><summary>'+ '😀'.repeat(301)+'</summary>'+Array.from({length:6},(_,i)=>`<author><name>${i}</name></author><category term="${i}"/>`).join('')+'<link title="pdf" href="https://arxiv.org/pdf/1"/></entry>';const [paper]=parseArxiv(xml);expect(paper.authors).toEqual(['0','1','2','3','4']);expect(paper.categories).toHaveLength(5);expect(paper.summary).toBe('😀'.repeat(300)+'...');expect(paper.pdf_url).toBe('https://arxiv.org/pdf/1');});
+ it('ignores foreign namespace fields and refuses malformed, excessive, or declared-entity XML',()=>{expect(parseArxiv('<entry xmlns:x="urn:foreign"><x:title>wrong</x:title><title>right</title></entry>')[0].title).toBe('right');for(const xml of ['<entry><title></entry>','<!DOCTYPE feed [<!ENTITY x SYSTEM "file:///etc/passwd">]><feed/>','<feed>'+ '<a>'.repeat(33)+'</a>'.repeat(33)+'</feed>','<feed>'+ ' '.repeat(2_000_000)+'</feed>'])expect(()=>parseArxiv(xml)).toThrow();});
+});

@@ -92,7 +92,7 @@ owned resource and handles asynchronous signal errors.
    folder. Source-specific `sync` remains explicitly not implemented, matching upstream's
    warning rather than pretending a refresh occurred. Click versions differ on automatic
    `_cmd` suffix removal; both `webcams` and legacy `webcams-cmd` are accepted. Short-option
-   aliases with separate values are verified; full Click shell-completion/Rich/help-layout
+   aliases with separate and attached values are verified; full Click shell-completion/Rich/help-layout
    parity is not claimed.
 4. **Collector daemon semantics need independent comparison.** Upstream has explicit
    once/daemon entrypoints, source-group filters, a default 300-second interval,
@@ -111,3 +111,32 @@ owned resource and handles asynchronous signal errors.
    Python-specific logger/thread mechanics are not reproduced.
 
 Do not mark “100% parity” based solely on the tool registry or these mocked HTTP tests.
+
+## Independent CLI differential oracle
+
+A second audit used actual Click parsing of the pinned decorators and the pinned command
+function bodies with provider/storage calls replaced by capturing sentinels. Imports,
+network access and filesystem actions were not executed. This is independent of the
+TypeScript mapping table, not a mocked “returns what we passed” dispatch test.
+
+`tests/fixtures/cli-upstream-oracle.json` contains 174 default/populated invocations:
+two for every executable command. `tests/intel-cli-oracle.test.ts` verifies all 174
+Click parameter dictionaries and 166 provider/storage call argument maps. The eight
+system-command invocations (status/guide/sync/dashboard) are parameter-oracle checks,
+not full operational side-effect equivalence. Twenty-two additional edge cases cover
+choices, booleans, repeated/variadic options, callback coordinates, missing arguments,
+malformed values, attached short-option values, integer separators, and end-of-options.
+
+This independent pass found and fixed:
+- `history series --limit 0` now selects upstream's 100/200 fallback.
+- Attached short-option values such as `-n5`, `-m5.5` and `-sAAPL` work.
+- Python-compatible decimal separators (for example `1_000`) are accepted.
+- ECB dataset choices remain case-sensitive; FRED series choices are insensitive.
+- A `--json-output` string after `--` remains a positional value, not a root flag.
+
+One explicit hardening difference is asserted rather than hidden: out-of-range AOI
+coordinates are rejected in the CLI callback instead of waiting for the store handler.
+Unsafe non-finite numeric inputs and integers outside JavaScript's exact range remain
+rejected. Rich table/formatting identity and live source behavior are not established
+by this oracle. CLI tests total 455 passing (362 oracle checks plus 93 dispatch tests);
+TypeScript compilation passes.

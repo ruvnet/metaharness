@@ -12,9 +12,9 @@ export interface ParsedIntelCommand{command:IntelCommand;values:Obj;args:Obj;jso
 export class IntelUsageError extends Error{readonly exitCode=2;}
 const globals=new Set(['--json-output']);
 function converted(raw:string,p:IntelParameter):any{
- let value:any=raw;
- if(p.type==='integer'){if(!/^[+-]?\d+$/.test(raw))throw new IntelUsageError(`${p.name}: '${raw}' is not a valid integer`);value=Number(raw);if(!Number.isSafeInteger(value))throw new IntelUsageError(p.name+': integer out of range');}
- if(p.type==='float'){if(!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(raw))throw new IntelUsageError(`${p.name}: '${raw}' is not a valid number`);value=Number(raw);if(!Number.isFinite(value))throw new IntelUsageError(p.name+': number out of range');}
+ let value:any=raw;const numericText=raw.trim(),digits='[0-9](?:_?[0-9])*';
+ if(p.type==='integer'){if(!new RegExp('^[+-]?'+digits+'$').test(numericText))throw new IntelUsageError(`${p.name}: '${raw}' is not a valid integer`);value=Number(numericText.replaceAll('_',''));if(!Number.isSafeInteger(value))throw new IntelUsageError(p.name+': integer out of range');}
+ if(p.type==='float'){if(!new RegExp('^[+-]?(?:'+digits+'(?:\\.(?:'+digits+')?)?|\\.'+digits+')(?:e[+-]?'+digits+')?$','i').test(numericText))throw new IntelUsageError(`${p.name}: '${raw}' is not a valid number`);value=Number(numericText.replaceAll('_',''));if(!Number.isFinite(value))throw new IntelUsageError(p.name+': number out of range');}
  if(p.choices){const found=p.choices.find(c=>p.caseSensitive?c===value:c.toLowerCase()===String(value).toLowerCase());if(found===undefined)throw new IntelUsageError(`${p.name}: choose from ${p.choices.join(', ')}`);value=found;}
  return value;
 }
@@ -30,6 +30,7 @@ function transformed(command:IntelCommand,values:Obj):Obj{
  if(!Object.keys(command.mapping).length)Object.assign(args,values);
  if(command.function==='news_reaction'&&values.max_age_hours!=null)args.max_age_hours=values.max_age_hours;
  if(command.function==='report'){delete args.fmt;delete args.output;args.format=values.fmt;args.sections=values.sections?String(values.sections).split(',').map(s=>s.trim()):null;}
+ if(command.function==='history_series')args.limit=values.limit||(values.series_key?100:200);
  if(command.function==='history_day'){args.per_source_limit=values.per_source;delete args.per_source;}
  if(command.function==='backfill_fred_cmd'){args.provider='fred';args.series=values.series_ids;delete args.series_ids;}
  if(command.function==='backfill_ecb_cmd'){args.provider='ecb';args.series=values.keys;delete args.keys;}
@@ -38,7 +39,7 @@ function transformed(command:IntelCommand,values:Obj):Obj{
 }
 export function parseIntelCommand(argv:readonly string[]):ParsedIntelCommand{
  if(argv.length>2048||argv.some(v=>v.length>16000))throw new IntelUsageError('Command line exceeds size limit');
- let jsonOutput=false;const tokens=argv.filter(a=>{if(globals.has(a)){jsonOutput=true;return false;}return true;});
+ let jsonOutput=false;const tokens=[...argv];while(tokens.length&&globals.has(tokens[0])){jsonOutput=true;tokens.shift();}
  const command=[...INTEL_COMMANDS].sort((a,b)=>b.path.length-a.path.length).find(c=>[c.path,...c.legacyPaths??[]].some(path=>path.every((part,i)=>tokens[i]===part)));
  if(!command)throw new IntelUsageError('Unknown command. Use --help to list available commands.');
  const matching=[command.path,...command.legacyPaths??[]].find(path=>path.every((part,i)=>tokens[i]===part))!,rest=tokens.slice(matching.length);
@@ -49,9 +50,11 @@ export function parseIntelCommand(argv:readonly string[]):ParsedIntelCommand{
   const token=rest[i];if(!endOptions&&token==='--'){endOptions=true;continue;}
   if(!endOptions&&token==='--help'){help=true;continue;}
   if(!endOptions&&token.startsWith('-')&&!/^-\d/.test(token)){
-   const eq=token.indexOf('='),name=eq<0?token:token.slice(0,eq),p=aliases.get(name);if(!p)throw new IntelUsageError('No such option: '+name);
+   const eq=token.indexOf('=');let name=eq<0?token:token.slice(0,eq),p=aliases.get(name),attached:string|undefined;
+   if(!p&&token.startsWith('-')&&!token.startsWith('--')&&token.length>2){name=token.slice(0,2);p=aliases.get(name);if(p&&p.type!=='boolean')attached=token.slice(2);}
+   if(!p)throw new IntelUsageError('No such option: '+name);
    if(p.type==='boolean'){if(eq>=0)throw new IntelUsageError('Flag does not accept a value: '+name);values[p.name]=true;seen.add(p.name);continue;}
-   const raw=eq<0?rest[++i]:token.slice(eq+1);if(raw===undefined)throw new IntelUsageError('Option requires an argument: '+name);
+   const raw=attached??(eq<0?rest[++i]:token.slice(eq+1));if(raw===undefined)throw new IntelUsageError('Option requires an argument: '+name);
    const value=converted(raw,p);if(p.multiple)values[p.name].push(value);else values[p.name]=value;seen.add(p.name);
   }else positional.push(token);
  }

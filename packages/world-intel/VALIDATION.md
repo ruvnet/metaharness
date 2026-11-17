@@ -74,3 +74,14 @@ No npm publication, production deployment, ruOS/ChatGPT configuration change, fu
 - Full ordered monorepo build passed. Root healthcheck tests11/11 passed; root dependency audit now reports zero vulnerabilities after compatible Hono4.13.19/@hono-node-server2.1.8 lock updates.
 - Corrected Node20 SQLite-only test gating and Windows file-URL/path/POSIX-permission assumptions exposed by the previous checkpoint CI. Remote rerun remains necessary.
 - Pure mocked HTTP/SSE tests are not browser-rendering/live-provider certification. Exact terminal Rich formatting and infrastructure identity remain documented differences.
+
+## Differential and lifecycle follow-up
+
+- Full suite: **1,180 tests passed; one browser test explicitly skipped** (83 files), including actual pinned BGE WASM fixtures. Default runs without model assets additionally skip the BGE integration.
+- Independent CLI oracle: 174 parsed-argument dictionaries, 166 captured provider/storage call arguments, and 22 edge cases, totaling 362 differential checks. Corrected five parser/default divergences.
+
+- Pinned pure-posture oracle: 256 seeded cases (2,304 component scores and 256 composites/classifications), plus 77 dependency-failure variants. Corrected Python 3.12 compensated-sum rounding; Python-version and intentional UNKNOWN differences remain documented.
+- Shared fetch runtime matrix covers fresh/expired/absent cache, open/closed breakers, failures/retries/429 spacing, credential isolation/redaction, redirected URL validation, cancellation and late responses. Fixed cross-origin secret-header stripping and late-timeout continuation.
+- Extended numeric fixtures compare pinned history sampling over 335 seeded observations, correlation/probability goldens, near-tie vector ordering, and timestamp/Unicode boundaries. See NUMERIC_PARITY.md.
+- Four real ephemeral loopback HTTP tests passed: request protections, SSE disconnect, backpressured shutdown and read-only policy. All listeners closed. Browser rendering remains blocked by Chromium Unix-socket permissions; its opt-in integration test is skipped, not passed.
+- Live governed USGS, NOAA space weather, Hacker News and arXiv calls succeeded with valid receipts. arXiv PDF links now resolve after an intentional fix of the upstream regex defect using bounded SAX parsing. No full-provider sweep or credentialed-provider claim.

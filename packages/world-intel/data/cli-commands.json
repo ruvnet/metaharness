@@ -1765,7 +1765,7 @@
             "BSI",
             "ILM"
           ],
-          "caseSensitive": false,
+          "caseSensitive": true,
           "callback": null
         },
         {

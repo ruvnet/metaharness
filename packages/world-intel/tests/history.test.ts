@@ -98,3 +98,4 @@ describe.skipIf(!supportsSqlite)('upstream source extraction contracts',()=>{
  }finally{store.close();}
  });
 });
+it('matches pinned Python normalization at leap-day, timezone, fractional and Unicode boundaries',async()=>{const {readFileSync}=await import('node:fs');const rows=JSON.parse(readFileSync(new URL('./fixtures/history-date-golden.json',import.meta.url),'utf8'));for(const row of rows)expect(normalizeObservedAt(row.input,row.assumeUtc),JSON.stringify(row)).toBe(row.expected);});

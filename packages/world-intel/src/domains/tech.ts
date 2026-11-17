@@ -1,3 +1,4 @@
+import {SaxesParser} from 'saxes';
 import {type SourceRuntime, type SourceRule} from '../source-runtime.js';
 // SPDX-License-Identifier: MIT
 // Native port of pinned World Intel public technology sources. Upstream MIT notice retained.
@@ -23,13 +24,31 @@ export function createTechTransport(fetcher:typeof fetch=fetch,sourceRuntime?:So
 const row=(x:unknown):Record<string,any>=>x&&typeof x==='object'&&!Array.isArray(x)?x as Record<string,any>:{};
 const integer=(x:unknown,d:number,max=50)=>{if(x===undefined)return d;if(typeof x!=='number'||!Number.isInteger(x)||x<0)throw new Error('Invalid limit');return Math.min(x,max);};
 const iso=(now:()=>Date)=>now().toISOString().replace('Z','+00:00');
+/** Corrects upstream regex attribute-order/entity/namespace bugs. Bounded, non-resolving SAX. */
 export function parseArxiv(xml:string):Record<string,unknown>[] {
+ if(Buffer.byteLength(xml,'utf8')>2_000_000)throw new Error('arXiv XML exceeds byte limit');
  if(/<!DOCTYPE|<!ENTITY/i.test(xml))throw new Error('XML declarations not allowed');
- return [...xml.matchAll(/<entry>([\s\S]*?)<\/entry>/g)].map(([,e])=>{
-  const get=(tag:string)=>e.match(new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`))?.[1];
-  let summary=(get('summary')??'').trim().replace(/\s+/g,' ');if(summary.length>300)summary=summary.slice(0,300)+'...';
+ type Node={name:string;uri:string;text:string;attributes:Record<string,string>;children:Node[]};
+ const roots:Node[]=[],stack:Node[]=[];let count=0;
+ const parser=new SaxesParser({xmlns:true});
+ parser.on('doctype',()=>{throw new Error('XML declarations not allowed');});
+ parser.on('error',error=>{throw error;});
+ parser.on('opentag',tag=>{
+  if(stack.length>=32||++count>50000)throw new Error('arXiv XML complexity limit exceeded');
+  const node:Node={name:tag.local,uri:tag.uri,text:'',attributes:Object.fromEntries(Object.values(tag.attributes).filter(a=>!a.uri).map(a=>[a.local,a.value])),children:[]};
+  if(stack.length)stack.at(-1)!.children.push(node);else roots.push(node);stack.push(node);
+ });
+ const text=(value:string)=>{if(stack.length)stack.at(-1)!.text+=value;};
+ parser.on('text',text);parser.on('cdata',text);parser.on('closetag',()=>{stack.pop();});parser.write(xml).close();
+ const atom=(n:Node)=>!n.uri||n.uri==='http://www.w3.org/2005/Atom';
+ const entries=roots.flatMap(n=>n.name==='entry'&&atom(n)?[n]:n.name==='feed'&&atom(n)?n.children.filter(c=>c.name==='entry'&&atom(c)):[]);
+ return entries.map(e=>{
+  const children=(name:string)=>e.children.filter(n=>n.name===name&&atom(n));
+  const get=(name:string)=>children(name)[0]?.text;
+  const normalize=(value:string)=>value.trim().replace(/\s+/g,' ');
+  let summary=normalize(get('summary')??'');if(Array.from(summary).length>300)summary=Array.from(summary).slice(0,300).join('')+'...';
   const url=get('id')??'';
-  return {id:url.includes('/abs/')?url.split('/abs/').at(-1):url,title:(get('title')??'').trim().replace(/\s+/g,' '),summary,authors:[...e.matchAll(/<author>\s*<name>(.*?)<\/name>/g)].slice(0,5).map(x=>x[1]),categories:[...e.matchAll(/<category[^>]*term="([^"]*)"/g)].slice(0,5).map(x=>x[1]),published:get('published')??null,updated:get('updated')??null,pdf_url:e.match(/<link[^>]*title="pdf"[^>]*href="([^"]*)"/)?.[1]??null,url};
+  return {id:url.includes('/abs/')?url.split('/abs/').at(-1):url,title:normalize(get('title')??''),summary,authors:children('author').flatMap(n=>n.children.filter(c=>c.name==='name'&&atom(c)).map(c=>c.text)).slice(0,5),categories:children('category').filter(n=>n.attributes.term!==undefined).map(n=>n.attributes.term).slice(0,5),published:get('published')??null,updated:get('updated')??null,pdf_url:children('link').find(n=>n.attributes.title==='pdf'&&n.attributes.href!==undefined)?.attributes.href??null,url};
  });
 }
 export function createTechHandlers(options:{sourceRuntime?:SourceRuntime;transport?:TechTransport;now?:()=>Date}={}):DomainHandlers{

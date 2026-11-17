@@ -1,0 +1,4765 @@
+{
+  "upstreamCommit": "fdebf9a8de6e00ed688053dd647cafedc179708b",
+  "oracle": "Actual Click parsing plus pinned function bodies with provider/storage calls replaced by capturing sentinels; no provider calls or writes",
+  "cases": [
+    {
+      "command": [
+        "markets"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "markets"
+      ],
+      "clickValues": {
+        "symbols": []
+      },
+      "call": {
+        "name": "markets.fetch_market_quotes",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "symbols": null
+        }
+      }
+    },
+    {
+      "command": [
+        "markets"
+      ],
+      "mode": "populated",
+      "argv": [
+        "markets",
+        "--symbols",
+        "sample",
+        "--symbols",
+        "sample"
+      ],
+      "clickValues": {
+        "symbols": [
+          "sample",
+          "sample"
+        ]
+      },
+      "call": {
+        "name": "markets.fetch_market_quotes",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "symbols": [
+            "sample",
+            "sample"
+          ]
+        }
+      }
+    },
+    {
+      "command": [
+        "crypto"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "crypto"
+      ],
+      "clickValues": {
+        "limit": 20
+      },
+      "call": {
+        "name": "markets.fetch_crypto_quotes",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "limit": 20
+        }
+      }
+    },
+    {
+      "command": [
+        "crypto"
+      ],
+      "mode": "populated",
+      "argv": [
+        "crypto",
+        "--limit",
+        "7"
+      ],
+      "clickValues": {
+        "limit": 7
+      },
+      "call": {
+        "name": "markets.fetch_crypto_quotes",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "limit": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "macro"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "macro"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "markets.fetch_macro_signals",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "macro"
+      ],
+      "mode": "populated",
+      "argv": [
+        "macro"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "markets.fetch_macro_signals",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "energy"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "energy"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "economic.fetch_energy_prices",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "energy"
+      ],
+      "mode": "populated",
+      "argv": [
+        "energy"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "economic.fetch_energy_prices",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "gas-prices"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "gas-prices"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "economic.fetch_gas_prices",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "gas-prices"
+      ],
+      "mode": "populated",
+      "argv": [
+        "gas-prices"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "economic.fetch_gas_prices",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "natgas"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "natgas"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "economic.fetch_residential_natgas_prices",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "natgas"
+      ],
+      "mode": "populated",
+      "argv": [
+        "natgas"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "economic.fetch_residential_natgas_prices",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "electricity"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "electricity"
+      ],
+      "clickValues": {
+        "state": null
+      },
+      "call": {
+        "name": "economic.fetch_electricity_rates",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "state": null
+        }
+      }
+    },
+    {
+      "command": [
+        "electricity"
+      ],
+      "mode": "populated",
+      "argv": [
+        "electricity",
+        "--state",
+        "sample"
+      ],
+      "clickValues": {
+        "state": "sample"
+      },
+      "call": {
+        "name": "economic.fetch_electricity_rates",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "state": "sample"
+        }
+      }
+    },
+    {
+      "command": [
+        "fred"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "fred",
+        "WALCL"
+      ],
+      "clickValues": {
+        "series_id": "WALCL",
+        "limit": 30
+      },
+      "call": {
+        "name": "economic.fetch_fred_series",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "series_id": "WALCL",
+          "limit": 30
+        }
+      }
+    },
+    {
+      "command": [
+        "fred"
+      ],
+      "mode": "populated",
+      "argv": [
+        "fred",
+        "WALCL",
+        "--limit",
+        "7"
+      ],
+      "clickValues": {
+        "limit": 7,
+        "series_id": "WALCL"
+      },
+      "call": {
+        "name": "economic.fetch_fred_series",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "series_id": "WALCL",
+          "limit": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "earthquakes"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "earthquakes"
+      ],
+      "clickValues": {
+        "min_mag": 4.5,
+        "hours": 24
+      },
+      "call": {
+        "name": "seismology.fetch_earthquakes",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "min_magnitude": 4.5,
+          "hours": 24
+        }
+      }
+    },
+    {
+      "command": [
+        "earthquakes"
+      ],
+      "mode": "populated",
+      "argv": [
+        "earthquakes",
+        "--min-mag",
+        "2.5",
+        "--hours",
+        "7"
+      ],
+      "clickValues": {
+        "min_mag": 2.5,
+        "hours": 7
+      },
+      "call": {
+        "name": "seismology.fetch_earthquakes",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "min_magnitude": 2.5,
+          "hours": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "fires"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "fires"
+      ],
+      "clickValues": {
+        "region": null
+      },
+      "call": {
+        "name": "wildfire.fetch_wildfires",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "region": null
+        }
+      }
+    },
+    {
+      "command": [
+        "fires"
+      ],
+      "mode": "populated",
+      "argv": [
+        "fires",
+        "--region",
+        "sample"
+      ],
+      "clickValues": {
+        "region": "sample"
+      },
+      "call": {
+        "name": "wildfire.fetch_wildfires",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "region": "sample"
+        }
+      }
+    },
+    {
+      "command": [
+        "conflicts"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "conflicts"
+      ],
+      "clickValues": {
+        "country": null,
+        "days": 7
+      },
+      "call": {
+        "name": "conflict.fetch_acled_events",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "country": null,
+          "days": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "conflicts"
+      ],
+      "mode": "populated",
+      "argv": [
+        "conflicts",
+        "--country",
+        "sample",
+        "--days",
+        "7"
+      ],
+      "clickValues": {
+        "country": "sample",
+        "days": 7
+      },
+      "call": {
+        "name": "conflict.fetch_acled_events",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "country": "sample",
+          "days": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "flights"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "flights"
+      ],
+      "clickValues": {
+        "bbox": null
+      },
+      "call": {
+        "name": "military.fetch_military_flights",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "bbox": null
+        }
+      }
+    },
+    {
+      "command": [
+        "flights"
+      ],
+      "mode": "populated",
+      "argv": [
+        "flights",
+        "--bbox",
+        "1,2,3,4"
+      ],
+      "clickValues": {
+        "bbox": "1,2,3,4"
+      },
+      "call": {
+        "name": "military.fetch_military_flights",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "bbox": "1,2,3,4"
+        }
+      }
+    },
+    {
+      "command": [
+        "posture"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "posture"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "military.fetch_theater_posture",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "posture"
+      ],
+      "mode": "populated",
+      "argv": [
+        "posture"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "military.fetch_theater_posture",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "outages"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "outages"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "infrastructure.fetch_internet_outages",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "outages"
+      ],
+      "mode": "populated",
+      "argv": [
+        "outages"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "infrastructure.fetch_internet_outages",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "cables"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "cables"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "infrastructure.fetch_cable_health",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "cables"
+      ],
+      "mode": "populated",
+      "argv": [
+        "cables"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "infrastructure.fetch_cable_health",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "warnings"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "warnings"
+      ],
+      "clickValues": {
+        "navarea": null
+      },
+      "call": {
+        "name": "maritime.fetch_nav_warnings",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "navarea": null
+        }
+      }
+    },
+    {
+      "command": [
+        "warnings"
+      ],
+      "mode": "populated",
+      "argv": [
+        "warnings",
+        "--navarea",
+        "sample"
+      ],
+      "clickValues": {
+        "navarea": "sample"
+      },
+      "call": {
+        "name": "maritime.fetch_nav_warnings",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "navarea": "sample"
+        }
+      }
+    },
+    {
+      "command": [
+        "climate"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "climate"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "climate.fetch_climate_anomalies",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "climate"
+      ],
+      "mode": "populated",
+      "argv": [
+        "climate"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "climate.fetch_climate_anomalies",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "news"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "news"
+      ],
+      "clickValues": {
+        "category": null,
+        "limit": 30
+      },
+      "call": {
+        "name": "news.fetch_news_feed",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "category": null,
+          "limit": 30
+        }
+      }
+    },
+    {
+      "command": [
+        "news"
+      ],
+      "mode": "populated",
+      "argv": [
+        "news",
+        "--category",
+        "climate",
+        "--limit",
+        "7"
+      ],
+      "clickValues": {
+        "category": "climate",
+        "limit": 7
+      },
+      "call": {
+        "name": "news.fetch_news_feed",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "category": "climate",
+          "limit": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "trending"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "trending"
+      ],
+      "clickValues": {
+        "min_count": 3
+      },
+      "call": {
+        "name": "news.fetch_trending_keywords",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "min_count": 3
+        }
+      }
+    },
+    {
+      "command": [
+        "trending"
+      ],
+      "mode": "populated",
+      "argv": [
+        "trending",
+        "--min-count",
+        "7"
+      ],
+      "clickValues": {
+        "min_count": 7
+      },
+      "call": {
+        "name": "news.fetch_trending_keywords",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "min_count": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "gdelt"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "gdelt"
+      ],
+      "clickValues": {
+        "query": "conflict",
+        "mode": "artlist",
+        "limit": 20
+      },
+      "call": {
+        "name": "news.fetch_gdelt_search",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "query": "conflict",
+          "mode": "artlist",
+          "limit": 20
+        }
+      }
+    },
+    {
+      "command": [
+        "gdelt"
+      ],
+      "mode": "populated",
+      "argv": [
+        "gdelt",
+        "sample",
+        "--mode",
+        "timelinevol",
+        "--limit",
+        "7"
+      ],
+      "clickValues": {
+        "mode": "timelinevol",
+        "limit": 7,
+        "query": "sample"
+      },
+      "call": {
+        "name": "news.fetch_gdelt_search",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "query": "sample",
+          "mode": "timelinevol",
+          "limit": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "hostility"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "hostility",
+        "sample"
+      ],
+      "clickValues": {
+        "country": "sample",
+        "other": null,
+        "days": 14
+      },
+      "call": {
+        "name": "news_signals.fetch_hostility_timeline",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "country": "sample",
+          "other": null,
+          "days": 14
+        }
+      }
+    },
+    {
+      "command": [
+        "hostility"
+      ],
+      "mode": "populated",
+      "argv": [
+        "hostility",
+        "sample",
+        "sample",
+        "--days",
+        "7"
+      ],
+      "clickValues": {
+        "days": 7,
+        "country": "sample",
+        "other": "sample"
+      },
+      "call": {
+        "name": "news_signals.fetch_hostility_timeline",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "country": "sample",
+          "other": "sample",
+          "days": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "situations"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "situations"
+      ],
+      "clickValues": {
+        "hours": 24.0,
+        "sort": "covered",
+        "kind": "all",
+        "limit": 20
+      },
+      "call": {
+        "name": "news_signals.fetch_situations",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "hours": 24.0,
+          "sort": "covered",
+          "kind": "all",
+          "limit": 20
+        }
+      }
+    },
+    {
+      "command": [
+        "situations"
+      ],
+      "mode": "populated",
+      "argv": [
+        "situations",
+        "--hours",
+        "2.5",
+        "--sort",
+        "change",
+        "--kind",
+        "inside",
+        "--limit",
+        "7"
+      ],
+      "clickValues": {
+        "hours": 2.5,
+        "sort": "change",
+        "kind": "inside",
+        "limit": 7
+      },
+      "call": {
+        "name": "news_signals.fetch_situations",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "hours": 2.5,
+          "sort": "change",
+          "kind": "inside",
+          "limit": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "top-stories"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "top-stories"
+      ],
+      "clickValues": {
+        "hours": 24.0,
+        "min_outlets": 3,
+        "limit": 10
+      },
+      "call": {
+        "name": "news_signals.fetch_top_stories",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "hours": 24.0,
+          "min_outlets": 3,
+          "limit": 10
+        }
+      }
+    },
+    {
+      "command": [
+        "top-stories"
+      ],
+      "mode": "populated",
+      "argv": [
+        "top-stories",
+        "--hours",
+        "2.5",
+        "--min-outlets",
+        "7",
+        "--limit",
+        "7"
+      ],
+      "clickValues": {
+        "hours": 2.5,
+        "min_outlets": 7,
+        "limit": 7
+      },
+      "call": {
+        "name": "news_signals.fetch_top_stories",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "hours": 2.5,
+          "min_outlets": 7,
+          "limit": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "predictions"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "predictions"
+      ],
+      "clickValues": {
+        "limit": 20
+      },
+      "call": {
+        "name": "prediction.fetch_prediction_markets",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "limit": 20
+        }
+      }
+    },
+    {
+      "command": [
+        "predictions"
+      ],
+      "mode": "populated",
+      "argv": [
+        "predictions",
+        "--limit",
+        "7"
+      ],
+      "clickValues": {
+        "limit": 7
+      },
+      "call": {
+        "name": "prediction.fetch_prediction_markets",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "limit": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "kalshi"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "kalshi"
+      ],
+      "clickValues": {
+        "category": null,
+        "series": null,
+        "limit": 20,
+        "pages": 3
+      },
+      "call": {
+        "name": "kalshi_src.fetch_kalshi_markets",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "category": null,
+          "series": null,
+          "limit": 20,
+          "pages": 3
+        }
+      }
+    },
+    {
+      "command": [
+        "kalshi"
+      ],
+      "mode": "populated",
+      "argv": [
+        "kalshi",
+        "--category",
+        "sample",
+        "--series",
+        "sample",
+        "--limit",
+        "7",
+        "--pages",
+        "7"
+      ],
+      "clickValues": {
+        "category": "sample",
+        "series": "sample",
+        "limit": 7,
+        "pages": 7
+      },
+      "call": {
+        "name": "kalshi_src.fetch_kalshi_markets",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "category": "sample",
+          "series": "sample",
+          "limit": 7,
+          "pages": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "prediction-compare"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "prediction-compare"
+      ],
+      "clickValues": {
+        "category": null,
+        "series": null,
+        "polymarket_limit": 300,
+        "min_confidence": 0.6,
+        "limit": 25
+      },
+      "call": {
+        "name": "prediction_cross.fetch_prediction_compare",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "category": null,
+          "series": null,
+          "polymarket_limit": 300,
+          "min_confidence": 0.6,
+          "limit": 25
+        }
+      }
+    },
+    {
+      "command": [
+        "prediction-compare"
+      ],
+      "mode": "populated",
+      "argv": [
+        "prediction-compare",
+        "--category",
+        "sample",
+        "--series",
+        "sample",
+        "--polymarket-limit",
+        "7",
+        "--min-confidence",
+        "2.5",
+        "--limit",
+        "7"
+      ],
+      "clickValues": {
+        "category": "sample",
+        "series": "sample",
+        "polymarket_limit": 7,
+        "min_confidence": 2.5,
+        "limit": 7
+      },
+      "call": {
+        "name": "prediction_cross.fetch_prediction_compare",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "category": "sample",
+          "series": "sample",
+          "polymarket_limit": 7,
+          "min_confidence": 2.5,
+          "limit": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "prediction-settled"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "prediction-settled"
+      ],
+      "clickValues": {
+        "limit": 25,
+        "offsets": [],
+        "kalshi_category": "Economics",
+        "kalshi_series": null
+      },
+      "call": {
+        "name": "prediction_cross.fetch_prediction_settled",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "limit": 25,
+          "offsets_hours": null,
+          "kalshi_category": "Economics",
+          "kalshi_series": null
+        }
+      }
+    },
+    {
+      "command": [
+        "prediction-settled"
+      ],
+      "mode": "populated",
+      "argv": [
+        "prediction-settled",
+        "--limit",
+        "7",
+        "--offset",
+        "2.5",
+        "--offset",
+        "2.5",
+        "--kalshi-category",
+        "sample",
+        "--kalshi-series",
+        "sample"
+      ],
+      "clickValues": {
+        "limit": 7,
+        "offsets": [
+          2.5,
+          2.5
+        ],
+        "kalshi_category": "sample",
+        "kalshi_series": "sample"
+      },
+      "call": {
+        "name": "prediction_cross.fetch_prediction_settled",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "limit": 7,
+          "offsets_hours": [
+            2.5,
+            2.5
+          ],
+          "kalshi_category": "sample",
+          "kalshi_series": "sample"
+        }
+      }
+    },
+    {
+      "command": [
+        "displacement"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "displacement"
+      ],
+      "clickValues": {
+        "year": null
+      },
+      "call": {
+        "name": "displacement.fetch_displacement_summary",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "year": null
+        }
+      }
+    },
+    {
+      "command": [
+        "displacement"
+      ],
+      "mode": "populated",
+      "argv": [
+        "displacement",
+        "--year",
+        "7"
+      ],
+      "clickValues": {
+        "year": 7
+      },
+      "call": {
+        "name": "displacement.fetch_displacement_summary",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "year": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "migration-flows"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "migration-flows"
+      ],
+      "clickValues": {
+        "year": null,
+        "origin": null,
+        "destination": null,
+        "limit": 25,
+        "min_people": 0
+      },
+      "call": {
+        "name": "migration.fetch_migration_flows",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "year": null,
+          "origin": null,
+          "destination": null,
+          "limit": 25,
+          "min_people": 0
+        }
+      }
+    },
+    {
+      "command": [
+        "migration-flows"
+      ],
+      "mode": "populated",
+      "argv": [
+        "migration-flows",
+        "--year",
+        "7",
+        "--origin",
+        "sample",
+        "--destination",
+        "sample",
+        "--limit",
+        "7",
+        "--min-people",
+        "7"
+      ],
+      "clickValues": {
+        "year": 7,
+        "origin": "sample",
+        "destination": "sample",
+        "limit": 7,
+        "min_people": 7
+      },
+      "call": {
+        "name": "migration.fetch_migration_flows",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "year": 7,
+          "origin": "sample",
+          "destination": "sample",
+          "limit": 7,
+          "min_people": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "migration-surges"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "migration-surges"
+      ],
+      "clickValues": {
+        "year": null,
+        "min_change": 50000,
+        "limit": 20
+      },
+      "call": {
+        "name": "migration.fetch_migration_surges",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "year": null,
+          "min_change": 50000,
+          "limit": 20
+        }
+      }
+    },
+    {
+      "command": [
+        "migration-surges"
+      ],
+      "mode": "populated",
+      "argv": [
+        "migration-surges",
+        "--year",
+        "7",
+        "--min-change",
+        "7",
+        "--limit",
+        "7"
+      ],
+      "clickValues": {
+        "year": 7,
+        "min_change": 7,
+        "limit": 7
+      },
+      "call": {
+        "name": "migration.fetch_migration_surges",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "year": 7,
+          "min_change": 7,
+          "limit": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "migration-history"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "migration-history",
+        "sample"
+      ],
+      "clickValues": {
+        "country": "sample",
+        "role": "origin",
+        "year_from": 1951,
+        "year_to": null
+      },
+      "call": {
+        "name": "migration.fetch_migration_history",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "country": "sample",
+          "role": "origin",
+          "year_from": 1951,
+          "year_to": null
+        }
+      }
+    },
+    {
+      "command": [
+        "migration-history"
+      ],
+      "mode": "populated",
+      "argv": [
+        "migration-history",
+        "sample",
+        "--role",
+        "host",
+        "--from",
+        "7",
+        "--to",
+        "7"
+      ],
+      "clickValues": {
+        "role": "host",
+        "year_from": 7,
+        "year_to": 7,
+        "country": "sample"
+      },
+      "call": {
+        "name": "migration.fetch_migration_history",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "country": "sample",
+          "role": "host",
+          "year_from": 7,
+          "year_to": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "net-migration"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "net-migration"
+      ],
+      "clickValues": {
+        "country": null,
+        "region": null,
+        "limit": 20
+      },
+      "call": {
+        "name": "migration.fetch_net_migration",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "country": null,
+          "region": null,
+          "limit": 20
+        }
+      }
+    },
+    {
+      "command": [
+        "net-migration"
+      ],
+      "mode": "populated",
+      "argv": [
+        "net-migration",
+        "--country",
+        "sample",
+        "--region",
+        "sample",
+        "--limit",
+        "7"
+      ],
+      "clickValues": {
+        "country": "sample",
+        "region": "sample",
+        "limit": 7
+      },
+      "call": {
+        "name": "migration.fetch_net_migration",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "country": "sample",
+          "region": "sample",
+          "limit": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "delays"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "delays"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "aviation.fetch_airport_delays",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "delays"
+      ],
+      "mode": "populated",
+      "argv": [
+        "delays"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "aviation.fetch_airport_delays",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "threats"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "threats"
+      ],
+      "clickValues": {
+        "limit": 30
+      },
+      "call": {
+        "name": "cyber.fetch_cyber_threats",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "limit": 30
+        }
+      }
+    },
+    {
+      "command": [
+        "threats"
+      ],
+      "mode": "populated",
+      "argv": [
+        "threats",
+        "--limit",
+        "7"
+      ],
+      "clickValues": {
+        "limit": 7
+      },
+      "call": {
+        "name": "cyber.fetch_cyber_threats",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "limit": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "brief"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "brief"
+      ],
+      "clickValues": {
+        "country_code": "US"
+      },
+      "call": {
+        "name": "intelligence.fetch_country_brief",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "country_code": "US"
+        }
+      }
+    },
+    {
+      "command": [
+        "brief"
+      ],
+      "mode": "populated",
+      "argv": [
+        "brief",
+        "sample"
+      ],
+      "clickValues": {
+        "country_code": "sample"
+      },
+      "call": {
+        "name": "intelligence.fetch_country_brief",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "country_code": "sample"
+        }
+      }
+    },
+    {
+      "command": [
+        "dossier"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "dossier"
+      ],
+      "clickValues": {
+        "country": "US"
+      },
+      "call": {
+        "name": "fetch_country_dossier",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "country": "US"
+        }
+      }
+    },
+    {
+      "command": [
+        "dossier"
+      ],
+      "mode": "populated",
+      "argv": [
+        "dossier",
+        "--country",
+        "sample"
+      ],
+      "clickValues": {
+        "country": "sample"
+      },
+      "call": {
+        "name": "fetch_country_dossier",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "country": "sample"
+        }
+      }
+    },
+    {
+      "command": [
+        "risk"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "risk"
+      ],
+      "clickValues": {
+        "limit": 20
+      },
+      "call": {
+        "name": "intelligence.fetch_risk_scores",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "limit": 20
+        }
+      }
+    },
+    {
+      "command": [
+        "risk"
+      ],
+      "mode": "populated",
+      "argv": [
+        "risk",
+        "--limit",
+        "7"
+      ],
+      "clickValues": {
+        "limit": 7
+      },
+      "call": {
+        "name": "intelligence.fetch_risk_scores",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "limit": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "instability"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "instability"
+      ],
+      "clickValues": {
+        "country_code": null
+      },
+      "call": {
+        "name": "intelligence.fetch_instability_index",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "country_code": null
+        }
+      }
+    },
+    {
+      "command": [
+        "instability"
+      ],
+      "mode": "populated",
+      "argv": [
+        "instability",
+        "sample"
+      ],
+      "clickValues": {
+        "country_code": "sample"
+      },
+      "call": {
+        "name": "intelligence.fetch_instability_index",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "country_code": "sample"
+        }
+      }
+    },
+    {
+      "command": [
+        "btc"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "btc"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "markets.fetch_btc_technicals",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "btc"
+      ],
+      "mode": "populated",
+      "argv": [
+        "btc"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "markets.fetch_btc_technicals",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "central-banks"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "central-banks"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "fetch_central_bank_rates",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "central-banks"
+      ],
+      "mode": "populated",
+      "argv": [
+        "central-banks"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "fetch_central_bank_rates",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "liquidity"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "liquidity"
+      ],
+      "clickValues": {
+        "sort": "biggest_move"
+      },
+      "call": {
+        "name": "liquidity.fetch_liquidity_board",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "sort": "biggest_move"
+        }
+      }
+    },
+    {
+      "command": [
+        "liquidity"
+      ],
+      "mode": "populated",
+      "argv": [
+        "liquidity",
+        "--sort",
+        "newest"
+      ],
+      "clickValues": {
+        "sort": "newest"
+      },
+      "call": {
+        "name": "liquidity.fetch_liquidity_board",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "sort": "newest"
+        }
+      }
+    },
+    {
+      "command": [
+        "net-liquidity"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "net-liquidity"
+      ],
+      "clickValues": {
+        "limit": 12,
+        "start": null
+      },
+      "call": {
+        "name": "liquidity.fetch_net_liquidity",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "limit": 12,
+          "start": null
+        }
+      }
+    },
+    {
+      "command": [
+        "net-liquidity"
+      ],
+      "mode": "populated",
+      "argv": [
+        "net-liquidity",
+        "--limit",
+        "7",
+        "--start",
+        "2020-01-01"
+      ],
+      "clickValues": {
+        "limit": 7,
+        "start": "2020-01-01"
+      },
+      "call": {
+        "name": "liquidity.fetch_net_liquidity",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "limit": 7,
+          "start": "2020-01-01"
+        }
+      }
+    },
+    {
+      "command": [
+        "money-supply"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "money-supply"
+      ],
+      "clickValues": {
+        "region": "all",
+        "limit": 6
+      },
+      "call": {
+        "name": "liquidity.fetch_money_supply",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "region": "all",
+          "limit": 6
+        }
+      }
+    },
+    {
+      "command": [
+        "money-supply"
+      ],
+      "mode": "populated",
+      "argv": [
+        "money-supply",
+        "--region",
+        "euro_area",
+        "--limit",
+        "7"
+      ],
+      "clickValues": {
+        "region": "euro_area",
+        "limit": 7
+      },
+      "call": {
+        "name": "liquidity.fetch_money_supply",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "region": "euro_area",
+          "limit": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "fed-liquidity"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "fed-liquidity",
+        "M2SL"
+      ],
+      "clickValues": {
+        "series_id": "M2SL",
+        "limit": 20,
+        "start": null
+      },
+      "call": {
+        "name": "liquidity.fetch_fed_liquidity_series",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "series_id": "M2SL",
+          "limit": 20,
+          "start": null
+        }
+      }
+    },
+    {
+      "command": [
+        "fed-liquidity"
+      ],
+      "mode": "populated",
+      "argv": [
+        "fed-liquidity",
+        "WTREGEN",
+        "--limit",
+        "7",
+        "--start",
+        "2020-01-01"
+      ],
+      "clickValues": {
+        "limit": 7,
+        "start": "2020-01-01",
+        "series_id": "WTREGEN"
+      },
+      "call": {
+        "name": "liquidity.fetch_fed_liquidity_series",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "series_id": "WTREGEN",
+          "limit": 7,
+          "start": "2020-01-01"
+        }
+      }
+    },
+    {
+      "command": [
+        "ecb-series"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "ecb-series",
+        "M.U2.Y.V.M30.X.1.U2.2300.Z01.E"
+      ],
+      "clickValues": {
+        "key": "M.U2.Y.V.M30.X.1.U2.2300.Z01.E",
+        "dataset": "BSI",
+        "limit": 12,
+        "start": null
+      },
+      "call": {
+        "name": "liquidity.fetch_ecb_series",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "dataset": "BSI",
+          "key": "M.U2.Y.V.M30.X.1.U2.2300.Z01.E",
+          "limit": 12,
+          "start": null
+        }
+      }
+    },
+    {
+      "command": [
+        "ecb-series"
+      ],
+      "mode": "populated",
+      "argv": [
+        "ecb-series",
+        "M.U2.Y.V.M30.X.1.U2.2300.Z01.E",
+        "--dataset",
+        "ILM",
+        "--limit",
+        "7",
+        "--start",
+        "2020-01-01"
+      ],
+      "clickValues": {
+        "dataset": "ILM",
+        "limit": 7,
+        "start": "2020-01-01",
+        "key": "M.U2.Y.V.M30.X.1.U2.2300.Z01.E"
+      },
+      "call": {
+        "name": "liquidity.fetch_ecb_series",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "dataset": "ILM",
+          "key": "M.U2.Y.V.M30.X.1.U2.2300.Z01.E",
+          "limit": 7,
+          "start": "2020-01-01"
+        }
+      }
+    },
+    {
+      "command": [
+        "shipping"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "shipping"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "shipping.fetch_shipping_index",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "shipping"
+      ],
+      "mode": "populated",
+      "argv": [
+        "shipping"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "shipping.fetch_shipping_index",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "news-reaction"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "news-reaction"
+      ],
+      "clickValues": {
+        "category": null,
+        "limit": 150,
+        "min_size": 2,
+        "max_age_hours": null,
+        "no_countries": false
+      },
+      "call": {
+        "name": "fetch_news_market_reaction",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "category": null,
+          "limit": 150,
+          "min_cluster_size": 2,
+          "include_countries": true
+        }
+      }
+    },
+    {
+      "command": [
+        "news-reaction"
+      ],
+      "mode": "populated",
+      "argv": [
+        "news-reaction",
+        "--category",
+        "sample",
+        "--limit",
+        "7",
+        "--min-size",
+        "7",
+        "--max-age-hours",
+        "2.5",
+        "--no-countries"
+      ],
+      "clickValues": {
+        "category": "sample",
+        "limit": 7,
+        "min_size": 7,
+        "max_age_hours": 2.5,
+        "no_countries": true
+      },
+      "call": {
+        "name": "fetch_news_market_reaction",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "category": "sample",
+          "limit": 7,
+          "min_cluster_size": 7,
+          "include_countries": false,
+          "max_age_hours": 2.5
+        }
+      }
+    },
+    {
+      "command": [
+        "social"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "social"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "social.fetch_social_signals",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "social"
+      ],
+      "mode": "populated",
+      "argv": [
+        "social"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "social.fetch_social_signals",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "disease"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "disease"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "health.fetch_disease_outbreaks",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "disease"
+      ],
+      "mode": "populated",
+      "argv": [
+        "disease"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "health.fetch_disease_outbreaks",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "elections"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "elections"
+      ],
+      "clickValues": {
+        "country": null
+      },
+      "call": {
+        "name": "elections.fetch_election_calendar",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "country": null
+        }
+      }
+    },
+    {
+      "command": [
+        "elections"
+      ],
+      "mode": "populated",
+      "argv": [
+        "elections",
+        "--country",
+        "sample"
+      ],
+      "clickValues": {
+        "country": "sample"
+      },
+      "call": {
+        "name": "elections.fetch_election_calendar",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "country": "sample"
+        }
+      }
+    },
+    {
+      "command": [
+        "nuclear"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "nuclear"
+      ],
+      "clickValues": {
+        "hours": 72
+      },
+      "call": {
+        "name": "nuclear.fetch_nuclear_monitor",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "hours": 72
+        }
+      }
+    },
+    {
+      "command": [
+        "nuclear"
+      ],
+      "mode": "populated",
+      "argv": [
+        "nuclear",
+        "--hours",
+        "7"
+      ],
+      "clickValues": {
+        "hours": 7
+      },
+      "call": {
+        "name": "nuclear.fetch_nuclear_monitor",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "hours": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "space"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "space"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "space_weather.fetch_space_weather",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "space"
+      ],
+      "mode": "populated",
+      "argv": [
+        "space"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "space_weather.fetch_space_weather",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "sanctions"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "sanctions",
+        "sample"
+      ],
+      "clickValues": {
+        "query": "sample",
+        "country": null
+      },
+      "call": {
+        "name": "sanctions.fetch_sanctions_search",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "query": "sample",
+          "country": null
+        }
+      }
+    },
+    {
+      "command": [
+        "sanctions"
+      ],
+      "mode": "populated",
+      "argv": [
+        "sanctions",
+        "sample",
+        "--country",
+        "sample"
+      ],
+      "clickValues": {
+        "country": "sample",
+        "query": "sample"
+      },
+      "call": {
+        "name": "sanctions.fetch_sanctions_search",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "query": "sample",
+          "country": "sample"
+        }
+      }
+    },
+    {
+      "command": [
+        "ai-watch"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "ai-watch"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "ai_watch.fetch_ai_watch",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "ai-watch"
+      ],
+      "mode": "populated",
+      "argv": [
+        "ai-watch"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "ai_watch.fetch_ai_watch",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "fleet"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "fleet"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "fetch_usni_fleet",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "fleet"
+      ],
+      "mode": "populated",
+      "argv": [
+        "fleet"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "fetch_usni_fleet",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "hn"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "hn"
+      ],
+      "clickValues": {
+        "limit": 20
+      },
+      "call": {
+        "name": "fetch_hacker_news",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "limit": 20
+        }
+      }
+    },
+    {
+      "command": [
+        "hn"
+      ],
+      "mode": "populated",
+      "argv": [
+        "hn",
+        "--limit",
+        "7"
+      ],
+      "clickValues": {
+        "limit": 7
+      },
+      "call": {
+        "name": "fetch_hacker_news",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "limit": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "gh-trending"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "gh-trending"
+      ],
+      "clickValues": {
+        "limit": 15
+      },
+      "call": {
+        "name": "fetch_trending_repos",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "limit": 15
+        }
+      }
+    },
+    {
+      "command": [
+        "gh-trending"
+      ],
+      "mode": "populated",
+      "argv": [
+        "gh-trending",
+        "--limit",
+        "7"
+      ],
+      "clickValues": {
+        "limit": 7
+      },
+      "call": {
+        "name": "fetch_trending_repos",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "limit": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "arxiv"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "arxiv"
+      ],
+      "clickValues": {
+        "query": "cs.AI",
+        "limit": 10
+      },
+      "call": {
+        "name": "fetch_arxiv_papers",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "query": "cs.AI",
+          "limit": 10
+        }
+      }
+    },
+    {
+      "command": [
+        "arxiv"
+      ],
+      "mode": "populated",
+      "argv": [
+        "arxiv",
+        "--query",
+        "sample",
+        "--limit",
+        "7"
+      ],
+      "clickValues": {
+        "query": "sample",
+        "limit": 7
+      },
+      "call": {
+        "name": "fetch_arxiv_papers",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "query": "sample",
+          "limit": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "spending"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "spending"
+      ],
+      "clickValues": {
+        "limit": 15
+      },
+      "call": {
+        "name": "fetch_usa_spending",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "limit": 15
+        }
+      }
+    },
+    {
+      "command": [
+        "spending"
+      ],
+      "mode": "populated",
+      "argv": [
+        "spending",
+        "--limit",
+        "7"
+      ],
+      "clickValues": {
+        "limit": 7
+      },
+      "call": {
+        "name": "fetch_usa_spending",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "limit": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "bases"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "bases"
+      ],
+      "clickValues": {
+        "operator": null,
+        "country": null
+      },
+      "call": {
+        "name": "geospatial.fetch_military_bases",
+        "positional": [],
+        "keywords": {
+          "operator": null,
+          "country": null
+        }
+      }
+    },
+    {
+      "command": [
+        "bases"
+      ],
+      "mode": "populated",
+      "argv": [
+        "bases",
+        "--operator",
+        "sample",
+        "--country",
+        "sample"
+      ],
+      "clickValues": {
+        "operator": "sample",
+        "country": "sample"
+      },
+      "call": {
+        "name": "geospatial.fetch_military_bases",
+        "positional": [],
+        "keywords": {
+          "operator": "sample",
+          "country": "sample"
+        }
+      }
+    },
+    {
+      "command": [
+        "exchanges"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "exchanges"
+      ],
+      "clickValues": {
+        "tier": null,
+        "country": null
+      },
+      "call": {
+        "name": "geospatial.fetch_stock_exchanges",
+        "positional": [],
+        "keywords": {
+          "tier": null,
+          "country": null
+        }
+      }
+    },
+    {
+      "command": [
+        "exchanges"
+      ],
+      "mode": "populated",
+      "argv": [
+        "exchanges",
+        "--tier",
+        "small",
+        "--country",
+        "sample"
+      ],
+      "clickValues": {
+        "tier": "small",
+        "country": "sample"
+      },
+      "call": {
+        "name": "geospatial.fetch_stock_exchanges",
+        "positional": [],
+        "keywords": {
+          "tier": "small",
+          "country": "sample"
+        }
+      }
+    },
+    {
+      "command": [
+        "traffic"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "traffic"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "fetch_traffic_flow",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "traffic"
+      ],
+      "mode": "populated",
+      "argv": [
+        "traffic"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "fetch_traffic_flow",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "incidents"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "incidents"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "fetch_traffic_incidents",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "incidents"
+      ],
+      "mode": "populated",
+      "argv": [
+        "incidents"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "fetch_traffic_incidents",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "air-traffic"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "air-traffic"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "aviation.fetch_domestic_flights",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "air-traffic"
+      ],
+      "mode": "populated",
+      "argv": [
+        "air-traffic"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "aviation.fetch_domestic_flights",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "webcams"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "webcams"
+      ],
+      "clickValues": {
+        "category": "traffic",
+        "limit": 20
+      },
+      "call": {
+        "name": "fetch_webcams",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "category": "traffic",
+          "limit": 20
+        }
+      }
+    },
+    {
+      "command": [
+        "webcams"
+      ],
+      "mode": "populated",
+      "argv": [
+        "webcams",
+        "--category",
+        "sample",
+        "--limit",
+        "7"
+      ],
+      "clickValues": {
+        "category": "sample",
+        "limit": 7
+      },
+      "call": {
+        "name": "fetch_webcams",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "category": "sample",
+          "limit": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "status"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "status"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "breaker.status",
+        "positional": [],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "status"
+      ],
+      "mode": "populated",
+      "argv": [
+        "status"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "breaker.status",
+        "positional": [],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "guide"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "guide"
+      ],
+      "clickValues": {
+        "measures": false
+      },
+      "call": {
+        "name": "guide.render_guide",
+        "positional": [],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "guide"
+      ],
+      "mode": "populated",
+      "argv": [
+        "guide",
+        "--measures"
+      ],
+      "clickValues": {
+        "measures": true
+      },
+      "call": {
+        "name": "print_json",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "sync"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "sync"
+      ],
+      "clickValues": {
+        "source": null
+      },
+      "call": {
+        "name": "cache.evict_expired",
+        "positional": [],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "sync"
+      ],
+      "mode": "populated",
+      "argv": [
+        "sync",
+        "sample"
+      ],
+      "clickValues": {
+        "source": "sample"
+      },
+      "call": null
+    },
+    {
+      "command": [
+        "dashboard"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "dashboard"
+      ],
+      "clickValues": {
+        "port": 8501,
+        "host": "127.0.0.1"
+      },
+      "call": {
+        "name": "run_dashboard",
+        "positional": [],
+        "keywords": {
+          "host": "127.0.0.1",
+          "port": 8501
+        }
+      }
+    },
+    {
+      "command": [
+        "dashboard"
+      ],
+      "mode": "populated",
+      "argv": [
+        "dashboard",
+        "--port",
+        "7",
+        "--host",
+        "sample"
+      ],
+      "clickValues": {
+        "port": 7,
+        "host": "sample"
+      },
+      "call": {
+        "name": "run_dashboard",
+        "positional": [],
+        "keywords": {
+          "host": "sample",
+          "port": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "report"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "report"
+      ],
+      "clickValues": {
+        "output": null,
+        "title": null,
+        "fmt": "pdf",
+        "sections": null
+      },
+      "call": {
+        "name": "generate_report",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "output_path": null,
+          "title": null,
+          "sections": null,
+          "fmt": "pdf"
+        }
+      }
+    },
+    {
+      "command": [
+        "report"
+      ],
+      "mode": "populated",
+      "argv": [
+        "report",
+        "--output",
+        "sample",
+        "--title",
+        "sample",
+        "--format",
+        "html",
+        "--sections",
+        "markets, news"
+      ],
+      "clickValues": {
+        "output": "sample",
+        "title": "sample",
+        "fmt": "html",
+        "sections": "markets, news"
+      },
+      "call": {
+        "name": "generate_report",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "output_path": "sample",
+          "title": "sample",
+          "sections": [
+            "markets",
+            "news"
+          ],
+          "fmt": "html"
+        }
+      }
+    },
+    {
+      "command": [
+        "aoi",
+        "define"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "aoi",
+        "define",
+        "sample",
+        "--lat",
+        "1",
+        "--lon",
+        "1",
+        "--radius-km",
+        "1"
+      ],
+      "clickValues": {
+        "lat": 1.0,
+        "lon": 1.0,
+        "radius_km": 1.0,
+        "name": "sample"
+      },
+      "call": {
+        "name": "aoi_analysis.define_aoi",
+        "positional": [
+          null
+        ],
+        "keywords": {
+          "name": "sample",
+          "lat": 1.0,
+          "lon": 1.0,
+          "radius_km": 1.0
+        }
+      }
+    },
+    {
+      "command": [
+        "aoi",
+        "define"
+      ],
+      "mode": "populated",
+      "argv": [
+        "aoi",
+        "define",
+        "sample",
+        "--lat",
+        "2.5",
+        "--lon",
+        "2.5",
+        "--radius-km",
+        "2.5"
+      ],
+      "clickValues": {
+        "lat": 2.5,
+        "lon": 2.5,
+        "radius_km": 2.5,
+        "name": "sample"
+      },
+      "call": {
+        "name": "aoi_analysis.define_aoi",
+        "positional": [
+          null
+        ],
+        "keywords": {
+          "name": "sample",
+          "lat": 2.5,
+          "lon": 2.5,
+          "radius_km": 2.5
+        }
+      }
+    },
+    {
+      "command": [
+        "aoi",
+        "define-polygon"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "aoi",
+        "define-polygon",
+        "sample"
+      ],
+      "clickValues": {
+        "name": "sample",
+        "vertices": []
+      },
+      "call": {
+        "name": "aoi_analysis.define_polygon_aoi",
+        "positional": [
+          null
+        ],
+        "keywords": {
+          "name": "sample",
+          "vertices": []
+        }
+      }
+    },
+    {
+      "command": [
+        "aoi",
+        "define-polygon"
+      ],
+      "mode": "populated",
+      "argv": [
+        "aoi",
+        "define-polygon",
+        "sample",
+        "--vertex",
+        "1,2",
+        "--vertex",
+        "1,2"
+      ],
+      "clickValues": {
+        "vertices": [
+          [
+            1.0,
+            2.0
+          ],
+          [
+            1.0,
+            2.0
+          ]
+        ],
+        "name": "sample"
+      },
+      "call": {
+        "name": "aoi_analysis.define_polygon_aoi",
+        "positional": [
+          null
+        ],
+        "keywords": {
+          "name": "sample",
+          "vertices": [
+            [
+              1.0,
+              2.0
+            ],
+            [
+              1.0,
+              2.0
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "command": [
+        "aoi",
+        "define-corridor"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "aoi",
+        "define-corridor",
+        "sample",
+        "--width-km",
+        "1"
+      ],
+      "clickValues": {
+        "width_km": 1.0,
+        "name": "sample",
+        "waypoints": []
+      },
+      "call": {
+        "name": "aoi_analysis.define_corridor_aoi",
+        "positional": [
+          null
+        ],
+        "keywords": {
+          "name": "sample",
+          "waypoints": [],
+          "width_km": 1.0
+        }
+      }
+    },
+    {
+      "command": [
+        "aoi",
+        "define-corridor"
+      ],
+      "mode": "populated",
+      "argv": [
+        "aoi",
+        "define-corridor",
+        "sample",
+        "--waypoint",
+        "1,2",
+        "--waypoint",
+        "1,2",
+        "--width-km",
+        "2.5"
+      ],
+      "clickValues": {
+        "waypoints": [
+          [
+            1.0,
+            2.0
+          ],
+          [
+            1.0,
+            2.0
+          ]
+        ],
+        "width_km": 2.5,
+        "name": "sample"
+      },
+      "call": {
+        "name": "aoi_analysis.define_corridor_aoi",
+        "positional": [
+          null
+        ],
+        "keywords": {
+          "name": "sample",
+          "waypoints": [
+            [
+              1.0,
+              2.0
+            ],
+            [
+              1.0,
+              2.0
+            ]
+          ],
+          "width_km": 2.5
+        }
+      }
+    },
+    {
+      "command": [
+        "aoi",
+        "list"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "aoi",
+        "list"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "aoi_analysis.list_aois",
+        "positional": [
+          null
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "aoi",
+        "list"
+      ],
+      "mode": "populated",
+      "argv": [
+        "aoi",
+        "list"
+      ],
+      "clickValues": {},
+      "call": {
+        "name": "aoi_analysis.list_aois",
+        "positional": [
+          null
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "aoi",
+        "update"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "aoi",
+        "update",
+        "sample"
+      ],
+      "clickValues": {
+        "name": "sample",
+        "new_name": null,
+        "lat": null,
+        "lon": null,
+        "radius_km": null
+      },
+      "call": {
+        "name": "aoi_analysis.update_aoi",
+        "positional": [
+          null
+        ],
+        "keywords": {
+          "name": "sample",
+          "new_name": null,
+          "lat": null,
+          "lon": null,
+          "radius_km": null
+        }
+      }
+    },
+    {
+      "command": [
+        "aoi",
+        "update"
+      ],
+      "mode": "populated",
+      "argv": [
+        "aoi",
+        "update",
+        "sample",
+        "--new-name",
+        "sample",
+        "--lat",
+        "2.5",
+        "--lon",
+        "2.5",
+        "--radius-km",
+        "2.5"
+      ],
+      "clickValues": {
+        "new_name": "sample",
+        "lat": 2.5,
+        "lon": 2.5,
+        "radius_km": 2.5,
+        "name": "sample"
+      },
+      "call": {
+        "name": "aoi_analysis.update_aoi",
+        "positional": [
+          null
+        ],
+        "keywords": {
+          "name": "sample",
+          "new_name": "sample",
+          "lat": 2.5,
+          "lon": 2.5,
+          "radius_km": 2.5
+        }
+      }
+    },
+    {
+      "command": [
+        "aoi",
+        "delete"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "aoi",
+        "delete",
+        "sample"
+      ],
+      "clickValues": {
+        "name": "sample"
+      },
+      "call": {
+        "name": "aoi_analysis.delete_aoi",
+        "positional": [
+          null
+        ],
+        "keywords": {
+          "name": "sample"
+        }
+      }
+    },
+    {
+      "command": [
+        "aoi",
+        "delete"
+      ],
+      "mode": "populated",
+      "argv": [
+        "aoi",
+        "delete",
+        "sample"
+      ],
+      "clickValues": {
+        "name": "sample"
+      },
+      "call": {
+        "name": "aoi_analysis.delete_aoi",
+        "positional": [
+          null
+        ],
+        "keywords": {
+          "name": "sample"
+        }
+      }
+    },
+    {
+      "command": [
+        "aoi",
+        "brief"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "aoi",
+        "brief",
+        "sample"
+      ],
+      "clickValues": {
+        "name": "sample"
+      },
+      "call": {
+        "name": "aoi_analysis.fetch_aoi_brief",
+        "positional": [
+          "<capability>",
+          null
+        ],
+        "keywords": {
+          "name": "sample"
+        }
+      }
+    },
+    {
+      "command": [
+        "aoi",
+        "brief"
+      ],
+      "mode": "populated",
+      "argv": [
+        "aoi",
+        "brief",
+        "sample"
+      ],
+      "clickValues": {
+        "name": "sample"
+      },
+      "call": {
+        "name": "aoi_analysis.fetch_aoi_brief",
+        "positional": [
+          "<capability>",
+          null
+        ],
+        "keywords": {
+          "name": "sample"
+        }
+      }
+    },
+    {
+      "command": [
+        "aoi",
+        "escalation"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "aoi",
+        "escalation",
+        "sample"
+      ],
+      "clickValues": {
+        "name": "sample"
+      },
+      "call": {
+        "name": "aoi_analysis.fetch_aoi_escalation",
+        "positional": [
+          "<capability>",
+          null
+        ],
+        "keywords": {
+          "name": "sample"
+        }
+      }
+    },
+    {
+      "command": [
+        "aoi",
+        "escalation"
+      ],
+      "mode": "populated",
+      "argv": [
+        "aoi",
+        "escalation",
+        "sample"
+      ],
+      "clickValues": {
+        "name": "sample"
+      },
+      "call": {
+        "name": "aoi_analysis.fetch_aoi_escalation",
+        "positional": [
+          "<capability>",
+          null
+        ],
+        "keywords": {
+          "name": "sample"
+        }
+      }
+    },
+    {
+      "command": [
+        "aoi",
+        "changes"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "aoi",
+        "changes",
+        "sample"
+      ],
+      "clickValues": {
+        "name": "sample"
+      },
+      "call": {
+        "name": "aoi_analysis.fetch_aoi_changes",
+        "positional": [
+          "<capability>",
+          null
+        ],
+        "keywords": {
+          "name": "sample"
+        }
+      }
+    },
+    {
+      "command": [
+        "aoi",
+        "changes"
+      ],
+      "mode": "populated",
+      "argv": [
+        "aoi",
+        "changes",
+        "sample"
+      ],
+      "clickValues": {
+        "name": "sample"
+      },
+      "call": {
+        "name": "aoi_analysis.fetch_aoi_changes",
+        "positional": [
+          "<capability>",
+          null
+        ],
+        "keywords": {
+          "name": "sample"
+        }
+      }
+    },
+    {
+      "command": [
+        "history",
+        "health"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "history",
+        "health"
+      ],
+      "clickValues": {
+        "source": null
+      },
+      "call": {
+        "name": "history.collection_health",
+        "positional": [
+          []
+        ],
+        "keywords": {
+          "source": null
+        }
+      }
+    },
+    {
+      "command": [
+        "history",
+        "health"
+      ],
+      "mode": "populated",
+      "argv": [
+        "history",
+        "health",
+        "--source",
+        "sample"
+      ],
+      "clickValues": {
+        "source": "sample"
+      },
+      "call": {
+        "name": "history.collection_health",
+        "positional": [
+          []
+        ],
+        "keywords": {
+          "source": "sample"
+        }
+      }
+    },
+    {
+      "command": [
+        "history",
+        "captures"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "history",
+        "captures",
+        "sample"
+      ],
+      "clickValues": {
+        "source": "sample",
+        "limit": 20,
+        "capture_id": null
+      },
+      "call": {
+        "name": "history.capture_history",
+        "positional": [
+          "sample"
+        ],
+        "keywords": {
+          "limit": 20,
+          "capture_id": null
+        }
+      }
+    },
+    {
+      "command": [
+        "history",
+        "captures"
+      ],
+      "mode": "populated",
+      "argv": [
+        "history",
+        "captures",
+        "sample",
+        "--limit",
+        "7",
+        "--capture-id",
+        "7"
+      ],
+      "clickValues": {
+        "limit": 7,
+        "capture_id": 7,
+        "source": "sample"
+      },
+      "call": {
+        "name": "history.capture_history",
+        "positional": [
+          "sample"
+        ],
+        "keywords": {
+          "limit": 7,
+          "capture_id": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "history",
+        "series"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "history",
+        "series"
+      ],
+      "clickValues": {
+        "series_key": null,
+        "source": null,
+        "limit": null
+      },
+      "call": {
+        "name": "history.series_history",
+        "positional": [
+          null
+        ],
+        "keywords": {
+          "source": null,
+          "limit": 200
+        }
+      }
+    },
+    {
+      "command": [
+        "history",
+        "series"
+      ],
+      "mode": "populated",
+      "argv": [
+        "history",
+        "series",
+        "sample",
+        "--source",
+        "sample",
+        "--limit",
+        "7"
+      ],
+      "clickValues": {
+        "source": "sample",
+        "limit": 7,
+        "series_key": "sample"
+      },
+      "call": {
+        "name": "history.series_history",
+        "positional": [
+          "sample"
+        ],
+        "keywords": {
+          "source": "sample",
+          "limit": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "history",
+        "revisions"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "history",
+        "revisions"
+      ],
+      "clickValues": {
+        "source": null,
+        "series_key": null,
+        "limit": 100
+      },
+      "call": {
+        "name": "history.revisions",
+        "positional": [],
+        "keywords": {
+          "source": null,
+          "series_key": null,
+          "limit": 100
+        }
+      }
+    },
+    {
+      "command": [
+        "history",
+        "revisions"
+      ],
+      "mode": "populated",
+      "argv": [
+        "history",
+        "revisions",
+        "--source",
+        "sample",
+        "--series",
+        "sample",
+        "--limit",
+        "7"
+      ],
+      "clickValues": {
+        "source": "sample",
+        "series_key": "sample",
+        "limit": 7
+      },
+      "call": {
+        "name": "history.revisions",
+        "positional": [],
+        "keywords": {
+          "source": "sample",
+          "series_key": "sample",
+          "limit": 7
+        }
+      }
+    },
+    {
+      "command": [
+        "history",
+        "connections"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "history",
+        "connections",
+        "sample"
+      ],
+      "clickValues": {
+        "series_keys": [
+          "sample"
+        ],
+        "grid": "day",
+        "transform": "changes",
+        "max_lag": 5,
+        "min_overlap": 30,
+        "q": 0.05,
+        "start": null,
+        "end": null
+      },
+      "call": {
+        "name": "lagged.lagged_connections",
+        "positional": [
+          "<capability>",
+          [
+            "sample"
+          ]
+        ],
+        "keywords": {
+          "grid": "day",
+          "transform": "changes",
+          "max_lag": 5,
+          "min_overlap": 30,
+          "q": 0.05,
+          "start": null,
+          "end": null
+        }
+      }
+    },
+    {
+      "command": [
+        "history",
+        "connections"
+      ],
+      "mode": "populated",
+      "argv": [
+        "history",
+        "connections",
+        "sample",
+        "sample",
+        "--grid",
+        "month",
+        "--transform",
+        "levels",
+        "--max-lag",
+        "7",
+        "--min-overlap",
+        "7",
+        "--q",
+        "2.5",
+        "--start",
+        "2020-01-01",
+        "--end",
+        "2026-01-01"
+      ],
+      "clickValues": {
+        "grid": "month",
+        "transform": "levels",
+        "max_lag": 7,
+        "min_overlap": 7,
+        "q": 2.5,
+        "start": "2020-01-01",
+        "end": "2026-01-01",
+        "series_keys": [
+          "sample",
+          "sample"
+        ]
+      },
+      "call": {
+        "name": "lagged.lagged_connections",
+        "positional": [
+          "<capability>",
+          [
+            "sample",
+            "sample"
+          ]
+        ],
+        "keywords": {
+          "grid": "month",
+          "transform": "levels",
+          "max_lag": 7,
+          "min_overlap": 7,
+          "q": 2.5,
+          "start": "2020-01-01",
+          "end": "2026-01-01"
+        }
+      }
+    },
+    {
+      "command": [
+        "history",
+        "day"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "history",
+        "day",
+        "2026-11-16"
+      ],
+      "clickValues": {
+        "day": "2026-11-16",
+        "by": "collected",
+        "source": null,
+        "limit": null,
+        "per_source": null
+      },
+      "call": {
+        "name": "day_timeline",
+        "positional": [
+          "fixture.sqlite",
+          "2026-11-16"
+        ],
+        "keywords": {
+          "by": "collected",
+          "source": null,
+          "roster": [],
+          "limit": 100,
+          "per_source_limit": 10,
+          "now": 1794873600
+        }
+      }
+    },
+    {
+      "command": [
+        "history",
+        "day"
+      ],
+      "mode": "populated",
+      "argv": [
+        "history",
+        "day",
+        "2026-11-16",
+        "--by",
+        "observed",
+        "--source",
+        "sample",
+        "--limit",
+        "7",
+        "--per-source",
+        "7"
+      ],
+      "clickValues": {
+        "by": "observed",
+        "source": "sample",
+        "limit": 7,
+        "per_source": 7,
+        "day": "2026-11-16"
+      },
+      "call": {
+        "name": "day_timeline",
+        "positional": [
+          "fixture.sqlite",
+          "2026-11-16"
+        ],
+        "keywords": {
+          "by": "observed",
+          "source": "sample",
+          "roster": [],
+          "limit": 7,
+          "per_source_limit": 7,
+          "now": 1794873600
+        }
+      }
+    },
+    {
+      "command": [
+        "history",
+        "backfill",
+        "fred"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "history",
+        "backfill",
+        "fred",
+        "sample"
+      ],
+      "clickValues": {
+        "series_ids": [
+          "sample"
+        ],
+        "start": null
+      },
+      "call": {
+        "name": "backfill",
+        "positional": [
+          "<capability>",
+          "fred",
+          [
+            "sample"
+          ],
+          null
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "history",
+        "backfill",
+        "fred"
+      ],
+      "mode": "populated",
+      "argv": [
+        "history",
+        "backfill",
+        "fred",
+        "sample",
+        "sample",
+        "--start",
+        "2020-01-01"
+      ],
+      "clickValues": {
+        "start": "2020-01-01",
+        "series_ids": [
+          "sample",
+          "sample"
+        ]
+      },
+      "call": {
+        "name": "backfill",
+        "positional": [
+          "<capability>",
+          "fred",
+          [
+            "sample",
+            "sample"
+          ],
+          "2020-01-01"
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "history",
+        "backfill",
+        "ecb"
+      ],
+      "mode": "defaults",
+      "argv": [
+        "history",
+        "backfill",
+        "ecb",
+        "sample"
+      ],
+      "clickValues": {
+        "keys": [
+          "sample"
+        ],
+        "start": null
+      },
+      "call": {
+        "name": "backfill",
+        "positional": [
+          "<capability>",
+          "ecb",
+          [
+            "sample"
+          ],
+          null
+        ],
+        "keywords": {}
+      }
+    },
+    {
+      "command": [
+        "history",
+        "backfill",
+        "ecb"
+      ],
+      "mode": "populated",
+      "argv": [
+        "history",
+        "backfill",
+        "ecb",
+        "sample",
+        "sample",
+        "--start",
+        "2020-01-01"
+      ],
+      "clickValues": {
+        "start": "2020-01-01",
+        "keys": [
+          "sample",
+          "sample"
+        ]
+      },
+      "call": {
+        "name": "backfill",
+        "positional": [
+          "<capability>",
+          "ecb",
+          [
+            "sample",
+            "sample"
+          ],
+          "2020-01-01"
+        ],
+        "keywords": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "command": [
+        "history",
+        "series"
+      ],
+      "argv": [
+        "history",
+        "series",
+        "--limit",
+        "0"
+      ],
+      "clickValues": {
+        "limit": 0,
+        "series_key": null,
+        "source": null
+      },
+      "call": {
+        "name": "history.series_history",
+        "positional": [
+          null
+        ],
+        "keywords": {
+          "source": null,
+          "limit": 200
+        }
+      },
+      "accepted": true
+    },
+    {
+      "command": [
+        "history",
+        "series"
+      ],
+      "argv": [
+        "history",
+        "series",
+        "some:key",
+        "--limit",
+        "0"
+      ],
+      "clickValues": {
+        "limit": 0,
+        "series_key": "some:key",
+        "source": null
+      },
+      "call": {
+        "name": "history.series_history",
+        "positional": [
+          "some:key"
+        ],
+        "keywords": {
+          "source": null,
+          "limit": 100
+        }
+      },
+      "accepted": true
+    },
+    {
+      "command": [
+        "crypto"
+      ],
+      "argv": [
+        "crypto",
+        "-n5"
+      ],
+      "clickValues": {
+        "limit": 5
+      },
+      "call": {
+        "name": "markets.fetch_crypto_quotes",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "limit": 5
+        }
+      },
+      "accepted": true
+    },
+    {
+      "command": [
+        "earthquakes"
+      ],
+      "argv": [
+        "earthquakes",
+        "-m5.5",
+        "-h48"
+      ],
+      "clickValues": {
+        "min_mag": 5.5,
+        "hours": 48
+      },
+      "call": {
+        "name": "seismology.fetch_earthquakes",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "min_magnitude": 5.5,
+          "hours": 48
+        }
+      },
+      "accepted": true
+    },
+    {
+      "command": [
+        "markets"
+      ],
+      "argv": [
+        "markets",
+        "-sAAPL",
+        "-sMSFT"
+      ],
+      "clickValues": {
+        "symbols": [
+          "AAPL",
+          "MSFT"
+        ]
+      },
+      "call": {
+        "name": "markets.fetch_market_quotes",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "symbols": [
+            "AAPL",
+            "MSFT"
+          ]
+        }
+      },
+      "accepted": true
+    },
+    {
+      "command": [
+        "crypto"
+      ],
+      "argv": [
+        "crypto",
+        "--limit=7"
+      ],
+      "clickValues": {
+        "limit": 7
+      },
+      "call": {
+        "name": "markets.fetch_crypto_quotes",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "limit": 7
+        }
+      },
+      "accepted": true
+    },
+    {
+      "command": [
+        "crypto"
+      ],
+      "argv": [
+        "crypto",
+        "--limit",
+        "4",
+        "--limit",
+        "8"
+      ],
+      "clickValues": {
+        "limit": 8
+      },
+      "call": {
+        "name": "markets.fetch_crypto_quotes",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "limit": 8
+        }
+      },
+      "accepted": true
+    },
+    {
+      "command": [
+        "crypto"
+      ],
+      "argv": [
+        "crypto",
+        "--limit",
+        "1_000"
+      ],
+      "clickValues": {
+        "limit": 1000
+      },
+      "call": {
+        "name": "markets.fetch_crypto_quotes",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "limit": 1000
+        }
+      },
+      "accepted": true
+    },
+    {
+      "command": [
+        "crypto"
+      ],
+      "argv": [
+        "crypto",
+        "--limit",
+        "-2"
+      ],
+      "clickValues": {
+        "limit": -2
+      },
+      "call": {
+        "name": "markets.fetch_crypto_quotes",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "limit": -2
+        }
+      },
+      "accepted": true
+    },
+    {
+      "command": [
+        "prediction-settled"
+      ],
+      "argv": [
+        "prediction-settled",
+        "--offset",
+        ".5",
+        "--offset",
+        "1e2"
+      ],
+      "clickValues": {
+        "offsets": [
+          0.5,
+          100.0
+        ],
+        "limit": 25,
+        "kalshi_category": "Economics",
+        "kalshi_series": null
+      },
+      "call": {
+        "name": "prediction_cross.fetch_prediction_settled",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "limit": 25,
+          "offsets_hours": [
+            0.5,
+            100.0
+          ],
+          "kalshi_category": "Economics",
+          "kalshi_series": null
+        }
+      },
+      "accepted": true
+    },
+    {
+      "command": [
+        "fed-liquidity"
+      ],
+      "argv": [
+        "fed-liquidity",
+        "walcl"
+      ],
+      "clickValues": {
+        "series_id": "WALCL",
+        "limit": 20,
+        "start": null
+      },
+      "call": {
+        "name": "liquidity.fetch_fed_liquidity_series",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "series_id": "WALCL",
+          "limit": 20,
+          "start": null
+        }
+      },
+      "accepted": true
+    },
+    {
+      "command": [
+        "ecb-series"
+      ],
+      "argv": [
+        "ecb-series",
+        "key",
+        "--dataset",
+        "ilm"
+      ],
+      "accepted": false,
+      "error": "'ilm' is not one of 'BSI', 'ILM'."
+    },
+    {
+      "command": [
+        "aoi",
+        "define-corridor"
+      ],
+      "argv": [
+        "aoi",
+        "define-corridor",
+        "a",
+        "--waypoint",
+        "-90,-180",
+        "--waypoint",
+        "90,180",
+        "--width-km",
+        ".5"
+      ],
+      "clickValues": {
+        "waypoints": [
+          [
+            -90.0,
+            -180.0
+          ],
+          [
+            90.0,
+            180.0
+          ]
+        ],
+        "width_km": 0.5,
+        "name": "a"
+      },
+      "call": {
+        "name": "aoi_analysis.define_corridor_aoi",
+        "positional": [
+          null
+        ],
+        "keywords": {
+          "name": "a",
+          "waypoints": [
+            [
+              -90.0,
+              -180.0
+            ],
+            [
+              90.0,
+              180.0
+            ]
+          ],
+          "width_km": 0.5
+        }
+      },
+      "accepted": true
+    },
+    {
+      "command": [
+        "gdelt"
+      ],
+      "argv": [
+        "gdelt",
+        "--",
+        "--json-output"
+      ],
+      "clickValues": {
+        "query": "--json-output",
+        "mode": "artlist",
+        "limit": 20
+      },
+      "call": {
+        "name": "news.fetch_gdelt_search",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "query": "--json-output",
+          "mode": "artlist",
+          "limit": 20
+        }
+      },
+      "accepted": true
+    },
+    {
+      "command": [
+        "markets"
+      ],
+      "argv": [
+        "markets",
+        "--symbols",
+        ""
+      ],
+      "clickValues": {
+        "symbols": [
+          ""
+        ]
+      },
+      "call": {
+        "name": "markets.fetch_market_quotes",
+        "positional": [
+          "<capability>"
+        ],
+        "keywords": {
+          "symbols": [
+            ""
+          ]
+        }
+      },
+      "accepted": true
+    },
+    {
+      "command": [
+        "situations"
+      ],
+      "argv": [
+        "situations",
+        "--sort",
+        "INVALID"
+      ],
+      "accepted": false,
+      "error": "'INVALID' is not one of 'covered', 'hostile', 'change'."
+    },
+    {
+      "command": [
+        "crypto"
+      ],
+      "argv": [
+        "crypto",
+        "--limit",
+        "x"
+      ],
+      "accepted": false,
+      "error": "'x' is not a valid integer."
+    },
+    {
+      "command": [
+        "aoi",
+        "define-polygon"
+      ],
+      "argv": [
+        "aoi",
+        "define-polygon",
+        "a",
+        "--vertex",
+        "91,0"
+      ],
+      "clickValues": {
+        "vertices": [
+          [
+            91.0,
+            0.0
+          ]
+        ],
+        "name": "a"
+      },
+      "call": {
+        "name": "aoi_analysis.define_polygon_aoi",
+        "positional": [
+          null
+        ],
+        "keywords": {
+          "name": "a",
+          "vertices": [
+            [
+              91.0,
+              0.0
+            ]
+          ]
+        }
+      },
+      "accepted": true
+    },
+    {
+      "command": [
+        "history",
+        "connections"
+      ],
+      "argv": [
+        "history",
+        "connections"
+      ],
+      "accepted": false,
+      "error": "Missing parameter: series_keys"
+    },
+    {
+      "command": [
+        "crypto"
+      ],
+      "argv": [
+        "crypto",
+        "--wat"
+      ],
+      "accepted": false,
+      "error": "No such option '--wat'."
+    },
+    {
+      "command": [
+        "crypto"
+      ],
+      "argv": [
+        "crypto",
+        "--limit"
+      ],
+      "accepted": false,
+      "error": "Option '--limit' requires an argument."
+    },
+    {
+      "command": [
+        "report"
+      ],
+      "argv": [
+        "report",
+        "--format",
+        "exe"
+      ],
+      "accepted": false,
+      "error": "'exe' is not one of 'pdf', 'html'."
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+import {readFileSync} from 'node:fs';
+import {it,expect} from 'vitest';
+import {computeStrategicPosture} from '../src/domains/posture.js';
+const fixture=JSON.parse(readFileSync(new URL('./fixtures/posture-differential.json',import.meta.url),'utf8'));
+it('matches 256 seeded upstream pure scoring oracle cases (2304 domain scores)',()=>{for(const [i,c] of fixture.cases.entries()){const result=computeStrategicPosture(c.input,'fixture',false);for(const [domain,score]of Object.entries(c.scores))expect(result.domain_scores[domain],`case ${i} ${domain}`).toMatchObject(score as object);expect(result.composite_score,`case ${i}`).toBe(c.composite_score);expect(result.risk_level,`case ${i}`).toBe(c.risk_level);}});
+it('fails closed for every dependency across missing, error, stale and nested degraded fallbacks',()=>{const input=fixture.cases[0].input;for(const key of Object.keys(input))for(const bad of [undefined,null,{}, {error:'provider unavailable'},{_stale:true},{metadata:{degraded:true}},{status:'warming_up'}]){const result=computeStrategicPosture({...input,[key]:bad},'fixture',false);expect(result.composite_score,`${key} ${JSON.stringify(bad)}`).toBeNull();expect(result.risk_level).toBe('UNKNOWN');expect(result.degraded).toBe(true);expect(result.domains_assessed).toBeLessThan(9);}});
