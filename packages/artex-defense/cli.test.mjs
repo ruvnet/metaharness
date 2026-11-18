@@ -54,7 +54,7 @@ test('dispatch returns output without exiting and never echoes caller input', as
   const help = await dispatch('help');
   assert.equal(help.code, 0);
   assert.match(help.lines[0], /defensive evidence replay/);
-  const secret = '/tmp/token=sk-live-should-not-appear';
+  const secret = join(tmpdir(), 'token=sk-live-should-not-appear');
   const bad = await dispatch('replay', [secret, secret, secret]);
   assert.equal(bad.code, 1);
   assert.deepEqual(bad.lines, []);
