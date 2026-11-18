@@ -1,8 +1,63 @@
-# MetaHarness defensive evidence replay
+# @metaharness/artex-defense — Defensive Evidence Replay for ARTEX Findings
 
-Import an ARTEX findings export or normalized defensive telemetry, compare two policies, and verify a receipt with the original bytes. This private workspace runs in a MetaHarness checkout. Monitor is the default. The optional simulate mode applies, expires and rolls back session leases in memory.
+<!-- ruv-seo:start (ADR-356) -->
+![@metaharness/artex-defense pipeline: ARTEX findings or identity and edge telemetry, a scoped manifest bound to tenant, case and SHA-256, a paired baseline and candidate policy replay, a simulated session quarantine, and a hash-chained MetaHarness receipt that verify recomputes](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/artex-defense.svg)
 
-## Run the example
+`@metaharness/artex-defense` is the blue-team side of a red/blue exercise: it imports ARTEX security findings or identity and edge telemetry, replays a baseline and a candidate detection policy over the same events, simulates a session quarantine, and pins the result to a tamper-evident MetaHarness receipt that anyone holding the original evidence can independently verify.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. CLI `artex-defense` plus an ESM library, also available as `redblue defense` in [`@metaharness/redblue`](https://www.npmjs.com/package/@metaharness/redblue). Offline: no network, no shell, nothing applied to a live system. Inputs are capped at 8 MiB and 10,000 events.
+
+[![npm version](https://img.shields.io/npm/v/@metaharness/artex-defense.svg)](https://www.npmjs.com/package/@metaharness/artex-defense)
+[![license: MIT](https://img.shields.io/npm/l/@metaharness/artex-defense.svg)](./LICENSE)
+[![node](https://img.shields.io/node/v/@metaharness/artex-defense.svg)](https://nodejs.org)
+
+## Quickstart
+
+```bash
+mkdir demo && cd demo && npm init -y >/dev/null
+npm install @metaharness/artex-defense
+pkg=node_modules/@metaharness/artex-defense
+npx artex-defense replay $pkg/fixtures/identity.manifest.json $pkg/fixtures/identity.json report.json simulate
+```
+
+Expected output (one line, wrapped here):
+
+```text
+{"tailSha256":"3a00ff7160220b71da94f2d10a3186301a6a58043d144d2cfa5616f1517fc9c6","mode":"simulate",
+ "baseline":{"events":3,"observations":2,"alerts":0,"simulatedQuarantines":0},
+ "candidate":{"events":3,"observations":1,"alerts":1,"simulatedQuarantines":1}}
+```
+
+The candidate policy correlates a credential change with later anomalous use in the same session and raises one alert; the decoy-only baseline does not. Keep the `tailSha256` apart from the report, then `npx artex-defense verify <manifest> <input> report.json <tailSha256>` prints `{"verified":true}` only for the exact report bytes.
+
+**Next:** [`@metaharness/redblue`](https://www.npmjs.com/package/@metaharness/redblue) — attack the agents you own, then use `redblue defense` to check what your detection policy would have done.
+<!-- ruv-seo:end -->
+
+## Reference
+
+Import an ARTEX findings export or normalized defensive telemetry, compare two policies, and verify a receipt with the original bytes. Monitor is the default. The optional simulate mode applies, expires and rolls back session leases in memory. Nothing is enforced on a real system and nothing goes over the network.
+
+### Install
+
+Node 20 or later. The only dependency is `@metaharness/harness`, the receipt log.
+
+```sh
+npm install @metaharness/artex-defense
+```
+
+Run the checked in fixtures from the installed package:
+
+```sh
+pkg=node_modules/@metaharness/artex-defense
+out=$(mktemp -d)
+npx artex-defense replay $pkg/fixtures/identity.manifest.json $pkg/fixtures/identity.json "$out/report.json" simulate > "$out/checkpoint.json"
+tail_hash=$(node -p "require(process.argv[1]).tailSha256" "$out/checkpoint.json")
+npx artex-defense verify $pkg/fixtures/identity.manifest.json $pkg/fixtures/identity.json "$out/report.json" "$tail_hash"
+```
+
+The same commands are available as `redblue defense <command>` in [`@metaharness/redblue`](https://www.npmjs.com/package/@metaharness/redblue), which ships this package as a dependency. The library entry exports the importer, both policies, the simulator, the receipt functions and `dispatch(command, args)`, which returns `{code, lines, errors}` without exiting the process.
+
+### Run from a source checkout
 
 Use Node 22.18 or later for native TypeScript support in a source checkout. Node 20 uses the built workspace dependency. For Node 20, install workspace dependencies and build `@metaharness/harness` first.
 

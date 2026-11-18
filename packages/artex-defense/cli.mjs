@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: MIT
-import { constants } from 'node:fs';
+import { constants, realpathSync } from 'node:fs';
 import { open, link, unlink } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { importEvidence, MAX_INPUT_BYTES, parseEvidenceJSON } from './ingest.mjs';
 import { evaluatePolicies } from './replay.mjs';
 import { simulateResponse } from './simulation.mjs';
@@ -70,17 +71,12 @@ function replayResult(bundle, mode) {
   return {baseline, candidate, simulation, findings: bundle.findings ?? []};
 }
 
-async function main([action, ...args]) {
-  if (action === 'help' || action === '--help' || !action) {
-    console.log(help);
-    return;
-  }
+async function run(action, args) {
+  if (action === 'help' || action === '--help' || !action) return {code: 0, lines: [help], errors: []};
   if (action === 'benchmark' && args.length === 0) {
     const {runBenchmark} = await import('./bench.mjs');
     const metrics = await runBenchmark();
-    console.log(JSON.stringify(metrics));
-    if (!metrics.accepted) process.exitCode = 1;
-    return;
+    return {code: metrics.accepted ? 0 : 1, lines: [JSON.stringify(metrics)], errors: []};
   }
   const [manifest, input, output, value] = args;
   if (action === 'replay' && [3, 4].includes(args.length)) {
@@ -88,9 +84,9 @@ async function main([action, ...args]) {
     const result = replayResult(bundle, value ?? 'monitor');
     const report = {version: 1, result, receipt: createReplayReceipt(bundle, result)};
     await writeNewReport(output, report);
-    console.log(JSON.stringify({tailSha256: report.receipt.tailSha256, mode: report.result.candidate.mode,
-      baseline: report.result.baseline.summary, candidate: report.result.candidate.summary}));
-    return;
+    return {code: 0, errors: [], lines: [JSON.stringify({tailSha256: report.receipt.tailSha256,
+      mode: report.result.candidate.mode, baseline: report.result.baseline.summary,
+      candidate: report.result.candidate.summary})]};
   }
   if (action === 'verify' && args.length === 4) {
     const bundle = await loadBundle(manifest, input);
@@ -98,20 +94,37 @@ async function main([action, ...args]) {
     const submitted = parseJSON(raw);
     const result = replayResult(bundle, submitted?.result?.candidate?.mode);
     const verified = verifyReplayReport(raw, bundle, result, value);
-    console.log(JSON.stringify({verified}));
-    if (!verified) process.exitCode = 1;
-    return;
+    return {code: verified ? 0 : 1, lines: [JSON.stringify({verified})], errors: []};
   }
   throw new Error('Invalid command arguments');
 }
 
-try {
-  await main(process.argv.slice(2));
-} catch (error) {
-  // Imported data or caller paths may contain credentials. Never echo parser exceptions.
-  const message = error?.code === 'EEXIST' ? 'Output already exists. Choose a new report path.' :
-    error?.code === 'ENOENT' ? 'A required file or directory is missing.' :
-    'Replay failed. Check input schema, digest, arguments, size limits and file access.';
-  console.error(message);
-  process.exitCode = 1;
+/**
+ * Run one subcommand and collect its output. Returns {code, lines, errors}:
+ * lines belong on stdout, errors on stderr. Never calls process.exit, so a host
+ * CLI such as `redblue defense` can forward to it.
+ */
+export async function dispatch(action, args = []) {
+  try {
+    return await run(action, args);
+  } catch (error) {
+    // Imported data or caller paths may contain credentials. Never echo parser exceptions.
+    const message = error?.code === 'EEXIST' ? 'Output already exists. Choose a new report path.' :
+      error?.code === 'ENOENT' ? 'A required file or directory is missing.' :
+      'Replay failed. Check input schema, digest, arguments, size limits and file access.';
+    return {code: 1, lines: [], errors: [message]};
+  }
+}
+
+// npm installs bins as symlinks, so compare real paths rather than raw URLs.
+const isMain = (() => {
+  if (!process.argv[1]) return false;
+  try { return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url)); }
+  catch { return false; }
+})();
+if (isMain) {
+  const result = await dispatch(process.argv[2], process.argv.slice(3));
+  for (const line of result.lines) console.log(line);
+  for (const line of result.errors) console.error(line);
+  process.exitCode = result.code;
 }

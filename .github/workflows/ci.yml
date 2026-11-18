@@ -355,6 +355,7 @@ jobs:
       # Root regressions are intentionally included; workspace-only npm test misses them.
       - run: npx vitest run --maxWorkers=1
       - run: node --test packages/darwin-mode/bench/swebench/cost-guard.test.mjs
+      - run: node --test 'packages/artex-defense/*.test.mjs'
       - run: npm audit --audit-level=moderate
       - run: node scripts/dream-release.mjs pack
       - run: node scripts/dream-release.mjs smoke
