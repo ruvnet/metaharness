@@ -369,3 +369,139 @@ describe('scanMcp — .mcp.json as an independent MCP-in-use signal', () => {
     expect(r2.findings.map((f) => f.id)).toEqual(r.findings.map((f) => f.id));
   });
 });
+
+// Dream Cycle 2026-10-23 (security-adversarial): scanMcp() only looked at
+// .harness/mcp-policy.json, .mcp.json, and .claude/settings.json's
+// mcpServers. codex/hermes/openclaw/copilot/opencode each register MCP in
+// their own native config file — live-reproduced: scaffold `--host codex`,
+// delete `.harness/mcp-policy.json` (an older harness predating 2026-10-18's
+// #413/#414, or any hand-edited directory), and `.codex/config.toml` still
+// has a real, live, ungoverned `[mcp_servers.*]` entry, yet scanMcp reported
+// `mcpEnabled: false` / "No MCP surface — nothing to scan". Each fixture
+// below omits .harness/mcp-policy.json and .claude/settings.json entirely
+// (no makeHarness()) so the native file alone is what's under test.
+describe('scanMcp — native per-host MCP registration surfaces (no policy sidecar)', () => {
+  it('detects MCP from .codex/config.toml (codex host) with no policy file', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'mcp-scan-codex-'));
+    await mkdir(join(dir, '.codex'), { recursive: true });
+    await writeFile(join(dir, '.codex', 'config.toml'), '[mcp_servers.bot]\ncommand = "npx"\nargs = ["-y", "bot@latest", "mcp", "start"]\n', 'utf-8');
+    const r = scanMcp(dir);
+    expect(r.mcpEnabled).toBe(true);
+    expect(r.findings.some((f) => f.id === 'no-policy')).toBe(true);
+    expect(r.worst).toBe('high');
+  });
+
+  it('does not falsely detect MCP from an empty .codex/config.toml (no servers registered)', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'mcp-scan-codex-empty-'));
+    await mkdir(join(dir, '.codex'), { recursive: true });
+    await writeFile(join(dir, '.codex', 'config.toml'), '\n', 'utf-8');
+    const r = scanMcp(dir);
+    expect(r.mcpEnabled).toBe(false);
+  });
+
+  it('detects MCP from optional-mcps/*.json (hermes host) with no policy file', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'mcp-scan-hermes-'));
+    await mkdir(join(dir, 'optional-mcps'), { recursive: true });
+    await writeFile(join(dir, 'optional-mcps', 'bot.json'), JSON.stringify({ bot: { command: 'npx' } }), 'utf-8');
+    const r = scanMcp(dir);
+    expect(r.mcpEnabled).toBe(true);
+    expect(r.findings.some((f) => f.id === 'no-policy')).toBe(true);
+    expect(r.worst).toBe('high');
+  });
+
+  it('does not falsely detect MCP from an empty optional-mcps/ directory', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'mcp-scan-hermes-empty-'));
+    await mkdir(join(dir, 'optional-mcps'), { recursive: true });
+    const r = scanMcp(dir);
+    expect(r.mcpEnabled).toBe(false);
+  });
+
+  // Regression (caught by independent critic): a non-registration file
+  // (e.g. a README, a .gitkeep) living in optional-mcps/ must NOT be read
+  // as a registered server — only a real, non-empty *.json server file does.
+  it('does not falsely detect MCP from a stray non-JSON file in optional-mcps/', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'mcp-scan-hermes-stray-'));
+    await mkdir(join(dir, 'optional-mcps'), { recursive: true });
+    await writeFile(join(dir, 'optional-mcps', 'README.md'), '# notes\n', 'utf-8');
+    const r = scanMcp(dir);
+    expect(r.mcpEnabled).toBe(false);
+  });
+
+  it('does not falsely detect MCP from an empty optional-mcps/*.json file', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'mcp-scan-hermes-emptyjson-'));
+    await mkdir(join(dir, 'optional-mcps'), { recursive: true });
+    await writeFile(join(dir, 'optional-mcps', 'bot.json'), JSON.stringify({}), 'utf-8');
+    const r = scanMcp(dir);
+    expect(r.mcpEnabled).toBe(false);
+  });
+
+  // Real path per host-config.ts (the CLI's actual emitter, verified
+  // 2026-10-23): .openclaw/openclaw.json, not a bare top-level openclaw.json.
+  it('detects MCP from .openclaw/openclaw.json\'s mcp.servers (openclaw host) with no policy file', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'mcp-scan-openclaw-'));
+    await mkdir(join(dir, '.openclaw'), { recursive: true });
+    await writeFile(join(dir, '.openclaw', 'openclaw.json'), JSON.stringify({ mcp: { servers: { bot: { enabled: true, command: 'npx' } } } }), 'utf-8');
+    const r = scanMcp(dir);
+    expect(r.mcpEnabled).toBe(true);
+    expect(r.findings.some((f) => f.id === 'no-policy')).toBe(true);
+    expect(r.worst).toBe('high');
+  });
+
+  it('does not falsely detect MCP from .openclaw/openclaw.json with an empty mcp.servers map', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'mcp-scan-openclaw-empty-'));
+    await mkdir(join(dir, '.openclaw'), { recursive: true });
+    await writeFile(join(dir, '.openclaw', 'openclaw.json'), JSON.stringify({ mcp: { servers: {} } }), 'utf-8');
+    const r = scanMcp(dir);
+    expect(r.mcpEnabled).toBe(false);
+  });
+
+  it('does not falsely detect MCP from a bare top-level openclaw.json (wrong path, not what the CLI emits)', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'mcp-scan-openclaw-wrongpath-'));
+    await writeFile(join(dir, 'openclaw.json'), JSON.stringify({ mcp: { servers: { bot: { enabled: true, command: 'npx' } } } }), 'utf-8');
+    const r = scanMcp(dir);
+    expect(r.mcpEnabled).toBe(false);
+  });
+
+  it('detects MCP from .vscode/mcp.json\'s servers (copilot host) with no policy file', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'mcp-scan-copilot-'));
+    await mkdir(join(dir, '.vscode'), { recursive: true });
+    await writeFile(join(dir, '.vscode', 'mcp.json'), JSON.stringify({ servers: { bot: { command: 'npx' } } }), 'utf-8');
+    const r = scanMcp(dir);
+    expect(r.mcpEnabled).toBe(true);
+    expect(r.findings.some((f) => f.id === 'no-policy')).toBe(true);
+    expect(r.worst).toBe('high');
+  });
+
+  it('does not falsely detect MCP from an empty .vscode/mcp.json', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'mcp-scan-copilot-empty-'));
+    await mkdir(join(dir, '.vscode'), { recursive: true });
+    await writeFile(join(dir, '.vscode', 'mcp.json'), JSON.stringify({ servers: {} }), 'utf-8');
+    const r = scanMcp(dir);
+    expect(r.mcpEnabled).toBe(false);
+  });
+
+  it('detects MCP from .opencode/opencode.json\'s mcp map (opencode host) with no policy file', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'mcp-scan-opencode-'));
+    await mkdir(join(dir, '.opencode'), { recursive: true });
+    await writeFile(join(dir, '.opencode', 'opencode.json'), JSON.stringify({ mcp: { bot: { command: 'npx' } } }), 'utf-8');
+    const r = scanMcp(dir);
+    expect(r.mcpEnabled).toBe(true);
+    expect(r.findings.some((f) => f.id === 'no-policy')).toBe(true);
+    expect(r.worst).toBe('high');
+  });
+
+  it('does not falsely detect MCP from an empty .opencode/opencode.json mcp map', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'mcp-scan-opencode-empty-'));
+    await mkdir(join(dir, '.opencode'), { recursive: true });
+    await writeFile(join(dir, '.opencode', 'opencode.json'), JSON.stringify({ mcp: {} }), 'utf-8');
+    const r = scanMcp(dir);
+    expect(r.mcpEnabled).toBe(false);
+  });
+
+  it('stays disabled in a directory with no MCP surface at all (e.g. rvm host, no native file, no policy)', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'mcp-scan-none-'));
+    const r = scanMcp(dir);
+    expect(r.mcpEnabled).toBe(false);
+    expect(r.findings.some((f) => f.id === 'mcp-disabled')).toBe(true);
+  });
+});
