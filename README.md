@@ -121,9 +121,9 @@ Output is an npm-publishable `.zip` with **your name on it, your branding, your 
   RuVector adapter fails closed unless a corrected flat-index wrapper is used.
 - **Experiment with bounded constraint planning.**
   [`@metaharness/energy`](packages/energy/) provides certified integer task
-  assignment through exact matching, plus pairwise energy search and local
-  pseudolikelihood learning. Synthetic validation recovers every feasible
-  optimum through the exact path. Experimental and opt in; see
+  assignment through exact matching. Its generic `searchEnergy` API optimizes
+  pairwise models using exact tree or bounded cyclic search and a seeded local
+  fallback. The package also supports local pseudolikelihood learning. See
   [ADR 324](docs/adrs/ADR-324-energy-constraint-module.md).
 - **Let your harness improve itself.** Every scaffold now ships with **Darwin Mode**
   ([`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin)) wired in —

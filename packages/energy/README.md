@@ -1,8 +1,8 @@
 # @metaharness/energy
 
 Experimental constraint planning for MetaHarness, with zero runtime dependencies.
-The assignment adapter uses classical exact matching by default. Generic pairwise
-energy search and local pseudolikelihood learning remain available separately.
+Use `searchEnergy` to optimize a discrete pairwise model and `assign` for a
+one-task-per-agent assignment. Use `fit` to learn preference costs from labels.
 This workspace package is not enabled in the production planner.
 
 The energy experiment is inspired by [CRAM](https://arxiv.org/abs/2611.17309).
@@ -63,7 +63,56 @@ const candidate = assign(problem, {
 // candidate.optimal is false even if it happens to reach the global minimum.
 ```
 
-## Pairwise search and local learning
+## Generic energy search
+
+Use one variable per decision and one row of unary costs per variable. Rows may
+have different lengths. A pair table adds the cost of choosing its two values
+together. In this example two stages may choose the same machine, and a handoff
+between machines costs four units.
+
+```ts
+import { searchEnergy } from '@metaharness/energy';
+
+const placement = {
+  unary: [[2, 0], [0, 3], [0, 1]],
+  fixed: { 2: 1 },
+  pairs: [
+    { i: 0, j: 1, costs: [[0, 4], [4, 0]] },
+    { i: 1, j: 2, costs: [[0, null], [4, 0]] },
+  ],
+};
+const result = searchEnergy(placement, { maxOperations: 1000 });
+// state [1, 1, 1], energy 4, method 'forest', optimal true
+```
+
+| Automatic selection | Method | Guarantee |
+| :--- | :--- | :--- |
+| Integer costs and an acyclic graph, including disconnected components | `forest` | Exact minimum by tree dynamic programming, or proof of infeasibility when completed |
+| Integer costs and a cyclic graph with up to 65,536 combinations after unary masks and clamps | `enumerate` | Exact minimum by iterative branch and bound, or proof of infeasibility when completed |
+| Larger cyclic spaces or fractional costs | `local` | Seeded search returns its best feasible candidate. Inspect `optimal` before relying on a minimum |
+
+Force a method with `strategy`. Forced exact methods require integer costs and
+`forest` requires acyclicity. To spend an explicit exact budget on a larger
+cycle, select `enumerate`. Its worst case grows exponentially with the number
+of free decisions. The automatic cutoff is a routing policy.
+
+Every returned state is checked against the full model. `infeasible` means a
+completed proof. A cutoff returns `budget_exhausted` on exact paths and can
+carry a feasible incumbent, including a supplied `initial`. Only a completed
+feasible exact path sets `optimal: true`. The local path always reports
+`optimal: false`. Without an explicit initial state and with at least one
+move, it also checks the cheapest admissible unary choices as one proposal.
+
+`maxOperations` defaults to 1,000,000 and accepts 0 through 10,000,000.
+Forest DP charges one unit per unary entry and edge table entry inspected.
+Enumeration charges each candidate unary and incident pair term visited during
+branching. Local search charges one unit per move and also honors `maxMoves`.
+When moves are available, each stochastic restart is given at least one move.
+Normalization, topology analysis, enumeration bounds, initialization, final
+scoring and reconstruction are outside the search counter. Use an isolated
+worker and an external deadline when elapsed time is a requirement.
+
+## Local learning
 
 ```ts
 import { fit, solve, evaluate } from '@metaharness/energy';
@@ -114,11 +163,19 @@ npm ci --ignore-scripts
 npm run build --workspace @metaharness/energy
 npm run lint --workspace @metaharness/energy
 npm run test --workspace @metaharness/energy
+npm run benchmark:generic --workspace @metaharness/energy
 node packages/energy/bench/assignment-v2.mjs
 node packages/energy/bench/sparse.mjs
 ```
 
-Current report: `bench/assignment-v2-validation.json`. Historical v1 energy
+The generic benchmark checks 320 small signed, masked models against a separate
+exhaustive oracle. Automatic search recovered all 269 feasible optima and
+proved the remaining 51 infeasible. At 750 moves, explicit local search found
+265 of those optima and the original `solve` found 264. On a larger 96 variable
+ring with competing preferences, local search returned energy 109 against a
+known minimum of 48. The report includes the seed, settings and timings.
+[Generic benchmark results](bench/generic-search-validation.json).
+Assignment results are in `bench/assignment-v2-validation.json`. Historical v1 energy
 reports remain in `bench/validation.json` and `bench/sparse-validation.json`.
 The old energy-only assignment benchmark now explicitly selects strategy energy.
 

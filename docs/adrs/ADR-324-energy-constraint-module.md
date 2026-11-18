@@ -41,7 +41,8 @@ deterministic differential validation with integer costs.
 
 | Operation | Input | Output | Assumption |
 | :--- | :--- | :--- | :--- |
-| Search | Scoped unary and pair costs, masks, fixed values, seed and work budget | Valid candidate or budget exhaustion, no optimality claim | Caller encodes all required constraints |
+| Local search (`solve`) | Scoped unary and pair costs, masks, fixed values, seed and work budget | Valid candidate or budget exhaustion, no optimality claim | Caller encodes all required constraints |
+| Generic search (`searchEnergy`) | Discrete unary and pair tables, clamps and a work cap | Rechecked feasible state, proven infeasibility or budget exhaustion, plus selected method | Exact paths require integer costs |
 | Learning | Model and verified feasible labels | Separate model plus initial/final training loss | Caller establishes label provenance and evaluation split |
 | Assignment | Rectangular task/agent costs and optional budget | Independently validated proposal | One task per agent per wave |
 
@@ -75,6 +76,19 @@ and infeasible fixtures pass, including 64 by 64 assignments. Mean warm CPU
 time is roughly 214x lower than prior energy search on the small distribution.
 Exact timing is batched and amortized; this is not a service p95 comparison.
 No production promotion gate is satisfied by comparing two synthetic paths.
+
+Revision 3 adds `searchEnergy` for finite pairwise optimization. Exact min-sum
+dynamic programming solves an integer forest in one pass over the score tables
+plus reconstruction. Bounded enumeration prunes cyclic integer problems using
+the sum of factor minima as a lower bound. Both support hard masks, clamped
+variables, heterogeneous domains and signed costs. Automatic routing selects
+enumeration for cyclic spaces up to 65,536 admissible unary combinations and
+seeded local search for larger cyclic spaces or fractional costs. Explicit
+strategies let callers control that tradeoff. A budget-limited exact run may
+return a feasible incumbent. Only completed exact runs can prove an optimum
+or infeasibility. The stochastic `solve` entry point keeps its existing contract.
+See `packages/energy/bench/generic-search-validation.json` for reproduction
+settings, independent oracle outcomes and the larger cyclic fallback fixtures.
 
 ## Consequences
 

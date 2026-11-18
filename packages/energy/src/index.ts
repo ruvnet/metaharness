@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { exactMatching, verifyMatching, type AssignmentCertificate } from './assignment.js';
+import { forestOrder, solveForest } from './forest.js';
+import { enumerateEnergy } from './enumerate.js';
 export type { AssignmentCertificate } from './assignment.js';
 /** A null cost is forbidden. Finite costs express preferences, never authority. */
 export type Cost = number | null;
@@ -95,13 +97,21 @@ function better(a: Score, b: Score): boolean {
 }
 /** Bounded stochastic local search. Finding a fixed point does not prove optimality. */
 export function solve(model: EnergyModel, opts: SearchOptions = {}): SearchResult {
-  const m = snapshot(model), rng = random(opts.seed ?? 1);
+  const m = snapshot(model);
+  return localSearch(m, opts, initialState(m, opts.initial));
+}
+function initialState(model: Required<EnergyModel>, input?: number[]): number[] | undefined {
+  if (input === undefined) return undefined;
+  const state = indexed(input, value => value, 1024);
+  checkState(model, state);
+  return state;
+}
+function localSearch(m: Required<EnergyModel>, opts: SearchOptions, initial?: number[]): SearchResult {
+  const rng = random(opts.seed ?? 1);
   const maxMoves = integer(opts.maxMoves ?? 4000, 0, 1_000_000, 'maxMoves');
   const restarts = integer(opts.restarts ?? 8, 1, 1024, 'restarts');
   const temperature = finite(opts.temperature ?? 1, 'temperature');
   if (temperature < 0) throw new RangeError('temperature');
-  const initial = opts.initial === undefined ? undefined : indexed(opts.initial, v => v, 1024);
-  if (initial) checkState(m, initial);
   const free = m.unary.map((_, i) => i).filter(i => m.fixed[i] === undefined);
   const adjacency: number[][] = m.unary.map(() => []);
   m.pairs.forEach((p, e) => { adjacency[p.i].push(e); adjacency[p.j].push(e); });
@@ -173,6 +183,106 @@ export function solve(model: EnergyModel, opts: SearchOptions = {}): SearchResul
   const verified = best ? full(m, best) : null;
   if (verified && verified.violations !== 0) throw new Error('internal validation failed');
   return { state: best, score: verified, moves, status: best ? 'valid' : 'budget_exhausted', optimal: false };
+}
+
+export type EnergySearchMethod = 'forest' | 'enumerate' | 'local';
+export interface EnergySearchOptions extends SearchOptions {
+  strategy?: 'auto' | EnergySearchMethod;
+  /** Caps search work. Input normalization, preprocessing and final scoring are separate. */
+  maxOperations?: number;
+}
+export interface EnergySearchResult {
+  state: number[] | null;
+  score: Score | null;
+  status: 'valid' | 'infeasible' | 'budget_exhausted';
+  optimal: boolean;
+  method: EnergySearchMethod;
+  operations: number;
+  moves: number;
+}
+
+function smallSearchSpace(m: Required<EnergyModel>): boolean {
+  // Saturate the product but inspect every domain: a later empty domain makes
+  // the entire space empty, independently of the variable ordering.
+  const threshold = 65_536;
+  let size = 1;
+  for (let i = 0; i < m.unary.length; i++) {
+    if (m.fixed[i] !== undefined) continue;
+    let allowed = 0;
+    for (const cost of m.unary[i]) if (cost !== null) allowed++;
+    if (allowed === 0) return true;
+    size = Math.min(threshold + 1, size * allowed);
+  }
+  return size <= threshold;
+}
+
+function searchLocalEnergy(m: Required<EnergyModel>, opts: SearchOptions, initial: number[] | undefined,
+  maxOperations: number): EnergySearchResult {
+  const requestedMoves = integer(opts.maxMoves ?? 4000, 0, 1_000_000, 'maxMoves');
+  const requestedRestarts = integer(opts.restarts ?? 8, 1, 1024, 'restarts');
+  const maxMoves = Math.min(requestedMoves, maxOperations);
+  const result = localSearch(m, {
+    maxMoves, restarts: Math.min(requestedRestarts, Math.max(1, maxMoves)),
+    seed: opts.seed, temperature: opts.temperature, incremental: opts.incremental,
+  }, initial);
+  const base = { ...result, method: 'local' as const, operations: result.moves };
+  if (initial || !result.moves) return base;
+
+  // Compare one inexpensive deterministic proposal alongside the seeded
+  // trajectory. Unary minima can conflict: score the complete graph first.
+  const candidate: number[] = [];
+  for (let i = 0; i < m.unary.length; i++) {
+    const row = m.unary[i];
+    let value = m.fixed[i];
+    if (value === undefined) {
+      let minimum = Infinity;
+      for (let a = 0; a < row.length; a++) {
+        const cost = row[a];
+        if (cost !== null && cost < minimum) { minimum = cost; value = a; }
+      }
+      if (value === undefined) return base;
+    }
+    candidate.push(value);
+  }
+  const score = full(m, candidate);
+  if (score.violations !== 0 || (base.score && base.score.energy <= score.energy)) return base;
+  return { ...base, state: candidate, score, status: 'valid' };
+}
+
+/** Optimize a finite pairwise energy, choosing an algorithm by graph structure.
+ * An exact method can return a feasible incumbent when its work budget expires.
+ * Only completed exact searches can report optimality or prove infeasibility.
+ */
+export function searchEnergy(model: EnergyModel, opts: EnergySearchOptions = {}): EnergySearchResult {
+  const m = snapshot(model);
+  const initial = initialState(m, opts.initial);
+  const strategy = opts.strategy ?? 'auto';
+  if (!['auto', 'forest', 'enumerate', 'local'].includes(strategy)) throw new RangeError('strategy');
+  const maxOperations = integer(opts.maxOperations ?? 1_000_000, 0, 10_000_000, 'maxOperations');
+  const local = () => searchLocalEnergy(m, opts, initial, maxOperations);
+  if (strategy === 'local') return local();
+  const integralRow = (row: Cost[]) => row.every(cost => cost === null || Number.isSafeInteger(cost));
+  if (!m.unary.every(integralRow) || !m.pairs.every(pair => pair.costs.every(integralRow))) {
+    if (strategy === 'auto') return local();
+    throw new RangeError('exact energy search requires integer costs');
+  }
+
+  const order = strategy === 'enumerate' ? null : forestOrder(m);
+  if (strategy === 'forest' && !order) throw new RangeError('forest strategy requires an acyclic graph');
+  if (strategy === 'auto' && !order && !smallSearchSpace(m)) return local();
+  const startingScore = initial ? full(m, initial) : null;
+  const incumbent = initial && startingScore?.violations === 0
+    ? { state: initial, energy: startingScore.energy } : undefined;
+  const result = order
+    ? solveForest(m, order, maxOperations)
+    : enumerateEnergy(m, maxOperations, incumbent);
+  const state = result.state ?? (result.status === 'budget_exhausted' ? incumbent?.state ?? null : null);
+  const score = state ? full(m, state) : null;
+  if ((score && score.violations !== 0) || (result.status === 'valid' && !score)) {
+    throw new Error('internal energy validation failed');
+  }
+  return { ...result, state, score, optimal: result.status === 'valid',
+    method: order ? 'forest' : 'enumerate', moves: 0 };
 }
 
 export interface AssignmentProblem {

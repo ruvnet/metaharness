@@ -12,7 +12,8 @@
     "lint": "tsc --noEmit",
     "test": "vitest run",
     "benchmark": "node bench/assignment-v2.mjs",
-    "benchmark:energy": "node bench/assignment.mjs"
+    "benchmark:energy": "node bench/assignment.mjs",
+    "benchmark:generic": "node bench/generic-search.mjs"
   },
   "repository": { "type": "git", "url": "https://github.com/ruvnet/metaharness.git", "directory": "packages/energy" },
   "homepage": "https://ruv.io",
