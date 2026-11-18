@@ -203,3 +203,48 @@ Keep opt in. Production promotion still requires real workload replay, compariso
 against an optimized classical solver and the existing planner, zero accepted
 constraint violations, quality within 1% of exact and at least 2x lower planning
 cost or p95 latency than the current planner.
+
+### Tune the local search budget with Darwin
+
+From a source checkout, build both workspaces and run the offline study:
+
+```sh
+npm run build --workspace @metaharness/darwin
+npm run build --workspace @metaharness/energy
+node --test packages/energy/bench/tuning-checks.mjs
+ENERGY_REPORT=/tmp/energy-study.json npm run benchmark:tpe --workspace @metaharness/energy
+```
+
+The finite grid TPE proposer ranks untried move and restart settings by the ratio
+of two discrete Gaussian kernel densities. It shares four shuffled warmup trials
+with random search and uses a one grid step minimum bandwidth. This is a small
+implementation inspired by [Watanabe's analysis](https://arxiv.org/abs/2304.11127).
+Darwin's NumericArchive ranks completed trials by training loss. Settings that
+miss a feasible training state rank below complete settings. For complete
+settings the loss is the mean of gap / (1 + gap), where gap is excess energy
+divided by max(1, absolute reference energy).
+
+Both proposers get up to 12 of 30 configurations and the same process CPU ceiling
+per seed (ENERGY_TUNE_CPU_MS, default 1000). A running solver call may finish
+after the ceiling; only complete trials inside the budget count. The full JSON
+records actual CPU and trial histories. Five paired seeds share eight training
+models, eight unseen models and the two published ring regressions. Synthetic
+optima come from an independent cycle dynamic program. Timing varies by host.
+The study changes no runtime settings.
+
+To evaluate planner data, set ENERGY_REPLAY to a local JSON array of unique
+records with id, model, referenceState and optionally baselineCpuMs. Include only
+models routed to local search, and measure each planner baseline on the same
+machine and workload. The harness keeps replay cases out of selection,
+independently recomputes the reference and each returned state's energy, and
+rejects invalid results. ENERGY_REPORT includes case IDs and outcomes. The CPU
+gate requires every TPE result within 1% of its verified reference or better,
+complete adaptive studies and at least 2x lower mean CPU cost across cases.
+Missing replay measurements leave the gate pending. A passing report still
+requires review of workload representativeness before promotion.
+
+The [recorded synthetic run](bench/tpe-validation.json) completed all 12 trials
+in each arm. Held out mean gaps were 0.61% for TPE, 1.47% for random tuning and
+2.34% for defaults. A replay comparison against a planner incumbent alone
+cannot establish the ADR's exact quality criterion. Keep promotion pending until
+an independent reference and the current planner both pass on real workloads.
