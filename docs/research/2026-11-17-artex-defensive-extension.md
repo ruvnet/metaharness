@@ -148,3 +148,10 @@ Decision: optional isolated adapter.
 Next action: implement offline import and a deterministic replay gate.
 Key risk: false containment or sandbox escape.
 Acceptance test: replay unseen attack cases plus 10,000 benign sequences with zero scope escape and zero incorrect blocks before enabling any response.
+
+## Implemented milestone
+
+[The offline workspace and run instructions](../../packages/artex-defense/README.md)
+cover both audited exporter layouts, scoped defensive telemetry, baseline and candidate
+replay, simulated session expiry and rollback, and verification against a MetaHarness
+receipt checkpoint. The end to end route for this milestone consumes files only.
