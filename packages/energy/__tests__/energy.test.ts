@@ -102,7 +102,8 @@ describe('assignment adapter', () => {
     }
   });
   it('bounds allocation before expanding assignment constraints', () => {
-    expect(() => assign({ costs: Array.from({ length: 100 }, () => Array(64).fill(0)) })).toThrow('entry budget');
+    expect(() => assign({ costs: Array.from({ length: 100 }, () => Array(64).fill(0)) }, { strategy: 'energy' })).toThrow('entry budget');
+    expect(assign({ costs: Array.from({ length: 100 }, () => Array(64).fill(0)) }).status).toBe('infeasible');
     expect(() => assign({ costs: [[0], [0, 1]] })).toThrow('rectangular');
     expect(() => assign({ costs: [[0]], budget: NaN })).toThrow();
   });
@@ -133,5 +134,53 @@ describe('local pseudolikelihood learning', () => {
     expect(() => fit(model, [[0, 1, 1]], { epochs: Infinity })).toThrow();
     expect(() => fit({ unary: Array.from({ length: 64 }, () => Array(64).fill(0)) },
       Array.from({ length: 1000 }, () => Array(64).fill(0)), { epochs: 1000 })).toThrow('work budget');
+  });
+  it('projects boundary updates into the reusable model cost range', () => {
+    const f = fit({ unary: [[1e9, 1e9]] }, [[0]], { epochs: 1, learningRate: 1 });
+    expect(f.clippedUpdates).toBeGreaterThan(0);
+    expect(f.model.unary[0].every(c => c !== null && Math.abs(c) <= 1e9)).toBe(true);
+    expect(() => solve(f.model)).not.toThrow();
+    expect(Number.isFinite(f.finalLoss)).toBe(true);
+  });
+  it('ignores caller controlled iterators and label slice methods', () => {
+    const row = [0]; let calls = 0;
+    row[Symbol.iterator] = function* () { calls++; yield 0; yield -1; };
+    expect(solve({ unary: [row] }).state).toEqual([0]);
+    expect(() => evaluate({ unary: [row] }, [1])).toThrow();
+    const labels = [0, 0];
+    labels.slice = () => { throw new Error('caller slice executed'); };
+    expect(() => fit({ unary: [[0], [0]] }, [labels])).not.toThrow();
+    expect(calls).toBe(0);
+  });
+  it('rejects string labels and leaves prototype properties untouched', () => {
+    const before = Object.getOwnPropertyDescriptors(Array.prototype);
+    expect(() => fit({ unary: [[0, 0], [0, 0]], pairs: [{ i: 0, j: 1, costs: [[0, 0], [0, 0]] }] },
+      [['__proto__', 'constructor'] as unknown as number[]])).toThrow();
+    const after = Object.getOwnPropertyDescriptors(Array.prototype);
+    expect(Reflect.ownKeys(after)).toEqual(Reflect.ownKeys(before));
+    for (const key of Reflect.ownKeys(before)) {
+      const previous = Reflect.get(before, key), current = Reflect.get(after, key);
+      for (const field of ['value', 'get', 'set', 'writable', 'enumerable', 'configurable']) {
+        expect(Object.is(current[field], previous[field])).toBe(true);
+      }
+    }
+  });
+  it('copies initial values once before validating and using them', () => {
+    const initial = [0]; let reads = 0;
+    Object.defineProperty(initial, 0, { get: () => ++reads === 1 ? 0 : -1 });
+    expect(solve({ unary: [[0]] }, { initial, maxMoves: 0 }).state).toEqual([0]);
+    expect(reads).toBe(1);
+  });
+  it('copies evaluation state once before validation and scoring', () => {
+    const state = [0]; let reads = 0;
+    Object.defineProperty(state, 0, { get: () => ++reads === 1 ? 0 : 5 });
+    expect(evaluate({ unary: [[0]] }, state)).toEqual({ violations: 0, energy: 0 });
+    expect(reads).toBe(1);
+  });
+  it('bounds training against the copied count when callers mutate sample length', () => {
+    const label = Array(64).fill(0), samples = Array.from({ length: 1000 }, () => label);
+    Object.defineProperty(samples, 999, { get: () => { samples.length = 1; return label; } });
+    const m = { unary: Array.from({ length: 64 }, () => Array(64).fill(0)) };
+    expect(() => fit(m, samples, { epochs: 10 })).toThrow('work budget');
   });
 });

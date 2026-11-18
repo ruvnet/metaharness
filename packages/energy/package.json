@@ -6,12 +6,13 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
-  "files": ["dist/**", "README.md", "LICENSE"],
+  "files": ["dist/**", "README.md", "VALIDATION-v2.md", "bench/**", "LICENSE"],
   "scripts": {
     "build": "tsc",
     "lint": "tsc --noEmit",
     "test": "vitest run",
-    "benchmark": "node bench/assignment.mjs"
+    "benchmark": "node bench/assignment-v2.mjs",
+    "benchmark:energy": "node bench/assignment.mjs"
   },
   "repository": { "type": "git", "url": "https://github.com/ruvnet/metaharness.git", "directory": "packages/energy" },
   "homepage": "https://ruv.io",

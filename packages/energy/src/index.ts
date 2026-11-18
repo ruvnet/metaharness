@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: MIT
+import { exactMatching, verifyMatching, type AssignmentCertificate } from './assignment.js';
+export type { AssignmentCertificate } from './assignment.js';
 /** A null cost is forbidden. Finite costs express preferences, never authority. */
 export type Cost = number | null;
 export interface Pair { i: number; j: number; costs: Cost[][] }
@@ -28,36 +30,46 @@ export function random(seed: number): () => number {
   return () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; };
 }
 function snapshot(input: EnergyModel): Required<EnergyModel> {
-  integer(input.unary.length, 1, 1024, 'variables');
   let entries = 0;
   const row = (r: Cost[]) => {
-    integer(r.length, 1, 64, 'domain');
-    entries += r.length;
+    const out = indexed(r, c => c === null ? null : finite(c, 'cost'), 64);
+    integer(out.length, 1, 64, 'domain');
+    entries += out.length;
     if (entries > 1_000_000) throw new RangeError('model entry budget');
-    return Array.from(r, c => c === null ? null : finite(c, 'cost'));
+    return out;
   };
-  const unary = Array.from(input.unary, row);
+  const unary = indexed(input.unary, row, 1024);
+  integer(unary.length, 1, 1024, 'variables');
   const seen = new Set<string>();
-  const pairs = Array.from(input.pairs ?? [], p => {
-    integer(p.i, 0, unary.length - 1, 'pair.i');
-    integer(p.j, p.i + 1, unary.length - 1, 'pair.j must exceed i');
-    const key = `${p.i}:${p.j}`;
+  const pairs = indexed(input.pairs ?? [], p => {
+    const i = integer(p.i, 0, unary.length - 1, 'pair.i');
+    const j = integer(p.j, i + 1, unary.length - 1, 'pair.j must exceed i');
+    const key = `${i}:${j}`;
     if (seen.has(key)) throw new RangeError('duplicate pair');
     seen.add(key);
-    if (p.costs.length !== unary[p.i].length) throw new RangeError('pair rows');
-    const costs = Array.from(p.costs, r => {
-      if (r.length !== unary[p.j].length) throw new RangeError('pair columns');
-      return row(r);
-    });
-    return { i: p.i, j: p.j, costs };
+    const costs = indexed(p.costs, row, 64);
+    if (costs.length !== unary[i].length) throw new RangeError('pair rows');
+    if (costs.some(r => r.length !== unary[j].length)) throw new RangeError('pair columns');
+    return { i, j, costs };
   });
-  const fixed: Record<number, number> = {};
+  const fixed: Record<number, number> = Object.create(null);
   for (const [k, v] of Object.entries(input.fixed ?? {})) {
     const i = integer(Number(k), 0, unary.length - 1, 'fixed variable');
     fixed[i] = integer(v, 0, unary[i].length - 1, 'fixed value');
     if (unary[i][v] === null) throw new RangeError('forbidden fixed value');
   }
   return { unary, pairs, fixed };
+}
+/** Ignore caller iterators, map and slice methods; copy only bounded indices. */
+function indexed<T, U>(source: T[], copy: (value: T) => U, maxLength = 1_000_000): U[] {
+  if (!Array.isArray(source)) throw new TypeError('dense array required');
+  const n = source.length, out: U[] = [];
+  integer(n, 0, maxLength, 'array length');
+  for (let i = 0; i < n; i++) {
+    if (!Object.hasOwn(source, i)) throw new TypeError('dense array required');
+    out.push(copy(source[i]));
+  }
+  return out;
 }
 function checkState(m: Required<EnergyModel>, state: number[]): void {
   if (state.length !== m.unary.length) throw new RangeError('state length');
@@ -75,7 +87,8 @@ function full(m: Required<EnergyModel>, s: number[]): Score {
 }
 /** Independent full evaluation, including hard constraints and clamped values. */
 export function evaluate(model: EnergyModel, state: number[]): Score {
-  const m = snapshot(model); checkState(m, state); return full(m, state);
+  const m = snapshot(model), s = indexed(state, v => v, 1024);
+  checkState(m, s); return full(m, s);
 }
 function better(a: Score, b: Score): boolean {
   return a.violations < b.violations || (a.violations === b.violations && a.energy < b.energy);
@@ -87,7 +100,8 @@ export function solve(model: EnergyModel, opts: SearchOptions = {}): SearchResul
   const restarts = integer(opts.restarts ?? 8, 1, 1024, 'restarts');
   const temperature = finite(opts.temperature ?? 1, 'temperature');
   if (temperature < 0) throw new RangeError('temperature');
-  if (opts.initial) checkState(m, opts.initial);
+  const initial = opts.initial === undefined ? undefined : indexed(opts.initial, v => v, 1024);
+  if (initial) checkState(m, initial);
   const free = m.unary.map((_, i) => i).filter(i => m.fixed[i] === undefined);
   const adjacency: number[][] = m.unary.map(() => []);
   m.pairs.forEach((p, e) => { adjacency[p.i].push(e); adjacency[p.j].push(e); });
@@ -105,7 +119,7 @@ export function solve(model: EnergyModel, opts: SearchOptions = {}): SearchResul
   };
   for (let r = 0; r < restarts; r++) {
     const s = m.unary.map((u, i) => m.fixed[i] ??
-      (r === 0 && opts.initial ? opts.initial[i] : Math.floor(rng() * u.length)));
+      (r === 0 && initial ? initial[i] : Math.floor(rng() * u.length)));
     let score = full(m, s); remember(s, score);
     if (!free.length || maxMoves === 0) break;
     const limit = Math.floor(maxMoves * (r + 1) / restarts);
@@ -167,7 +181,29 @@ export interface AssignmentProblem {
   /** At most one task per agent in this scheduling wave. */
   budget?: number;
 }
+export interface AssignmentOptions extends SearchOptions {
+  strategy?: 'exact' | 'energy';
+  /** Edge relaxations in the exact path, not a wall clock deadline. */
+  maxOperations?: number;
+}
+export interface AssignmentResult extends Omit<SearchResult, 'status' | 'optimal'> {
+  status: 'valid' | 'infeasible' | 'budget_exhausted';
+  optimal: boolean;
+  method: 'exact' | 'energy';
+  operations: number;
+  certificate?: AssignmentCertificate;
+}
+function assignmentSnapshot(problem: AssignmentProblem): AssignmentProblem {
+  const m = snapshot({ unary: problem.costs });
+  const budget = problem.budget;
+  if (budget !== undefined && (!Number.isFinite(budget) || Math.abs(budget) > Number.MAX_SAFE_INTEGER)) throw new RangeError('budget');
+  if (m.unary.some(u => u.length !== m.unary[0].length)) throw new RangeError('rectangular costs');
+  return { costs: m.unary, budget };
+}
 export function validateAssignment(problem: AssignmentProblem, state: number[]): boolean {
+  try { return validAssignment(assignmentSnapshot(problem), state); } catch { return false; }
+}
+function validAssignment(problem: AssignmentProblem, state: number[]): boolean {
   if (!Array.isArray(state) || state.length !== problem.costs.length) return false;
   const used = new Set<number>(); let cost = 0;
   for (let i = 0; i < state.length; i++) {
@@ -180,11 +216,40 @@ export function validateAssignment(problem: AssignmentProblem, state: number[]):
   return Number.isFinite(cost) && (problem.budget === undefined ||
     (Number.isFinite(problem.budget) && cost <= problem.budget));
 }
+/** Checks a supplied integer optimum certificate independently of the solver.
+ * The aggregate budget must also be satisfied for this to return true.
+ */
+export function verifyAssignmentCertificate(problem: AssignmentProblem, state: number[], certificate: AssignmentCertificate): boolean {
+  try {
+    const p = assignmentSnapshot(problem);
+    const s = indexed(state, v => integer(v, 0, 63, 'state'), 1024);
+    const copy = (v: number) => integer(v, Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER, 'potential');
+    const cert = {
+      rowPotentials: indexed(certificate.rowPotentials, copy, 1024),
+      columnPotentials: indexed(certificate.columnPotentials, copy, 64),
+    };
+    return validAssignment(p, s) && verifyMatching(p.costs, s, cert);
+  } catch { return false; }
+}
 /** Proposals only. The caller still enforces current permissions on execution. */
-export function assign(problem: AssignmentProblem, opts: SearchOptions = {}): SearchResult {
-  const m = snapshot({ unary: problem.costs });
-  if (problem.budget !== undefined) finite(problem.budget, 'budget');
-  if (m.unary.some(u => u.length !== m.unary[0].length)) throw new RangeError('rectangular costs');
+export function assign(problem: AssignmentProblem, opts: AssignmentOptions = {}): AssignmentResult {
+  const normalized = assignmentSnapshot(problem);
+  if (opts.strategy !== undefined && opts.strategy !== 'exact' && opts.strategy !== 'energy') throw new RangeError('strategy');
+  if (opts.strategy !== 'energy') {
+    const maxOperations = integer(opts.maxOperations ?? 1_000_000, 0, 10_000_000, 'maxOperations');
+    const result = exactMatching(normalized.costs, maxOperations);
+    const base = { state: null, score: null, moves: 0, optimal: false, method: 'exact' as const, operations: result.operations };
+    if (!result.state) return { ...base, status: result.status === 'infeasible' ? 'infeasible' : 'budget_exhausted' };
+    // Check the unconstrained minimum before applying the aggregate budget.
+    const optimal = verifyMatching(normalized.costs, result.state, result.certificate!);
+    if (!validAssignment({ costs: normalized.costs }, result.state)) throw new Error('internal assignment validation failed');
+    if (!validAssignment(normalized, result.state)) return { ...base, status: optimal ? 'infeasible' : 'budget_exhausted' };
+    let energy = 0;
+    for (let i = 0; i < result.state.length; i++) energy += normalized.costs[i][result.state[i]]!;
+    return { ...base, state: result.state, score: { violations: 0, energy }, status: 'valid', optimal,
+      ...(optimal ? { certificate: result.certificate } : {}) };
+  }
+  const m = snapshot({ unary: normalized.costs });
   const n = m.unary.length, c = m.unary[0].length;
   if (n * c + n * (n - 1) / 2 * c * c > 1_000_000) throw new RangeError('assignment entry budget');
   const pairs: Pair[] = [];
@@ -201,14 +266,14 @@ export function assign(problem: AssignmentProblem, opts: SearchOptions = {}): Se
     used.add(best); return best;
   });
   const result = solve({ unary: m.unary, pairs }, { ...opts, initial: opts.initial ?? initial });
-  if (result.state && !validateAssignment(problem, result.state)) {
-    return { ...result, state: null, score: null, status: 'budget_exhausted' };
+  if (result.state && !validAssignment(normalized, result.state)) {
+    return { ...result, state: null, score: null, status: 'budget_exhausted', method: 'energy', operations: result.moves };
   }
-  return result;
+  return { ...result, method: 'energy', operations: result.moves };
 }
 
 export interface FitOptions { epochs?: number; learningRate?: number }
-export interface FitResult { model: EnergyModel; initialLoss: number; finalLoss: number }
+export interface FitResult { model: EnergyModel; initialLoss: number; finalLoss: number; clippedUpdates: number }
 /** Local pseudolikelihood SGD, without differentiating through search.
  * Hard null masks and fixed values are immutable. Labels must be verified by
  * the caller; syntactic feasibility here does not establish label provenance.
@@ -220,16 +285,20 @@ export function fit(model: EnergyModel, examples: number[][], opts: FitOptions =
   const epochs = integer(opts.epochs ?? 50, 1, 1000, 'epochs');
   const lr = finite(opts.learningRate ?? 0.05, 'learningRate');
   if (lr <= 0 || lr > 10) throw new RangeError('learningRate');
-  const labels = Array.from(examples, s => {
+  const labels = indexed(examples, source => {
+    // Read each external label exactly once. Typed copies cannot carry string
+    // property keys into updates, even when callers override array methods.
+    const s = indexed(source, value => integer(value, 0, 63, 'label'), 64);
     checkState(m, s);
     if (full(m, s).violations) throw new RangeError('infeasible example');
-    return s.slice();
-  });
+    return new Int32Array(s);
+  }, 1000);
+  integer(labels.length, 1, 1000, 'examples');
   const adjacency: Pair[][] = m.unary.map(() => []);
   for (const p of m.pairs) { adjacency[p.i].push(p); adjacency[p.j].push(p); }
   const work = m.unary.reduce((n, u, i) => n + u.length * (1 + adjacency[i].length), 0);
-  if (epochs * examples.length * work > 20_000_000) throw new RangeError('training work budget');
-  const conditional = (s: number[], i: number) => {
+  if (epochs * labels.length * work > 20_000_000) throw new RangeError('training work budget');
+  const conditional = (s: Int32Array, i: number) => {
     const energies = m.unary[i].map((u, a) => {
       if (u === null) return Infinity;
       let e = u;
@@ -243,29 +312,36 @@ export function fit(model: EnergyModel, examples: number[][], opts: FitOptions =
     const min = Math.min(...energies);
     const weights = energies.map(e => Math.exp(min - e));
     const z = weights.reduce((a, b) => a + b, 0);
-    return { energies, probabilities: weights.map(w => w / z), logZ: Math.log(z) - min };
+    return { energies, probabilities: weights.map(w => w / z), logZ: Math.log(z), min };
   };
   const loss = () => {
     let sum = 0, count = 0;
     for (const s of labels) for (let i = 0; i < s.length; i++) if (m.fixed[i] === undefined) {
-      const q = conditional(s, i); sum += q.energies[s[i]] + q.logZ; count++;
+      const q = conditional(s, i); sum += (q.energies[s[i]] - q.min) + q.logZ; count++;
     }
     return count ? sum / count : 0;
   };
   const initialLoss = loss();
+  let clippedUpdates = 0;
+  const boundedUpdate = (old: number, gradient: number) => {
+    const next = old - lr * gradient;
+    const bounded = Math.max(-1e9, Math.min(1e9, next));
+    if (bounded !== next) clippedUpdates++;
+    return bounded;
+  };
   for (let epoch = 0; epoch < epochs; epoch++) for (const s of labels) {
     for (let i = 0; i < s.length; i++) if (m.fixed[i] === undefined) {
       const q = conditional(s, i);
       for (let a = 0; a < m.unary[i].length; a++) {
         if (!Number.isFinite(q.energies[a])) continue;
         const gradient = Number(a === s[i]) - q.probabilities[a];
-        m.unary[i][a] = m.unary[i][a]! - lr * gradient;
+        m.unary[i][a] = boundedUpdate(m.unary[i][a]!, gradient);
         for (const p of adjacency[i]) {
-          const row = p.i === i ? a : s[p.i], col = p.i === i ? s[p.j] : a;
-          p.costs[row][col] = p.costs[row][col]! - lr * gradient;
+          const row = Number(p.i === i ? a : s[p.i]), col = Number(p.i === i ? s[p.j] : a);
+          p.costs[row][col] = boundedUpdate(p.costs[row][col]!, gradient);
         }
       }
     }
   }
-  return { model: m, initialLoss, finalLoss: loss() };
+  return { model: m, initialLoss, finalLoss: loss(), clippedUpdates };
 }

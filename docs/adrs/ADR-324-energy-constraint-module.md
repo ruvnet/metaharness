@@ -1,6 +1,6 @@
 # ADR 324: Experimental pairwise energy constraint module
 
-Status: Implemented experimentally; production promotion deferred
+**Status**: Implemented experimentally; production promotion deferred
 
 Date: 2026-11-17
 
@@ -19,6 +19,12 @@ Add `packages/energy` as the standalone TypeScript workspace package
 bounded search with restarts and swap proposals, local pseudolikelihood SGD,
 and a one-task-per-agent scheduling-wave adapter. This is an independent
 implementation inspired by CRAM, not a faithful reproduction or Git submodule.
+
+Revision 2 defaults the assignment adapter to exact rectangular Hungarian
+matching. The generic energy experiment remains available through `solve` and
+explicit `strategy: 'energy'`. Exact matching follows classical assignment
+duality ([Kuhn 1955](https://www.math.toronto.edu/mccann/1855/KuhnNRL55.pdf));
+its speedup must not be attributed to CRAM or general agent reasoning.
 
 Hard constraints are explicit null masks, clamped values, uniqueness and an
 aggregate assignment budget. They cannot be trained away. Feasible incumbents
@@ -46,7 +52,7 @@ No persistent state or mandatory runtime dependencies are introduced.
 
 ## Evidence and decision gate
 
-See `packages/energy/bench/validation.json` and `sparse-validation.json`.
+Version 1: see `packages/energy/bench/validation.json` and `sparse-validation.json`.
 On 1000 synthetic cases (906 feasible), search returns 906 valid assignments,
 904 at the exact optimum, with zero invalid output and a 0.0178% mean cost gap.
 Automatic scoring p95 is 1.348 ms versus exact enumeration at 0.504 ms.
@@ -60,6 +66,28 @@ Keep opt in; do not wire into the production planner. No LLM or token-cost
 savings were measured. Future promotion needs real workload replay, an optimized
 classical solver baseline, zero accepted violations, quality within 1%, and
 at least 2x lower cost or p95 latency than the current planner.
+
+Version 2: `bench/assignment-v2-validation.json` compares the same 1000 cases
+using exact matching, the explicit prior energy strategy and an independent
+exhaustive oracle. Exact matching recovers all 906 feasible optima, with zero
+invalid output or false certificates. All eight larger planted, metamorphic
+and infeasible fixtures pass, including 64 by 64 assignments. Mean warm CPU
+time is roughly 214x lower than prior energy search on the small distribution.
+Exact timing is batched and amortized; this is not a service p95 comparison.
+No production promotion gate is satisfied by comparing two synthetic paths.
+
+## Consequences
+
+The assignment adapter now defaults to a bounded rectangular Hungarian path,
+without pairwise exclusivity table allocation. Generic energy search remains
+available through `solve` and explicit `assign(..., { strategy: 'energy' })`.
+Safe integer optima receive independently checked primal/dual certificates;
+floating point outputs never claim certified optimality. Exact operation
+exhaustion is distinct from proven matching infeasibility.
+
+Input normalization uses bounded indexed copies instead of caller iterators or
+slice methods. Labels are copied into typed numeric arrays before learning, and
+updates are projected to the accepted cost range with a clipping counter.
 
 ## Alternatives and rollback
 

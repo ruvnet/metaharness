@@ -44,7 +44,7 @@ const cases = Array.from({ length: count }, (_, i) => {
   if (optimum.state && i % 11 === 0) p.budget = optimum.cost - 1;
   return { p, optimum: exact(p) };
 });
-const options = { seed: 42, maxMoves: 4000, restarts: 8, temperature: 10 };
+const options = { strategy: 'energy', seed: 42, maxMoves: 4000, restarts: 8, temperature: 10 };
 // Explicit warm-up; cold start is timed separately and reported, not hidden.
 const coldStart = performance.now(); assign(cases[0].p, options); const coldMs = performance.now() - coldStart;
 for (let i = 0; i < 30; i++) assign(cases[i % count].p, options);
