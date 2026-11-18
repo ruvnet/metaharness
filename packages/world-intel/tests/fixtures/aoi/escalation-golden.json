@@ -1,0 +1,174 @@
+{
+  "timeline": [
+    {
+      "data": [
+        {
+          "date": "20260101T000000Z",
+          "value": 10,
+          "norm": 1000
+        },
+        {
+          "date": "20260102T000000Z",
+          "value": 10,
+          "norm": 1000
+        },
+        {
+          "date": "20260103T000000Z",
+          "value": 10,
+          "norm": 1000
+        },
+        {
+          "date": "20260104T000000Z",
+          "value": 10,
+          "norm": 1000
+        },
+        {
+          "date": "20260105T000000Z",
+          "value": 10,
+          "norm": 1000
+        },
+        {
+          "date": "20260106T000000Z",
+          "value": 10,
+          "norm": 1000
+        },
+        {
+          "date": "20260107T000000Z",
+          "value": 10,
+          "norm": 1000
+        },
+        {
+          "date": "20260108T000000Z",
+          "value": 20,
+          "norm": 1000
+        },
+        {
+          "date": "20260109T000000Z",
+          "value": 20,
+          "norm": 1000
+        },
+        {
+          "date": "20260110T000000Z",
+          "value": 20,
+          "norm": 1000
+        },
+        {
+          "date": "20260111T000000Z",
+          "value": 20,
+          "norm": 1000
+        },
+        {
+          "date": "20260112T000000Z",
+          "value": 20,
+          "norm": 1000
+        },
+        {
+          "date": "20260113T000000Z",
+          "value": 20,
+          "norm": 1000
+        },
+        {
+          "date": "20260114T000000Z",
+          "value": 20,
+          "norm": 1000
+        }
+      ]
+    }
+  ],
+  "now": "2026-01-14T12:00:00Z",
+  "trend": {
+    "window_days": 7,
+    "step_seconds": 86400,
+    "latest_step": "2026-01-14T00:00:00Z",
+    "current_step_start": "2026-01-14T00:00:00Z",
+    "current_step_elapsed": 0.5,
+    "current_window": {
+      "start": "2026-01-08T00:00:00Z",
+      "end": "2026-01-15T00:00:00Z",
+      "articles": 140,
+      "monitored_articles": 7000,
+      "steps_with_data": 7,
+      "steps": 7,
+      "share_per_10k": 200.0
+    },
+    "prior_window": {
+      "start": "2026-01-01T00:00:00Z",
+      "end": "2026-01-08T00:00:00Z",
+      "articles": 70,
+      "monitored_articles": 7000,
+      "steps_with_data": 7,
+      "steps": 7,
+      "share_per_10k": 100.0
+    },
+    "method": "GDELT DOC timelinevolraw for the geocoded place query (see news_scoping): the settlement and county at the AOI's centre, so coverage of other places inside a large area is not counted. Current window: the 7 days ending with GDELT's current time step (a UTC day at GDELT's default daily resolution), which is still filling: current_step_elapsed is the fraction of it that has passed; a share is unaffected by how much of the day GDELT has ingested so far, but any time-of-day mix in a partial day is not measured. Prior window: the 7 days before it. Share = matching articles / all articles GDELT monitored in the window. expected_articles = prior share x current monitored volume; change_pct = 100 x (current articles - expected) / max(expected, 20); news component = min(20, 0.2 x max(0, change_pct)), so a doubled share scores the full 20 (once 20 or more articles were expected) and a flat or falling one scores 0. Not scored when either window monitored under half the other's volume (GDELT ingestion gaps), or when the only timeline on hand is an expired cached copy.",
+    "expected_articles": 70.0,
+    "change_pct": 100.0,
+    "score_input": 100.0
+  },
+  "scoped": {
+    "earthquakes": {
+      "items": [
+        {
+          "latitude": 0.9,
+          "longitude": 179.9
+        }
+      ]
+    },
+    "military_flights": {
+      "items": [
+        {
+          "latitude": 1.1,
+          "longitude": -179.9
+        },
+        {
+          "latitude": 1.0,
+          "longitude": 179.9
+        }
+      ]
+    },
+    "conflict_events": {
+      "items": []
+    },
+    "wildfires": {
+      "items": []
+    }
+  },
+  "convergence": {
+    "score": 5.46,
+    "lower_bound": false,
+    "convergent_cells": 1,
+    "cells": [
+      {
+        "lat": 1.0,
+        "lon": 180.0,
+        "event_count": 3,
+        "signal_types": [
+          "earthquakes",
+          "military_flights"
+        ],
+        "type_count": 2,
+        "total_weight": 3.0,
+        "convergence_score": 5.46
+      }
+    ],
+    "grid_offset_deg": {
+      "lat": 0.5,
+      "lon": 0.5
+    },
+    "events_by_domain": {
+      "earthquakes": 1,
+      "military_flights": 2,
+      "conflict_events": 0,
+      "wildfires": 0
+    },
+    "inputs_used": [
+      "earthquakes",
+      "military_flights",
+      "conflict_events",
+      "wildfires"
+    ],
+    "inputs_failed": [],
+    "inputs_partial": [],
+    "method": "analysis/convergence.py detect_convergence over the events inside the AOI's exact shape (filter_by_aoi) from earthquakes, military flights, ACLED conflict events and wildfires: 1-degree grid, a cell converges with events from at least 2 of those domains and at least 3 events, cell score = domains x (1 + sqrt(events)). The grid is laid four ways, shifted 0 or 0.5 degrees in latitude and in longitude (grid_offset_deg names the one used; ties keep the unshifted grid), and input = the strongest cell of any of them, so a cluster spanning under 0.5 degrees in both latitude and longitude is never split; one spanning 0.5 to 1 degree still can be. Convergence component = min(8, 2 x score), so any convergent cell (smallest possible score 5.46) earns the full 8. A cell's lat/lon is its grid-cell centre, which can lie outside a small AOI. The four domains cover different windows (windows) and were fetched at different times (fetched_at)."
+  }
+}

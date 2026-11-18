@@ -1,0 +1,133 @@
+{
+  "HOSTILITY_CATEGORIES": {
+    "threat": [
+      "threat",
+      "warns",
+      "warned",
+      "ultimatum",
+      "retaliat",
+      "vows revenge",
+      "vow revenge"
+    ],
+    "sanction": [
+      "sanction",
+      "embargo",
+      "blacklist",
+      "export control",
+      "export ban",
+      "asset freeze",
+      "tariff",
+      "trade war"
+    ],
+    "force": [
+      "airstrike",
+      "air strike",
+      "missile",
+      "drone strike",
+      "drone attack",
+      "attack",
+      "bombing",
+      "bombard",
+      "shelling",
+      "invasion",
+      "invade",
+      "troops",
+      "clash",
+      "artillery",
+      "offensive",
+      "war",
+      "raid",
+      "military strike",
+      "strikes on",
+      "strike on",
+      "strike kill",
+      "strikes kill"
+    ],
+    "criticism": [
+      "condemn",
+      "criticis",
+      "criticiz",
+      "denounce",
+      "rebuke",
+      "slams",
+      "slammed",
+      "accuse",
+      "accusation",
+      "summons ambassador",
+      "summoned ambassador",
+      "lambast"
+    ]
+  },
+  "_HOSTILITY_OVERRIDES": {
+    "war": "(?<!trade )(?<!price )(?<!culture )(?<!tariff )\\bwars?\\b(?! of words)",
+    "trade war": "\\btrade wars?\\b",
+    "offensive": "\\boffensive\\b(?! (?:remarks?|comments?|language|posts?|tweets?|jokes?|content))",
+    "raid": "\\braid(?:s|ed)?\\b",
+    "attack": "\\battack(?:s|ed|ing)?\\b",
+    "clash": "\\bclash(?:es|ed)?\\b",
+    "troops": "\\btroops\\b"
+  },
+  "HOSTILITY_METHOD": "English keyword heuristic over headlines (classifier.HOSTILITY_CATEGORIES): boundary-anchored stems, no parsing of who acts on whom, negation, quotation or idiom; a headline can count in several categories. Written for English: a non-English headline matches only through shared spellings (French 'sanctions', 'missile'), so non-English coverage is undercounted.",
+  "_CHANGE_DEFINITION": "change = articles in the current window minus articles in the prior window of equal length, both counted only over comparable feeds (feeds whose oldest retained item is at or before the prior window's start). change_ratio = (current_comparable + 1) / (prior + 1). 'change' sort orders by change, then by current articles. With no comparable feed nothing is compared: change_measured (attention_change_measured for attention) is false, the change fields are null and attention is empty, and a 'change' sort ranks by coverage instead (sort_applied).",
+  "GDELT_HOSTILITY_TERMS": {
+    "threat": [
+      "threat",
+      "threats",
+      "threaten",
+      "threatens",
+      "threatened",
+      "warns",
+      "ultimatum",
+      "retaliation",
+      "retaliate"
+    ],
+    "sanction": [
+      "sanction",
+      "sanctions",
+      "sanctioned",
+      "embargo",
+      "blacklist",
+      "tariff",
+      "tariffs",
+      "\"export controls\""
+    ],
+    "force": [
+      "airstrike",
+      "airstrikes",
+      "missile",
+      "missiles",
+      "\"drone strike\"",
+      "attack",
+      "attacks",
+      "attacked",
+      "bombing",
+      "shelling",
+      "invasion",
+      "troops",
+      "clashes",
+      "artillery"
+    ],
+    "criticism": [
+      "condemns",
+      "condemned",
+      "condemnation",
+      "criticizes",
+      "criticized",
+      "criticises",
+      "criticised",
+      "denounces",
+      "denounced",
+      "rebuke",
+      "accuses",
+      "accused"
+    ]
+  },
+  "hostility_method": "GDELT DOC 2.0 timelinevolraw: 'articles' counts articles GDELT matched to the base query per bucket, summed to UTC days; each hostile column counts articles matching the base query AND any of that category's terms (GDELT_HOSTILITY_TERMS, listed in 'queries'). This is GDELT's keyword match over the text it indexes, not a headline classifier and not a model: it cannot tell who threatens whom, negation, or quotation, and one article can count in several categories. 'all_monitored_articles' is GDELT's per-bucket total ('norm'). tone is GDELT timelinetone average tone, weighted by the day's per-bucket article counts when those are available. Unmeasured: the bucket resolution GDELT uses for spans over 7 days, and whether it holds buckets before 2026-10-15T10Z (a 7-day call returned none earlier). Every probe of either drew HTTP 429 on 2026-10-17 (timespan=14d at 16:42Z, 16:51:16Z and 16:51:55Z; Oct 11 to 13 by start and end date at 16:52:15Z and 16:52:53Z); 30 days was not probed.",
+  "hostility_definitions": {
+    "partial": "a volume column (articles or a hostility category) has no bucket for at least one elapsed hour of that UTC day, or none at all (for today, only wholly elapsed hours count). Judged per column: partial_columns names them, coverage_by_column gives each column's buckets and hours, and hours_missing is the union of their missing hours. buckets_returned and hours_covered come from the base series, or the first category series that answered when the base call failed. Tone is not judged. Absent when it cannot be judged",
+    "in_progress": "the row is today's UTC day, which has not ended; its totals are not comparable with a full day's",
+    "hostile_share": "a category's count over the day's articles; null when either is null or, with hourly or finer buckets, when the two series cover different hours of the day",
+    "column_status": "per GDELT call: ok (a live answer or a cache entry within its 30-minute TTL), stale (the live call failed and only an expired cached copy was available: the column is null, and stale_age_seconds gives the copy's age), failed (nothing usable: the column is null)",
+    "null": "not measured (call failed, expired copy, or day not returned), never zero"
+  }
+}

@@ -1,0 +1,494 @@
+{
+  "_MATCH_METHOD": "whole-word match of each headline against the country's tier-1 keywords (name, demonym, capital), each allowed an -n, -ns or -s ending on its last word ('North Koreans', 'Gazan', 'Afghans'), so 'Tirana' is not Iran and 'Indiana' is not India; South Sudan, the Indian Ocean, Latin/South/Central/North American and New Mexico are removed first. Other compound names still count (Lagos in Portugal, the Republic of the Congo). Searched: the newest items across every RSS feed.",
+  "_ISO2_TO_ISO3": {
+    "US": "USA",
+    "CN": "CHN",
+    "RU": "RUS",
+    "UA": "UKR",
+    "SY": "SYR",
+    "YE": "YEM",
+    "MM": "MMR",
+    "SD": "SDN",
+    "NG": "NGA",
+    "AF": "AFG",
+    "IQ": "IRQ",
+    "IR": "IRN",
+    "TW": "TWN",
+    "KP": "PRK",
+    "IL": "ISR",
+    "PS": "PSE",
+    "LB": "LBN",
+    "ET": "ETH",
+    "CD": "COD",
+    "PK": "PAK",
+    "IN": "IND",
+    "MX": "MEX",
+    "GB": "GBR",
+    "DE": "DEU",
+    "FR": "FRA",
+    "JP": "JPN",
+    "KR": "KOR",
+    "BR": "BRA",
+    "AU": "AUS",
+    "CA": "CAN",
+    "SA": "SAU",
+    "TR": "TUR",
+    "EG": "EGY",
+    "ZA": "ZAF",
+    "ID": "IDN",
+    "TH": "THA",
+    "VN": "VNM",
+    "PH": "PHL",
+    "PL": "POL",
+    "IT": "ITA",
+    "ES": "ESP",
+    "SE": "SWE",
+    "NO": "NOR",
+    "CH": "CHE",
+    "NL": "NLD",
+    "BE": "BEL",
+    "AR": "ARG",
+    "CL": "CHL",
+    "CO": "COL",
+    "PE": "PER"
+  },
+  "_EXTRA_COUNTRY_NAMES": {
+    "ARG": "Argentina",
+    "AUS": "Australia",
+    "BEL": "Belgium",
+    "BRA": "Brazil",
+    "CAN": "Canada",
+    "CHE": "Switzerland",
+    "CHL": "Chile",
+    "COL": "Colombia",
+    "DEU": "Germany",
+    "EGY": "Egypt",
+    "ESP": "Spain",
+    "FRA": "France",
+    "GBR": "United Kingdom",
+    "IDN": "Indonesia",
+    "ITA": "Italy",
+    "JPN": "Japan",
+    "KOR": "Korea, South",
+    "NLD": "Netherlands",
+    "NOR": "Norway",
+    "PER": "Peru",
+    "PHL": "Philippines",
+    "POL": "Poland",
+    "SAU": "Saudi Arabia",
+    "SWE": "Sweden",
+    "THA": "Thailand",
+    "TUR": "Turkey",
+    "VNM": "Vietnam",
+    "ZAF": "South Africa"
+  },
+  "_SANCTIONS_METHOD": "OFAC SDN entries whose remarks name the country (nationality, citizenship, address, registration), substring match on the English country name. Not an exposure screen: entries tied to the country in other ways are missed, and a name inside another also matches (Niger in Nigeria, Sudan in South Sudan). total_entities is the number of SDN rows read before the search stopped, not the size of the list.",
+  "_FOCUS_COUNTRIES": [
+    "SYR",
+    "UKR",
+    "YEM",
+    "MMR",
+    "SDN",
+    "ETH",
+    "NGA",
+    "COD",
+    "AFG",
+    "IRQ"
+  ],
+  "_ISO3_TO_NAME": {
+    "SYR": "Syria",
+    "UKR": "Ukraine",
+    "YEM": "Yemen",
+    "MMR": "Myanmar",
+    "SDN": "Sudan",
+    "ETH": "Ethiopia",
+    "NGA": "Nigeria",
+    "COD": "DR Congo",
+    "AFG": "Afghanistan",
+    "IRQ": "Iraq"
+  },
+  "INTEL_HOTSPOTS": {
+    "tehran": {
+      "lat": 35.69,
+      "lon": 51.39,
+      "baseline_escalation": 3,
+      "associated_countries": [
+        "IRN",
+        "ISR"
+      ]
+    },
+    "kyiv": {
+      "lat": 50.45,
+      "lon": 30.52,
+      "baseline_escalation": 5,
+      "associated_countries": [
+        "UKR",
+        "RUS"
+      ]
+    },
+    "taipei": {
+      "lat": 25.03,
+      "lon": 121.57,
+      "baseline_escalation": 3,
+      "associated_countries": [
+        "TWN",
+        "CHN"
+      ]
+    },
+    "pyongyang": {
+      "lat": 39.02,
+      "lon": 125.75,
+      "baseline_escalation": 3,
+      "associated_countries": [
+        "PRK",
+        "KOR"
+      ]
+    },
+    "gaza": {
+      "lat": 31.42,
+      "lon": 34.35,
+      "baseline_escalation": 5,
+      "associated_countries": [
+        "PSE",
+        "ISR"
+      ]
+    },
+    "kabul": {
+      "lat": 34.53,
+      "lon": 69.17,
+      "baseline_escalation": 3,
+      "associated_countries": [
+        "AFG",
+        "PAK"
+      ]
+    },
+    "damascus": {
+      "lat": 33.51,
+      "lon": 36.29,
+      "baseline_escalation": 4,
+      "associated_countries": [
+        "SYR",
+        "IRN",
+        "ISR"
+      ]
+    },
+    "khartoum": {
+      "lat": 15.59,
+      "lon": 32.53,
+      "baseline_escalation": 5,
+      "associated_countries": [
+        "SDN"
+      ]
+    },
+    "sanaa": {
+      "lat": 15.37,
+      "lon": 44.19,
+      "baseline_escalation": 4,
+      "associated_countries": [
+        "YEM"
+      ]
+    },
+    "naypyidaw": {
+      "lat": 19.76,
+      "lon": 96.07,
+      "baseline_escalation": 3,
+      "associated_countries": [
+        "MMR"
+      ]
+    },
+    "baghdad": {
+      "lat": 33.31,
+      "lon": 44.37,
+      "baseline_escalation": 3,
+      "associated_countries": [
+        "IRQ",
+        "IRN"
+      ]
+    },
+    "mogadishu": {
+      "lat": 2.05,
+      "lon": 45.32,
+      "baseline_escalation": 4,
+      "associated_countries": [
+        "SOM"
+      ]
+    },
+    "addis_ababa": {
+      "lat": 9.02,
+      "lon": 38.75,
+      "baseline_escalation": 3,
+      "associated_countries": [
+        "ETH"
+      ]
+    },
+    "kinshasa": {
+      "lat": -4.32,
+      "lon": 15.31,
+      "baseline_escalation": 3,
+      "associated_countries": [
+        "COD"
+      ]
+    },
+    "bamako": {
+      "lat": 12.64,
+      "lon": -8.0,
+      "baseline_escalation": 3,
+      "associated_countries": [
+        "MLI"
+      ]
+    },
+    "ouagadougou": {
+      "lat": 12.37,
+      "lon": -1.52,
+      "baseline_escalation": 3,
+      "associated_countries": [
+        "BFA"
+      ]
+    },
+    "beirut": {
+      "lat": 33.89,
+      "lon": 35.5,
+      "baseline_escalation": 4,
+      "associated_countries": [
+        "LBN",
+        "ISR"
+      ]
+    },
+    "hormuz_strait": {
+      "lat": 26.57,
+      "lon": 56.25,
+      "baseline_escalation": 3,
+      "associated_countries": [
+        "IRN",
+        "OMN"
+      ]
+    },
+    "south_china_sea": {
+      "lat": 15.0,
+      "lon": 115.0,
+      "baseline_escalation": 3,
+      "associated_countries": [
+        "CHN",
+        "PHL",
+        "VNM"
+      ]
+    },
+    "crimea": {
+      "lat": 44.95,
+      "lon": 34.1,
+      "baseline_escalation": 4,
+      "associated_countries": [
+        "UKR",
+        "RUS"
+      ]
+    },
+    "bab_el_mandeb": {
+      "lat": 12.58,
+      "lon": 43.33,
+      "baseline_escalation": 4,
+      "associated_countries": [
+        "YEM",
+        "DJI",
+        "ERI"
+      ]
+    },
+    "suez_canal": {
+      "lat": 30.46,
+      "lon": 32.34,
+      "baseline_escalation": 2,
+      "associated_countries": [
+        "EGY"
+      ]
+    }
+  },
+  "CONFLICT_ZONES": [
+    {
+      "name": "Ukraine",
+      "lat": 48.38,
+      "lon": 35.0,
+      "type": "interstate_war",
+      "since": "2022-02"
+    },
+    {
+      "name": "Gaza",
+      "lat": 31.42,
+      "lon": 34.35,
+      "type": "asymmetric_conflict",
+      "since": "2023-10"
+    },
+    {
+      "name": "Sudan",
+      "lat": 15.5,
+      "lon": 32.5,
+      "type": "civil_war",
+      "since": "2023-04"
+    },
+    {
+      "name": "Myanmar",
+      "lat": 21.0,
+      "lon": 96.0,
+      "type": "civil_war",
+      "since": "2021-02"
+    },
+    {
+      "name": "Sahel",
+      "lat": 14.0,
+      "lon": 2.0,
+      "type": "insurgency",
+      "since": "2012-01"
+    },
+    {
+      "name": "DRC/Great Lakes",
+      "lat": -1.5,
+      "lon": 29.0,
+      "type": "multi_party_conflict",
+      "since": "2021-11"
+    }
+  ],
+  "UPCOMING_ELECTIONS": [
+    {
+      "country": "Germany",
+      "iso3": "DEU",
+      "election_type": "federal",
+      "date": "2025-02-23",
+      "description": "Federal election (Bundestag)",
+      "instability_impact": "low"
+    },
+    {
+      "country": "Ecuador",
+      "iso3": "ECU",
+      "election_type": "presidential",
+      "date": "2025-02-09",
+      "description": "Presidential runoff",
+      "instability_impact": "medium"
+    },
+    {
+      "country": "Belarus",
+      "iso3": "BLR",
+      "election_type": "presidential",
+      "date": "2025-01-26",
+      "description": "Presidential election",
+      "instability_impact": "high"
+    },
+    {
+      "country": "Canada",
+      "iso3": "CAN",
+      "election_type": "federal",
+      "date": "2025-10-20",
+      "description": "Federal election",
+      "instability_impact": "low"
+    },
+    {
+      "country": "Iraq",
+      "iso3": "IRQ",
+      "election_type": "parliamentary",
+      "date": "2025-10-01",
+      "description": "Parliamentary election",
+      "instability_impact": "high"
+    },
+    {
+      "country": "Chile",
+      "iso3": "CHL",
+      "election_type": "presidential",
+      "date": "2025-11-16",
+      "description": "Presidential election",
+      "instability_impact": "medium"
+    },
+    {
+      "country": "Poland",
+      "iso3": "POL",
+      "election_type": "presidential",
+      "date": "2025-05-18",
+      "description": "Presidential election",
+      "instability_impact": "low"
+    },
+    {
+      "country": "Philippines",
+      "iso3": "PHL",
+      "election_type": "midterm",
+      "date": "2025-05-12",
+      "description": "Midterm elections",
+      "instability_impact": "medium"
+    },
+    {
+      "country": "Singapore",
+      "iso3": "SGP",
+      "election_type": "general",
+      "date": "2025-05-03",
+      "description": "General election",
+      "instability_impact": "low"
+    },
+    {
+      "country": "Australia",
+      "iso3": "AUS",
+      "election_type": "federal",
+      "date": "2025-05-17",
+      "description": "Federal election",
+      "instability_impact": "low"
+    },
+    {
+      "country": "South Korea",
+      "iso3": "KOR",
+      "election_type": "presidential",
+      "date": "2025-06-03",
+      "description": "Snap presidential election",
+      "instability_impact": "medium"
+    },
+    {
+      "country": "Ivory Coast",
+      "iso3": "CIV",
+      "election_type": "presidential",
+      "date": "2025-10-01",
+      "description": "Presidential election",
+      "instability_impact": "high"
+    },
+    {
+      "country": "Norway",
+      "iso3": "NOR",
+      "election_type": "parliamentary",
+      "date": "2025-09-08",
+      "description": "Parliamentary election",
+      "instability_impact": "low"
+    },
+    {
+      "country": "United States",
+      "iso3": "USA",
+      "election_type": "midterm",
+      "date": "2026-11-03",
+      "description": "Midterm elections",
+      "instability_impact": "medium"
+    },
+    {
+      "country": "Brazil",
+      "iso3": "BRA",
+      "election_type": "municipal",
+      "date": "2026-10-04",
+      "description": "Municipal elections",
+      "instability_impact": "medium"
+    },
+    {
+      "country": "Mexico",
+      "iso3": "MEX",
+      "election_type": "midterm",
+      "date": "2027-06-06",
+      "description": "Midterm elections",
+      "instability_impact": "medium"
+    },
+    {
+      "country": "France",
+      "iso3": "FRA",
+      "election_type": "presidential",
+      "date": "2027-04-10",
+      "description": "Presidential election",
+      "instability_impact": "medium"
+    },
+    {
+      "country": "India",
+      "iso3": "IND",
+      "election_type": "general",
+      "date": "2029-04-01",
+      "description": "General election (projected)",
+      "instability_impact": "medium"
+    }
+  ]
+}

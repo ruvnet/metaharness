@@ -1,0 +1,273 @@
+[
+  {
+    "file": "nhc_tcm_ep212026_adv017.txt",
+    "expected": {
+      "advisory_number": "17",
+      "issued": "2026-10-17T15:00:00Z",
+      "initial": {
+        "valid_time": "2026-10-17T15:00:00Z",
+        "latitude": 16.6,
+        "longitude": -103.9,
+        "max_wind_kt": 80,
+        "gust_kt": 100,
+        "pressure_mb": 979
+      },
+      "points": [
+        {
+          "tau_hours": 12,
+          "valid_time": "2026-10-18T00:00:00Z",
+          "latitude": 17.7,
+          "longitude": -104.8,
+          "max_wind_kt": 90,
+          "gust_kt": 110,
+          "status": null,
+          "section": "forecast"
+        },
+        {
+          "tau_hours": 24,
+          "valid_time": "2026-10-18T12:00:00Z",
+          "latitude": 19.1,
+          "longitude": -105.7,
+          "max_wind_kt": 90,
+          "gust_kt": 110,
+          "status": null,
+          "section": "forecast"
+        },
+        {
+          "tau_hours": 36,
+          "valid_time": "2026-10-19T00:00:00Z",
+          "latitude": 20.1,
+          "longitude": -106.4,
+          "max_wind_kt": 85,
+          "gust_kt": 105,
+          "status": null,
+          "section": "forecast"
+        },
+        {
+          "tau_hours": 48,
+          "valid_time": "2026-10-19T12:00:00Z",
+          "latitude": 20.7,
+          "longitude": -107.0,
+          "max_wind_kt": 65,
+          "gust_kt": 80,
+          "status": null,
+          "section": "forecast"
+        },
+        {
+          "tau_hours": 60,
+          "valid_time": "2026-10-20T00:00:00Z",
+          "latitude": 20.9,
+          "longitude": -107.5,
+          "max_wind_kt": 45,
+          "gust_kt": 55,
+          "status": null,
+          "section": "forecast"
+        },
+        {
+          "tau_hours": 72,
+          "valid_time": "2026-10-20T12:00:00Z",
+          "latitude": 20.9,
+          "longitude": -108.2,
+          "max_wind_kt": 35,
+          "gust_kt": 45,
+          "status": null,
+          "section": "forecast"
+        },
+        {
+          "tau_hours": 96,
+          "valid_time": "2026-10-21T12:00:00Z",
+          "latitude": 21.7,
+          "longitude": -109.4,
+          "max_wind_kt": 25,
+          "gust_kt": 35,
+          "status": "POST-TROP/REMNT LOW",
+          "section": "outlook"
+        },
+        {
+          "tau_hours": 120,
+          "valid_time": "2026-10-22T12:00:00Z",
+          "latitude": null,
+          "longitude": null,
+          "max_wind_kt": null,
+          "gust_kt": null,
+          "status": "DISSIPATED",
+          "section": "outlook"
+        }
+      ]
+    }
+  },
+  {
+    "file": "jtwc_wp2926web_wrn013.txt",
+    "expected": {
+      "warning_number": 13,
+      "issued": "2026-10-17T15:00:00Z",
+      "initial": {
+        "valid_time": "2026-10-17T12:00:00Z",
+        "latitude": 12.6,
+        "longitude": 146.1,
+        "max_wind_kt": 120,
+        "gust_kt": 145,
+        "pressure_mb": 945
+      },
+      "points": [
+        {
+          "tau_hours": 12,
+          "valid_time": "2026-10-18T00:00:00Z",
+          "latitude": 13.0,
+          "longitude": 143.7,
+          "max_wind_kt": 120,
+          "gust_kt": 145,
+          "status": null,
+          "section": "forecast"
+        },
+        {
+          "tau_hours": 24,
+          "valid_time": "2026-10-18T12:00:00Z",
+          "latitude": 13.5,
+          "longitude": 141.6,
+          "max_wind_kt": 135,
+          "gust_kt": 165,
+          "status": null,
+          "section": "forecast"
+        },
+        {
+          "tau_hours": 36,
+          "valid_time": "2026-10-19T00:00:00Z",
+          "latitude": 14.3,
+          "longitude": 139.5,
+          "max_wind_kt": 140,
+          "gust_kt": 170,
+          "status": null,
+          "section": "forecast"
+        },
+        {
+          "tau_hours": 48,
+          "valid_time": "2026-10-19T12:00:00Z",
+          "latitude": 15.3,
+          "longitude": 137.4,
+          "max_wind_kt": 135,
+          "gust_kt": 165,
+          "status": null,
+          "section": "extended_outlook"
+        },
+        {
+          "tau_hours": 60,
+          "valid_time": "2026-10-20T00:00:00Z",
+          "latitude": 16.3,
+          "longitude": 135.1,
+          "max_wind_kt": 135,
+          "gust_kt": 165,
+          "status": null,
+          "section": "extended_outlook"
+        },
+        {
+          "tau_hours": 72,
+          "valid_time": "2026-10-20T12:00:00Z",
+          "latitude": 17.3,
+          "longitude": 132.8,
+          "max_wind_kt": 135,
+          "gust_kt": 165,
+          "status": null,
+          "section": "extended_outlook"
+        },
+        {
+          "tau_hours": 96,
+          "valid_time": "2026-10-21T12:00:00Z",
+          "latitude": 19.4,
+          "longitude": 128.6,
+          "max_wind_kt": 125,
+          "gust_kt": 150,
+          "status": null,
+          "section": "long_range_outlook"
+        },
+        {
+          "tau_hours": 120,
+          "valid_time": "2026-10-22T12:00:00Z",
+          "latitude": 21.0,
+          "longitude": 125.9,
+          "max_wind_kt": 105,
+          "gust_kt": 130,
+          "status": null,
+          "section": "long_range_outlook"
+        }
+      ]
+    }
+  },
+  {
+    "file": "jtwc_sh0127web_wrn003.txt",
+    "expected": {
+      "warning_number": 3,
+      "issued": "2026-10-17T09:00:00Z",
+      "initial": {
+        "valid_time": "2026-10-17T06:00:00Z",
+        "latitude": -13.2,
+        "longitude": -163.2,
+        "max_wind_kt": 60,
+        "gust_kt": 75,
+        "pressure_mb": 986
+      },
+      "points": [
+        {
+          "tau_hours": 12,
+          "valid_time": "2026-10-17T18:00:00Z",
+          "latitude": -14.9,
+          "longitude": -162.6,
+          "max_wind_kt": 70,
+          "gust_kt": 85,
+          "status": null,
+          "section": "forecast"
+        },
+        {
+          "tau_hours": 24,
+          "valid_time": "2026-10-18T06:00:00Z",
+          "latitude": -16.6,
+          "longitude": -161.4,
+          "max_wind_kt": 75,
+          "gust_kt": 90,
+          "status": null,
+          "section": "forecast"
+        },
+        {
+          "tau_hours": 36,
+          "valid_time": "2026-10-18T18:00:00Z",
+          "latitude": -18.5,
+          "longitude": -159.1,
+          "max_wind_kt": 65,
+          "gust_kt": 80,
+          "status": null,
+          "section": "forecast"
+        },
+        {
+          "tau_hours": 48,
+          "valid_time": "2026-10-19T06:00:00Z",
+          "latitude": -20.7,
+          "longitude": -155.7,
+          "max_wind_kt": 60,
+          "gust_kt": 75,
+          "status": null,
+          "section": "extended_outlook"
+        },
+        {
+          "tau_hours": 60,
+          "valid_time": "2026-10-19T18:00:00Z",
+          "latitude": -23.5,
+          "longitude": -150.9,
+          "max_wind_kt": 50,
+          "gust_kt": 65,
+          "status": "BECOMING EXTRATROPICAL",
+          "section": "extended_outlook"
+        },
+        {
+          "tau_hours": 72,
+          "valid_time": "2026-10-20T06:00:00Z",
+          "latitude": -26.3,
+          "longitude": -145.8,
+          "max_wind_kt": 45,
+          "gust_kt": 55,
+          "status": "EXTRATROPICAL",
+          "section": "extended_outlook"
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,1126 @@
+{
+  "LEADERS": {
+    "biden": {
+      "name": "Joe Biden",
+      "title": "President",
+      "country": "USA"
+    },
+    "joe biden": {
+      "name": "Joe Biden",
+      "title": "President",
+      "country": "USA"
+    },
+    "trump": {
+      "name": "Donald Trump",
+      "title": "Former President",
+      "country": "USA"
+    },
+    "donald trump": {
+      "name": "Donald Trump",
+      "title": "Former President",
+      "country": "USA"
+    },
+    "xi jinping": {
+      "name": "Xi Jinping",
+      "title": "President",
+      "country": "CHN"
+    },
+    "xi": {
+      "name": "Xi Jinping",
+      "title": "President",
+      "country": "CHN"
+    },
+    "putin": {
+      "name": "Vladimir Putin",
+      "title": "President",
+      "country": "RUS"
+    },
+    "vladimir putin": {
+      "name": "Vladimir Putin",
+      "title": "President",
+      "country": "RUS"
+    },
+    "zelensky": {
+      "name": "Volodymyr Zelensky",
+      "title": "President",
+      "country": "UKR"
+    },
+    "zelenskyy": {
+      "name": "Volodymyr Zelensky",
+      "title": "President",
+      "country": "UKR"
+    },
+    "macron": {
+      "name": "Emmanuel Macron",
+      "title": "President",
+      "country": "FRA"
+    },
+    "starmer": {
+      "name": "Keir Starmer",
+      "title": "Prime Minister",
+      "country": "GBR"
+    },
+    "scholz": {
+      "name": "Olaf Scholz",
+      "title": "Chancellor",
+      "country": "DEU"
+    },
+    "modi": {
+      "name": "Narendra Modi",
+      "title": "Prime Minister",
+      "country": "IND"
+    },
+    "narendra modi": {
+      "name": "Narendra Modi",
+      "title": "Prime Minister",
+      "country": "IND"
+    },
+    "netanyahu": {
+      "name": "Benjamin Netanyahu",
+      "title": "Prime Minister",
+      "country": "ISR"
+    },
+    "khamenei": {
+      "name": "Ali Khamenei",
+      "title": "Supreme Leader",
+      "country": "IRN"
+    },
+    "kim jong un": {
+      "name": "Kim Jong Un",
+      "title": "Supreme Leader",
+      "country": "PRK"
+    },
+    "kim jong-un": {
+      "name": "Kim Jong Un",
+      "title": "Supreme Leader",
+      "country": "PRK"
+    },
+    "erdogan": {
+      "name": "Recep Tayyip Erdogan",
+      "title": "President",
+      "country": "TUR"
+    },
+    "kishida": {
+      "name": "Fumio Kishida",
+      "title": "Prime Minister",
+      "country": "JPN"
+    },
+    "trudeau": {
+      "name": "Justin Trudeau",
+      "title": "Prime Minister",
+      "country": "CAN"
+    },
+    "lula": {
+      "name": "Luiz Inacio Lula da Silva",
+      "title": "President",
+      "country": "BRA"
+    },
+    "al-assad": {
+      "name": "Bashar al-Assad",
+      "title": "Former President",
+      "country": "SYR"
+    },
+    "marcos": {
+      "name": "Ferdinand Marcos Jr.",
+      "title": "President",
+      "country": "PHL"
+    },
+    "albanese": {
+      "name": "Anthony Albanese",
+      "title": "Prime Minister",
+      "country": "AUS"
+    },
+    "milei": {
+      "name": "Javier Milei",
+      "title": "President",
+      "country": "ARG"
+    },
+    "meloni": {
+      "name": "Giorgia Meloni",
+      "title": "Prime Minister",
+      "country": "ITA"
+    }
+  },
+  "ORGANIZATIONS": {
+    "united nations": {
+      "abbrev": "UN",
+      "type": "intl_org"
+    },
+    "un": {
+      "abbrev": "UN",
+      "type": "intl_org"
+    },
+    "nato": {
+      "abbrev": "NATO",
+      "type": "military_alliance"
+    },
+    "european union": {
+      "abbrev": "EU",
+      "type": "political_bloc"
+    },
+    "eu": {
+      "abbrev": "EU",
+      "type": "political_bloc"
+    },
+    "who": {
+      "abbrev": "WHO",
+      "type": "intl_org"
+    },
+    "world health organization": {
+      "abbrev": "WHO",
+      "type": "intl_org"
+    },
+    "imf": {
+      "abbrev": "IMF",
+      "type": "financial"
+    },
+    "international monetary fund": {
+      "abbrev": "IMF",
+      "type": "financial"
+    },
+    "world bank": {
+      "abbrev": "WB",
+      "type": "financial"
+    },
+    "opec": {
+      "abbrev": "OPEC",
+      "type": "energy"
+    },
+    "iaea": {
+      "abbrev": "IAEA",
+      "type": "nuclear"
+    },
+    "international atomic energy agency": {
+      "abbrev": "IAEA",
+      "type": "nuclear"
+    },
+    "red cross": {
+      "abbrev": "ICRC",
+      "type": "humanitarian"
+    },
+    "icrc": {
+      "abbrev": "ICRC",
+      "type": "humanitarian"
+    },
+    "unhcr": {
+      "abbrev": "UNHCR",
+      "type": "humanitarian"
+    },
+    "unicef": {
+      "abbrev": "UNICEF",
+      "type": "humanitarian"
+    },
+    "asean": {
+      "abbrev": "ASEAN",
+      "type": "political_bloc"
+    },
+    "african union": {
+      "abbrev": "AU",
+      "type": "political_bloc"
+    },
+    "brics": {
+      "abbrev": "BRICS",
+      "type": "political_bloc"
+    },
+    "g7": {
+      "abbrev": "G7",
+      "type": "political_bloc"
+    },
+    "g20": {
+      "abbrev": "G20",
+      "type": "political_bloc"
+    },
+    "wto": {
+      "abbrev": "WTO",
+      "type": "trade"
+    },
+    "world trade organization": {
+      "abbrev": "WTO",
+      "type": "trade"
+    },
+    "hamas": {
+      "abbrev": "Hamas",
+      "type": "militant"
+    },
+    "hezbollah": {
+      "abbrev": "Hezbollah",
+      "type": "militant"
+    },
+    "houthis": {
+      "abbrev": "Houthis",
+      "type": "militant"
+    },
+    "isis": {
+      "abbrev": "ISIS",
+      "type": "militant"
+    },
+    "islamic state": {
+      "abbrev": "ISIS",
+      "type": "militant"
+    },
+    "al-qaeda": {
+      "abbrev": "AQ",
+      "type": "militant"
+    },
+    "al qaeda": {
+      "abbrev": "AQ",
+      "type": "militant"
+    },
+    "taliban": {
+      "abbrev": "Taliban",
+      "type": "militant"
+    },
+    "wagner": {
+      "abbrev": "Wagner",
+      "type": "pmc"
+    },
+    "wagner group": {
+      "abbrev": "Wagner",
+      "type": "pmc"
+    },
+    "cia": {
+      "abbrev": "CIA",
+      "type": "intelligence"
+    },
+    "fbi": {
+      "abbrev": "FBI",
+      "type": "intelligence"
+    },
+    "mossad": {
+      "abbrev": "Mossad",
+      "type": "intelligence"
+    },
+    "mi6": {
+      "abbrev": "MI6",
+      "type": "intelligence"
+    },
+    "fsb": {
+      "abbrev": "FSB",
+      "type": "intelligence"
+    },
+    "pentagon": {
+      "abbrev": "DoD",
+      "type": "military"
+    },
+    "department of defense": {
+      "abbrev": "DoD",
+      "type": "military"
+    }
+  },
+  "COMPANIES": {
+    "lockheed martin": {
+      "ticker": "LMT",
+      "sector": "defense"
+    },
+    "raytheon": {
+      "ticker": "RTX",
+      "sector": "defense"
+    },
+    "northrop grumman": {
+      "ticker": "NOC",
+      "sector": "defense"
+    },
+    "boeing": {
+      "ticker": "BA",
+      "sector": "defense"
+    },
+    "general dynamics": {
+      "ticker": "GD",
+      "sector": "defense"
+    },
+    "bae systems": {
+      "ticker": "BA.L",
+      "sector": "defense"
+    },
+    "rheinmetall": {
+      "ticker": "RHM.DE",
+      "sector": "defense"
+    },
+    "apple": {
+      "ticker": "AAPL",
+      "sector": "tech"
+    },
+    "google": {
+      "ticker": "GOOGL",
+      "sector": "tech"
+    },
+    "alphabet": {
+      "ticker": "GOOGL",
+      "sector": "tech"
+    },
+    "microsoft": {
+      "ticker": "MSFT",
+      "sector": "tech"
+    },
+    "amazon": {
+      "ticker": "AMZN",
+      "sector": "tech"
+    },
+    "meta": {
+      "ticker": "META",
+      "sector": "tech"
+    },
+    "nvidia": {
+      "ticker": "NVDA",
+      "sector": "tech"
+    },
+    "openai": {
+      "ticker": null,
+      "sector": "ai"
+    },
+    "anthropic": {
+      "ticker": null,
+      "sector": "ai"
+    },
+    "deepmind": {
+      "ticker": null,
+      "sector": "ai"
+    },
+    "aramco": {
+      "ticker": "2222.SR",
+      "sector": "energy"
+    },
+    "exxonmobil": {
+      "ticker": "XOM",
+      "sector": "energy"
+    },
+    "chevron": {
+      "ticker": "CVX",
+      "sector": "energy"
+    },
+    "shell": {
+      "ticker": "SHEL",
+      "sector": "energy"
+    },
+    "bp": {
+      "ticker": "BP",
+      "sector": "energy"
+    },
+    "gazprom": {
+      "ticker": null,
+      "sector": "energy"
+    },
+    "tsmc": {
+      "ticker": "TSM",
+      "sector": "semiconductor"
+    },
+    "samsung": {
+      "ticker": "005930.KS",
+      "sector": "tech"
+    }
+  },
+  "APT_GROUPS": [
+    "alphv",
+    "apt28",
+    "apt29",
+    "apt30",
+    "apt31",
+    "apt33",
+    "apt34",
+    "apt35",
+    "apt38",
+    "apt40",
+    "apt41",
+    "black basta",
+    "blackcat",
+    "charming kitten",
+    "cl0p",
+    "conti",
+    "cozy bear",
+    "darkside",
+    "double dragon",
+    "equation group",
+    "fancy bear",
+    "forest blizzard",
+    "kimsuky",
+    "lapsus$",
+    "lazarus",
+    "lazarus group",
+    "lockbit",
+    "midnight blizzard",
+    "revil",
+    "salt typhoon",
+    "sandworm",
+    "scattered spider",
+    "star blizzard",
+    "stone panda",
+    "turla",
+    "volt typhoon"
+  ],
+  "TIER1_COUNTRIES": {
+    "USA": {
+      "name": "United States",
+      "keywords": [
+        "united states",
+        "usa",
+        "american"
+      ],
+      "baseline_risk": 15,
+      "event_multiplier": 0.3
+    },
+    "CHN": {
+      "name": "China",
+      "keywords": [
+        "china",
+        "chinese",
+        "beijing"
+      ],
+      "baseline_risk": 35,
+      "event_multiplier": 2.5
+    },
+    "RUS": {
+      "name": "Russia",
+      "keywords": [
+        "russia",
+        "russian",
+        "moscow"
+      ],
+      "baseline_risk": 55,
+      "event_multiplier": 1.8
+    },
+    "UKR": {
+      "name": "Ukraine",
+      "keywords": [
+        "ukraine",
+        "ukrainian",
+        "kyiv"
+      ],
+      "baseline_risk": 85,
+      "event_multiplier": 1.0
+    },
+    "SYR": {
+      "name": "Syria",
+      "keywords": [
+        "syria",
+        "syrian",
+        "damascus"
+      ],
+      "baseline_risk": 80,
+      "event_multiplier": 1.2
+    },
+    "YEM": {
+      "name": "Yemen",
+      "keywords": [
+        "yemen",
+        "yemeni",
+        "sanaa",
+        "houthi"
+      ],
+      "baseline_risk": 75,
+      "event_multiplier": 1.3
+    },
+    "MMR": {
+      "name": "Myanmar",
+      "keywords": [
+        "myanmar",
+        "burma",
+        "burmese"
+      ],
+      "baseline_risk": 70,
+      "event_multiplier": 1.1
+    },
+    "SDN": {
+      "name": "Sudan",
+      "keywords": [
+        "sudan",
+        "sudanese",
+        "khartoum"
+      ],
+      "baseline_risk": 80,
+      "event_multiplier": 1.4
+    },
+    "NGA": {
+      "name": "Nigeria",
+      "keywords": [
+        "nigeria",
+        "nigerian",
+        "lagos",
+        "abuja"
+      ],
+      "baseline_risk": 50,
+      "event_multiplier": 1.0
+    },
+    "AFG": {
+      "name": "Afghanistan",
+      "keywords": [
+        "afghanistan",
+        "afghan",
+        "kabul",
+        "taliban"
+      ],
+      "baseline_risk": 70,
+      "event_multiplier": 1.1
+    },
+    "IRQ": {
+      "name": "Iraq",
+      "keywords": [
+        "iraq",
+        "iraqi",
+        "baghdad"
+      ],
+      "baseline_risk": 55,
+      "event_multiplier": 1.0
+    },
+    "IRN": {
+      "name": "Iran",
+      "keywords": [
+        "iran",
+        "iranian",
+        "tehran"
+      ],
+      "baseline_risk": 50,
+      "event_multiplier": 2.0
+    },
+    "TWN": {
+      "name": "Taiwan",
+      "keywords": [
+        "taiwan",
+        "taiwanese",
+        "taipei"
+      ],
+      "baseline_risk": 30,
+      "event_multiplier": 3.0
+    },
+    "PRK": {
+      "name": "North Korea",
+      "keywords": [
+        "north korea",
+        "dprk",
+        "pyongyang"
+      ],
+      "baseline_risk": 45,
+      "event_multiplier": 2.5
+    },
+    "ISR": {
+      "name": "Israel",
+      "keywords": [
+        "israel",
+        "israeli",
+        "tel aviv",
+        "jerusalem"
+      ],
+      "baseline_risk": 55,
+      "event_multiplier": 1.5
+    },
+    "PSE": {
+      "name": "Palestine",
+      "keywords": [
+        "palestine",
+        "palestinian",
+        "gaza",
+        "west bank"
+      ],
+      "baseline_risk": 85,
+      "event_multiplier": 1.0
+    },
+    "LBN": {
+      "name": "Lebanon",
+      "keywords": [
+        "lebanon",
+        "lebanese",
+        "beirut",
+        "hezbollah"
+      ],
+      "baseline_risk": 60,
+      "event_multiplier": 1.3
+    },
+    "ETH": {
+      "name": "Ethiopia",
+      "keywords": [
+        "ethiopia",
+        "ethiopian",
+        "addis ababa"
+      ],
+      "baseline_risk": 55,
+      "event_multiplier": 1.0
+    },
+    "COD": {
+      "name": "DR Congo",
+      "keywords": [
+        "congo",
+        "drc",
+        "kinshasa",
+        "congolese"
+      ],
+      "baseline_risk": 60,
+      "event_multiplier": 1.0
+    },
+    "PAK": {
+      "name": "Pakistan",
+      "keywords": [
+        "pakistan",
+        "pakistani",
+        "islamabad"
+      ],
+      "baseline_risk": 45,
+      "event_multiplier": 1.0
+    },
+    "IND": {
+      "name": "India",
+      "keywords": [
+        "india",
+        "indian",
+        "new delhi"
+      ],
+      "baseline_risk": 30,
+      "event_multiplier": 0.5
+    },
+    "MEX": {
+      "name": "Mexico",
+      "keywords": [
+        "mexico",
+        "mexican",
+        "mexico city"
+      ],
+      "baseline_risk": 40,
+      "event_multiplier": 0.8
+    }
+  },
+  "CATEGORIES": {
+    "nuclear": {
+      "keywords": [
+        "nuclear",
+        "atomic",
+        "uranium",
+        "plutonium",
+        "warhead",
+        "icbm",
+        "ballistic missile",
+        "nuclear test",
+        "radiation",
+        "enrichment",
+        "nonproliferation",
+        "iaea",
+        "dirty bomb"
+      ],
+      "severity_base": 9
+    },
+    "terrorism": {
+      "keywords": [
+        "terrorist",
+        "terrorism",
+        "suicide bomb",
+        "car bomb",
+        "ied",
+        "hostage",
+        "kidnapping",
+        "beheading",
+        "mass shooting",
+        "lone wolf",
+        "radicalization",
+        "jihad",
+        "extremist"
+      ],
+      "severity_base": 9
+    },
+    "military": {
+      "keywords": [
+        "military",
+        "troops",
+        "soldier",
+        "artillery",
+        "airstrike",
+        "bombing",
+        "invasion",
+        "offensive",
+        "deployed",
+        "nato",
+        "warship",
+        "submarine",
+        "fighter jet",
+        "drone strike",
+        "mobilization",
+        "ceasefire",
+        "frontline",
+        "casualties"
+      ],
+      "severity_base": 8
+    },
+    "cyber": {
+      "keywords": [
+        "cyber",
+        "hack",
+        "ransomware",
+        "malware",
+        "phishing",
+        "data breach",
+        "ddos",
+        "vulnerability",
+        "exploit",
+        "cve-",
+        "zero-day",
+        "apt",
+        "botnet",
+        "credential",
+        "encryption"
+      ],
+      "severity_base": 7
+    },
+    "political": {
+      "keywords": [
+        "election",
+        "coup",
+        "protest",
+        "demonstration",
+        "sanctions",
+        "embargo",
+        "diplomatic",
+        "parliament",
+        "congress",
+        "impeachment",
+        "referendum",
+        "regime",
+        "martial law",
+        "authoritarian",
+        "democracy",
+        "opposition"
+      ],
+      "severity_base": 6
+    },
+    "economic": {
+      "keywords": [
+        "recession",
+        "inflation",
+        "default",
+        "debt crisis",
+        "currency collapse",
+        "bank run",
+        "stock crash",
+        "layoffs",
+        "trade war",
+        "tariff",
+        "supply chain",
+        "shortage"
+      ],
+      "severity_base": 6
+    },
+    "health": {
+      "keywords": [
+        "pandemic",
+        "epidemic",
+        "outbreak",
+        "virus",
+        "pathogen",
+        "vaccine",
+        "quarantine",
+        "who emergency",
+        "mortality",
+        "infection",
+        "ebola",
+        "bird flu",
+        "h5n1",
+        "mpox"
+      ],
+      "severity_base": 7
+    },
+    "climate": {
+      "keywords": [
+        "hurricane",
+        "typhoon",
+        "cyclone",
+        "earthquake",
+        "tsunami",
+        "flood",
+        "drought",
+        "wildfire",
+        "heatwave",
+        "glacier",
+        "sea level",
+        "emission",
+        "carbon",
+        "climate change"
+      ],
+      "severity_base": 6
+    },
+    "infrastructure": {
+      "keywords": [
+        "power outage",
+        "blackout",
+        "pipeline",
+        "cable cut",
+        "internet outage",
+        "grid failure",
+        "dam collapse",
+        "bridge collapse",
+        "port blockade",
+        "supply disruption"
+      ],
+      "severity_base": 7
+    },
+    "maritime": {
+      "keywords": [
+        "shipping",
+        "strait",
+        "piracy",
+        "naval blockade",
+        "vessel",
+        "cargo ship",
+        "tanker",
+        "port",
+        "chokepoint",
+        "seafarer",
+        "coast guard",
+        "maritime security"
+      ],
+      "severity_base": 5
+    },
+    "aviation": {
+      "keywords": [
+        "airspace",
+        "no-fly zone",
+        "intercept",
+        "air defense",
+        "airline",
+        "crash",
+        "hijack",
+        "flight ban"
+      ],
+      "severity_base": 6
+    },
+    "energy": {
+      "keywords": [
+        "oil price",
+        "opec",
+        "gas pipeline",
+        "lng",
+        "refinery",
+        "energy crisis",
+        "power grid",
+        "renewable",
+        "solar",
+        "wind farm",
+        "battery",
+        "hydrogen"
+      ],
+      "severity_base": 5
+    },
+    "social_unrest": {
+      "keywords": [
+        "riot",
+        "looting",
+        "tear gas",
+        "water cannon",
+        "curfew",
+        "state of emergency",
+        "civil disobedience",
+        "strike",
+        "labor dispute",
+        "food riot",
+        "uprising"
+      ],
+      "severity_base": 7
+    },
+    "space": {
+      "keywords": [
+        "satellite",
+        "space debris",
+        "solar flare",
+        "geomagnetic",
+        "space weather",
+        "orbit",
+        "launch",
+        "rocket",
+        "asteroid"
+      ],
+      "severity_base": 4
+    }
+  },
+  "_HIGH_SEVERITY": [
+    "killed",
+    "dead",
+    "death toll",
+    "massacre",
+    "war crime",
+    "genocide",
+    "nuclear",
+    "catastrophic",
+    "critical",
+    "emergency",
+    "mass casualty",
+    "destroyed",
+    "collapse",
+    "unprecedented",
+    "worst"
+  ],
+  "_MODERATE_SEVERITY": [
+    "injured",
+    "wounded",
+    "escalation",
+    "crisis",
+    "threat",
+    "warning",
+    "attack",
+    "strike",
+    "explosion",
+    "breach",
+    "violation"
+  ],
+  "_WORD_ONLY_KEYWORDS": [
+    "carbon",
+    "coup",
+    "port",
+    "regime"
+  ],
+  "_PATTERN_OVERRIDES": {
+    "apt": "\\bapt\\d*\\b",
+    "dead": "\\bdead(?:ly)?\\b"
+  },
+  "_STOPWORDS": [
+    "a",
+    "about",
+    "above",
+    "after",
+    "against",
+    "all",
+    "also",
+    "although",
+    "an",
+    "and",
+    "any",
+    "are",
+    "as",
+    "at",
+    "back",
+    "be",
+    "because",
+    "been",
+    "before",
+    "being",
+    "below",
+    "between",
+    "both",
+    "but",
+    "by",
+    "can",
+    "could",
+    "d",
+    "did",
+    "do",
+    "does",
+    "down",
+    "during",
+    "each",
+    "either",
+    "even",
+    "every",
+    "few",
+    "first",
+    "for",
+    "from",
+    "get",
+    "got",
+    "had",
+    "has",
+    "have",
+    "he",
+    "her",
+    "here",
+    "him",
+    "his",
+    "how",
+    "if",
+    "in",
+    "into",
+    "is",
+    "it",
+    "its",
+    "just",
+    "last",
+    "ll",
+    "m",
+    "many",
+    "may",
+    "me",
+    "might",
+    "more",
+    "most",
+    "much",
+    "must",
+    "my",
+    "neither",
+    "new",
+    "no",
+    "nor",
+    "not",
+    "now",
+    "of",
+    "off",
+    "on",
+    "once",
+    "one",
+    "only",
+    "or",
+    "our",
+    "out",
+    "over",
+    "own",
+    "re",
+    "s",
+    "said",
+    "same",
+    "says",
+    "shall",
+    "she",
+    "should",
+    "since",
+    "so",
+    "some",
+    "still",
+    "such",
+    "t",
+    "than",
+    "that",
+    "the",
+    "their",
+    "them",
+    "then",
+    "there",
+    "these",
+    "they",
+    "this",
+    "those",
+    "through",
+    "to",
+    "too",
+    "two",
+    "under",
+    "until",
+    "up",
+    "us",
+    "ve",
+    "very",
+    "was",
+    "way",
+    "we",
+    "well",
+    "were",
+    "what",
+    "when",
+    "where",
+    "whether",
+    "which",
+    "while",
+    "who",
+    "whom",
+    "why",
+    "will",
+    "with",
+    "would",
+    "yet",
+    "you",
+    "your"
+  ],
+  "FEED_OUTLETS": {
+    "BBC World": "BBC",
+    "BBC Mundo": "BBC",
+    "DW News": "DW",
+    "DW Español": "DW",
+    "DW Deutsch": "DW",
+    "DW Europe": "DW",
+    "France24": "France 24",
+    "France24 Français": "France 24",
+    "UN News": "UN News",
+    "UN News Español": "UN News",
+    "UN News Français": "UN News"
+  }
+}

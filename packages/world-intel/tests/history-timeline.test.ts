@@ -1,0 +1,15 @@
+import {realpathSync} from 'node:fs';
+import {describe,it,expect} from 'vitest';import {mkdtempSync,rmSync,existsSync} from 'node:fs';import {tmpdir} from 'node:os';import {join} from 'node:path';
+import {HistoryStore,registerHistoryExtractor} from '../src/history.js';import {dayTimeline} from '../src/history-timeline.js';
+const [major,minor]=process.versions.node.split('.').map(Number),supported=major!>22||(major===22&&minor!>=13);const start=Date.parse('2026-11-15T00:00:00Z')/1000;registerHistoryExtractor('timeline_fixture',p=>p.points);
+describe.skipIf(!supported)('read-only UTC day timeline',()=>{
+ it('never creates missing history stores and rejects invalid/future dates',()=>{const path=join(realpathSync(tmpdir()),'absent-'+Math.random(),'db');const r=dayTimeline(path,'2026-11-15',{now:start+86400,roster:['never']});expect(r.collector.state).toBe('not_recorded');expect(existsSync(path)).toBe(false);expect(dayTimeline(path,'2026-02-30')).toHaveProperty('error');expect(dayTimeline(path,'2026-11-17',{now:start})).toHaveProperty('error');});
+ it('separates partial failure, retention, run-log coverage and observation revisions/periods',()=>{
+ const dir=mkdtempSync(join(realpathSync(tmpdir()),'timeline-')),path=join(dir,'db');const s=new HistoryStore(path,{payloadDays:0,captureDays:0,historyDays:0});try{
+ s.recordCycle([{source:'older',collected_at:start-1,payload:{value:1}},{source:'timeline_fixture',collected_at:start+10,payload:{points:[{series_key:'day',observed_at:'2026-11-15',value:1},{series_key:'month',observed_at:'2026-11',value:4},{series_key:'unknown',value:9}]}},{source:'timeline_fixture',collected_at:start+20,error:'offline'},{source:'timeline_fixture',collected_at:start+30,payload:{points:[{series_key:'day',observed_at:'2026-11-15',value:2}]}}]);
+ const r=dayTimeline(path,'2026-11-15',{now:start+86400,roster:['timeline_fixture','never'],limit:2});expect(r.collector.state).toBe('ran');expect(r.sources[0]).toMatchObject({attempts:3,partial_failure:true,observations_retained:4});expect(r.truncation).toMatchObject({matched:4,returned:2,truncated:true});
+ const o=dayTimeline(path,'2026-11-15',{by:'observed',now:start+86400,limit:1});expect(o.day_values[0]).toMatchObject({stored_values:2,value:2,first_value:1,precision:'date'});expect(o.period_values).toHaveLength(0);expect(o.without_observed_at.collected_that_day).toBe(1);expect(o.truncation.period_values.truncated).toBe(true);
+ }finally{s.close();rmSync(dir,{recursive:true,force:true});}
+ });
+ it('does not call an unrecorded earlier day quiet',()=>{const dir=mkdtempSync(join(realpathSync(tmpdir()),'timeline-')),path=join(dir,'db');const s=new HistoryStore(path,{payloadDays:0,captureDays:0,historyDays:0});try{s.recordCycle([{source:'later',collected_at:start+86400,payload:{value:1}}]);const r=dayTimeline(path,'2026-11-15',{now:start+2*86400,roster:['later']});expect(r.collector).toMatchObject({state:'not_recorded',context:'before_first_capture'});expect(r.sources[0].day_state).toBe('before_run_log');}finally{s.close();rmSync(dir,{recursive:true,force:true});}});
+});

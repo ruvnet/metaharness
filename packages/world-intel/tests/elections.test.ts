@@ -1,0 +1,4 @@
+import {it,expect} from 'vitest';
+import {createElectionHandlers} from '../src/domains/elections.js';
+it('returns sorted pinned calendar and highest risk',async()=>{const h=createElectionHandlers(()=>new Date('2026-11-17T12:00:00Z'));const r=await h.intel_election_calendar({}) as any;expect(r.count).toBeGreaterThan(0);expect(r.highest_risk).toEqual(r.elections[0]);expect(r.timestamp).toBe('2026-11-17T12:00:00Z');expect(r.elections.every((x:any,i:number)=>!i||r.elections[i-1].risk_score>=x.risk_score)).toBe(true);});
+it('matches ISO3 or case insensitive substring and handles no matches',async()=>{const h=createElectionHandlers();expect(await h.intel_election_calendar({country:'NO-SUCH-COUNTRY'})).toMatchObject({count:0,highest_risk:null});const all=await h.intel_election_calendar({}) as any;const r=await h.intel_election_calendar({country:all.elections[0].iso3.toLowerCase()}) as any;expect(r.elections.every((x:any)=>x.iso3===all.elections[0].iso3)).toBe(true);});

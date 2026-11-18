@@ -1,0 +1,51 @@
+{
+  "north_america": [
+    "United States",
+    "Canada",
+    "Mexico"
+  ],
+  "south_america": [
+    "Brazil",
+    "Argentina",
+    "Colombia",
+    "Chile"
+  ],
+  "europe": [
+    "Greece",
+    "Spain",
+    "Portugal",
+    "Italy",
+    "France"
+  ],
+  "africa": [
+    "Nigeria",
+    "DR Congo",
+    "Ethiopia",
+    "Sudan"
+  ],
+  "middle_east": [
+    "Syria",
+    "Iraq",
+    "Iran",
+    "Yemen"
+  ],
+  "south_asia": [
+    "India",
+    "Pakistan",
+    "Afghanistan"
+  ],
+  "east_asia": [
+    "China",
+    "Japan",
+    "South Korea"
+  ],
+  "southeast_asia": [
+    "Myanmar",
+    "Indonesia",
+    "Philippines"
+  ],
+  "oceania": [
+    "Australia",
+    "New Zealand"
+  ]
+}

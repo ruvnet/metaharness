@@ -1,0 +1,147 @@
+{
+  "SENSITIVE_REGIONS": {
+    "persian_gulf": {
+      "bbox": "20,45,30,60",
+      "baseline_presence": {
+        "United States": 15,
+        "Iran": 5
+      }
+    },
+    "taiwan_strait": {
+      "bbox": "21,116,27,123",
+      "baseline_presence": {
+        "China": 10,
+        "United States": 5
+      }
+    },
+    "baltic_sea": {
+      "bbox": "53,10,66,30",
+      "baseline_presence": {
+        "Russia": 3,
+        "United States": 2
+      }
+    },
+    "south_china_sea": {
+      "bbox": "0,100,25,122",
+      "baseline_presence": {
+        "China": 8,
+        "United States": 4
+      }
+    },
+    "korean_dmz": {
+      "bbox": "33,124,43,132",
+      "baseline_presence": {
+        "United States": 5
+      }
+    },
+    "black_sea": {
+      "bbox": "40,27,47,42",
+      "baseline_presence": {
+        "Russia": 5,
+        "Turkey": 3
+      }
+    },
+    "red_sea": {
+      "bbox": "12,32,30,44",
+      "baseline_presence": {
+        "United States": 3
+      }
+    },
+    "arctic": {
+      "bbox": "65,-180,90,180",
+      "baseline_presence": {
+        "Russia": 3,
+        "United States": 2
+      }
+    }
+  },
+  "_THEATER_REGION_MAP": {
+    "european": [
+      "baltic_sea",
+      "black_sea"
+    ],
+    "indo_pacific": [
+      "taiwan_strait",
+      "south_china_sea"
+    ],
+    "middle_east": [
+      "persian_gulf",
+      "red_sea"
+    ],
+    "arctic": [
+      "arctic"
+    ],
+    "korean_peninsula": [
+      "korean_dmz"
+    ]
+  },
+  "CABLE_DEPENDENCIES": {
+    "transatlantic_north": {
+      "United Kingdom": 0.6,
+      "France": 0.4,
+      "Germany": 0.3,
+      "Netherlands": 0.25,
+      "United States": 0.15,
+      "Ireland": 0.5
+    },
+    "transatlantic_south": {
+      "Brazil": 0.5,
+      "Portugal": 0.3,
+      "Spain": 0.2,
+      "Argentina": 0.15,
+      "South Africa": 0.1
+    },
+    "asia_europe": {
+      "India": 0.4,
+      "Saudi Arabia": 0.35,
+      "UAE": 0.3,
+      "Pakistan": 0.25,
+      "Singapore": 0.2,
+      "Malaysia": 0.15
+    },
+    "red_sea": {
+      "Egypt": 0.5,
+      "Saudi Arabia": 0.3,
+      "Djibouti": 0.8,
+      "Yemen": 0.6,
+      "Eritrea": 0.5,
+      "Sudan": 0.3
+    },
+    "transpacific": {
+      "Japan": 0.3,
+      "United States": 0.1,
+      "South Korea": 0.2,
+      "Taiwan": 0.25,
+      "Philippines": 0.15
+    },
+    "mediterranean": {
+      "Italy": 0.3,
+      "Greece": 0.4,
+      "Turkey": 0.2,
+      "Egypt": 0.15,
+      "Spain": 0.1,
+      "Israel": 0.2
+    }
+  },
+  "WATERWAY_CORRIDOR_MAP": {
+    "Suez Canal": [
+      "red_sea",
+      "asia_europe",
+      "mediterranean"
+    ],
+    "Strait of Hormuz": [
+      "asia_europe"
+    ],
+    "Strait of Malacca": [
+      "transpacific"
+    ],
+    "Bab-el-Mandeb": [
+      "red_sea",
+      "asia_europe"
+    ],
+    "Strait of Gibraltar": [
+      "mediterranean",
+      "transatlantic_south"
+    ]
+  }
+}

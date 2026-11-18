@@ -1,0 +1,86 @@
+{
+  "NAVAREAS": {
+    "I": "UK (NE Atlantic, North Sea)",
+    "II": "France (Bay of Biscay, W Africa)",
+    "III": "Spain (Mediterranean W)",
+    "IV": "United States (W Atlantic, Caribbean, Gulf of Mexico)",
+    "V": "Brazil (SW Atlantic)",
+    "VI": "Argentina (SE Atlantic)",
+    "VII": "South Africa (Indian Ocean W)",
+    "VIII": "India (Indian Ocean N)",
+    "IX": "Pakistan (Arabian Sea, Persian Gulf)",
+    "X": "Australia (Indian Ocean S)",
+    "XI": "Japan (NW Pacific)",
+    "XII": "United States (NE Pacific)",
+    "XIII": "Russia (Arctic)",
+    "XIV": "New Zealand (SW Pacific)",
+    "XV": "Chile (SE Pacific)",
+    "XVI": "Peru (E Pacific)"
+  },
+  "NGA_AREA_CODES": {
+    "4": {
+      "series": "NAVAREA IV",
+      "navareas": [
+        "IV"
+      ],
+      "unlisted_navareas": [
+        "XVIII"
+      ],
+      "single_navarea": false
+    },
+    "12": {
+      "series": "NAVAREA XII",
+      "navareas": [
+        "XII"
+      ],
+      "unlisted_navareas": [],
+      "single_navarea": true
+    },
+    "A": {
+      "series": "HYDROLANT",
+      "navareas": [
+        "I",
+        "II",
+        "III",
+        "IV",
+        "V",
+        "VI",
+        "VII",
+        "XV"
+      ],
+      "unlisted_navareas": [],
+      "single_navarea": false
+    },
+    "P": {
+      "series": "HYDROPAC",
+      "navareas": [
+        "VII",
+        "VIII",
+        "IX",
+        "X",
+        "XI",
+        "XII",
+        "XIII",
+        "XIV",
+        "XV",
+        "XVI"
+      ],
+      "unlisted_navareas": [],
+      "single_navarea": false
+    },
+    "C": {
+      "series": "HYDROARC",
+      "navareas": [
+        "I"
+      ],
+      "unlisted_navareas": [
+        "XVII",
+        "XVIII",
+        "XIX",
+        "XX",
+        "XXI"
+      ],
+      "single_navarea": false
+    }
+  }
+}

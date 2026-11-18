@@ -1,0 +1,358 @@
+{
+  "_COUNTRIES": {
+    "maxPages": 1,
+    "items": [
+      {
+        "iso": "SYR",
+        "iso2": "SY",
+        "name": "Syrian Arab Rep.",
+        "nameShort": "Syrian Arab Rep.",
+        "region": "Western Asia",
+        "majorArea": "Asia"
+      },
+      {
+        "iso": "TUR",
+        "iso2": "TR",
+        "name": "T\u00fcrkiye",
+        "region": "Western Asia",
+        "majorArea": "Asia"
+      },
+      {
+        "iso": "DEU",
+        "iso2": "DE",
+        "name": "Germany",
+        "region": "Western Europe",
+        "majorArea": "Europe"
+      },
+      {
+        "iso": "AUT",
+        "iso2": "AT",
+        "name": "Austria",
+        "region": "Western Europe",
+        "majorArea": "Europe"
+      },
+      {
+        "iso": "SDN",
+        "iso2": "SD",
+        "name": "Sudan",
+        "region": "Northern Africa",
+        "majorArea": "Africa"
+      },
+      {
+        "iso": "TCD",
+        "iso2": "TD",
+        "name": "Chad",
+        "region": "Middle Africa",
+        "majorArea": "Africa"
+      },
+      {
+        "iso": "COG",
+        "iso2": "CG",
+        "name": "Congo",
+        "region": "Middle Africa",
+        "majorArea": "Africa"
+      },
+      {
+        "iso": "COD",
+        "iso2": "CD",
+        "name": "Dem. Rep. of the Congo",
+        "region": "Middle Africa",
+        "majorArea": "Africa"
+      },
+      {
+        "code": "UKN",
+        "iso": "UNK",
+        "name": "Unknown ",
+        "region": null,
+        "majorArea": null
+      },
+      {
+        "code": "STA",
+        "iso": "XXA",
+        "name": "Stateless",
+        "region": "Stateless",
+        "majorArea": "Stateless"
+      }
+    ]
+  },
+  "_PAIRS": {
+    "2025": [
+      {
+        "coo": "SYR",
+        "coo_iso": "SYR",
+        "coo_name": "SYR",
+        "coa_iso": "TUR",
+        "coa_name": "TUR",
+        "refugees": 2000000,
+        "asylum_seekers": 0,
+        "oip": "-",
+        "idps": 0
+      },
+      {
+        "coo": "SYR",
+        "coo_iso": "SYR",
+        "coo_name": "SYR",
+        "coa_iso": "DEU",
+        "coa_name": "DEU",
+        "refugees": 600000,
+        "asylum_seekers": 60000,
+        "oip": "-",
+        "idps": 0
+      },
+      {
+        "coo": "SYR",
+        "coo_iso": "SYR",
+        "coo_name": "SYR",
+        "coa_iso": "SYR",
+        "coa_name": "SYR",
+        "refugees": 0,
+        "asylum_seekers": 0,
+        "oip": "-",
+        "idps": 5000000
+      },
+      {
+        "coo": "SDN",
+        "coo_iso": "SDN",
+        "coo_name": "SDN",
+        "coa_iso": "TCD",
+        "coa_name": "TCD",
+        "refugees": 1200000,
+        "asylum_seekers": 0,
+        "oip": "-",
+        "idps": 0
+      },
+      {
+        "coo": "SDN",
+        "coo_iso": "SDN",
+        "coo_name": "SDN",
+        "coa_iso": "SDN",
+        "coa_name": "SDN",
+        "refugees": 0,
+        "asylum_seekers": 0,
+        "oip": "-",
+        "idps": 9000000
+      },
+      {
+        "coo": "AUS",
+        "coo_iso": "AUT",
+        "coo_name": "AUT",
+        "coa_iso": "DEU",
+        "coa_name": "DEU",
+        "refugees": 0,
+        "asylum_seekers": 10,
+        "oip": "-",
+        "idps": 0
+      },
+      {
+        "coo": "UNK",
+        "coo_iso": "UNK",
+        "coo_name": "UNK",
+        "coa_iso": "DEU",
+        "coa_name": "DEU",
+        "refugees": 900000,
+        "asylum_seekers": 0,
+        "oip": "-",
+        "idps": 0
+      }
+    ],
+    "2024": [
+      {
+        "coo": "SYR",
+        "coo_iso": "SYR",
+        "coo_name": "SYR",
+        "coa_iso": "TUR",
+        "coa_name": "TUR",
+        "refugees": 2900000,
+        "asylum_seekers": 0,
+        "oip": "-",
+        "idps": 0
+      },
+      {
+        "coo": "SYR",
+        "coo_iso": "SYR",
+        "coo_name": "SYR",
+        "coa_iso": "DEU",
+        "coa_name": "DEU",
+        "refugees": 650000,
+        "asylum_seekers": 60000,
+        "oip": "-",
+        "idps": 0
+      },
+      {
+        "coo": "SYR",
+        "coo_iso": "SYR",
+        "coo_name": "SYR",
+        "coa_iso": "SYR",
+        "coa_name": "SYR",
+        "refugees": 0,
+        "asylum_seekers": 0,
+        "oip": "-",
+        "idps": 7000000
+      },
+      {
+        "coo": "SDN",
+        "coo_iso": "SDN",
+        "coo_name": "SDN",
+        "coa_iso": "TCD",
+        "coa_name": "TCD",
+        "refugees": 400000,
+        "asylum_seekers": 0,
+        "oip": "-",
+        "idps": 0
+      },
+      {
+        "coo": "SDN",
+        "coo_iso": "SDN",
+        "coo_name": "SDN",
+        "coa_iso": "SDN",
+        "coa_name": "SDN",
+        "refugees": 0,
+        "asylum_seekers": 0,
+        "oip": "-",
+        "idps": 11000000
+      },
+      {
+        "coo": "UNK",
+        "coo_iso": "UNK",
+        "coo_name": "UNK",
+        "coa_iso": "DEU",
+        "coa_name": "DEU",
+        "refugees": 100000,
+        "asylum_seekers": 0,
+        "oip": "-",
+        "idps": 0
+      }
+    ]
+  },
+  "_HISTORY_SYR": [
+    {
+      "year": 2013,
+      "refugees": 2400000,
+      "asylum_seekers": 0,
+      "idps": 0
+    },
+    {
+      "year": 2011,
+      "refugees": 20000,
+      "asylum_seekers": 0,
+      "idps": 0
+    },
+    {
+      "year": 2012,
+      "refugees": 700000,
+      "asylum_seekers": 29000,
+      "idps": 0
+    },
+    {
+      "year": 2014,
+      "refugees": 3800000,
+      "asylum_seekers": 87000,
+      "idps": 0
+    }
+  ],
+  "_WB_COUNTRIES": [
+    {
+      "page": 1,
+      "pages": 1
+    },
+    [
+      {
+        "id": "SYR",
+        "iso2Code": "SY",
+        "name": "Syrian Arab Republic",
+        "region": {
+          "id": "MEA",
+          "value": "Middle East"
+        },
+        "incomeLevel": {
+          "value": "Low income"
+        }
+      },
+      {
+        "id": "DEU",
+        "iso2Code": "DE",
+        "name": "Germany",
+        "region": {
+          "id": "ECS",
+          "value": "Europe & Central Asia"
+        },
+        "incomeLevel": {
+          "value": "High income"
+        }
+      },
+      {
+        "id": "SDN",
+        "iso2Code": "SD",
+        "name": "Sudan",
+        "region": {
+          "id": "SSF",
+          "value": "Sub-Saharan Africa"
+        },
+        "incomeLevel": {
+          "value": "Low income"
+        }
+      },
+      {
+        "id": "TCD",
+        "iso2Code": "TD",
+        "name": "Chad",
+        "region": {
+          "id": "SSF",
+          "value": "Sub-Saharan Africa"
+        },
+        "incomeLevel": {
+          "value": "Low income"
+        }
+      },
+      {
+        "id": "WLD",
+        "iso2Code": "1W",
+        "name": "World",
+        "region": {
+          "id": "NA",
+          "value": "Aggregates"
+        }
+      },
+      {
+        "id": "SSF",
+        "iso2Code": "ZG",
+        "name": "Sub-Saharan Africa",
+        "region": {
+          "id": "NA",
+          "value": "Aggregates"
+        }
+      }
+    ]
+  ],
+  "_WB_LATEST": {
+    "SM.POP.NETM": {
+      "SYR": 400000,
+      "DEU": -300000,
+      "SDN": 290000,
+      "TCD": -120000,
+      "WLD": 0,
+      "SSF": -200000
+    },
+    "SP.POP.TOTL": {
+      "SYR": 25000000,
+      "DEU": 83000000,
+      "SDN": 50000000,
+      "TCD": 20000000,
+      "WLD": 8000000000,
+      "SSF": 1200000000
+    },
+    "SM.POP.TOTL": {
+      "SYR": 900000,
+      "DEU": 16000000,
+      "SDN": 2400000,
+      "TCD": 1200000
+    }
+  },
+  "provenance": {
+    "source": "src/world_intel_mcp/tests/test_migration.py",
+    "commit": "fdebf9a8de6e00ed688053dd647cafedc179708b",
+    "sha256": "beec0e2055c60c4ccdbdfa43f0d797eaee71ea2826e07caefbecebb2706afb8e",
+    "license": "MIT; Phoenix AGI; see THIRD_PARTY_NOTICES.md",
+    "extraction": "Static AST literal extraction; upstream module not executed"
+  }
+}

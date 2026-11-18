@@ -1,0 +1,22 @@
+import {describe,it,expect} from 'vitest';import {HistoryStore} from '../src/history.js';import {historyBackfill,validateEcbBackfillKey} from '../src/history-backfill.js';
+const [major,minor]=process.versions.node.split('.').map(Number),supported=major!>22||(major===22&&minor!>=13),now=()=>1800000000;
+describe.skipIf(!supported)('bounded native history backfill',()=>{
+ it('loads current FRED vintage, skips missing, stores revisions, retains withdrawn values',async()=>{
+ const store=new HistoryStore(':memory:',{payloadDays:0,captureDays:0,historyDays:0});let rows='2026-01-01,1\n2026-01-02,.\n2026-01-03,3';const transport={get:async()=>({body:'observation_date,TEST\n'+rows,fetchedAt:now()-1})};try{
+ const a=await historyBackfill(store,'fred',['test'],undefined,{transport,now});expect(a.totals).toMatchObject({loaded:2,stored_new:2,missing_skipped:1});expect(a.requests[0].copy_fetched_at).not.toBeNull();
+ const b=await historyBackfill(store,'fred',['TEST'],undefined,{transport,now});expect(b.totals).toMatchObject({stored_new:0,unchanged:2});rows='2026-01-01,2\n2026-01-02,5\n2026-01-03,.';const c=await historyBackfill(store,'fred',['TEST'],undefined,{transport,now});expect(c.totals).toMatchObject({stored_new:1,stored_revised:1,absent_from_response:1});expect(store.revisions().count).toBe(1);expect(store.captureHistory('backfill:fred',20,3).capture.payload.body).toContain('Summary only');
+ }finally{store.close();}
+ });
+ it('validates all requests before fetching and refuses stale cache with an error capture',async()=>{
+ const store=new HistoryStore(':memory:');let calls=0;const transport={get:async()=>{calls++;return {body:'observation_date,TEST\n2026-01-01,1',fetchedAt:now()-100,staleAgeSeconds:100};}};try{const bad=await historyBackfill(store,'fred',['OK','../BAD'],undefined,{transport,now});expect(bad.error).toBeTruthy();expect(calls).toBe(0);const r=await historyBackfill(store,'fred',['TEST'],undefined,{transport,now});expect(r.totals.failed).toBe(1);expect(store.captureHistory('backfill:fred').captures[0].status).toBe('error');expect(store.storageStats().observations).toBe(0);}finally{store.close();}
+ });
+ it('prunes only backfill rows before loading and can restore aged unchanged points',async()=>{
+ const store=new HistoryStore(':memory:',{payloadDays:1,captureDays:1,historyDays:1});const transport={get:async()=>({body:'observation_date,TEST\n1962-01-01,1',fetchedAt:now()})};try{store.recordCycle([{source:'collector',collected_at:now()-200000,payload:{value:1}}],now()-200000);await historyBackfill(store,'fred',['TEST'],undefined,{transport,now:()=>now()-200000});const r=await historyBackfill(store,'fred',['TEST'],undefined,{transport,now});expect(r.totals.stored_new).toBe(1);expect(r.pruned.observations).toBe(1);expect(store.captureHistory('collector').total_captures).toBe(1);}finally{store.close();}
+ });
+ it('bounds ECB combination keys before requests',()=>{expect(validateEcbBackfillKey('ILM.W.U2.C.T000000.Z5.Z01')).toEqual(['ILM','W.U2.C.T000000.Z5.Z01']);expect(()=>validateEcbBackfillKey('ILM.W..C.T.Z.Z')).toThrow('without wildcards');});
+ it('loads ECB weekly period-end dates with lookback and provisional status',async()=>{
+ const store=new HistoryStore(':memory:',{payloadDays:0,captureDays:0,historyDays:0});let url='';const data={structure:{dimensions:{series:['W','U2','C','T000000','Z5','Z01'].map((id,i)=>({id:['FREQ','AREA','ADJUSTMENT','ITEM','COUNTERPART','CURRENCY'][i],values:[{id}]})),observation:[{id:'TIME_PERIOD',values:[{id:'2026-W44',end:'2026-11-01T23:59:59'},{id:'2026-W45',end:'2026-11-08T23:59:59'}]}]},attributes:{series:[{id:'UNIT',values:[{id:'EUR'}]},{id:'UNIT_MULT',values:[{id:'6',name:'Millions'}]},{id:'TITLE',values:[{name:'Test ECB'}]}],observation:[{id:'OBS_STATUS',values:[{name:'Normal'},{name:'Provisional'}]}]}},dataSets:[{series:{'0:0:0:0:0:0':{attributes:[0,0,0],observations:{'0':[100,0],'1':[110,1]}}}}]};
+ try{const r=await historyBackfill(store,'ecb',['ILM.W.U2.C.T000000.Z5.Z01'],'2026-11-03',{now,transport:{get:async u=>{url=u.href;return {body:JSON.stringify(data),fetchedAt:now()-1};}}});expect(new URL(url).searchParams.get('startPeriod')).toBe('2026-10-28');expect(r.totals).toMatchObject({loaded:1,missing_skipped:null});expect(r.requests[0].series[0]).toMatchObject({first_observed_at:'2026-11-08',provisional:1});expect(store.seriesHistory('backfill:ecb:ILM.W.U2.C.T000000.Z5.Z01').observations[0]).toMatchObject({value:110,observed_at:'2026-11-08',published_at:null});}finally{store.close();}
+ });
+
+});

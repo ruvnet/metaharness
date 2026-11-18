@@ -1,0 +1,238 @@
+{
+  "CABLE_CORRIDORS": {
+    "transatlantic_north": {
+      "lat_range": [
+        35,
+        55
+      ],
+      "lon_range": [
+        -70,
+        -5
+      ],
+      "cables": [
+        "TAT-14",
+        "AC-1",
+        "MAREA",
+        "Dunant"
+      ]
+    },
+    "transatlantic_south": {
+      "lat_range": [
+        -5,
+        35
+      ],
+      "lon_range": [
+        -50,
+        0
+      ],
+      "cables": [
+        "SAex1",
+        "SACS",
+        "EllaLink"
+      ]
+    },
+    "transpacific": {
+      "lat_range": [
+        20,
+        50
+      ],
+      "lon_range": [
+        120,
+        -120
+      ],
+      "cables": [
+        "FASTER",
+        "Unity",
+        "SJC"
+      ]
+    },
+    "asia_europe": {
+      "lat_range": [
+        -5,
+        35
+      ],
+      "lon_range": [
+        30,
+        120
+      ],
+      "cables": [
+        "SEA-ME-WE 6",
+        "AAE-1",
+        "FLAG"
+      ]
+    },
+    "red_sea": {
+      "lat_range": [
+        10,
+        30
+      ],
+      "lon_range": [
+        30,
+        50
+      ],
+      "cables": [
+        "FALCON",
+        "EIG",
+        "AAE-1"
+      ]
+    },
+    "mediterranean": {
+      "lat_range": [
+        30,
+        45
+      ],
+      "lon_range": [
+        -5,
+        35
+      ],
+      "cables": [
+        "SEA-ME-WE 3/4",
+        "MedNautilus"
+      ]
+    }
+  },
+  "_TRAFFIC_CITIES": [
+    {
+      "name": "New York",
+      "lat": 40.758,
+      "lon": -73.9855,
+      "country": "US"
+    },
+    {
+      "name": "London",
+      "lat": 51.5074,
+      "lon": -0.1278,
+      "country": "UK"
+    },
+    {
+      "name": "Tokyo",
+      "lat": 35.6762,
+      "lon": 139.6503,
+      "country": "JP"
+    },
+    {
+      "name": "Beijing",
+      "lat": 39.9042,
+      "lon": 116.4074,
+      "country": "CN"
+    },
+    {
+      "name": "Mumbai",
+      "lat": 19.076,
+      "lon": 72.8777,
+      "country": "IN"
+    },
+    {
+      "name": "S\u00e3o Paulo",
+      "lat": -23.5505,
+      "lon": -46.6333,
+      "country": "BR"
+    },
+    {
+      "name": "Cairo",
+      "lat": 30.0444,
+      "lon": 31.2357,
+      "country": "EG"
+    },
+    {
+      "name": "Lagos",
+      "lat": 6.5244,
+      "lon": 3.3792,
+      "country": "NG"
+    },
+    {
+      "name": "Moscow",
+      "lat": 55.7558,
+      "lon": 37.6173,
+      "country": "RU"
+    },
+    {
+      "name": "Istanbul",
+      "lat": 41.0082,
+      "lon": 28.9784,
+      "country": "TR"
+    },
+    {
+      "name": "Los Angeles",
+      "lat": 34.0522,
+      "lon": -118.2437,
+      "country": "US"
+    },
+    {
+      "name": "Paris",
+      "lat": 48.8566,
+      "lon": 2.3522,
+      "country": "FR"
+    },
+    {
+      "name": "Berlin",
+      "lat": 52.52,
+      "lon": 13.405,
+      "country": "DE"
+    },
+    {
+      "name": "Sydney",
+      "lat": -33.8688,
+      "lon": 151.2093,
+      "country": "AU"
+    },
+    {
+      "name": "Dubai",
+      "lat": 25.2048,
+      "lon": 55.2708,
+      "country": "AE"
+    },
+    {
+      "name": "Singapore",
+      "lat": 1.3521,
+      "lon": 103.8198,
+      "country": "SG"
+    },
+    {
+      "name": "Seoul",
+      "lat": 37.5665,
+      "lon": 126.978,
+      "country": "KR"
+    },
+    {
+      "name": "Mexico City",
+      "lat": 19.4326,
+      "lon": -99.1332,
+      "country": "MX"
+    },
+    {
+      "name": "Jakarta",
+      "lat": -6.2088,
+      "lon": 106.8456,
+      "country": "ID"
+    },
+    {
+      "name": "Bangkok",
+      "lat": 13.7563,
+      "lon": 100.5018,
+      "country": "TH"
+    }
+  ],
+  "_INCIDENT_REGIONS": [
+    {
+      "name": "US East",
+      "bbox": "-82,25,-65,48"
+    },
+    {
+      "name": "US West",
+      "bbox": "-125,30,-100,50"
+    },
+    {
+      "name": "Europe",
+      "bbox": "-10,35,30,60"
+    },
+    {
+      "name": "Middle East",
+      "bbox": "25,20,60,42"
+    },
+    {
+      "name": "East Asia",
+      "bbox": "100,20,145,50"
+    }
+  ]
+}

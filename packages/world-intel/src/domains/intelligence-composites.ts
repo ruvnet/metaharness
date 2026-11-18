@@ -1,0 +1,63 @@
+// SPDX-License-Identifier: MIT
+// Native ports of upstream analysis/signals.py, focal_points.py, temporal.py.
+// Copyright Phoenix AGI 2025-2026; see THIRD_PARTY_NOTICES.md.
+import {readFileSync,existsSync,mkdirSync} from 'node:fs';
+import {dirname} from 'node:path';
+import {createRequire} from 'node:module';
+import type {DatabaseSync} from 'node:sqlite';
+import {pyRound} from './markets.js';
+import {MemoryBaselineStore,type BaselineStore} from './synthesis.js';
+import type {AcledResult} from './intelligence.js';
+import type {DomainHandlers} from '../domain-runtime.js';
+type Row=Record<string,any>;
+const countries=JSON.parse(readFileSync(new URL('../../data/synthesis/reference.json',import.meta.url),'utf8')).TIER1_COUNTRIES as Record<string,Row>;
+const regions=JSON.parse(readFileSync(new URL('../../data/synthesis/fire-regions.json',import.meta.url),'utf8')) as Record<string,string[]>;
+const list=(v:any):Row[]=>Array.isArray(v)?v:[];
+const stamp=(n:number)=>new Date(n).toISOString().replace(/\.\d{3}Z$/,'Z');
+export function aggregateCountrySignals(inputs:{conflict?:Row[];displacement?:Row[];earthquakes?:Row[];fires?:Row[];outages?:Row[];military?:Row[];protests?:Row[]}):Record<string,Row>{
+ const values=new Map<string,Row>();const get=(country:string)=>{let v=values.get(country);if(!v){v={conflict_events:0,fatalities:0,displaced_persons:0,earthquakes:0,max_earthquake_mag:0,fires:0,outages:0,military_aircraft:0,protests:0,riots:0,domains:new Set<string>(),high:0};values.set(country,v);}return v;};
+ for(const e of inputs.conflict??[]){if(!e.country)continue;const c=get(e.country);c.conflict_events++;if(typeof e.fatalities==='number'){c.fatalities+=Math.trunc(e.fatalities);if(Math.trunc(e.fatalities)>10)c.high++;}c.domains.add('conflict');}
+ for(const e of inputs.displacement??[]){if(!e.country)continue;const c=get(e.country);if(typeof e.total_displaced==='number'){c.displaced_persons+=Math.trunc(e.total_displaced);if(Math.trunc(e.total_displaced)>100000)c.high++;}c.domains.add('displacement');}
+ for(const e of inputs.earthquakes??[]){const parts=String(e.place??'').split(', '),c=get(parts.length>1?parts.at(-1)!:'Unknown');c.earthquakes++;if(typeof e.magnitude==='number'){c.max_earthquake_mag=Math.max(c.max_earthquake_mag,e.magnitude);if(e.magnitude>=6)c.high++;}c.domains.add('seismology');}
+ for(const e of inputs.fires??[]){const country=e.country??regions[e.region]?.[0];if(country){const c=get(country);c.fires++;c.domains.add('wildfire');}}
+ for(const e of inputs.outages??[]){for(const country of typeof e.countries==='string'?[e.countries]:e.countries??[]){if(country){const c=get(country);c.outages++;c.domains.add('infrastructure');}}}
+ for(const e of inputs.military??[]){if(e.origin_country){const c=get(e.origin_country);c.military_aircraft++;c.domains.add('military');}}
+ for(const e of inputs.protests??[]){if(e.country){const c=get(e.country);c[String(e.event_type??'').toLowerCase().includes('riot')?'riots':'protests']++;c.domains.add('unrest');}}
+ const result=[...values].map(([name,c])=>{const {domains,high,...data}=c;const total=c.conflict_events+c.earthquakes+c.fires+c.outages+c.military_aircraft+c.protests+c.riots;return [name,{...data,signal_count:domains.size,total_signals:total,active_domains:[...domains].sort(),convergence_score:20*domains.size+Math.min(30,5*total)+10*high}] as [string,Row];});
+ result.sort((a,b)=>b[1].convergence_score-a[1].convergence_score||b[1].signal_count-a[1].signal_count);return Object.fromEntries(result);
+}
+export function detectFocalPoints(events:Row[],minSignals=2,maxAgeHours=48,now=Date.now()):Row[]{
+ const groups=new Map<string,Row[]>();for(const e of events){if(!e.entity)continue;let age=0;if(e.timestamp){const raw=typeof e.timestamp==='string'?e.timestamp:undefined;let ts=raw?Date.parse(raw):NaN;if(Number.isFinite(ts))age=(now-ts)/3600000;}if(age>maxAgeHours)continue;const key=String(e.entity).trim().toLowerCase();groups.set(key,[...(groups.get(key)??[]),{...e,_hours_old:age}]);}
+ const result:Row[]=[];for(const es of groups.values()){if(es.length<minSignals)continue;const types=[...new Set(es.map(e=>e.type).filter(Boolean))].sort(),countries=[...new Set(es.map(e=>e.country).filter(Boolean))].sort();const recency=es.reduce((s,e)=>s+1/Math.max(1,e._hours_old),0)/es.length;result.push({entity:es[0].entity,signal_count:es.length,signal_types:types,urgency:es.length>=10?'critical':es.length>=5?'elevated':'watch',focal_score:pyRound(es.length*(1+types.length*.5)*recency,2),countries,recent_events:[...es].sort((a,b)=>a._hours_old-b._hours_old).slice(0,10).map(e=>Object.fromEntries(Object.entries(e).filter(([k])=>!k.startsWith('_'))))});}return result.sort((a,b)=>b.focal_score-a.focal_score);
+}
+/** Explicit caller-owned persistence, schema-compatible with upstream temporal.db. */
+export class SqliteTemporalStore implements BaselineStore {
+ private db:DatabaseSync;readonly existed:boolean;
+ constructor(path:string){const {DatabaseSync}=createRequire(import.meta.url)('node:sqlite') as typeof import('node:sqlite');this.existed=path!==':memory:'&&existsSync(path);if(path!==':memory:')mkdirSync(dirname(path),{recursive:true});this.db=new DatabaseSync(path);try{this.db.exec('CREATE TABLE IF NOT EXISTS baselines (key TEXT PRIMARY KEY, count INTEGER NOT NULL DEFAULT 0, mean REAL NOT NULL DEFAULT 0.0, m2 REAL NOT NULL DEFAULT 0.0, updated_at TEXT NOT NULL)');}catch(error){this.db.close();throw error;}}
+ get(key:string):[number,number,number]{const r=this.db.prepare('SELECT count,mean,m2 FROM baselines WHERE key=?').get(key);return r?[Number(r.count),Number(r.mean),Number(r.m2)]:[0,0,0];}
+ set(key:string,n:number,mean:number,m2:number,updated:string){this.db.prepare('INSERT INTO baselines (key,count,mean,m2,updated_at) VALUES (?,?,?,?,?) ON CONFLICT(key) DO UPDATE SET count=excluded.count,mean=excluded.mean,m2=excluded.m2,updated_at=excluded.updated_at').run(key,n,mean,m2,updated);}
+ snapshot(){return {existed:this.existed,rows:this.db.prepare('SELECT key,count,mean,m2,updated_at FROM baselines').all().map(r=>[String(r.key),Number(r.count),Number(r.mean),Number(r.m2),String(r.updated_at)] as [string,number,number,number,string])};}
+ close(){this.db.close();}
+}
+/** Inject a persistent store to retain seasonal baselines across process restarts. */
+export class TemporalBaseline{
+ constructor(readonly store:BaselineStore=new MemoryBaselineStore(),readonly now=Date.now){}
+ private season(){const d=new Date(this.now());return [d.toLocaleDateString('en-US',{weekday:'long',timeZone:'UTC'}),d.toLocaleDateString('en-US',{month:'long',timeZone:'UTC'})];}
+ private key(type:string,region:string){return [type,region,...this.season()].join(':');}
+ record(type:string,region:string,value:number){const key=this.key(type,region),[n,m,m2]=this.store.get(key),mean=m+(value-m)/(n+1);this.store.set(key,n+1,mean,m2+(value-m)*(value-mean),stamp(this.now()));}
+ check(type:string,region:string,value:number):Row|null{const [n,mean,m2]=this.store.get(this.key(type,region));if(n<10)return null;const sd=Math.sqrt(Math.max(0,m2/(n-1)));if(!sd)return null;const z=(value-mean)/sd;if(z<1.5)return null;const multiplier=mean>0?value/mean:Infinity,[weekday,month]=this.season();return {event_type:type,region,z_score:pyRound(z,2),severity:z>=3?'critical':z>=2?'high':'medium',multiplier:Number.isFinite(multiplier)?pyRound(multiplier,1):null,message:`${type.replaceAll('_',' ').replace(/\b\w/g,w=>w.toUpperCase())} ${multiplier.toFixed(1)}x normal for ${weekday} (${month})`,observed:value,expected:pyRound(mean,0)};}
+ recordAndCheck(type:string,region:string,value:number){this.record(type,region,value);return this.check(type,region,value);}
+}
+export interface CompositeOptions{call:(name:string,args:Row)=>Promise<Row>;acledQuery?:(params:Record<string,string|number>)=>Promise<AcledResult>;now?:()=>number;temporal?:TemporalBaseline}
+export function createIntelligenceCompositeHandlers(options:CompositeOptions):DomainHandlers{
+ const now=options.now??Date.now,temporal=options.temporal??new TemporalBaseline(undefined,now);
+ const safe=async(name:string,args:Row={}):Promise<Row>=>{try{const r=await options.call(name,args);return r&&typeof r==='object'?r:{error:'invalid provider response'};}catch(e){return {error:e instanceof Error?e.message:'provider failed'};}};
+ const gap=(name:string,r:Row)=>r.error||r.degraded||r._stale?`${name}: ${r.error??r.reason??'degraded or stale source'}`:null;
+ const acled=async(limit:number,days:number,extra:Row={}):Promise<AcledResult>=>{if(!options.acledQuery)return {data:null,reason:'acled_unconfigured'};try{return await options.acledQuery({limit,event_date:`${new Date(now()-days*86400000).toISOString().slice(0,10)}|${new Date(now()).toISOString().slice(0,10)}`,event_date_where:'BETWEEN',...extra});}catch{return {data:null,reason:'acled_fetch_failed'};}};
+ const finish=(data:Row,gaps:(string|null|undefined)[])=>{const clean=[...new Set(gaps.filter(Boolean))].sort();return {...data,data_gaps:clean,...(clean.length?{degraded:true}:{}),timestamp:stamp(now())};};
+ return {
+  intel_signal_summary:async a=>{const [conflict,quakes,outages,posture,protests,displacement]=await Promise.all([safe('intel_acled_events',{days:7,limit:200}),safe('intel_earthquakes',{min_magnitude:4.5,hours:168,limit:100}),safe('intel_internet_outages'),safe('intel_theater_posture'),acled(200,7,{event_type:'Protests'}),safe('intel_displacement_summary')]);const military=Object.values(posture.theaters??{}).flatMap((t:any)=>(t.countries??[]).map((c:string)=>({origin_country:c,count:t.count??0})));const aggregated=aggregateCountrySignals({conflict:list(conflict.events),earthquakes:list(quakes.earthquakes),outages:list(outages.outages),military,protests:list(protests.data?.data),displacement:list(displacement.by_origin)});const countries=Object.entries(aggregated).filter(([c])=>!a.country||c.toLowerCase().includes(String(a.country).toLowerCase())).map(([country,data])=>({country,...data}));return finish({countries:countries.slice(0,50),count:countries.length,source:'signal-aggregation-v2'},[gap('conflict',conflict),gap('earthquakes',quakes),gap('outages',outages),gap('military',posture),gap('displacement',displacement),protests.data?null:protests.reason]);},
+  intel_focal_points:async()=>{const [news,mil,outages,protests]=await Promise.all([safe('intel_news_feed',{limit:100}),safe('intel_theater_posture'),safe('intel_internet_outages'),acled(200,7,{event_type:'Protests'})]);const events:Row[]=[];for(const item of list(news.items)){const lower=String(item.title??'').toLowerCase().trim();const matched=Object.values(countries).find(c=>lower===c.name.toLowerCase()||c.keywords.some((k:string)=>lower.includes(k)||k.includes(lower)));if(matched)events.push({entity:matched.name,type:'news',timestamp:item.published||stamp(now()),country:matched.name,weight:1});}for(const t of Object.values(mil.theaters??{}) as Row[])if(t.count>0)for(const c of t.countries??[])events.push({entity:c,type:'military',timestamp:stamp(now()),country:c,weight:Math.min(3,t.count/10)});for(const out of list(outages.outages))if(Array.isArray(out.countries))for(const c of out.countries)if(c)events.push({entity:c,type:'infrastructure',timestamp:out.start||stamp(now()),country:c,weight:out.is_ongoing?2:1});for(const e of list(protests.data?.data))if(e.country)events.push({entity:e.country,type:'protest',timestamp:e.event_date||stamp(now()),country:e.country,weight:1});const points=detectFocalPoints(events,2,48,now());return finish({focal_points:points,count:points.length,total_events_analyzed:events.length,source:'focal-point-analysis'},[gap('news',news),gap('military',mil),gap('outages',outages),protests.data?null:protests.reason]);},
+  intel_temporal_anomalies:async()=>{const posture=await safe('intel_theater_posture'),anomalies:Row[]=[];let recorded=0;const unavailable=new Set(posture.unavailable_theaters??[]);if(!posture.error&&!posture._stale)for(const [name,t]of Object.entries(posture.theaters??{}) as [string,Row][]){if(unavailable.has(name))continue;const r=temporal.recordAndCheck('military_flights',name,t.count??0);recorded++;if(r)anomalies.push(r);}const result=await acled(500,7);if(result.data){const counts=new Map<string,number>();for(const e of list(result.data.data))if(e.country)counts.set(e.country,(counts.get(e.country)??0)+1);for(const [name,count]of counts){const r=temporal.recordAndCheck('acled_events',name,count);recorded++;if(r)anomalies.push(r);}}return finish({anomalies:anomalies.sort((a,b)=>b.z_score-a.z_score),anomaly_count:anomalies.length,observations_recorded:recorded,source:'temporal-anomaly-detection'},[gap('military',posture),result.data?null:result.reason]);}
+ };
+}

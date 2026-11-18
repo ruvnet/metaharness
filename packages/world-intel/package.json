@@ -1,0 +1,69 @@
+{
+  "name": "@metaharness/world-intel",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Native TypeScript World Intel compatibility port with MetaHarness governance and AssemblyScript WASM. Parity work in progress.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/metaharness.git",
+    "directory": "packages/world-intel"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./mcp": "./dist/mcp.js"
+  },
+  "bin": {
+    "world-intel-ts": "dist/cli.js",
+    "world-intel-collect": "dist/collector-cli.js",
+    "world-intel-dashboard": "dist/dashboard-main.js",
+    "intel-ts": "dist/intel-cli-main.js"
+  },
+  "files": [
+    "dist",
+    "wasm/geo.wasm",
+    "wasm/geo.ts",
+    "README.md",
+    "THIRD_PARTY_NOTICES.md",
+    "data/**"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "build:wasm": "asc wasm/geo.ts --outFile wasm/geo.wasm --runtime stub --optimize --noAssert",
+    "test": "vitest run",
+    "lint": "tsc --noEmit",
+    "smoke:live": "node dist/cli.js --live-smoke",
+    "audit:parity": "node --experimental-strip-types scripts/parity-audit.ts",
+    "audit:complete": "node --experimental-strip-types scripts/parity-audit.ts --require-complete"
+  },
+  "dependencies": {
+    "@metaharness/harness": "0.2.1",
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "@pdf-lib/fontkit": "1.1.1",
+    "fast-xml-parser": "5.12.1",
+    "pdf-lib": "1.17.1",
+    "saxes": "6.0.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.0",
+    "assemblyscript": "0.27.31",
+    "typescript": "5.9.3",
+    "vitest": "4.1.12"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "metaharness": {
+    "wasmArtifacts": [
+      "wasm/geo.wasm"
+    ]
+  },
+  "optionalDependencies": {
+    "@huggingface/transformers": "4.3.2",
+    "onnxruntime-web": "1.22.0-dev.20250409-89f8206ba4"
+  }
+}
