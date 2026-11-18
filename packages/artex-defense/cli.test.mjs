@@ -48,3 +48,28 @@ test('CLI imports both file formats, verifies an external pin, and refuses overw
   assert.equal(run('replay', fixture('identity.manifest.json'), modified, target).status, 1);
   await assert.rejects(readFile(target), { code: 'ENOENT' });
 });
+
+test('dispatch returns output without exiting and never echoes caller input', async () => {
+  const { dispatch } = await import('./index.mjs');
+  const help = await dispatch('help');
+  assert.equal(help.code, 0);
+  assert.match(help.lines[0], /defensive evidence replay/);
+  const secret = join(tmpdir(), 'token=sk-live-should-not-appear');
+  const bad = await dispatch('replay', [secret, secret, secret]);
+  assert.equal(bad.code, 1);
+  assert.deepEqual(bad.lines, []);
+  assert.equal(bad.errors.length, 1);
+  assert.ok(!bad.errors[0].includes('sk-live'));
+  assert.equal((await dispatch('nonsense')).code, 1);
+});
+
+test('the bin runs when invoked through a symlink, as npm installs it', async t => {
+  const { symlink } = await import('node:fs/promises');
+  const dir = await mkdtemp(join(tmpdir(), 'artex-bin-'));
+  t.after(() => rm(dir, {recursive: true, force: true}));
+  const link = join(dir, 'artex-defense');
+  await symlink(cli, link);
+  const result = spawnSync(process.execPath, [link, 'help'], {encoding: 'utf8'});
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /defensive evidence replay/);
+});
