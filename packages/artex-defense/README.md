@@ -36,3 +36,16 @@ JSON telemetry follows the checked in identity fixture. Each event has a unique 
 Both policies evaluate the same events. The virtual response applies on a decision, expires after five minutes, and de-duplicates repeated intents. The simulation library also accepts explicit rollback times. The report includes at most 128 lifecycle records and full counts. Two hash chained MetaHarness receipts commit to the imported and normalized input and the evaluated report. An independently retained tail detects a substituted chain.
 
 The benchmark draws 20 development and 20 separate incident histories from the same signal families, plus 10,000 benign histories based on ten templates. It emits per-family results, corpus and receipt digests, and p95 for the candidate evaluator alone. It measures synthetic policy behavior. Assess field accuracy, telemetry quality and enforcement latency on independently labeled traffic before any production rollout.
+
+## Reproduce the optimization measurements
+
+From the optimized checkout, compare against the original implementation at `325eb57f04d6ff70836de999c8a8b8b2956661cb`. Use Node 22.18 or later, or build the harness dependency in both worktrees on Node 20.
+
+```sh
+before=$(mktemp -d)
+git worktree add --detach "$before" 325eb57f04d6ff70836de999c8a8b8b2956661cb
+node packages/artex-defense/profile.mjs --cli --samples 8 --large 10000 "$before" . > paired-profile.json
+git worktree remove "$before"
+```
+
+The profiler alternates execution order and records the individual timings. It checks agreement on normalized evidence, both policy outputs, simulation and receipt digests. In memory timings cover import through receipt creation. The optional CLI measurements include process startup, local file access and independent verification against the baseline checkpoint.

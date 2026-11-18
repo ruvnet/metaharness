@@ -1,8 +1,18 @@
 // SPDX-License-Identifier: MIT
-import { createHash } from 'node:crypto';
+import crypto from 'node:crypto';
 import { MAX_EVENTS } from './ingest.mjs';
 
-const digestPattern = /^[a-f0-9]{64}$/;
+const hexDigit = new Uint8Array(128);
+for (const char of '0123456789abcdef') hexDigit[char.charCodeAt(0)] = 1;
+
+function isDigest(value) {
+  if (typeof value !== 'string' || value.length !== 64) return false;
+  for (let i = 0; i < value.length; i++) {
+    if (!hexDigit[value.charCodeAt(i)]) return false;
+  }
+  return true;
+}
+
 const scopePattern = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 const kinds = new Set(['benign', 'marker', 'decoy_hit', 'credential_change', 'anomalous_use', 'finding']);
 const sources = new Set(['edge', 'identity', 'endpoint', 'canary', 'artex']);
@@ -10,31 +20,52 @@ const windowMs = 300_000;
 const ttlMs = 300_000;
 const revision = 'offline-policy-v1';
 
+// crypto.hash is available from Node 20.12. Keep the streaming fallback for earlier Node 20.
+const hashText = crypto.hash
+  ? text => crypto.hash('sha256', text, 'hex')
+  : text => crypto.createHash('sha256').update(text).digest('hex');
+
 function digest(value) {
-  return createHash('sha256').update(JSON.stringify(value)).digest('hex');
+  return hashText(JSON.stringify(value));
 }
 
-// Check normalized inputs even when callers invoke the library without the importer.
-function validatedEvents(bundle) {
-  if (!bundle || bundle.version !== 1 || typeof bundle.tenant !== 'string' || !scopePattern.test(bundle.tenant) ||
-      typeof bundle.caseId !== 'string' || !scopePattern.test(bundle.caseId) ||
-      typeof bundle.sourceSha256 !== 'string' || !digestPattern.test(bundle.sourceSha256) ||
-      !Array.isArray(bundle.events) || bundle.events.length > MAX_EVENTS) {
+function compareEvents(a, b) {
+  return a.at - b.at || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+}
+
+// Build a fresh snapshot even when callers bypass the importer or reuse a mutable bundle.
+function prepareCase(bundle) {
+  if (!bundle) throw new Error('Invalid normalized evidence bundle');
+  const { version, tenant, caseId, sourceSha256, events: input } = bundle;
+  const length = Array.isArray(input) ? input.length : -1;
+  if (version !== 1 || typeof tenant !== 'string' || !scopePattern.test(tenant) ||
+      typeof caseId !== 'string' || !scopePattern.test(caseId) || !isDigest(sourceSha256) ||
+      !Number.isInteger(length) || length < 0 || length > MAX_EVENTS) {
     throw new Error('Invalid normalized evidence bundle');
   }
   const ids = new Set();
-  return bundle.events.map(event => {
-    if (!event || typeof event.id !== 'string' || !digestPattern.test(event.id) ||
-        typeof event.session !== 'string' || !digestPattern.test(event.session) ||
-        !kinds.has(event.kind) || !sources.has(event.source) ||
-        (event.source === 'artex') !== (event.kind === 'finding') ||
-        !Number.isSafeInteger(event.at) || event.at < 0 || event.at > 253402300799999 ||
-        ids.has(event.id)) {
+  const events = new Array(length);
+  let ordered = true;
+  for (let i = 0; i < events.length; i++) {
+    const event = input[i];
+    if (!event) throw new Error('Invalid or duplicate normalized event');
+    const { id, session, kind, at, source } = event;
+    if (!isDigest(id) || !isDigest(session) || !kinds.has(kind) || !sources.has(source) ||
+        (source === 'artex') !== (kind === 'finding') || !Number.isSafeInteger(at) ||
+        at < 0 || at > 253402300799999 || ids.has(id)) {
       throw new Error('Invalid or duplicate normalized event');
     }
-    ids.add(event.id);
-    return { id: event.id, session: event.session, kind: event.kind, at: event.at, source: event.source };
-  }).sort((a, b) => a.at - b.at || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+    ids.add(id);
+    events[i] = { id, session, kind, at, source };
+    if (ordered && i > 0 && compareEvents(events[i - 1], events[i]) > 0) ordered = false;
+  }
+  if (!ordered) events.sort(compareEvents);
+  const caseDigest = digest([tenant, caseId]);
+  return { events, caseDigest, sourceSha256, normalizedSha256: digest([caseDigest, events]) };
+}
+
+function checkMode(mode) {
+  if (mode !== 'monitor' && mode !== 'simulate') throw new Error('Unknown replay mode or policy');
 }
 
 /**
@@ -42,13 +73,23 @@ function validatedEvents(bundle) {
  * a collector. All decisions are advisory and every quarantine is simulated.
  */
 export function evaluateCase(bundle, mode = 'monitor', policy = 'candidate') {
-  if (!['monitor', 'simulate'].includes(mode) || !['baseline', 'candidate'].includes(policy)) {
-    throw new Error('Unknown replay mode or policy');
-  }
-  const events = validatedEvents(bundle);
-  const caseDigest = digest([bundle.tenant, bundle.caseId]);
-  const normalizedSha256 = digest([caseDigest, events]);
-  const credentials = new Map();
+  checkMode(mode);
+  if (policy !== 'baseline' && policy !== 'candidate') throw new Error('Unknown replay mode or policy');
+  return evaluatePrepared(prepareCase(bundle), mode, policy);
+}
+
+// Only the two policies in this invocation share validation, ordering and input hashes.
+export function evaluatePolicies(bundle, mode = 'monitor') {
+  checkMode(mode);
+  const prepared = prepareCase(bundle);
+  return {
+    baseline: evaluatePrepared(prepared, mode, 'baseline'),
+    candidate: evaluatePrepared(prepared, mode, 'candidate')
+  };
+}
+
+function evaluatePrepared({ events, caseDigest, sourceSha256, normalizedSha256 }, mode, policy) {
+  const credentials = policy === 'candidate' ? new Map() : null;
   const cooldown = new Map();
   const decisions = [];
   let observations = 0;
@@ -64,7 +105,7 @@ export function evaluateCase(bundle, mode = 'monitor', policy = 'candidate') {
       if (event.kind === 'decoy_hit' && event.source === 'canary') {
         rule = 'bound_decoy';
         evidence = [event.id];
-      } else if (policy === 'candidate' && event.kind === 'anomalous_use' &&
+      } else if (credentials && event.kind === 'anomalous_use' &&
           (event.source === 'edge' || event.source === 'endpoint')) {
         const prior = credentials.get(event.session);
         if (prior && event.at - prior.at <= windowMs) {
@@ -78,26 +119,27 @@ export function evaluateCase(bundle, mode = 'monitor', policy = 'candidate') {
       }
       if ((cooldown.get(event.session) ?? -1) > event.at) continue;
       const sessionRef = digest([caseDigest, event.session]);
-      const key = digest([revision, policy, caseDigest, event.session, rule, evidence]);
       const decision = { sessionRef, rule, at: event.at, evidence, outcome: 'alert' };
       if (mode === 'simulate') {
         decision.outcome = 'would_quarantine';
         decision.expiresAt = event.at + ttlMs;
-        decision.idempotencyKey = key;
+        decision.idempotencyKey = digest([revision, policy, caseDigest, event.session, rule, evidence]);
       }
       decisions.push(decision);
       cooldown.set(event.session, event.at + ttlMs);
     }
-    for (let i = start; i < end; i++) {
-      const event = events[i];
-      if (event.kind === 'credential_change' && event.source === 'identity') {
-        credentials.set(event.session, event);
+    if (credentials) {
+      for (let i = start; i < end; i++) {
+        const event = events[i];
+        if (event.kind === 'credential_change' && event.source === 'identity') {
+          credentials.set(event.session, event);
+        }
       }
     }
     start = end;
   }
   const receipt = {
-    version: 1, revision, policy, mode, caseDigest, inputSha256: bundle.sourceSha256, normalizedSha256,
+    version: 1, revision, policy, mode, caseDigest, inputSha256: sourceSha256, normalizedSha256,
     summary: { events: events.length, observations, alerts: decisions.length,
       simulatedQuarantines: mode === 'simulate' ? decisions.length : 0 },
     decisions
@@ -108,7 +150,7 @@ export function evaluateCase(bundle, mode = 'monitor', policy = 'candidate') {
 // The trusted digest must come from a separately retained manifest. A digest
 // carried only alongside a submitted receipt does not identify a trusted run.
 export function verifyReplay(receipt, bundle, trustedDigest) {
-  if (typeof trustedDigest !== 'string' || !digestPattern.test(trustedDigest) ||
+  if (!isDigest(trustedDigest) ||
       receipt?.receiptSha256 !== trustedDigest) return false;
   try {
     const { receiptSha256, ...body } = receipt;

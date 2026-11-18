@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { createHash } from 'node:crypto';
+import crypto from 'node:crypto';
 
 export const MAX_INPUT_BYTES = 8 * 1024 * 1024;
 export const MAX_EVENTS = 10_000;
@@ -30,19 +30,30 @@ function exactFields(object, fields) {
     && fields.every(key => Object.hasOwn(object, key));
 }
 
-function sha256(bytes) {
-  return createHash('sha256').update(bytes).digest('hex');
-}
+// One-shot hashing avoids a stream object per small reference on Node 20.12+.
+// Retain the original implementation for the earlier supported Node 20 releases.
+const sha256 = typeof crypto.hash === 'function'
+  ? bytes => crypto.hash('sha256', bytes, 'hex')
+  : bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 
-function reference(scope, type, ...keys) {
-  return sha256(JSON.stringify(['artex-evidence-v1', scope.tenant, scope.caseId, type, ...keys]));
-}
-
-function scopedEvent(scope, id, session, kind, at, source) {
-  return {
-    id: reference(scope, 'event', source, id),
-    session: reference(scope, 'session', session),
-    kind, at, source,
+function scopedEvents(scope, cacheSessions) {
+  // Every component below passed an ASCII identifier or enum check. This is
+  // the exact JSON array encoding of the v1 references, including the scope.
+  const prefix = JSON.stringify(['artex-evidence-v1', scope.tenant, scope.caseId]).slice(0, -1);
+  const eventPrefix = prefix + ',"event","';
+  const sessionPrefix = prefix + ',"session","';
+  // CSV assigns a distinct session to each finding, so it has no reuse.
+  const sessions = cacheSessions ? new Map() : undefined;
+  return (id, session, kind, at, source) => {
+    let sessionRef = sessions?.get(session);
+    if (sessionRef === undefined) {
+      sessionRef = sha256(sessionPrefix + session + '"]');
+      sessions?.set(session, sessionRef);
+    }
+    return {
+      id: sha256(eventPrefix + source + '","' + id + '"]'),
+      session: sessionRef, kind, at, source,
+    };
   };
 }
 
@@ -63,16 +74,24 @@ function checkObjectKeys(text) {
       stack.pop();
     } else if (ch === '"') {
       const start = i;
-      while (++i < text.length && text[i] !== '"') if (text[i] === '\\') i++;
+      let escaped = false;
+      while (++i < text.length && text[i] !== '"') {
+        if (text[i] === '\\') {
+          escaped = true;
+          i++;
+        }
+      }
       requireValue(i < text.length, 'Invalid evidence JSON');
       let next = i + 1;
-      while (/^[\t\n\r ]$/.test(text[next] ?? '')) next++;
+      while (text[next] === ' ' || text[next] === '\t' || text[next] === '\r' || text[next] === '\n') next++;
       if (text[next] === ':') {
         requireValue(i - start < 64, 'JSON key exceeds limit');
-        let key;
-        try { key = JSON.parse(text.slice(start, i + 1)); }
-        catch { throw new TypeError('Invalid JSON key'); }
-        const fields = stack.at(-1);
+        let key = text.slice(start + 1, i);
+        if (escaped || /[\u0000-\u001f]/.test(key)) {
+          try { key = JSON.parse(text.slice(start, i + 1)); }
+          catch { throw new TypeError('Invalid JSON key'); }
+        }
+        const fields = stack[stack.length - 1];
         requireValue(fields instanceof Set && !fields.has(key), 'Duplicate JSON key');
         fields.add(key);
       }
@@ -93,6 +112,7 @@ function importJson(text, scope) {
     'Unsupported evidence envelope');
   requireValue(data.tenant === scope.tenant && data.caseId === scope.caseId, 'Evidence scope mismatch');
   requireValue(Array.isArray(data.events) && data.events.length <= MAX_EVENTS, 'Invalid event count');
+  const scopedEvent = scopedEvents(scope, true);
   const events = data.events.map(event => {
     requireValue(exactFields(event, ['id', 'session', 'kind', 'at', 'source']), 'Invalid event fields');
     const { id, session, kind, at, source } = event;
@@ -100,7 +120,7 @@ function importJson(text, scope) {
     requireValue(Number.isSafeInteger(at) && at >= 0 && at <= timestampMax, 'Invalid event time');
     requireValue(kinds.has(kind) && sources.has(source) && (kind === 'finding') === (source === 'artex'),
       'Invalid event kind or source');
-    return scopedEvent(scope, id, session, kind, at, source);
+    return scopedEvent(id, session, kind, at, source);
   });
   return { events };
 }
@@ -108,44 +128,49 @@ function importJson(text, scope) {
 // Strict RFC-style CSV. Quoted fields may include commas, line feeds and
 // doubled quotes. Reject malformed rows before interpreting any column.
 function* csvRows(text) {
-  let row = [], field = '', quoted = false, closedQuote = false, count = 0;
-  function endField() {
-    requireValue(row.length < reviewedHeader.length, 'CSV has too many columns');
-    row.push(field);
-    field = '';
-    closedQuote = false;
-  }
-  function endRow() {
-    endField();
-    requireValue(++count <= MAX_EVENTS + 1, 'Too many CSV rows');
-    const finished = row;
-    row = [];
-    return finished;
-  }
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    if (quoted) {
-      if (ch !== '"') field += ch;
-      else if (text[i + 1] === '"') { field += '"'; i++; }
-      else { quoted = false; closedQuote = true; }
-    } else if (ch === ',') {
-      endField();
-    } else if (ch === '\n' || ch === '\r') {
-      if (ch === '\r') {
-        requireValue(text[i + 1] === '\n', 'Invalid CSV line ending');
+  // Advance from delimiter to delimiter so long narratives are sliced once.
+  // Quoted fields enforce the size cap on their decoded UTF-16 length.
+  const delimiter = /[",\r\n]/g;
+  let row = [], count = 0, i = 0;
+  while (i < text.length || row.length) {
+    let field;
+    if (text[i] === '"') {
+      const start = ++i;
+      let pairs = 0;
+      for (;;) {
+        const end = text.indexOf('"', i);
+        const length = (end < 0 ? text.length : end) - start - pairs;
+        requireValue(length <= MAX_CSV_FIELD, 'CSV field exceeds limit');
+        requireValue(end >= 0, 'Unclosed CSV quote');
+        i = end + 1;
+        if (text[i] !== '"') {
+          field = text.slice(start, end);
+          if (pairs) field = field.replaceAll('""', '"');
+          break;
+        }
+        requireValue(length < MAX_CSV_FIELD, 'CSV field exceeds limit');
+        pairs++;
         i++;
       }
-      yield endRow();
-    } else if (ch === '"' && !field && !closedQuote) {
-      quoted = true;
     } else {
-      requireValue(!closedQuote && ch !== '"', 'Invalid CSV quoting');
-      field += ch;
+      const start = i;
+      delimiter.lastIndex = start;
+      i = delimiter.test(text) ? delimiter.lastIndex - 1 : text.length;
+      requireValue(i - start <= MAX_CSV_FIELD, 'CSV field exceeds limit');
+      field = text.slice(start, i);
     }
-    requireValue(field.length <= MAX_CSV_FIELD, 'CSV field exceeds limit');
+    const separator = text[i++];
+    requireValue(separator !== '"' && (separator === undefined || separator === ',' ||
+      separator === '\n' || separator === '\r'), 'Invalid CSV quoting');
+    if (separator === '\r') requireValue(text[i++] === '\n', 'Invalid CSV line ending');
+    requireValue(row.length < reviewedHeader.length, 'CSV has too many columns');
+    row.push(field);
+    if (separator !== ',') {
+      requireValue(++count <= MAX_EVENTS + 1, 'Too many CSV rows');
+      yield row;
+      row = [];
+    }
   }
-  requireValue(!quoted, 'Unclosed CSV quote');
-  if (row.length || field.length || closedQuote) yield endRow();
 }
 
 function csvTime(value) {
@@ -165,6 +190,7 @@ function importCsv(text, scope) {
     shape.length === header.length && shape.every((field, i) => field === header[i])),
     'Unsupported ARTEX CSV header');
   const idx = Object.fromEntries(header.map((name, i) => [name, i]));
+  const scopedEvent = scopedEvents(scope, false);
   const events = [], findings = [];
   for (const row of rows) {
     requireValue(row.length === header.length, 'Invalid CSV column count');
@@ -175,7 +201,7 @@ function importCsv(text, scope) {
     const evidenceIds = rawIds ? rawIds.split(',') : [];
     requireValue(Number(rawCount) === evidenceIds.length && evidenceIds.every(ref => /^[1-9]\d{0,18}$/.test(ref)),
       'Invalid traffic evidence references');
-    const event = scopedEvent(scope, id, 'finding.' + id, 'finding', csvTime(row[idx['Found At']]), 'artex');
+    const event = scopedEvent(id, 'finding.' + id, 'finding', csvTime(row[idx['Found At']]), 'artex');
     const severity = row[idx.Severity].toLowerCase();
     events.push(event);
     findings.push({

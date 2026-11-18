@@ -35,6 +35,9 @@ test('CLI imports both file formats, verifies an external pin, and refuses overw
     assert.equal(await readFile(target, 'utf8'), original);
     await writeFile(target, original.replace('{"version":1,', '{"version":0,"version":1,'));
     assert.deepEqual(JSON.parse(run('verify', manifest, source, target, summary.tailSha256).stdout), {verified:false});
+    const {tailSha256, ...rest} = report.receipt;
+    await writeFile(target, JSON.stringify({...report, receipt: {tailSha256, ...rest}}) + '\n');
+    assert.deepEqual(JSON.parse(run('verify', manifest, source, target, summary.tailSha256).stdout), {verified:false});
     report.result.candidate.summary.alerts += 1;
     await writeFile(target, JSON.stringify(report));
     assert.equal(run('verify', manifest, source, target, summary.tailSha256).status, 1);

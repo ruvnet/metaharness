@@ -50,5 +50,18 @@ export function verifyReplayReceipt(artifact, bundle, result, expectedTailSha256
   }
   const replayed = createReplayReceipt(bundle, result);
   if (!isDeepStrictEqual(artifact, replayed)) return false;
-  return ReceiptLog.fromJSON(artifact).verify().ok;
+  ReceiptLog.fromJSON(artifact); // fromJSON verifies every chain link.
+  return true;
+}
+
+// The CLI supplies fresh policy results from the original pinned evidence.
+// Compare the complete report bytes, including key order and the final newline.
+export function verifyReplayReport(raw, bundle, result, expectedTailSha256) {
+  if (typeof expectedTailSha256 !== 'string' || !SHA256.test(expectedTailSha256)) return false;
+  const receipt = createReplayReceipt(bundle, result);
+  if (receipt.tailSha256 !== expectedTailSha256) return false;
+  const expected = JSON.stringify({version: 1, result, receipt}) + '\n';
+  if (!raw.equals(Buffer.from(expected))) return false;
+  ReceiptLog.fromJSON(receipt);
+  return true;
 }

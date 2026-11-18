@@ -6,9 +6,9 @@ import { randomUUID } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import { dirname, join } from 'node:path';
 import { importEvidence, MAX_INPUT_BYTES, parseEvidenceJSON } from './ingest.mjs';
-import { evaluateCase } from './replay.mjs';
+import { evaluatePolicies } from './replay.mjs';
 import { simulateResponse } from './simulation.mjs';
-import { createReplayReceipt, verifyReplayReceipt } from './metaharness.mjs';
+import { createReplayReceipt, verifyReplayReport } from './metaharness.mjs';
 
 const help = [
   'MetaHarness defensive evidence replay',
@@ -64,13 +64,10 @@ async function writeNewReport(path, report) {
   } finally { await file.close(); await unlink(tmp); }
 }
 
-function runCase(bundle, mode) {
-  const baseline = evaluateCase(bundle, mode, 'baseline');
-  const candidate = evaluateCase(bundle, mode, 'candidate');
+function replayResult(bundle, mode) {
+  const {baseline, candidate} = evaluatePolicies(bundle, mode);
   const simulation = simulateResponse(candidate);
-  const result = {baseline, candidate, simulation, findings: bundle.findings ?? []};
-  const receipt = createReplayReceipt(bundle, result);
-  return {version: 1, result, receipt};
+  return {baseline, candidate, simulation, findings: bundle.findings ?? []};
 }
 
 async function main([action, ...args]) {
@@ -88,7 +85,8 @@ async function main([action, ...args]) {
   const [manifest, input, output, value] = args;
   if (action === 'replay' && [3, 4].includes(args.length)) {
     const bundle = await loadBundle(manifest, input);
-    const report = runCase(bundle, value ?? 'monitor');
+    const result = replayResult(bundle, value ?? 'monitor');
+    const report = {version: 1, result, receipt: createReplayReceipt(bundle, result)};
     await writeNewReport(output, report);
     console.log(JSON.stringify({tailSha256: report.receipt.tailSha256, mode: report.result.candidate.mode,
       baseline: report.result.baseline.summary, candidate: report.result.candidate.summary}));
@@ -98,9 +96,8 @@ async function main([action, ...args]) {
     const bundle = await loadBundle(manifest, input);
     const raw = await readBounded(output, 16 * 1024 * 1024);
     const submitted = parseJSON(raw);
-    const recomputed = runCase(bundle, submitted?.result?.candidate?.mode);
-    const verified = raw.equals(Buffer.from(JSON.stringify(recomputed) + '\n')) &&
-      verifyReplayReceipt(submitted.receipt, bundle, recomputed.result, value);
+    const result = replayResult(bundle, submitted?.result?.candidate?.mode);
+    const verified = verifyReplayReport(raw, bundle, result, value);
     console.log(JSON.stringify({verified}));
     if (!verified) process.exitCode = 1;
     return;
