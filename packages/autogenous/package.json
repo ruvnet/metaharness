@@ -40,11 +40,15 @@
     "radio-moe",
     "governed-evolution",
     "agent-harness",
-    "safety-gates"
+    "safety-gates",
+    "agl",
+    "webassembly"
   ],
   "license": "MIT",
   "dependencies": {
-    "@metaharness/flywheel": "^0.1.1"
+    "@metaharness/flywheel": "^0.1.1",
+    "autogenous": "0.1.0",
+    "radio-moe": "0.3.1"
   },
   "devDependencies": {
     "typescript": "^5.4.0",

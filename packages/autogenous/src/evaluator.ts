@@ -7,6 +7,7 @@ import {
   type AutogenousMeshGenome,
 } from './genome.js';
 import { projectAutogenousScore, type AutogenousBenchResult } from './score.js';
+import { admitAutogenousPolicy, type AutogenousAdmissionOptions } from './admission.js';
 
 /**
  * The real-system seam. The adapter never reimplements radio-moe's evaluator; callers inject
@@ -17,11 +18,29 @@ export type AutogenousBenchRunner = (
   suite: Suite,
 ) => Promise<AutogenousBenchResult>;
 
-export function makeAutogenousEvaluator(runBench: AutogenousBenchRunner): Evaluator {
+export interface AutogenousEvaluatorOptions {
+  /** AGL admission settings (parent genome, clock). Admission always runs. */
+  admission?: AutogenousAdmissionOptions;
+}
+
+/**
+ * Every candidate is first admitted by Autogenous' AGL (`autogenous` package, Rust
+ * agl-types compiled to WebAssembly). A refused candidate is scored as not authorized,
+ * so the promotion gate can never promote it, whatever its benchmark says.
+ */
+export function makeAutogenousEvaluator(
+  runBench: AutogenousBenchRunner,
+  options: AutogenousEvaluatorOptions = {},
+): Evaluator {
   return async function evaluate(policy: Policy, suite: Suite) {
     const violations = policyViolations(policy);
     const result = await runBench(policyToGenome(policy), suite);
-    return projectAutogenousScore(result, violations);
+    // Admission runs after the bench so AGL, not a caller boolean alone, decides reversibility.
+    const admission = admitAutogenousPolicy(policy, violations, {
+      ...options.admission,
+      reversible: result.reversible,
+    });
+    return projectAutogenousScore(result, violations, admission);
   };
 }
 
