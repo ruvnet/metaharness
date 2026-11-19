@@ -58,9 +58,25 @@ export declare class RuvSecurityMemory {
     indexSites(repo: string, commit: string, sites: CorpusSite[]): {
         indexed: number;
     };
-    /** Record a confirmed finding + its patch into long-term memory. */
+    /**
+     * Record a confirmed finding + its patch into long-term memory.
+     *
+     * Gated before persisting (ADR-155 §safety controls): `runSwarm` already gates
+     * findings via `gateOutputs()` before they reach here, so this is a no-op for
+     * it. `compounding.ts`/`ablation.ts` call this directly with raw, corpus-derived
+     * findings that never passed that gate — without this, unsafe content in
+     * `evidence`/`patch`/`test` could be persisted into `confirmedFindings`/
+     * `patches` and later resurface via retrieval/export. Note `gateFinding` only
+     * redacts those three fields, not `weakness`/`file`/`symbol`/`id` — sufficient
+     * for every caller today (those are controlled-vocabulary classification
+     * strings, never attacker-influenced text), not a claim that the whole
+     * `Finding` is sanitized. The `exploitCodeAllowed` invariant pins `finding` to
+     * never trigger `gateFinding`'s drop case, so `safe` is never null in practice;
+     * the fallback keeps this a safe no-op if that invariant is ever violated
+     * upstream.
+     */
     writeConfirmed(finding: Finding): void;
-    /** Record a rejected hypothesis (negative memory). */
+    /** Record a rejected hypothesis (negative memory). Gated — see {@link writeConfirmed}. */
     writeFalsePositive(finding: Finding): void;
     /** Record a winning genome keyed by the repo profile it succeeded on. */
     writeGenome(profile: RepoProfile, genome: HarnessGenome): void;
