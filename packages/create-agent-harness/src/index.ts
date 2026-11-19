@@ -291,7 +291,7 @@ export interface ScaffoldOptions {
 }
 
 /** ADR-147: the darwin version a scaffolded harness depends on. */
-const DARWIN_VERSION = '^0.8.0';
+const DARWIN_VERSION = '^0.13.0';
 
 /** ADR-147: the real `evolve` skill emitted into every darwin-integrated harness. */
 function darwinEvolveSkill(name: string): string {

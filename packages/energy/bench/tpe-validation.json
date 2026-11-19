@@ -1,0 +1,204 @@
+{
+  "node": "v24.22.1",
+  "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+  "seeds": [
+    101,
+    103,
+    107,
+    109,
+    113
+  ],
+  "maxTrials": 12,
+  "budgetMs": 1000,
+  "grid": {
+    "moves": [
+      250,
+      500,
+      1000,
+      2000,
+      4000,
+      8000
+    ],
+    "restarts": [
+      1,
+      2,
+      4,
+      8,
+      16
+    ]
+  },
+  "defaults": {
+    "moves": 4000,
+    "restarts": 8
+  },
+  "reference": "Exact cycle DP for synthetic cases; independently rescored planner incumbent for replay",
+  "summary": {
+    "heldout": {
+      "defaults": {
+        "cases": 40,
+        "feasible": 40,
+        "meanGapPctAmongFeasible": 2.335238403379219,
+        "meanCpuMs": 1.1977750000000005,
+        "p95WallMs": 1.5899440000000027
+      },
+      "random": {
+        "cases": 40,
+        "feasible": 40,
+        "meanGapPctAmongFeasible": 1.469525367316096,
+        "meanCpuMs": 2.1224499999999997,
+        "p95WallMs": 3.181315999999981
+      },
+      "tpe": {
+        "cases": 40,
+        "feasible": 40,
+        "meanGapPctAmongFeasible": 0.6128123088014088,
+        "meanCpuMs": 1.8005749999999998,
+        "p95WallMs": 2.718254999999999
+      }
+    },
+    "regressions": {
+      "defaults": {
+        "cases": 10,
+        "feasible": 10,
+        "meanGapPctAmongFeasible": 30.83333333333333,
+        "meanCpuMs": 1.7097000000000002,
+        "p95WallMs": 2.748694000000114
+      },
+      "random": {
+        "cases": 10,
+        "feasible": 10,
+        "meanGapPctAmongFeasible": 29.166666666666668,
+        "meanCpuMs": 1.8244,
+        "p95WallMs": 2.5087409999999863
+      },
+      "tpe": {
+        "cases": 10,
+        "feasible": 10,
+        "meanGapPctAmongFeasible": 21.04166666666667,
+        "meanCpuMs": 2.2015000000000002,
+        "p95WallMs": 6.379781999999977
+      }
+    }
+  },
+  "replayGate": {
+    "status": "pending",
+    "reason": "No measured planner replay provided"
+  },
+  "selections": [
+    {
+      "seed": 101,
+      "tuning": {
+        "tpe": {
+          "completedTrials": 12,
+          "selected": {
+            "moves": 8000,
+            "restarts": 4
+          },
+          "fallbackToDefaults": false,
+          "cpuMs": 450.855
+        },
+        "random": {
+          "completedTrials": 12,
+          "selected": {
+            "moves": 8000,
+            "restarts": 16
+          },
+          "fallbackToDefaults": false,
+          "cpuMs": 82.3
+        }
+      }
+    },
+    {
+      "seed": 103,
+      "tuning": {
+        "random": {
+          "completedTrials": 12,
+          "selected": {
+            "moves": 8000,
+            "restarts": 2
+          },
+          "fallbackToDefaults": false,
+          "cpuMs": 49.509
+        },
+        "tpe": {
+          "completedTrials": 12,
+          "selected": {
+            "moves": 8000,
+            "restarts": 2
+          },
+          "fallbackToDefaults": false,
+          "cpuMs": 109.489
+        }
+      }
+    },
+    {
+      "seed": 107,
+      "tuning": {
+        "tpe": {
+          "completedTrials": 12,
+          "selected": {
+            "moves": 8000,
+            "restarts": 8
+          },
+          "fallbackToDefaults": false,
+          "cpuMs": 89.695
+        },
+        "random": {
+          "completedTrials": 12,
+          "selected": {
+            "moves": 8000,
+            "restarts": 2
+          },
+          "fallbackToDefaults": false,
+          "cpuMs": 47.037
+        }
+      }
+    },
+    {
+      "seed": 109,
+      "tuning": {
+        "random": {
+          "completedTrials": 12,
+          "selected": {
+            "moves": 4000,
+            "restarts": 16
+          },
+          "fallbackToDefaults": false,
+          "cpuMs": 41.032
+        },
+        "tpe": {
+          "completedTrials": 12,
+          "selected": {
+            "moves": 4000,
+            "restarts": 4
+          },
+          "fallbackToDefaults": false,
+          "cpuMs": 87.957
+        }
+      }
+    },
+    {
+      "seed": 113,
+      "tuning": {
+        "tpe": {
+          "completedTrials": 12,
+          "selected": {
+            "moves": 8000,
+            "restarts": 8
+          },
+          "fallbackToDefaults": false,
+          "cpuMs": 179.911
+        },
+        "random": {
+          "completedTrials": 12,
+          "selected": {
+            "moves": 8000,
+            "restarts": 8
+          },
+          "fallbackToDefaults": false,
+          "cpuMs": 96.184
+        }
+      }
+    }
+  ]
+}

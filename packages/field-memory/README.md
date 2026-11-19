@@ -1,5 +1,63 @@
 # @metaharness/field-memory
 
+<!-- ruv-seo:start (ADR-356) -->
+`@metaharness/field-memory` turns verified routing outcomes into a cost-aware routing field: each update must pass your verifier and per-principal influence caps, and `choose()` returns the configuration with the best decayed reward-minus-cost score for a query embedding. Raw prompts, solutions and tool traces never enter it.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. ESM only (`import`, not `require`). Pure TypeScript, no native module; an optional structural adapter accepts an already-open `ruvector` `VectorDb`.
+
+## Quickstart
+
+```bash
+npm install @metaharness/field-memory
+cat > quickstart.mjs <<'JS'
+import { randomBytes } from 'node:crypto';
+import { createFieldMemory, InMemoryFieldStorage } from '@metaharness/field-memory';
+
+const dim = 4;
+const memory = createFieldMemory({
+  storage: new InMemoryFieldStorage({ dimension: dim, metric: 'cosine' }),
+  // Demo verifier: a real one checks a signed outcome receipt.
+  verifier: async (proof) => (proof.ok ? { principalId: proof.who, trustDomain: 'demo' } : null),
+  identityHashKey: randomBytes(32),
+  config: { dimension: dim, retrievalK: 4, minimumSupport: 1 },
+});
+
+const ts = [1, 0, 0, 0];
+const outcomes = [
+  ['cheap', 0.2, 0.01], ['cheap', 0.3, 0.01],
+  ['frontier', 0.9, 0.5], ['frontier', 0.8, 0.5],
+];
+let n = 0;
+for (const [configurationId, reward, cost] of outcomes) {
+  const r = await memory.update({
+    centroidId: 'typescript-maintenance', embedding: ts, configurationId, reward, cost,
+    observedAt: Date.now(), idempotencyKey: `run-${n}`, principalProof: { ok: true, who: `ci-${n++}` },
+  });
+  console.log('update', configurationId, '->', r.status);
+}
+const choice = await memory.choose({ embedding: ts, allowedConfigurations: ['cheap', 'frontier'] });
+console.log('route to:', choice?.configurationId);
+JS
+node quickstart.mjs
+```
+
+Expected output:
+
+```text
+update cheap -> accepted
+update cheap -> accepted
+update frontier -> accepted
+update frontier -> accepted
+route to: frontier
+```
+
+**Next:** [`@metaharness/router`](https://www.npmjs.com/package/@metaharness/router) — the k-NN model router whose route choices this field can learn from.
+
+**Where it fits:** `metaharness new <name> --field-memory` scaffolds a fail-closed bootstrap that adds `@metaharness/field-memory` to the generated harness's runtime dependencies and imports it (off by default).
+<!-- ruv-seo:end -->
+
+## Reference
+
 Experimental, governed attractor memory for MetaHarness routing. It converts
 verified aggregate outcomes into a cost-aware probability landscape without
 putting predecessor prompts, solutions, or tool traces into the context window.

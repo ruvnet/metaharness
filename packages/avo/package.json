@@ -1,7 +1,16 @@
 {
   "name": "@metaharness/avo",
-  "version": "0.2.0",
-  "description": "Governed autonomous variation runtime: evidence-driven repository engineering loops with bounded authority, replayable receipts, semantic supervision, and RVF working memory.",
+  "version": "0.2.1",
+  "description": "Governed autonomous variation runtime: evidence-driven repository engineering loops with bounded authority, replayable receipts, semantic supervision and RVF working memory.",
+  "homepage": "https://ruv.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/metaharness.git",
+    "directory": "packages/avo"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -28,12 +37,15 @@
     "pack:verify": "npm pack --dry-run"
   },
   "keywords": [
+    "metaharness",
     "agentic-variation",
     "long-horizon",
     "evolutionary-search",
     "rvf",
     "swe-bench",
-    "metaharness"
+    "receipts",
+    "agent-harness",
+    "autonomous-agents"
   ],
   "author": "rUv <ruv@ruv.net>",
   "license": "MIT",

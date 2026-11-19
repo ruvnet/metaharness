@@ -117,6 +117,44 @@ function dirExists(root: string, sub: string): boolean {
   }
 }
 
+// Dream Cycle 2026-10-25 (generator-genome). 2026-08-25's #229 fix stopped
+// `hasVerifiedTestFiles` from being credited off manifest/language detection
+// alone — but `dirExists()` itself only checks the directory is present, not
+// that it contains anything. `mkdir tests` with zero files inside still read
+// as "verified," reopening the exact false-positive #229 closed, one level
+// deeper. A first version of this fix (same night, caught pre-ship by an
+// independent critic) only scanned one level — `mkdir -p tests/unit` with
+// zero files anywhere still passed, because `readdirSync('tests')` sees the
+// non-dot entry `unit` and stops there. This version walks the subtree
+// (bounded depth, skips dotfiles/IGNORE_DIRS) until it finds a real FILE, not
+// just a directory entry.
+function hasAnyFile(root: string, sub: string, maxDepth = 4): boolean {
+  if (!dirExists(root, sub)) return false;
+  const stack: Array<{ p: string; depth: number }> = [{ p: join(root, sub), depth: 0 }];
+  while (stack.length) {
+    const { p, depth } = stack.pop()!;
+    let entries: string[];
+    try {
+      entries = readdirSync(p);
+    } catch {
+      continue;
+    }
+    for (const name of entries) {
+      if (name.startsWith('.') || IGNORE_DIRS.has(name)) continue;
+      const full = join(p, name);
+      let isDir: boolean;
+      try {
+        isDir = statSync(full).isDirectory();
+      } catch {
+        continue;
+      }
+      if (!isDir) return true;
+      if (depth < maxDepth) stack.push({ p: full, depth: depth + 1 });
+    }
+  }
+  return false;
+}
+
 /** Read high-signal files + cheap structural probes. Never reads arbitrary source. */
 export function inventory(dir: string): Record<string, string> {
   const root = resolve(dir);
@@ -138,7 +176,7 @@ export function inventory(dir: string): Record<string, string> {
   // check) — read by analyzeFiles() into hasVerifiedTestFiles, since language
   // detection alone (a pyproject.toml/go.mod) doesn't mean any test file
   // actually exists (Dream Cycle 2026-08-25).
-  if (['__tests__', 'tests', 'test'].some((d) => dirExists(root, d))) files['__test_dir__'] = 'present';
+  if (['__tests__', 'tests', 'test'].some((d) => hasAnyFile(root, d))) files['__test_dir__'] = 'present';
   // Cheap top-level dir scan so structure signals work without deep walks.
   try {
     for (const e of readdirSync(root)) {

@@ -1,3 +1,5 @@
+import type { EvaluationProvenance, ProductionEvidence, ProductionGateManifest } from './production-gate.js';
+import type { BudgetSnapshot } from './budget.js';
 // @metaharness/flywheel — the abstract API surface.
 //
 // DESIGN RULE (load-bearing): this package must NOT know about any host, model, or benchmark — no
@@ -47,8 +49,11 @@ export interface Score {
    *  gate (see `sequential.ts`) sets this on both the baseline and candidate Score it returns for the SAME
    *  suite; `runFlywheelGenerations` zips the two arrays by index into `PromotionEvidence.pairedOutcomes`.
    *  Absent (the default) ⇒ no pairing is possible and any sequential-evidence rule degrades to its base
-   *  rule, unchanged from today. */
+   *  rule in research mode, unchanged from today. Production instead requires independent paired
+   *  evidence with validated provenance and never falls back on missing outcomes. */
   itemWins?: boolean[];
+  /** Required on independent comparison scores in production mode. */
+  provenance?: EvaluationProvenance;
 }
 
 /** One paired per-item outcome — did the candidate and the baseline each win THIS suite item? Only a
@@ -73,9 +78,11 @@ export interface PromotionEvidence {
   candidate: Score;
   anchor?: { baseline: number; candidate: number };
   pairedOutcomes?: PairedOutcome[];
+  production?: ProductionEvidence;
 }
 
 export interface PromotionDecision {
+  status?: 'PROMOTE' | 'REJECT' | 'INCONCLUSIVE';
   promote: boolean;
   reasons: string[];
 }
@@ -140,6 +147,10 @@ export interface LineageCommit {
   /** ADR-235 — the sealed baseline+candidate Score this commit's verdict was decided from. Lets an
    *  external reviewer RE-RUN the promotion rule and confirm the verdict reproduces (trust the gate
    *  re-run, not the logged verdict). Absent on the gen-0 root (nothing was compared). */
+  productionEvidence?: ProductionEvidence;
+  anchorEvaluation?: Score;
+  policyDigest?: string;
+  baselinePolicyDigest?: string;
   baselineScore?: Score;
   candidateScore?: Score;
 }
@@ -165,6 +176,11 @@ export type LiftCurve = LiftPoint[];
 
 /** Everything an EXTERNAL reviewer needs to replay the run with no trust in the producer. */
 export interface ReplayBundle {
+  promotion_mode?: 'research' | 'production';
+  gate_manifest?: ProductionGateManifest;
+  /** Signs manifest, root/lineage identities, bundle metrics and final budget snapshot. */
+  production_receipt?: PromotionReceipt;
+  budget_snapshot?: BudgetSnapshot;
   data_source: string; // caller-stamped ('SYNTHETIC' | 'LIVE' | …). Never a benchmark name.
   root_id: string;
   /** current → gen-0 root (the promoted chain). */
@@ -172,7 +188,7 @@ export interface ReplayBundle {
   /** every candidate commit across all generations (promoted + rejected) — the full diagnostic ledger. */
   all_commits: LineageCommit[];
   lift_curve: LiftCurve;
-  /** sha256 of the PromotionRule source, when the caller supplies it — proves the gate was UNCHANGED. */
+  /** Legacy source hash, or canonical configuration-bearing gate identity for registered wrappers. */
   gate_fingerprint: string | null;
   verified_improvements: number;
   anchor_surviving_improvements: number;
@@ -184,6 +200,7 @@ export interface ReplayBundle {
  *  boundary, made explicit so it can be persisted and handed back as {@link FlywheelConfig.resumeFrom}.
  *  A crashed multi-hour run continues from `fromGeneration + 1` instead of re-spending from generation 1. */
 export interface ResumeState {
+  production?: { gateFingerprint: string; ledgerId: string; budgetReserved: number; budgetSnapshot: BudgetSnapshot; checkpointReceipt: PromotionReceipt };
   /** The gen-0 baseline score (the lift-curve origin) — NOT re-evaluated on resume. */
   rootScore: Score;
   /** The frozen anchor's root score (or null when no anchor) — the never-regress bar. */

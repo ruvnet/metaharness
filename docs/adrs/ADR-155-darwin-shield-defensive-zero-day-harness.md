@@ -567,3 +567,14 @@ existing safety gate. The architecture, bound, gating, determinism, and receipts
 are real and tested; wiring the real tool surface + real corpora is the remaining
 production step (Addendum A Phase 2 / Addendum B fuzzer). No claim of autonomous
 zero-day SOTA until those land.
+
+## Defensive evidence replay, November 2026
+
+Decision for the offline extension in [PR 512](https://github.com/ruvnet/metaharness/pull/512).
+A private workspace [artex-defense](../../packages/artex-defense/README.md) accepts a caller scoped,
+digest pinned file and computes observation or session quarantine proposals. ARTEX CSV findings
+supply evidence references and severity. Correlation uses normalized, separately supplied telemetry
+with collector labels. The extension compares a decoy baseline to a fixed candidate and advances
+simulated leases on a virtual clock. MetaHarness ReceiptLog binds the import to the evaluation.
+A reviewer can replay the original bytes against an independently retained checkpoint.
+Production response, trusted collector authentication and field efficacy remain open.
