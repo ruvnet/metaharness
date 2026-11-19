@@ -47,6 +47,16 @@ describe('DARWIN-SHIELD-BENCH — acceptance gates', () => {
     }
   });
 
+  it('"beats every baseline" is certified statistically for EVERY baseline, not just B2 (ADR-155: "statistical certification", not a bare point estimate)', () => {
+    const gate = report.gates.find((g) => g.name.startsWith('Champion beats every baseline'))!;
+    expect(gate.pass).toBe(true);
+    // The gate's own detail must expose a lower95 bound for B0 and B1 too — proof
+    // it is not silently reusing B2's statistical result or a bare ">" check.
+    expect(gate.detail).toMatch(/B0 lower95=/);
+    expect(gate.detail).toMatch(/B1 lower95=/);
+    expect(gate.detail).toMatch(/B2 lower95=/);
+  });
+
   it('all runs are reproducible from receipts', () => {
     for (const b of [...report.baselines, report.champion]) {
       expect(b.reproHash).not.toBe('MISMATCH');

@@ -187,9 +187,9 @@
       "detail": "B0=593274e6 B1=2589863b B2=92a56965 B3=5991a555"
     },
     {
-      "name": "Champion beats every baseline on fitness",
+      "name": "Champion beats every baseline on fitness (statistically, not point estimate)",
       "pass": true,
-      "detail": "B3 0.93275 vs [0.5665, 0.1365, 0.598]"
+      "detail": "B0 lower95=0.23625, B1 lower95=0.40625, B2 lower95=0.20225"
     },
     {
       "name": "Beyond SOTA: champion STATISTICALLY beats the previous champion",
