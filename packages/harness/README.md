@@ -1,5 +1,56 @@
 # @metaharness/harness
 
+<!-- ruv-seo:start (ADR-356) -->
+![@metaharness/harness flow: worker proposes, utility score, four safety gates, hash-chained receipt, decision](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/harness.svg)
+
+`@metaharness/harness` is a deterministic control plane for agents: any model, tool or skill becomes a replaceable worker, and the harness, not the model, decides which output to accept, using utility scoring, four safety gates, hash-chained receipts and circuit-breaker recovery.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. ESM library. No native build step and no network access of its own; workers are whatever async functions you pass in.
+
+## Quickstart
+
+```bash
+mkdir demo && cd demo && npm init -y >/dev/null
+npm install @metaharness/harness
+cat > quickstart.mjs <<'JS'
+import {
+  HarnessKernel, AlgorithmRouter, AgentPool,
+  VerifierRegistry, predicateVerifier, PolicyGate, allowTools,
+} from '@metaharness/harness';
+
+// Stub workers stand in for real model calls; each reports quality, risk and cost.
+const worker = (id, kinds) => ({ id, model: 'stub', handles: kinds,
+  run: async () => ({ output: `${id} done`, quality: 0.9, confidence: 0.8, risk: 0.05, costUsd: 0.001, latencyMs: 10 }) });
+
+const kernel = new HarnessKernel({
+  router: new AlgorithmRouter(),
+  pool: new AgentPool([worker('planner', ['plan']), worker('scanner', ['scan-repo']),
+    worker('coder', ['code']), worker('tester', ['test']), worker('reviewer', ['review'])]),
+  verifiers: new VerifierRegistry().register(predicateVerifier('nonempty', 'syntax', (o) => String(o).length > 0)),
+  policy: new PolicyGate([allowTools(['plan', 'scan-repo', 'code', 'test', 'review'])]),
+});
+
+const run = await kernel.run({ text: 'implement and test the parser' });
+console.log('success:', run.success);
+console.log('receipts valid:', run.receiptsValid);
+console.log('result:', run.result);
+JS
+node quickstart.mjs
+```
+
+Expected output:
+
+```text
+success: true
+receipts valid: true
+result: reviewer done
+```
+
+**Next:** [`@metaharness/router`](https://www.npmjs.com/package/@metaharness/router) — pick the cheapest model that is good enough for each worker call.
+<!-- ruv-seo:end -->
+
+## Reference
+
 > The Algorithmic Agent Harness — **the model proposes, the harness decides, the algorithms verify.**
 
 A dependency-free, deterministic **control plane** for AI agents (ADR-047). Single

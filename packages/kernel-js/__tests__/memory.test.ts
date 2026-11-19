@@ -34,15 +34,26 @@ describe('rankWithDecay', () => {
     expect(r.map(h => h.id)).toEqual(['a', 'b', 'c']);
   });
 
-  it('returns decayedScore === score when emergent-time is unavailable (graceful fallback)', async () => {
-    // No emergent-time package install in this monorepo at iter 5 unless
-    // npm install ran — the loader returns null, and we fall back to raw
-    // scores reported under decayedScore so callers don't have to branch.
-    const r = await rankWithDecay(hits, { useDecay: true, now: NOW });
-    expect(r.length).toBe(3);
+  it('decays by storedAt with the half-life weight and reorders', async () => {
+    // @ruvector/emergent-time 0.1.x has no weight(ageMs), so this is the
+    // deterministic 0.5^(age / halfLife) path.
+    const r = await rankWithDecay(hits, { useDecay: true, now: NOW, halfLifeMs: 7 * DAY });
+    expect(r.map(h => h.id)).toEqual(['b', 'c', 'a']);
     for (const h of r) {
+      const age = NOW - h.storedAt!;
+      expect(h.decayedScore).toBeCloseTo(h.score * linearDecay(age, 7 * DAY), 10);
       expect(h.decayedScore).toBeGreaterThan(0);
     }
+    // score stays the raw similarity.
+    expect(r.find(h => h.id === 'a')!.score).toBe(0.9);
+  });
+
+  it('treats hits without storedAt as age 0', async () => {
+    const r = await rankWithDecay(
+      [{ id: 'x', score: 0.5, decayedScore: 0, namespace: 'ns' }],
+      { useDecay: true, now: NOW },
+    );
+    expect(r[0].decayedScore).toBe(0.5);
   });
 
   it('sorts descending by the ranking key', async () => {

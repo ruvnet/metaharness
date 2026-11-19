@@ -1,7 +1,16 @@
 {
   "name": "@metaharness/harness",
-  "version": "0.2.0",
-  "description": "Algorithmic Agent Harness (ADR-047) — a deterministic control plane that wraps any model/tool/skill as a replaceable worker: utility-scored decisions, four-gate safety, hash-chained receipts, circuit-breaker recovery, adversarial verification, and a bandit agent pool. The model proposes, the harness decides, the algorithms verify.",
+  "version": "0.2.1",
+  "description": "Deterministic control plane for agents: wraps any model, tool or skill as a replaceable worker behind utility scoring, four safety gates, hash-chained receipts and circuit-breaker recovery.",
+  "homepage": "https://ruv.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/metaharness.git",
+    "directory": "packages/harness"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -22,24 +31,19 @@
     "lint": "tsc --noEmit"
   },
   "keywords": [
+    "metaharness",
     "agent-harness",
     "control-plane",
-    "metaharness",
+    "ai-agent",
     "receipts",
     "verification",
     "circuit-breaker",
     "contextual-bandit",
-    "consensus",
-    "governance"
+    "governance",
+    "agent-safety"
   ],
   "author": "rUv <ruv@ruv.net>",
   "license": "MIT",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator",
-    "directory": "packages/harness"
-  },
   "engines": {
     "node": ">=20.0.0"
   },

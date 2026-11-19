@@ -1,7 +1,16 @@
 {
   "name": "@metaharness/aws-finops",
-  "version": "0.1.0",
-  "description": "Darwin FinOps harness (ADR-168): the Darwin Shield primitives — multi-tier cascade, deterministic execution oracle, shrinking residual — applied to AWS cost optimization. Swaps the security oracle (semgrep + crash-fuzzer) for a cost oracle (infracost + checkov + terraform validate/plan). Frozen $0.04 Qwen models propose Terraform patches; a deterministic oracle proves the modeled bill drops without breaking the build or compliance; only verified savings are reported, behind a human review gate. Dependency-free core (Node built-ins); binaries optional/skip-when-absent.",
+  "version": "0.1.1",
+  "description": "Darwin FinOps harness: cheap models propose Terraform patches and a deterministic cost oracle (infracost, checkov, terraform plan) reports only verified AWS savings behind a review gate.",
+  "homepage": "https://ruv.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/metaharness.git",
+    "directory": "packages/aws-finops"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -11,7 +20,11 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist/**", "README.md", "LICENSE"],
+  "files": [
+    "dist/**",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
@@ -32,12 +45,6 @@
   ],
   "author": "rUv <ruv@ruv.net>",
   "license": "MIT",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator",
-    "directory": "packages/aws-finops"
-  },
   "engines": {
     "node": ">=20.0.0"
   },

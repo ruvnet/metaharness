@@ -1,7 +1,16 @@
 {
   "name": "@metaharness/router",
-  "version": "0.4.0",
-  "description": "Cost-optimal model router for AI agent harnesses — route each query to the cheapest model that's good enough (k-NN over labelled embeddings). The productized DRACO Phase-2 finding.",
+  "version": "0.4.1",
+  "description": "Cost-optimal model router for agent harnesses: sends each query to the cheapest model that is good enough, using k-NN over labelled embeddings.",
+  "homepage": "https://ruv.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/metaharness.git",
+    "directory": "packages/router"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -23,22 +32,19 @@
     "bench": "npm run build && node bench/route-throughput.mjs"
   },
   "keywords": [
+    "metaharness",
     "model-routing",
     "llm-routing",
-    "cost-optimal",
+    "llm-router",
+    "cost-optimization",
     "agent-harness",
-    "metaharness",
-    "draco",
     "knn",
-    "embeddings"
+    "embeddings",
+    "draco",
+    "llm"
   ],
   "author": "rUv <ruv@ruv.net>",
   "license": "MIT",
-  "homepage": "https://github.com/ruvnet/metaharness",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ruvnet/metaharness"
-  },
   "engines": {
     "node": ">=20.0.0"
   },
