@@ -57,6 +57,58 @@ describe('@metaharness/host-claude-code', () => {
       expect(cmds[0]).toContain('https://example.com/mcp');
       expect(cmds[0]).toBe(`claude mcp add --transport http 'remote' 'https://example.com/mcp'`);
     });
+
+    // Dream Cycle 2026-11-09 — every sibling host adapter (codex, copilot,
+    // opencode, openclaw, hermes, prime-agent, github-actions) already
+    // projects McpServerSpec.env; host-claude-code silently dropped it.
+    it('includes --env flags for the command (stdio) form', () => {
+      const cmds = mcpAddCommands({
+        name: 'h',
+        mcpServers: [{ name: 'srv', command: ['node', 'x.js'], env: [['API_KEY', 'secret']] }],
+      });
+      expect(cmds[0]).toBe(`claude mcp add 'srv' --env 'API_KEY=secret' -- 'node' 'x.js'`);
+    });
+
+    // `claude mcp add --transport http` has no stdio process to inject env
+    // into — verified live (v2.1.319) that it silently never stores an
+    // `env` key for an http-transport server, regardless of flag placement,
+    // and `--env`'s variadic parsing can even swallow the URL positional if
+    // placed before it with no `--` separator. So the http branch discloses
+    // the no-op instead of emitting a flag the real CLI ignores (or worse,
+    // a line that errors outright).
+    it('disclosed-no-op: http transport does not apply --env, but says so', () => {
+      const cmds = mcpAddCommands({
+        name: 'h',
+        mcpServers: [{ name: 'remote', url: 'https://example.com/mcp', env: [['TOKEN', 'abc']] }],
+      });
+      expect(cmds[0]).toBe(`claude mcp add --transport http 'remote' 'https://example.com/mcp'`);
+      expect(cmds[1]).toContain('# (note:');
+      expect(cmds[1]).toContain('env is not applied');
+    });
+
+    it('http transport with no env emits exactly one line, no disclosure comment', () => {
+      const cmds = mcpAddCommands({
+        name: 'h',
+        mcpServers: [{ name: 'remote', url: 'https://example.com/mcp' }],
+      });
+      expect(cmds).toHaveLength(1);
+    });
+
+    it('emits multiple --env flags in declared order, each shell-quoted', () => {
+      const cmds = mcpAddCommands({
+        name: 'h',
+        mcpServers: [{ name: 'srv', command: ['node', 'x.js'], env: [['A', '1'], ['B', 'has space']] }],
+      });
+      expect(cmds[0]).toBe(`claude mcp add 'srv' --env 'A=1' --env 'B=has space' -- 'node' 'x.js'`);
+    });
+
+    it('omits --env entirely when no env is declared (no regression on the existing path)', () => {
+      const cmds = mcpAddCommands({
+        name: 'h',
+        mcpServers: [{ name: 'demo', command: ['npx', '-y', 'demo'] }],
+      });
+      expect(cmds[0]).not.toContain('--env');
+    });
   });
 
   // Dream Cycle 2026-09-09 — host-claude-code was the last unfixed sibling of
