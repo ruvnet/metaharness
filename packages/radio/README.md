@@ -1,5 +1,40 @@
 # @metaharness/radio
 
+<!-- ruv-seo:start (ADR-356) -->
+
+A passive-awareness message bus for pods of agents: threads, non-blocking mentions, and watchers that fold a teammate's discoveries into an agent at its next step boundary instead of interrupting it (AgentRadio).
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. ESM only (`import`, not `require`). Pure JavaScript, no native build step.
+
+## Quickstart
+
+```bash
+mkdir demo && cd demo && npm init -y >/dev/null
+npm install @metaharness/radio
+cat > quickstart.mjs <<'EOF'
+import { RadioBus, Watcher } from '@metaharness/radio';
+const bus = new RadioBus();
+bus.createThread('worklog', ['scout', 'builder']);
+const scout = new Watcher(bus, 'scout');
+bus.send('worklog', 'builder', 'auth flow lives in gateway/, not api/', ['scout']);
+for (const { mention } of scout.fold()) console.log('scout folded:', JSON.stringify(mention));
+EOF
+node quickstart.mjs
+```
+
+Expected output:
+
+```text
+scout folded: {"seq":0,"thread":"worklog","sender":"builder","content":"auth flow lives in gateway/, not api/","mentions":["scout"]}
+```
+
+**Next:** [`@metaharness/oo-agents`](https://www.npmjs.com/package/@metaharness/oo-agents) — run object-oriented agents as radio pod members that coordinate over this bus.
+
+**Where it fits:** `@metaharness/oo-agents` depends on it and wraps each OO agent as a radio `PodAgent` (`src/pod.ts`), so a pod of OO agents coordinates over this bus.
+<!-- ruv-seo:end -->
+
+## Reference
+
 **Passive-awareness swarm bus for agent pods.**
 _Freeze the model. Evolve the comms policy._
 

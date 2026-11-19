@@ -1,5 +1,56 @@
 # @metaharness/workspace-lens
 
+<!-- ruv-seo:start (ADR-356) -->
+![@metaharness/workspace-lens flow: hidden state at a layer, Jacobian, unembed to vocabulary, workspace tokens and trajectory, signed receipt with drift and flags](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/workspace-lens.svg)
+
+`@metaharness/workspace-lens` reads what an open-weight model is internally "thinking about" at inference time: it projects residual activations through a fitted Jacobian lens (lens_l(h) = unembed(J_l · h)) into workspace tokens, a layer trajectory, drift and entropy scores, safety flags and a hashable receipt.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. ESM library, dependency-free, model-agnostic. Runtime only: you capture activations from your own runtime and fit the lens offline.
+
+## Quickstart
+
+```bash
+mkdir demo && cd demo && npm init -y >/dev/null
+npm install @metaharness/workspace-lens
+cat > quickstart.mjs <<'JS'
+import { WorkspaceLens, buildReceipt } from '@metaharness/workspace-lens';
+
+// A tiny synthetic lens. Real lenses are fitted offline on an open-weight model.
+const lens = WorkspaceLens.fromArtifact({
+  lensId: 'jlens-demo', modelId: 'synth-3d', dModel: 3,
+  vocab: ['ok', 'wrong', 'exfiltrate'],
+  unembed: [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+  layers: [{ layer: 5, jacobian: [[1, 0, 0], [0, 1, 0], [0, 0, 1]] }],
+});
+const concepts = [{ concept: 'exfiltration', modelId: 'synth-3d', vector: [0, 0, 1], critical: true }];
+
+// Hand the lens residual activations you captured at layer 5.
+const receipt = buildReceipt(lens, 'summarize the doc', [{ layer: 5, position: 4, h: [0, 0, 9] }],
+  { createdAt: '2026-07-07T00:00:00Z', concepts });
+
+const top = receipt.topTokens[0].tokens[0];
+console.log('top workspace token:', top.token ?? top);
+console.log('flags:', JSON.stringify(receipt.flags));
+console.log('critical triggers:', receipt.triggers.filter((t) => t.critical).map((t) => t.concept).join(', '));
+console.log('receipt prompt hash:', receipt.promptHash.slice(0, 16) + '…');
+JS
+node quickstart.mjs
+```
+
+Expected output:
+
+```text
+top workspace token: exfiltrate
+flags: {"promptInjection":true,"evalAwareness":false,"hiddenObjective":false,"refusalConflict":false}
+critical triggers: exfiltration
+receipt prompt hash: 46f9a175a791cbe9…
+```
+
+**Next:** [`@metaharness/workspace-probe`](https://www.npmjs.com/package/@metaharness/workspace-probe) — turn these receipts into a score and veto mutations whose workspace gets worse.
+<!-- ruv-seo:end -->
+
+## Reference
+
 **A Jacobian-Lens interpretability primitive for open-weight LLMs.** Read the model's *verbalizable
 workspace* — the concepts it is disposed to say next — at inference time, and turn it into workspace
 tokens, a layer-by-layer thinking trajectory, drift/entropy scores, vectorized safety flags, and a

@@ -1,7 +1,16 @@
 {
   "name": "@metaharness/projects",
-  "version": "0.1.2",
-  "description": "Borrowed-pattern integration program for Darwin Mode (ADR-156…166): durable checkpoints, cost-attributing traces, declarative HarnessSpec, bounded escalation scheduling, tiered memory, a dataset registry, typed handoffs, immutable safety rails, ROI opportunity scanning, and human review gates. The thesis: Darwin Mode mutates structured policies, not prompts. Dependency-free (Node built-ins).",
+  "version": "0.1.3",
+  "description": "Borrowed-pattern program for Darwin Mode: durable checkpoints, cost-attributing traces, declarative HarnessSpec, tiered memory, typed handoffs, safety rails and human review gates.",
+  "homepage": "https://ruv.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/metaharness.git",
+    "directory": "packages/projects"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -30,17 +39,11 @@
     "tracing",
     "cost-optimization",
     "guardrails",
-    "evolutionary-search",
-    "policy-mutation"
+    "policy-mutation",
+    "human-review"
   ],
   "author": "rUv <ruv@ruv.net>",
   "license": "MIT",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator",
-    "directory": "packages/projects"
-  },
   "engines": {
     "node": ">=20.0.0"
   },
