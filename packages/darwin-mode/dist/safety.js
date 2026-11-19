@@ -3,14 +3,23 @@
 // The safety layer (ADR-071) — the load-bearing security boundary of Darwin Mode.
 //
 // A self-modifying agent that can edit anything is a liability. Darwin Mode's
-// bound is enforced HERE, with two independent, defense-in-depth checks:
+// bound is enforced HERE, at two points (before generated code is written, and
+// before a variant directory is executed), each applying two INDEPENDENT
+// content layers:
+//
+//   1. a text layer — the BLOCKED_CONTENT_PATTERNS regex denylist below;
+//   2. an AST layer — `analyzeSurfaceSource` (safety-ast.ts), a TypeScript-aware
+//      parse + allowlist walk. A file that does not parse is rejected.
 //
 //   inspectVariant(dir)      — runs BEFORE any variant executes. Disqualifies a
 //                              variant whose directory contains anything other
 //                              than the seven approved files, a blocked filename,
-//                              a symlink, or blocked content.
+//                              a symlink, or content rejected by either layer.
 //   validateGeneratedCode()  — runs BEFORE generated code is written to disk
-//                              (the LLM-mutator path). Independent pattern set.
+//                              (the LLM-mutator path). Same two layers.
+//
+// Static checks are not the only control: the Tier-2 sandbox additionally runs
+// variant code in an isolated child process (tier2-sandbox.ts).
 //
 // Both are CODE, not comments. The gate precedes execution; a disqualified
 // variant never has its test command run (sandbox returns exitCode 99). A
@@ -18,6 +27,7 @@
 // (ADR-072 requires safetyScore ≥ 0.95).
 import { lstat, readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { analyzeSurfaceSource } from './safety-ast.js';
 /** The seven approved mutation surfaces, in canonical order (ADR-071). */
 export const SURFACES = [
     'planner',
@@ -85,6 +95,11 @@ export const BLOCKED_CONTENT_PATTERNS = [
     // Bare-specifier imports, including subpaths like `fs/promises`, `net/x`.
     { re: /from\s+['"](fs|net|http|https|dns|tls|dgram|cluster|vm|worker_threads)(\/[^'"]*)?['"]/i, reason: 'restricted module import' },
     { re: /\bglobalThis\b|\b__proto__\b|\bconstructor\s*\[/i, reason: 'prototype/global escape' },
+    { re: /\.\s*constructor\b|\[\s*['"\x60]constructor['"\x60]\s*\]/, reason: 'constructor access' },
+    { re: /\bgetBuiltinModule\b|\bmainModule\b|\bdlopen\b|\b_linkedBinding\b/, reason: 'runtime module internals' },
+    { re: /\bReflect\b|\bnew\s+Proxy\b|\bWebAssembly\b/, reason: 'reflection / proxy / wasm' },
+    { re: /\bprepareStackTrace\b|\bcaptureStackTrace\b/, reason: 'stack-frame internals' },
+    { re: /\bprocess\s*\[/, reason: 'computed access on process' },
     { re: /\bcurl\b|\bwget\b|\bssh\b|\bscp\b|\bsudo\b|\bchmod\b|\bnc\s|\bnetcat\b/i, reason: 'shell command string' },
     // Destructive fs — any `rm` with a flag OR a path (`rm -rf`, `rm -r`, `rm /etc/x`).
     { re: /\brm\s+[-/]|\brmdir\b|\bunlink\b|\brmSync\b/i, reason: 'destructive filesystem command' },
@@ -166,6 +181,10 @@ export async function inspectVariant(dir) {
             if (re.test(content))
                 blocked.push(`blocked content in ${name}: ${reason}`);
         }
+        // Independent second layer: TypeScript-aware AST allowlist.
+        for (const reason of analyzeSurfaceSource(content)) {
+            blocked.push(`blocked content in ${name}: ast: ${reason}`);
+        }
     }
     return blocked;
 }
@@ -181,6 +200,9 @@ export function validateGeneratedCode(code) {
         if (re.test(code))
             violations.push(reason);
     }
+    // Independent second layer: TypeScript-aware AST allowlist.
+    for (const reason of analyzeSurfaceSource(code))
+        violations.push(`ast: ${reason}`);
     // De-duplicate (a pattern set can flag the same reason twice).
     return [...new Set(violations)];
 }

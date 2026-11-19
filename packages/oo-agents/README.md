@@ -1,5 +1,57 @@
 # @metaharness/oo-agents
 
+<!-- ruv-seo:start (ADR-356) -->
+`@metaharness/oo-agents` lets you write an agent as a class: fields are state, methods are capabilities, schemas are typed contracts, and an `agentic` method is answered by a model writing code cells that run in a fuel-limited Rust/WASM VM with no filesystem, network or clock.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. ESM only (`import`, not `require`). The cell VM is a bundled `wasm32` module (`wasm/ooa_cell_vm.wasm`); no native build step. `ScriptedDriver` stands in for a model, so the quickstart needs no API key.
+
+## Quickstart
+
+```bash
+npm install @metaharness/oo-agents
+cat > quickstart.mjs <<'JS'
+import { Agent, agentic, Runtime, ScriptedDriver } from '@metaharness/oo-agents';
+
+class SupportAgent extends Agent {
+  static doc = 'You are a support agent.';
+  orders = { 'A-1': { delivered: true, daysSinceDelivery: 3 }, 'A-2': { delivered: true, daysSinceDelivery: 45 } };
+  isRefundEligible(id) { const o = this.orders[id]; return o.delivered && o.daysSinceDelivery <= 30; }
+  triage = agentic({
+    doc: 'Create a typed support ticket.',
+    params: { message: { type: 'string' }, orderId: { type: 'string' } },
+    returns: {
+      type: 'object',
+      properties: { orderId: { type: 'string' }, refund: { type: 'boolean' }, note: { type: 'string' } },
+      required: ['orderId', 'refund', 'note'],
+    },
+  });
+}
+
+// ScriptedDriver stands in for a model: it emits the code cell the model would write.
+const cell = 'return_result({ orderId: orderId, refund: self.isRefundEligible(orderId), note: "auto-triaged" })';
+const agent = new SupportAgent();
+for (const id of ['A-1', 'A-2']) {
+  const rt = await Runtime.create(new ScriptedDriver([cell]));
+  console.log(JSON.stringify(await rt.run(agent, 'triage', ['where is my refund?', id])));
+}
+JS
+node quickstart.mjs
+```
+
+Expected output:
+
+```text
+{"note":"auto-triaged","orderId":"A-1","refund":true}
+{"note":"auto-triaged","orderId":"A-2","refund":false}
+```
+
+**Next:** [`@metaharness/radio`](https://www.npmjs.com/package/@metaharness/radio) — the passive-awareness bus that pods of these agents coordinate over.
+
+**Fit:** standalone — no published `@metaharness` package depends on it. It depends on `@metaharness/radio` for multi-agent pods.
+<!-- ruv-seo:end -->
+
+## Reference
+
 **The agent is a class. The model acts by writing code — inside a Rust/WASM
 sandbox.**
 

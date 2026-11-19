@@ -1,5 +1,45 @@
 # @metaharness/vertical-base
 
+<!-- ruv-seo:start (ADR-356) -->
+
+The shared contract for MetaHarness vertical packs: the `VerticalPack` and `VerticalManifest` types plus `readVerticalManifest`, `validateVerticalManifest` and `verifyTemplateFilesPresent`, so a pack author can check a manifest before publishing.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. ESM only (`import`, not `require`). Pure JavaScript, no native build step.
+
+## Quickstart
+
+```bash
+mkdir demo && cd demo && npm init -y >/dev/null
+npm install @metaharness/vertical-base
+cat > quickstart.mjs <<'EOF'
+import { validateVerticalManifest } from '@metaharness/vertical-base';
+const manifest = {
+  id: 'my-vertical', description: 'My custom vertical',
+  files: [{ src: 'CLAUDE.md.tmpl', dst: 'CLAUDE.md', render: true }],
+  vars: [{ name: 'name', prompt: 'Harness name', default: 'my-bot' }],
+};
+validateVerticalManifest(manifest);
+console.log('valid:', manifest.id);
+try { validateVerticalManifest({ ...manifest, files: [{ src: 'a.tmpl', dst: 'a' }] }); }
+catch (e) { console.log('rejected:', e.message); }
+EOF
+node quickstart.mjs
+```
+
+Expected output:
+
+```text
+valid: my-vertical
+rejected: manifest.files entry "a.tmpl" missing render flag
+```
+
+**Next:** [`@metaharness/vertical-trading`](https://www.npmjs.com/package/@metaharness/vertical-trading) — a pack built on this contract.
+
+**Where it fits:** `@metaharness/vertical-trading` depends on it and loads its manifest with `readVerticalManifest`. Note: the export names are `readVerticalManifest` / `validateVerticalManifest`; the older notes below call them `loadVerticalPack` / `validateManifest`.
+<!-- ruv-seo:end -->
+
+## Reference
+
 Shared contract for [`@metaharness/vertical-*`](https://github.com/ruvnet/agent-harness-generator) packs — the type-only / runtime-helper module that every standalone vertical pack consumes so the generator can load them uniformly.
 
 ## What it is
