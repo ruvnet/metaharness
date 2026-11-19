@@ -1,3 +1,32 @@
+# 0.14.0 (2026-11-10)
+
+Numeric genomes: optional surrogate pre-screening, with a `ruv-fann` model. Experimental.
+
+- `evolveNumeric` takes an opt-in `surrogate` config. Each generation it proposes `oversample`× the usual mutation candidates, a surrogate fit on the archive's scored genomes ranks them, and only the best-ranked go to the external evaluator. The evaluator budget per parent is unchanged, the surrogate never scores a variant, and any failure (too few rows, declined fit, failed trust gate, thrown error) falls back to the unscreened generation and is recorded in `result.surrogate.fallbacks`.
+- Pre-screen settings: `oversample`, `minRows`, `exploreSlots`, `warmupGenerations`, `refitEvery`, a held-out-Spearman `trust` gate and an `onGeneration` callback.
+- `createFannSurrogate()` provides a surrogate backed by `ruv-fann@0.1.2` (Rust/WASM dense networks), with `hidden` layer shapes, `activation`, `optimizer`, `learningRate`, `epochs`, `maxRows`, `targetTransform` (`standardize` or `rank`), `ensemble`, `explorationWeight`, `seed` and `simd`. `ruv-fann` is an optional peer dependency (Node 20.9+), loaded only when this function is called.
+- `NumericSurrogate` is a public port, so any model can be plugged in. New exports: `genomeToUnitVector`, `surrogateRowsFromArchive`, `selectByPrediction`, `fitSurrogate`, `spearman`, `validateSurrogateConfig`, `FannSurrogate`, `fannEpochBudget`.
+- CLI: `evolve-numeric --surrogate fann` plus `--surrogate-*` flags for every setting above.
+- `bench/selection/numeric-surrogate.mjs` (`npm run bench:surrogate`): paired benchmark on synthetic objectives; results in `bench/results/numeric-surrogate.txt` and the README.
+- README: new "Numeric genomes and the ruv-fann surrogate" section with two animated diagrams.
+
+Without `surrogate`, `evolveNumeric` behaves exactly as in 0.13.1.
+
+# 0.13.0 (2026-11-05)
+
+Security: harden variant evaluation.
+
+- The ADR-071 content gate now has a second, independent layer: a TypeScript-aware AST allowlist (`src/safety-ast.ts`) applied by both `inspectVariant` and `validateGeneratedCode`. It rejects module loading other than `import type`, references to ambient capability objects, constructor/prototype/runtime-internal member access in any spelling, computed member keys assembled from strings at runtime, and `this` outside class bodies. A file that does not parse is rejected. The regex layer gained additional patterns.
+- Tier-2 (`agent` sandbox) variants now run in an isolated child process: Node permission model (reads limited to the driver and the variant directory; no filesystem writes, child processes, workers, addons or WASI), string code generation disabled, a heap cap, an empty environment and a SIGKILL timeout. The driver verifies its own confinement and removes ambient globals before importing any variant module. Network is denied by the permission model only on Node versions that support it; elsewhere network globals are removed and network modules are not resolvable.
+- If the runtime cannot provide that isolation, Tier-2 execution is refused (exit code 99, `blockedActions` set) instead of running unconfined.
+- New runtime dependency: `@babel/parser`. Variants that previously passed the gate may now be rejected if they use the constructs above; the generated baseline surfaces are unaffected.
+
+Advisory: GHSA-mjwg-5fm3-fx2p.
+
+# 0.12.1 (2026-10-21)
+
+Fix: the contrastive development loop restarted its `timeoutMs` budget for every callback (setup, adapter admission, execution, validation, cache hits) instead of enforcing one deadline across the whole round, so a round could run well past its configured budget. Now enforces a single monotonic deadline across the round; an expired round preserves the baseline and reserves cost conservatively rather than overrunning. Independent confirmation already had a shared deadline and is unchanged. Default (non-contrastive) Darwin behavior is unchanged. PR #424.
+
 # 0.12.0 (2026-10-16)
 
 Adds optional independent paired confirmation with frozen policies and data partitions, exact statistical comparison, regression limits, effect budgets and scoped execution receipts. Includes a pinned public intent-classification pilot and explicit limits on repeated testing. Existing development and evolve APIs remain compatible.
