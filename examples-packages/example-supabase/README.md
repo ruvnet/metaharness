@@ -1,6 +1,8 @@
 # @metaharness/example-supabase
 
 <!-- ruv-seo:start (ADR-356) -->
+![@metaharness/example-supabase flow: npx @metaharness/example-supabase my-bot scaffolds the example files and the .harness manifest, then harness doctor reports HEALTHY](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/example-scaffold.svg)
+
 MetaHarness SDK showcase — RLS-aware Supabase data agent (anon vs service-role, pgvector RAG, verification-gated).
 
 **Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This package does not install the third-party SDK; the scaffold tells you to run `npm install @supabase/supabase-js` yourself. This is the `@metaharness/example-supabase` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.

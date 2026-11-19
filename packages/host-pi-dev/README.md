@@ -1,6 +1,8 @@
 # @metaharness/host-pi-dev
 
 <!-- ruv-seo:start (ADR-356) -->
+![@metaharness/host-pi-dev flow: a HarnessSpec goes through the adapter's generateConfig() into a map of host files (config and MCP wiring) that the pi-dev host loads](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/host-adapter.svg)
+
 Turns a MetaHarness harness spec into a pi.dev coding-agent extension, `AGENTS.md`, `SYSTEM.md` and `trust.json`. There is no MCP wiring; the Pi agent does not use MCP by design.
 
 **Supported environments:** Node.js 20+ on Linux, macOS and Windows. ESM only (`import`, not `require`). Pure JavaScript with no native build step; `@metaharness/kernel` is used only for its `HarnessSpec` and `HostAdapter` types.

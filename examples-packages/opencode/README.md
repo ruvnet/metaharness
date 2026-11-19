@@ -1,6 +1,8 @@
 # MetaHarness × OpenCode .opencode/ config
 
 <!-- ruv-seo:start (ADR-356) -->
+![@metaharness/opencode flow: npx @metaharness/opencode my-bot scaffolds the example files and the .harness manifest, then harness doctor reports HEALTHY](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/example-scaffold.svg)
+
 MetaHarness example — minimal OpenCode .opencode/ config scaffold for agent harnesses.
 
 **Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/opencode` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.

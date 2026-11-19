@@ -1,6 +1,8 @@
 # MetaHarness × RVM deployment-target partition
 
 <!-- ruv-seo:start (ADR-356) -->
+![@metaharness/rvm flow: npx @metaharness/rvm my-bot scaffolds the example files and the .harness manifest, then harness doctor reports HEALTHY](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/example-scaffold.svg)
+
 MetaHarness example — minimal agent harness pre-wired for the RVM deployment-target partition.
 
 **Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/rvm` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.

@@ -29,6 +29,7 @@ import {
   renderHackerOneMarkdown,
 } from '../reports/hackerone.js';
 import { HackerOneClient, hasHackerOneKey } from '../integrations/hackerone.js';
+import { cmdDefense } from './defense.js';
 import { gatedSubmit } from '../integrations/h1-submit.js';
 import type { HackerOneReportDraft } from '../reports/hackerone.js';
 import type { TargetDriver, TestCase, TestResult } from '../types.js';
@@ -478,6 +479,8 @@ Usage:
   redblue patch  [--config redblue.yaml] [--mock-judge]   # baseline -> patch -> retest delta
   redblue retest [--config redblue.yaml] [--mock-judge]
   redblue report --in report.json
+  redblue defense <replay|verify|benchmark>  # blue side: replay real findings against two
+                 # policies, simulate a quarantine, pin a receipt (offline, see 'defense help')
   redblue hackerone weaknesses [--refresh]   # read-only CWE taxonomy (cache→live→static)
   redblue hackerone capabilities             # read-only probe of the token's read surface
   redblue hackerone submit --report <draft.json> --program <handle>
@@ -527,6 +530,8 @@ export async function dispatch(sub: string | undefined, args: string[]): Promise
       return cmdReport(args);
     case 'hackerone':
       return cmdHackerOne(args);
+    case 'defense':
+      return cmdDefense(args);
     case undefined:
     case 'help':
     case '--help':

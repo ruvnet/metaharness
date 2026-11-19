@@ -1,6 +1,8 @@
 # @metaharness/host-prime-agent
 
 <!-- ruv-seo:start (ADR-356) -->
+![@metaharness/host-prime-agent flow: a HarnessSpec goes through the adapter's generateConfig() into a map of host files (config and MCP wiring) that the prime-agent host loads](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/host-adapter.svg)
+
 Turns a MetaHarness harness spec into project-scoped Prime Agent (PrimeIntellect) skills under `.prime/agent/`: instruction-only skills for tools, Python-backed skills for remote HTTP MCP servers, and an install runbook.
 
 **Supported environments:** Node.js 20+ on Linux, macOS and Windows. ESM only (`import`, not `require`). Pure JavaScript with no native build step; `@metaharness/kernel` is used only for its `HarnessSpec` and `HostAdapter` types.

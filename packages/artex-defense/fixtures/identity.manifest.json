@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "tenant": "lab",
+  "caseId": "example",
+  "format": "json",
+  "expectedSha256": "3b13632f6ee7f4162d1e9642125fd61bd27e28c403e9f0b6634cd59df8103da0"
+}

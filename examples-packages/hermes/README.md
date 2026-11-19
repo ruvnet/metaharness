@@ -1,6 +1,8 @@
 # MetaHarness × Hermes cli-config harness
 
 <!-- ruv-seo:start (ADR-356) -->
+![@metaharness/hermes flow: npx @metaharness/hermes my-bot scaffolds the example files and the .harness manifest, then harness doctor reports HEALTHY](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/example-scaffold.svg)
+
 MetaHarness example — Hermes cli-config harness scaffold for AI agents.
 
 **Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/hermes` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.

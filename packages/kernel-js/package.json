@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/kernel",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Cross-platform kernel for MetaHarness harnesses: the HarnessSpec and HostAdapter contract, memory backends, and a WASM-first runtime with NAPI-RS native and pure-JS fallbacks.",
   "homepage": "https://ruv.io",
   "repository": {
@@ -40,6 +40,13 @@
     "README.md",
     "LICENSE"
   ],
+  "metaharness": {
+    "wasmArtifacts": [
+      "pkg/package.json",
+      "pkg/ruflo_kernel_wasm.js",
+      "pkg/ruflo_kernel_wasm_bg.wasm"
+    ]
+  },
   "scripts": {
     "build": "tsc",
     "test": "vitest run",

@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "tenant": "lab",
+  "caseId": "example",
+  "events": [
+    {"id":"evt1","session":"s01","kind":"credential_change","source":"identity","at":1000},
+    {"id":"evt2","session":"s01","kind":"anomalous_use","source":"edge","at":1500},
+    {"id":"evt3","session":"s02","kind":"benign","source":"edge","at":1600}
+  ]
+}

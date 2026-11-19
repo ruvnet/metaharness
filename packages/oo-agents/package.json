@@ -25,6 +25,11 @@
     "wasm",
     "README.md"
   ],
+  "metaharness": {
+    "wasmArtifacts": [
+      "wasm/ooa_cell_vm.wasm"
+    ]
+  },
   "publishConfig": {
     "access": "public"
   },
