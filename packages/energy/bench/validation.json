@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "workload": "synthetic one-task-per-agent assignment; 3..6 tasks; 15% denied pairs",
+  "count": 1000,
+  "seed": 90001,
+  "options": {
+    "seed": 42,
+    "maxMoves": 4000,
+    "restarts": 8,
+    "temperature": 10
+  },
+  "feasibleCases": 906,
+  "coldMs": 7.430335000000014,
+  "environment": {
+    "node": "v24.22.1",
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "INTEL(R) XEON(R) PLATINUM 8573C"
+  },
+  "summary": {
+    "greedy": {
+      "feasible": 741,
+      "optimal": 356,
+      "invalid": 0,
+      "missedFeasible": 165,
+      "meanGap": 0.20785395851666782,
+      "p95Gap": 0.8591549295774648,
+      "meanMs": 0.004375326000004748,
+      "p50Ms": 0.0027810000001409207,
+      "p95Ms": 0.006539999999972679
+    },
+    "energy_auto": {
+      "feasible": 906,
+      "optimal": 904,
+      "invalid": 0,
+      "missedFeasible": 0,
+      "meanGap": 0.00017777530438223857,
+      "p95Gap": 0,
+      "meanMs": 0.8402922350000008,
+      "p50Ms": 0.7699860000000172,
+      "p95Ms": 1.3476659999996627
+    },
+    "energy_sparse": {
+      "feasible": 906,
+      "optimal": 904,
+      "invalid": 0,
+      "missedFeasible": 0,
+      "meanGap": 0.00017777530438223857,
+      "p95Gap": 0,
+      "meanMs": 1.2486996909999926,
+      "p50Ms": 1.1031530000000203,
+      "p95Ms": 2.2129939999999806
+    },
+    "energy_full": {
+      "feasible": 906,
+      "optimal": 904,
+      "invalid": 0,
+      "missedFeasible": 0,
+      "meanGap": 0.00017777530438223857,
+      "p95Gap": 0,
+      "meanMs": 0.8507394590000056,
+      "p50Ms": 0.76390600000002,
+      "p95Ms": 1.3839790000001813
+    },
+    "exact": {
+      "feasible": 906,
+      "optimal": 906,
+      "invalid": 0,
+      "missedFeasible": 0,
+      "meanGap": 0,
+      "p95Gap": 0,
+      "meanMs": 0.10351395700000689,
+      "p50Ms": 0.022163000000091415,
+      "p95Ms": 0.5037169999995967
+    }
+  },
+  "sparseFullMismatches": 0,
+  "gates": {
+    "zeroInvalid": true,
+    "sparseMatchesReference": true,
+    "energyMeanGapWithinOnePercent": true,
+    "noMissedFeasible": true,
+    "twoTimesFasterThanExactP95": false
+  },
+  "limitations": [
+    "Synthetic data, not production replay",
+    "No GPU, LLM or token-cost comparison",
+    "Exact oracle intentionally enumerates without pruning; not a competitive optimized assignment solver",
+    "Energy search is heuristic and incomplete; zero violations is not proof of optimality"
+  ]
+}

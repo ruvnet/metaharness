@@ -74,7 +74,7 @@ export function HarnessBuilder({ seed }: { seed?: HarnessConfig }) {
   }
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+    <div className="grid gap-5 pb-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:pb-0">
       {/* ---- Left: configuration ---- */}
       <div className="space-y-5">
         <Section title="Identity" desc="Your harness ships to npm under this name.">
@@ -120,7 +120,7 @@ export function HarnessBuilder({ seed }: { seed?: HarnessConfig }) {
           title="Quick-start template"
           desc="Pick a vertical to jump-start — it pre-fills the brand description, agents, skills, and commands."
         >
-          <div className="max-h-[460px] space-y-4 overflow-auto pr-1 scroll-thin">
+          <div className="scroll-thin max-h-[420px] space-y-4 overflow-auto pr-1 lg:max-h-none lg:overflow-visible lg:pr-0">
             {templatesByCategory().map((group) => (
               <div key={group.category}>
                 <div className="field-label">{group.category}</div>
@@ -392,6 +392,17 @@ export function HarnessBuilder({ seed }: { seed?: HarnessConfig }) {
         </Section>
 
         {nameCheck.valid && <HostGuide hosts={cfg.hosts} />}
+      </div>
+
+      {/* Mobile: keep the primary action reachable while configuring (the preview sits far below). */}
+      <div className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-between gap-3 border-t border-ink-700 bg-ink-900/95 px-4 py-3 backdrop-blur lg:hidden">
+        <span className="min-w-0 truncate text-xs text-slate-400">
+          {nameCheck.valid ? `${files.length} files · ${(totalBytes(files) / 1024).toFixed(1)} KB` : 'Fix the harness name to download'}
+        </span>
+        <button data-testid="download-harness-mobile" className="btn btn-primary shrink-0" onClick={download} disabled={!nameCheck.valid || busy}>
+          {busy ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+          Download .zip
+        </button>
       </div>
     </div>
   );

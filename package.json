@@ -37,9 +37,14 @@
   },
   "devDependencies": {
     "@napi-rs/cli": "^3.0.0",
+    "@ruvector/tiny-dancer": "^0.1.21",
     "@types/node": "^20.0.0",
     "typescript": "^5.4.0",
     "vitest": "^4.1.12"
+  },
+  "overrides": {
+    "glob": "^14.0.2",
+    "minimatch": "^11.0.1"
   },
   "engines": {
     "node": ">=20.0.0"

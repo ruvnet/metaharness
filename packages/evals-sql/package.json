@@ -1,7 +1,16 @@
 {
   "name": "@metaharness/evals-sql",
   "version": "0.1.0",
-  "description": "Text-to-SQL (Spider/BIRD-style) benchmark adapter for @metaharness/flywheel — evolve the SQL answering policy, not the model. Schema-linking, SQL dialect, execute-and-compare verification, SQL normalization, calibration, and a stricter composite promotion gate.",
+  "description": "Text-to-SQL (Spider/BIRD-style) benchmark adapter for @metaharness/flywheel: evolve the SQL policy, not the model, with execute-and-compare checks and a strict gate.",
+  "homepage": "https://ruv.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/metaharness.git",
+    "directory": "packages/evals-sql"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -11,7 +20,10 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -20,7 +32,19 @@
     "test": "vitest run",
     "lint": "tsc --noEmit"
   },
-  "keywords": ["sql", "text-to-sql", "spider", "bird", "benchmark", "eval", "flywheel", "metaharness", "policy-evolution", "llm", "agent-harness"],
+  "keywords": [
+    "sql",
+    "text-to-sql",
+    "spider",
+    "bird",
+    "benchmark",
+    "eval",
+    "flywheel",
+    "metaharness",
+    "policy-evolution",
+    "llm",
+    "agent-harness"
+  ],
   "license": "MIT",
   "dependencies": {
     "@metaharness/flywheel": "^0.1.1"

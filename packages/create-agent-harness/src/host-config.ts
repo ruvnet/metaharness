@@ -53,7 +53,7 @@ function mcpServerEntry(cfg: HostConfigInput): Record<string, unknown> | null {
   if (cfg.mcp === 'remote') {
     return { type: 'http', url: 'https://localhost:8787/mcp', headers: { Authorization: 'Bearer ${HARNESS_MCP_TOKEN}' } };
   }
-  return { command: 'npx', args: ['-y', `${cfg.name}@latest`, 'mcp', 'start'] };
+  return { command: 'node', args: ['./bin/mcp.js'] };
 }
 
 /** Derive a Claude-Code-style allow/deny posture (mirrors the web UI). */
@@ -117,7 +117,7 @@ export function hostConfigFiles(host: string, cfg: HostConfigInput): HostFile[] 
         ? `# ${cfg.name} — MCP disabled at scaffold time.\n`
         : cfg.mcp === 'remote'
           ? `[mcp_servers.${cfg.name}]\ntype = "http"\nurl = "https://localhost:8787/mcp"\n`
-          : `[mcp_servers.${cfg.name}]\ncommand = "npx"\nargs = ["-y", "${cfg.name}@latest", "mcp", "start"]\n`;
+          : `[mcp_servers.${cfg.name}]\ncommand = "node"\nargs = ["./bin/mcp.js"]\n`;
       return [
         { path: '.codex/config.toml', content: toml },
         { path: 'AGENTS.md', content: `# ${cfg.name}\n\n${cfg.description}\n\n## Behavioral rules\n\n- Use the harness's MCP tools (\`mcp__${cfg.name}__*\`) for orchestration.\n- Defer destructive operations to the user.\n` },
@@ -136,9 +136,10 @@ export function hostConfigFiles(host: string, cfg: HostConfigInput): HostFile[] 
       // `model:` + `agent.personalities` schema; no name/description/scrub keys.
       const persona = (cfg.description || `You are ${cfg.name}.`).replace(/[\r\n]+/g, ' ');
       const files: HostFile[] = [
-        { path: 'cli-config.yaml', content: `# Hermes Agent config for ${cfg.name} — subset of cli-config.yaml.example.\nmodel:\n  provider: "auto"\nagent:\n  personalities:\n    ${yamlKey(cfg.name)}: ${JSON.stringify(persona)}\n` },
+        { path: 'cli-config.yaml', content: `# Hermes Agent config for ${cfg.name} — subset of cli-config.yaml.example.\nmodel:\n  provider: "auto"\nagent:\n  personalities:\n    ${yamlKey(cfg.name)}: ${JSON.stringify(persona)}\n${server ? `mcp_servers:\n  ${yamlKey(cfg.name)}: ${JSON.stringify(server)}\n` : ''}` },
       ];
       if (server) files.push({ path: `optional-mcps/${cfg.name}.json`, content: JSON.stringify({ [cfg.name]: server }, null, 2) + '\n' });
+      files.push({path:'install-hermes.md',content:`# Installing ${cfg.name} into Hermes\n\nHermes reads \`$HERMES_HOME/config.yaml\` (normally \`~/.hermes/config.yaml\`), not this folder automatically. Copy \`cli-config.yaml\` into a new isolated profile as \`config.yaml\`, or review and merge its personality and \`mcp_servers\` entries into your existing configuration. Preserve existing configuration and credentials. Start Hermes from this harness directory so relative stdio paths resolve; use an absolute server path when launching elsewhere. The optional-mcps export alone does not enable the server.\n`});
       return files;
     }
 
@@ -146,7 +147,7 @@ export function hostConfigFiles(host: string, cfg: HostConfigInput): HostFile[] 
       // ADR-046 — verified against real openclaw 2026.6.8: MCP nests under
       // `mcp.servers` with an `enabled` flag (NOT top-level `mcp_servers`);
       // no top-level allow/deny permissions concept.
-      const servers = server ? { [cfg.name]: { enabled: true, command: 'npx', args: ['-y', `${cfg.name}@latest`, 'mcp', 'start'] } } : {};
+      const servers = server ? { [cfg.name]: { enabled: true, ...server } } : {};
       return [{ path: '.openclaw/openclaw.json', content: JSON.stringify({ mcp: { servers } }, null, 2) + '\n' }];
     }
 
@@ -178,7 +179,7 @@ export function hostConfigFiles(host: string, cfg: HostConfigInput): HostFile[] 
       return [
         { path: '.opencode/opencode.json', content: JSON.stringify({
           $schema: 'https://opencode.ai/schema/opencode.json',
-          mcp: server ? { [cfg.name]: { type: 'local', command: ['npx', '-y', `${cfg.name}@latest`, 'mcp', 'start'], enabled: true } } : {},
+          mcp: server ? { [cfg.name]: { type: 'local', command: ['node', './bin/mcp.js'], enabled: true } } : {},
           permission: { edit: cfg.allowFileWrite ? 'allow' : 'ask', bash: { '*': cfg.allowShell ? 'allow' : 'ask', 'rm *': 'deny', 'git push *': 'deny' }, webfetch: 'ask' },
         }, null, 2) + '\n' },
         { path: 'install.md', content: `# Installing ${cfg.name} into OpenCode\n\n1. \`opencode auth login\` to set a model provider.\n2. \`cd\` here and run \`opencode\` — the TUI reads \`.opencode/opencode.json\`.\n3. Inside the TUI run \`/mcp\` to verify \`${cfg.name}\` is registered.\n` },

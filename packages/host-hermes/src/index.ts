@@ -142,6 +142,16 @@ export function cliConfigYaml(spec: HarnessSpec): string {
   for (const a of spec.agents ?? []) {
     lines.push(`    ${yamlKey(a.name)}: ${yamlStr(a.systemPrompt ?? `You are the ${a.name} agent.`)}`);
   }
+  // Hermes consumes enabled MCP servers from config.yaml, not optional catalog files.
+  if (spec.mcpServers?.length) {
+    lines.push('mcp_servers:');
+    for (const server of spec.mcpServers) {
+      const entry = server.command?.length
+        ? {command:server.command[0],args:server.command.slice(1),...(server.env?.length ? {env:Object.fromEntries(server.env)} : {})}
+        : {url:server.url,...(server.env?.length ? {env:Object.fromEntries(server.env)} : {})};
+      lines.push(`  ${yamlKey(server.name)}: ${JSON.stringify(entry)}`);
+    }
+  }
   if (spec.autonomous) {
     lines.push(
       '',

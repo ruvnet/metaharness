@@ -297,6 +297,7 @@ function hostFiles(host: HostId, cfg: HarnessConfig): GenFile[] {
       if (cfg.primitives.mcp !== 'off') {
         files.push({ path: `optional-mcps/${cfg.name}.json`, content: JSON.stringify({ [cfg.name]: mcpServerEntry(cfg) }, null, 2) + '\n' });
       }
+      files.push({path:'install-hermes.md',content:`# Installing ${cfg.name} into Hermes\n\nHermes reads \`$HERMES_HOME/config.yaml\` (normally \`~/.hermes/config.yaml\`), not this folder automatically. Review and merge \`cli-config.yaml\` into the chosen profile, preserving existing configuration and credentials. The optional-mcps export alone does not enable the server. Browser downloads do not activate an npm-name placeholder: build and verify the emitted local MCP server before adding it to \`mcp_servers\`. The generated MCP script uses \`node dist/mcp/server.js\`; resolve that path from the harness directory or use an absolute path. Do not run an unverified registry package under the harness name.\n`});
       return files;
     }
     case 'openclaw': {
