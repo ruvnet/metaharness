@@ -247,10 +247,31 @@ export function hostConfigFiles(host: string, cfg: HostConfigInput): HostFile[] 
       // ADR-247 — Prime Agent uses project skills, supports remote HTTP MCP,
       // and has no native sandbox. Runtime-specific files are emitted by
       // @metaharness/host-prime-agent; scaffold-time emits concise guidance.
-      return [
+      //
+      // ADR-247 §2.2 fail-closed posture (dream-cycle 2026-11-04): the real
+      // adapter never silently drops a non-empty deny-list — it emits
+      // SANDBOX-REQUIRED.md and prepends a warning banner to the install
+      // runbook (host-prime-agent/src/index.ts's sandboxRequiredMd/
+      // sandboxBanner). This scaffold-time mirror had neither, regardless of
+      // policy, reintroducing the exact bug class the real adapter was
+      // hardened against. Kept in lockstep with the web-ui generator's copy
+      // (ADR-027 parity) and dependency-free per this file's own header.
+      const { deny } = policyLists(cfg);
+      const sandboxBanner = deny.length > 0
+        ? [
+            '> **WARNING — SANDBOX REQUIRED.** This harness declares a deny-list that',
+            '> Prime Agent cannot enforce natively. Run it only inside an external',
+            '> sandbox (container / RVM per ADR-018). Denied capabilities:',
+            ...deny.map((d) => `> - \`${d}\``),
+            '> See `SANDBOX-REQUIRED.md` for details.',
+            '',
+          ]
+        : [];
+      const files: HostFile[] = [
         { path: 'install-prime-agent.md', content: [
           `# Install ${cfg.name} into Prime Agent`,
           '',
+          ...sandboxBanner,
           'Prime Agent loads tools from project skills and supports remote HTTP MCP integrations; local stdio MCP is not currently wired.',
           '',
           cfg.mcp === 'off' ? 'MCP: off — nothing further.' : `MCP (${cfg.mcp}): remote HTTP servers are emitted as Python-backed integrations; local stdio servers are listed as unsupported.`,
@@ -259,6 +280,26 @@ export function hostConfigFiles(host: string, cfg: HostConfigInput): HostFile[] 
         ].join('\n') + '\n' },
         { path: '.prime/agent/skills/README.md', content: `# ${cfg.name} skills\n\nGenerated skill directories land here (one per tool).\n` },
       ];
+      if (deny.length > 0) {
+        files.push({ path: 'SANDBOX-REQUIRED.md', content: [
+          '# SANDBOX REQUIRED',
+          '',
+          '> **WARNING: Prime Agent cannot enforce this harness\'s deny-list.**',
+          '',
+          'Prime Agent executes model-written Python at user permission level with',
+          'no native allow/deny enforcement — its own security notes state that',
+          'worker/kernel processes are not sandboxes. This harness declares the',
+          'following denied capabilities, which **must** be enforced by an external',
+          'sandbox (container, RVM per ADR-018, or equivalent) before running',
+          'Prime Agent against untrusted input:',
+          '',
+          ...deny.map((d) => `- \`${d}\``),
+          '',
+          'Do not run this harness on Prime Agent outside such a sandbox.',
+          '',
+        ].join('\n') });
+      }
+      return files;
     }
 
     default:
