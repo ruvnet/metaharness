@@ -1,7 +1,7 @@
 {
   "name": "@metaharness/redblue",
-  "version": "0.1.7",
-  "description": "AI red-teaming for agents and LLM apps you own: adversarial tests for prompt injection, tool misuse, data leakage and jailbreaks, auto-patch, retest, and a report. No shell, no live targets.",
+  "version": "0.1.8",
+  "description": "AI red-teaming for agents and LLM apps you own: prompt injection, tool misuse, data leakage and jailbreak tests, auto-patch, retest, report, plus defense replay. No live targets.",
   "homepage": "https://ruv.io",
   "repository": {
     "type": "git",
@@ -54,12 +54,21 @@
     "security-testing",
     "llm-evaluation",
     "ai-safety",
-    "agent-harness"
+    "agent-harness",
+    "blue-team-defense",
+    "artex",
+    "detection-engineering",
+    "incident-response",
+    "evidence-replay",
+    "tamper-evident"
   ],
   "author": "rUv <ruv@ruv.net>",
   "license": "MIT",
   "engines": {
     "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@metaharness/artex-defense": "0.1.0"
   },
   "devDependencies": {
     "typescript": "^5.4.0",
