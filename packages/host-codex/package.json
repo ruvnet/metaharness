@@ -1,12 +1,15 @@
 {
   "name": "@metaharness/host-codex",
-  "version": "0.1.3",
-  "description": "OpenAI Codex CLI host adapter for agent-harness-generator (MCP via ~/.codex/config.toml)",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator",
+  "version": "0.1.4",
+  "description": "OpenAI Codex CLI host adapter for MetaHarness: writes the MCP server entry for ~/.codex/config.toml from a harness spec.",
+  "homepage": "https://ruv.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "url": "https://github.com/ruvnet/metaharness.git",
     "directory": "packages/host-codex"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
   },
   "license": "MIT",
   "type": "module",
@@ -28,12 +31,14 @@
     "lint": "tsc --noEmit"
   },
   "keywords": [
+    "metaharness",
     "agent-harness",
     "openai-codex",
     "codex",
+    "codex-cli",
     "mcp",
-    "host-adapter",
-    "ruflo"
+    "model-context-protocol",
+    "host-adapter"
   ],
   "publishConfig": {
     "access": "public"

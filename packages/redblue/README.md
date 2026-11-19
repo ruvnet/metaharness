@@ -1,5 +1,41 @@
 # @metaharness/redblue — AI Red/Blue Team Harness
 
+<!-- ruv-seo:start (ADR-356) -->
+![@metaharness/redblue loop: red team adversarial probes, finding, blue team auto-patch, retest with the same probes, report mapped to NIST and OWASP](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/redblue.svg)
+
+`@metaharness/redblue` red-teams AI agents and LLM apps that you own: it runs adversarial test families (prompt injection, tool misuse, data exfiltration, role confusion, cost amplification and more) against a loopback or test target, patches the failures, retests with the same probes, and writes a report.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. CLI `redblue` (alias `metaharness-redblue`) plus an ESM library. Network, shell and real credentials are disabled at config load, and the target must be a loopback or test host. The real judge is a model and needs `OPENROUTER_API_KEY`; `--mock-judge` is a $0 test fixture, not the product judge.
+
+## Quickstart
+
+```bash
+mkdir demo && cd demo && npm init -y >/dev/null
+npm install @metaharness/redblue
+npx redblue init
+npx redblue patch --mock-judge
+```
+
+Expected output (temp path shortened to `./`):
+
+```text
+Wrote sample config to ./redblue.yaml
+SAFETY: network/shell/real-credentials are hard-off; target must be a loopback/test host.
+{
+  "patch_reduction_rate": 1,
+  "gates_passed": false
+}
+```
+
+`redblue run --mock-judge --out report.json` writes the per-test findings; `redblue report --in report.json` renders them.
+
+**Blue side:** `redblue defense` replays ARTEX security findings or identity and edge telemetry against a baseline and a candidate detection policy, simulates a session quarantine, and pins the result to a verifiable receipt. See [Defense replay](#defense-replay-redblue-defense).
+
+**Next:** [`@metaharness/workspace-lens`](https://www.npmjs.com/package/@metaharness/workspace-lens) — when an attack lands on an open-weight model, look at what its internal workspace was doing.
+<!-- ruv-seo:end -->
+
+## Reference
+
 > **Stress-test the AI agents & LLM apps you own with adversarial models, find security failures (prompt injection, tool misuse, data leakage, jailbreaks), auto-patch them, retest, and get a board-ready report — safely (capability-contained).** For AI/ML engineers, app developers, and security teams shipping LLM-powered products.
 
 [![npm version](https://img.shields.io/npm/v/@metaharness/redblue.svg)](https://www.npmjs.com/package/@metaharness/redblue)
@@ -83,6 +119,7 @@ redblue run    [--config redblue.yaml] [--tests N] [--patch] [--mock-judge] [--o
 redblue attack <prompt|tools|data|all> [--count N]        # preview generated test cases
 redblue patch  [--config redblue.yaml] [--mock-judge]     # baseline -> patch -> retest delta
 redblue report --in report.json                           # render a board-readable summary
+redblue defense <replay|verify|benchmark>                 # blue side: replay findings vs two policies
 ```
 
 ### The judge is a model (the default/product path)
@@ -168,6 +205,20 @@ gates:
   min_patch_reduction_rate: 0.5
 families: [direct_prompt_injection, indirect_prompt_injection, tool_overreach, data_exfiltration_attempt, role_confusion, cost_amplification, cross_session_trace_replay]
 ```
+
+## Defense replay (`redblue defense`)
+
+![redblue defense pipeline: ARTEX findings or identity and edge telemetry, a scoped manifest bound to tenant, case and SHA-256, a paired baseline and candidate policy replay, a simulated session quarantine, and a hash-chained MetaHarness receipt that verify recomputes](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/artex-defense.svg)
+
+The attack commands above test the agent. `redblue defense` tests the detection policy around it, using [`@metaharness/artex-defense`](https://www.npmjs.com/package/@metaharness/artex-defense), which installs with redblue. It is offline: nothing is enforced on a live system.
+
+```bash
+redblue defense replay MANIFEST INPUT NEW_REPORT [monitor|simulate]   # prints the receipt tail hash
+redblue defense verify MANIFEST INPUT REPORT TRUSTED_TAIL_SHA256      # {"verified":true} or exit 1
+redblue defense benchmark                                             # synthetic policy benchmark
+```
+
+`MANIFEST` binds one evidence file (an ARTEX findings CSV or JSON telemetry) to a tenant, case and SHA-256. `replay` evaluates both policies on the same events and refuses to overwrite an existing report. `verify` recomputes everything from the original evidence and accepts only the exact report bytes, so keep the tail hash somewhere the report cannot reach. Evidence formats, limits and the benchmark are documented in the [artex-defense README](https://www.npmjs.com/package/@metaharness/artex-defense).
 
 ## Attack families → OWASP / NIST mapping
 

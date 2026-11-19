@@ -1,0 +1,187 @@
+{
+  "schemaVersion": 2,
+  "workload": "synthetic injective task assignment; 3..6 tasks, 15% denied pairs, mixed budgets",
+  "count": 1000,
+  "seed": 90001,
+  "options": {
+    "strategy": "energy",
+    "seed": 42,
+    "maxMoves": 4000,
+    "restarts": 8,
+    "temperature": 10
+  },
+  "feasibleCases": 906,
+  "coldMs": {
+    "exact": 1.4478620000000433,
+    "energy": 5.468150000000037,
+    "exhaustiveOracle": 0.0038390000000276814
+  },
+  "timing": {
+    "warmupCallsPerMethod": 50,
+    "repeatsPerFixture": {
+      "exact": 32,
+      "energy": 1,
+      "exhaustiveOracle": 1
+    },
+    "interpretation": "per-fixture amortized warm CPU duration; rotated method order; not request latency or SLA"
+  },
+  "environment": {
+    "node": "v24.22.1",
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "INTEL(R) XEON(R) PLATINUM 8573C"
+  },
+  "summary": {
+    "exact": {
+      "feasible": 906,
+      "optimal": 906,
+      "invalid": 0,
+      "missedFeasible": 0,
+      "falseInfeasible": 0,
+      "falseOptimal": 0,
+      "certifiedOptimal": 906,
+      "meanGap": 0,
+      "p95Gap": 0,
+      "meanMs": 0.00924859324999996,
+      "p50Ms": 0.005801437499997064,
+      "p95Ms": 0.019532968749999213,
+      "meanOperations": 35.125,
+      "maxOperations": 101
+    },
+    "energy": {
+      "feasible": 906,
+      "optimal": 904,
+      "invalid": 0,
+      "missedFeasible": 0,
+      "falseInfeasible": 0,
+      "falseOptimal": 0,
+      "certifiedOptimal": 0,
+      "meanGap": 0.00017777530438223857,
+      "p95Gap": 0,
+      "meanMs": 1.9814075859999896,
+      "p50Ms": 1.1834709999998267,
+      "p95Ms": 3.9799960000000283,
+      "meanOperations": 4000,
+      "maxOperations": 4000
+    },
+    "exhaustiveOracle": {
+      "feasible": 906,
+      "optimal": 906,
+      "invalid": 0,
+      "missedFeasible": 0,
+      "falseInfeasible": 0,
+      "falseOptimal": 0,
+      "certifiedOptimal": 0,
+      "meanGap": 0,
+      "p95Gap": 0,
+      "meanMs": 0.21189327100000155,
+      "p50Ms": 0.022295999999641936,
+      "p95Ms": 0.5595439999997325,
+      "meanOperations": null,
+      "maxOperations": null
+    }
+  },
+  "measuredSpeedups": {
+    "exactVersusPriorEnergyMean": 214.23880718291923,
+    "exactVersusPriorEnergyP95": 203.75786450793296,
+    "exactVersusExhaustiveMean": 22.910864957760197
+  },
+  "largeResults": [
+    {
+      "name": "32x48 planted",
+      "expectedOptimum": -381,
+      "returnedCost": -381,
+      "status": "valid",
+      "certifiedOptimal": true,
+      "operations": 1536,
+      "amortizedMs": 0.08734381249999501,
+      "correct": true
+    },
+    {
+      "name": "32x48 column permutation",
+      "expectedOptimum": -381,
+      "returnedCost": -381,
+      "status": "valid",
+      "certifiedOptimal": true,
+      "operations": 1536,
+      "amortizedMs": 0.07869196875000739,
+      "correct": true
+    },
+    {
+      "name": "32x48 row offsets",
+      "expectedOptimum": -387,
+      "returnedCost": -387,
+      "status": "valid",
+      "certifiedOptimal": true,
+      "operations": 1536,
+      "amortizedMs": 0.07024868749999769,
+      "correct": true
+    },
+    {
+      "name": "64x64 planted",
+      "expectedOptimum": -766,
+      "returnedCost": -766,
+      "status": "valid",
+      "certifiedOptimal": true,
+      "operations": 4096,
+      "amortizedMs": 0.22107703125000455,
+      "correct": true
+    },
+    {
+      "name": "64x64 column permutation",
+      "expectedOptimum": -766,
+      "returnedCost": -766,
+      "status": "valid",
+      "certifiedOptimal": true,
+      "operations": 4096,
+      "amortizedMs": 0.25855981249999616,
+      "correct": true
+    },
+    {
+      "name": "64x64 row offsets",
+      "expectedOptimum": -769,
+      "returnedCost": -769,
+      "status": "valid",
+      "certifiedOptimal": true,
+      "operations": 4096,
+      "amortizedMs": 0.18721153125,
+      "correct": true
+    },
+    {
+      "name": "Hall deficient 32x48",
+      "expectedOptimum": null,
+      "returnedCost": null,
+      "status": "infeasible",
+      "certifiedOptimal": false,
+      "operations": 1644,
+      "amortizedMs": 0.046430781249995334,
+      "correct": true
+    },
+    {
+      "name": "more tasks than agents 64x32",
+      "expectedOptimum": null,
+      "returnedCost": null,
+      "status": "infeasible",
+      "certifiedOptimal": false,
+      "operations": 0,
+      "amortizedMs": 0.04203503125000907,
+      "correct": true
+    }
+  ],
+  "gates": {
+    "zeroInvalid": true,
+    "exactRecoversEveryFeasibleOptimum": true,
+    "exactHasNoFalseCertificates": true,
+    "exactCertifiesEveryReturnedOptimum": true,
+    "largeFixturesAndMetamorphicsPass": true
+  },
+  "checksum": 3266942,
+  "limitations": [
+    "Synthetic fixtures only; no production replay, LLM or token-cost comparison",
+    "Same small fixture distribution and seed as v1, not a newly independent evaluation set",
+    "Repeated exact timings amortize measurement overhead and warm caches; not direct service p95 comparisons",
+    "Exhaustive enumeration is an independent correctness oracle, not a competitive matching implementation",
+    "Large optima are planted and metamorphic, not an arbitrary large matching oracle",
+    "Default assignment now selects a classical exact matching algorithm; these are not CRAM speedups"
+  ]
+}

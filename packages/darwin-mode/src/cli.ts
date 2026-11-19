@@ -23,6 +23,8 @@ import type { EvolutionResult } from './types.js';
 import { runBenchmark, renderReport } from './security/index.js';
 import { evolveNumeric } from './numeric-evolve.js';
 import { ShellEvaluator } from './numeric-evaluator.js';
+import { createFannSurrogate, type FannSurrogate, type FannSurrogateOptions } from './fann-surrogate.js';
+import type { NumericSurrogateConfig } from './numeric-surrogate.js';
 import type { NumericEvolutionResult, NumericGenomeSpec } from './numeric-types.js';
 
 function flag(name: string, fallback: string): string {
@@ -146,6 +148,65 @@ function printNumericReport(result: NumericEvolutionResult): void {
  * of the built-in sandbox — Darwin Mode never trains or scores anything itself
  * for this kind, it only ever shells out to that command once per candidate.
  */
+/** Parse a numeric flag only when present, so unset flags fall through to library defaults. */
+function optNum(name: string): number | undefined {
+  const raw = flag(name, '');
+  if (raw === '') return undefined;
+  const v = Number(raw);
+  if (!Number.isFinite(v)) throw new Error(`${name} expects a number (got "${raw}")`);
+  return v;
+}
+
+function oneOf<T extends string>(name: string, allowed: readonly T[]): T | undefined {
+  const raw = flag(name, '');
+  if (raw === '') return undefined;
+  if (!(allowed as readonly string[]).includes(raw)) throw new Error(`${name} must be one of: ${allowed.join(', ')} (got "${raw}")`);
+  return raw as T;
+}
+
+/**
+ * `--surrogate fann` and its `--surrogate-*` tuning flags → a surrogate config
+ * (numeric-surrogate.ts) backed by the optional `ruv-fann` peer. Returns null
+ * when no surrogate was requested.
+ */
+async function surrogateFromFlags(seed: number): Promise<{ config: NumericSurrogateConfig; model: FannSurrogate } | null> {
+  const kind = flag('--surrogate', '');
+  if (kind === '') return null;
+  if (kind !== 'fann') throw new Error(`--surrogate must be "fann" (got "${kind}")`);
+  const hiddenRaw = flag('--surrogate-hidden', '');
+  const options: FannSurrogateOptions = {
+    hidden: hiddenRaw === '' ? undefined : hiddenRaw.split(',').map((h) => Number(h.trim())),
+    activation: oneOf('--surrogate-activation', ['Tanh', 'Sigmoid', 'SigmoidSymmetric', 'ReLU'] as const),
+    epochs: optNum('--surrogate-epochs'),
+    learningRate: optNum('--surrogate-lr'),
+    optimizer: oneOf('--surrogate-optimizer', ['sgd', 'adamw'] as const),
+    maxRows: optNum('--surrogate-max-rows'),
+    targetTransform: oneOf('--surrogate-target', ['standardize', 'rank'] as const),
+    ensemble: optNum('--surrogate-ensemble'),
+    explorationWeight: optNum('--surrogate-explore-weight'),
+    simd: process.argv.includes('--surrogate-no-simd') ? false : 'auto',
+    seed: optNum('--surrogate-seed') ?? seed,
+  };
+  const model = await createFannSurrogate(options);
+  const minSpearman = optNum('--surrogate-min-spearman');
+  const config: NumericSurrogateConfig = {
+    model,
+    oversample: optNum('--surrogate-oversample'),
+    minRows: optNum('--surrogate-min-rows'),
+    exploreSlots: optNum('--surrogate-explore-slots'),
+    warmupGenerations: optNum('--surrogate-warmup'),
+    refitEvery: optNum('--surrogate-refit-every'),
+    trust: minSpearman === undefined ? undefined : { minSpearman, holdoutFraction: optNum('--surrogate-holdout') },
+    onGeneration: (e) =>
+      process.stderr.write(
+        e.screened
+          ? `[surrogate] gen ${e.generation}: ranked ${e.ranked} → evaluating ${e.selected} (${e.rows} rows${e.holdoutSpearman === undefined ? '' : `, held-out ρ=${e.holdoutSpearman.toFixed(3)}`})\n`
+          : `[surrogate] gen ${e.generation}: unscreened — ${e.reason}\n`,
+      ),
+  };
+  return { config, model };
+}
+
 async function runEvolveNumeric(): Promise<void> {
   const repoRoot = resolve(process.argv[3] ?? process.cwd());
   const workRoot = resolve(repoRoot, '.metaharness-numeric');
@@ -169,22 +230,37 @@ async function runEvolveNumeric(): Promise<void> {
   // are already taken as trusted CLI flags elsewhere in this file.
   const evaluatorArgv = evaluatorCmd.split(/\s+/).filter(Boolean);
 
-  const result = await evolveNumeric({
+  const seed = num('--seed', 0);
+  const surrogate = await surrogateFromFlags(seed);
+
+  let result: NumericEvolutionResult;
+  try {
+  result = await evolveNumeric({
     genomeSpec,
     evaluator: new ShellEvaluator({ command: evaluatorArgv, cwd: repoRoot, timeoutMs: num('--evaluator-timeout-ms', 120_000) }),
     generations: num('--generations', 3),
     childrenPerGeneration: num('--children', 4),
     concurrency: num('--concurrency', 4),
-    seed: num('--seed', 0),
+    seed,
     mutationSigma: (() => {
       const v = Number(flag('--sigma', '0.2'));
       return Number.isFinite(v) ? v : 0.2;
     })(),
     crossover: process.argv.includes('--crossover'),
     workRoot,
+    surrogate: surrogate?.config,
   });
+  } finally {
+    surrogate?.model.dispose();
+  }
 
   printNumericReport(result);
+  if (result.surrogate) {
+    const r = result.surrogate;
+    process.stdout.write(
+      `\nSurrogate (ruv-fann): screened ${r.generationsScreened}/${result.generations} generations, ranked ${r.candidatesRanked} candidates → ${r.candidatesSelected} evaluated; ${r.fallbacks.length} unscreened fallback(s)\n`,
+    );
+  }
   process.stdout.write(`\nArtifacts: ${workRoot}\n`);
 }
 
@@ -230,6 +306,8 @@ async function main(): Promise<void> {
       'usage: metaharness-darwin <evolve|evolve-numeric|bench|security> …\n' +
         '  evolve <repo> [--generations N] [--children N] [--concurrency N] [--seed N] [--bench <suite.json>] [--tie faster] [--selection quality-diversity|behavioral-diversity|niche-steering|clade|pareto] [--crossover] [--epistasis] [--risk-budget N] [--fdr Q] [--curriculum] [--sandbox real|mock|agent] [--mutator deterministic|ruvllm] [--ruvllm-url URL] [--ruvllm-model M]\n' +
         '  evolve-numeric <repo> --genome <spec.json> --evaluator "<cmd> [args...]" [--generations N] [--children N] [--concurrency N] [--seed N] [--sigma F] [--crossover] [--evaluator-timeout-ms N]   (ADR-272, numeric genome kind)\n' +
+        '      surrogate pre-screen (needs optional peer ruv-fann): --surrogate fann [--surrogate-oversample N] [--surrogate-min-rows N] [--surrogate-explore-slots N] [--surrogate-warmup N] [--surrogate-refit-every N] [--surrogate-min-spearman F [--surrogate-holdout F]]\n' +
+        '      model: [--surrogate-hidden 16,8] [--surrogate-activation Tanh|Sigmoid|SigmoidSymmetric|ReLU] [--surrogate-epochs N] [--surrogate-lr F] [--surrogate-optimizer sgd|adamw] [--surrogate-max-rows N] [--surrogate-target standardize|rank] [--surrogate-ensemble N] [--surrogate-explore-weight F] [--surrogate-seed N] [--surrogate-no-simd]\n' +
         '  bench create <repo> [--out <suite.json>]\n' +
         '  bench verify <suite.json>\n' +
         '  security bench [--population N] [--cycles N] [--seed N]   (ADR-155 Darwin Shield)\n',
