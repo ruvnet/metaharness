@@ -196,3 +196,47 @@ it('digest rejection clears every positive proof claim', () => {
   expect(result.recursiveImproverEvidence).toBe(false);
   expect(result.independentConfirmation).toBe(false);
 });
+
+// 2026-11-11 dream-cycle (flywheel-promotion): sibling of the replay.ts fix for the same disclosed gap
+// (2026-10-21 ledger note) — `e.generations` was trusted to be an array before this function's own
+// `.length` read / `for` loop. Confirmed live against the pre-fix build: `generations: null` threw
+// "Cannot read properties of null (reading 'length')", an uncaught TypeError from a function this file's
+// own `validAttestation`/`evidenceDigest` try/catch guards already document as required to always return
+// a verdict. Every case proves a clean INVALID verdict, not just "didn't throw".
+describe('verifyMultiGenerationEvidence() — fail-closed on a malformed top-level evidence shape', () => {
+  const e = makeEvidence();
+  const exp = expectation(e);
+
+  it('does not throw, and returns INVALID, when generations is null', () => {
+    const bad = { ...e, generations: null } as unknown as MultiGenerationEvidence;
+    let result: ReturnType<typeof verifyMultiGenerationEvidence> | undefined;
+    expect(() => { result = verifyMultiGenerationEvidence(bad, exp); }).not.toThrow();
+    expect(result!.pass).toBe(false);
+    expect(result!.proofClass).toBe('INVALID');
+    expect(result!.failures).toContain('invalid_evidence_shape');
+  });
+
+  it('does not throw, and returns INVALID, when generations is missing entirely', () => {
+    const bad = { ...e } as unknown as Record<string, unknown>;
+    delete bad.generations;
+    let result: ReturnType<typeof verifyMultiGenerationEvidence> | undefined;
+    expect(() => { result = verifyMultiGenerationEvidence(bad as unknown as MultiGenerationEvidence, exp); }).not.toThrow();
+    expect(result!.pass).toBe(false);
+    expect(result!.proofClass).toBe('INVALID');
+    expect(result!.failures).toContain('invalid_evidence_shape');
+  });
+
+  it('does not throw, and returns INVALID, when generations is a non-array object', () => {
+    const bad = { ...e, generations: { 0: e.generations[0] } } as unknown as MultiGenerationEvidence;
+    let result: ReturnType<typeof verifyMultiGenerationEvidence> | undefined;
+    expect(() => { result = verifyMultiGenerationEvidence(bad, exp); }).not.toThrow();
+    expect(result!.pass).toBe(false);
+    expect(result!.failures).toContain('invalid_evidence_shape');
+  });
+
+  it('does not add invalid_evidence_shape for well-formed evidence (no behavior change on the happy path)', () => {
+    const result = verifyMultiGenerationEvidence(e, exp);
+    expect(result.failures).not.toContain('invalid_evidence_shape');
+    expect(result.pass).toBe(true);
+  });
+});

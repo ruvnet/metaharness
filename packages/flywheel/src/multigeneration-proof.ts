@@ -278,6 +278,24 @@ export function verifyMultiGenerationEvidence(
   expected: MultiGenerationProofExpectation,
   policy: MultiGenerationProofPolicy = DEFAULT_MULTIGEN_POLICY,
 ): MultiGenerationProofVerdict {
+  // Sibling of replay.ts's 2026-11-11 fix, same root cause: `e` is typed `MultiGenerationEvidence`, but
+  // this function is itself an independent-verification entry point (see the file's own `validAttestation`
+  // and `evidenceDigest` try/catch guards, added precisely because this function must always return a
+  // verdict, never throw). Those guards protect the canon()/digest path; nothing previously protected
+  // `e.generations` itself — a non-array (or missing) `generations` reached `.length`/the `for` loop below
+  // directly and threw an uncaught TypeError before any failure could be recorded. Checked first, fails
+  // closed, and returns the same `{pass:false, ...}` shape every other rejection in this function returns.
+  if (!e || typeof e !== 'object' || !Array.isArray(e.generations)) {
+    return {
+      pass: false,
+      proofClass: 'INVALID',
+      recursiveImproverEvidence: false,
+      independentConfirmation: false,
+      failures: ['invalid_evidence_shape'],
+      derived: [],
+      evidenceDigest: `sha256:${'0'.repeat(64)}`,
+    };
+  }
   const failures: string[] = [];
   const derived: GenerationDerived[] = [];
 
