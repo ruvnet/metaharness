@@ -29,6 +29,8 @@ SAFETY: network/shell/real-credentials are hard-off; target must be a loopback/t
 
 `redblue run --mock-judge --out report.json` writes the per-test findings; `redblue report --in report.json` renders them.
 
+**Blue side:** `redblue defense` replays ARTEX security findings or identity and edge telemetry against a baseline and a candidate detection policy, simulates a session quarantine, and pins the result to a verifiable receipt. See [Defense replay](#defense-replay-redblue-defense).
+
 **Next:** [`@metaharness/workspace-lens`](https://www.npmjs.com/package/@metaharness/workspace-lens) — when an attack lands on an open-weight model, look at what its internal workspace was doing.
 <!-- ruv-seo:end -->
 
@@ -117,6 +119,7 @@ redblue run    [--config redblue.yaml] [--tests N] [--patch] [--mock-judge] [--o
 redblue attack <prompt|tools|data|all> [--count N]        # preview generated test cases
 redblue patch  [--config redblue.yaml] [--mock-judge]     # baseline -> patch -> retest delta
 redblue report --in report.json                           # render a board-readable summary
+redblue defense <replay|verify|benchmark>                 # blue side: replay findings vs two policies
 ```
 
 ### The judge is a model (the default/product path)
@@ -202,6 +205,20 @@ gates:
   min_patch_reduction_rate: 0.5
 families: [direct_prompt_injection, indirect_prompt_injection, tool_overreach, data_exfiltration_attempt, role_confusion, cost_amplification, cross_session_trace_replay]
 ```
+
+## Defense replay (`redblue defense`)
+
+![redblue defense pipeline: ARTEX findings or identity and edge telemetry, a scoped manifest bound to tenant, case and SHA-256, a paired baseline and candidate policy replay, a simulated session quarantine, and a hash-chained MetaHarness receipt that verify recomputes](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/artex-defense.svg)
+
+The attack commands above test the agent. `redblue defense` tests the detection policy around it, using [`@metaharness/artex-defense`](https://www.npmjs.com/package/@metaharness/artex-defense), which installs with redblue. It is offline: nothing is enforced on a live system.
+
+```bash
+redblue defense replay MANIFEST INPUT NEW_REPORT [monitor|simulate]   # prints the receipt tail hash
+redblue defense verify MANIFEST INPUT REPORT TRUSTED_TAIL_SHA256      # {"verified":true} or exit 1
+redblue defense benchmark                                             # synthetic policy benchmark
+```
+
+`MANIFEST` binds one evidence file (an ARTEX findings CSV or JSON telemetry) to a tenant, case and SHA-256. `replay` evaluates both policies on the same events and refuses to overwrite an existing report. `verify` recomputes everything from the original evidence and accepts only the exact report bytes, so keep the tail hash somewhere the report cannot reach. Evidence formats, limits and the benchmark are documented in the [artex-defense README](https://www.npmjs.com/package/@metaharness/artex-defense).
 
 ## Attack families → OWASP / NIST mapping
 

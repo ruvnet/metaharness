@@ -13,6 +13,8 @@ ignore = [
     "RUSTSEC-2024-0436",
     # proc-macro-error2 — unmaintained proc-macro pulled transitively; RUSTSEC-2026-0173.
     "RUSTSEC-2026-0173",
+    # chrono — RUSTSEC-2026-0543 (2026-09-14) flags it unmaintained; all versions affected, no fixed release.
+    "RUSTSEC-2026-0543",
 ]
 
 [licenses]
