@@ -182,6 +182,50 @@ describe('multi-generation improvement proof', () => {
     expect(verdict.independentConfirmation).toBe(false);
     expect(verdict.proofClass).not.toBe('INDEPENDENT_CONFIRMATION');
   });
+
+  it('classifies a non-synthetic, non-independent chain as BOUNDED_RECURSIVE_IMPROVER (positive case)', () => {
+    const e = makeEvidence('development');
+    e.generations[1]!.evidenceClass = 'sealed_holdout';
+    e.generations[1]!.reviewerAttestations = attest(e.runId, e.generations[1]!);
+    const verdict = verifyMultiGenerationEvidence(e, expectation(e));
+    expect(verdict.pass).toBe(true);
+    // Neither 'development' nor 'sealed_holdout' is 'synthetic', so mixing them must not fall through
+    // to SYNTHETIC_RECURSIVE_IMPROVER by accident of the weakest-link check added below.
+    expect(verdict.proofClass).toBe('BOUNDED_RECURSIVE_IMPROVER');
+  });
+
+  it('does not upgrade a chain to BOUNDED_RECURSIVE_IMPROVER just because it is not UNANIMOUSLY synthetic', () => {
+    const e = makeEvidence('development');
+    e.generations[1]!.evidenceClass = 'synthetic';
+    e.generations[1]!.reviewerAttestations = attest(e.runId, e.generations[1]!);
+    const verdict = verifyMultiGenerationEvidence(e, expectation(e));
+    expect(verdict.pass).toBe(true);
+    // One synthetic generation among otherwise-'development' evidence is the weakest link: the whole
+    // chain is no stronger than its least-confirmed generation, not the strongest.
+    expect(verdict.proofClass).toBe('SYNTHETIC_RECURSIVE_IMPROVER');
+  });
+
+  it('rejects an unrecognized evidenceClass instead of silently upgrading the proof tier', () => {
+    const e = makeEvidence('development');
+    // @ts-expect-error -- deliberately invalid at runtime (e.g. a typo, or a field an older producer omitted)
+    e.generations[1]!.evidenceClass = 'bogus';
+    e.generations[1]!.reviewerAttestations = attest(e.runId, e.generations[1]!);
+    const verdict = verifyMultiGenerationEvidence(e, expectation(e));
+    expect(verdict.pass).toBe(false);
+    expect(verdict.failures).toContain('gen2:invalid_evidence_class');
+    expect(verdict.proofClass).toBe('INVALID');
+    expect(verdict.recursiveImproverEvidence).toBe(false);
+  });
+
+  it('rejects a missing evidenceClass the same way as an unrecognized one', () => {
+    const e = makeEvidence('development');
+    e.generations[1]!.evidenceClass = undefined as unknown as GenerationEvidence['evidenceClass'];
+    e.generations[1]!.reviewerAttestations = attest(e.runId, e.generations[1]!);
+    const verdict = verifyMultiGenerationEvidence(e, expectation(e));
+    expect(verdict.pass).toBe(false);
+    expect(verdict.failures).toContain('gen2:invalid_evidence_class');
+    expect(verdict.proofClass).toBe('INVALID');
+  });
 });
 
 it('digest rejection clears every positive proof claim', () => {
