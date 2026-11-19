@@ -198,17 +198,38 @@ export function agentMarkdown(a: AgentSpec): string {
  * a shell line unescaped — a name or arg containing shell metacharacters
  * (`;`, `$(...)`, backticks, spaces) could inject arbitrary commands into
  * the generated install-mcp.sh.
+ *
+ * Dream Cycle 2026-11-09: `s.env` (per-server env vars, e.g. API keys) was
+ * read by every sibling host adapter (codex, copilot, opencode, openclaw,
+ * hermes, prime-agent, github-actions) but silently dropped here, so a
+ * spawned (stdio) MCP server that needs a credential via env lost it only
+ * when projected to Claude Code. Fixed for the stdio/command form, where
+ * `claude mcp add`'s real CLI (verified live, v2.1.319) honors `--env
+ * KEY=VALUE` once the `--` separator stops its variadic consumption. The
+ * `--transport http` form does NOT project `env` at all: verified live that
+ * `claude mcp add --transport http` silently never stores an `env` key
+ * regardless of flag placement (it only makes sense for a spawned process,
+ * not a remote URL) — so rather than emit a flag the real CLI ignores, or
+ * silently drop `s.env` with no trace (the exact ADR-046/2026-09-19 "no-op
+ * must be disclosed" bug class), an http-transport server with a non-empty
+ * `env` gets a disclosed-no-op comment line instead.
  */
 export function mcpAddCommands(spec: HarnessSpec): string[] {
-  return (spec.mcpServers ?? []).map(s => {
+  return (spec.mcpServers ?? []).flatMap(s => {
     if (s.command) {
+      const env = (s.env ?? []).flatMap(([k, v]) => ['--env', shellQuote(`${k}=${v}`)]);
+      const envPart = env.length ? ` ${env.join(' ')}` : '';
       const cmd = s.command.map(shellQuote).join(' ');
-      return `claude mcp add ${shellQuote(s.name)} -- ${cmd}`;
+      return [`claude mcp add ${shellQuote(s.name)}${envPart} -- ${cmd}`];
     }
     if (s.url) {
-      return `claude mcp add --transport http ${shellQuote(s.name)} ${shellQuote(s.url)}`;
+      const lines = [`claude mcp add --transport http ${shellQuote(s.name)} ${shellQuote(s.url)}`];
+      if ((s.env ?? []).length > 0) {
+        lines.push(`# (note: ${commentSafe(s.name)}'s env is not applied — claude mcp add --transport http does not support per-server env vars)`);
+      }
+      return lines;
     }
-    return `# (skipped: ${commentSafe(s.name)} has neither command nor url)`;
+    return [`# (skipped: ${commentSafe(s.name)} has neither command nor url)`];
   });
 }
 

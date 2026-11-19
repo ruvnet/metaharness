@@ -182,6 +182,50 @@ describe('multi-generation improvement proof', () => {
     expect(verdict.independentConfirmation).toBe(false);
     expect(verdict.proofClass).not.toBe('INDEPENDENT_CONFIRMATION');
   });
+
+  it('classifies a non-synthetic, non-independent chain as BOUNDED_RECURSIVE_IMPROVER (positive case)', () => {
+    const e = makeEvidence('development');
+    e.generations[1]!.evidenceClass = 'sealed_holdout';
+    e.generations[1]!.reviewerAttestations = attest(e.runId, e.generations[1]!);
+    const verdict = verifyMultiGenerationEvidence(e, expectation(e));
+    expect(verdict.pass).toBe(true);
+    // Neither 'development' nor 'sealed_holdout' is 'synthetic', so mixing them must not fall through
+    // to SYNTHETIC_RECURSIVE_IMPROVER by accident of the weakest-link check added below.
+    expect(verdict.proofClass).toBe('BOUNDED_RECURSIVE_IMPROVER');
+  });
+
+  it('does not upgrade a chain to BOUNDED_RECURSIVE_IMPROVER just because it is not UNANIMOUSLY synthetic', () => {
+    const e = makeEvidence('development');
+    e.generations[1]!.evidenceClass = 'synthetic';
+    e.generations[1]!.reviewerAttestations = attest(e.runId, e.generations[1]!);
+    const verdict = verifyMultiGenerationEvidence(e, expectation(e));
+    expect(verdict.pass).toBe(true);
+    // One synthetic generation among otherwise-'development' evidence is the weakest link: the whole
+    // chain is no stronger than its least-confirmed generation, not the strongest.
+    expect(verdict.proofClass).toBe('SYNTHETIC_RECURSIVE_IMPROVER');
+  });
+
+  it('rejects an unrecognized evidenceClass instead of silently upgrading the proof tier', () => {
+    const e = makeEvidence('development');
+    // @ts-expect-error -- deliberately invalid at runtime (e.g. a typo, or a field an older producer omitted)
+    e.generations[1]!.evidenceClass = 'bogus';
+    e.generations[1]!.reviewerAttestations = attest(e.runId, e.generations[1]!);
+    const verdict = verifyMultiGenerationEvidence(e, expectation(e));
+    expect(verdict.pass).toBe(false);
+    expect(verdict.failures).toContain('gen2:invalid_evidence_class');
+    expect(verdict.proofClass).toBe('INVALID');
+    expect(verdict.recursiveImproverEvidence).toBe(false);
+  });
+
+  it('rejects a missing evidenceClass the same way as an unrecognized one', () => {
+    const e = makeEvidence('development');
+    e.generations[1]!.evidenceClass = undefined as unknown as GenerationEvidence['evidenceClass'];
+    e.generations[1]!.reviewerAttestations = attest(e.runId, e.generations[1]!);
+    const verdict = verifyMultiGenerationEvidence(e, expectation(e));
+    expect(verdict.pass).toBe(false);
+    expect(verdict.failures).toContain('gen2:invalid_evidence_class');
+    expect(verdict.proofClass).toBe('INVALID');
+  });
 });
 
 it('digest rejection clears every positive proof claim', () => {
@@ -195,4 +239,48 @@ it('digest rejection clears every positive proof claim', () => {
   expect(result.proofClass).toBe('INVALID');
   expect(result.recursiveImproverEvidence).toBe(false);
   expect(result.independentConfirmation).toBe(false);
+});
+
+// 2026-11-11 dream-cycle (flywheel-promotion): sibling of the replay.ts fix for the same disclosed gap
+// (2026-10-21 ledger note) — `e.generations` was trusted to be an array before this function's own
+// `.length` read / `for` loop. Confirmed live against the pre-fix build: `generations: null` threw
+// "Cannot read properties of null (reading 'length')", an uncaught TypeError from a function this file's
+// own `validAttestation`/`evidenceDigest` try/catch guards already document as required to always return
+// a verdict. Every case proves a clean INVALID verdict, not just "didn't throw".
+describe('verifyMultiGenerationEvidence() — fail-closed on a malformed top-level evidence shape', () => {
+  const e = makeEvidence();
+  const exp = expectation(e);
+
+  it('does not throw, and returns INVALID, when generations is null', () => {
+    const bad = { ...e, generations: null } as unknown as MultiGenerationEvidence;
+    let result: ReturnType<typeof verifyMultiGenerationEvidence> | undefined;
+    expect(() => { result = verifyMultiGenerationEvidence(bad, exp); }).not.toThrow();
+    expect(result!.pass).toBe(false);
+    expect(result!.proofClass).toBe('INVALID');
+    expect(result!.failures).toContain('invalid_evidence_shape');
+  });
+
+  it('does not throw, and returns INVALID, when generations is missing entirely', () => {
+    const bad = { ...e } as unknown as Record<string, unknown>;
+    delete bad.generations;
+    let result: ReturnType<typeof verifyMultiGenerationEvidence> | undefined;
+    expect(() => { result = verifyMultiGenerationEvidence(bad as unknown as MultiGenerationEvidence, exp); }).not.toThrow();
+    expect(result!.pass).toBe(false);
+    expect(result!.proofClass).toBe('INVALID');
+    expect(result!.failures).toContain('invalid_evidence_shape');
+  });
+
+  it('does not throw, and returns INVALID, when generations is a non-array object', () => {
+    const bad = { ...e, generations: { 0: e.generations[0] } } as unknown as MultiGenerationEvidence;
+    let result: ReturnType<typeof verifyMultiGenerationEvidence> | undefined;
+    expect(() => { result = verifyMultiGenerationEvidence(bad, exp); }).not.toThrow();
+    expect(result!.pass).toBe(false);
+    expect(result!.failures).toContain('invalid_evidence_shape');
+  });
+
+  it('does not add invalid_evidence_shape for well-formed evidence (no behavior change on the happy path)', () => {
+    const result = verifyMultiGenerationEvidence(e, exp);
+    expect(result.failures).not.toContain('invalid_evidence_shape');
+    expect(result.pass).toBe(true);
+  });
 });

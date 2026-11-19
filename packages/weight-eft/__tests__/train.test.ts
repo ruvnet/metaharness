@@ -28,6 +28,18 @@ describe('train runner — size gate (7-14B only)', () => {
   it('REJECTS a 32B model (it spills a 16GB GPU, §59)', () => {
     expect(() => assertTunableSize(QWEN32)).toThrow(/14.*B band|32B/i);
   });
+
+  it('REJECTS NaN paramsB instead of silently passing (CVE-2026-54235-shaped bypass)', () => {
+    // Both `NaN < MIN` and `NaN > MAX` are false under IEEE-754, so the bare
+    // range comparison alone lets a malformed --params-b (e.g. Number('abc'))
+    // through unchecked. A dedicated finiteness guard must reject it.
+    expect(() => assertTunableSize({ id: 'x', paramsB: NaN })).toThrow(/non-finite/i);
+  });
+
+  it('REJECTS +Infinity and -Infinity paramsB', () => {
+    expect(() => assertTunableSize({ id: 'x', paramsB: Infinity })).toThrow(/non-finite/i);
+    expect(() => assertTunableSize({ id: 'x', paramsB: -Infinity })).toThrow(/non-finite/i);
+  });
 });
 
 describe('train runner — dry-run emits a valid plan', () => {

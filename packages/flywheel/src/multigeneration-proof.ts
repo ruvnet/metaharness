@@ -7,6 +7,13 @@ export const MULTIGEN_AUTHORITY = 'none' as const;
 
 export type EvidenceClass = 'synthetic' | 'development' | 'sealed_holdout' | 'independent_confirmation';
 
+const EVIDENCE_CLASSES: ReadonlySet<string> = new Set<EvidenceClass>([
+  'synthetic',
+  'development',
+  'sealed_holdout',
+  'independent_confirmation',
+]);
+
 export interface Outcome {
   primary: number;
   costPerWin: number;
@@ -278,6 +285,24 @@ export function verifyMultiGenerationEvidence(
   expected: MultiGenerationProofExpectation,
   policy: MultiGenerationProofPolicy = DEFAULT_MULTIGEN_POLICY,
 ): MultiGenerationProofVerdict {
+  // Sibling of replay.ts's 2026-11-11 fix, same root cause: `e` is typed `MultiGenerationEvidence`, but
+  // this function is itself an independent-verification entry point (see the file's own `validAttestation`
+  // and `evidenceDigest` try/catch guards, added precisely because this function must always return a
+  // verdict, never throw). Those guards protect the canon()/digest path; nothing previously protected
+  // `e.generations` itself — a non-array (or missing) `generations` reached `.length`/the `for` loop below
+  // directly and threw an uncaught TypeError before any failure could be recorded. Checked first, fails
+  // closed, and returns the same `{pass:false, ...}` shape every other rejection in this function returns.
+  if (!e || typeof e !== 'object' || !Array.isArray(e.generations)) {
+    return {
+      pass: false,
+      proofClass: 'INVALID',
+      recursiveImproverEvidence: false,
+      independentConfirmation: false,
+      failures: ['invalid_evidence_shape'],
+      derived: [],
+      evidenceDigest: `sha256:${'0'.repeat(64)}`,
+    };
+  }
   const failures: string[] = [];
   const derived: GenerationDerived[] = [];
 
@@ -305,6 +330,9 @@ export function verifyMultiGenerationEvidence(
     const prefix = `gen${g.generation}:`;
 
     if (g.authority !== MULTIGEN_AUTHORITY) failures.push(`${prefix}authority_not_none`);
+    // An unrecognized evidenceClass must not silently default into a stronger proof tier (see the
+    // classification below) — reject it outright rather than let a typo'd or missing label upgrade a claim.
+    if (!EVIDENCE_CLASSES.has(g.evidenceClass)) failures.push(`${prefix}invalid_evidence_class`);
     if (g.generation !== i + 1) failures.push(`${prefix}noncontiguous_generation`);
     if (g.parentId !== expectedParent) failures.push(`${prefix}parent_chain_mismatch`);
     if (seenChildIds.has(g.childId)) failures.push(`${prefix}duplicate_child_id`);
@@ -408,8 +436,13 @@ export function verifyMultiGenerationEvidence(
   let proofClass: ProofClass = 'INVALID';
   if (independentConfirmation) proofClass = 'INDEPENDENT_CONFIRMATION';
   else if (recursiveImproverEvidence) {
-    const allSynthetic = e.generations.every((g) => g.evidenceClass === 'synthetic');
-    proofClass = allSynthetic ? 'SYNTHETIC_RECURSIVE_IMPROVER' : 'BOUNDED_RECURSIVE_IMPROVER';
+    // Weakest-link, not unanimous: a chain is only as strong as its least-confirmed generation. Requiring
+    // EVERY generation to be 'synthetic' before downgrading let a single synthetic generation mixed into
+    // otherwise-real evidence (or a chain where evidenceClass was simply omitted on some generations)
+    // escalate straight to BOUNDED_RECURSIVE_IMPROVER — the second-strongest tier ADR-318 defines —
+    // with no generation actually confirmed beyond 'synthetic'.
+    const anySynthetic = e.generations.some((g) => g.evidenceClass === 'synthetic');
+    proofClass = anySynthetic ? 'SYNTHETIC_RECURSIVE_IMPROVER' : 'BOUNDED_RECURSIVE_IMPROVER';
   } else if (structuralPass) proofClass = 'STRUCTURAL_MULTI_GENERATION';
 
 
