@@ -53,9 +53,36 @@
 // ids now push successfully, and sending BOTH `id` and the taxonomy's own
 // dotted `name` together (self-documenting, not id-only) also now works.
 
-import { Client, Config } from 'agntcy-dir';
-import { create } from '@bufbuild/protobuf';
-import { RecordRefsSchema, PublishRequestSchema } from '@buf/agntcy_dir.bufbuild_es/agntcy/dir/routing/v1/routing_service_pb.js';
+// The Directory SDK is an OPTIONAL dependency: `agntcy-dir` depends on
+// `@buf/agntcy_dir.bufbuild_es`, which only the Buf registry serves, so a plain
+// `npm install @metaharness/agntcy` without an `@buf:registry` line in
+// .npmrc cannot install it. Only publishToDirectory() needs it, so it is loaded
+// lazily there; everything else in this package works without it.
+//
+// Nothing here references the SDK's types either, so this package type-checks
+// (and its .d.ts files resolve for consumers) when the SDK is not installed.
+// `DirectoryConfig` is the structural subset of the SDK's `Config` class this
+// file reads; pass a real `Config` instance from `agntcy-dir`.
+export interface DirectoryConfig {
+  serverAddress: string;
+  spiffeEndpointSocket: string;
+  authMode: string;
+  jwtAudience: string;
+  tlsCaFile: string;
+  tlsCertFile: string;
+  tlsKeyFile: string;
+  authToken: string;
+  tlsServerName: string;
+  tlsSkipVerify: boolean;
+  oidcIssuer: string;
+  oidcClientId: string;
+  oidcClientSecret: string;
+  oidcRedirectUri: string;
+  oidcCallbackPort: number;
+  oidcAuthTimeout: number;
+  oidcScopes: string[];
+  oidcAccessToken: string;
+}
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import type { OasfRecord } from './record.js';
@@ -98,7 +125,7 @@ export interface PublishTarget {
    * PKCE login this synchronous publish call has no way to drive — pass a
    * `Config` with a pre-cached `authToken` instead if OIDC is your auth mode.
    */
-  config?: Config;
+  config?: DirectoryConfig;
 }
 
 interface TaxonomyLeaf {
@@ -223,11 +250,53 @@ function projectAnnotations(record: OasfRecord): Record<string, string> {
   return annotations;
 }
 
+const SDK_INSTALL_HINT =
+  'Directory publishing needs the optional AGNTCY Directory SDK. Add ' +
+  '"@buf:registry=https://buf.build/gen/npm/v1/" to .npmrc, then run ' +
+  '"npm install agntcy-dir @bufbuild/protobuf @buf/agntcy_dir.bufbuild_es".';
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+type DirectorySdk = {
+  Client: any;
+  Config: (new (...args: unknown[]) => DirectoryConfig) & { loadFromEnv(): DirectoryConfig };
+  create: (schema: unknown, init: unknown) => unknown;
+  RecordRefsSchema: unknown;
+  PublishRequestSchema: unknown;
+};
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+// Specifiers live in variables so tsc does not try to resolve the optional
+// modules at build time (they may be absent from the build environment too).
+const SDK_SPECIFIERS = {
+  dir: 'agntcy-dir',
+  protobuf: '@bufbuild/protobuf',
+  routing: '@buf/agntcy_dir.bufbuild_es/agntcy/dir/routing/v1/routing_service_pb.js',
+} as const;
+
+async function loadDirectorySdk(): Promise<DirectorySdk | { error: string }> {
+  try {
+    const [dir, protobuf, routing] = await Promise.all([
+      import(SDK_SPECIFIERS.dir as string),
+      import(SDK_SPECIFIERS.protobuf as string),
+      import(SDK_SPECIFIERS.routing as string),
+    ]);
+    return {
+      Client: dir.Client,
+      Config: dir.Config,
+      create: protobuf.create,
+      RecordRefsSchema: routing.RecordRefsSchema,
+      PublishRequestSchema: routing.PublishRequestSchema,
+    };
+  } catch (err) {
+    return { error: `${SDK_INSTALL_HINT} (${err instanceof Error ? err.message : String(err)})` };
+  }
+}
+
 /** Rebuild a Config with a different serverAddress by re-running the real
  * constructor (see the call site's comment for why a plain property
  * assignment is wrong here) — every other field carries over unchanged. */
-function withServerAddress(config: Config, serverAddress: string): Config {
-  return new Config(
+function withServerAddress(ConfigCtor: DirectorySdk['Config'], config: DirectoryConfig, serverAddress: string): DirectoryConfig {
+  return new ConfigCtor(
     serverAddress,
     config.spiffeEndpointSocket,
     config.authMode,
@@ -288,8 +357,13 @@ export async function publishToDirectory(record: OasfRecord, target: PublishTarg
   // plaintext, `https://` for tls/x509/jwt/oidc); a plain property assignment
   // skips that entirely and the transport layer then throws `Invalid URL` on
   // the un-prefixed address (caught by this file's own live-server test).
-  const loaded = target.config ?? Config.loadFromEnv();
-  const config = withServerAddress(loaded, serverAddress);
+  const sdk = await loadDirectorySdk();
+  if ('error' in sdk) {
+    return { published: false, reason: sdk.error };
+  }
+  const { Client, Config: ConfigCtor, create, RecordRefsSchema, PublishRequestSchema } = sdk;
+  const loaded = target.config ?? ConfigCtor.loadFromEnv();
+  const config = withServerAddress(ConfigCtor, loaded, serverAddress);
   if (config.authMode === 'oidc') {
     return {
       published: false,

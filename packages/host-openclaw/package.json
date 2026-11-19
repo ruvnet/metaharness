@@ -1,12 +1,15 @@
 {
   "name": "@metaharness/host-openclaw",
-  "version": "0.1.4",
-  "description": "OpenClaw (personal AI assistant) host adapter for agent-harness-generator (MCP via ~/.openclaw/openclaw.json + workspace skills)",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator",
+  "version": "0.1.5",
+  "description": "OpenClaw host adapter for MetaHarness: MCP wiring via ~/.openclaw/openclaw.json plus workspace skills, from a harness spec.",
+  "homepage": "https://ruv.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "url": "https://github.com/ruvnet/metaharness.git",
     "directory": "packages/host-openclaw"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
   },
   "license": "MIT",
   "type": "module",
@@ -28,12 +31,14 @@
     "lint": "tsc --noEmit"
   },
   "keywords": [
+    "metaharness",
     "agent-harness",
     "openclaw",
     "personal-ai-assistant",
     "mcp",
+    "model-context-protocol",
     "host-adapter",
-    "ruflo"
+    "skills"
   ],
   "publishConfig": {
     "access": "public"

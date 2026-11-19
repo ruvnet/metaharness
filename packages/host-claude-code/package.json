@@ -1,12 +1,15 @@
 {
   "name": "@metaharness/host-claude-code",
-  "version": "0.1.3",
-  "description": "Claude Code host adapter for agent-harness-generator (MCP + hooks + .claude/settings.json)",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator",
+  "version": "0.1.4",
+  "description": "Claude Code host adapter for MetaHarness: turns a harness spec into .claude/settings.json, hooks and MCP server wiring.",
+  "homepage": "https://ruv.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "url": "https://github.com/ruvnet/metaharness.git",
     "directory": "packages/host-claude-code"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
   },
   "license": "MIT",
   "type": "module",
@@ -28,11 +31,15 @@
     "lint": "tsc --noEmit"
   },
   "keywords": [
+    "metaharness",
     "agent-harness",
     "claude-code",
+    "anthropic",
     "mcp",
+    "model-context-protocol",
     "host-adapter",
-    "ruflo"
+    "hooks",
+    "claude-code-plugin"
   ],
   "publishConfig": {
     "access": "public"
