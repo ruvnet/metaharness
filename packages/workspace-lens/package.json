@@ -1,7 +1,16 @@
 {
   "name": "@metaharness/workspace-lens",
-  "version": "0.1.2",
-  "description": "Jacobian-Lens interpretability primitive for open-weight LLMs (Anthropic 2026-07-06, 'Verbalizable Representations Form a Global Workspace'). Reads the model's functional workspace at inference time — lens_l(h)=unembed(J_l·h) — into workspace tokens, layer-trajectory, drift/entropy scores, vectorized safety flags, and a signable interpretability receipt. Runtime-only (fitting is external); model-agnostic; dependency-free.",
+  "version": "0.1.3",
+  "description": "Jacobian-Lens interpretability for open-weight LLMs: read a model's workspace at inference time into tokens, layer trajectory, drift and entropy scores, safety flags and a signable receipt.",
+  "homepage": "https://ruv.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/metaharness.git",
+    "directory": "packages/workspace-lens"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -25,17 +34,16 @@
     "bench": "npm run build && node bench/detect-concepts-throughput.mjs"
   },
   "keywords": [
+    "metaharness",
     "jacobian-lens",
     "interpretability",
     "logit-lens",
     "global-workspace",
-    "mechanistic-governance",
-    "intops",
+    "mechanistic-interpretability",
     "ai-safety",
     "prompt-injection",
-    "llm",
     "open-weight",
-    "metaharness",
+    "llm",
     "agent-harness"
   ],
   "license": "MIT",

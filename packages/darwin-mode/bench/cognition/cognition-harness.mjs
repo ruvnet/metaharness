@@ -20,8 +20,15 @@ import { createHash, randomBytes } from 'node:crypto';
 import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { AgenticMemory } from 'agenticow';
 import { runEpisode } from '../gaia/scaffolds.mjs';
+
+// agenticow is an OPTIONAL dev dependency (declared in this package's devDependencies; bench/ is
+// not published). Load it lazily so importing this module never throws when it is absent: the
+// episodic store then degrades to "no recall" (buildEpisodicStore returns null, recallHints → []).
+let AgenticMemory = null;
+try { ({ AgenticMemory } = await import('agenticow')); }
+catch (e) { AgenticMemory = null; console.error(`[cognition] agenticow unavailable (${e?.code || e?.message || e}) — episodic memory disabled`); }
+export const agenticowAvailable = () => AgenticMemory !== null;
 
 export const EMB_DIM = 256;
 
@@ -123,6 +130,7 @@ export function buildMemo({ kind, episodicK }, hints, decomp) {
 // itself). Branches FORK this base so each self has an isolated, COW-cheap view (the
 // experiment exercises agenticow's fork/query even when payloads are read-side).
 export function buildEpisodicStore(rvfPath, entries, dim = EMB_DIM) {
+  if (!AgenticMemory) return null; // degraded: no agenticow → no episodic recall
   mkdirSync(dirname(rvfPath), { recursive: true });
   const mem = AgenticMemory.open(rvfPath, { dimension: dim, metric: 'cosine' });
   const records = entries.map((e, i) => ({ id: i, vector: embedText(e.question, dim) }));
@@ -135,7 +143,7 @@ export function buildEpisodicStore(rvfPath, entries, dim = EMB_DIM) {
 // the "each self gets its own branched memory view" substrate the experiment tests. The
 // fork's backing file goes to a unique temp path and is removed after close (no litter).
 export function recallHints(store, taskIdx, qVec, k) {
-  if (!k || !store || !store.payloads.length) return [];
+  if (!k || !store || !store.mem || !store.payloads.length) return [];
   const fpath = join(tmpdir(), `cow-fork-${process.pid}-${randomBytes(6).toString('hex')}.rvf`);
   let hits = [], fork = null;
   try { fork = store.mem.fork(`q${taskIdx}`, fpath); hits = fork.query(qVec, k + 1) || []; }

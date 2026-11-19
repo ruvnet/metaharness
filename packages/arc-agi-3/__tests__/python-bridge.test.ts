@@ -588,7 +588,7 @@ describe('python bridge SDK reset contract', () => {
     } finally {
       rmSync(fakeModules, { recursive: true, force: true });
     }
-  });
+  }, 60_000); // spawns python twice; Windows runners have taken 11.6 s (vitest default is 5 s)
 
   for (const [label, initiallyEmpty] of [
     ['constructor-populated observation', false],
