@@ -1,3 +1,7 @@
+# 0.4.24 — 2026-11-19
+
+Pin `@metaharness/redblue` to `0.1.8` (adds the blue-team defense layer; the `dispatch` entry is unchanged). Ship the evaluated Dream scoring fixes merged since 0.4.23: threat-model tool counts (#479) and `secretsReachable` (#459), `scoreMcpSafety` reading `settings.json` (#502), SBOM component hashes (#445), manifest-only test credit (#489, #451), empty test directories (#435), `hasCi` prose (#464), and the prime-agent `SANDBOX-REQUIRED.md` in both scaffold mirrors (#461). No API changes.
+
 # 0.4.23 — 2026-11-10
 
 Pin the six `@metaharness/*` dependencies to exact versions: `avo` 0.2.1, `darwin` 0.13.1, `flywheel` 0.1.14, `redblue` 0.1.7, `turn-credit` 0.1.1, `weight-eft` 0.1.3. The old 0.x caret ranges never crossed a minor line, so `^0.1.4` kept every install on `@metaharness/avo` 0.1.5 after 0.2.x shipped. All six stay required dependencies. No API changes: the `dispatch(sub, args)` entry point metaharness calls is unchanged in every pinned version. `__tests__/pinned-deps.test.ts` guards the exact pins and loads each package for real through `metaharness <verb>`.
