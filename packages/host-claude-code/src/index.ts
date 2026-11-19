@@ -10,8 +10,16 @@
 //     - .claude/settings.local.json       (project, gitignored)
 //   - Hooks via .claude/settings.json or plugin-supplied hooks/hooks.json
 //   - 5 hook handler types: command | http | mcp_tool | prompt | agent
-//   - Events: SessionStart, Setup, UserPromptSubmit, PreToolUse, PostToolUse,
-//     PostToolUseFailure, Stop, SubagentStart, SubagentStop, FileChanged
+//   - Events (re-verified 2026-11-14, live docs fetch — 33 total, up from
+//     an earlier 10-event research snapshot; see ADR-004's 2026-11-14
+//     note): SessionStart, Setup, UserPromptSubmit, UserPromptExpansion,
+//     PreToolUse, PermissionRequest, PermissionDenied, PostToolUse,
+//     PostToolUseFailure, PostToolBatch, Notification, MessageDisplay,
+//     SubagentStart, SubagentStop, TaskCreated, TaskCompleted, Stop,
+//     StopFailure, TeammateIdle, InstructionsLoaded, ConfigChange,
+//     CwdChanged, DirectoryAdded, FileChanged, WorktreeCreate,
+//     WorktreeRemove, PreCompact, PostCompact, PreModelSwitch,
+//     PostModelSwitch, Elicitation, ElicitationResult, SessionEnd
 //   - Hooks emit JSON to stdout to influence the model:
 //     hookSpecificOutput.permissionDecision: "deny|allow|ask|defer"
 //     plus additionalContext, updatedInput
