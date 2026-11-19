@@ -263,8 +263,11 @@ describe('buildThreatModel — allowedTools/deniedTools vs. role-scoped mcp-poli
     const tm = buildThreatModel(dir);
     expect(tm.networkAccess).toBe(true);
     expect(tm.fileWrite).toBe(true);
-    expect(tm.verdict).toBe('medium');
-    expect(tm.exitCode).toBe(1);
+    // No settings.json means no .env deny rule, so secrets are reachable under
+    // #459's deny-first semantics; that alone makes the verdict high.
+    expect(tm.secretsReachable).toBe(true);
+    expect(tm.verdict).toBe('high');
+    expect(tm.exitCode).toBe(2);
   });
 
   it('regression: claude-code harnesses with an explicit permissions block still get real flat counts, never null', async () => {
