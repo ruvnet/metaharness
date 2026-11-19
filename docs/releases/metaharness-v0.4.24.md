@@ -21,6 +21,6 @@ Evaluated Dream-cycle fixes merged since 0.4.23. Each one ships with a regressio
 
 ## Tests
 
-`packages/create-agent-harness`: 750 passed, 6 skipped.
+`packages/create-agent-harness`: 756 passed, 6 skipped.
 
 No API changes.
