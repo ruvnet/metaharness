@@ -76,9 +76,22 @@ async function loadEmergent(): Promise<EmergentTimeApi | null> {
   }
 }
 
+/** An emergent-time clock with a callable `weight(ageMs)`, or null. */
+async function emergentDecayClock(halfLifeMs: number): Promise<{ weight(ageMs: number): number } | null> {
+  const emergent = await loadEmergent();
+  if (!emergent) return null;
+  try {
+    const clock = new emergent.AgenticClock({ halfLifeMs }) as { weight?: unknown };
+    return typeof clock.weight === 'function' ? (clock as { weight(ageMs: number): number }) : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Rank a list of raw HNSW hits, applying AgenticClock decay weights when
- * `useDecay` is true and the emergent-time package is available.
+ * Rank a list of raw HNSW hits by decay-weighted score when `useDecay` is
+ * true: an emergent-time AgenticClock weight when one is usable, otherwise
+ * the half-life weight `linearDecay(age, halfLifeMs)`.
  *
  * Returns a NEW array sorted descending by decayedScore (when useDecay=true)
  * or score (when false).
@@ -95,15 +108,14 @@ export async function rankWithDecay(
     return [...hits].sort((a, b) => b.score - a.score);
   }
 
-  const emergent = await loadEmergent();
-  if (!emergent) {
-    // Graceful fallback — return raw scores in `decayedScore` so callers
-    // don't have to special-case the absence of emergent-time.
-    return [...hits].map(h => ({ ...h, decayedScore: h.score }))
-      .sort((a, b) => b.decayedScore - a.decayedScore);
-  }
-
-  const clock = new emergent.AgenticClock({ halfLifeMs });
+  // Without a usable emergent-time clock, decay with the deterministic
+  // half-life weight 0.5^(age / halfLifeMs). `score` stays raw. Until 0.1.6
+  // this path returned raw scores, so decay never reordered anything:
+  // @ruvector/emergent-time 0.1.x has no `weight(ageMs)` (its AgenticClock
+  // measures internal agent time from state deltas, not age decay).
+  const clock = (await emergentDecayClock(halfLifeMs))
+    ?? { weight: (ageMs: number) => linearDecay(ageMs, halfLifeMs) };
+  // Hits without `storedAt` are treated as age 0 (weight 1).
   const ranked = hits.map(h => {
     const ageMs = h.storedAt !== undefined ? Math.max(0, now - h.storedAt) : 0;
     const weight = clock.weight(ageMs);

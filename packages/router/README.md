@@ -1,5 +1,64 @@
 # @metaharness/router
 
+<!-- ruv-seo:start (ADR-356) -->
+![@metaharness/router flow: query, embed, k-NN over labelled examples, pick the cheapest model that passes, answer](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/router.svg)
+
+`@metaharness/router` routes each query to the cheapest model that is predicted to be good enough. For every candidate model it predicts quality on the new query by k-NN over that model's labelled examples (query embedding and the quality it achieved), then returns the cheapest candidate that clears your quality bar.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. ESM library, no dependencies, no model files and no network. Bring vectors from any embedding model.
+
+## Quickstart
+
+```bash
+mkdir demo && cd demo && npm init -y >/dev/null
+npm install @metaharness/router
+cat > quickstart.mjs <<'JS'
+import { Router } from '@metaharness/router';
+
+// Two candidates, each with labelled examples: [query embedding, quality it achieved].
+const router = new Router({
+  k: 1,            // nearest labelled example decides (default 5)
+  qualityBar: 0.8,
+  candidates: [
+    { id: 'small-model', costPerMTok: 1, examples: [
+      { embedding: [1, 0], quality: 0.9 },   // good on "type A" queries
+      { embedding: [0, 1], quality: 0.4 },   // weak on "type B" queries
+    ] },
+    { id: 'large-model', costPerMTok: 15, examples: [
+      { embedding: [1, 0], quality: 0.95 },
+      { embedding: [0, 1], quality: 0.9 },
+    ] },
+  ],
+});
+
+console.log('type A:', router.route([0.9, 0.1]));
+console.log('type B:', router.route([0.1, 0.9]));
+JS
+node quickstart.mjs
+```
+
+Expected output:
+
+```text
+type A: {
+  id: 'small-model',
+  costPerMTok: 1,
+  predictedQuality: 0.9,
+  metBar: true
+}
+type B: {
+  id: 'large-model',
+  costPerMTok: 15,
+  predictedQuality: 0.9,
+  metBar: true
+}
+```
+
+**Next:** [`@metaharness/harness`](https://www.npmjs.com/package/@metaharness/harness) — wrap the routed models as workers behind safety gates and receipts.
+<!-- ruv-seo:end -->
+
+## Reference
+
 **Route each query to the cheapest model that's good enough.** The productized
 form of the DRACO Phase-2 finding (`ruvnet/agent-harness-generator`, ADR-040):
 on cross-domain research, structure/fusion does *not* beat a strong model on

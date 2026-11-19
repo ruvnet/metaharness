@@ -1,0 +1,84 @@
+{
+  "name": "@metaharness/artex-defense",
+  "version": "0.1.0",
+  "description": "Blue-team evidence replay for ARTEX findings and identity telemetry: compare two detection policies, simulate a quarantine, verify with a tamper-evident receipt. Offline.",
+  "homepage": "https://ruv.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/metaharness.git",
+    "directory": "packages/artex-defense"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
+  },
+  "type": "module",
+  "license": "MIT",
+  "author": "rUv <ruv@ruv.net>",
+  "main": "./index.mjs",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.mjs",
+      "default": "./index.mjs"
+    },
+    "./cli": "./cli.mjs",
+    "./ingest": "./ingest.mjs",
+    "./replay": "./replay.mjs",
+    "./simulation": "./simulation.mjs",
+    "./receipts": "./metaharness.mjs"
+  },
+  "bin": {
+    "artex-defense": "./cli.mjs"
+  },
+  "files": [
+    "index.mjs",
+    "index.d.ts",
+    "cli.mjs",
+    "ingest.mjs",
+    "replay.mjs",
+    "simulation.mjs",
+    "metaharness.mjs",
+    "bench.mjs",
+    "fixtures/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test",
+    "benchmark": "node cli.mjs benchmark"
+  },
+  "keywords": [
+    "metaharness",
+    "artex",
+    "blue-team",
+    "red-team",
+    "defensive-security",
+    "detection-engineering",
+    "incident-response",
+    "threat-detection",
+    "security-findings",
+    "evidence-replay",
+    "policy-replay",
+    "identity-security",
+    "session-quarantine",
+    "audit-log",
+    "tamper-evident",
+    "receipts",
+    "hash-chain",
+    "telemetry",
+    "siem",
+    "soc",
+    "security-testing",
+    "ai-security"
+  ],
+  "dependencies": {
+    "@metaharness/harness": "0.2.1"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

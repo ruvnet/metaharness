@@ -11,7 +11,7 @@
 // exports as subcommands, and (4) adds `wasm/**` to the harness `files` and a
 // `wasm` doctor check. Missing wasm-pack/cargo is reported, not fatal.
 
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { existsSync, rmSync, writeFileSync, readFileSync, mkdirSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 
@@ -20,9 +20,9 @@ export interface WasmWireResult {
   lines: string[];
 }
 
-function have(cmd: string): boolean {
+function have(bin: string, args: string[]): boolean {
   try {
-    execSync(cmd, { stdio: 'ignore' });
+    execFileSync(bin, args, { stdio: 'ignore' });
     return true;
   } catch {
     return false;
@@ -60,7 +60,7 @@ export function wireWasm(cratePath: string, targetDir: string): WasmWireResult {
   if (!existsSync(join(crate, 'Cargo.toml'))) {
     return { ok: false, lines: [`--with-wasm: no Cargo.toml at ${crate}`] };
   }
-  if (!have('wasm-pack --version')) {
+  if (!have('wasm-pack', ['--version'])) {
     return {
       ok: false,
       lines: [
@@ -74,8 +74,10 @@ export function wireWasm(cratePath: string, targetDir: string): WasmWireResult {
   const outDir = join(targetDir, 'wasm');
   mkdirSync(outDir, { recursive: true });
   try {
-    execSync(
-      `wasm-pack build ${JSON.stringify(crate)} --target nodejs --release --out-dir ${JSON.stringify(outDir)}`,
+    // argv array, no shell: the crate and output paths are passed verbatim.
+    execFileSync(
+      'wasm-pack',
+      ['build', crate, '--target', 'nodejs', '--release', '--out-dir', outDir],
       { stdio: 'inherit', env: { ...process.env, RUSTFLAGS: '' } },
     );
   } catch (e) {

@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "tenant": "lab",
+  "caseId": "example",
+  "format": "csv",
+  "expectedSha256": "b57af4389633f3df36bfef0549b0c527b1ad0ae40566a45fa5e85fed78d58b54"
+}

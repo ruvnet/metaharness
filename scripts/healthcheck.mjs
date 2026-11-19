@@ -76,6 +76,9 @@ const CHECKS = {
       // @metaharness/redblue (defensive red/blue adversarial testing, ADR-197) ships
       // on its own semver (0.1.2 → 0.1.4 across the HackerOne-integration arc).
       '@metaharness/redblue',
+      // @metaharness/artex-defense (offline defensive evidence replay, used by
+      // `redblue defense`) is likewise a standalone published library on its own semver.
+      '@metaharness/artex-defense',
       // @metaharness/weight-eft (evolutionary fine-tuning, ADR-198) likewise —
       // published 0.1.1 with the umbrella-CLI wiring.
       '@metaharness/weight-eft',
@@ -132,6 +135,16 @@ const CHECKS = {
       '@metaharness/host-pi-dev',
       '@metaharness/host-prime-agent',
       '@metaharness/host-rvm',
+      // Published on their own semver through per-package Release tags; they sat at
+      // 0.1.0 only by coincidence and moved to 0.1.1 with the ADR-356 metadata release.
+      '@metaharness/aws-finops',
+      '@metaharness/field-memory',
+      '@metaharness/energy',
+      '@metaharness/oo-agents',
+      '@metaharness/radio',
+      '@metaharness/turn-credit',
+      '@metaharness/vertical-base',
+      '@metaharness/vertical-trading',
     ]);
     for (const p of packages) {
       if (!p.isDirectory()) continue;
