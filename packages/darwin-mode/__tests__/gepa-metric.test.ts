@@ -107,6 +107,29 @@ test('classifyFailure precedence covers all 6 classes + resolved', () => {
   assert.equal(classifyFailure({ analysis: a6, patch: '', goldPatchFiles: null, maxSteps: 12 }), 6);
 });
 
+// Disclosed 2026-11-12 (banked runner-up, dream-cycle darwin-evolution night), closed 2026-11-17:
+// the production case has goldPatchFiles KNOWN (the eval harness always passes it) — class 6 must
+// stay reachable even when the agent DID read/touch the gold file before running out of steps.
+// Pre-fix, this was dead code: the `!ps.empty && readGold` (class 4) check always fired first
+// whenever goldPatchFiles was non-null, so a budget-exhausted-but-on-the-right-file trajectory was
+// always mislabeled "wrong-fix" instead of "budget-exhaustion" — steering GEPA's reflection-driven
+// mutation hint toward test/retrieval-policy changes instead of the correct "reach the edit earlier"
+// hint. The only pre-fix test for class 6 (above) dodged this by passing goldPatchFiles: null.
+test('classifyFailure: class 6 (budget-exhaustion) is reachable even when goldPatchFiles is known and the gold file was read (regression for the class-4/class-6 precedence bug)', () => {
+  const gold = ['src/parser.py'];
+  const steps = [T('read', { path: 'src/parser.py' })];
+  for (let i = 0; i < 10; i++) steps.push(T('read', { path: `other${i}.py` }));
+  steps.push(T('line_edit', { path: 'src/parser.py' }, 'line_edit src/parser.py: replaced lines 1-1 (+1 chars)'));
+  const a = analyzeTranscript(steps); // 12 steps total, 1 edit landed, gold file read
+  assert.equal(a.steps, 12);
+  assert.equal(a.editsLanded, 1);
+  assert.equal(
+    classifyFailure({ analysis: a, patch: PATCH, goldPatchFiles: gold, maxSteps: 12 }),
+    6,
+    'edits landed + steps >= maxSteps must classify as budget-exhaustion (6), not wrong-fix (4), even when the gold file was read',
+  );
+});
+
 test('makeFeedback: ASI cites steps, files, gold gap, penalties, class hint, teacher pairing', () => {
   const analysis = analyzeTranscript([T('grep', { pattern: 'x' }), T('grep', { pattern: 'y' }), T('read', { path: 'utils.py' })]);
   const scored = computeInstanceScore({ analysis, patch: '', cost: 0.02, goldPatchFiles: ['src/parser.py'] });
