@@ -10,6 +10,7 @@ import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync } from 'nod
 import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import assert from 'node:assert/strict';
+import { checkWasmInPack } from './wasm-artifacts.mjs';
 const root = process.cwd();
 const out = resolve('dist-release');
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
@@ -30,6 +31,8 @@ if (mode === 'pack') {
     assert.equal(pkg.repository?.directory, `packages/${dir}`, `${pkg.name}: wrong repository directory`);
     const [packed] = JSON.parse(run(npm, ['pack', '--json', '--ignore-scripts', '--pack-destination', out], resolve('packages', dir)));
     assert(packed.files.some(f => f.path === entryOf(pkg)), `${pkg.name}: missing compiled entry ${entryOf(pkg)}`);
+    // Fail the release when a declared wasm file is not in the tarball (horizon 0.2.1 shipped without it).
+    checkWasmInPack(pkg, packed.files);
     return { name: pkg.name, version: pkg.version, file: packed.filename, sha256: hash(readFileSync(join(out, packed.filename))) };
   });
   writeFileSync(manifestPath, JSON.stringify({ sourceSha: run('git', ['rev-parse', 'HEAD']), artifacts }, null, 2) + '\n');
@@ -57,6 +60,19 @@ if (mode === 'pack') {
     if (names.has('@metaharness/sdk')) lines.push(`
       const { defineHarness } = await import('@metaharness/sdk');
       assert.equal(defineHarness({name:'installed'}).name, 'installed');`);
+    // Packages that ship wasm must answer from the wasm, not a fallback.
+    if (names.has('@metaharness/horizon')) lines.push(`
+      const { HorizonCore, CommandGuard } = await import('@metaharness/horizon');
+      const guard = new CommandGuard(await HorizonCore.load());
+      assert.equal(guard.classify('ls').verdict, 'allow');`);
+    if (names.has('@metaharness/oo-agents')) lines.push(`
+      const { CellVm } = await import('@metaharness/oo-agents');
+      assert.equal(typeof (await CellVm.load()), 'object');`);
+    if (names.has('@metaharness/kernel')) lines.push(`
+      process.env.METAHARNESS_KERNEL_BACKEND = 'wasm';
+      const { loadKernel } = await import('@metaharness/kernel');
+      assert.equal((await loadKernel()).backend, 'wasm');
+      delete process.env.METAHARNESS_KERNEL_BACKEND;`);
     if (names.has('@metaharness/agntcy')) lines.push(`
       const { oasfPublish } = await import('@metaharness/agntcy');
       assert.equal(typeof oasfPublish.publishToDirectory, 'function');`);
@@ -67,6 +83,21 @@ if (mode === 'pack') {
       const policy = JSON.parse(readFileSync(join(dir, 'doctor/.harness/mcp-policy.json'), 'utf8'));
       assert.equal(policy.defaultDeny, true); assert.equal(policy.allowShell, false);
       run(process.execPath, ['node_modules/metaharness/dist/harness-bin.js', 'doctor', join(dir, 'doctor')], dir);
+    }
+    if (names.has('@metaharness/agntcy')) {
+      // A consumer with no @buf registry line must still install the tarball and use
+      // everything except Directory publishing (the SDK is an optional dependency).
+      const bare = mkdtempSync(join(tmpdir(), 'release-agntcy-bare-'));
+      try {
+        writeFileSync(join(bare, 'package.json'), '{"private":true,"type":"module"}\n');
+        const a = artifacts.find(x => x.name === '@metaharness/agntcy');
+        run(npm, ['install', '--ignore-scripts', '--no-audit', '--no-fund', join(out, a.file)], bare);
+        writeFileSync(join(bare, 'smoke.mjs'), `import assert from 'node:assert/strict';
+          const { casa, oasfPublish } = await import('@metaharness/agntcy');
+          assert(casa.isCasaEnvelope(casa.compileObjectiveToEnvelope('Review the open pull requests')));
+          assert.equal(typeof oasfPublish.publishToDirectory, 'function');`);
+        run(process.execPath, ['smoke.mjs'], bare);
+      } finally { rmSync(bare, { recursive: true, force: true }); }
     }
     console.log(`Installed-artifact smoke passed for ${[...names].join(', ')}.`);
   } finally { rmSync(dir, { recursive: true, force: true }); }
@@ -82,16 +113,22 @@ if (mode === 'pack') {
     let response = await fetch(metadataUrl);
     if (response.status === 404) {
       run(npm, ['publish', path, '--provenance', '--access', 'public', '--ignore-scripts']);
-      for (let attempt = 0; attempt < 12; attempt++) {
-        response = await fetch(metadataUrl);
+      // npm may stage the publish for several minutes, and the registry CDN caches the
+      // 404s from this polling for up to 300 s, so poll for up to 15 minutes.
+      for (let attempt = 0; attempt < 90; attempt++) {
+        response = await fetch(metadataUrl, { headers: { 'cache-control': 'no-cache' } });
         if (response.ok) break;
-        await new Promise(r => setTimeout(r, 5000));
+        await new Promise(r => setTimeout(r, 10000));
       }
     }
     assert(response.ok, `${a.name}: registry metadata HTTP ${response.status}`);
     const metadata = await response.json();
-    const download = await fetch(metadata.dist.tarball);
-    assert(download.ok, `${a.name}: tarball download failed`);
+    let download = await fetch(metadata.dist.tarball);
+    for (let attempt = 0; !download.ok && attempt < 40; attempt++) {
+      await new Promise(r => setTimeout(r, 15000));
+      download = await fetch(metadata.dist.tarball, { headers: { 'cache-control': 'no-cache' } });
+    }
+    assert(download.ok, `${a.name}: tarball download failed (HTTP ${download.status})`);
     assert.equal(hash(Buffer.from(await download.arrayBuffer())), a.sha256, `${a.name}: public bytes differ`);
     console.log(`${a.name}@${a.version}: published bytes verified (${a.sha256})`);
   }

@@ -1,5 +1,51 @@
 # @metaharness/turn-credit
 
+<!-- ruv-seo:start (ADR-356) -->
+
+Offline turn-level credit assignment for recorded agent trajectories: it turns one sparse success or failure into bounded per-turn weights, so you can see which tools, routes or retries mattered. It is advisory only: it never flips the verifier's outcome and never updates model weights.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. ESM only (`import`, not `require`). Pure JavaScript, no native build step. Dependency-free (Node built-ins only).
+
+## Quickstart
+
+```bash
+mkdir demo && cd demo && npm init -y >/dev/null
+npm install @metaharness/turn-credit
+cat > quickstart.mjs <<'EOF'
+import { processTrajectory, evidenceFromScorePairs, GOVERNED_DEFAULTS, creditByLabel } from '@metaharness/turn-credit';
+const pairs = [
+  { turn: 0, label: 'search', scoreWith: 0.4, scoreWithout: 0.4 },
+  { turn: 1, label: 'read-file', scoreWith: 0.9, scoreWithout: 0.3 },
+  { turn: 2, label: 'retry', scoreWith: 0.5, scoreWithout: 0.6 },
+];
+const credit = processTrajectory({
+  evidence: evidenceFromScorePairs(pairs), mode: 'verifier-delta-proxy',
+  prior: 0.3, success: true, config: GOVERNED_DEFAULTS,
+});
+console.log('bound:', credit.boundPct, 'pivotal turns:', credit.pivotalTurns);
+for (const c of credit.credits) console.log(`turn ${c.turn} ${c.label}: multiplier ${c.multiplier}`);
+console.log('top label:', creditByLabel(credit)[0].label);
+EOF
+node quickstart.mjs
+```
+
+Expected output:
+
+```text
+bound: 0.1 pivotal turns: [ 1 ]
+turn 0 search: multiplier 0.951902
+turn 1 read-file: multiplier 1.1
+turn 2 retry: multiplier 0.909051
+top label: read-file
+```
+
+**Next:** [`@metaharness/flywheel`](https://www.npmjs.com/package/@metaharness/flywheel) — the promotion loop that can consume these credits as advisory evidence.
+
+**Where it fits:** `metaharness` depends on it and forwards `npx metaharness turn-credit <process|report>` to its CLI (`@metaharness/turn-credit/cli`, see `packages/create-agent-harness/src/index.ts`).
+<!-- ruv-seo:end -->
+
+## Reference
+
 Offline **recursive turn-level credit assignment** for agent trajectories, after
 AgentOPSD ([arXiv:2608.05987](https://arxiv.org/abs/2608.05987)). A terminal
 success/failure score says nothing about which of 30 actions mattered. This

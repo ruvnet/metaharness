@@ -1,12 +1,15 @@
 {
   "name": "@metaharness/example-stripe",
-  "version": "0.2.0",
-  "description": "MetaHarness scaffold for Stripe billing agents \u2014 subscriptions, refunds, and webhook handling in test mode by default (npx @metaharness/example-stripe my-bot)",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/examples-packages/example-stripe",
+  "version": "0.2.1",
+  "description": "MetaHarness scaffold for Stripe billing agents — subscriptions, refunds, and webhook handling in test mode by default (npx @metaharness/example-stripe my-bot)",
+  "homepage": "https://ruv.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "url": "https://github.com/ruvnet/metaharness.git",
     "directory": "examples-packages/example-stripe"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
   },
   "license": "MIT",
   "author": "rUv <ruv@ruv.net>",
@@ -33,7 +36,8 @@
     "scaffold",
     "agent-harness",
     "tiered-routing",
-    "webhook"
+    "webhook",
+    "agent-scaffold"
   ],
   "publishConfig": {
     "access": "public"

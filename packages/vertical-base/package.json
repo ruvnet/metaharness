@@ -1,12 +1,15 @@
 {
   "name": "@metaharness/vertical-base",
-  "version": "0.1.0",
-  "description": "Shared contract for @metaharness/vertical-* packs — VerticalPack interface, manifest schema, template-files protocol",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator",
+  "version": "0.1.1",
+  "description": "Shared contract for @metaharness/vertical-* packs: the VerticalPack interface, manifest schema and template-files protocol.",
+  "homepage": "https://ruv.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "url": "https://github.com/ruvnet/metaharness.git",
     "directory": "packages/vertical-base"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
   },
   "license": "MIT",
   "type": "module",
@@ -18,18 +21,34 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist/**", "README.md"],
+  "files": [
+    "dist/**",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "vitest run --passWithNoTests",
     "lint": "tsc --noEmit"
   },
-  "keywords": ["agent-harness", "vertical-pack", "ruflo"],
-  "publishConfig": { "access": "public" },
+  "keywords": [
+    "metaharness",
+    "agent-harness",
+    "vertical-pack",
+    "plugin-contract",
+    "templates",
+    "manifest-schema",
+    "typescript",
+    "scaffold"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "typescript": "^5.4.0",
     "vitest": "^4.1.12"
   },
-  "engines": { "node": ">=20.0.0" }
+  "engines": {
+    "node": ">=20.0.0"
+  }
 }
