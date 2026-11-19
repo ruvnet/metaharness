@@ -98,6 +98,37 @@ function countDir(dir: string, sub: string): number {
   }
 }
 
+// Dream Cycle 2026-10-25 (generator-genome). A non-empty-directory-entry
+// check (e.g. `countDir(dir, sub) > 0`) is satisfied by `mkdir -p tests/unit`
+// with zero files anywhere — the top-level `tests/` entry is the (empty)
+// `unit` dir itself. Walks the subtree (bounded depth) for a real FILE.
+function hasAnyFile(dir: string, sub: string, maxDepth = 4): boolean {
+  if (!dirExists(dir, sub)) return false;
+  const stack: Array<{ p: string; depth: number }> = [{ p: join(dir, sub), depth: 0 }];
+  while (stack.length) {
+    const { p, depth } = stack.pop()!;
+    let entries: string[];
+    try {
+      entries = readdirSync(p);
+    } catch {
+      continue;
+    }
+    for (const name of entries) {
+      if (name.startsWith('.')) continue;
+      const full = join(p, name);
+      let isDir: boolean;
+      try {
+        isDir = statSync(full).isDirectory();
+      } catch {
+        continue;
+      }
+      if (!isDir) return true;
+      if (depth < maxDepth) stack.push({ p: full, depth: depth + 1 });
+    }
+  }
+  return false;
+}
+
 // --- dimension scorers (pure-ish — they read disk but no exec) -------------
 
 function scoreRepoUnderstanding(dir: string, manifest: any): DimensionScore {
@@ -230,7 +261,9 @@ function scoreMcpSafety(dir: string): McpScore {
 function scoreTestCoverage(dir: string): DimensionScore {
   const signals: string[] = [];
   let s = 0;
-  const hasTests = dirExists(dir, '__tests__') || dirExists(dir, 'tests') || dirExists(dir, 'test');
+  // Dream Cycle 2026-10-25: an empty test directory (dirExists true, zero
+  // files anywhere in the subtree) previously still earned full credit here.
+  const hasTests = ['__tests__', 'tests', 'test'].some((d) => hasAnyFile(dir, d));
   if (hasTests) {
     s += 50;
     signals.push('test directory present');
