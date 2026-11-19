@@ -144,6 +144,8 @@ jobs:
         run: npx vitest run __tests__/wasm-release.test.ts --maxWorkers=2
       - name: Every package with a build script is in the build phases
         run: npx vitest run __tests__/build-ordered-coverage.test.ts --maxWorkers=2
+      - name: Claude plugin marketplace entry installs (#462)
+        run: npx vitest run __tests__/claude-plugin-install-462.test.ts --maxWorkers=2
       - name: Path-handling guard (the /tmp Windows bug regression test)
         shell: bash
         run: node scripts/path-guard.mjs
