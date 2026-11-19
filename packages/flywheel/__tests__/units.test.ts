@@ -310,6 +310,57 @@ describe('verifyReplayBundle — gateReExecutes: re-run the rule on sealed score
   });
 });
 
+// [disclosed-and-fixed, Dream Cycle 2026-11-06] `pairedOutcomesFromItemWins` (sequential.ts) guarded
+// `Score.itemWins` with a length-only check (`!bw || !cw || bw.length === 0 || bw.length !== cw.length`)
+// and no `Array.isArray`. `itemWins` is only a TypeScript type — nothing enforces it at runtime for a
+// live Evaluator's return value or an untrusted `ReplayBundle` parsed from JSON — so a non-array value
+// with a matching `.length` (a string is the simplest real case) passed the guard and then threw on
+// `.map`. `verifyReplayBundle` calls this with no try/catch (replay.ts) and must, per its own documented
+// header contract, ALWAYS return a structured verdict and never throw on untrusted input.
+describe('verifyReplayBundle — malformed Score.itemWins must never throw (type-confusion regression)', () => {
+  const signer = makeSigner();
+  const root: LineageCommit = {
+    id: 'root', generation: 0, parents: [], mutation: null, primaryDelta: 0, anchorScore: null,
+    verdict: 'ROOT', failureReasons: [], receipt: signer.sign({ kind: 'root', root: 'root' }), createdAt: 'g0',
+  };
+  const promoted = (baselineScore: Score, candidateScore: Score): LineageCommit => ({
+    id: 'c1', generation: 1, parents: ['root'], mutation: { target: 't', summary: 'adapt t' }, primaryDelta: 1,
+    anchorScore: null, verdict: 'PROMOTED', failureReasons: [], receipt: signer.sign({ kind: 'candidate', id: 'c1', verdict: 'PROMOTED' }),
+    createdAt: 'g1', baselineScore, candidateScore,
+  });
+  const bundleOf = (c1: LineageCommit): ReplayBundle => ({
+    data_source: 'SYNTHETIC', root_id: 'root', chain: [c1, root], all_commits: [c1],
+    lift_curve: [], gate_fingerprint: gateFingerprint(meetsPromotionRule),
+    verified_improvements: 1, anchor_surviving_improvements: 1, milestone_reached: false, created_at: 'g1',
+  });
+
+  it('a string masquerading as itemWins (same .length both sides) does not throw — gate re-runs on the base rule', () => {
+    const base: Score = { primary: 5, noopRate: 0.3, costPerWin: 1, regressed: false, itemWins: 'ab' as unknown as boolean[] };
+    const cand: Score = { primary: 6, noopRate: 0.2, costPerWin: 1, regressed: false, itemWins: 'cd' as unknown as boolean[] };
+    const b = bundleOf(promoted(base, cand));
+    expect(() => verifyReplayBundle(b, { promotionRule: meetsPromotionRule })).not.toThrow();
+    const v = verifyReplayBundle(b, { promotionRule: meetsPromotionRule });
+    expect(v.checks.gateReExecutes).toBe(true); // degrades to the base rule, which this candidate re-passes
+    expect(v.pass).toBe(true);
+  });
+
+  it('mismatched-length non-array itemWins does not throw either', () => {
+    const base: Score = { primary: 5, noopRate: 0.3, costPerWin: 1, regressed: false, itemWins: 'abc' as unknown as boolean[] };
+    const cand: Score = { primary: 6, noopRate: 0.2, costPerWin: 1, regressed: false, itemWins: 'cd' as unknown as boolean[] };
+    const b = bundleOf(promoted(base, cand));
+    expect(() => verifyReplayBundle(b, { promotionRule: meetsPromotionRule })).not.toThrow();
+  });
+
+  it('honest boolean[] itemWins is unaffected (byte-identical pairing behavior)', () => {
+    const base: Score = { primary: 5, noopRate: 0.3, costPerWin: 1, regressed: false, itemWins: [true, false] };
+    const cand: Score = { primary: 6, noopRate: 0.2, costPerWin: 1, regressed: false, itemWins: [true, true] };
+    const b = bundleOf(promoted(base, cand));
+    const v = verifyReplayBundle(b, { promotionRule: meetsPromotionRule });
+    expect(v.checks.gateReExecutes).toBe(true);
+    expect(v.pass).toBe(true);
+  });
+});
+
 describe('verifyReplayBundle — all_commits receipts (the full diagnostic ledger, not just the winning chain)', () => {
   const signer = makeSigner();
   const root: LineageCommit = {
