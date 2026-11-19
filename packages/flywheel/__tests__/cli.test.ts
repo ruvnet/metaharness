@@ -6,7 +6,7 @@
 // produces via `Math.round((p.primary / max) * 32)`. This is the one human-facing verb for inspecting an
 // otherwise fully receipt-verified, replay-checked bundle — it should degrade gracefully, not crash.
 import { describe, it, expect } from 'vitest';
-import { writeFileSync, unlinkSync } from 'node:fs';
+import { writeFileSync, unlinkSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { dispatch } from '../src/cli.js';
@@ -120,5 +120,26 @@ describe('flywheel graph/analyze/replay — shared fail-closed bundle validation
     const r = await dispatch('replay', [path]);
     expect(r.code === 0 || r.code === 1).toBe(true); // replay's ACCEPTANCE can legitimately fail on this minimal fixture; it must not throw
     unlinkSync(path);
+  });
+});
+
+
+// Vite's transformed import() treats a Windows 8.3 temp path such as RUNNER~1
+// as a literal RUNNER%7E1 path. Keep executable config fixtures in a unique workspace
+// directory; ordinary bundle JSON tests above continue exercising the OS temp path.
+describe('flywheel run production default', () => {
+  it('requires explicit production controls before invoking an old config', async () => {
+    const dir = mkdtempSync(join(process.cwd(), '.flywheel-cli-default-'));
+    const path = join(dir, 'config.mjs');
+    writeFileSync(path, `export default {rootPolicy:{a:''}, proposer:async()=>{throw new Error('must not propose')}, evaluator:async()=>{throw new Error('must not evaluate')}, holdout:{id:'s',items:[]}, maxGenerations:1};`);
+    try { await expect(dispatch('run', [path])).rejects.toThrow(/production requires/); }
+    finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+  it('keeps explicitly selected research configs usable without independent evidence', async () => {
+    const dir = mkdtempSync(join(process.cwd(), '.flywheel-cli-research-'));
+    const path = join(dir, 'config.mjs');
+    writeFileSync(path, `export default {promotionMode:'research', rootPolicy:{a:''}, proposer:async()=>'#', evaluator:async(p)=>({primary:p.a.length,noopRate:0,costPerWin:1,regressed:false}), holdout:{id:'s',items:[]}, maxGenerations:1, dataSource:'SYNTHETIC'};`);
+    try { expect((await dispatch('run', [path])).code).toBe(0); }
+    finally { rmSync(dir, { recursive: true, force: true }); }
   });
 });

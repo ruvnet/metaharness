@@ -8,6 +8,7 @@ import { writeAtomic } from './writer.js';
 import { emptyManifest, fingerprintFiles, sha256 } from './manifest.js';
 import { validateHarnessName } from './renderer.js';
 import { hostConfigFiles } from './host-config.js';
+import { integrateGeneratedRuntime } from './generated-runtime.js';
 import {
   FIELD_MEMORY_MODULE_PATH,
   fieldMemoryManifest,
@@ -290,7 +291,7 @@ export interface ScaffoldOptions {
 }
 
 /** ADR-147: the darwin version a scaffolded harness depends on. */
-const DARWIN_VERSION = '^0.8.0';
+const DARWIN_VERSION = '^0.13.0';
 
 /** ADR-147: the real `evolve` skill emitted into every darwin-integrated harness. */
 function darwinEvolveSkill(name: string): string {
@@ -319,6 +320,16 @@ Or directly:
 \`\`\`bash
 npx metaharness-darwin evolve . --sandbox real --generations 3 --children 4
 \`\`\`
+
+## Fitness limits
+
+The default \`--sandbox real\` command reruns repository tests. Those tests must
+execute the changed policy for their outcomes to measure harness improvement.
+An install smoke test can stay green for every variant and is regression evidence
+only. Mock scores are simulated mechanism checks, not measured agent performance.
+For adoption, use a surface-aware evaluator with frozen baseline/candidate code,
+separate confirmation tasks, and per-task regression checks. A confirmation verdict
+alone never grants deployment or promotion authority.
 
 ## Safety (secure by default)
 
@@ -861,6 +872,7 @@ export async function renderScaffold(opts: ScaffoldOptions) {
     integrateFieldMemory(rendered);
   }
 
+  integrateGeneratedRuntime(rendered, opts.name, hostSet.includes('claude-code'));
   return { rendered, vars, hostSet };
 }
 

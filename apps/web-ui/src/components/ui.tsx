@@ -64,7 +64,7 @@ export function SegTabs<T extends string>({
   onChange: (v: T) => void;
 }) {
   return (
-    <div className="inline-flex rounded-lg border border-ink-700 bg-ink-900/70 p-1">
+    <div className="scroll-thin inline-flex max-w-full overflow-x-auto whitespace-nowrap rounded-lg border border-ink-700 bg-ink-900/70 p-1">
       {options.map((o) => (
         <button
           key={o.id}

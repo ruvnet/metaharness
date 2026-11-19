@@ -9,6 +9,10 @@
 >
 > Read this after ADR-002.
 
+## Distribution amendment — 2026-10-27
+
+The five declared native packages at version 0.1.0 currently return 404 from the public npm registry. npm 11 rejects clean installs whose lockfile cannot resolve those optional dependencies. Until real native artifacts are published, source manifests declare them as optional peers: explicit installations remain discoverable by the unchanged native loader, followed by wasm and the JavaScript fallback. Native packages are not automatically installed in this interim state. Private benchmarks use compatible workspace adapter ranges rather than old registry-only adapter pins. Restore `optionalDependencies` only after published-platform and clean-install qualification. Existing published kernel manifests remain unchanged; they require a separate versioned release to receive this correction.
+
 ## Context
 
 ADR-002 commits the kernel to two distribution targets: a WebAssembly bundle for cross-platform reach (browser, Cloudflare Workers, Deno, Bun, Node, edge) and per-platform native NAPI-RS binaries for Node hosts that want to skip the wasm cost. The kernel is one Rust workspace; the npm surface is one umbrella package (`@metaharness/kernel`) plus five-to-six per-platform peer packages declared as `optionalDependencies`.

@@ -62,6 +62,17 @@ describe('buildScaffold', () => {
     expect(cfg.content).toContain('legal-redline: "Redline contracts fast"');
   });
 
+  it('keeps browser Hermes registry placeholders inactive and preserves multi-host setup guides', () => {
+    for (const hosts of [['hermes','copilot'],['copilot','hermes']] as const) {
+      const files = buildScaffold({...base,hosts:[...hosts]});
+      expect(files.find(f=>f.path==='cli-config.yaml')!.content).not.toContain('mcp_servers:');
+      expect(files.filter(f=>f.path==='install-hermes.md')).toHaveLength(1);
+      expect(files.find(f=>f.path==='install-hermes.md')!.content).toContain('Do not run an unverified registry package');
+      expect(files.some(f=>f.path==='install.md')).toBe(true);
+      expect(new Set(files.map(f=>f.path)).size).toBe(files.length);
+    }
+  });
+
   // Regression: `cfg.name` lands in YAML *key* position
   // (`agent.personalities.<name>`) and is unconstrained on `HarnessConfig`
   // — a name containing `:` previously produced two top-level `:` on one

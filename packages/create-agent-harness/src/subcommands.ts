@@ -156,8 +156,15 @@ export async function doctor(args: string[]): Promise<SubcommandResult> {
   const hasHermes = existsSync(join(dir, 'cli-config.yaml'));
   const hasOpenClaw = existsSync(join(dir, '.openclaw', 'openclaw.json'));
   const hasRvm = existsSync(join(dir, 'rvm.manifest.toml'));
-  check(hasClaudeCode || hasCodex || hasPi || hasHermes || hasOpenClaw || hasRvm,
-    'at least one host artifact present (.claude/, .codex/, AGENTS.md, cli-config.yaml, .openclaw/openclaw.json, or rvm.manifest.toml)');
+  // The four hosts below were scaffolded by `metaharness new` but missing
+  // here, so a fresh --host copilot/opencode/github-actions/prime-agent
+  // harness failed doctor before the user had changed anything.
+  const hasCopilot = existsSync(join(dir, '.vscode', 'mcp.json')) || existsSync(join(dir, '.github', 'copilot-instructions.md'));
+  const hasOpenCode = existsSync(join(dir, '.opencode', 'opencode.json'));
+  const hasGithubActions = existsSync(join(dir, '.github', 'actions')) && existsSync(join(dir, '.github', 'workflows'));
+  const hasPrimeAgent = existsSync(join(dir, '.prime')) || existsSync(join(dir, 'install-prime-agent.md'));
+  check(hasClaudeCode || hasCodex || hasPi || hasHermes || hasOpenClaw || hasRvm || hasCopilot || hasOpenCode || hasGithubActions || hasPrimeAgent,
+    'at least one host artifact present (.claude/, .codex/, AGENTS.md, cli-config.yaml, .openclaw/openclaw.json, rvm.manifest.toml, .vscode/mcp.json, .opencode/opencode.json, .github/workflows + .github/actions, or .prime/)');
 
   // iter 134: surface .claude-plugin/plugin.json presence (the second-path
   // `claude -p --plugin-dir <harness>` proof). All scaffolds since
@@ -169,12 +176,15 @@ export async function doctor(args: string[]): Promise<SubcommandResult> {
     try {
       const plugin = JSON.parse(await readFile(pluginPath, 'utf-8'));
       if (typeof plugin.name === 'string' && plugin.name.length > 0) {
-        lines.push(`  PASS .claude-plugin/plugin.json (name=${plugin.name}, claude -p --plugin-dir works)`);
+        check(plugin.author === undefined ||
+          (typeof plugin.author?.name === 'string' && plugin.author.name.trim().length > 0),
+          '.claude-plugin/plugin.json author.name is a non-empty string when author is provided');
+        lines.push(`  PASS .claude-plugin/plugin.json parsed (name=${plugin.name}; host loading not executed)`);
       } else {
-        lines.push('  WARN .claude-plugin/plugin.json is missing the "name" field');
+        check(false, '.claude-plugin/plugin.json is missing the "name" field');
       }
     } catch {
-      lines.push('  WARN .claude-plugin/plugin.json is not valid JSON');
+      check(false, '.claude-plugin/plugin.json is not valid JSON');
     }
   } else {
     lines.push('  WARN .claude-plugin/plugin.json absent — `claude -p --plugin-dir` won\'t load this harness as a plugin. Run `npx metaharness harness plugin-init` to backfill, or re-scaffold with metaharness@0.1.3+.');

