@@ -89,7 +89,7 @@ describe('memory-rvf against an installed @ruvector/rvf', () => {
       expect(exact.map(h => h.id)).toEqual(truth);
       for (const h of exact) {
         expect(h.score).toBeCloseTo(cosine(q, data.get(h.id)!), 4);
-        expect(h.storedAt).toBeUndefined();
+        expect(typeof h.storedAt).toBe('number');
         expect(h.namespace).toBe('default');
       }
       const approx = await r.search(q, 10);

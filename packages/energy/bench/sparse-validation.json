@@ -1,0 +1,18 @@
+{
+  "workload": "100 synthetic chain graphs; 100 variables, 4 values, 99 edges",
+  "seed": 18374,
+  "options": {
+    "maxMoves": 4000,
+    "restarts": 8,
+    "seed": 42
+  },
+  "node": "v24.22.1",
+  "sparseMeanMs": 3.4597855800000046,
+  "fullMeanMs": 8.20513708,
+  "speedup": 2.3715738707714915,
+  "mismatches": 0,
+  "invalid": 0,
+  "limitations": [
+    "Arithmetic equivalence and latency benchmark; no optimality or production claim"
+  ]
+}
