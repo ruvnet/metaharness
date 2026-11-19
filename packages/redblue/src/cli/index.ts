@@ -12,7 +12,8 @@
 // @metaharness/weight-eft/cli). The `redblue` / `metaharness-redblue` bins call
 // dispatch and then print / exit — behavior is unchanged for direct CLI use.
 
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { readFileSync, writeFileSync, existsSync, realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { AttackFamily, ModelClient, RedBlueConfig } from '../types.js';
 import { loadConfigFromString, defaultConfig, ALL_FAMILIES } from '../config/loader.js';
@@ -28,6 +29,7 @@ import {
   renderHackerOneMarkdown,
 } from '../reports/hackerone.js';
 import { HackerOneClient, hasHackerOneKey } from '../integrations/hackerone.js';
+import { cmdDefense } from './defense.js';
 import { gatedSubmit } from '../integrations/h1-submit.js';
 import type { HackerOneReportDraft } from '../reports/hackerone.js';
 import type { TargetDriver, TestCase, TestResult } from '../types.js';
@@ -477,6 +479,8 @@ Usage:
   redblue patch  [--config redblue.yaml] [--mock-judge]   # baseline -> patch -> retest delta
   redblue retest [--config redblue.yaml] [--mock-judge]
   redblue report --in report.json
+  redblue defense <replay|verify|benchmark>  # blue side: replay real findings against two
+                 # policies, simulate a quarantine, pin a receipt (offline, see 'defense help')
   redblue hackerone weaknesses [--refresh]   # read-only CWE taxonomy (cache→live→static)
   redblue hackerone capabilities             # read-only probe of the token's read surface
   redblue hackerone submit --report <draft.json> --program <handle>
@@ -526,6 +530,8 @@ export async function dispatch(sub: string | undefined, args: string[]): Promise
       return cmdReport(args);
     case 'hackerone':
       return cmdHackerOne(args);
+    case 'defense':
+      return cmdDefense(args);
     case undefined:
     case 'help':
     case '--help':
@@ -537,7 +543,16 @@ export async function dispatch(sub: string | undefined, args: string[]): Promise
 }
 
 // Direct CLI entry (when invoked as the `redblue` / `metaharness-redblue` bin).
-const isMain = import.meta.url === `file://${process.argv[1]}`;
+// npm installs bins as symlinks, so compare real paths: a raw `file://${argv[1]}`
+// check never matches through node_modules/.bin and the CLI silently did nothing.
+const isMain = (() => {
+  if (!process.argv[1]) return false;
+  try {
+    return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return false;
+  }
+})();
 if (isMain) {
   const [, , sub, ...rest] = process.argv;
   dispatch(sub, rest)

@@ -1,5 +1,59 @@
 # metaharness
 
+<!-- ruv-seo:start (ADR-356) -->
+![metaharness flow: npx metaharness new, scaffold with a .harness manifest, host config, harness doctor, harness score](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/metaharness.svg)
+
+`metaharness` scaffolds a custom AI agent harness (an npm package with agents, skills, an MCP policy and host config) and ships the `harness` command that checks and scores it. One scaffold targets Claude Code, Codex, GitHub Copilot, GitHub Actions, OpenCode, pi.dev, Hermes, OpenClaw, RVM or Prime Agent.
+
+**Supported environments:** Node.js 20+ on Linux, macOS and Windows. Two bins: `metaharness` (scaffold) and `harness` (doctor, score, mcp-scan, sbom and more). The optional `@ruvector/ruvllm` dependency adds local embeddings; everything below works without it.
+
+## Quickstart
+
+```bash
+mkdir demo && cd demo && npm init -y >/dev/null
+npm install metaharness
+npx metaharness new my-bot
+npx harness doctor my-bot | tail -1
+npx harness score my-bot | tail -8
+```
+
+Expected output (temp paths shortened to `./`):
+
+```text
+Scaffolded my-bot into ./my-bot
+Files: 17
+Manifest: ./my-bot/.harness/manifest.json
+Result: HEALTHY (./my-bot)
+  Harness Score: 60
+  MCP Risk:      Low
+  Release Ready: No
+  Tests Detected:Yes
+  SBOM:          No
+  Witness Signed:No
+
+Verdict: C (exit 1)
+```
+
+`harness score` exits 1 below grade B, so a fresh scaffold "fails" until you add skills, an SBOM and a witness signature. To run these checks on every push, use the GitHub Actions recipe in [`@metaharness/host-github-actions`](https://www.npmjs.com/package/@metaharness/host-github-actions#evaluate-a-harness-in-github-actions).
+
+### Ready-made scaffolds
+
+Each of these is `npx metaharness new` plus a ready-made agent bundle. Run any of them the same way, then check it with `harness doctor`:
+
+```bash
+npx @metaharness/example-github my-bot
+npx -y -p metaharness harness doctor my-bot | tail -1   # Result: HEALTHY (./my-bot)
+```
+
+- **Third-party SDK showcases:** [`example-ads`](https://www.npmjs.com/package/@metaharness/example-ads), [`example-aws`](https://www.npmjs.com/package/@metaharness/example-aws), [`example-azure`](https://www.npmjs.com/package/@metaharness/example-azure), [`example-bio`](https://www.npmjs.com/package/@metaharness/example-bio), [`example-datadog`](https://www.npmjs.com/package/@metaharness/example-datadog), [`example-fhir`](https://www.npmjs.com/package/@metaharness/example-fhir), [`example-gcp`](https://www.npmjs.com/package/@metaharness/example-gcp), [`example-github`](https://www.npmjs.com/package/@metaharness/example-github), [`example-huggingface`](https://www.npmjs.com/package/@metaharness/example-huggingface), [`example-iot`](https://www.npmjs.com/package/@metaharness/example-iot), [`example-nasa`](https://www.npmjs.com/package/@metaharness/example-nasa), [`example-pinecone`](https://www.npmjs.com/package/@metaharness/example-pinecone), [`example-qiskit`](https://www.npmjs.com/package/@metaharness/example-qiskit), [`example-slack`](https://www.npmjs.com/package/@metaharness/example-slack), [`example-stripe`](https://www.npmjs.com/package/@metaharness/example-stripe), [`example-supabase`](https://www.npmjs.com/package/@metaharness/example-supabase), [`example-twilio`](https://www.npmjs.com/package/@metaharness/example-twilio), [`example-web3`](https://www.npmjs.com/package/@metaharness/example-web3)
+- **One per host:** [`claude-code`](https://www.npmjs.com/package/@metaharness/claude-code), [`codex`](https://www.npmjs.com/package/@metaharness/codex), [`copilot`](https://www.npmjs.com/package/@metaharness/copilot), [`github-actions`](https://www.npmjs.com/package/@metaharness/github-actions), [`hermes`](https://www.npmjs.com/package/@metaharness/hermes), [`openclaw`](https://www.npmjs.com/package/@metaharness/openclaw), [`opencode`](https://www.npmjs.com/package/@metaharness/opencode), [`pi-dev`](https://www.npmjs.com/package/@metaharness/pi-dev), [`rvm`](https://www.npmjs.com/package/@metaharness/rvm)
+- **Verticals:** [`coding`](https://www.npmjs.com/package/@metaharness/coding), [`devops`](https://www.npmjs.com/package/@metaharness/devops), [`education`](https://www.npmjs.com/package/@metaharness/education), [`gaming`](https://www.npmjs.com/package/@metaharness/gaming), [`legal`](https://www.npmjs.com/package/@metaharness/legal), [`repo-maintainer`](https://www.npmjs.com/package/@metaharness/repo-maintainer), [`research`](https://www.npmjs.com/package/@metaharness/research), [`sales`](https://www.npmjs.com/package/@metaharness/sales), [`support`](https://www.npmjs.com/package/@metaharness/support), [`trading`](https://www.npmjs.com/package/@metaharness/trading)
+
+**Next:** [`@metaharness/darwin`](https://www.npmjs.com/package/@metaharness/darwin) — evolve the harness you just scaffolded instead of hand-tuning it.
+<!-- ruv-seo:end -->
+
+## Reference
+
 Scaffold your own focused AI agent harness — like [ruflo](https://github.com/ruvnet/ruflo), uniquely yours.
 
 > **Proven at the cost-Pareto frontier.** Same "evolve the harness" thesis, measured: the Darwin harness resolves

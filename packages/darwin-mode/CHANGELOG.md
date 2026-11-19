@@ -1,3 +1,17 @@
+# 0.14.0 (2026-11-10)
+
+Numeric genomes: optional surrogate pre-screening, with a `ruv-fann` model. Experimental.
+
+- `evolveNumeric` takes an opt-in `surrogate` config. Each generation it proposes `oversample`× the usual mutation candidates, a surrogate fit on the archive's scored genomes ranks them, and only the best-ranked go to the external evaluator. The evaluator budget per parent is unchanged, the surrogate never scores a variant, and any failure (too few rows, declined fit, failed trust gate, thrown error) falls back to the unscreened generation and is recorded in `result.surrogate.fallbacks`.
+- Pre-screen settings: `oversample`, `minRows`, `exploreSlots`, `warmupGenerations`, `refitEvery`, a held-out-Spearman `trust` gate and an `onGeneration` callback.
+- `createFannSurrogate()` provides a surrogate backed by `ruv-fann@0.1.2` (Rust/WASM dense networks), with `hidden` layer shapes, `activation`, `optimizer`, `learningRate`, `epochs`, `maxRows`, `targetTransform` (`standardize` or `rank`), `ensemble`, `explorationWeight`, `seed` and `simd`. `ruv-fann` is an optional peer dependency (Node 20.9+), loaded only when this function is called.
+- `NumericSurrogate` is a public port, so any model can be plugged in. New exports: `genomeToUnitVector`, `surrogateRowsFromArchive`, `selectByPrediction`, `fitSurrogate`, `spearman`, `validateSurrogateConfig`, `FannSurrogate`, `fannEpochBudget`.
+- CLI: `evolve-numeric --surrogate fann` plus `--surrogate-*` flags for every setting above.
+- `bench/selection/numeric-surrogate.mjs` (`npm run bench:surrogate`): paired benchmark on synthetic objectives; results in `bench/results/numeric-surrogate.txt` and the README.
+- README: new "Numeric genomes and the ruv-fann surrogate" section with two animated diagrams.
+
+Without `surrogate`, `evolveNumeric` behaves exactly as in 0.13.1.
+
 # 0.13.0 (2026-11-05)
 
 Security: harden variant evaluation.

@@ -1,7 +1,16 @@
 {
   "name": "@metaharness/evals-hle",
   "version": "0.1.0",
-  "description": "HLE (Humanity's Last Exam) benchmark adapter for @metaharness/flywheel — evolve the answering policy, not the model. Subject routing, verifier stack, answer normalization, calibration, and a stricter composite promotion gate.",
+  "description": "Humanity's Last Exam (HLE) benchmark adapter for @metaharness/flywheel: evolve the answering policy, not the model, with verifiers, calibration and a strict promotion gate.",
+  "homepage": "https://ruv.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/metaharness.git",
+    "directory": "packages/evals-hle"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -11,7 +20,10 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -20,7 +32,17 @@
     "test": "vitest run",
     "lint": "tsc --noEmit"
   },
-  "keywords": ["hle", "humanitys-last-exam", "benchmark", "eval", "flywheel", "metaharness", "policy-evolution", "llm", "agent-harness"],
+  "keywords": [
+    "hle",
+    "humanitys-last-exam",
+    "benchmark",
+    "eval",
+    "flywheel",
+    "metaharness",
+    "policy-evolution",
+    "llm",
+    "agent-harness"
+  ],
   "license": "MIT",
   "dependencies": {
     "@metaharness/flywheel": "^0.1.1"
