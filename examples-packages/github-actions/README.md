@@ -1,6 +1,8 @@
 # MetaHarness × GitHub Actions
 
 <!-- ruv-seo:start (ADR-356) -->
+![@metaharness/github-actions flow: npx @metaharness/github-actions my-bot scaffolds the example files and the .harness manifest, then harness doctor reports HEALTHY](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/example-scaffold.svg)
+
 MetaHarness example — GitHub Actions CI/CD harness (.github/workflows + composite action.yml, non-interactive, ADR-033).
 
 **Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/github-actions` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.

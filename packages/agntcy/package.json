@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/agntcy",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "AGNTCY build-time integration for MetaHarness agents: DID identity badges, OASF capability records, Agent Directory publishing, OpenTelemetry semantic attributes, and the CASA intent compiler.",
   "homepage": "https://ruv.io",
   "repository": {
@@ -49,7 +49,9 @@
   "engines": {
     "node": ">=20.0.0"
   },
-  "dependencies": {
+  "optionalDependencies": {
+    "@buf/agntcy_dir.bufbuild_es": "2.16.0-20261015113725-c24aeb0a65d8.1",
+    "@bufbuild/protobuf": "^2.12.0",
     "agntcy-dir": "^1.8.1"
   },
   "devDependencies": {

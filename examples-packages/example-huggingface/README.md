@@ -1,6 +1,8 @@
 # @metaharness/example-huggingface
 
 <!-- ruv-seo:start (ADR-356) -->
+![@metaharness/example-huggingface flow: npx @metaharness/example-huggingface my-bot scaffolds the example files and the .harness manifest, then harness doctor reports HEALTHY](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/example-scaffold.svg)
+
 MetaHarness example — Hugging Face SDK showcase: model/dataset discovery, serverless inference, and Space exploration.
 
 **Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This package does not install the third-party SDK; the scaffold tells you to run `npm install @huggingface/inference @huggingface/hub` yourself. This is the `@metaharness/example-huggingface` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.

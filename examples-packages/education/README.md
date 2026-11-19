@@ -1,6 +1,8 @@
 # MetaHarness: education vertical
 
 <!-- ruv-seo:start (ADR-356) -->
+![@metaharness/education flow: npx @metaharness/education my-bot scaffolds the example files and the .harness manifest, then harness doctor reports HEALTHY](https://raw.githubusercontent.com/ruvnet/metaharness/main/docs/assets/readme/example-scaffold.svg)
+
 MetaHarness example — tutor pod that teaches over a curriculum with planner, tutor, and grader agents.
 
 **Supported environments:** Node.js 20+ on Linux, macOS and Windows. The scaffold runs `npx metaharness@latest`, so the first run needs network access. This is the `@metaharness/education` path from [`metaharness`](https://www.npmjs.com/package/metaharness): the same scaffold as `npx metaharness new my-bot`, plus this example's files.
