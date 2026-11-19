@@ -1,0 +1,171 @@
+{
+  "seed": 819137,
+  "count": 320,
+  "variablesPerFixture": "3..7",
+  "domainSizes": "2..4",
+  "strategies": {
+    "auto": {
+      "strategy": "auto",
+      "maxOperations": 1000000
+    },
+    "local": {
+      "seed": 41,
+      "restarts": 4,
+      "maxMoves": 750,
+      "temperature": 3,
+      "strategy": "local"
+    },
+    "legacy": {
+      "entrypoint": "solve",
+      "seed": 41,
+      "restarts": 4,
+      "maxMoves": 750,
+      "temperature": 3
+    }
+  },
+  "timing": {
+    "warmupPerMethod": 24,
+    "repeatsPerMethodAndFixture": 3,
+    "description": "Mean and p95 of warm per-fixture amortized CPU wall times in ms. Synthetic single-process measurements."
+  },
+  "environment": {
+    "node": "v24.22.1",
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "INTEL(R) XEON(R) PLATINUM 8573C"
+  },
+  "operationUnits": "Forest DP candidate inspections, enumeration candidate and incident factor inspections, and stochastic moves measure different work.",
+  "results": {
+    "forest": {
+      "auto": {
+        "cases": 160,
+        "feasible": 139,
+        "validStates": 139,
+        "optimalStates": 139,
+        "infeasibleProven": 21,
+        "invalidOutputs": 0,
+        "exactMismatches": 0,
+        "routeErrors": 0,
+        "meanMs": 0.07661531041666783,
+        "p95Ms": 0.05948533333336551,
+        "meanOperations": 36.65625
+      },
+      "local": {
+        "cases": 160,
+        "feasible": 139,
+        "validStates": 139,
+        "optimalStates": 137,
+        "infeasibleProven": 0,
+        "invalidOutputs": 0,
+        "exactMismatches": 0,
+        "routeErrors": 0,
+        "meanMs": 1.1039165250000031,
+        "p95Ms": 5.593012333333263,
+        "meanOperations": 750
+      },
+      "legacy": {
+        "cases": 160,
+        "feasible": 139,
+        "validStates": 139,
+        "optimalStates": 136,
+        "infeasibleProven": 0,
+        "invalidOutputs": 0,
+        "exactMismatches": 0,
+        "routeErrors": 0,
+        "meanMs": 0.6221901541666638,
+        "p95Ms": 3.089618666666638,
+        "meanOperations": 750
+      }
+    },
+    "cycle": {
+      "auto": {
+        "cases": 160,
+        "feasible": 130,
+        "validStates": 130,
+        "optimalStates": 130,
+        "infeasibleProven": 30,
+        "invalidOutputs": 0,
+        "exactMismatches": 0,
+        "routeErrors": 0,
+        "meanMs": 0.1741137666666735,
+        "p95Ms": 0.16454766666667334,
+        "meanOperations": 68.4875
+      },
+      "local": {
+        "cases": 160,
+        "feasible": 130,
+        "validStates": 130,
+        "optimalStates": 128,
+        "infeasibleProven": 0,
+        "invalidOutputs": 0,
+        "exactMismatches": 0,
+        "routeErrors": 0,
+        "meanMs": 1.0223622645833346,
+        "p95Ms": 5.679714999999987,
+        "meanOperations": 750
+      },
+      "legacy": {
+        "cases": 160,
+        "feasible": 130,
+        "validStates": 130,
+        "optimalStates": 128,
+        "infeasibleProven": 0,
+        "invalidOutputs": 0,
+        "exactMismatches": 0,
+        "routeErrors": 0,
+        "meanMs": 1.044334902083332,
+        "p95Ms": 6.880723666666654,
+        "meanOperations": 750
+      }
+    }
+  },
+  "pairedLocalVersusLegacy": {
+    "improved": 1,
+    "same": 319,
+    "worse": 0
+  },
+  "largeForest": {
+    "variables": 511,
+    "expected": 39,
+    "returned": 39,
+    "method": "forest",
+    "operations": 3062
+  },
+  "largeCycles": {
+    "smoothRing": {
+      "variables": 96,
+      "optimum": 0,
+      "legacy": 95,
+      "current": 0,
+      "gap": 0,
+      "method": "local",
+      "moves": 750,
+      "checked": true
+    },
+    "frustratedRing": {
+      "variables": 96,
+      "optimum": 48,
+      "legacy": 109,
+      "current": 109,
+      "gap": 61,
+      "method": "local",
+      "moves": 750,
+      "checked": true
+    }
+  },
+  "zeroBudget": {
+    "status": "budget_exhausted",
+    "operations": 0,
+    "returned": 96
+  },
+  "gates": {
+    "independentlyValidResults": true,
+    "exactOutcomesMatchOracle": true,
+    "correctRoutingAndClaims": true,
+    "plantedTreeRecovered": true,
+    "explicitLocalNeverRegresses": true,
+    "largeCyclesUseBoundedLocalSearch": true,
+    "smoothRingRecoversKnownOptimum": true,
+    "interruptedIncumbentRetained": true
+  }
+}

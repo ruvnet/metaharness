@@ -6,6 +6,7 @@
 // validator that silently accepted everything would also "not throw."
 import { describe, it, expect } from 'vitest';
 import { validateReplayBundle } from '../src/validate-bundle.js';
+import { verifyReplayBundle } from '../src/replay.js';
 import type { ReplayBundle } from '../src/index.js';
 
 const validReceipt = { payload: { kind: 'root', root: 'root' }, signature: 'sig', publicKey: 'pk', alg: 'ed25519' as const };
@@ -118,5 +119,62 @@ describe('validateReplayBundle — multiple simultaneous violations', () => {
     const r = validateReplayBundle(b);
     expect(r.valid).toBe(false);
     expect(r.errors.length).toBeGreaterThanOrEqual(3);
+  });
+});
+
+// 2026-11-11 dream-cycle (flywheel-promotion): `cli.ts`'s `loadBundle()` runs every bundle it reads
+// through `validateReplayBundle()` before calling `verifyReplayBundle()` — but `verifyReplayBundle` is
+// also re-exported from `index.ts` as the documented entry point for an INDEPENDENT reviewer with no
+// trust in the producer (see replay.ts's file header). A caller that imports it directly, bypassing the
+// CLI, got no such gate: a malformed top-level `ReplayBundle` reached `verifyReplayBundle`'s own
+// iteration/property access and threw an uncaught TypeError, breaking its own documented "always return
+// a verdict, never throw" contract. Confirmed live against the pre-fix build (`node -e` against
+// `dist/cjs/replay.js`): a non-array `chain` threw "Cannot read properties of undefined (reading
+// 'payload')"; a bundle missing `all_commits` threw "b.all_commits is not iterable" — neither is a
+// hypothetical. Every case below proves a clean REJECTED verdict, not just "didn't throw" — a version
+// that silently coerced the bad shape into a passing verdict would also "not throw."
+describe('verifyReplayBundle() — fail-closed on a malformed top-level bundle (does not just trust the CLI)', () => {
+  it('does not throw, and fails closed, when chain is not an array', () => {
+    const bundle = { ...validBundle(), chain: 'not-an-array' } as unknown as ReplayBundle;
+    let verdict: ReturnType<typeof verifyReplayBundle> | undefined;
+    expect(() => { verdict = verifyReplayBundle(bundle); }).not.toThrow();
+    expect(verdict!.pass).toBe(false);
+    expect(verdict!.failures).toContain('invalid_bundle');
+  });
+
+  it('does not throw, and fails closed, when all_commits is missing entirely', () => {
+    const bundle = validBundle() as unknown as Record<string, unknown>;
+    delete bundle.all_commits;
+    let verdict: ReturnType<typeof verifyReplayBundle> | undefined;
+    expect(() => { verdict = verifyReplayBundle(bundle as unknown as ReplayBundle); }).not.toThrow();
+    expect(verdict!.pass).toBe(false);
+    expect(verdict!.failures).toContain('invalid_bundle');
+  });
+
+  it('does not throw, and fails closed, when a chain node\'s parents is not an array', () => {
+    const bundle = validBundle();
+    (bundle.chain[0] as unknown as Record<string, unknown>).parents = 'not-an-array';
+    let verdict: ReturnType<typeof verifyReplayBundle> | undefined;
+    expect(() => { verdict = verifyReplayBundle(bundle); }).not.toThrow();
+    expect(verdict!.pass).toBe(false);
+    expect(verdict!.failures).toContain('invalid_bundle');
+  });
+
+  it('rejects a NaN/Infinity-poisoned numeric field instead of letting it reach gate re-execution unflagged', () => {
+    const bundle = validBundle() as unknown as Record<string, unknown>;
+    bundle.verified_improvements = NaN;
+    let verdict: ReturnType<typeof verifyReplayBundle> | undefined;
+    expect(() => { verdict = verifyReplayBundle(bundle as unknown as ReplayBundle); }).not.toThrow();
+    expect(verdict!.pass).toBe(false);
+    expect(verdict!.failures).toContain('invalid_bundle');
+  });
+
+  it('does not add invalid_bundle for a structurally well-formed bundle (no behavior change on the happy path)', () => {
+    // validBundle()'s receipt is a fixture stub, not a real Ed25519 signature, so `receipts` still fails —
+    // this only proves the NEW `invalid_bundle` gate stays silent for correctly-shaped bundles.
+    const bundle = validBundle();
+    const verdict = verifyReplayBundle(bundle);
+    expect(verdict.failures).not.toContain('invalid_bundle');
+    expect(verdict.chainSummary).not.toBe('');
   });
 });
