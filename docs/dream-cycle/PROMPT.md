@@ -13,7 +13,7 @@
 > **Authority note (read before editing).** The authoritative copy of this
 > prompt is the one stored in the Anthropic cloud scheduler routine
 > ("MetaHarness Nightly Dream Cycle", cron `0 8 * * *` UTC). This file is the
-> version-controlled mirror kept for review, diffing, and ADR-251 traceability.
+> version-controlled mirror kept for review, diffing, and ADR-273 traceability.
 > Whenever one copy changes, the other MUST be updated in the same piece of
 > work — a drifted mirror is worse than no mirror.
 
