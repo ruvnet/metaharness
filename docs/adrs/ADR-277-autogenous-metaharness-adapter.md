@@ -4,7 +4,7 @@
 **Date**: 2026-08-17
 **Updated**: 2026-08-17
 **Project**: `ruvnet/metaharness`
-**Related**: ADR-150, ADR-153, ADR-235; Autogenous ADR-392 and ADR-400
+**Related**: ADR-150, ADR-153, ADR-235, ADR-323 (real Autogenous dependencies); Autogenous ADR-392 and ADR-400
 
 ## Context
 

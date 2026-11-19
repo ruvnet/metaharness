@@ -3,7 +3,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult, ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 import { registerAppTool } from '@modelcontextprotocol/ext-apps/server';
-import { z } from 'zod/v3';
+import { z } from 'zod';
 import type {
   ActRequest,
   ArcAvoContext,
@@ -134,7 +134,7 @@ const memoryCommit = z.object({
 const explicitSupervisorCase = z.object({
   trigger: z.literal('MODEL_CONTRADICTION'),
   evidenceReceiptHashes: z.array(sha256).min(1).max(128),
-  metrics: z.record(z.number().finite()).optional(),
+  metrics: z.record(z.string(), z.number().finite()).optional(),
 }).strict();
 const supervisorMode = z.enum([
   'CONTINUE',

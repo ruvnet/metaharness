@@ -81,17 +81,14 @@ jobs:
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32
         with:
           shared-key: wasm-${{ matrix.os }}
-      - name: Install wasm-pack (Linux / macOS)
-        if: runner.os != 'Windows'
+      - name: Install pinned wasm tools (crates.io only)
+        # wasm-pack 0.13.1, wasm-bindgen-cli (= the Cargo.toml pin) and wasm-opt, each via
+        # `cargo install --locked` with retries, on every OS. The old curl installer and
+        # wasm-pack's on-demand wasm-bindgen/binaryen downloads came from GitHub release
+        # assets, which returned 504s and turned main CI red on 7136c872. --locked keeps
+        # transitives within the 1.88 toolchain pin. rust-cache keeps ~/.cargo/bin warm.
         shell: bash
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-      - name: Install wasm-pack (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        # Pin wasm-pack 0.13.1 and use its own Cargo.lock (--locked). Unlocked,
-        # cargo resolves the newest transitives (e.g. uuid 1.27 needs rustc 1.89)
-        # which exceed our 1.88 workspace toolchain pin and fail the install.
-        run: cargo install wasm-pack --version 0.13.1 --locked
+        run: bash scripts/install-wasm-tools.sh
       - name: Install wasm-tools
         # Pin to a version compatible with workspace rust 1.88 — newer
         # wasm-tools rev their MSRV aggressively (1.252 needed 1.85,
@@ -141,6 +138,12 @@ jobs:
         run: npm test
       - name: Dream integration regressions
         run: npx vitest run __tests__/dream-explicit-new.test.ts --maxWorkers=2
+      - name: CI aggregate requires every job, including Dream
+        run: npx vitest run __tests__/ci-aggregate.test.ts --maxWorkers=2
+      - name: Wasm release invariants (horizon 0.2.1 shipped without its wasm)
+        run: npx vitest run __tests__/wasm-release.test.ts --maxWorkers=2
+      - name: Every package with a build script is in the build phases
+        run: npx vitest run __tests__/build-ordered-coverage.test.ts --maxWorkers=2
       - name: Path-handling guard (the /tmp Windows bug regression test)
         shell: bash
         run: node scripts/path-guard.mjs
@@ -266,6 +269,21 @@ jobs:
         shell: bash
         run: node scripts/install-all.mjs
 
+  # Clean contributor install must work with npm 11, without install fallback.
+  contributor-install:
+    name: Contributor / Node 24 npm 11
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+      - name: Clean npm 11 install
+        run: npx --yes npm@11 ci
+      - run: npm run build
+      - run: npx vitest run packages/kernel-js packages/bench --maxWorkers=2
+
   # ─────────────────────────────────────────────────────────────────────
   # Bench (Linux only — others would be redundant for synthetic corpus)
   # ─────────────────────────────────────────────────────────────────────
@@ -308,10 +326,15 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────
   ci-pass:
     name: CI passed
-    needs: [rust, wasm, node, meta-proxy-launchagent, meta-proxy-scheduled-task, pack-install, bench]
+    needs: [rust, wasm, node, contributor-install, meta-proxy-launchagent, meta-proxy-scheduled-task, pack-install, bench, dream-validation, dream-neural]
+    if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:
-      - run: echo "All cross-platform gates green."
+      - name: Require every CI dependency to succeed
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: >-
+          node -e 'const failed = Object.entries(JSON.parse(process.env.NEEDS_JSON)).filter(([, job]) => job.result !== "success"); if (failed.length) { console.error("CI dependencies did not succeed:", failed); process.exit(1); } console.log("All CI gates green.");'
 
   dream-validation:
     name: Dream integration / installed artifacts
@@ -332,9 +355,17 @@ jobs:
       # Root regressions are intentionally included; workspace-only npm test misses them.
       - run: npx vitest run --maxWorkers=1
       - run: node --test packages/darwin-mode/bench/swebench/cost-guard.test.mjs
-      - run: npm audit --audit-level=moderate
+      - run: node --test 'packages/artex-defense/*.test.mjs'
+      # Shipped (non-dev) deps are audited at moderate. The full tree, including dev
+      # tooling, is audited at critical: GHSA-fc5q-39xc-vjpf (picomatch <=4.0.7, reached
+      # only through vite/vitest) has no patched release. Restore a single
+      # `npm audit --audit-level=moderate` once picomatch ships a fix.
+      - run: npm audit --omit=dev --audit-level=moderate
+      - run: npm audit --audit-level=critical
       - run: node scripts/dream-release.mjs pack
       - run: node scripts/dream-release.mjs smoke
+      - name: Generated installed-user journey
+        run: node scripts/generated-journey.mjs
       - run: node bench/dream/canonicalization.mjs
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:

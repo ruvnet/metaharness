@@ -75,8 +75,8 @@ describe('scaffold (e2e)', () => {
       await readFile(join(target, '.claude/settings.json'), 'utf-8'),
     );
     expect(settings.mcpServers['ops-bot']).toBeDefined();
-    expect(settings.mcpServers.alerts).toBeDefined();
-    expect(settings.mcpServers.runbook_store).toBeDefined();
+    // Only advertise the server actually shipped; no placeholder alert/store services.
+    expect(Object.keys(settings.mcpServers)).toEqual(['ops-bot']);
     // Sanity-check the deny list.
     expect(settings.permissions.deny).toContain('Bash(rm *)');
   });
@@ -206,7 +206,9 @@ describe('scaffold — ADR-022 default-deny mcp-policy.json (Dream Cycle 2026-10
       const report = scanMcp(target);
       expect(report.findings.some(f => f.id === 'no-policy'), `template ${t} still flags no-policy`).toBe(false);
     }
-  });
+    // 20 full scaffolds to disk in one test: Windows file I/O under parallel test
+    // load can exceed the 5 s default, so this test gets an explicit budget.
+  }, 30_000);
 });
 
 describe('detectRufloProject', () => {

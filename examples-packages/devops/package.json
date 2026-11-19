@@ -1,12 +1,15 @@
 {
   "name": "@metaharness/devops",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "MetaHarness example — Claude Code incident-response vertical with responder, runbook-runner, escalator, postmortem agents (npx @metaharness/devops my-bot)",
-  "homepage": "https://github.com/ruvnet/agent-harness-generator/tree/main/examples-packages/devops",
+  "homepage": "https://ruv.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/agent-harness-generator.git",
+    "url": "https://github.com/ruvnet/metaharness.git",
     "directory": "examples-packages/devops"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/metaharness/issues"
   },
   "license": "MIT",
   "author": "rUv <ruv@ruv.net>",
@@ -23,14 +26,13 @@
   "keywords": [
     "metaharness",
     "agent-harness",
-    "agent-harness-generator",
     "devops",
-    "vertical",
     "claude-code",
     "ai-agent",
     "mcp",
     "npx",
-    "scaffold"
+    "scaffold",
+    "agent-scaffold"
   ],
   "publishConfig": {
     "access": "public"

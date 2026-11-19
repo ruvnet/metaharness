@@ -97,6 +97,17 @@ describe('@metaharness/host-hermes — Hermes-4 quirk handling', () => {
       expect(c).not.toMatch(/^name:/m);
     });
 
+    it('registers actual command and URL servers under mcp_servers', () => {
+      const config = cliConfigYaml({name:'h',mcpServers:[
+        {name:'local',command:['node','./bin/mcp.js'],env:[['SCOPE','read']]},
+        {name:'remote',url:'https://example.test/mcp'},
+      ]} as any);
+      expect(config).toContain('mcp_servers:\n');
+      const lines = config.split('mcp_servers:\n')[1].trim().split('\n');
+      expect(JSON.parse(lines[0].trim().slice('local: '.length))).toEqual({command:'node',args:['./bin/mcp.js'],env:{SCOPE:'read'}});
+      expect(JSON.parse(lines[1].trim().slice('remote: '.length))).toEqual({url:'https://example.test/mcp'});
+    });
+
     it('maps each agent to a named personality', () => {
       const c = cliConfigYaml({
         name: 'h',

