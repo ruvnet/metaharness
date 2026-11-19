@@ -88,6 +88,13 @@ export interface NumericEvolutionConfig {
     readonly workRoot: string;
     /** Optional explicit baseline genome; defaults to each parameter's `default` or bounds midpoint. */
     readonly baselineGenome?: NumericGenome;
+    /**
+     * Opt-in surrogate pre-screening (numeric-surrogate.ts). When set, each
+     * generation proposes `oversample`× the usual mutation candidates and only
+     * the ones the surrogate predicts best reach the external evaluator — the
+     * evaluator budget is unchanged. Omitted → the loop is exactly as before.
+     */
+    readonly surrogate?: import('./numeric-surrogate.js').NumericSurrogateConfig;
 }
 /** The outcome of a numeric `evolveNumeric` run. */
 export interface NumericEvolutionResult {
@@ -96,5 +103,7 @@ export interface NumericEvolutionResult {
     readonly records: readonly NumericArchiveRecord[];
     readonly generations: number;
     readonly winnerLineage: readonly string[];
+    /** Present only when `config.surrogate` was set: what the pre-screen actually did. */
+    readonly surrogate?: import('./numeric-surrogate.js').NumericSurrogateReport;
 }
 //# sourceMappingURL=numeric-types.d.ts.map

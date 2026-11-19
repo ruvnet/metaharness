@@ -16,9 +16,8 @@ export function packageJsonFor(target, description) {
   const keywords = [
     'metaharness',
     'agent-harness',
-    'agent-harness-generator',
+    'agent-scaffold',
     target.name,
-    target.kind, // 'host' | 'vertical'
     target.host,
     'ai-agent',
     'mcp',
@@ -29,12 +28,13 @@ export function packageJsonFor(target, description) {
     name: `@metaharness/${target.name}`,
     version: '0.1.0',
     description,
-    homepage: `https://github.com/ruvnet/agent-harness-generator/tree/main/examples-packages/${target.name}`,
+    homepage: 'https://ruv.io',
     repository: {
       type: 'git',
-      url: 'https://github.com/ruvnet/agent-harness-generator.git',
+      url: 'https://github.com/ruvnet/metaharness.git',
       directory: `examples-packages/${target.name}`,
     },
+    bugs: { url: 'https://github.com/ruvnet/metaharness/issues' },
     license: 'MIT',
     author: 'rUv <ruv@ruv.net>',
     type: 'module',

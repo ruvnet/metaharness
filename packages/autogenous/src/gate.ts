@@ -1,8 +1,9 @@
 import type { PromotionDecision, PromotionEvidence } from '@metaharness/flywheel';
+import { PROMOTION_MARGIN, promoteAuthorized } from 'radio-moe';
 import type { AutogenousScore } from './score.js';
 
-/** Frozen in radio-moe mesh-evolve.ts. */
-export const AUTOGENOUS_PROMOTION_MARGIN = 0.02;
+/** radio-moe mesh-evolve's frozen `PROMOTION_MARGIN`, imported rather than copied. */
+export const AUTOGENOUS_PROMOTION_MARGIN: number = PROMOTION_MARGIN;
 
 /**
  * Autogenous' domain gate: Better ∧ Safe ∧ Authorized ∧ Reversible.
@@ -13,12 +14,18 @@ export function autogenousPromotionRule(evidence: PromotionEvidence): PromotionD
   const candidate = evidence.candidate as AutogenousScore;
   const reasons: string[] = [];
 
-  if (candidate.separation < baseline.separation + AUTOGENOUS_PROMOTION_MARGIN) {
-    reasons.push('insufficient_separation_lift');
+  // The Better ∧ Safe ∧ Authorized ∧ Reversible core is radio-moe's own promoteAuthorized().
+  const core = promoteAuthorized(candidate, baseline, {
+    authorized: candidate.authorized,
+    reversible: candidate.reversible,
+  });
+  if (!core.better) reasons.push('insufficient_separation_lift');
+  if (!core.safe) reasons.push('hard_gates_failed');
+  if (!core.authorized) reasons.push('not_authorized');
+  if (!core.reversible) reasons.push('not_reversible');
+  if (candidate.aglAdmission && !candidate.aglAdmission.admissible) {
+    reasons.push(`agl_admission_refused:${candidate.aglAdmission.reason}`);
   }
-  if (!candidate.hardGatesPass) reasons.push('hard_gates_failed');
-  if (!candidate.authorized) reasons.push('not_authorized');
-  if (!candidate.reversible) reasons.push('not_reversible');
   if (candidate.policyViolations.length > 0) reasons.push('policy_surface_violation');
   if (candidate.correlatedGainVsBest < 0) reasons.push('correlated_quality_below_best_single');
   if (candidate.correlatedGainVsBest < baseline.correlatedGainVsBest) {
