@@ -1,0 +1,777 @@
+{
+  "generatedFrom": "bench/sim-endurance.mjs",
+  "generatedAt": "2026-11-20T16:36:23.166Z",
+  "methodology": {
+    "kind": "synthetic_local_disk_persistence_not_model_performance",
+    "node": "v22.23.2",
+    "platform": "linux 6.17.0-23-generic",
+    "arch": "x64",
+    "cpu": "AMD Ryzen 9 9950X 16-Core Processor",
+    "cpus": 32,
+    "fsType": "ext4",
+    "dir": "/tmp",
+    "syncPolicy": "journal: fsync per acknowledged append (+dir fsync on create); checkpoint: temp+fsync+rename+dir fsync; snapshot(fsync): temp+fsync+rename+dir fsync per append; snapshot(unmodified SimMemory): temp+rename, no fsync",
+    "isolation": "each arm in a fresh child process; arms sequential (shared device)",
+    "ci": "95% percentile bootstrap, 200 fixed-seed resamples (latency subsampled to <=20k points)",
+    "writeAmplification": "app = bytes the code writes / logical record-line bytes; block = /proc/self/io write_bytes / logical bytes (Linux only)",
+    "config": {
+      "records": [
+        10000,
+        100000
+      ],
+      "checkpointEvery": 1000,
+      "tail": 100,
+      "replays": 5,
+      "sustainSizes": [
+        1000,
+        5000,
+        10000,
+        19000,
+        20000
+      ],
+      "sustainAppends": 60
+    }
+  },
+  "endurance": [
+    {
+      "arm": "journal",
+      "records": 10000,
+      "file": "/tmp/sim-endurance-hAUYyo/journal-10000-0.jsonl",
+      "wallSeconds": 2.82,
+      "append": {
+        "n": 10000,
+        "meanMs": 0.281,
+        "meanCi95": [
+          0.279,
+          0.283
+        ],
+        "p50Ms": 0.264,
+        "p50Ci95": [
+          0.264,
+          0.265
+        ],
+        "p95Ms": 0.341,
+        "p95Ci95": [
+          0.338,
+          0.344
+        ],
+        "p99Ms": 0.49,
+        "p99Ci95": [
+          0.449,
+          0.541
+        ],
+        "recordsPerSecond": 3560.6,
+        "recordsPerSecondCi95": [
+          3533.6,
+          3584.2
+        ]
+      },
+      "diskBytes": 6887392,
+      "bytesPerRecord": 688.7,
+      "checkpoints": 0,
+      "appBytesWritten": 6887392,
+      "writeAmplificationApp": 1,
+      "writeAmplificationBlock": 6.946,
+      "maxRssMb": 95.9
+    },
+    {
+      "arm": "journal+checkpoint/1000",
+      "records": 10000,
+      "file": "/tmp/sim-endurance-hAUYyo/journal-10000-1000.jsonl",
+      "wallSeconds": 2.84,
+      "append": {
+        "n": 10000,
+        "meanMs": 0.283,
+        "meanCi95": [
+          0.281,
+          0.284
+        ],
+        "p50Ms": 0.268,
+        "p50Ci95": [
+          0.267,
+          0.269
+        ],
+        "p95Ms": 0.346,
+        "p95Ci95": [
+          0.343,
+          0.35
+        ],
+        "p99Ms": 0.5,
+        "p99Ci95": [
+          0.463,
+          0.547
+        ],
+        "recordsPerSecond": 3538.7,
+        "recordsPerSecondCi95": [
+          3521.1,
+          3558.7
+        ]
+      },
+      "diskBytes": 6887712,
+      "bytesPerRecord": 688.8,
+      "checkpoints": 10,
+      "appBytesWritten": 6890592,
+      "writeAmplificationApp": 1.0005,
+      "writeAmplificationBlock": 6.952,
+      "maxRssMb": 96
+    },
+    {
+      "arm": "journal",
+      "records": 100000,
+      "file": "/tmp/sim-endurance-hAUYyo/journal-100000-0.jsonl",
+      "wallSeconds": 68.26,
+      "append": {
+        "n": 100000,
+        "meanMs": 0.681,
+        "meanCi95": [
+          0.666,
+          0.692
+        ],
+        "p50Ms": 0.313,
+        "p50Ci95": [
+          0.312,
+          0.313
+        ],
+        "p95Ms": 3.677,
+        "p95Ci95": [
+          3.665,
+          3.687
+        ],
+        "p99Ms": 4.106,
+        "p99Ci95": [
+          4.042,
+          4.186
+        ],
+        "recordsPerSecond": 1468.5,
+        "recordsPerSecondCi95": [
+          1426.5,
+          1503.8
+        ]
+      },
+      "diskBytes": 69174450,
+      "bytesPerRecord": 691.7,
+      "checkpoints": 0,
+      "appBytesWritten": 69174450,
+      "writeAmplificationApp": 1,
+      "writeAmplificationBlock": 6.919,
+      "maxRssMb": 284.3
+    },
+    {
+      "arm": "journal+checkpoint/1000",
+      "records": 100000,
+      "file": "/tmp/sim-endurance-hAUYyo/journal-100000-1000.jsonl",
+      "wallSeconds": 55.94,
+      "append": {
+        "n": 100000,
+        "meanMs": 0.558,
+        "meanCi95": [
+          0.547,
+          0.567
+        ],
+        "p50Ms": 0.32,
+        "p50Ci95": [
+          0.319,
+          0.321
+        ],
+        "p95Ms": 2.21,
+        "p95Ci95": [
+          2.199,
+          2.222
+        ],
+        "p99Ms": 2.609,
+        "p99Ci95": [
+          2.521,
+          2.768
+        ],
+        "recordsPerSecond": 1792.9,
+        "recordsPerSecondCi95": [
+          1766.8,
+          1821.5
+        ]
+      },
+      "diskBytes": 69174772,
+      "bytesPerRecord": 691.7,
+      "checkpoints": 100,
+      "appBytesWritten": 69206650,
+      "writeAmplificationApp": 1.0005,
+      "writeAmplificationBlock": 6.925,
+      "maxRssMb": 289.3
+    }
+  ],
+  "replay": [
+    {
+      "arm": "journal",
+      "records": 10000,
+      "mode": "full-verify",
+      "trials": 5,
+      "replayedRecords": 10000,
+      "checkpointRecords": 0,
+      "p50Ms": 58.777,
+      "p95Ms": 63.995,
+      "p99Ms": 63.995,
+      "minMs": 55.598,
+      "maxMs": 63.995,
+      "meanCi95": [
+        56.799,
+        62.202
+      ],
+      "maxRssMb": 92.8
+    },
+    {
+      "arm": "journal+checkpoint/1000",
+      "records": 10000,
+      "mode": "checkpoint",
+      "trials": 5,
+      "replayedRecords": 100,
+      "checkpointRecords": 9900,
+      "p50Ms": 26.108,
+      "p95Ms": 26.678,
+      "p99Ms": 26.678,
+      "minMs": 25.613,
+      "maxMs": 26.678,
+      "meanCi95": [
+        25.743,
+        26.473
+      ],
+      "maxRssMb": 81.7
+    },
+    {
+      "arm": "journal",
+      "records": 100000,
+      "mode": "full-verify",
+      "trials": 5,
+      "replayedRecords": 100000,
+      "checkpointRecords": 0,
+      "p50Ms": 542.256,
+      "p95Ms": 551.581,
+      "p99Ms": 551.581,
+      "minMs": 531.694,
+      "maxMs": 551.581,
+      "meanCi95": [
+        535.234,
+        546.482
+      ],
+      "maxRssMb": 306.8
+    },
+    {
+      "arm": "journal+checkpoint/1000",
+      "records": 100000,
+      "mode": "checkpoint",
+      "trials": 5,
+      "replayedRecords": 100,
+      "checkpointRecords": 99900,
+      "p50Ms": 273.137,
+      "p95Ms": 277.268,
+      "p99Ms": 277.268,
+      "minMs": 269.877,
+      "maxMs": 277.268,
+      "meanCi95": [
+        271.74,
+        276.236
+      ],
+      "maxRssMb": 301.1
+    }
+  ],
+  "sustained": [
+    {
+      "history": 1000,
+      "journal": {
+        "kind": "journal",
+        "history": 1000,
+        "append": {
+          "n": 60,
+          "meanMs": 0.324,
+          "meanCi95": [
+            0.294,
+            0.373
+          ],
+          "p50Ms": 0.273,
+          "p50Ci95": [
+            0.266,
+            0.278
+          ],
+          "p95Ms": 0.441,
+          "p95Ci95": [
+            0.397,
+            0.686
+          ],
+          "p99Ms": 1.453,
+          "p99Ci95": [
+            0.44,
+            1.453
+          ],
+          "recordsPerSecond": 3085,
+          "recordsPerSecondCi95": [
+            2631.6,
+            3448.3
+          ]
+        },
+        "blockBytesPerAppend": 4779,
+        "logicalBytesPerAppend": 689
+      },
+      "snapshot-fsync": {
+        "kind": "snapshot-fsync",
+        "history": 1000,
+        "append": {
+          "n": 60,
+          "meanMs": 2.663,
+          "meanCi95": [
+            2.56,
+            2.768
+          ],
+          "p50Ms": 2.505,
+          "p50Ci95": [
+            2.45,
+            2.643
+          ],
+          "p95Ms": 3.54,
+          "p95Ci95": [
+            3.167,
+            3.625
+          ],
+          "p99Ms": 3.776,
+          "p99Ci95": [
+            3.54,
+            3.776
+          ],
+          "recordsPerSecond": 375.5,
+          "recordsPerSecondCi95": [
+            360,
+            391.5
+          ]
+        },
+        "blockBytesPerAppend": 892109,
+        "logicalBytesPerAppend": 861
+      },
+      "snapshot": {
+        "kind": "snapshot",
+        "history": 1000,
+        "append": {
+          "n": 60,
+          "meanMs": 1.787,
+          "meanCi95": [
+            1.686,
+            1.916
+          ],
+          "p50Ms": 1.605,
+          "p50Ci95": [
+            1.532,
+            1.687
+          ],
+          "p95Ms": 2.616,
+          "p95Ci95": [
+            2.264,
+            3.22
+          ],
+          "p99Ms": 4.112,
+          "p99Ci95": [
+            2.616,
+            4.112
+          ],
+          "recordsPerSecond": 559.7,
+          "recordsPerSecondCi95": [
+            526,
+            603.5
+          ]
+        },
+        "blockBytesPerAppend": 892109,
+        "logicalBytesPerAppend": 861
+      },
+      "journalVsFsyncSnapshot": {
+        "speedup": 8.2,
+        "ci95": [
+          7.1,
+          9.2
+        ]
+      }
+    },
+    {
+      "history": 5000,
+      "journal": {
+        "kind": "journal",
+        "history": 5000,
+        "append": {
+          "n": 60,
+          "meanMs": 0.403,
+          "meanCi95": [
+            0.353,
+            0.461
+          ],
+          "p50Ms": 0.342,
+          "p50Ci95": [
+            0.332,
+            0.356
+          ],
+          "p95Ms": 0.664,
+          "p95Ci95": [
+            0.43,
+            1.191
+          ],
+          "p99Ms": 1.692,
+          "p99Ci95": [
+            0.664,
+            1.692
+          ],
+          "recordsPerSecond": 2481.7,
+          "recordsPerSecondCi95": [
+            2132.2,
+            2816.9
+          ]
+        },
+        "blockBytesPerAppend": 4779,
+        "logicalBytesPerAppend": 689
+      },
+      "snapshot-fsync": {
+        "kind": "snapshot-fsync",
+        "history": 5000,
+        "append": {
+          "n": 60,
+          "meanMs": 11.561,
+          "meanCi95": [
+            11.307,
+            11.862
+          ],
+          "p50Ms": 11.287,
+          "p50Ci95": [
+            11.053,
+            11.494
+          ],
+          "p95Ms": 12.975,
+          "p95Ci95": [
+            12.488,
+            14.394
+          ],
+          "p99Ms": 16.565,
+          "p99Ci95": [
+            12.975,
+            16.565
+          ],
+          "recordsPerSecond": 86.5,
+          "recordsPerSecondCi95": [
+            84.4,
+            88.4
+          ]
+        },
+        "blockBytesPerAppend": 4360329,
+        "logicalBytesPerAppend": 861
+      },
+      "snapshot": {
+        "kind": "snapshot",
+        "history": 5000,
+        "append": {
+          "n": 60,
+          "meanMs": 9.315,
+          "meanCi95": [
+            9.042,
+            9.6
+          ],
+          "p50Ms": 9.148,
+          "p50Ci95": [
+            8.822,
+            9.841
+          ],
+          "p95Ms": 10.932,
+          "p95Ci95": [
+            10.691,
+            11.159
+          ],
+          "p99Ms": 11.197,
+          "p99Ci95": [
+            10.932,
+            11.197
+          ],
+          "recordsPerSecond": 107.4,
+          "recordsPerSecondCi95": [
+            104.5,
+            110.8
+          ]
+        },
+        "blockBytesPerAppend": 4360329,
+        "logicalBytesPerAppend": 861
+      },
+      "journalVsFsyncSnapshot": {
+        "speedup": 28.7,
+        "ci95": [
+          24.5,
+          32.1
+        ]
+      }
+    },
+    {
+      "history": 10000,
+      "journal": {
+        "kind": "journal",
+        "history": 10000,
+        "append": {
+          "n": 60,
+          "meanMs": 0.36,
+          "meanCi95": [
+            0.346,
+            0.382
+          ],
+          "p50Ms": 0.35,
+          "p50Ci95": [
+            0.336,
+            0.359
+          ],
+          "p95Ms": 0.445,
+          "p95Ci95": [
+            0.408,
+            0.473
+          ],
+          "p99Ms": 0.77,
+          "p99Ci95": [
+            0.445,
+            0.77
+          ],
+          "recordsPerSecond": 2777.3,
+          "recordsPerSecondCi95": [
+            2645.5,
+            2898.6
+          ]
+        },
+        "blockBytesPerAppend": 4779,
+        "logicalBytesPerAppend": 689
+      },
+      "snapshot-fsync": {
+        "kind": "snapshot-fsync",
+        "history": 10000,
+        "append": {
+          "n": 60,
+          "meanMs": 22.111,
+          "meanCi95": [
+            21.83,
+            22.417
+          ],
+          "p50Ms": 21.835,
+          "p50Ci95": [
+            21.622,
+            22.426
+          ],
+          "p95Ms": 23.716,
+          "p95Ci95": [
+            23.456,
+            24.832
+          ],
+          "p99Ms": 24.844,
+          "p99Ci95": [
+            23.716,
+            24.844
+          ],
+          "recordsPerSecond": 45.2,
+          "recordsPerSecondCi95": [
+            44.7,
+            45.7
+          ]
+        },
+        "blockBytesPerAppend": 8695808,
+        "logicalBytesPerAppend": 861
+      },
+      "snapshot": {
+        "kind": "snapshot",
+        "history": 10000,
+        "append": {
+          "n": 60,
+          "meanMs": 17.176,
+          "meanCi95": [
+            16.701,
+            17.601
+          ],
+          "p50Ms": 16.608,
+          "p50Ci95": [
+            16.208,
+            17.013
+          ],
+          "p95Ms": 20.191,
+          "p95Ci95": [
+            18.977,
+            26.191
+          ],
+          "p99Ms": 26.191,
+          "p99Ci95": [
+            20.191,
+            26.191
+          ],
+          "recordsPerSecond": 58.2,
+          "recordsPerSecondCi95": [
+            56.5,
+            60
+          ]
+        },
+        "blockBytesPerAppend": 8695808,
+        "logicalBytesPerAppend": 861
+      },
+      "journalVsFsyncSnapshot": {
+        "speedup": 61.4,
+        "ci95": [
+          57.9,
+          64.3
+        ]
+      }
+    },
+    {
+      "history": 19000,
+      "journal": {
+        "kind": "journal",
+        "history": 19000,
+        "append": {
+          "n": 60,
+          "meanMs": 0.449,
+          "meanCi95": [
+            0.385,
+            0.54
+          ],
+          "p50Ms": 0.377,
+          "p50Ci95": [
+            0.347,
+            0.408
+          ],
+          "p95Ms": 0.626,
+          "p95Ci95": [
+            0.506,
+            0.929
+          ],
+          "p99Ms": 3.233,
+          "p99Ci95": [
+            0.577,
+            3.233
+          ],
+          "recordsPerSecond": 2226.4,
+          "recordsPerSecondCi95": [
+            1876.2,
+            2617.8
+          ]
+        },
+        "blockBytesPerAppend": 4779,
+        "logicalBytesPerAppend": 689
+      },
+      "snapshot-fsync": {
+        "kind": "snapshot-fsync",
+        "history": 19000,
+        "append": {
+          "n": 60,
+          "meanMs": 38.943,
+          "meanCi95": [
+            38.366,
+            39.507
+          ],
+          "p50Ms": 38.725,
+          "p50Ci95": [
+            37.811,
+            39.067
+          ],
+          "p95Ms": 43.174,
+          "p95Ci95": [
+            40.658,
+            43.747
+          ],
+          "p99Ms": 44.858,
+          "p99Ci95": [
+            43.174,
+            44.858
+          ],
+          "recordsPerSecond": 25.7,
+          "recordsPerSecondCi95": [
+            25.4,
+            26
+          ]
+        },
+        "blockBytesPerAppend": 16526541,
+        "logicalBytesPerAppend": 861
+      },
+      "snapshot": {
+        "kind": "snapshot",
+        "history": 19000,
+        "append": {
+          "n": 60,
+          "meanMs": 39.051,
+          "meanCi95": [
+            38.667,
+            39.448
+          ],
+          "p50Ms": 38.808,
+          "p50Ci95": [
+            38.499,
+            39.053
+          ],
+          "p95Ms": 41.662,
+          "p95Ci95": [
+            40.538,
+            43.567
+          ],
+          "p99Ms": 43.624,
+          "p99Ci95": [
+            41.662,
+            43.624
+          ],
+          "recordsPerSecond": 25.6,
+          "recordsPerSecondCi95": [
+            25.4,
+            25.9
+          ]
+        },
+        "blockBytesPerAppend": 16526541,
+        "logicalBytesPerAppend": 861
+      },
+      "journalVsFsyncSnapshot": {
+        "speedup": 86.7,
+        "ci95": [
+          64.9,
+          101.4
+        ]
+      }
+    },
+    {
+      "history": 20000,
+      "journal": {
+        "kind": "journal",
+        "history": 20000,
+        "append": {
+          "n": 60,
+          "meanMs": 0.346,
+          "meanCi95": [
+            0.333,
+            0.365
+          ],
+          "p50Ms": 0.341,
+          "p50Ci95": [
+            0.327,
+            0.35
+          ],
+          "p95Ms": 0.41,
+          "p95Ci95": [
+            0.396,
+            0.413
+          ],
+          "p99Ms": 0.765,
+          "p99Ci95": [
+            0.403,
+            0.765
+          ],
+          "recordsPerSecond": 2887.7,
+          "recordsPerSecondCi95": [
+            2747.3,
+            3021.1
+          ]
+        },
+        "blockBytesPerAppend": 4779,
+        "logicalBytesPerAppend": 689
+      },
+      "snapshot-fsync": {
+        "kind": "snapshot-fsync",
+        "history": 20000,
+        "skipped": "seed of 20000 records is 17368229 bytes, over the snapshot's 16 MiB limit"
+      },
+      "snapshot": {
+        "kind": "snapshot",
+        "history": 20000,
+        "skipped": "seed of 20000 records is 17368229 bytes, over the snapshot's 16 MiB limit"
+      }
+    }
+  ],
+  "notMeasured": [
+    "1,000,000 records: SimJournal caps a journal at 100,000 records (MAX_RECORDS); raising it is out of scope",
+    "snapshot at 100,000 records: the snapshot format caps at 16 MiB, far below 100k records",
+    "power-loss durability and network filesystems"
+  ]
+}

@@ -2,11 +2,16 @@
 // Optional append-only journal for SIM, guarded by a cross-process single-writer lease.
 // The existing SimMemory snapshot remains the default for backward compatibility.
 import { createHash, randomBytes } from 'node:crypto';
+import type { Hash } from 'node:crypto';
 import { readFileSync, unlinkSync } from 'node:fs';
 import { open, mkdir, readFile, stat, statfs, unlink, writeFile } from 'node:fs/promises';
 import { hostname } from 'node:os';
 import { dirname } from 'node:path';
 import { validateSimAttempt } from './sim-memory.js';
+import {
+  buildCheckpointManifest, checkManifestAgainst, checkpointPathFor, readCheckpointManifest, syncDir, writeFileAtomic,
+} from './sim-checkpoint.js';
+import type { SimCheckpointFaults, SimCheckpointManifest, SimCheckpointStatus } from './sim-checkpoint.js';
 import type { SimAttempt, SimAttemptInput } from './sim-memory.js';
 
 const MAX_LINE = 32 * 1024;
@@ -26,6 +31,34 @@ function verify(candidate: unknown, previous: string | null): asserts candidate 
   if (sha(unsigned as unknown as Omit<SimAttempt, 'hash'>) !== hash) throw new Error('SIM journal: invalid hash');
 }
 
+function parseLine(line: string): SimAttempt {
+  if (Buffer.byteLength(line) > MAX_LINE) throw new Error('SIM journal: oversized line');
+  let envelope: unknown;
+  try { envelope = JSON.parse(line); } catch { throw new Error('SIM journal: corrupt committed line'); }
+  if (!envelope || typeof envelope !== 'object' || Array.isArray(envelope)) throw new Error('SIM journal: corrupt envelope');
+  const item = envelope as { schema?: unknown; record?: unknown };
+  if (item.schema !== FORMAT) throw new Error('SIM journal: incompatible schema');
+  return item.record as SimAttempt;
+}
+
+// Accepts the byte-verified prefix of a checkpoint. Records are parsed but not
+// re-hashed; the count, ids and chain head must still match the manifest.
+function adoptPrefix(manifest: SimCheckpointManifest, complete: Buffer, out: SimAttempt[], ids: Set<string>): string | null {
+  if (manifest.records > MAX_RECORDS) return 'record count beyond capacity';
+  try {
+    for (const line of complete.subarray(0, manifest.offset).toString('utf8').split('\n')) {
+      if (!line) continue;
+      const record = parseLine(line);
+      if (!record || typeof record !== 'object' || typeof record.id !== 'string' || ids.has(record.id)) return 'invalid record in prefix';
+      ids.add(record.id);
+      out.push(record);
+    }
+  } catch (error) { return (error as Error).message; }
+  if (out.length !== manifest.records) return 'record count mismatch';
+  if ((out.at(-1)?.hash ?? null) !== manifest.chainHead) return 'chain head mismatch';
+  return null;
+}
+
 export interface JournalRecovery {
   records: number;
   /** Bytes of an unterminated final record. Never acknowledged; removed only by the lease holder. */
@@ -41,7 +74,7 @@ export interface SimJournalLease {
 }
 
 /** Test-only fault injection at each write boundary. Throwing simulates a crash at that point. */
-export interface SimJournalFaults {
+export interface SimJournalFaults extends SimCheckpointFaults {
   beforeWrite?(): void | Promise<void>;
   afterPartialWrite?(): void | Promise<void>;
   beforeSync?(): void | Promise<void>;
@@ -59,6 +92,10 @@ export interface SimJournalOptions {
   /** Age after which an unreadable (half-written) lease file counts as abandoned. Default 10s. */
   staleLeaseMs?: number;
   faults?: SimJournalFaults;
+  /** Use a verified checkpoint manifest, when present, to skip re-verifying the covered prefix. Default true. */
+  checkpoints?: boolean;
+  /** Writer only: install a checkpoint manifest after every N committed appends. Default 0 (never). */
+  checkpointEvery?: number;
 }
 
 // Linux statfs f_type magic numbers for filesystems where lock files and fsync
@@ -110,13 +147,6 @@ function isAlive(pid: number): boolean {
   catch (error) { return (error as NodeJS.ErrnoException).code === 'EPERM'; }
 }
 
-async function syncDir(dir: string): Promise<void> {
-  // Windows cannot open a directory for fsync; NTFS metadata is journaled.
-  if (process.platform === 'win32') return;
-  const handle = await open(dir, 'r');
-  try { await handle.sync(); } finally { await handle.close(); }
-}
-
 async function readLease(lockPath: string): Promise<{ raw: string; lease: SimJournalLease | null; ageMs: number } | null> {
   try {
     const [raw, info] = await Promise.all([readFile(lockPath, 'utf8'), stat(lockPath)]);
@@ -160,6 +190,11 @@ export class SimJournal {
   private committedSize = 0;
   private pending: Promise<void> = Promise.resolve();
   private recovery: JournalRecovery = { records: 0, recoveredTailBytes: 0 };
+  private checkpointState: SimCheckpointStatus = { status: 'absent', checkpointRecords: 0, replayedRecords: 0 };
+  // Running sha256 of the committed bytes (writer only), so a checkpoint never rereads the file.
+  private hasher: Hash | null = null;
+  private sinceCheckpoint = 0;
+  private checkpointError: Error | null = null;
   readonly lockPath: string;
   constructor(readonly filePath: string, private readonly options: SimJournalOptions = {}) {
     this.lockPath = filePath + '.lock';
@@ -172,7 +207,17 @@ export class SimJournal {
     return { ...this.recovery };
   }
 
-  private async read(): Promise<number> {
+  // Verifies the journal. With a matching checkpoint manifest, the covered prefix is
+  // checked by one sha256 over its bytes and parsed without per-record re-hashing;
+  // only records after the checkpoint offset are fully verified (bounded replay).
+  private async read(computeHash = false): Promise<number> {
+    const useCheckpoint = this.options.checkpoints !== false;
+    // Read the manifest BEFORE the journal: a manifest only ever covers bytes that
+    // were already committed, so it can never point past the bytes read next.
+    const manifest = useCheckpoint ? await readCheckpointManifest(this.filePath) : null;
+    let status: SimCheckpointStatus = { status: useCheckpoint ? 'absent' : 'disabled', checkpointRecords: 0, replayedRecords: 0 };
+    if (typeof manifest === 'string') status = { ...status, status: 'rejected', reason: manifest };
+    const hasher = createHash('sha256');
     let bytes: Buffer;
     try {
       const info = await stat(this.filePath);
@@ -180,36 +225,47 @@ export class SimJournal {
       bytes = await readFile(this.filePath);
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+      if (manifest && typeof manifest === 'object') status = { ...status, status: 'rejected', reason: 'journal missing' };
       this.records = []; this.ids = new Set(); this.loaded = true;
       this.recovery = { records: 0, recoveredTailBytes: 0 };
+      this.checkpointState = status;
+      this.hasher = computeHash ? hasher : null;
       return 0;
     }
     const newline = bytes.lastIndexOf(10);
     const complete = newline < 0 ? Buffer.alloc(0) : bytes.subarray(0, newline + 1);
     let previous: string | null = null;
-    const ids = new Set<string>();
-    const parsed: SimAttempt[] = [];
-    for (const line of complete.toString('utf8').split('\n')) {
+    let offset = 0;
+    let ids = new Set<string>();
+    let parsed: SimAttempt[] = [];
+    if (manifest && typeof manifest === 'object') {
+      const reason = checkManifestAgainst(manifest, complete) ?? adoptPrefix(manifest, complete, parsed, ids);
+      if (reason) {
+        status = { ...status, status: 'rejected', reason };
+        parsed = []; ids = new Set();
+      } else {
+        status = { ...status, status: 'used', checkpointRecords: manifest.records };
+        offset = manifest.offset; previous = manifest.chainHead;
+      }
+    }
+    for (const line of complete.subarray(offset).toString('utf8').split('\n')) {
       if (!line) continue;
-      if (Buffer.byteLength(line) > MAX_LINE) throw new Error('SIM journal: oversized line');
-      let envelope: unknown;
-      try { envelope = JSON.parse(line); } catch { throw new Error('SIM journal: corrupt committed line'); }
-      if (!envelope || typeof envelope !== 'object' || Array.isArray(envelope)) throw new Error('SIM journal: corrupt envelope');
-      const item = envelope as { schema?: unknown; record?: unknown };
-      if (item.schema !== FORMAT) throw new Error('SIM journal: incompatible schema');
-      validateSimAttempt(item.record);
-      verify(item.record, previous);
-      const record = item.record as SimAttempt;
+      const record = parseLine(line);
+      validateSimAttempt(record);
+      verify(record, previous);
       if (ids.has(record.id)) throw new Error('SIM journal: duplicate ID');
       ids.add(record.id);
       parsed.push(record);
       previous = record.hash;
+      status.replayedRecords++;
       if (parsed.length > MAX_RECORDS) throw new Error('SIM journal: capacity exceeded');
     }
     this.records = parsed;
     this.ids = ids;
     this.loaded = true;
     this.recovery = { records: parsed.length, recoveredTailBytes: bytes.length - complete.length };
+    this.checkpointState = status;
+    this.hasher = computeHash ? hasher.update(complete) : null;
     return complete.length;
   }
 
@@ -279,7 +335,7 @@ export class SimJournal {
   }
 
   private async recoverUnderLease(): Promise<void> {
-    const committed = await this.read();
+    const committed = await this.read(true);
     const tail = this.recovery.recoveredTailBytes;
     if (tail) {
       // Preserve the unacknowledged bytes for audit, then cut them off.
@@ -341,9 +397,17 @@ export class SimJournal {
         throw error;
       }
       this.committedSize += buffer.length;
+      this.hasher!.update(buffer);
       this.records.push(record);
       this.ids.add(record.id);
       result = record;
+      // The record is already durable; a failed automatic checkpoint must not fail
+      // its append. The old manifest stays valid and the error is kept for callers.
+      const every = this.options.checkpointEvery ?? 0;
+      if (every > 0 && ++this.sinceCheckpoint >= every) {
+        try { await this.fence(); await this.installCheckpoint(); this.checkpointError = null; }
+        catch (error) { this.checkpointError = error as Error; }
+      }
     });
     this.pending = operation.catch(() => undefined);
     await operation;
@@ -366,6 +430,35 @@ export class SimJournal {
     if (current?.lease?.token === token) await unlink(this.lockPath);
   }
 
+  /**
+   * Installs a checkpoint manifest covering every committed record. Takes the lease
+   * if needed, is queued behind in-flight appends, and is fenced like an append.
+   */
+  async checkpoint(): Promise<SimCheckpointManifest> {
+    let manifest: SimCheckpointManifest | undefined;
+    const operation = this.pending.then(async () => {
+      if (this.poisoned) throw new Error('SIM journal: previous write failed; close, reopen and recover before retry');
+      await this.acquire();
+      await this.fence();
+      manifest = await this.installCheckpoint();
+    });
+    this.pending = operation.catch(() => undefined);
+    await operation;
+    return { ...manifest! };
+  }
+
+  private async installCheckpoint(): Promise<SimCheckpointManifest> {
+    const manifest = buildCheckpointManifest(this.committedSize, this.records.length,
+      this.records.at(-1)?.hash ?? null, this.hasher!.copy().digest('hex'));
+    await writeFileAtomic(checkpointPathFor(this.filePath), JSON.stringify(manifest) + '\n', this.options.faults);
+    this.sinceCheckpoint = 0;
+    return manifest;
+  }
+
+  /** How the last load or recovery used the checkpoint manifest, and how many records it fully re-verified. */
+  checkpointStatus(): SimCheckpointStatus { return { ...this.checkpointState }; }
+  /** The error from the last failed automatic checkpoint, if the most recent attempt failed. */
+  lastCheckpointError(): Error | null { return this.checkpointError; }
   holdsLease(): boolean { return this.token !== null; }
   all(): SimAttempt[] { return JSON.parse(JSON.stringify(this.records)) as SimAttempt[]; }
   count(): number { return this.records.length; }

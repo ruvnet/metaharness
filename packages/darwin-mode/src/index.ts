@@ -48,6 +48,8 @@ export * from './archive.js';
 export * from './evolve.js';
 export * from './sim-memory.js';
 export * from './sim-journal.js';
+export * from './sim-checkpoint.js';
+export * from './sim-migrate.js';
 export * from './sim-rvf.js';
 
 // Numeric genome kind (ADR-272) — a second, parallel genome representation

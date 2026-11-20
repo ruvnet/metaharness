@@ -3,7 +3,8 @@
 **Status**: Implemented as an opt in prototype, subject to empirical validation  
 **Date:** 2026-11-20  
 **Issue:** https://github.com/ruvnet/metaharness/issues/518  
-**Extends:** ADR-074, ADR-071, ADR-072, ADR-073, ADR-161
+**Extends:** ADR-074, ADR-071, ADR-072, ADR-073, ADR-161  
+**Follow-ups:** #521 (single-writer journal lease), #522 (checkpoints, migration, endurance)
 
 ## Context
 
@@ -22,6 +23,12 @@ Darwin retrieves context only for the optimizer at proposal time, with mode `ful
 After independent scoring and promotion, Darwin appends the scored attempt. Failed attempts and regressions are preserved. The proposer receives prior optimizer history; the evaluator and scorer **never read SIM**. No direct change to the Darwin statistical promotion gate, risk gate, child safety validator, or selection algorithm is authorized by this ADR.
 
 The `SimRunConfig` mode `off` or omission of the config preserves existing behavior, including absence of SIM disk writes. `allowCrossRepo` is explicit and remains bounded to the same owner and compatible interface; cross-model and cross-benchmark retrieval is allowed **only as a prior**, never as transfer evidence without independent reevaluation.
+
+### Journal checkpoints and migration (#522)
+
+The opt-in journal may install a versioned checkpoint manifest (`metaharness.sim.checkpoint.v1`, file `<journal>.checkpoint`) holding the committed byte offset, record count, chain-head hash and a sha256 of the covered prefix. Only the lease holder writes it, fenced like an append, by temp file + fsync + rename + directory fsync. Writers keep a running hash of committed bytes, so a checkpoint never rereads the journal. A manifest is a hint, not an authority: a reader takes it only if the offset falls on a record boundary inside the committed file, the prefix hash matches byte for byte, and the parsed prefix has the manifest's record count and chain head. It then fully re-verifies (schema, hash, chain) only the records after the offset. Any mismatch falls back to full verified replay and never truncates. Checkpointing is off unless `checkpointEvery` is set or `checkpoint()` is called; reading a manifest that exists is on by default and can be disabled with `checkpoints: false`.
+
+`migrateSimSnapshotToJournal`, `rollbackSimJournalToSnapshot` and `writeSimJournal` move records between the two backends explicitly. Records are copied verbatim, so negative outcomes, evidence ids, scope and the hash chain are preserved. Each move runs under the journal's writer lease, verifies the source chain, writes atomically, re-reads the target and compares count and chain head. It is idempotent for an identical target, refuses a different non-empty target or identical paths, and never modifies the source. Rollback fails closed above the snapshot's 16 MiB limit. The snapshot remains the default backend.
 
 ## Security and operational constraints
 
@@ -44,6 +51,7 @@ The synthetic benchmark uses fixed 40 records and four matching query families, 
 * With SIM on, the proposer sees bounded, untrusted prior history; scoring, promotion and the safety gates are unchanged.
 * Failed and regressed attempts persist, so later rounds can revise earlier edits with their outcomes in view.
 * The opt-in journal enforces one writer per path across processes with an O_EXCL lease, fencing and torn-tail recovery (#521). It is verified on local filesystems only, not NFS/SMB or under power loss.
+* Journal checkpoints bound the records that are fully re-verified on load to those after the checkpoint. The covered prefix is still hashed and parsed so `all()` stays complete, so load I/O remains proportional to file size. A journal is capped at 100,000 records; 1M-record journals are not supported. Measurements are in `packages/darwin-mode/bench/results/sim-endurance.json` (#522).
 * Measured LLM gains remain unestablished until the held-out trial described below is run.
 
 ## Alternatives
