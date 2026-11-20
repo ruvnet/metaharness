@@ -159,7 +159,7 @@ Appending N records to a new journal (per-record fsync):
 | journal | 100,000 | 1,469 [1,427, 1,504] | 0.31 / 3.68 / 4.11 | 69.2 MB | 1.000 / 6.92 | 284 MB |
 | journal + checkpoint/1000 | 100,000 | 1,793 [1,767, 1,822] | 0.32 / 2.21 / 2.61 | 69.2 MB | 1.0005 / 6.93 | 289 MB |
 
-The median append does not change with history; the p95/p99 tail grows at 100k (cause not isolated; the heap is ~250 MB larger), and the two 100k arms differ by more than checkpointing explains, so read that gap as run-to-run variance. Block-level write amplification is ~7x because each fsync of a ~690-byte line writes at least one 4 KiB page plus filesystem metadata.
+The median append rises only slightly with history (0.26 → 0.31 ms); the p95/p99 tail grows much more at 100k (cause not isolated; the heap is ~190 MB larger). The checkpoint arm was faster at 100k in both full runs (1,506 vs 2,312 rec/s, then 1,469 vs 1,793), which checkpointing does not explain; it always ran second, so an order effect is not ruled out and the gap is unexplained. Block-level write amplification is ~7x because each fsync of a ~690-byte line writes at least one 4 KiB page plus filesystem metadata.
 
 Loading (5 fresh processes each; the checkpoint arm has a fixed 100-record tail after its last checkpoint):
 
@@ -184,7 +184,7 @@ Sustained append cost at a fixed history H, against the unmodified snapshot and 
 
 Each snapshot append rewrites the whole file (16.5 MB per append at H = 19,000), so the gap widens with history. At H = 1,000 it is under 10x. There is no snapshot arm at 100k: the format cannot hold it.
 
-**Not measured:** 1,000,000 records (a journal is capped at 100,000 records); power loss; network filesystems; multiple machines or repeated runs.
+**Not measured:** 1,000,000 records (a journal is capped at 100,000 records); power loss; network filesystems; other machines. Two full runs were made; the tables show the second.
 
 ## Verification and operational reality
 
