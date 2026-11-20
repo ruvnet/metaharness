@@ -251,7 +251,12 @@ export class SimMemory {
         record, position, rank: relevance(words, record),
       }));
       overlap.sort((a, b) => b.rank - a.rank || a.position - b.position);
-      return { records: overlap.map((entry) => entry.record), retrieval: 'vector' };
+      // Prefer grounded lexical matches when present; retain semantic-only
+      // hits for queries with no lexical overlap anywhere in the candidate set.
+      const grounded = overlap.some((entry) => entry.rank > 0)
+        ? overlap.filter((entry) => entry.rank > 0)
+        : overlap;
+      return { records: grounded.map((entry) => entry.record), retrieval: 'vector' };
     }
     const words = terms(query.query);
     const ranked = pool
