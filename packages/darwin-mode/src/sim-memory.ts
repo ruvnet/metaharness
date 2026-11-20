@@ -4,6 +4,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, stat, unlink, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
+import type { SimJournal } from './sim-journal.js';
 
 const SCHEMA = 'metaharness.sim.v1';
 const MAX_RECORDS = 100_000;
@@ -148,10 +149,20 @@ export class SimMemory {
   private records: SimAttempt[] = [];
   private loaded = false;
   private queue: Promise<void> = Promise.resolve();
-  constructor(readonly filePath: string) {}
+  private journal: SimJournal | null = null;
+  constructor(readonly filePath: string, readonly options: { persistence?: 'snapshot' | 'journal' } = {}) {}
 
   async load(): Promise<void> {
     if (this.loaded) return;
+    if (this.options.persistence === 'journal') {
+      const { SimJournal } = await import('./sim-journal.js');
+      const journal = new SimJournal(this.filePath);
+      await journal.load();
+      this.records = journal.all();
+      this.journal = journal;
+      this.loaded = true;
+      return;
+    }
     let body: string;
     try {
       const info = await stat(this.filePath);
@@ -194,6 +205,13 @@ export class SimMemory {
       const safe = copy(input);
       if (this.records.length >= MAX_RECORDS || this.records.some((r) => r.id === safe.id)) {
         throw new Error('SIM: duplicate id or capacity exceeded');
+      }
+      if (this.journal) {
+        // Journal is the durable authority. Never update the in-memory view
+        // before its fsync completes, including when an append fails.
+        added = await this.journal.append(safe);
+        this.records.push(added);
+        return;
       }
       const previousHash = this.records.at(-1)?.hash ?? null;
       const unsigned = { ...safe, previousHash };
