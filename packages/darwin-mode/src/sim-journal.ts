@@ -2,13 +2,14 @@
 // Optional append-only journal for SIM. A single writer owns each journal path.
 // The existing SimMemory snapshot remains the default for backward compatibility.
 import { createHash } from 'node:crypto';
-import { open, mkdir, readFile } from 'node:fs/promises';
+import { open, mkdir, readFile, stat } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { validateSimAttempt } from './sim-memory.js';
 import type { SimAttempt, SimAttemptInput } from './sim-memory.js';
 
 const MAX_LINE = 32 * 1024;
 const MAX_RECORDS = 100_000;
+const MAX_FILE_BYTES = MAX_RECORDS * MAX_LINE;
 const FORMAT = 'metaharness.sim.journal.v1';
 const sha = (record: Omit<SimAttempt, 'hash'>): string =>
   createHash('sha256').update(JSON.stringify(record)).digest('hex');
@@ -35,6 +36,7 @@ export class SimJournal {
   private records: SimAttempt[] = [];
   private ids = new Set<string>();
   private loaded = false;
+  private poisoned = false;
   private pending: Promise<void> = Promise.resolve();
   private recovery: JournalRecovery = { records: 0, recoveredTailBytes: 0 };
   constructor(readonly filePath: string) {}
@@ -42,7 +44,11 @@ export class SimJournal {
   async load(): Promise<JournalRecovery> {
     if (this.loaded) return { ...this.recovery };
     let bytes: Buffer;
-    try { bytes = await readFile(this.filePath); }
+    try {
+      const info = await stat(this.filePath);
+      if (info.size > MAX_FILE_BYTES) throw new Error('SIM journal: file too large');
+      bytes = await readFile(this.filePath);
+    }
     catch (error) {
       if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
       this.loaded = true;
@@ -86,6 +92,7 @@ export class SimJournal {
   async append(input: SimAttemptInput): Promise<SimAttempt> {
     let result: SimAttempt | undefined;
     const operation = this.pending.then(async () => {
+      if (this.poisoned) throw new Error('SIM journal: previous write failed; reopen and recover before retry');
       await this.load();
       if (this.records.length >= MAX_RECORDS) throw new Error('SIM journal: capacity exceeded');
       if (this.ids.has(input.id)) throw new Error('SIM journal: duplicate ID');
@@ -96,8 +103,11 @@ export class SimJournal {
       const line = JSON.stringify({ schema: FORMAT, record }) + '\n';
       if (Buffer.byteLength(line) > MAX_LINE) throw new Error('SIM journal: oversized line');
       await mkdir(dirname(this.filePath), { recursive: true });
-      const handle = await open(this.filePath, 'a', 0o600);
+      // An I/O failure may leave an unterminated record. Poison this instance
+      // rather than allowing the next append to commit behind a partial line.
       try {
+        const handle = await open(this.filePath, 'a', 0o600);
+        try {
         const buffer = Buffer.from(line);
         let written = 0;
         while (written < buffer.length) {
@@ -106,7 +116,11 @@ export class SimJournal {
           written += outcome.bytesWritten;
         }
         await handle.sync();
-      } finally { await handle.close(); }
+        } finally { await handle.close(); }
+      } catch (error) {
+        this.poisoned = true;
+        throw error;
+      }
       this.records.push(record);
       this.ids.add(record.id);
       result = record;
