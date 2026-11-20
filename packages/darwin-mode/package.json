@@ -73,6 +73,7 @@
   },
   "devDependencies": {
     "@metaharness/flywheel": "^0.1.1",
+    "@ruvector/rvf": "^0.4.12",
     "agenticow": "^0.2.3",
     "ruv-fann": "0.1.2",
     "typescript": "^5.4.0",
@@ -82,10 +83,14 @@
     "@babel/parser": "^7.29.13"
   },
   "peerDependencies": {
-    "ruv-fann": "0.1.2"
+    "ruv-fann": "0.1.2",
+    "@ruvector/rvf": ">=0.2.0"
   },
   "peerDependenciesMeta": {
     "ruv-fann": {
+      "optional": true
+    },
+    "@ruvector/rvf": {
       "optional": true
     }
   },
