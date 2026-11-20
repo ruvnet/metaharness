@@ -28,6 +28,26 @@ export const EVAL_BRIEF =
   'allowed if they keep the exported names and signatures.';
 
 /**
+ * System prompts. 'stock' is verbatim OpenRouterMutator. 'behaviour' (study v2)
+ * changes only the two clauses that forbid behaviour change; the safety rules
+ * (no capabilities, imports, network, fs, shell, env, deps) are identical.
+ */
+export const SYSTEM_LINES = Object.freeze({
+  stock: (surface) =>
+    'You improve ONE file of an AI agent harness. Output ONLY the full replacement file — no prose, no fences. ' +
+    'HARD RULES: keep every exported name and signature identical; introduce NO new capabilities, imports, network, ' +
+    'filesystem, shell, or env access; no new dependencies; pure refactor/tuning only (it must pass a static safety ' +
+    'validator that rejects added capabilities). Make a small, plausibly score-improving change to the "' +
+    surface + '" surface.',
+  behaviour: (surface) =>
+    'You improve ONE file of an AI agent harness. Output ONLY the full replacement file — no prose, no fences. ' +
+    'HARD RULES: keep every exported name and signature identical; introduce NO new capabilities, imports, network, ' +
+    'filesystem, shell, or env access; no new dependencies; behaviour changes inside this file are allowed (it must ' +
+    'pass a static safety validator that rejects added capabilities). Make the change to the "' +
+    surface + '" surface that is most likely to raise the score.',
+});
+
+/**
  * Amendment 2: describe the FAILED TRAIN tasks named in Darwin's failure lines,
  * from the optimizer-visible train partition only. Ids not in `trainTasks`
  * (anything else) are ignored, so held-out tasks can never be described.
@@ -46,14 +66,9 @@ export function failedTaskDetails(failedTraces, trainTasks) {
 }
 
 /** Same rules text as OpenRouterMutator, plus the fixed EVAL_BRIEF (amendment 1) and failed-train-task details (amendment 2). */
-export function buildMessages(input, { brief = EVAL_BRIEF, trainTasks = null } = {}) {
+export function buildMessages(input, { brief = EVAL_BRIEF, trainTasks = null, system = 'stock' } = {}) {
   const details = failedTaskDetails(input.failedTraces, trainTasks);
-  const sys =
-    'You improve ONE file of an AI agent harness. Output ONLY the full replacement file — no prose, no fences. ' +
-    'HARD RULES: keep every exported name and signature identical; introduce NO new capabilities, imports, network, ' +
-    'filesystem, shell, or env access; no new dependencies; pure refactor/tuning only (it must pass a static safety ' +
-    'validator that rejects added capabilities). Make a small, plausibly score-improving change to the "' +
-    input.surface + '" surface.';
+  const sys = SYSTEM_LINES[system](input.surface);
   const user =
     (brief ? `${brief}\n\n` : '') +
     `Surface: ${input.surface}\nParent score: ${input.parentScore}\n` +
@@ -128,16 +143,16 @@ export function summarizeTelemetry(t) {
  * injected `apiKey` (read from env by the caller); there is no file fallback.
  */
 export class GuardedOpenRouterProposer {
-  constructor({ model, pricing, guard, apiKey, trainTasks = null, fetchImpl = globalThis.fetch, maxTokens = 2500, temperature = 0.4, timeoutMs = 90_000, meta = {} }) {
+  constructor({ model, pricing, guard, apiKey, trainTasks = null, system = 'stock', fetchImpl = globalThis.fetch, maxTokens = 2500, temperature = 0.4, timeoutMs = 90_000, meta = {} }) {
     if (!apiKey) throw new Error('GuardedOpenRouterProposer: OPENROUTER_API_KEY missing from env');
-    this.trainTasks = trainTasks; this.model = model; this.pricing = pricing; this.guard = guard; this.apiKey = apiKey;
+    this.system = system; this.trainTasks = trainTasks; this.model = model; this.pricing = pricing; this.guard = guard; this.apiKey = apiKey;
     this.fetchImpl = fetchImpl; this.maxTokens = maxTokens; this.temperature = temperature;
     this.timeoutMs = timeoutMs; this.meta = meta;
     this.telemetry = newTelemetry();
   }
 
   async generateMutation(input) {
-    const messages = buildMessages(input, { trainTasks: this.trainTasks });
+    const messages = buildMessages(input, { trainTasks: this.trainTasks, system: this.system });
     noteSim(this.telemetry, input);
     const promptChars = messages.reduce((s, m) => s + m.content.length, 0);
     const reservation = this.guard.reserve(
@@ -170,7 +185,7 @@ export class GuardedOpenRouterProposer {
     const latency = Date.now() - started;
     const usage = j?.usage ?? {};
     const charged = this.guard.settle(reservation, Number(usage.cost), {
-      outcome: j?.choices?.[0]?.message?.content ? 'ok' : 'empty',
+      outcome: j?.choices?.[0]?.message?.content ? 'ok' : 'empty', error: j?.error ? String(j.error.message ?? j.error.code ?? 'error').slice(0, 160) : undefined,
       promptTokens: usage.prompt_tokens ?? null, completionTokens: usage.completion_tokens ?? null, latencyMs: latency,
     });
     this.telemetry.calls += 1;
