@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { SimMemory, indexSimAttempt } from '../src/sim-memory.js';
 import type { SimAttemptInput, SimScope, SimVectorIndex } from '../src/sim-memory.js';
-import { openRvfSimIndex } from '../src/sim-rvf.js';
+import { assertRvfSdkVersion, openRvfSimIndex } from '../src/sim-rvf.js';
 
 const dirs: string[] = [];
 const scope: SimScope = {
@@ -188,8 +188,10 @@ describe('SIM opt-in optimizer experience memory', () => {
   it('uses real RVF when the optional SDK is installed, with a writable persistent index', async () => {
     const root = await mkdtemp(join(tmpdir(), 'metaharness-sim-rvf-'));
     dirs.push(root);
+    // @ruvector/rvf is a darwin devDependency, so the real SDK path always runs here.
     const index = await openRvfSimIndex(join(root, 'sim.rvf'), 2);
-    if (index === null) return; // bare-install optional-dependency fallback; see ADR.
+    expect(index).not.toBeNull();
+    if (index === null) return;
     try {
       await index.upsert('record-a', [1, 0]);
       await index.upsert('record-b', [0, 1]);
@@ -197,5 +199,13 @@ describe('SIM opt-in optimizer experience memory', () => {
       expect(hits[0].id).toBe('record-a');
       await expect(index.upsert('bad', [1])).rejects.toThrow(/vector/);
     } finally { await index.close?.(); }
+  });
+
+  it('refuses @ruvector/rvf versions that drop string ids', () => {
+    expect(() => assertRvfSdkVersion('0.1.9')).toThrow(/drops string ids/);
+    expect(() => assertRvfSdkVersion(null)).toThrow(/cannot determine/);
+    expect(() => assertRvfSdkVersion('0.2.0')).not.toThrow();
+    expect(() => assertRvfSdkVersion('0.4.7')).not.toThrow();
+    expect(() => assertRvfSdkVersion('1.0.0')).not.toThrow();
   });
 });

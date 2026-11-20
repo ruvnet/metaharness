@@ -5,7 +5,7 @@ import { hostname, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
-import { SimJournal, SimJournalLockedError } from '../src/sim-journal.js';
+import { SimJournal, SimJournalLockedError, networkFilesystemName } from '../src/sim-journal.js';
 import type { SimJournalFaults } from '../src/sim-journal.js';
 import type { SimAttemptInput } from '../src/sim-memory.js';
 
@@ -183,6 +183,37 @@ describe('SIM journal single-writer lease (#521)', () => {
     await writeFile(file + '.lock', JSON.stringify({ ...lease, token: 'usurper' }));
     await expect(store.append(row('b'))).rejects.toThrow(/lease lost/);
     expect((await reload(file)).all().map((x) => x.id)).toEqual(['a']);
+  });
+});
+
+describe('SIM journal network filesystem guard', () => {
+  it('maps Linux statfs magics for network filesystems', () => {
+    expect(networkFilesystemName(0x6969)).toBe('nfs');
+    expect(networkFilesystemName(0xff534d42)).toBe('cifs');
+    expect(networkFilesystemName(0xfe534d42)).toBe('smb2');
+    expect(networkFilesystemName(0xef53)).toBeNull(); // ext4
+    expect(networkFilesystemName(0x01021994)).toBeNull(); // tmpfs
+    expect(networkFilesystemName(null)).toBeNull();
+  });
+
+  it('refuses to write on a network filesystem and writes nothing', async () => {
+    const { dir, file } = await journal();
+    const store = track(new SimJournal(file, { filesystemProbe: async () => 0x6969 }));
+    await expect(store.append(row('a'))).rejects.toMatchObject({ code: 'SIM_JOURNAL_UNSUPPORTED_FS' });
+    expect(await readdir(dir)).toEqual([]);
+  });
+
+  it('allows a network filesystem only with an explicit override', async () => {
+    const { file } = await journal();
+    const store = track(new SimJournal(file, { filesystemProbe: async () => 0x6969, allowNetworkFilesystem: true }));
+    await store.append(row('a'));
+    expect((await reload(file)).count()).toBe(1);
+  });
+
+  it('passes on the local test filesystem with the real probe', async () => {
+    const { file, store } = await journal();
+    await store.append(row('a'));
+    expect((await reload(file)).count()).toBe(1);
   });
 });
 

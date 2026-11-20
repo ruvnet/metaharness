@@ -3,7 +3,7 @@
 // The existing SimMemory snapshot remains the default for backward compatibility.
 import { createHash, randomBytes } from 'node:crypto';
 import { readFileSync, unlinkSync } from 'node:fs';
-import { open, mkdir, readFile, stat, unlink, writeFile } from 'node:fs/promises';
+import { open, mkdir, readFile, stat, statfs, unlink, writeFile } from 'node:fs/promises';
 import { hostname } from 'node:os';
 import { dirname } from 'node:path';
 import { validateSimAttempt } from './sim-memory.js';
@@ -49,9 +49,39 @@ export interface SimJournalFaults {
 }
 
 export interface SimJournalOptions {
+  /**
+   * Allow a journal on a network filesystem (NFS, SMB/CIFS, AFS, Ceph, 9p).
+   * O_EXCL lock files and fsync are not reliable there, so the default refuses.
+   */
+  allowNetworkFilesystem?: boolean;
+  /** Test hook: returns the Linux statfs magic for a directory, or null if unknown. */
+  filesystemProbe?: (dir: string) => Promise<number | null>;
   /** Age after which an unreadable (half-written) lease file counts as abandoned. Default 10s. */
   staleLeaseMs?: number;
   faults?: SimJournalFaults;
+}
+
+// Linux statfs f_type magic numbers for filesystems where lock files and fsync
+// do not give local semantics. Other platforms report different numbering, so
+// the check runs on Linux only.
+const NETWORK_FILESYSTEMS: Readonly<Record<number, string>> = {
+  0x6969: 'nfs',
+  0x517b: 'smb',
+  0xff534d42: 'cifs',
+  0xfe534d42: 'smb2',
+  0x5346414f: 'afs',
+  0x00c36400: 'ceph',
+  0x01021997: '9p',
+};
+
+/** Name of the network filesystem for a statfs magic, or null when it is not one. */
+export function networkFilesystemName(type: number | null): string | null {
+  return type === null ? null : NETWORK_FILESYSTEMS[type >>> 0] ?? null;
+}
+
+async function linuxStatfsType(dir: string): Promise<number | null> {
+  if (process.platform !== 'linux') return null;
+  return (await statfs(dir)).type;
 }
 
 /** Another live writer, or a writer on another host, owns the journal. */
@@ -117,7 +147,8 @@ async function readLease(lockPath: string): Promise<{ raw: string; lease: SimJou
  * - An unterminated final record is never acknowledged. The lease holder copies
  *   it aside (`<journal>.torn-*`) and truncates it; a complete corrupt record is fatal.
  *
- * Local filesystems only. NFS/SMB lock-file semantics and power-loss durability are not verified.
+ * Local filesystems only: on Linux a journal on NFS, SMB/CIFS, AFS, Ceph or 9p is refused
+ * unless `allowNetworkFilesystem` is set. Power-loss durability is not verified.
  */
 export class SimJournal {
   private records: SimAttempt[] = [];
@@ -187,6 +218,15 @@ export class SimJournal {
     if (this.closed) throw new Error('SIM journal: closed');
     if (this.token) return;
     await mkdir(dirname(this.filePath), { recursive: true });
+    if (!this.options.allowNetworkFilesystem) {
+      const type = await (this.options.filesystemProbe ?? linuxStatfsType)(dirname(this.filePath));
+      const fs = networkFilesystemName(type);
+      if (fs) {
+        const error = new Error(`SIM journal: ${dirname(this.filePath)} is on ${fs}; lock files and fsync are not reliable there (set allowNetworkFilesystem to override)`);
+        (error as NodeJS.ErrnoException).code = 'SIM_JOURNAL_UNSUPPORTED_FS';
+        throw error;
+      }
+    }
     const token = randomBytes(16).toString('hex');
     const lease: SimJournalLease = { format: LEASE_FORMAT, pid: process.pid, host: hostname(), token, acquiredAt: new Date().toISOString() };
     for (let attempt = 0; ; attempt++) {

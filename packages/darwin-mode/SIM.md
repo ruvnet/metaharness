@@ -33,7 +33,7 @@ When an LLM-backed generator supports it, it receives a bounded `simContext` con
 
 ## Optional native RuVector retrieval
 
-Install `@ruvector/rvf` (and a working native runtime) separately. The package is not required by Darwin.
+Install `@ruvector/rvf` >= 0.2.0 (0.4.7+ recommended, with a working native runtime) separately. The package is not required by Darwin. Versions before 0.2.0 return every string id as `"0"`, so `openRvfSimIndex` refuses them, and also refuses when it cannot read the installed version.
 
 ```ts
 import { openRvfSimIndex, indexSimAttempt } from '@metaharness/darwin';
@@ -107,7 +107,7 @@ The adapter is covered by a Darwin E2E parity test.
 
 Tests cover two real writer processes, four racing processes (every acknowledged record exactly once), a writer SIGKILLed partway through a record, and an injected fault at each write boundary.
 
-**Limits:** local filesystems only. `O_EXCL` lock files and fsync on NFS/SMB are not verified; do not share a journal over a network filesystem. Power-loss durability has not been tested on real hardware. A reused pid makes a stale lease look live, which fails closed. Only a final unterminated record is recoverable; complete corrupt records fail closed. Do not treat a hash chain as an authenticated signature or durable multi-node transaction. Append fsync guarantees rely on the underlying filesystem's fsync implementation and hardware. A future checkpoint/compaction layer must preserve the verifiable chain head and audit evidence.
+**Limits:** local filesystems only. On Linux, a journal directory on NFS, SMB/CIFS, AFS, Ceph or 9p (including WSL `/mnt/*` drives) is refused with `SIM_JOURNAL_UNSUPPORTED_FS`, because `O_EXCL` lock files and fsync are not reliable there; `allowNetworkFilesystem: true` overrides this at your own risk. On macOS and Windows the filesystem type is not checked, so keep the journal on a local disk. Power-loss durability has not been tested on real hardware. A reused pid makes a stale lease look live, which fails closed. Only a final unterminated record is recoverable; complete corrupt records fail closed. Do not treat a hash chain as an authenticated signature or durable multi-node transaction. Append fsync guarantees rely on the underlying filesystem's fsync implementation and hardware. A future checkpoint/compaction layer must preserve the verifiable chain head and audit evidence.
 
 Reproduce local synthetic persistence measurements:
 
