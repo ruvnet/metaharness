@@ -4,23 +4,26 @@
 // dist imports, no I/O. PREREGISTRATION.md mirrors these constants; the live
 // runner refuses to start if the frozen partition hash differs.
 
-// v1 + AMENDMENT-1 (fixed evaluation brief, 30 seeds, calibration gate)
-// + AMENDMENT-2 (failed-train-task details, recalibration seeds 960-961).
-export const PREREG_ID = 'metaharness-523-sealed-sim-v1a2';
+// Study v2 (PREREGISTRATION-V2.md). v1 (+ amendments 1-2) closed at its calibration
+// gate with a proposer floor; v2 keeps every v1 rule except the proposer models,
+// their system lines (chosen by the probe rule in probe.mjs), seeds and output dir.
+export const PREREG_ID = 'metaharness-523-sealed-sim-v2';
+export const V1_PREREG_ID = 'metaharness-523-sealed-sim-v1a2';
 export const EXPECTED_TASKS_SHA256 = '7ebe5ff750d78c05a4630b6edfdded30e6f3ce44f09a457040f4bea686037582';
 
+/** `system` is the proposer system line selected for that model by the probe rule. */
 export const MODELS = Object.freeze([
-  { id: 'google/gemini-2.5-flash-lite', family: 'google', inPerM: 0.10, outPerM: 0.40 },
-  { id: 'openai/gpt-4.1-nano', family: 'openai', inPerM: 0.10, outPerM: 0.40 },
+  { id: 'google/gemini-3.1-flash-lite', family: 'google', inPerM: 0.25, outPerM: 1.50, system: 'stock' },
+  { id: 'deepseek/deepseek-chat-v3.1', family: 'deepseek', inPerM: 0.25, outPerM: 0.95, system: 'behaviour' },
 ]);
 export const BENCHES = Object.freeze(['loc', 'per']);
 
 export const LIVE_DESIGN = Object.freeze({
   capUsd: 40,
   sourceSeeds: [101, 102, 103],
-  targetSeeds: Array.from({ length: 30 }, (_, i) => i + 1),
+  targetSeeds: Array.from({ length: 25 }, (_, i) => i + 1),
   smokeSeeds: [900],
-  calibSeeds: [960, 961],
+  calibSeeds: [970, 971],
   generations: 6,
   childrenPerGeneration: 3,
   selectionPool: 'generation', // fixed parent count (≤2) ⇒ identical candidate counts per arm
@@ -29,7 +32,7 @@ export const LIVE_DESIGN = Object.freeze({
   simMaxTokens: 800,
   proposerMaxTokens: 2500,
   temperature: 0.4,
-  runConcurrency: 8,
+  runConcurrency: 16,
 });
 
 /** $0 mock design used by --dry and CI tests (tiny, same code path). */

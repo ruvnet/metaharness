@@ -9,7 +9,7 @@
 //
 // Results append to <out>/raw-<phase>.jsonl (resumable: finished run ids are
 // skipped). Every live call is reserved against, then settled into, the shared
-// append-only spend ledger <out>/spend-ledger.jsonl before the next one starts.
+// append-only spend ledger results/spend-ledger.jsonl (shared by v1, probe and v2) before the next one starts.
 
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -38,7 +38,7 @@ const design = dry ? DRY_DESIGN : LIVE_DESIGN;
 const phase = opt('--phase', dry ? 'all' : undefined);
 if (!['smoke', 'calib', 'source', 'target', 'all'].includes(phase)) throw new Error('--phase smoke|calib|source|target|all is required');
 if (live && phase === 'all') throw new Error('--live runs one phase at a time');
-const outDir = resolve(opt('--out', dry ? join(tmpdir(), `sim-eval-dry-${process.pid}`) : join(here, 'results')));
+const outDir = resolve(opt('--out', dry ? join(tmpdir(), `sim-eval-dry-${process.pid}`) : join(here, 'results', 'v2')));
 const capUsd = parseCap(opt('--cap', String(design.capUsd)));
 if (capUsd > LIVE_DESIGN.capUsd) throw new Error(`--cap may not exceed the pre-registered $${LIVE_DESIGN.capUsd}`);
 const runConcurrency = Number(opt('--concurrency', String(design.runConcurrency)));
@@ -89,14 +89,15 @@ const scratchRoot = join(opt('--scratch', tmpdir()), `sim-eval-523-${process.pid
 mkdirSync(scratchRoot, { recursive: true });
 appendFileSync(join(outDir, 'provenance.jsonl'), JSON.stringify(provenance) + '\n');
 
-const guard = new SpendGuard({ capUsd, ledgerPath: dry ? null : join(outDir, 'spend-ledger.jsonl') });
+// One ledger for every paid call of #523 (v1, probe, v2), so the $40 cap is global.
+const guard = new SpendGuard({ capUsd, ledgerPath: dry ? null : resolve(opt('--ledger', join(here, 'results', 'spend-ledger.jsonl'))) });
 const apiKey = live ? (process.env.OPENROUTER_API_KEY ?? '').trim() : '';
 if (live && !apiKey) throw new Error('OPENROUTER_API_KEY must be set in the environment for --live');
 const pricing = new Map(MODELS.map((m) => [m.id, m]));
 const makeProposer = (spec) => (dry
   ? new MockProposer()
   : new GuardedOpenRouterProposer({
-    model: spec.model, pricing: pricing.get(spec.model), guard, apiKey, trainTasks: tasksDoc.partitions[spec.bench].train,
+    model: spec.model, pricing: pricing.get(spec.model), guard, apiKey, trainTasks: tasksDoc.partitions[spec.bench].train, system: pricing.get(spec.model).system,
     maxTokens: design.proposerMaxTokens, temperature: design.temperature, meta: { run: spec.id },
   }));
 

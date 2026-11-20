@@ -139,6 +139,9 @@ export async function executeRun(spec, ctx) {
     value: solved(held) / held.length, heldoutSolved: solved(held), heldoutN: held.length,
     baselineHeldout: solved(baseHeld) / baseHeld.length,
     winnerTrain: solved(winTrain) / winTrain.length,
+    // Train-ceiling readout (v2): first generation with a child scoring train 100%.
+    firstTrainPerfectGeneration: children.filter((r) => r.score && r.score.taskSuccess >= 1)
+      .reduce((g, r) => Math.min(g, r.variant.generation), Infinity),
     winnerId: winner.variant.id, winnerFinalScore: winner.score?.finalScore ?? null, winnerLineageSurfaces: lineage,
     candidates: children.length, evaluatorTaskRuns: result.records.length * partitions[spec.bench].train.length,
     validatorRejections: summaries.filter((s) => s.startsWith('mutation rejected by validator')).length,
