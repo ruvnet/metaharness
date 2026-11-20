@@ -375,3 +375,5 @@ If you are reading this with intent to start implementation, the gating ADR is *
 - [ADR-323: Autogenous as a real dependency of @metaharness/autogenous; rGi not added](./ADR-323-autogenous-and-rgi-as-dependencies.md)
 
 - [ADR 324: Experimental pairwise energy constraint module](./ADR-324-energy-constraint-module.md)
+
+- [ADR-325: Continual Self Improvement Memory for the MetaHarness optimizer](./ADR-325-continual-self-improvement-memory.md)

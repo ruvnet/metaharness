@@ -1,6 +1,6 @@
 # ADR-325: Continual Self Improvement Memory for the MetaHarness optimizer
 
-**Status:** Implemented as an opt in prototype, subject to empirical validation  
+**Status**: Implemented as an opt in prototype, subject to empirical validation  
 **Date:** 2026-11-20  
 **Issue:** https://github.com/ruvnet/metaharness/issues/518  
 **Extends:** ADR-074, ADR-071, ADR-072, ADR-073, ADR-161
@@ -37,6 +37,14 @@ The `SimRunConfig` mode `off` or omission of the config preserves existing behav
 Run `npm run lint -w @metaharness/darwin`, `npx vitest run packages/darwin-mode/__tests__/sim-memory.test.ts packages/darwin-mode/__tests__/sim-evolve.test.ts`, and `npm run bench:sim -w @metaharness/darwin`.
 
 The synthetic benchmark uses fixed 40 records and four matching query families, showing context precision/recall and token-budget effects. Its output explicitly says `heldoutModelScores: NOT_MEASURED`. It cannot establish LLM performance gains, production safety, vector search superiority or causal attribution. Promotion to an enabled default requires a held out, independently run three arm trial over multiple models and benchmarks, with repeated seeds, fixed candidate/round budgets, significance estimates, token and dollar costs, negative transfer, and regressions.
+
+## Consequences
+
+* Darwin with `sim` omitted or `mode: 'off'` behaves exactly as before and writes nothing to disk for SIM.
+* With SIM on, the proposer sees bounded, untrusted prior history; scoring, promotion and the safety gates are unchanged.
+* Failed and regressed attempts persist, so later rounds can revise earlier edits with their outcomes in view.
+* The journal serializes appends within one process only. Two processes must not share a journal path until the single-writer lease in #521 lands.
+* Measured LLM gains remain unestablished until the held-out trial described below is run.
 
 ## Alternatives
 
