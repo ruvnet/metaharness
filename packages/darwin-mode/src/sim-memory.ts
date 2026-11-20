@@ -4,7 +4,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, stat, unlink, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import type { SimJournal } from './sim-journal.js';
+import type { SimJournal, SimJournalOptions } from './sim-journal.js';
 
 const SCHEMA = 'metaharness.sim.v1';
 const MAX_RECORDS = 100_000;
@@ -150,13 +150,17 @@ export class SimMemory {
   private loaded = false;
   private queue: Promise<void> = Promise.resolve();
   private journal: SimJournal | null = null;
-  constructor(readonly filePath: string, readonly options: { persistence?: 'snapshot' | 'journal' } = {}) {}
+  constructor(
+    readonly filePath: string,
+    /** `journal` options (checkpointing, faults) apply only with `persistence: 'journal'`. Snapshot stays the default. */
+    readonly options: { persistence?: 'snapshot' | 'journal'; journal?: SimJournalOptions } = {},
+  ) {}
 
   async load(): Promise<void> {
     if (this.loaded) return;
     if (this.options.persistence === 'journal') {
       const { SimJournal } = await import('./sim-journal.js');
-      const journal = new SimJournal(this.filePath);
+      const journal = new SimJournal(this.filePath, this.options.journal);
       await journal.load();
       this.records = journal.all();
       this.journal = journal;
