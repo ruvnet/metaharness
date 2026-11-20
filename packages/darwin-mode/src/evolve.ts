@@ -10,6 +10,8 @@
 // (ADR-073) rather than dead-ending — a weak ancestor can still seed a branch.
 
 import { mkdir, writeFile } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
+import { indexSimAttempt } from './sim-memory.js';
 import { join, relative, resolve } from 'node:path';
 import { Archive } from './archive.js';
 import { generateBaselineHarness } from './generator.js';
@@ -313,6 +315,9 @@ export async function evolve(config: EvolutionConfig): Promise<EvolutionResult> 
   const profile = await profileRepo(config.repoRoot);
   const archive = new Archive(join(config.workRoot, 'archive.json'));
   await archive.load();
+  // SIM is optional, optimizer-only evidence. Nothing in the scorer consumes it.
+  const sim = config.sim && config.sim.mode !== 'off' ? config.sim : null;
+  if (sim) await sim.store.load();
 
   const seed = config.seed ?? 0;
   const concurrency = config.concurrency ?? DEFAULT_CONCURRENCY;
@@ -411,6 +416,18 @@ export async function evolve(config: EvolutionConfig): Promise<EvolutionResult> 
                   repoSummary: profile.summary,
                   parentScore: scoreById.get(parent.id)?.finalScore ?? 0,
                   failedTraces: summarizeFailedTraces(tracesById.get(parent.id) ?? []),
+                  simContext: sim
+                    ? (await sim.store.context({
+                        scope: sim.scope,
+                        mode: sim.mode as 'full' | 'retrieval',
+                        query: [profile.summary, parent.mutationSurface,
+                          ...summarizeFailedTraces(tracesById.get(parent.id) ?? [])].join(' ').slice(0, 4000) || 'harness',
+                        allowCrossRepo: sim.allowCrossRepo,
+                        maxTokens: sim.maxTokens,
+                        embedder: sim.embedder,
+                        vectorIndex: sim.vectorIndex,
+                      })).context
+                    : undefined,
                 },
               );
         if (archive.get(child.id)) throw new Error(`darwin: autonomous or generated child id already exists: ${child.id}`);
@@ -549,6 +566,28 @@ export async function evolve(config: EvolutionConfig): Promise<EvolutionResult> 
         );
       }
       await commit(archive, config.workRoot, ev);
+      // Record selected and rejected attempts only AFTER independent scoring.
+      // The grader is frozen: this history cannot change the promotion verdict.
+      if (sim && ev.variant.parentId !== null) {
+        const parentScore = scoreById.get(ev.variant.parentId)?.finalScore ?? 0;
+        const recorded = await sim.store.append({
+          id: randomUUID(),
+          createdAt: ev.variant.createdAt,
+          scope: sim.scope,
+          problemKey: 'surface/' + ev.variant.mutationSurface,
+          diagnosis: 'Unclassified harness improvement; see independently scored evidence',
+          variantId: ev.variant.id,
+          parentId: ev.variant.parentId,
+          mutationSurface: ev.variant.mutationSurface,
+          rationale: ev.variant.mutationSummary.slice(0, 4000) || 'unspecified mutation',
+          predictedDelta: null,
+          observedDelta: ev.score.finalScore - parentScore,
+          finalScore: ev.score.finalScore,
+          promoted: ev.score.promoted,
+          evidenceIds: ['archive:' + ev.variant.id].concat(decision ? ['bench:' + ev.variant.id] : []),
+        });
+        if (sim.embedder && sim.vectorIndex) await indexSimAttempt(recorded, sim.embedder, sim.vectorIndex);
+      }
       scoreById.set(ev.variant.id, ev.score);
       tracesById.set(ev.variant.id, ev.traces);
       if (ev.score.promoted) promoted.push(ev.variant);
