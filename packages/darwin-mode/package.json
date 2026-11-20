@@ -48,7 +48,8 @@
     "bench:shield": "npm run build && node bench/security/darwin-shield-bench.mjs",
     "bench:clade": "npm run build && node bench/selection/clade-throughput.mjs",
     "bench:contrastive": "npm run build && node bench/contrastive/run.mjs",
-    "bench:surrogate": "npm run build && node bench/selection/numeric-surrogate.mjs"
+    "bench:surrogate": "npm run build && node bench/selection/numeric-surrogate.mjs",
+    "bench:sim": "npm run build && node bench/sim-continuation.mjs"
   },
   "keywords": [
     "metaharness",
