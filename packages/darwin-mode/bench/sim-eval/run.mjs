@@ -96,7 +96,7 @@ const pricing = new Map(MODELS.map((m) => [m.id, m]));
 const makeProposer = (spec) => (dry
   ? new MockProposer()
   : new GuardedOpenRouterProposer({
-    model: spec.model, pricing: pricing.get(spec.model), guard, apiKey,
+    model: spec.model, pricing: pricing.get(spec.model), guard, apiKey, trainTasks: tasksDoc.partitions[spec.bench].train,
     maxTokens: design.proposerMaxTokens, temperature: design.temperature, meta: { run: spec.id },
   }));
 

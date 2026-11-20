@@ -12,7 +12,7 @@ import * as plan from '../bench/sim-eval/plan.mjs';
 // @ts-expect-error untyped .mjs bench module
 import { SpendCapError, SpendGuard, parseCap, worstCaseUsd } from '../bench/sim-eval/spend-guard.mjs';
 // @ts-expect-error untyped .mjs bench module
-import { EVAL_BRIEF, GuardedOpenRouterProposer, buildMessages, diffSummary } from '../bench/sim-eval/proposer.mjs';
+import { EVAL_BRIEF, GuardedOpenRouterProposer, buildMessages, diffSummary, failedTaskDetails } from '../bench/sim-eval/proposer.mjs';
 // @ts-expect-error untyped .mjs bench module
 import { contrast, holm, verdict } from '../bench/sim-eval/stats.mjs';
 
@@ -126,6 +126,20 @@ describe('sim-eval proposer (fake fetch)', () => {
     const off = buildMessages({ ...input, simContext: undefined });
     expect(off[1].content.startsWith(EVAL_BRIEF)).toBe(true);
     expect(off[1].content).not.toContain('Prior optimizer evidence');
+  });
+
+  it('describes only failed TRAIN tasks, never held-out ones', () => {
+    const p = buildPartitions();
+    const train = p.loc.train;
+    const lines = ['task loc-t9: exit 1 — unsolved', `task ${p.loc.heldout[0].id}: exit 1 — unsolved`];
+    const d = failedTaskDetails(lines, train);
+    expect(d).toHaveLength(1);
+    expect(d[0]).toContain('loc-t9');
+    expect(d[0]).toContain(`at input position ${train[9].files.indexOf(train[9].buggyFile)}`);
+    expect(failedTaskDetails(lines, null)).toEqual([]);
+    const msg = buildMessages({ ...input, failedTraces: lines }, { trainTasks: train })[1].content;
+    expect(msg).toContain('Failed train task details');
+    expect(msg).not.toContain(p.loc.heldout[0].buggyFile);
   });
 
   it('charges the reservation on a network error and refuses before fetching when capped', async () => {

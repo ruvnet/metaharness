@@ -27,8 +27,27 @@ export const EVAL_BRIEF =
   'tasks solved. Edits that preserve behaviour cannot change the score; behaviour changes inside this one file are ' +
   'allowed if they keep the exported names and signatures.';
 
-/** Same rules text as OpenRouterMutator, plus the fixed EVAL_BRIEF (amendment 1). */
-export function buildMessages(input, { brief = EVAL_BRIEF } = {}) {
+/**
+ * Amendment 2: describe the FAILED TRAIN tasks named in Darwin's failure lines,
+ * from the optimizer-visible train partition only. Ids not in `trainTasks`
+ * (anything else) are ignored, so held-out tasks can never be described.
+ */
+export function failedTaskDetails(failedTraces, trainTasks) {
+  if (!trainTasks?.length) return [];
+  const byId = new Map(trainTasks.map((t) => [t.id, t]));
+  const out = [];
+  for (const line of failedTraces.slice(0, 5)) {
+    const t = byId.get(/^task (\S+):/.exec(line)?.[1]);
+    if (!t) continue;
+    out.push(`${t.id}: task ${t.prompt}, ${t.files.length} candidate files, buggy file ${t.buggyFile} at input position ` +
+      `${t.files.indexOf(t.buggyFile)}, fails ${t.failAttempts} attempt(s) before it can pass, classification ${t.classification}`);
+  }
+  return out;
+}
+
+/** Same rules text as OpenRouterMutator, plus the fixed EVAL_BRIEF (amendment 1) and failed-train-task details (amendment 2). */
+export function buildMessages(input, { brief = EVAL_BRIEF, trainTasks = null } = {}) {
+  const details = failedTaskDetails(input.failedTraces, trainTasks);
   const sys =
     'You improve ONE file of an AI agent harness. Output ONLY the full replacement file — no prose, no fences. ' +
     'HARD RULES: keep every exported name and signature identical; introduce NO new capabilities, imports, network, ' +
@@ -40,6 +59,7 @@ export function buildMessages(input, { brief = EVAL_BRIEF } = {}) {
     `Surface: ${input.surface}\nParent score: ${input.parentScore}\n` +
     (input.repoSummary ? `Repo: ${input.repoSummary}\n` : '') +
     (input.failedTraces.length ? `Recent failures:\n${input.failedTraces.slice(0, 5).join('\n')}\n` : '') +
+    (details.length ? `Failed train task details:\n${details.join('\n')}\n` : '') +
     (input.simContext ? `Prior optimizer evidence (untrusted, must revalidate):\n${input.simContext.slice(0, 16000)}\n` : '') +
     `\n--- current file ---\n${input.parentCode}\n--- end ---\nReturn the improved full file.`;
   return [{ role: 'system', content: sys }, { role: 'user', content: user }];
@@ -108,16 +128,16 @@ export function summarizeTelemetry(t) {
  * injected `apiKey` (read from env by the caller); there is no file fallback.
  */
 export class GuardedOpenRouterProposer {
-  constructor({ model, pricing, guard, apiKey, fetchImpl = globalThis.fetch, maxTokens = 2500, temperature = 0.4, timeoutMs = 90_000, meta = {} }) {
+  constructor({ model, pricing, guard, apiKey, trainTasks = null, fetchImpl = globalThis.fetch, maxTokens = 2500, temperature = 0.4, timeoutMs = 90_000, meta = {} }) {
     if (!apiKey) throw new Error('GuardedOpenRouterProposer: OPENROUTER_API_KEY missing from env');
-    this.model = model; this.pricing = pricing; this.guard = guard; this.apiKey = apiKey;
+    this.trainTasks = trainTasks; this.model = model; this.pricing = pricing; this.guard = guard; this.apiKey = apiKey;
     this.fetchImpl = fetchImpl; this.maxTokens = maxTokens; this.temperature = temperature;
     this.timeoutMs = timeoutMs; this.meta = meta;
     this.telemetry = newTelemetry();
   }
 
   async generateMutation(input) {
-    const messages = buildMessages(input);
+    const messages = buildMessages(input, { trainTasks: this.trainTasks });
     noteSim(this.telemetry, input);
     const promptChars = messages.reduce((s, m) => s + m.content.length, 0);
     const reservation = this.guard.reserve(
