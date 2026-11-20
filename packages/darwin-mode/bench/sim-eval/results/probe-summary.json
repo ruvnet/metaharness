@@ -1,0 +1,171 @@
+{
+ "baseline": {
+  "loc": 0.6,
+  "per": 0.7777777777777778
+ },
+ "spend": {
+  "capUsd": 40,
+  "spentUsd": 0.360782,
+  "outstandingUsd": 0,
+  "calls": 868,
+  "unpricedCalls": 8
+ },
+ "table": [
+  {
+   "model": "google/gemini-2.5-flash-lite",
+   "family": "google",
+   "system": "stock",
+   "pricePerM": 0.5,
+   "locRaise": 0,
+   "perRaise": 0,
+   "rejected": 0,
+   "failed": 0,
+   "locHeldMax": 0.125,
+   "perHeldMax": 0.3125,
+   "costUsd": 0.0059632056
+  },
+  {
+   "model": "google/gemini-2.5-flash-lite",
+   "family": "google",
+   "system": "behaviour",
+   "pricePerM": 0.5,
+   "locRaise": 0,
+   "perRaise": 0.2,
+   "rejected": 0.1,
+   "failed": 0,
+   "locHeldMax": 0.125,
+   "perHeldMax": 0.375,
+   "costUsd": 0.005900202
+  },
+  {
+   "model": "google/gemini-3.1-flash-lite",
+   "family": "google",
+   "system": "stock",
+   "pricePerM": 1.75,
+   "locRaise": 1,
+   "perRaise": 1,
+   "rejected": 0,
+   "failed": 0,
+   "locHeldMax": 0.3541666666666667,
+   "perHeldMax": 0.7083333333333334,
+   "costUsd": 0.019480725000000004
+  },
+  {
+   "model": "google/gemini-3.1-flash-lite",
+   "family": "google",
+   "system": "behaviour",
+   "pricePerM": 1.75,
+   "locRaise": 1,
+   "perRaise": 1,
+   "rejected": 0,
+   "failed": 0,
+   "locHeldMax": 0.375,
+   "perHeldMax": 0.7083333333333334,
+   "costUsd": 0.018747630000000005
+  },
+  {
+   "model": "openai/gpt-4.1-nano",
+   "family": "openai",
+   "system": "stock",
+   "pricePerM": 0.5,
+   "locRaise": 0,
+   "perRaise": 0.2,
+   "rejected": 0,
+   "failed": 0,
+   "locHeldMax": 0.125,
+   "perHeldMax": 0.375,
+   "costUsd": 0.005269968000000001
+  },
+  {
+   "model": "openai/gpt-4.1-nano",
+   "family": "openai",
+   "system": "behaviour",
+   "pricePerM": 0.5,
+   "locRaise": 0,
+   "perRaise": 0,
+   "rejected": 0,
+   "failed": 0,
+   "locHeldMax": 0.125,
+   "perHeldMax": 0.3125,
+   "costUsd": 0.0054192599999999995
+  },
+  {
+   "model": "openai/gpt-4.1-mini",
+   "family": "openai",
+   "system": "stock",
+   "pricePerM": 2,
+   "locRaise": 0,
+   "perRaise": 0.6,
+   "rejected": 0.05,
+   "failed": 0,
+   "locHeldMax": 0.125,
+   "perHeldMax": 0.375,
+   "costUsd": 0.021452112
+  },
+  {
+   "model": "openai/gpt-4.1-mini",
+   "family": "openai",
+   "system": "behaviour",
+   "pricePerM": 2,
+   "locRaise": 0,
+   "perRaise": 1,
+   "rejected": 0.2,
+   "failed": 0,
+   "locHeldMax": 0.125,
+   "perHeldMax": 0.375,
+   "costUsd": 0.023794847999999997
+  },
+  {
+   "model": "deepseek/deepseek-chat-v3.1",
+   "family": "deepseek",
+   "system": "stock",
+   "pricePerM": 1.2,
+   "locRaise": 0,
+   "perRaise": 1,
+   "rejected": 0,
+   "failed": 0,
+   "locHeldMax": 0.125,
+   "perHeldMax": 0.375,
+   "costUsd": 0.0177195645
+  },
+  {
+   "model": "deepseek/deepseek-chat-v3.1",
+   "family": "deepseek",
+   "system": "behaviour",
+   "pricePerM": 1.2,
+   "locRaise": 0.5,
+   "perRaise": 1,
+   "rejected": 0.05,
+   "failed": 0,
+   "locHeldMax": 1,
+   "perHeldMax": 0.7083333333333334,
+   "costUsd": 0.0165893706
+  },
+  {
+   "model": "qwen/qwen3-coder",
+   "family": "qwen",
+   "system": "stock",
+   "pricePerM": 1.3,
+   "locRaise": 0.2,
+   "perRaise": 1,
+   "rejected": 0,
+   "failed": 0,
+   "locHeldMax": 1,
+   "perHeldMax": 0.4791666666666667,
+   "costUsd": 0.014216023800000002
+  },
+  {
+   "model": "qwen/qwen3-coder",
+   "family": "qwen",
+   "system": "behaviour",
+   "pricePerM": 1.3,
+   "locRaise": 0.5,
+   "perRaise": 0.3,
+   "rejected": 0.05,
+   "failed": 0.4,
+   "locHeldMax": 1,
+   "perHeldMax": 0.7083333333333334,
+   "costUsd": 0.0460894893
+  }
+ ]
+}
