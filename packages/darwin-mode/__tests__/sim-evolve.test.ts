@@ -66,6 +66,31 @@ describe('Darwin SIM integration', () => {
     expect(reload.all().every((r) => r.evidenceIds.every((id) => !id.includes('hidden')))).toBe(true);
   });
 
+  it('continues Darwin optimization with a durable journal without changing scorer output', async () => {
+    const repoRoot = await repo();
+    const baselineWork = await work();
+    const journalWork = await work();
+    const config: EvolutionConfig = {
+      repoRoot, workRoot: baselineWork, generations: 2, childrenPerGeneration: 1,
+      tasks: [], sandboxMode: 'mock', mockTasks: [], concurrency: 1,
+      promotionDelta: 0.01, seed: 17,
+    };
+    const baseline = await evolve(config);
+    const memory = new SimMemory(join(journalWork, 'optimizer-events.jsonl'), { persistence: 'journal' });
+    const journalRun = await evolve({
+      ...config, workRoot: journalWork,
+      sim: { store: memory, mode: 'retrieval', scope, maxTokens: 512 },
+    });
+    expect(journalRun.records.map((r) => r.score?.finalScore))
+      .toEqual(baseline.records.map((r) => r.score?.finalScore));
+    expect(journalRun.records.map((r) => r.score?.promoted))
+      .toEqual(baseline.records.map((r) => r.score?.promoted));
+    const restored = new SimMemory(memory.filePath, { persistence: 'journal' });
+    await restored.load();
+    expect(restored.all()).toHaveLength(journalRun.records.length - 1);
+    expect(restored.all().every((r) => r.evidenceIds.length > 0)).toBe(true);
+  });
+
   it('mode off does not create SIM records or change the default run', async () => {
     const repoRoot = await repo();
     const workRoot = await work();
