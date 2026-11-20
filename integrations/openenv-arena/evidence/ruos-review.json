@@ -1,0 +1,12 @@
+{
+  "provider": "ruOS Work Desktop",
+  "source_commit": "90a793a9f4f1a06a5b6422164951e9192c909daa",
+  "completionVersion": 1,
+  "completionVerified": true,
+  "exitCode": 0,
+  "status": "ok",
+  "independent_task_tests_passed": 15,
+  "independent_submission_tests_passed": 19,
+  "oracle_cases": 768,
+  "scope": "Remote offline controls, not a model evaluation; submission tests here preceded the three new HF cache lookup tests"
+}

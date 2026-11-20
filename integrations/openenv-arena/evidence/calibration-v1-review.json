@@ -1,0 +1,534 @@
+{
+  "review_version": 1,
+  "reviewed_at": "2026-10-08T23:52:39.857057+00:00",
+  "source": {
+    "gist": "https://gist.github.com/ruvnet/00fb40aeabb35a893f140597e2695c1d",
+    "gist_revision": "a8e16faaaf19d7faf0e3ff53cdbee0a1ff299dfb",
+    "environment_commit": "90a793a9f4f1a06a5b6422164951e9192c909daa",
+    "local_episode_file_sha256": "8b6b23a9d781c1ba83fcc266ab831094696772882e54afd5d02d367e0b2d3f09",
+    "original_runner_sha256": "52ca27a9d37b1ab5761f6020e787c9f8944f2fea71569fe346765ada7a0f16e1",
+    "timeout_60_to_900_only_runner_sha256": "aaa826e43ffc4293beee116740722ea6906a30c0f1c4c6216c926f5d01ac1d19",
+    "public_file_verification": [
+      {
+        "local_name": "episodes.jsonl",
+        "public_url": "https://gist.githubusercontent.com/ruvnet/00fb40aeabb35a893f140597e2695c1d/raw/cf60b28915f858b1e6337a8e77aa242a5a8953b9/calibration-v1-episodes.jsonl",
+        "size": 489823,
+        "sha256": "8b6b23a9d781c1ba83fcc266ab831094696772882e54afd5d02d367e0b2d3f09",
+        "matches_local": true
+      },
+      {
+        "local_name": "table.txt",
+        "public_url": "https://gist.githubusercontent.com/ruvnet/00fb40aeabb35a893f140597e2695c1d/raw/808acb5def0c41ac8495e7f98141b54291a97c6e/calibration-v1-table.txt",
+        "size": 1400,
+        "sha256": "8ffd132f0e90d5d5f275a2af83dbd78a5dbc0ffecd891c608632a557d82d00a9",
+        "matches_local": true
+      },
+      {
+        "local_name": "README.md",
+        "public_url": "https://gist.githubusercontent.com/ruvnet/00fb40aeabb35a893f140597e2695c1d/raw/0e04f2c85f57a43d89f4eacf90399e79b11504ee/README.md",
+        "size": 1229,
+        "sha256": "cbc79a2a35ea01d9392492810042f8bf45e0c76329c2da7ac34c3f726ce48de6",
+        "matches_local": true
+      }
+    ]
+  },
+  "row_types": {
+    "plan": 24,
+    "episode": 77,
+    "summary": 10,
+    "orchestration_receipt": 10
+  },
+  "verification": {
+    "episodes": 77,
+    "matching_trajectory_hashes": 77,
+    "matching_resets": 77,
+    "replayed_valid_actions": 143,
+    "matching_step_observations": 143,
+    "matching_rewards": 77,
+    "matching_completed_summaries": 10,
+    "matching_orchestration_receipts": 10
+  },
+  "mismatches": [],
+  "totals": {
+    "episodes": 77,
+    "successes": 63,
+    "partial": 3,
+    "zero": 11,
+    "published_table_episodes": 74,
+    "additional_jsonl_episodes": 3,
+    "planned_episodes": 96,
+    "missing_episodes": 19,
+    "complete_four_attempt_groups": 10,
+    "nonterminal_validation_errors": 11,
+    "overall_success_rate": 0.8181818181818182,
+    "success_among_episodes_without_ValidationError": 0.9545454545454546
+  },
+  "groups": [
+    {
+      "family": "finance_ledger",
+      "difficulty": 1,
+      "attempts": 3,
+      "successes": 3,
+      "partial": 0,
+      "zero": 0,
+      "mean_reward": 1.0,
+      "reported_total_tokens_mean": 4712.666666666667,
+      "failures": {},
+      "seeds": [
+        400100,
+        400101,
+        400102
+      ]
+    },
+    {
+      "family": "finance_ledger",
+      "difficulty": 2,
+      "attempts": 3,
+      "successes": 2,
+      "partial": 0,
+      "zero": 1,
+      "mean_reward": 0.6666666666666666,
+      "reported_total_tokens_mean": 5345,
+      "failures": {
+        "ValidationError": 1
+      },
+      "seeds": [
+        400200,
+        400201,
+        400202
+      ]
+    },
+    {
+      "family": "finance_ledger",
+      "difficulty": 3,
+      "attempts": 3,
+      "successes": 3,
+      "partial": 0,
+      "zero": 0,
+      "mean_reward": 1.0,
+      "reported_total_tokens_mean": 5275.333333333333,
+      "failures": {},
+      "seeds": [
+        400300,
+        400301,
+        400302
+      ]
+    },
+    {
+      "family": "industrial_schedule",
+      "difficulty": 1,
+      "attempts": 2,
+      "successes": 0,
+      "partial": 0,
+      "zero": 2,
+      "mean_reward": 0.0,
+      "reported_total_tokens_mean": 5527.5,
+      "failures": {
+        "ValidationError": 2
+      },
+      "seeds": [
+        400100,
+        400101
+      ]
+    },
+    {
+      "family": "industrial_schedule",
+      "difficulty": 2,
+      "attempts": 2,
+      "successes": 0,
+      "partial": 0,
+      "zero": 2,
+      "mean_reward": 0.0,
+      "reported_total_tokens_mean": 5605.5,
+      "failures": {
+        "ValidationError": 2
+      },
+      "seeds": [
+        400200,
+        400201
+      ]
+    },
+    {
+      "family": "industrial_schedule",
+      "difficulty": 3,
+      "attempts": 2,
+      "successes": 0,
+      "partial": 0,
+      "zero": 2,
+      "mean_reward": 0.0,
+      "reported_total_tokens_mean": 5701,
+      "failures": {
+        "ValidationError": 2
+      },
+      "seeds": [
+        400300,
+        400301
+      ]
+    },
+    {
+      "family": "math_route",
+      "difficulty": 1,
+      "attempts": 4,
+      "successes": 4,
+      "partial": 0,
+      "zero": 0,
+      "mean_reward": 1.0,
+      "reported_total_tokens_mean": 2231.25,
+      "failures": {},
+      "seeds": [
+        400100,
+        400101,
+        400102,
+        400103
+      ]
+    },
+    {
+      "family": "math_route",
+      "difficulty": 2,
+      "attempts": 4,
+      "successes": 4,
+      "partial": 0,
+      "zero": 0,
+      "mean_reward": 1.0,
+      "reported_total_tokens_mean": 3241.25,
+      "failures": {},
+      "seeds": [
+        400200,
+        400201,
+        400202,
+        400203
+      ]
+    },
+    {
+      "family": "math_route",
+      "difficulty": 3,
+      "attempts": 3,
+      "successes": 3,
+      "partial": 0,
+      "zero": 0,
+      "mean_reward": 1.0,
+      "reported_total_tokens_mean": 4688.666666666667,
+      "failures": {},
+      "seeds": [
+        400300,
+        400301,
+        400302
+      ]
+    },
+    {
+      "family": "media_timeline",
+      "difficulty": 1,
+      "attempts": 4,
+      "successes": 4,
+      "partial": 0,
+      "zero": 0,
+      "mean_reward": 1.0,
+      "reported_total_tokens_mean": 3904.25,
+      "failures": {},
+      "seeds": [
+        400100,
+        400101,
+        400102,
+        400103
+      ]
+    },
+    {
+      "family": "media_timeline",
+      "difficulty": 2,
+      "attempts": 3,
+      "successes": 3,
+      "partial": 0,
+      "zero": 0,
+      "mean_reward": 1.0,
+      "reported_total_tokens_mean": 4597.333333333333,
+      "failures": {},
+      "seeds": [
+        400200,
+        400201,
+        400202
+      ]
+    },
+    {
+      "family": "media_timeline",
+      "difficulty": 3,
+      "attempts": 3,
+      "successes": 2,
+      "partial": 0,
+      "zero": 1,
+      "mean_reward": 0.6666666666666666,
+      "reported_total_tokens_mean": 5299.333333333333,
+      "failures": {
+        "ValidationError": 1
+      },
+      "seeds": [
+        400300,
+        400301,
+        400302
+      ]
+    },
+    {
+      "family": "office_reconciliation",
+      "difficulty": 1,
+      "attempts": 4,
+      "successes": 3,
+      "partial": 1,
+      "zero": 0,
+      "mean_reward": 0.875,
+      "reported_total_tokens_mean": 4125,
+      "failures": {},
+      "seeds": [
+        400100,
+        400101,
+        400102,
+        400103
+      ]
+    },
+    {
+      "family": "office_reconciliation",
+      "difficulty": 2,
+      "attempts": 4,
+      "successes": 4,
+      "partial": 0,
+      "zero": 0,
+      "mean_reward": 1.0,
+      "reported_total_tokens_mean": 4699.5,
+      "failures": {},
+      "seeds": [
+        400200,
+        400201,
+        400202,
+        400203
+      ]
+    },
+    {
+      "family": "office_reconciliation",
+      "difficulty": 3,
+      "attempts": 3,
+      "successes": 3,
+      "partial": 0,
+      "zero": 0,
+      "mean_reward": 1.0,
+      "reported_total_tokens_mean": 5765.666666666667,
+      "failures": {},
+      "seeds": [
+        400300,
+        400301,
+        400302
+      ]
+    },
+    {
+      "family": "science_calibration",
+      "difficulty": 1,
+      "attempts": 4,
+      "successes": 4,
+      "partial": 0,
+      "zero": 0,
+      "mean_reward": 1.0,
+      "reported_total_tokens_mean": 3136,
+      "failures": {},
+      "seeds": [
+        400100,
+        400101,
+        400102,
+        400103
+      ]
+    },
+    {
+      "family": "science_calibration",
+      "difficulty": 2,
+      "attempts": 4,
+      "successes": 4,
+      "partial": 0,
+      "zero": 0,
+      "mean_reward": 1.0,
+      "reported_total_tokens_mean": 3378.25,
+      "failures": {},
+      "seeds": [
+        400200,
+        400201,
+        400202,
+        400203
+      ]
+    },
+    {
+      "family": "science_calibration",
+      "difficulty": 3,
+      "attempts": 4,
+      "successes": 4,
+      "partial": 0,
+      "zero": 0,
+      "mean_reward": 1.0,
+      "reported_total_tokens_mean": 3492,
+      "failures": {},
+      "seeds": [
+        400300,
+        400301,
+        400302,
+        400303
+      ]
+    },
+    {
+      "family": "security_triage",
+      "difficulty": 1,
+      "attempts": 3,
+      "successes": 2,
+      "partial": 1,
+      "zero": 0,
+      "mean_reward": 0.8888888888888888,
+      "reported_total_tokens_mean": 4918.333333333333,
+      "failures": {},
+      "seeds": [
+        400100,
+        400101,
+        400102
+      ]
+    },
+    {
+      "family": "security_triage",
+      "difficulty": 2,
+      "attempts": 2,
+      "successes": 0,
+      "partial": 1,
+      "zero": 1,
+      "mean_reward": 0.3333333333333333,
+      "reported_total_tokens_mean": 6032,
+      "failures": {
+        "ValidationError": 1
+      },
+      "seeds": [
+        400200,
+        400201
+      ]
+    },
+    {
+      "family": "security_triage",
+      "difficulty": 3,
+      "attempts": 2,
+      "successes": 0,
+      "partial": 0,
+      "zero": 2,
+      "mean_reward": 0.0,
+      "reported_total_tokens_mean": 6915.5,
+      "failures": {
+        "ValidationError": 2
+      },
+      "seeds": [
+        400300,
+        400301
+      ]
+    },
+    {
+      "family": "software_change",
+      "difficulty": 1,
+      "attempts": 4,
+      "successes": 4,
+      "partial": 0,
+      "zero": 0,
+      "mean_reward": 1.0,
+      "reported_total_tokens_mean": 2633,
+      "failures": {},
+      "seeds": [
+        400100,
+        400101,
+        400102,
+        400103
+      ]
+    },
+    {
+      "family": "software_change",
+      "difficulty": 2,
+      "attempts": 4,
+      "successes": 4,
+      "partial": 0,
+      "zero": 0,
+      "mean_reward": 1.0,
+      "reported_total_tokens_mean": 3857.75,
+      "failures": {},
+      "seeds": [
+        400200,
+        400201,
+        400202,
+        400203
+      ]
+    },
+    {
+      "family": "software_change",
+      "difficulty": 3,
+      "attempts": 3,
+      "successes": 3,
+      "partial": 0,
+      "zero": 0,
+      "mean_reward": 1.0,
+      "reported_total_tokens_mean": 4284.666666666667,
+      "failures": {},
+      "seeds": [
+        400300,
+        400301,
+        400302
+      ]
+    }
+  ],
+  "provenance_bounds": {
+    "model": "Qwen/Qwen3.8-27B",
+    "model_revision_claimed_in_readme": "1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0",
+    "model_revision_recorded_in_plans": [
+      "1d4bf0f2"
+    ],
+    "server_aliases_recorded": [
+      "qwen38"
+    ],
+    "model_execution_attestation": "Publisher assertion; local replay authenticates retained observations, actions, rewards and digests only.",
+    "hardware_and_BF16": "Publisher assertion; not independently attested by these receipts.",
+    "per_reply_token_limit": 4096,
+    "aggregate_arena_budget_enforced": false,
+    "usage_field": "Sum of provider total_tokens per API response; repeated prompt tokens are counted. Not unique rollout tokens or generated-only tokens.",
+    "invalid_assistant_responses_retained": false,
+    "finish_reason_retained": false,
+    "reasoning_content_retained": false,
+    "truncation_proven": false,
+    "truncation_assessment": "ValidationError proves failure to validate the discarded assistant content, not token truncation. Truncation is a plausible unverified inference.",
+    "official_evaluation": false,
+    "training_improvement_measured": false,
+    "v2_calibration": false,
+    "table_discrepancy_interpretation": "The files contain different observed episode totals; progress during capture is plausible but not independently timestamp-proven."
+  },
+  "decision": "Do not submit v1 based on claimed truncation mechanism or infer v2 difficulty from v1. Retain this as independently replayed partial proxy calibration evidence.",
+  "table_differences": [
+    {
+      "family": "finance_ledger",
+      "difficulty": 2,
+      "table": {
+        "successes": 1,
+        "attempts": 2
+      },
+      "jsonl": {
+        "successes": 2,
+        "attempts": 3
+      }
+    },
+    {
+      "family": "media_timeline",
+      "difficulty": 3,
+      "table": {
+        "successes": 1,
+        "attempts": 2
+      },
+      "jsonl": {
+        "successes": 2,
+        "attempts": 3
+      }
+    },
+    {
+      "family": "software_change",
+      "difficulty": 2,
+      "table": {
+        "successes": 3,
+        "attempts": 3
+      },
+      "jsonl": {
+        "successes": 4,
+        "attempts": 4
+      }
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "tasks": [
+    {
+      "task_id": "software_change-d2",
+      "split": "train"
+    },
+    {
+      "task_id": "industrial_schedule-d2",
+      "split": "train"
+    },
+    {
+      "task_id": "science_calibration-d2",
+      "split": "train"
+    },
+    {
+      "task_id": "office_reconciliation-d2",
+      "split": "train"
+    },
+    {
+      "task_id": "finance_ledger-d2",
+      "split": "train"
+    },
+    {
+      "task_id": "math_route-d2",
+      "split": "train"
+    },
+    {
+      "task_id": "security_triage-d2",
+      "split": "train"
+    },
+    {
+      "task_id": "media_timeline-d2",
+      "split": "train"
+    }
+  ]
+}

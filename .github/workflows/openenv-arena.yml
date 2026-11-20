@@ -1,0 +1,98 @@
+name: OpenEnv Arena entry
+on:
+  push:
+    branches: [feat/openenv-arena-entry]
+    paths:
+      - 'integrations/openenv-arena/arena_env/**'
+      - 'integrations/openenv-arena/Dockerfile'
+      - 'integrations/openenv-arena/requirements.lock'
+      - 'integrations/openenv-arena/requirements-dev.lock'
+      - 'integrations/openenv-arena/openenv.yaml'
+      - '.github/workflows/openenv-arena.yml'
+  pull_request:
+    paths:
+      - 'integrations/openenv-arena/**'
+      - '.github/workflows/openenv-arena.yml'
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the validated image to GHCR (does not submit to Arena)
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  controls:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Build arena image
+        run: docker build --platform linux/amd64 -t metaharness-arena:check integrations/openenv-arena
+      - name: Prepare test dependencies outside the runtime image
+        shell: bash
+        run: |
+          docker run --rm --network none metaharness-arena:check python -c 'import importlib.util; assert importlib.util.find_spec("pytest") is None; assert importlib.util.find_spec("iniconfig") is None; assert importlib.util.find_spec("pluggy") is None'
+          mkdir -p "$RUNNER_TEMP/arena-test-deps"
+          docker run --rm --user "$(id -u):$(id -g)" --cap-drop ALL --security-opt no-new-privileges \
+            -v "$RUNNER_TEMP/arena-test-deps:/test-deps" \
+            -v "$PWD/integrations/openenv-arena/requirements-dev.lock:/app/requirements-dev.lock:ro" \
+            metaharness-arena:check python -m pip install --no-cache-dir --no-deps --target /test-deps -r /app/requirements-dev.lock
+          docker run --rm --network none \
+            -v "$RUNNER_TEMP/arena-test-deps:/test-deps:ro" -e PYTHONPATH=/test-deps:/app \
+            metaharness-arena:check python -m pip check
+      - name: Replay controls in a network isolated image
+        run: >-
+          docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges
+          --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m
+          -v "$PWD/integrations/openenv-arena/tests:/app/tests:ro"
+          -v "$PWD/integrations/openenv-arena/scripts:/app/scripts:ro"
+          -v "$PWD/integrations/openenv-arena/submission.py:/app/submission.py:ro"
+          -v "$RUNNER_TEMP/arena-test-deps:/test-deps:ro"
+          -e PYTHONPATH=/test-deps:/app metaharness-arena:check
+          python -m pytest -q -p no:cacheprovider /app/tests
+      - name: Start image and validate pinned OpenEnv protocol
+        shell: bash
+        run: |
+          docker run -d --name arena-check --network none --cap-drop ALL --security-opt no-new-privileges --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m metaharness-arena:check
+          for attempt in $(seq 1 30); do
+            if docker exec arena-check python -c 'import urllib.request; urllib.request.urlopen("http://127.0.0.1:8000/health",timeout=1)' >/dev/null 2>&1; then break; fi
+            sleep 1
+          done
+          docker exec arena-check openenv validate --url http://127.0.0.1:8000 --json
+      - name: Container logs
+        if: always()
+        run: docker logs arena-check || true
+      - name: Stop test container
+        if: always()
+        run: docker rm -f arena-check || true
+      - name: Publish tested image
+        if: (github.event_name == 'workflow_dispatch' && inputs.publish) || (github.event_name == 'push' && github.ref == 'refs/heads/feat/openenv-arena-entry')
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+          IMAGE_TAG: ghcr.io/ruvnet/metaharness-arena:${{ github.sha }}
+        run: |
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+          docker tag metaharness-arena:check "$IMAGE_TAG"
+          docker push "$IMAGE_TAG"
+          docker logout ghcr.io
+          IMAGE_DIGEST=$(docker image inspect "$IMAGE_TAG" --format '{{index .RepoDigests 0}}')
+          echo "Published reference: $IMAGE_DIGEST"
+          echo "Package: https://github.com/users/ruvnet/packages/container/package/metaharness-arena"
+          echo "image_digest=$IMAGE_DIGEST" >> "$GITHUB_OUTPUT"
+      - name: Verify anonymous registry access and replay published digest
+        if: (github.event_name == 'workflow_dispatch' && inputs.publish) || (github.event_name == 'push' && github.ref == 'refs/heads/feat/openenv-arena-entry')
+        env:
+          IMAGE_TAG: ghcr.io/ruvnet/metaharness-arena:${{ github.sha }}
+        run: |
+          IMAGE_DIGEST=$(docker image inspect "$IMAGE_TAG" --format '{{index .RepoDigests 0}}')
+          export DOCKER_CONFIG=$(mktemp -d)
+          docker pull "$IMAGE_DIGEST"
+          docker run --rm --network none "$IMAGE_DIGEST" python -c 'import importlib.util; assert importlib.util.find_spec("pytest") is None; assert importlib.util.find_spec("iniconfig") is None; assert importlib.util.find_spec("pluggy") is None'
+          docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m -v "$PWD/integrations/openenv-arena/tests:/app/tests:ro" -v "$PWD/integrations/openenv-arena/scripts:/app/scripts:ro" -v "$PWD/integrations/openenv-arena/submission.py:/app/submission.py:ro" -v "$RUNNER_TEMP/arena-test-deps:/test-deps:ro" -e PYTHONPATH=/test-deps:/app "$IMAGE_DIGEST" python -m pytest -q -p no:cacheprovider /app/tests
