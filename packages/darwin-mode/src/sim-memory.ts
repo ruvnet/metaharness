@@ -111,7 +111,7 @@ function validate(input: unknown): asserts input is SimAttemptInput {
   if (typeof input.promoted !== 'boolean') throw new Error('SIM: promoted must be boolean');
   if (!Array.isArray(input.evidenceIds) || input.evidenceIds.length > 20) throw new Error('SIM: invalid evidenceIds');
   for (const id of input.evidenceIds) bounded(id, 'evidenceIds[]', 256);
-  if (Number.isNaN(Date.parse(input.createdAt)) || new Date(input.createdAt).toISOString() !== input.createdAt) {
+  if (typeof input.createdAt !== 'string' || Number.isNaN(Date.parse(input.createdAt)) || new Date(input.createdAt).toISOString() !== input.createdAt) {
     throw new Error('SIM: invalid createdAt');
   }
 }
