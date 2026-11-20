@@ -45,6 +45,10 @@ The mock scores show the mechanics only; they are not a benchmark result. Childr
 
 **New in 0.14.0:** an optional [`ruv-fann`](https://www.npmjs.com/package/ruv-fann) neural surrogate that pre-screens numeric-genome candidates before your evaluator runs. See [Numeric genomes and the ruv-fann surrogate](#numeric-genomes-and-the-ruv-fann-surrogate-0140).
 
+## Continual self-improvement memory (SIM)
+
+Darwin now includes an **opt-in optimizer experience memory** preserving why harness edits were attempted, their measured outcomes (including regressions), and bounded evidence for later proposals. It supports deterministic lexical retrieval and an optional native RuVector RVF adapter; it never overrides the frozen scorer, and no real model uplift has yet been demonstrated by its synthetic ablation. See [SIM API, safety, and benchmark](./SIM.md) and [ADR-325](../../docs/adrs/ADR-325-continual-self-improvement-memory.md).
+
 ## Reference
 
 > **An LLM supercharger and cost optimizer.** Keep your model frozen — evolve the
