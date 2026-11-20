@@ -103,7 +103,7 @@ function finite(value: unknown, field: string): asserts value is number {
   if (typeof value !== 'number' || !Number.isFinite(value)) throw new Error('SIM: invalid ' + field);
 }
 
-function validate(input: unknown): asserts input is SimAttemptInput {
+export function validateSimAttempt(input: unknown): asserts input is SimAttemptInput {
   if (!object(input) || !object(input.scope)) throw new Error('SIM: invalid record or scope');
   for (const k of ['id', 'createdAt', 'problemKey', 'variantId', 'mutationSurface'] as const) bounded(input[k], k, 160);
   for (const k of ['diagnosis', 'rationale'] as const) bounded(input[k], k, 4_000);
@@ -170,7 +170,7 @@ export class SimMemory {
     let last: string | null = null;
     const ids = new Set<string>();
     for (const candidate of parsed.records) {
-      validate(candidate);
+      validateSimAttempt(candidate);
       if (!object(candidate) || candidate.previousHash !== last || typeof candidate.hash !== 'string') {
         throw new Error('SIM: broken hash chain');
       }
@@ -190,7 +190,7 @@ export class SimMemory {
     const operation = this.queue.then(async () => {
       await this.load();
       // Validate before JSON cloning: JSON.stringify silently turns NaN/Infinity into null.
-      validate(input);
+      validateSimAttempt(input);
       const safe = copy(input);
       if (this.records.length >= MAX_RECORDS || this.records.some((r) => r.id === safe.id)) {
         throw new Error('SIM: duplicate id or capacity exceeded');
