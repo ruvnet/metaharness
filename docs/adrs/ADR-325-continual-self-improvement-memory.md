@@ -43,7 +43,7 @@ The synthetic benchmark uses fixed 40 records and four matching query families, 
 * Darwin with `sim` omitted or `mode: 'off'` behaves exactly as before and writes nothing to disk for SIM.
 * With SIM on, the proposer sees bounded, untrusted prior history; scoring, promotion and the safety gates are unchanged.
 * Failed and regressed attempts persist, so later rounds can revise earlier edits with their outcomes in view.
-* The journal serializes appends within one process only. Two processes must not share a journal path until the single-writer lease in #521 lands.
+* The opt-in journal enforces one writer per path across processes with an O_EXCL lease, fencing and torn-tail recovery (#521). It is verified on local filesystems only, not NFS/SMB or under power loss.
 * Measured LLM gains remain unestablished until the held-out trial described below is run.
 
 ## Alternatives

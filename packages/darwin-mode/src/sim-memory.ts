@@ -226,6 +226,12 @@ export class SimMemory {
 
   all(): SimAttempt[] { return copy(this.records); }
 
+  /** Releases the journal writer lease, if one is held. A no-op for the snapshot backend. */
+  async close(): Promise<void> {
+    await this.queue;
+    await this.journal?.close();
+  }
+
   private async persist(): Promise<void> {
     await mkdir(dirname(this.filePath), { recursive: true });
     const temp = this.filePath + '.' + randomUUID() + '.tmp';

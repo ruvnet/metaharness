@@ -71,14 +71,15 @@ The returned data is a portable, explicit `metaharness.sim.handoff.v1` document 
 
 ## Experimental append-only journal
 
-`SimJournal` is now exported as a separate **opt-in persistence primitive**, with one fsynced JSONL event per append, hash chain verification, strict shared SIM schema validation, and incomplete-tail recovery. The existing `SimMemory` snapshot remains the default for `evolve()`. A journal backend is now available through the same optimizer memory interface, with an explicit opt-in. There is no transparent migration or shared-writer guarantee.
+`SimJournal` is now exported as a separate **opt-in persistence primitive**, with one fsynced JSONL event per append, hash chain verification, strict shared SIM schema validation, incomplete-tail recovery, and a cross-process single-writer lease. The existing `SimMemory` snapshot remains the default for `evolve()`. A journal backend is now available through the same optimizer memory interface, with an explicit opt-in. There is no transparent migration.
 
 ```ts
 import { SimJournal } from '@metaharness/darwin';
 const journal = new SimJournal('/safe-owner-data/optimizer-events.jsonl');
 const recovery = await journal.load();
 console.log(recovery); // { records, recoveredTailBytes }
-await journal.append(validatedSimAttempt);
+await journal.append(validatedSimAttempt); // takes the writer lease on first append
+await journal.close();                       // releases it
 ```
 
 To use the fsynced journal in Darwin without changing the scorer:
@@ -90,11 +91,23 @@ const store = new SimMemory('/safe-owner-data/optimizer-events.jsonl', {
 });
 // Pass `sim: { store, mode: 'retrieval', scope }` into the existing evolve config.
 // Use a new .jsonl path; do not point the journal at an existing snapshot.
+// Call `await store.close()` when done to release the writer lease.
 ```
 
-The adapter is covered by a Darwin E2E parity test. Journal I/O failures poison the active journal instance, requiring a fresh instance and recovery before another append. Incomplete tails are truncated on reopen; complete corrupted events remain fatal. This does not guarantee cross-process exclusivity or power-loss safety on untrustworthy storage.
+The adapter is covered by a Darwin E2E parity test.
 
-Never point two processes at the same journal. Only a final unterminated record is recoverable; complete corrupt records fail closed. Do not treat a hash chain as an authenticated signature or durable multi-node transaction. Append fsync guarantees rely on the underlying filesystem's fsync implementation and hardware. A future checkpoint/compaction layer must preserve the verifiable chain head and audit evidence.
+### Single-writer lease
+
+- **Readers** may call `load()` from any process. It is read-only and never changes the file; an unterminated final record is reported in `recoveredTailBytes` and ignored.
+- **The writer** takes `<journal>.lock` on its first `append()` (or `acquire()`), created atomically with `O_EXCL` and holding `{ pid, host, token }`. Any other writer, in this process or another, gets `SimJournalLockedError` (`code: SIM_JOURNAL_LOCKED`) until `close()`. A process that exits normally releases the lease automatically.
+- **Stale leases**: a lease from a dead pid on the same host is removed under a separate `.lock.break` mutex, and only if it is byte-identical to the lease judged stale. A half-written lease counts as stale after `staleLeaseMs` (default 10 s). A lease from another host is never broken automatically; remove it by hand once that writer is confirmed gone.
+- **Fencing**: before every write, the writer re-reads the lease token and checks that the file still ends where it last committed. If either changed, it commits nothing and poisons itself.
+- **Recovery**: an append is acknowledged only after the whole line is written and fsynced. The next lease holder copies any unterminated tail to `<journal>.torn-<time>-<id>` and truncates it. A complete corrupt record is fatal and is never truncated. After a fault, a record whose full line reached the file but was never acknowledged may be present once; retrying it with the same id is rejected as a duplicate.
+- **After an I/O failure** the instance is poisoned: `close()` it, then open a new instance, which recovers under the lease.
+
+Tests cover two real writer processes, four racing processes (every acknowledged record exactly once), a writer SIGKILLed partway through a record, and an injected fault at each write boundary.
+
+**Limits:** local filesystems only. `O_EXCL` lock files and fsync on NFS/SMB are not verified; do not share a journal over a network filesystem. Power-loss durability has not been tested on real hardware. A reused pid makes a stale lease look live, which fails closed. Only a final unterminated record is recoverable; complete corrupt records fail closed. Do not treat a hash chain as an authenticated signature or durable multi-node transaction. Append fsync guarantees rely on the underlying filesystem's fsync implementation and hardware. A future checkpoint/compaction layer must preserve the verifiable chain head and audit evidence.
 
 Reproduce local synthetic persistence measurements:
 
