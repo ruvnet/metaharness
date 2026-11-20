@@ -127,6 +127,47 @@ describe('SIM opt-in optimizer experience memory', () => {
     expect(handoff).toMatchObject({ schema: 'metaharness.sim.handoff.v1', audience: 'harness_optimizer' });
   });
 
+  it('enforces exact small token budgets and rejects invalid budgets before embedding', async () => {
+    const db = await store();
+    await db.append(attempt('tiny'));
+    const tiny = await db.context({ scope, query: 'completion', mode: 'retrieval', maxTokens: 1 });
+    expect(tiny.estimatedTokens).toBeLessThanOrEqual(1);
+    expect(tiny.records).toEqual([]);
+    let embedCalls = 0;
+    const embedder = { async embed() { embedCalls++; return [1, 0]; } };
+    const vectorIndex: SimVectorIndex = { async upsert() {}, async search() { return []; } };
+    for (const bad of [0, -1, 4001, 1.5, Number.NaN]) {
+      await expect(db.context({ scope, query: 'completion', mode: 'retrieval',
+        maxTokens: bad, embedder, vectorIndex })).rejects.toThrow(/maxTokens/);
+    }
+    expect(embedCalls).toBe(0);
+  });
+
+  it('skips oversized records to pack shorter relevant evidence', async () => {
+    const db = await store();
+    await db.append(attempt('short', { rationale: 'fix' }));
+    await db.append(attempt('long', { rationale: 'verbose '.repeat(400) }));
+    const result = await db.context({ scope, query: 'completion', mode: 'full', maxTokens: 160 });
+    expect(result.records.map((x) => x.id)).toContain('short');
+    expect(result.records.map((x) => x.id)).not.toContain('long');
+    expect(result.estimatedTokens).toBeLessThanOrEqual(160);
+  });
+
+  it('rejects malformed query scopes and nonfinite query vectors before searching', async () => {
+    const db = await store();
+    await db.append(attempt('query'));
+    await expect(db.select({ scope: { ...scope, ownerId: '' }, query: 'completion', mode: 'retrieval' }))
+      .rejects.toThrow(/scope.ownerId/);
+    let searched = false;
+    const embedder = { async embed() { return [Number.NaN]; } };
+    const vectorIndex: SimVectorIndex = {
+      async upsert() {}, async search() { searched = true; return []; },
+    };
+    await expect(db.select({ scope, query: 'completion', mode: 'retrieval', embedder, vectorIndex }))
+      .rejects.toThrow(/embedding/);
+    expect(searched).toBe(false);
+  });
+
   it('uses real RVF when the optional SDK is installed, with a writable persistent index', async () => {
     const root = await mkdtemp(join(tmpdir(), 'metaharness-sim-rvf-'));
     dirs.push(root);
