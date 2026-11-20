@@ -243,7 +243,15 @@ export class SimMemory {
         const record = allowed.get(hit.id);
         if (record) { records.push(record); seen.add(hit.id); }
       }
-      return { records, retrieval: 'vector' };
+      // Hybrid reranking: retain vector-only matches for semantic queries, but
+      // when lexical evidence exists, prioritize exact problem matches before
+      // consuming the scarce optimizer context budget.
+      const words = terms(query.query);
+      const overlap = records.map((record, position) => ({
+        record, position, rank: relevance(words, record),
+      }));
+      overlap.sort((a, b) => b.rank - a.rank || a.position - b.position);
+      return { records: overlap.map((entry) => entry.record), retrieval: 'vector' };
     }
     const words = terms(query.query);
     const ranked = pool
