@@ -33,6 +33,7 @@ export interface JournalRecovery {
  */
 export class SimJournal {
   private records: SimAttempt[] = [];
+  private ids = new Set<string>();
   private loaded = false;
   private pending: Promise<void> = Promise.resolve();
   private recovery: JournalRecovery = { records: 0, recoveredTailBytes: 0 };
@@ -76,6 +77,7 @@ export class SimJournal {
       try { await handle.truncate(complete.length); await handle.sync(); } finally { await handle.close(); }
     }
     this.records = parsed;
+    this.ids = ids;
     this.loaded = true;
     this.recovery = { records: parsed.length, recoveredTailBytes: tail };
     return { ...this.recovery };
@@ -86,7 +88,7 @@ export class SimJournal {
     const operation = this.pending.then(async () => {
       await this.load();
       if (this.records.length >= MAX_RECORDS) throw new Error('SIM journal: capacity exceeded');
-      if (this.records.some((x) => x.id === input.id)) throw new Error('SIM journal: duplicate ID');
+      if (this.ids.has(input.id)) throw new Error('SIM journal: duplicate ID');
       validateSimAttempt(input);
       const safe = JSON.parse(JSON.stringify(input)) as SimAttemptInput;
       const unsigned = { ...safe, previousHash: this.records.at(-1)?.hash ?? null };
@@ -106,6 +108,7 @@ export class SimJournal {
         await handle.sync();
       } finally { await handle.close(); }
       this.records.push(record);
+      this.ids.add(record.id);
       result = record;
     });
     this.pending = operation.catch(() => undefined);
