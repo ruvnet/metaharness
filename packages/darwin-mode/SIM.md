@@ -71,7 +71,7 @@ The returned data is a portable, explicit `metaharness.sim.handoff.v1` document 
 
 ## Experimental append-only journal
 
-`SimJournal` is now exported as a separate **opt-in persistence primitive**, with one fsynced JSONL event per append, hash chain verification, strict shared SIM schema validation, and incomplete-tail recovery. The existing `SimMemory` snapshot remains the default for `evolve()`. This separation is intentional: no transparent migration, shared-writer guarantee, or automatic journal-to-SIM adapter has been validated yet.
+`SimJournal` is now exported as a separate **opt-in persistence primitive**, with one fsynced JSONL event per append, hash chain verification, strict shared SIM schema validation, and incomplete-tail recovery. The existing `SimMemory` snapshot remains the default for `evolve()`. A journal backend is now available through the same optimizer memory interface, with an explicit opt-in. There is no transparent migration or shared-writer guarantee.
 
 ```ts
 import { SimJournal } from '@metaharness/darwin';
@@ -80,6 +80,19 @@ const recovery = await journal.load();
 console.log(recovery); // { records, recoveredTailBytes }
 await journal.append(validatedSimAttempt);
 ```
+
+To use the fsynced journal in Darwin without changing the scorer:
+
+```ts
+import { SimMemory, evolve } from '@metaharness/darwin';
+const store = new SimMemory('/safe-owner-data/optimizer-events.jsonl', {
+  persistence: 'journal',
+});
+// Pass `sim: { store, mode: 'retrieval', scope }` into the existing evolve config.
+// Use a new .jsonl path; do not point the journal at an existing snapshot.
+```
+
+The adapter is covered by a Darwin E2E parity test. Journal I/O failures poison the active journal instance, requiring a fresh instance and recovery before another append. Incomplete tails are truncated on reopen; complete corrupted events remain fatal. This does not guarantee cross-process exclusivity or power-loss safety on untrustworthy storage.
 
 Never point two processes at the same journal. Only a final unterminated record is recoverable; complete corrupt records fail closed. Do not treat a hash chain as an authenticated signature or durable multi-node transaction. Append fsync guarantees rely on the underlying filesystem's fsync implementation and hardware. A future checkpoint/compaction layer must preserve the verifiable chain head and audit evidence.
 
