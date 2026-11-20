@@ -2,9 +2,9 @@
 
 **Status**: Implemented as an opt in prototype, subject to empirical validation  
 **Date:** 2026-11-20  
-**Issue:** https://github.com/ruvnet/metaharness/issues/518  
+**Issue:** https://github.com/ruvnet/metaharness/issues/518, signed handoff https://github.com/ruvnet/metaharness/issues/524  
 **Extends:** ADR-074, ADR-071, ADR-072, ADR-073, ADR-161  
-**Follow-ups:** #521 (single-writer journal lease), #522 (checkpoints, migration, endurance)
+**Follow-ups:** #521 (single-writer journal lease), #522 (checkpoints, migration, endurance), #524 (signed handoff)
 
 ## Context
 
@@ -22,6 +22,14 @@ Darwin retrieves context only for the optimizer at proposal time, with mode `ful
 
 After independent scoring and promotion, Darwin appends the scored attempt. Failed attempts and regressions are preserved. The proposer receives prior optimizer history; the evaluator and scorer **never read SIM**. No direct change to the Darwin statistical promotion gate, risk gate, child safety validator, or selection algorithm is authorized by this ADR.
 
+### Signed handoff for Ruflo (v2, #524)
+
+`signSimHandoff` / `signedRufloHandoff` wrap a v1 handoff in a `metaharness.sim.handoff.v2` envelope: `{ payload, signature }`, where `payload` carries `eventId`, `keyId`, `tenant` (`owner`, `repo`), `createdAt`, `expiresAt` (at most 30 days later), fixed `consent` (`harness_optimizer`, `sharing: none`, `promotion: manual_review_only`), `retention.days` and the v1 `handoff`. The signature is Ed25519 over `"metaharness.sim.handoff.v2\n" + canonicalJson(payload)`; canonical JSON sorts keys, has no whitespace and rejects non-finite numbers. `keyId` is derived from the public key and `eventId` from `{ tenant, handoff }`, so redelivering or re-signing the same evidence yields the same event id. Node `crypto` only.
+
+`verifySimHandoff` accepts a payload only if its key is in the consumer's trusted set, not revoked or past `notAfter`, the signature verifies, the envelope is in its validity window, and the consumer's configuration binds that key to the tenant the payload names. Every v1 record must carry the same owner and repo, and fields outside the SimAttempt allowlist are rejected rather than dropped, so grader traces or hidden test content cannot ride along. The envelope's own tenant claim authorizes nothing. Signing and verification are separate from `evolve()`: Darwin scoring, promotion and SIM retrieval never call them.
+
+The Ruflo consumer (`ruflo metaharness sim-ingest`, ruvnet/ruflo) re-implements verification independently. A signed fixture produced by `bench/sim-handoff-fixture.mjs`, with public keys only, is committed to both repositories and must verify in both.
+
 The `SimRunConfig` mode `off` or omission of the config preserves existing behavior, including absence of SIM disk writes. `allowCrossRepo` is explicit and remains bounded to the same owner and compatible interface; cross-model and cross-benchmark retrieval is allowed **only as a prior**, never as transfer evidence without independent reevaluation.
 
 ### Journal checkpoints and migration (#522)
@@ -35,13 +43,13 @@ The opt-in journal may install a versioned checkpoint manifest (`metaharness.sim
 1. Do not store raw traces, prompt responses, hidden test details, secrets, or private user content in the SIM record. Store reference IDs and independently scored outcomes. Any external embedder must receive only explicitly approved retrieval text.
 2. The owner and repo scope are required. The operator supplies a per-tenant storage path and per-tenant index path. This is not a network-facing authorization layer: tenant identity must be authenticated by the surrounding service.
 3. No automatic merge or promotion on the basis of memory similarity, vector score, or an agent's own prediction.
-4. No automatic release or cross-tenant learning. A future Ruflo consumer must apply least privilege, human controlled promotion and signed receipts.
+4. No automatic release or cross-tenant learning. Ruflo ingestion requires a v2 signature from a key the consumer has explicitly bound to the tenant, writes to a tenant-scoped namespace in a store separate from task-agent memory, and never promotes evidence automatically. Core Memory promotion stays a manual issue/PR workflow (ruvnet/core-memory#227).
 5. Snapshot writes use a temporary file and atomic rename. Only one process may write a snapshot; multiple processes require an external transaction/lock service. The hash chain does not defend against a malicious writer with filesystem access.
 6. Secret scanning, holdout isolation and independent benchmark sealing remain obligations of the surrounding evaluator. Existing failed trace summaries may be visible to the legacy mutator independently of SIM and should be separately audited.
 
 ## Evidence and acceptance
 
-Run `npm run lint -w @metaharness/darwin`, `npx vitest run packages/darwin-mode/__tests__/sim-memory.test.ts packages/darwin-mode/__tests__/sim-evolve.test.ts`, and `npm run bench:sim -w @metaharness/darwin`.
+Run `npm run lint -w @metaharness/darwin`, `npx vitest run packages/darwin-mode/__tests__/sim-memory.test.ts packages/darwin-mode/__tests__/sim-evolve.test.ts packages/darwin-mode/__tests__/sim-handoff.test.ts`, and `npm run bench:sim -w @metaharness/darwin`.
 
 The synthetic benchmark uses fixed 40 records and four matching query families, showing context precision/recall and token-budget effects. Its output explicitly says `heldoutModelScores: NOT_MEASURED`. It cannot establish LLM performance gains, production safety, vector search superiority or causal attribution. Promotion to an enabled default requires a held out, independently run three arm trial over multiple models and benchmarks, with repeated seeds, fixed candidate/round budgets, significance estimates, token and dollar costs, negative transfer, and regressions.
 
@@ -52,6 +60,7 @@ The synthetic benchmark uses fixed 40 records and four matching query families, 
 * Failed and regressed attempts persist, so later rounds can revise earlier edits with their outcomes in view.
 * The opt-in journal enforces one writer per path across processes with an O_EXCL lease, fencing and torn-tail recovery (#521). It is verified on local filesystems only, not NFS/SMB or under power loss.
 * Journal checkpoints bound the records that are fully re-verified on load to those after the checkpoint. The covered prefix is still hashed and parsed so `all()` stays complete, so load I/O remains proportional to file size. A journal is capped at 100,000 records; 1M-record journals are not supported. Measurements are in `packages/darwin-mode/bench/results/sim-endurance.json` (#522).
+* A signed v2 handoff authenticates the producer key, tenant binding, freshness and integrity. It does not make record content trustworthy: consumers still treat it as untrusted optimizer evidence. Key distribution and rotation are manual.
 * Measured LLM gains remain unestablished until the held-out trial described below is run.
 
 ## Alternatives

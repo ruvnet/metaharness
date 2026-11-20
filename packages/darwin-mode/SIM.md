@@ -69,6 +69,31 @@ console.log(JSON.stringify(handoff));
 
 The returned data is a portable, explicit `metaharness.sim.handoff.v1` document with provenance and untrusted evidence labeling. This is **not** a claim that it has already been consumed by a Ruflo swarm, nor an instruction to trust its contents.
 
+### Signed handoff (v2) for authenticated ingestion
+
+A v1 document is unauthenticated: its hash chain detects corruption, not a forger. To hand evidence to Ruflo, sign it:
+
+```ts
+import { createPrivateKey } from 'node:crypto';
+import { signedRufloHandoff, simKeyId, verifySimHandoff } from '@metaharness/darwin';
+
+const privateKey = createPrivateKey(pemFromYourKeyStore); // Ed25519
+const envelope = await signedRufloHandoff(memory, {
+  scope, query: 'failed retry handling', mode: 'retrieval', maxTokens: 512,
+}, { privateKey, retentionDays: 30 });
+// envelope = { payload: { schema: 'metaharness.sim.handoff.v2', eventId, keyId, tenant,
+//              createdAt, expiresAt, consent, retention, handoff }, signature: { alg: 'ed25519', value } }
+```
+
+- **Signature:** Ed25519 over `"metaharness.sim.handoff.v2\n" + canonicalJson(payload)` (sorted keys, no whitespace, finite numbers only).
+- **Ids:** `keyId` is `ed25519:` plus a hash of the public key. `eventId` is a hash of `{ tenant, handoff }`, so redelivery or re-signing the same evidence keeps the same id and consumers can deduplicate.
+- **Tenant:** `{ owner, repo }`, taken from the handoff scope by default. The producer refuses to sign records from another owner/repo, and records carrying fields outside the SimAttempt allowlist (for example hidden test output). The tenant name allows `[A-Za-z0-9._-]`, and the repo may contain one `/`.
+- **Consent and retention:** consent is fixed to optimizer-only use with no sharing and manual-review-only promotion. `retentionDays` (1 to 3650, default 30) tells the consumer how long to keep it. `expiresAt` is at most 30 days after `createdAt` (default 7).
+
+Verification (`verifySimHandoff(envelope, { trustedKeys, now })`) returns a typed reason on failure: `unsigned`, `malformed`, `unknown_key`, `key_id_mismatch`, `revoked_key`, `key_expired`, `bad_signature`, `expired`, `not_yet_valid`, `tenant_not_authorized`, `scope_mismatch`, `event_id_mismatch` or `too_large`. A trusted key entry is `{ keyId, publicKey (SPKI PEM), tenants: ['owner/repo'], revoked?, notAfter? }`. The binding of a key to its tenants lives only in the consumer's configuration: a valid signature from a key bound to tenant A never authorizes a payload naming tenant B.
+
+The Ruflo consumer is `ruflo metaharness sim-ingest` (opt-in, disabled until `.claude-flow/sim/trusted-keys.json` sets `"enabled": true`). It verifies independently, writes to namespace `sim:<owner>/<repo>` in its own database (separate from task-agent memory), deduplicates by event id, supports revoking an event or a key, and keeps an audit log. `bench/sim-handoff-fixture.mjs` regenerates the signed cross-repo fixture (public keys only), which is committed to both repositories. Signing is not called by `evolve()`, so Darwin scoring is unchanged whether or not you use it. Core Memory promotion stays a manual issue/PR workflow; nothing is shared automatically.
+
 ## Experimental append-only journal
 
 `SimJournal` is now exported as a separate **opt-in persistence primitive**, with one fsynced JSONL event per append, hash chain verification, strict shared SIM schema validation, incomplete-tail recovery, and a cross-process single-writer lease. The existing `SimMemory` snapshot remains the default for `evolve()`. A journal backend is now available through the same optimizer memory interface, with an explicit opt-in. Migration between the two is explicit (see below); nothing migrates automatically.
