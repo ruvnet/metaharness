@@ -46,6 +46,14 @@ import { admitWithStatisticalGate, makeRiskBudget } from './bench/risk.js';
 import type { RiskBudget } from './bench/risk.js';
 import type { BenchmarkResult, PromotionDecision } from './bench/types.js';
 
+/** Only coarse outcome categories enter optimizer memory/retrieval; no raw held-out traces. */
+function simProblemKind(traces: readonly RunTrace[]): string {
+  if (traces.some((t) => t.blockedActions.length > 0)) return 'blocked-action';
+  if (traces.some((t) => t.timedOut)) return 'timeout';
+  if (traces.some((t) => t.exitCode !== 0)) return 'task-failure';
+  return 'optimization';
+}
+
 const AUTONOMOUS_SURFACES = new Set<MutationSurface>([
   'planner', 'contextBuilder', 'reviewer', 'retryPolicy', 'toolPolicy', 'memoryPolicy', 'scorePolicy',
 ]);
@@ -420,8 +428,9 @@ export async function evolve(config: EvolutionConfig): Promise<EvolutionResult> 
                     ? (await sim.store.context({
                         scope: sim.scope,
                         mode: sim.mode as 'full' | 'retrieval',
-                        query: [profile.summary, parent.mutationSurface,
-                          ...summarizeFailedTraces(tracesById.get(parent.id) ?? [])].join(' ').slice(0, 4000) || 'harness',
+                        // Stable coarse query only; never send raw test traces to an embedder.
+                        query: [parent.mutationSurface,
+                          simProblemKind(tracesById.get(parent.id) ?? [])].join(' '),
                         allowCrossRepo: sim.allowCrossRepo,
                         maxTokens: sim.maxTokens,
                         embedder: sim.embedder,
@@ -574,8 +583,8 @@ export async function evolve(config: EvolutionConfig): Promise<EvolutionResult> 
           id: randomUUID(),
           createdAt: ev.variant.createdAt,
           scope: sim.scope,
-          problemKey: 'surface/' + ev.variant.mutationSurface,
-          diagnosis: 'Unclassified harness improvement; see independently scored evidence',
+          problemKey: 'surface/' + ev.variant.mutationSurface + '/' + simProblemKind(tracesById.get(ev.variant.parentId) ?? []),
+          diagnosis: 'Parent outcome category: ' + simProblemKind(tracesById.get(ev.variant.parentId) ?? []) + '; cause not established',
           variantId: ev.variant.id,
           parentId: ev.variant.parentId,
           mutationSurface: ev.variant.mutationSurface,
