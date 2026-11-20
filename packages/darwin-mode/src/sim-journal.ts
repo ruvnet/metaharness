@@ -4,6 +4,7 @@
 import { createHash } from 'node:crypto';
 import { open, mkdir, readFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
+import { validateSimAttempt } from './sim-memory.js';
 import type { SimAttempt, SimAttemptInput } from './sim-memory.js';
 
 const MAX_LINE = 32 * 1024;
@@ -60,6 +61,7 @@ export class SimJournal {
       if (!envelope || typeof envelope !== 'object' || Array.isArray(envelope)) throw new Error('SIM journal: corrupt envelope');
       const item = envelope as { schema?: unknown; record?: unknown };
       if (item.schema !== FORMAT) throw new Error('SIM journal: incompatible schema');
+      validateSimAttempt(item.record);
       verify(item.record, previous);
       const record = item.record as SimAttempt;
       if (ids.has(record.id)) throw new Error('SIM journal: duplicate ID');
@@ -85,7 +87,7 @@ export class SimJournal {
       await this.load();
       if (this.records.length >= MAX_RECORDS) throw new Error('SIM journal: capacity exceeded');
       if (this.records.some((x) => x.id === input.id)) throw new Error('SIM journal: duplicate ID');
-      validateSimJournalInput(input);
+      validateSimAttempt(input);
       const safe = JSON.parse(JSON.stringify(input)) as SimAttemptInput;
       const unsigned = { ...safe, previousHash: this.records.at(-1)?.hash ?? null };
       const record: SimAttempt = { ...unsigned, hash: sha(unsigned) };
@@ -115,17 +117,3 @@ export class SimJournal {
   count(): number { return this.records.length; }
 }
 
-// Strictly validate without JSON serialization turning nonfinite values into null.
-function validateSimJournalInput(value: SimAttemptInput): void {
-  if (!value || typeof value !== 'object' || !value.scope) throw new Error('SIM journal: invalid record');
-  const strings = [value.id, value.createdAt, value.problemKey, value.diagnosis, value.variantId,
-    value.mutationSurface, value.rationale, ...Object.values(value.scope), ...value.evidenceIds];
-  if (strings.some((x) => typeof x !== 'string' || x.length < 1 || x.length > 4000)) throw new Error('SIM journal: invalid string');
-  if (value.parentId !== null && (typeof value.parentId !== 'string' || value.parentId.length < 1 || value.parentId.length > 160)) throw new Error('SIM journal: invalid parent');
-  if (!Number.isFinite(value.observedDelta) || !Number.isFinite(value.finalScore) ||
-      (value.predictedDelta !== null && !Number.isFinite(value.predictedDelta)) ||
-      typeof value.promoted !== 'boolean' || !Array.isArray(value.evidenceIds) || value.evidenceIds.length > 20 ||
-      !Number.isFinite(Date.parse(value.createdAt)) || new Date(value.createdAt).toISOString() !== value.createdAt) {
-    throw new Error('SIM journal: invalid outcome');
-  }
-}
