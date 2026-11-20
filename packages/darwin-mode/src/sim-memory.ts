@@ -122,6 +122,30 @@ export function validateSimAttempt(input: unknown): asserts input is SimAttemptI
   }
 }
 
+const INPUT_KEYS = new Set<string>([
+  'id', 'createdAt', 'scope', 'problemKey', 'diagnosis', 'variantId', 'parentId', 'mutationSurface',
+  'rationale', 'predictedDelta', 'observedDelta', 'finalScore', 'promoted', 'evidenceIds',
+]);
+const SCOPE_KEYS = new Set<string>(['ownerId', 'repoId', 'interfaceId', 'modelId', 'benchmarkId', 'harnessVersion']);
+
+/**
+ * Strict check for a NEW attempt passed to append(): every field of SimAttemptInput and
+ * nothing else. In particular `hash`/`previousHash` (a stored SimAttempt passed back in)
+ * are rejected: they would be hashed into the record in the wrong position and make the
+ * stored record fail verification on the next load. Stored records are checked on load
+ * by validateSimAttempt() plus the hash chain, which accept `hash`/`previousHash`.
+ */
+export function validateSimAttemptInput(input: unknown): asserts input is SimAttemptInput {
+  if (!object(input) || !object(input.scope)) throw new Error('SIM: invalid record or scope');
+  const extra = Object.keys(input).filter((k) => !INPUT_KEYS.has(k));
+  if (extra.length) {
+    throw new Error(`SIM: append input has unsupported field(s) ${extra.slice(0, 5).join(', ')}; pass a SimAttemptInput, not a stored SimAttempt`);
+  }
+  const extraScope = Object.keys(input.scope).filter((k) => !SCOPE_KEYS.has(k));
+  if (extraScope.length) throw new Error(`SIM: append input scope has unsupported field(s) ${extraScope.slice(0, 5).join(', ')}`);
+  validateSimAttempt(input);
+}
+
 function fingerprint(record: Omit<SimAttempt, 'hash'>): string {
   return createHash('sha256').update(JSON.stringify(record)).digest('hex');
 }
@@ -205,8 +229,10 @@ export class SimMemory {
     const operation = this.queue.then(async () => {
       await this.load();
       // Validate before JSON cloning: JSON.stringify silently turns NaN/Infinity into null.
-      validateSimAttempt(input);
+      // Re-check the clone too, so a toJSON() cannot smuggle fields past the check.
+      validateSimAttemptInput(input);
       const safe = copy(input);
+      validateSimAttemptInput(safe);
       if (this.records.length >= MAX_RECORDS || this.records.some((r) => r.id === safe.id)) {
         throw new Error('SIM: duplicate id or capacity exceeded');
       }

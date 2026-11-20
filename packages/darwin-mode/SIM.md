@@ -196,6 +196,8 @@ npm run bench:sim -w @metaharness/darwin
 
 The benchmark is a fixed 40-record, four-query **synthetic retrieval experiment** comparing no history, full bounded history, and retrieved history. It measures context precision, recall in budget, latency and approximate tokens only, not AI model improvement. The same fixed fixtures and seeds are used for all three arms.
 
+**Input:** `append()` (snapshot and journal) accepts exactly the `SimAttemptInput` fields, checked with `validateSimAttemptInput()` before anything is written. A stored `SimAttempt` passed back in (it carries `hash`/`previousHash`), or any unknown field (including in `scope`), is rejected. Up to 0.15.0 such input was written and then failed verification on the next load, making the file unreadable. Loading still accepts stored records as before.
+
 **Failure modes:** Cross-model transfer is only a prior and must be independently tested. Stale or poisoned records may bias proposals. The local hash chain detects accidental corruption, not a malicious writer. Persistence is safe for a single writer; do not share a snapshot across processes without a real lock/transaction layer. Index ingestion errors fail explicitly rather than silently claiming vector retrieval. External evaluation data stays out of SIM, which stores only evidence references and final measured scores. No secrets or raw hidden tests should be stored in the record.
 
 **Acceptance beyond this PR:** independent model evals with sealed heldout suites, matching candidate counts, budgets and model versions, reproducible negative-transfer ablations, signed receipts and at least 2 held out score points gained without security or cost regressions. No such improvement is claimed from the synthetic fixture.
