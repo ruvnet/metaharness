@@ -69,6 +69,29 @@ console.log(JSON.stringify(handoff));
 
 The returned data is a portable, explicit `metaharness.sim.handoff.v1` document with provenance and untrusted evidence labeling. This is **not** a claim that it has already been consumed by a Ruflo swarm, nor an instruction to trust its contents.
 
+## Experimental append-only journal
+
+`SimJournal` is now exported as a separate **opt-in persistence primitive**, with one fsynced JSONL event per append, hash chain verification, strict shared SIM schema validation, and incomplete-tail recovery. The existing `SimMemory` snapshot remains the default for `evolve()`. This separation is intentional: no transparent migration, shared-writer guarantee, or automatic journal-to-SIM adapter has been validated yet.
+
+```ts
+import { SimJournal } from '@metaharness/darwin';
+const journal = new SimJournal('/safe-owner-data/optimizer-events.jsonl');
+const recovery = await journal.load();
+console.log(recovery); // { records, recoveredTailBytes }
+await journal.append(validatedSimAttempt);
+```
+
+Never point two processes at the same journal. Only a final unterminated record is recoverable; complete corrupt records fail closed. Do not treat a hash chain as an authenticated signature or durable multi-node transaction. Append fsync guarantees rely on the underlying filesystem's fsync implementation and hardware. A future checkpoint/compaction layer must preserve the verifiable chain head and audit evidence.
+
+Reproduce local synthetic persistence measurements:
+
+```bash
+npm run bench:sim-journal -w @metaharness/darwin
+SIM_BENCH_RECORDS=2000 node packages/darwin-mode/bench/sim-journal.mjs
+```
+
+On one ruOS Software Factory run, the 2,000-record snapshot baseline sustained 82 writes/s and the fsynced journal sustained 1,831 writes/s (22.33 times faster). This is a **single-machine microbenchmark**, not a 100,000-record endurance or crash-power-loss test. Journal replay still reads and validates the complete history, and the journal is not yet used by the default Darwin integration.
+
 ## Verification and operational reality
 
 ```bash
