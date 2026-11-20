@@ -7,7 +7,7 @@ import { readFileSync, unlinkSync } from 'node:fs';
 import { open, mkdir, readFile, stat, statfs, unlink, writeFile } from 'node:fs/promises';
 import { hostname } from 'node:os';
 import { dirname } from 'node:path';
-import { validateSimAttempt } from './sim-memory.js';
+import { validateSimAttempt, validateSimAttemptInput } from './sim-memory.js';
 import {
   buildCheckpointManifest, checkManifestAgainst, checkpointPathFor, readCheckpointManifest, syncDir, writeFileAtomic,
 } from './sim-checkpoint.js';
@@ -362,11 +362,13 @@ export class SimJournal {
     const faults = this.options.faults ?? {};
     const operation = this.pending.then(async () => {
       if (this.poisoned) throw new Error('SIM journal: previous write failed; close, reopen and recover before retry');
+      // Strict input check before the lease is taken or anything is written.
+      validateSimAttemptInput(input);
+      const safe = JSON.parse(JSON.stringify(input)) as SimAttemptInput;
+      validateSimAttemptInput(safe);
       await this.acquire();
       if (this.records.length >= MAX_RECORDS) throw new Error('SIM journal: capacity exceeded');
-      if (this.ids.has(input.id)) throw new Error('SIM journal: duplicate ID');
-      validateSimAttempt(input);
-      const safe = JSON.parse(JSON.stringify(input)) as SimAttemptInput;
+      if (this.ids.has(safe.id)) throw new Error('SIM journal: duplicate ID');
       const unsigned = { ...safe, previousHash: this.records.at(-1)?.hash ?? null };
       const record: SimAttempt = { ...unsigned, hash: sha(unsigned) };
       const buffer = Buffer.from(JSON.stringify({ schema: FORMAT, record }) + '\n');
