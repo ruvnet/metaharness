@@ -184,8 +184,9 @@ export class SimMemory {
     let added: SimAttempt | undefined;
     const operation = this.queue.then(async () => {
       await this.load();
+      // Validate before JSON cloning: JSON.stringify silently turns NaN/Infinity into null.
+      validate(input);
       const safe = copy(input);
-      validate(safe);
       if (this.records.length >= MAX_RECORDS || this.records.some((r) => r.id === safe.id)) {
         throw new Error('SIM: duplicate id or capacity exceeded');
       }
