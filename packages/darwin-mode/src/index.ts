@@ -53,6 +53,7 @@ export type { SimCheckpointFaults, SimCheckpointManifest, SimCheckpointStatus } 
 export { migrateSimSnapshotToJournal, rollbackSimJournalToSnapshot, verifySimChain, writeSimJournal } from './sim-migrate.js';
 export type { SimMigrationResult } from './sim-migrate.js';
 export * from './sim-rvf.js';
+export * from './sim-handoff.js';
 
 // Numeric genome kind (ADR-272) — a second, parallel genome representation
 // (bounded numeric parameter vectors, e.g. ML hyperparameters) scored by a
