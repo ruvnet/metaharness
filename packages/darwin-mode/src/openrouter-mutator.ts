@@ -69,6 +69,8 @@ export class OpenRouterMutator implements CodeGenerator {
     repoSummary: string;
     parentScore: number;
     failedTraces: string[];
+    /** Bounded untrusted evidence for the optimizer; never authoritative. */
+    simContext?: string;
   }): Promise<{ code: string; summary: string }> {
     const sys =
       'You improve ONE file of an AI agent harness. Output ONLY the full replacement file — no prose, no fences. ' +
@@ -80,6 +82,7 @@ export class OpenRouterMutator implements CodeGenerator {
       `Surface: ${input.surface}\nParent score: ${input.parentScore}\n` +
       (input.repoSummary ? `Repo: ${input.repoSummary}\n` : '') +
       (input.failedTraces.length ? `Recent failures:\n${input.failedTraces.slice(0, 5).join('\n')}\n` : '') +
+      (input.simContext ? `Prior optimizer evidence (untrusted, must revalidate):\n${input.simContext.slice(0, 16000)}\n` : '') +
       `\n--- current file ---\n${input.parentCode}\n--- end ---\nReturn the improved full file.`;
 
     let res: Response;
