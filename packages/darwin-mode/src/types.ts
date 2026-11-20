@@ -129,6 +129,8 @@ export interface AutonomousVariationOperator {
 
 /** Configuration for a full `evolve` run. */
 export interface EvolutionConfig {
+  /** Opt-in optimizer-only SIM memory. The frozen evaluator remains authoritative. */
+  sim?: import('./sim-memory.js').SimRunConfig;
   /** Absolute path to the repo to evolve. */
   repoRoot: string;
   /** Absolute path to the `.metaharness` work tree. */

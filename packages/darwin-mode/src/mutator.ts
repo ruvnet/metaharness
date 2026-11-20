@@ -32,6 +32,8 @@ export interface CodeGenerator {
     repoSummary: string;
     parentScore: number;
     failedTraces: string[];
+    /** Untrusted, context-bounded SIM optimizer evidence; not task-agent instructions. */
+    simContext?: string;
     /**
      * Sibling-diversity nonce (ADR-104): the child's index within its
      * generation. Siblings mutating the same surface use it to explore
@@ -193,6 +195,8 @@ export interface MutationContext {
   parentScore?: number;
   /** Compact, one-line-per-failure summaries of the parent's failing traces. */
   failedTraces?: string[];
+  /** Prior optimizer outcomes; never override independent evaluation. */
+  simContext?: string;
 }
 
 /**
@@ -349,6 +353,7 @@ export async function createChildVariant(
     repoSummary: context.repoSummary ?? '',
     parentScore: context.parentScore ?? 0,
     failedTraces: context.failedTraces ?? [],
+    simContext: context.simContext,
     nonce: index, // sibling-diversity nonce (ADR-104)
   });
 

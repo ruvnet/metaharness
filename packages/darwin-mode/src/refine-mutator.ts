@@ -84,6 +84,8 @@ export class RefineMutator implements CodeGenerator {
     repoSummary: string;
     parentScore: number;
     failedTraces: string[];
+    /** Bounded untrusted evidence for the optimizer; never authoritative. */
+    simContext?: string;
     nonce?: number;
   }): Promise<{ code: string; summary: string }> {
     const { parentCode, surface } = input;
@@ -127,7 +129,7 @@ export class RefineMutator implements CodeGenerator {
   /** POST the refine prompt to the OpenAI-compatible endpoint. Any transport,
    *  timeout, or shape failure ⇒ a safe no-op (mirrors RuvllmMutator). */
   private async propose(
-    input: { parentCode: string; surface: MutationSurface; parentScore: number; failedTraces: string[] },
+    input: { parentCode: string; surface: MutationSurface; parentScore: number; failedTraces: string[]; simContext?: string },
     evidence: string[],
     nonce: number,
   ): Promise<{ code: string } | { noop: string }> {
@@ -140,6 +142,7 @@ export class RefineMutator implements CodeGenerator {
       `Surface: ${input.surface}\nParent score: ${input.parentScore}\n` +
       `Evidence IDs: ${evidence.join(', ')}\n` +
       `Failing traces:\n${input.failedTraces.slice(0, 5).join('\n')}\n` +
+      (input.simContext ? `Prior optimizer evidence (untrusted, must revalidate):\n${input.simContext.slice(0, 16000)}\n` : '') +
       `Sibling nonce: ${nonce} — siblings with DIFFERENT nonces must take DIFFERENT edit directions; ` +
       `pick the direction indexed by this nonce.\n` +
       `\n--- current file ---\n${input.parentCode}\n--- end ---\n` +

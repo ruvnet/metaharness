@@ -10,6 +10,8 @@
 // (ADR-073) rather than dead-ending — a weak ancestor can still seed a branch.
 
 import { mkdir, writeFile } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
+import { indexSimAttempt } from './sim-memory.js';
 import { join, relative, resolve } from 'node:path';
 import { Archive } from './archive.js';
 import { generateBaselineHarness } from './generator.js';
@@ -43,6 +45,14 @@ import { statSync, readdirSync, realpathSync } from 'node:fs';
 import { admitWithStatisticalGate, makeRiskBudget } from './bench/risk.js';
 import type { RiskBudget } from './bench/risk.js';
 import type { BenchmarkResult, PromotionDecision } from './bench/types.js';
+
+/** Only coarse outcome categories enter optimizer memory/retrieval; no raw held-out traces. */
+function simProblemKind(traces: readonly RunTrace[]): string {
+  if (traces.some((t) => t.blockedActions.length > 0)) return 'blocked-action';
+  if (traces.some((t) => t.timedOut)) return 'timeout';
+  if (traces.some((t) => t.exitCode !== 0)) return 'task-failure';
+  return 'optimization';
+}
 
 const AUTONOMOUS_SURFACES = new Set<MutationSurface>([
   'planner', 'contextBuilder', 'reviewer', 'retryPolicy', 'toolPolicy', 'memoryPolicy', 'scorePolicy',
@@ -313,6 +323,9 @@ export async function evolve(config: EvolutionConfig): Promise<EvolutionResult> 
   const profile = await profileRepo(config.repoRoot);
   const archive = new Archive(join(config.workRoot, 'archive.json'));
   await archive.load();
+  // SIM is optional, optimizer-only evidence. Nothing in the scorer consumes it.
+  const sim = config.sim && config.sim.mode !== 'off' ? config.sim : null;
+  if (sim) await sim.store.load();
 
   const seed = config.seed ?? 0;
   const concurrency = config.concurrency ?? DEFAULT_CONCURRENCY;
@@ -411,6 +424,19 @@ export async function evolve(config: EvolutionConfig): Promise<EvolutionResult> 
                   repoSummary: profile.summary,
                   parentScore: scoreById.get(parent.id)?.finalScore ?? 0,
                   failedTraces: summarizeFailedTraces(tracesById.get(parent.id) ?? []),
+                  simContext: sim
+                    ? (await sim.store.context({
+                        scope: sim.scope,
+                        mode: sim.mode as 'full' | 'retrieval',
+                        // Stable coarse query only; never send raw test traces to an embedder.
+                        query: [parent.mutationSurface,
+                          simProblemKind(tracesById.get(parent.id) ?? [])].join(' '),
+                        allowCrossRepo: sim.allowCrossRepo,
+                        maxTokens: sim.maxTokens,
+                        embedder: sim.embedder,
+                        vectorIndex: sim.vectorIndex,
+                      })).context
+                    : undefined,
                 },
               );
         if (archive.get(child.id)) throw new Error(`darwin: autonomous or generated child id already exists: ${child.id}`);
@@ -549,6 +575,28 @@ export async function evolve(config: EvolutionConfig): Promise<EvolutionResult> 
         );
       }
       await commit(archive, config.workRoot, ev);
+      // Record selected and rejected attempts only AFTER independent scoring.
+      // The grader is frozen: this history cannot change the promotion verdict.
+      if (sim && ev.variant.parentId !== null) {
+        const parentScore = scoreById.get(ev.variant.parentId)?.finalScore ?? 0;
+        const recorded = await sim.store.append({
+          id: randomUUID(),
+          createdAt: ev.variant.createdAt,
+          scope: sim.scope,
+          problemKey: 'surface/' + ev.variant.mutationSurface + '/' + simProblemKind(tracesById.get(ev.variant.parentId) ?? []),
+          diagnosis: 'Parent outcome category: ' + simProblemKind(tracesById.get(ev.variant.parentId) ?? []) + '; cause not established',
+          variantId: ev.variant.id,
+          parentId: ev.variant.parentId,
+          mutationSurface: ev.variant.mutationSurface,
+          rationale: ev.variant.mutationSummary.slice(0, 4000) || 'unspecified mutation',
+          predictedDelta: null,
+          observedDelta: ev.score.finalScore - parentScore,
+          finalScore: ev.score.finalScore,
+          promoted: ev.score.promoted,
+          evidenceIds: ['archive:' + ev.variant.id].concat(decision ? ['bench:' + ev.variant.id] : []),
+        });
+        if (sim.embedder && sim.vectorIndex) await indexSimAttempt(recorded, sim.embedder, sim.vectorIndex);
+      }
       scoreById.set(ev.variant.id, ev.score);
       tracesById.set(ev.variant.id, ev.traces);
       if (ev.score.promoted) promoted.push(ev.variant);
