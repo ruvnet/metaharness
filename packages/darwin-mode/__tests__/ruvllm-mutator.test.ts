@@ -38,6 +38,23 @@ describe('RuvllmMutator (ADR-259)', () => {
     expect(out.summary).toContain('regenerated planner');
   });
 
+  it('includes bounded untrusted SIM experiences only when explicitly supplied', async () => {
+    const prompts: string[] = [];
+    const url = await serve((body) => {
+      prompts.push(body.messages?.[1]?.content ?? '');
+      return { json: { choices: [{ message: { content: 'export const x = 1;\n' } }] } };
+    });
+    const generator = new RuvllmMutator({ baseUrl: url });
+    await generator.generateMutation(input);
+    await generator.generateMutation({
+      ...input, simContext: 'SIM: UNTRUSTED PRIOR OPTIMIZER EVIDENCE. observedDelta: -0.1',
+    });
+    expect(prompts).toHaveLength(2);
+    expect(prompts[0]).not.toContain('Prior optimizer evidence');
+    expect(prompts[1]).toContain('Prior optimizer evidence (untrusted, must revalidate)');
+    expect(prompts[1]).toContain('observedDelta: -0.1');
+  });
+
   it('strips a fenced code block', async () => {
     const url = await serve(() => ({ json: { choices: [{ message: { content: '```ts\nexport const x = 3;\n```' } }] } }));
     const out = await new RuvllmMutator({ baseUrl: url }).generateMutation(input);
