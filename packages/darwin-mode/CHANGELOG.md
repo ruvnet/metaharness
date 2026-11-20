@@ -1,3 +1,14 @@
+# 0.15.0 (2026-11-20)
+
+SIM: opt-in continual self-improvement memory for the Darwin optimizer (ADR-325). Experimental.
+
+- `SimMemory` stores scored optimizer attempts (diagnosis, mutation surface, rationale, measured delta, promotion verdict, evidence ids), hash-linked, with failures and regressions kept. Scope is required (owner, repo, interface); cross-repo reads are opt-in and stay inside one owner and interface.
+- `evolve()` takes an opt-in `sim` config (`mode: off | full | retrieval`). The proposer receives bounded prior history marked untrusted; the evaluator, scorer, promotion and safety gates never read it. Omitting `sim` or `mode: off` changes nothing and writes nothing.
+- Retrieval uses a supplied embedder and vector index, including `openRvfSimIndex()` over the optional `@ruvector/rvf`, or deterministic lexical matching. Vector hits are re-checked against scope, and a token budget caps the context.
+- `SimJournal`: an append-only, fsync-per-record JSONL backend (`persistence: journal`) with a cross-process single-writer lease (`<journal>.lock`, O_EXCL), fencing on every append, stale-lease recovery for dead local writers, and torn-tail recovery that keeps the torn bytes aside. `load()` is read-only. A second writer gets `SimJournalLockedError`. `SimMemory.close()` and `SimJournal.close()` release the lease (#521).
+- `metaharness.sim.handoff.v1` export for a future Ruflo orchestration adapter.
+- Benchmarks: `npm run bench:sim` and `npm run bench:sim-journal` (synthetic; held-out model gains are not measured).
+
 # 0.14.0 (2026-11-10)
 
 Numeric genomes: optional surrogate pre-screening, with a `ruv-fann` model. Experimental.
