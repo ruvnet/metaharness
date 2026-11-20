@@ -1,3 +1,13 @@
+# 0.16.0 (2026-11-20)
+
+SIM fixes and durability follow-ups. **Upgrade from 0.15.0 if you use SIM (`sim` config, `SimMemory` or `SimJournal`).** Default Darwin use (no `sim`, or `mode: off`) was never affected.
+
+- **Data-loss fix (#529).** In 0.15.0, passing a stored `SimAttempt` back to `append()` hashed and wrote a record that still carried its old `hash`/`previousHash`. The next load failed chain verification, and because a complete corrupt record is fatal, the whole journal or snapshot became unreadable. Every append path now validates against the exact `SimAttemptInput` shape with the new exported `validateSimAttemptInput()`, rejects unknown top-level or `scope` keys (naming them in the error), and checks the JSON clone before taking the lease or writing. Stricter contract: extra fields that used to be stored silently now throw. Loading is unchanged.
+- **Checkpoints and bounded replay (#522, #528).** Opt-in `<journal>.checkpoint` manifests (`checkpointEvery` or `checkpoint()`), written only by the lease holder. A reader uses a manifest only after verifying the offset, prefix sha256, count and chain head, re-verifies only the records after it, and otherwise falls back to a full replay (`checkpointStatus()`). Tested at 100,000 records with a writer SIGKILLed mid-record.
+- **Snapshot ↔ journal migration (#528).** `migrateSimSnapshotToJournal`, `rollbackSimJournalToSnapshot` and `writeSimJournal` copy records verbatim under the journal lease, verify the source chain, write atomically and are idempotent. The source is never modified. The snapshot remains the default.
+- **RVF and filesystem guards (#526).** `openRvfSimIndex` refuses `@ruvector/rvf` < 0.2.0 (those versions return every id as `"0"`); the SDK is an optional peer `>=0.2.0`. On Linux, `SimJournal` refuses NFS, SMB/CIFS, AFS, Ceph and 9p (`SIM_JOURNAL_UNSUPPORTED_FS`) unless `allowNetworkFilesystem: true`.
+- **Signed handoff v2 (#524, #527).** `signSimHandoff()`/`verifySimHandoff()` produce and check a `metaharness.sim.handoff.v2` envelope: Ed25519 over canonical JSON, tenant-scoped, content-derived event id, fixed consent and bounded retention. Node `crypto` only. Not wired into `evolve()`; scoring and promotion are unchanged.
+
 # 0.15.0 (2026-11-20)
 
 SIM: opt-in continual self-improvement memory for the Darwin optimizer (ADR-325). Experimental.
