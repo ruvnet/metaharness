@@ -1,6 +1,6 @@
 {
   "name": "@metaharness/darwin",
-  "version": "0.15.0",
+  "version": "0.16.0",
   "description": "Freeze the model, evolve the harness: Darwin Mode mutates an agent harness's policy, runs each child in a sandbox, and promotes only children that beat the parent on a deterministic oracle.",
   "homepage": "https://ruv.io",
   "repository": {
