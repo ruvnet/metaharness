@@ -1,0 +1,578 @@
+[
+  {
+    "target": "e1-agentic-v4pro-300",
+    "features": "issue",
+    "model": "logistic",
+    "train pool": "target",
+    "AUC mean": "0.485",
+    "AUC sd (repeats)": "0.039",
+    "min": "0.420"
+  },
+  {
+    "target": "e1-agentic-v4pro-300",
+    "features": "issue",
+    "model": "logistic",
+    "train pool": "all",
+    "AUC mean": "0.542",
+    "AUC sd (repeats)": "0.021",
+    "min": "0.518"
+  },
+  {
+    "target": "e1-agentic-v4pro-300",
+    "features": "issue",
+    "model": "ruv-fann",
+    "train pool": "target",
+    "AUC mean": "0.469",
+    "AUC sd (repeats)": "0.024",
+    "min": "0.441"
+  },
+  {
+    "target": "e1-agentic-v4pro-300",
+    "features": "issue",
+    "model": "ruv-fann",
+    "train pool": "all",
+    "AUC mean": "0.560",
+    "AUC sd (repeats)": "0.016",
+    "min": "0.533"
+  },
+  {
+    "target": "e1-agentic-v4pro-300",
+    "features": "patch",
+    "model": "logistic",
+    "train pool": "target",
+    "AUC mean": "0.545",
+    "AUC sd (repeats)": "0.028",
+    "min": "0.483"
+  },
+  {
+    "target": "e1-agentic-v4pro-300",
+    "features": "patch",
+    "model": "logistic",
+    "train pool": "all",
+    "AUC mean": "0.555",
+    "AUC sd (repeats)": "0.012",
+    "min": "0.533"
+  },
+  {
+    "target": "e1-agentic-v4pro-300",
+    "features": "patch",
+    "model": "ruv-fann",
+    "train pool": "target",
+    "AUC mean": "0.545",
+    "AUC sd (repeats)": "0.026",
+    "min": "0.506"
+  },
+  {
+    "target": "e1-agentic-v4pro-300",
+    "features": "patch",
+    "model": "ruv-fann",
+    "train pool": "all",
+    "AUC mean": "0.552",
+    "AUC sd (repeats)": "0.013",
+    "min": "0.536"
+  },
+  {
+    "target": "e1-agentic-v4pro-300",
+    "features": "patch+issue",
+    "model": "logistic",
+    "train pool": "target",
+    "AUC mean": "0.589",
+    "AUC sd (repeats)": "0.033",
+    "min": "0.523"
+  },
+  {
+    "target": "e1-agentic-v4pro-300",
+    "features": "patch+issue",
+    "model": "logistic",
+    "train pool": "all",
+    "AUC mean": "0.585",
+    "AUC sd (repeats)": "0.014",
+    "min": "0.561"
+  },
+  {
+    "target": "e1-agentic-v4pro-300",
+    "features": "patch+issue",
+    "model": "ruv-fann",
+    "train pool": "target",
+    "AUC mean": "0.601",
+    "AUC sd (repeats)": "0.026",
+    "min": "0.564"
+  },
+  {
+    "target": "e1-agentic-v4pro-300",
+    "features": "patch+issue",
+    "model": "ruv-fann",
+    "train pool": "all",
+    "AUC mean": "0.591",
+    "AUC sd (repeats)": "0.020",
+    "min": "0.567"
+  },
+  {
+    "target": "e1-agentic-v4pro-300",
+    "features": "patch+issue+priors",
+    "model": "logistic",
+    "train pool": "target",
+    "AUC mean": "0.583",
+    "AUC sd (repeats)": "0.031",
+    "min": "0.531"
+  },
+  {
+    "target": "e1-agentic-v4pro-300",
+    "features": "patch+issue+priors",
+    "model": "logistic",
+    "train pool": "all",
+    "AUC mean": "0.592",
+    "AUC sd (repeats)": "0.014",
+    "min": "0.569"
+  },
+  {
+    "target": "e1-agentic-v4pro-300",
+    "features": "patch+issue+priors",
+    "model": "ruv-fann",
+    "train pool": "target",
+    "AUC mean": "0.586",
+    "AUC sd (repeats)": "0.033",
+    "min": "0.545"
+  },
+  {
+    "target": "e1-agentic-v4pro-300",
+    "features": "patch+issue+priors",
+    "model": "ruv-fann",
+    "train pool": "all",
+    "AUC mean": "0.596",
+    "AUC sd (repeats)": "0.012",
+    "min": "0.579"
+  },
+  {
+    "target": "agentic-v4pro-300",
+    "features": "issue",
+    "model": "logistic",
+    "train pool": "target",
+    "AUC mean": "0.555",
+    "AUC sd (repeats)": "0.030",
+    "min": "0.509"
+  },
+  {
+    "target": "agentic-v4pro-300",
+    "features": "issue",
+    "model": "logistic",
+    "train pool": "all",
+    "AUC mean": "0.586",
+    "AUC sd (repeats)": "0.020",
+    "min": "0.561"
+  },
+  {
+    "target": "agentic-v4pro-300",
+    "features": "issue",
+    "model": "ruv-fann",
+    "train pool": "target",
+    "AUC mean": "0.562",
+    "AUC sd (repeats)": "0.015",
+    "min": "0.533"
+  },
+  {
+    "target": "agentic-v4pro-300",
+    "features": "issue",
+    "model": "ruv-fann",
+    "train pool": "all",
+    "AUC mean": "0.593",
+    "AUC sd (repeats)": "0.013",
+    "min": "0.570"
+  },
+  {
+    "target": "agentic-v4pro-300",
+    "features": "patch",
+    "model": "logistic",
+    "train pool": "target",
+    "AUC mean": "0.493",
+    "AUC sd (repeats)": "0.032",
+    "min": "0.438"
+  },
+  {
+    "target": "agentic-v4pro-300",
+    "features": "patch",
+    "model": "logistic",
+    "train pool": "all",
+    "AUC mean": "0.527",
+    "AUC sd (repeats)": "0.016",
+    "min": "0.509"
+  },
+  {
+    "target": "agentic-v4pro-300",
+    "features": "patch",
+    "model": "ruv-fann",
+    "train pool": "target",
+    "AUC mean": "0.489",
+    "AUC sd (repeats)": "0.032",
+    "min": "0.416"
+  },
+  {
+    "target": "agentic-v4pro-300",
+    "features": "patch",
+    "model": "ruv-fann",
+    "train pool": "all",
+    "AUC mean": "0.532",
+    "AUC sd (repeats)": "0.017",
+    "min": "0.510"
+  },
+  {
+    "target": "agentic-v4pro-300",
+    "features": "patch+issue",
+    "model": "logistic",
+    "train pool": "target",
+    "AUC mean": "0.522",
+    "AUC sd (repeats)": "0.041",
+    "min": "0.459"
+  },
+  {
+    "target": "agentic-v4pro-300",
+    "features": "patch+issue",
+    "model": "logistic",
+    "train pool": "all",
+    "AUC mean": "0.554",
+    "AUC sd (repeats)": "0.016",
+    "min": "0.528"
+  },
+  {
+    "target": "agentic-v4pro-300",
+    "features": "patch+issue",
+    "model": "ruv-fann",
+    "train pool": "target",
+    "AUC mean": "0.545",
+    "AUC sd (repeats)": "0.031",
+    "min": "0.490"
+  },
+  {
+    "target": "agentic-v4pro-300",
+    "features": "patch+issue",
+    "model": "ruv-fann",
+    "train pool": "all",
+    "AUC mean": "0.567",
+    "AUC sd (repeats)": "0.017",
+    "min": "0.544"
+  },
+  {
+    "target": "agentic-v4pro-300",
+    "features": "patch+issue+priors",
+    "model": "logistic",
+    "train pool": "target",
+    "AUC mean": "0.573",
+    "AUC sd (repeats)": "0.033",
+    "min": "0.523"
+  },
+  {
+    "target": "agentic-v4pro-300",
+    "features": "patch+issue+priors",
+    "model": "logistic",
+    "train pool": "all",
+    "AUC mean": "0.599",
+    "AUC sd (repeats)": "0.018",
+    "min": "0.564"
+  },
+  {
+    "target": "agentic-v4pro-300",
+    "features": "patch+issue+priors",
+    "model": "ruv-fann",
+    "train pool": "target",
+    "AUC mean": "0.562",
+    "AUC sd (repeats)": "0.035",
+    "min": "0.477"
+  },
+  {
+    "target": "agentic-v4pro-300",
+    "features": "patch+issue+priors",
+    "model": "ruv-fann",
+    "train pool": "all",
+    "AUC mean": "0.589",
+    "AUC sd (repeats)": "0.015",
+    "min": "0.563"
+  },
+  {
+    "target": "3tier-300",
+    "features": "issue",
+    "model": "logistic",
+    "train pool": "target",
+    "AUC mean": "0.515",
+    "AUC sd (repeats)": "0.012",
+    "min": "0.498"
+  },
+  {
+    "target": "3tier-300",
+    "features": "issue",
+    "model": "logistic",
+    "train pool": "all",
+    "AUC mean": "0.552",
+    "AUC sd (repeats)": "0.010",
+    "min": "0.539"
+  },
+  {
+    "target": "3tier-300",
+    "features": "issue",
+    "model": "ruv-fann",
+    "train pool": "target",
+    "AUC mean": "0.587",
+    "AUC sd (repeats)": "0.027",
+    "min": "0.551"
+  },
+  {
+    "target": "3tier-300",
+    "features": "issue",
+    "model": "ruv-fann",
+    "train pool": "all",
+    "AUC mean": "0.558",
+    "AUC sd (repeats)": "0.011",
+    "min": "0.539"
+  },
+  {
+    "target": "3tier-300",
+    "features": "patch",
+    "model": "logistic",
+    "train pool": "target",
+    "AUC mean": "0.609",
+    "AUC sd (repeats)": "0.019",
+    "min": "0.570"
+  },
+  {
+    "target": "3tier-300",
+    "features": "patch",
+    "model": "logistic",
+    "train pool": "all",
+    "AUC mean": "0.624",
+    "AUC sd (repeats)": "0.008",
+    "min": "0.605"
+  },
+  {
+    "target": "3tier-300",
+    "features": "patch",
+    "model": "ruv-fann",
+    "train pool": "target",
+    "AUC mean": "0.588",
+    "AUC sd (repeats)": "0.027",
+    "min": "0.551"
+  },
+  {
+    "target": "3tier-300",
+    "features": "patch",
+    "model": "ruv-fann",
+    "train pool": "all",
+    "AUC mean": "0.621",
+    "AUC sd (repeats)": "0.010",
+    "min": "0.604"
+  },
+  {
+    "target": "3tier-300",
+    "features": "patch+issue",
+    "model": "logistic",
+    "train pool": "target",
+    "AUC mean": "0.608",
+    "AUC sd (repeats)": "0.015",
+    "min": "0.578"
+  },
+  {
+    "target": "3tier-300",
+    "features": "patch+issue",
+    "model": "logistic",
+    "train pool": "all",
+    "AUC mean": "0.630",
+    "AUC sd (repeats)": "0.008",
+    "min": "0.620"
+  },
+  {
+    "target": "3tier-300",
+    "features": "patch+issue",
+    "model": "ruv-fann",
+    "train pool": "target",
+    "AUC mean": "0.613",
+    "AUC sd (repeats)": "0.023",
+    "min": "0.576"
+  },
+  {
+    "target": "3tier-300",
+    "features": "patch+issue",
+    "model": "ruv-fann",
+    "train pool": "all",
+    "AUC mean": "0.634",
+    "AUC sd (repeats)": "0.016",
+    "min": "0.604"
+  },
+  {
+    "target": "3tier-300",
+    "features": "patch+issue+priors",
+    "model": "logistic",
+    "train pool": "target",
+    "AUC mean": "0.670",
+    "AUC sd (repeats)": "0.007",
+    "min": "0.660"
+  },
+  {
+    "target": "3tier-300",
+    "features": "patch+issue+priors",
+    "model": "logistic",
+    "train pool": "all",
+    "AUC mean": "0.686",
+    "AUC sd (repeats)": "0.007",
+    "min": "0.672"
+  },
+  {
+    "target": "3tier-300",
+    "features": "patch+issue+priors",
+    "model": "ruv-fann",
+    "train pool": "target",
+    "AUC mean": "0.670",
+    "AUC sd (repeats)": "0.010",
+    "min": "0.653"
+  },
+  {
+    "target": "3tier-300",
+    "features": "patch+issue+priors",
+    "model": "ruv-fann",
+    "train pool": "all",
+    "AUC mean": "0.670",
+    "AUC sd (repeats)": "0.011",
+    "min": "0.655"
+  },
+  {
+    "target": "v4pro-hybrid-300",
+    "features": "issue",
+    "model": "logistic",
+    "train pool": "target",
+    "AUC mean": "0.548",
+    "AUC sd (repeats)": "0.018",
+    "min": "0.526"
+  },
+  {
+    "target": "v4pro-hybrid-300",
+    "features": "issue",
+    "model": "logistic",
+    "train pool": "all",
+    "AUC mean": "0.566",
+    "AUC sd (repeats)": "0.018",
+    "min": "0.544"
+  },
+  {
+    "target": "v4pro-hybrid-300",
+    "features": "issue",
+    "model": "ruv-fann",
+    "train pool": "target",
+    "AUC mean": "0.574",
+    "AUC sd (repeats)": "0.016",
+    "min": "0.548"
+  },
+  {
+    "target": "v4pro-hybrid-300",
+    "features": "issue",
+    "model": "ruv-fann",
+    "train pool": "all",
+    "AUC mean": "0.573",
+    "AUC sd (repeats)": "0.012",
+    "min": "0.557"
+  },
+  {
+    "target": "v4pro-hybrid-300",
+    "features": "patch",
+    "model": "logistic",
+    "train pool": "target",
+    "AUC mean": "0.703",
+    "AUC sd (repeats)": "0.012",
+    "min": "0.675"
+  },
+  {
+    "target": "v4pro-hybrid-300",
+    "features": "patch",
+    "model": "logistic",
+    "train pool": "all",
+    "AUC mean": "0.693",
+    "AUC sd (repeats)": "0.011",
+    "min": "0.666"
+  },
+  {
+    "target": "v4pro-hybrid-300",
+    "features": "patch",
+    "model": "ruv-fann",
+    "train pool": "target",
+    "AUC mean": "0.682",
+    "AUC sd (repeats)": "0.014",
+    "min": "0.655"
+  },
+  {
+    "target": "v4pro-hybrid-300",
+    "features": "patch",
+    "model": "ruv-fann",
+    "train pool": "all",
+    "AUC mean": "0.681",
+    "AUC sd (repeats)": "0.011",
+    "min": "0.665"
+  },
+  {
+    "target": "v4pro-hybrid-300",
+    "features": "patch+issue",
+    "model": "logistic",
+    "train pool": "target",
+    "AUC mean": "0.721",
+    "AUC sd (repeats)": "0.012",
+    "min": "0.698"
+  },
+  {
+    "target": "v4pro-hybrid-300",
+    "features": "patch+issue",
+    "model": "logistic",
+    "train pool": "all",
+    "AUC mean": "0.708",
+    "AUC sd (repeats)": "0.011",
+    "min": "0.686"
+  },
+  {
+    "target": "v4pro-hybrid-300",
+    "features": "patch+issue",
+    "model": "ruv-fann",
+    "train pool": "target",
+    "AUC mean": "0.702",
+    "AUC sd (repeats)": "0.017",
+    "min": "0.655"
+  },
+  {
+    "target": "v4pro-hybrid-300",
+    "features": "patch+issue",
+    "model": "ruv-fann",
+    "train pool": "all",
+    "AUC mean": "0.707",
+    "AUC sd (repeats)": "0.015",
+    "min": "0.685"
+  },
+  {
+    "target": "v4pro-hybrid-300",
+    "features": "patch+issue+priors",
+    "model": "logistic",
+    "train pool": "target",
+    "AUC mean": "0.724",
+    "AUC sd (repeats)": "0.014",
+    "min": "0.705"
+  },
+  {
+    "target": "v4pro-hybrid-300",
+    "features": "patch+issue+priors",
+    "model": "logistic",
+    "train pool": "all",
+    "AUC mean": "0.700",
+    "AUC sd (repeats)": "0.015",
+    "min": "0.673"
+  },
+  {
+    "target": "v4pro-hybrid-300",
+    "features": "patch+issue+priors",
+    "model": "ruv-fann",
+    "train pool": "target",
+    "AUC mean": "0.695",
+    "AUC sd (repeats)": "0.012",
+    "min": "0.676"
+  },
+  {
+    "target": "v4pro-hybrid-300",
+    "features": "patch+issue+priors",
+    "model": "ruv-fann",
+    "train pool": "all",
+    "AUC mean": "0.717",
+    "AUC sd (repeats)": "0.011",
+    "min": "0.698"
+  }
+]
