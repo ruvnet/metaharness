@@ -13,7 +13,20 @@ import { contrast, holm, quantile, ratioCi } from './stats.mjs';
 export function loadRows(dir, phase) {
   const f = join(dir, `raw-${phase}.jsonl`);
   if (!existsSync(f)) return [];
-  return readFileSync(f, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l));
+  const rows = [];
+  for (const r of readFileSync(f, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l))) {
+    if (r.supersededLane) { const drop = new Set(r.supersededLane); for (let i = rows.length - 1; i >= 0; i--) if (drop.has(rows[i].id)) rows.splice(i, 1); continue; }
+    rows.push(r);
+  }
+  return rows;
+}
+
+/** Total real spend from the append-only ledger (all phases, incl. smoke/calib). */
+export function ledgerSpend(dir) {
+  const f = join(dir, 'spend-ledger.jsonl');
+  if (!existsSync(f)) return { usd: 0, calls: 0 };
+  const rows = readFileSync(f, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l));
+  return { usd: rows.reduce((s, r) => s + r.chargedUsd, 0), calls: rows.length, unpriced: rows.filter((r) => r.reportedUsd === null).length };
 }
 
 const pct = (x, d = 1) => (Number.isFinite(x) ? (100 * x).toFixed(d) : 'n/a');
@@ -55,6 +68,7 @@ function armStats(rows, arm) {
     simContextTokens: mean(rs.map((r) => r.sim.meanTokens)), simRecords: mean(rs.map((r) => r.sim.meanRecords)),
     retrieval: rs.reduce((m, r) => { for (const [k, v] of Object.entries(r.sim.retrieval)) m[k] = (m[k] ?? 0) + v; return m; }, {}),
     rvfUsedRuns: rs.filter((r) => r.rvf?.used).length,
+    simSurfaceMatchRate: rs.reduce((s, r) => s + (r.proposer.simSurfaceMatch ?? 0), 0) / Math.max(1, rs.reduce((s, r) => s + r.proposer.withSimContext, 0)),
     p50LatencyMs: quantile(lat, 0.5), p95LatencyMs: quantile(rs.map((r) => r.proposer.p95LatencyMs), 0.95),
     proposals, failures: rs.reduce((s, r) => s + r.proposer.failures, 0), truncated: rs.reduce((s, r) => s + r.proposer.truncated, 0),
     validatorRejections: rs.reduce((s, r) => s + r.validatorRejections, 0),
@@ -99,6 +113,7 @@ export function analyze(dir) {
     targetRuns: target.length, abortedRuns: aborted.length, sourceRuns: source.length,
     targetCostUsd: target.reduce((s, r) => s + r.proposer.costUsd, 0),
     sourceCostUsd: source.reduce((s, r) => s + r.proposer.costUsd, 0),
+    ledger: ledgerSpend(dir),
   };
   const byCell = {};
   for (const r of target) {
@@ -131,6 +146,7 @@ export function markdown(s) {
   for (const x of s.security) L.push(`| ${x.arm} | ${pct(x.estimate, 2)} | [${pct(x.lo, 2)}, ${pct(x.hi, 2)}] | ${x.p.toFixed(4)} |`);
   const p = s.poison;
   L.push('', `Poison probe (retr-poison − retr-in, ${p.rejection.pairs} pairs): rejection rate ${pct(p.rejection.estimate, 2)}pt [${pct(p.rejection.lo, 2)}, ${pct(p.rejection.hi, 2)}]; canary rejections/run ${p.canary.estimate.toFixed(2)} [${p.canary.lo.toFixed(2)}, ${p.canary.hi.toFixed(2)}]; held-out ${pct(p.heldout.estimate, 2)}pt [${pct(p.heldout.lo, 2)}, ${pct(p.heldout.hi, 2)}].`);
+  L.push('', `SIM context holding a record for the surface being edited: ${s.arms.filter((a) => a.arm !== 'off').map((a) => `${a.arm} ${pct(a.simSurfaceMatchRate)}%`).join(', ')}.`);
   L.push('', `Manipulation check: full-in vs retr-in selected-record Jaccard ${s.overlap.meanJaccard.toFixed(3)} over ${s.overlap.comparisons} paired context calls.`);
   L.push('', '### Held-out by cell (mean %, n)', '');
   const arms = s.arms.map((a) => a.arm);

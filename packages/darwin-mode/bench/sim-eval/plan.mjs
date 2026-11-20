@@ -4,7 +4,8 @@
 // dist imports, no I/O. PREREGISTRATION.md mirrors these constants; the live
 // runner refuses to start if the frozen partition hash differs.
 
-export const PREREG_ID = 'metaharness-523-sealed-sim-v1';
+// v1 + AMENDMENT-1 (fixed evaluation brief, 30 seeds, calibration gate).
+export const PREREG_ID = 'metaharness-523-sealed-sim-v1a1';
 export const EXPECTED_TASKS_SHA256 = '7ebe5ff750d78c05a4630b6edfdded30e6f3ce44f09a457040f4bea686037582';
 
 export const MODELS = Object.freeze([
@@ -16,8 +17,9 @@ export const BENCHES = Object.freeze(['loc', 'per']);
 export const LIVE_DESIGN = Object.freeze({
   capUsd: 40,
   sourceSeeds: [101, 102, 103],
-  targetSeeds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  targetSeeds: Array.from({ length: 30 }, (_, i) => i + 1),
   smokeSeeds: [900],
+  calibSeeds: [950, 951],
   generations: 6,
   childrenPerGeneration: 3,
   selectionPool: 'generation', // fixed parent count (≤2) ⇒ identical candidate counts per arm
@@ -36,6 +38,7 @@ export const DRY_DESIGN = Object.freeze({
   sourceSeeds: [101],
   targetSeeds: [1, 2],
   smokeSeeds: [900],
+  calibSeeds: [950],
   generations: 2,
   childrenPerGeneration: 2,
   runConcurrency: 4,
@@ -100,6 +103,11 @@ export function targetSpecs(design, { phase = 'target', seeds = design.targetSee
     }
   }
   return out;
+}
+
+/** Calibration specs (amendment 1, excluded from analysis): `off` only, every cell. */
+export function calibSpecs(design) {
+  return targetSpecs(design, { phase: 'calib', seeds: design.calibSeeds }).filter((s) => s.arm === 'off');
 }
 
 /** Smoke specs (excluded from analysis): one run per primary arm, first model, 'loc'. */

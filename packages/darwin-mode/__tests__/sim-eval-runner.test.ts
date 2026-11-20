@@ -12,7 +12,7 @@ import * as plan from '../bench/sim-eval/plan.mjs';
 // @ts-expect-error untyped .mjs bench module
 import { SpendCapError, SpendGuard, parseCap, worstCaseUsd } from '../bench/sim-eval/spend-guard.mjs';
 // @ts-expect-error untyped .mjs bench module
-import { GuardedOpenRouterProposer, diffSummary } from '../bench/sim-eval/proposer.mjs';
+import { EVAL_BRIEF, GuardedOpenRouterProposer, buildMessages, diffSummary } from '../bench/sim-eval/proposer.mjs';
 // @ts-expect-error untyped .mjs bench module
 import { contrast, holm, verdict } from '../bench/sim-eval/stats.mjs';
 
@@ -114,6 +114,18 @@ describe('sim-eval proposer (fake fetch)', () => {
     expect(out.summary).toBe('retryPolicy: -[export const maxAttempts = 3;] +[export const maxAttempts = 5;]');
     expect(g.snapshot().spentUsd).toBeCloseTo(0.0004);
     expect(p.telemetry.withSimContext).toBe(1);
+  });
+
+  it('gives every arm the same pre-registered brief, with no held-out vocabulary or remedy', async () => {
+    const { createHash } = await import('node:crypto');
+    expect(createHash('sha256').update(EVAL_BRIEF).digest('hex')).toBe('22d2a472f138f133ff0bb300c05b57c0b0cb8897317c76f9d312c892a0f17860');
+    const p = buildPartitions();
+    const heldWords = new Set(p.loc.heldout.concat(p.per.heldout).flatMap((t: { prompt: string }) => t.prompt.split(' ').slice(1)));
+    for (const w of heldWords) expect(EVAL_BRIEF.toLowerCase()).not.toMatch(new RegExp(`\\b${w}\\b`));
+    expect(EVAL_BRIEF).not.toMatch(/path\.length|tie|slice\(|\d{2,}/);
+    const off = buildMessages({ ...input, simContext: undefined });
+    expect(off[1].content.startsWith(EVAL_BRIEF)).toBe(true);
+    expect(off[1].content).not.toContain('Prior optimizer evidence');
   });
 
   it('charges the reservation on a network error and refuses before fetching when capped', async () => {

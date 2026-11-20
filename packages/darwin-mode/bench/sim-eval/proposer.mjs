@@ -12,8 +12,23 @@
 
 import { worstCaseUsd } from './spend-guard.mjs';
 
-/** Same rules text as OpenRouterMutator (kept verbatim so the proposer is comparable). */
-export function buildMessages(input) {
+/**
+ * Amendment 1: a FIXED description of what the evaluation loop checks, given to
+ * every arm (off included). It states the mechanism, not a remedy: no tie-break
+ * hint, no held-out ranges. Its sha256 is pre-registered in AMENDMENT-1.md.
+ */
+export const EVAL_BRIEF =
+  'How variants are scored: a deterministic agent loop imports planner.ts, context_builder.ts, retry_policy.ts and ' +
+  'tool_policy.ts and runs each task. A task is solved only if (1) createPlan(task) returns a plan containing a ' +
+  '"verify" step, (2) buildContext(task, files) returns the task\'s buggy file among its items, and (3) the loop ' +
+  'is still running on the attempt where the task stops failing: some tasks fail a fixed number of attempts first, ' +
+  'each failure carries a classification (transient, repairable or unknown), and the loop continues only while ' +
+  'decideRetry(attempt, classification).retry is true and attempt + 1 < maxAttempts. Score is mostly the fraction of ' +
+  'tasks solved. Edits that preserve behaviour cannot change the score; behaviour changes inside this one file are ' +
+  'allowed if they keep the exported names and signatures.';
+
+/** Same rules text as OpenRouterMutator, plus the fixed EVAL_BRIEF (amendment 1). */
+export function buildMessages(input, { brief = EVAL_BRIEF } = {}) {
   const sys =
     'You improve ONE file of an AI agent harness. Output ONLY the full replacement file — no prose, no fences. ' +
     'HARD RULES: keep every exported name and signature identical; introduce NO new capabilities, imports, network, ' +
@@ -21,6 +36,7 @@ export function buildMessages(input) {
     'validator that rejects added capabilities). Make a small, plausibly score-improving change to the "' +
     input.surface + '" surface.';
   const user =
+    (brief ? `${brief}\n\n` : '') +
     `Surface: ${input.surface}\nParent score: ${input.parentScore}\n` +
     (input.repoSummary ? `Repo: ${input.repoSummary}\n` : '') +
     (input.failedTraces.length ? `Recent failures:\n${input.failedTraces.slice(0, 5).join('\n')}\n` : '') +
@@ -59,13 +75,21 @@ export function diffSummary(surface, before, after) {
   return `${surface}: ${parts.join(' ') || 'comment/whitespace only'}${more ? ` (+${more} more lines)` : ''}`;
 }
 
+/** Count SIM context use, and whether it holds a record for the surface being edited (amendment 1). */
+function noteSim(t, input) {
+  if (!input.simContext) return;
+  t.withSimContext += 1;
+  t.simContextChars.push(input.simContext.length);
+  if (input.simContext.includes(`"edit":"${input.surface}"`)) t.simSurfaceMatch += 1;
+}
+
 const quantileSorted = (s, q) => (s.length ? s[Math.min(s.length - 1, Math.floor(q * s.length))] : null);
 
 /** Shared per-proposer telemetry (calls, tokens, cost, latency, failures, SIM context sizes). */
 export function newTelemetry() {
   return {
     calls: 0, failures: 0, truncated: 0, promptTokens: 0, completionTokens: 0, costUsd: 0,
-    latenciesMs: [], simContextChars: [], withSimContext: 0,
+    latenciesMs: [], simContextChars: [], withSimContext: 0, simSurfaceMatch: 0,
   };
 }
 export function summarizeTelemetry(t) {
@@ -75,7 +99,7 @@ export function summarizeTelemetry(t) {
     promptTokens: t.promptTokens, completionTokens: t.completionTokens, costUsd: Number(t.costUsd.toFixed(6)),
     p50LatencyMs: quantileSorted(lat, 0.5), p95LatencyMs: quantileSorted(lat, 0.95),
     meanSimContextChars: t.simContextChars.length ? Math.round(t.simContextChars.reduce((s, x) => s + x, 0) / t.simContextChars.length) : 0,
-    withSimContext: t.withSimContext,
+    withSimContext: t.withSimContext, simSurfaceMatch: t.simSurfaceMatch,
   };
 }
 
@@ -94,7 +118,7 @@ export class GuardedOpenRouterProposer {
 
   async generateMutation(input) {
     const messages = buildMessages(input);
-    if (input.simContext) { this.telemetry.withSimContext += 1; this.telemetry.simContextChars.push(input.simContext.length); }
+    noteSim(this.telemetry, input);
     const promptChars = messages.reduce((s, m) => s + m.content.length, 0);
     const reservation = this.guard.reserve(
       worstCaseUsd({ promptChars, maxTokens: this.maxTokens, inPerM: this.pricing.inPerM, outPerM: this.pricing.outPerM }) * 1.25 + 0.0001,
@@ -155,7 +179,7 @@ export class MockProposer {
     this.n += 1;
     this.telemetry.calls += 1;
     this.telemetry.latenciesMs.push(0);
-    if (input.simContext) { this.telemetry.withSimContext += 1; this.telemetry.simContextChars.push(input.simContext.length); }
+    noteSim(this.telemetry, input);
     let code = input.parentCode;
     const k = (this.n + (input.nonce ?? 0)) % 3;
     if (input.surface === 'contextBuilder') {

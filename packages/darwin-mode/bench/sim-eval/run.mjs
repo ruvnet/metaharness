@@ -13,15 +13,15 @@
 
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { executeRun } from './execute.mjs';
+import { executeRun, storePath } from './execute.mjs';
 import {
-  DRY_DESIGN, EXPECTED_TASKS_SHA256, LIVE_DESIGN, MODELS, PREREG_ID, smokeSpecs, sourceSpecs, targetSpecs,
+  DRY_DESIGN, EXPECTED_TASKS_SHA256, LIVE_DESIGN, MODELS, PREREG_ID, calibSpecs, smokeSpecs, sourceSpecs, targetSpecs,
 } from './plan.mjs';
-import { GuardedOpenRouterProposer, MockProposer, summarizeTelemetry } from './proposer.mjs';
+import { EVAL_BRIEF, GuardedOpenRouterProposer, MockProposer, summarizeTelemetry } from './proposer.mjs';
 import { SpendCapError, SpendGuard, parseCap } from './spend-guard.mjs';
 import { partitionHash } from './tasks.mjs';
 
@@ -36,7 +36,7 @@ const dry = flag('--dry') || !live;
 if (live && flag('--dry')) throw new Error('choose one of --live / --dry');
 const design = dry ? DRY_DESIGN : LIVE_DESIGN;
 const phase = opt('--phase', dry ? 'all' : undefined);
-if (!['smoke', 'source', 'target', 'all'].includes(phase)) throw new Error('--phase smoke|source|target|all is required');
+if (!['smoke', 'calib', 'source', 'target', 'all'].includes(phase)) throw new Error('--phase smoke|calib|source|target|all is required');
 if (live && phase === 'all') throw new Error('--live runs one phase at a time');
 const outDir = resolve(opt('--out', dry ? join(tmpdir(), `sim-eval-dry-${process.pid}`) : join(here, 'results')));
 const capUsd = parseCap(opt('--cap', String(design.capUsd)));
@@ -78,6 +78,7 @@ const provenance = {
     evolveDistSha256: sha(join(pkgDir, 'dist/evolve.js')),
     simMemorySrcSha256: sha(join(pkgDir, 'src/sim-memory.ts')),
   },
+  evalBriefSha256: createHash('sha256').update(EVAL_BRIEF).digest('hex'),
   models: MODELS, design, capUsd,
 };
 
@@ -106,14 +107,32 @@ const ctx = {
 
 function done(file) {
   if (!existsSync(file)) return new Set();
-  return new Set(readFileSync(file, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)).filter((r) => !r.aborted).map((r) => r.id));
+  const ok = new Set();
+  for (const r of readFileSync(file, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l))) {
+    if (r.supersededLane) for (const id of r.supersededLane) ok.delete(id);
+    else if (!r.aborted) ok.add(r.id);
+  }
+  return ok;
 }
 
 let stopped = null;
 async function runPhase(name, specs) {
   const file = join(outDir, `raw-${name}.jsonl`);
   const finished = done(file);
-  const todo = specs.filter((s) => !finished.has(s.id));
+  let todo = specs.filter((s) => !finished.has(s.id));
+  if (name === 'source') {
+    // A source store is built by its lane's seeds in order. A partially built lane
+    // is rebuilt from empty (store deleted, earlier rows superseded), never resumed.
+    const partial = new Set(todo.map((s) => `${s.model}|${s.bench}`));
+    for (const lane of partial) {
+      const laneSpecs = specs.filter((s) => `${s.model}|${s.bench}` === lane);
+      const [model, bench] = lane.split('|');
+      const store = storePath(storesDir, model, bench);
+      if (existsSync(store)) rmSync(store);
+      appendFileSync(file, JSON.stringify({ supersededLane: laneSpecs.map((s) => s.id), at: new Date().toISOString() }) + '\n');
+    }
+    todo = specs.filter((s) => partial.has(`${s.model}|${s.bench}`));
+  }
   console.error(`[${name}] ${todo.length}/${specs.length} runs to do; spend ${JSON.stringify(guard.snapshot())}`);
   // Source runs share one store per (model, bench): run those serially per store.
   const lanes = new Map();
@@ -150,10 +169,10 @@ async function runPhase(name, specs) {
   await Promise.all(Array.from({ length: Math.max(1, runConcurrency) }, worker));
 }
 
-const phases = phase === 'all' ? ['smoke', 'source', 'target'] : [phase];
+const phases = phase === 'all' ? ['smoke', 'calib', 'source', 'target'] : [phase];
 for (const p of phases) {
   if (stopped) break;
-  const specs = p === 'smoke' ? smokeSpecs(design) : p === 'source' ? sourceSpecs(design) : targetSpecs(design);
+  const specs = p === 'smoke' ? smokeSpecs(design) : p === 'calib' ? calibSpecs(design) : p === 'source' ? sourceSpecs(design) : targetSpecs(design);
   await runPhase(p, specs);
 }
 const final = { ...guard.snapshot(), stoppedBySpendCap: stopped, outDir };
