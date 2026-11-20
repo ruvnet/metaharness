@@ -168,6 +168,23 @@ describe('SIM opt-in optimizer experience memory', () => {
     expect(searched).toBe(false);
   });
 
+  it('uses the journal backend through the same Darwin memory interface', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'sim-journal-adapter-'));
+    dirs.push(root);
+    const path = join(root, 'optimizer.jsonl');
+    const memory = new SimMemory(path, { persistence: 'journal' });
+    await memory.load();
+    await memory.append(attempt('regression', { observedDelta: -0.4 }));
+    await memory.append(attempt('improvement', { observedDelta: 0.2, promoted: true }));
+    const lines = (await readFile(path, 'utf8')).trim().split('\n');
+    expect(lines).toHaveLength(2);
+    const restored = new SimMemory(path, { persistence: 'journal' });
+    await restored.load();
+    expect(restored.all().map((x) => x.id)).toEqual(['regression', 'improvement']);
+    const selected = await restored.context({ scope, mode: 'retrieval', query: 'completion', maxTokens: 512 });
+    expect(selected.records.some((x) => x.observedDelta < 0)).toBe(true);
+  });
+
   it('uses real RVF when the optional SDK is installed, with a writable persistent index', async () => {
     const root = await mkdtemp(join(tmpdir(), 'metaharness-sim-rvf-'));
     dirs.push(root);
