@@ -76,7 +76,7 @@ async function resolveKernelBackend(harnessDir: string): Promise<{
   reasons: { native?: string; wasm?: string };
 }> {
   const requested = (process.env.METAHARNESS_KERNEL_BACKEND || '').trim().toLowerCase() || null;
-  const entry = resolveKernelEntry(harnessDir);
+  const entry = resolveKernelEntry();
   if (!entry) return { backend: undefined, requested, reasons: {} };
   try {
     const mod = (await import(pathToFileURL(entry).href)) as {
@@ -102,13 +102,17 @@ async function resolveKernelBackend(harnessDir: string): Promise<{
 }
 
 /**
- * Resolve the @metaharness/kernel entry module the same way we resolve its
- * version — from the harness's own node_modules first, then the workspace
- * checkout — so the reported backend matches the kernel the harness loads.
+ * Resolve the @metaharness/kernel entry module that THIS CLI ships with (then
+ * the workspace checkout). The backend probe imports and runs this module, so
+ * it must never come from the inspected directory: `harness diag <dir>` and
+ * `harness validate <dir>` only read data (manifest, package.json version)
+ * from <dir> and must not execute code that lives there. Backend availability
+ * (native/wasm/js) is a property of this machine, so the CLI's kernel answers
+ * the same question.
  */
-function resolveKernelEntry(harnessDir: string): string | undefined {
+function resolveKernelEntry(): string | undefined {
   try {
-    const require = createRequire(join(harnessDir, 'package.json'));
+    const require = createRequire(import.meta.url);
     return require.resolve('@metaharness/kernel');
   } catch {
     const wsEntry = resolve(__dirname, '..', '..', 'kernel-js', 'dist', 'index.js');

@@ -1,6 +1,6 @@
 {
   "name": "metaharness",
-  "version": "0.4.24",
+  "version": "0.4.25",
   "description": "Scaffold, check and score a custom AI agent harness for Claude Code, Codex, Copilot, GitHub Actions and six more hosts: `npx metaharness new <name>`, then `harness doctor` and `harness score`.",
   "homepage": "https://ruv.io",
   "repository": {

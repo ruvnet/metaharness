@@ -1,3 +1,7 @@
+# 0.4.25 — 2026-11-22
+
+Hardening: `harness diag` and `harness validate` now read only data (manifest, package.json version) from the directory they inspect and probe the kernel backend with the CLI's own `@metaharness/kernel`. `analyze` / `analyze-repo` / `from-repo` read high-signal files only when they are regular files inside the repo, and refuse to write `repo-profile.json` / `harness-plan.json` through a symlink or other non-regular file. No API changes.
+
 # 0.4.24 — 2026-11-19
 
 Pin `@metaharness/redblue` to `0.1.8` (adds the blue-team defense layer; the `dispatch` entry is unchanged). Ship the evaluated Dream scoring fixes merged since 0.4.23: threat-model tool counts (#479) and `secretsReachable` (#459), `scoreMcpSafety` reading `settings.json` (#502), SBOM component hashes (#445), manifest-only test credit (#489, #451), empty test directories (#435), `hasCi` prose (#464), and the prime-agent `SANDBOX-REQUIRED.md` in both scaffold mirrors (#461). No API changes.
