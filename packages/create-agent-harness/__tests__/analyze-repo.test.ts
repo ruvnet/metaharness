@@ -6,7 +6,7 @@
 // native build is absent).
 
 import { describe, it, expect } from 'vitest';
-import { mkdtemp, mkdir, writeFile, readFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, readFile, symlink, lstat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { analyzeFiles, inventory, recommendPlan, scoreArchetypes, ruvllmSemantic, analyzeRepoCmd } from '../src/analyze-repo.js';
@@ -168,5 +168,29 @@ describe('analyzeRepoCmd', () => {
     const r = await analyzeRepoCmd([dir, '--scaffold', 'ruvector-bot', '--out', dir]);
     expect(r.code).toBe(0);
     expect(r.lines.join('\n')).toMatch(/Scaffolded ruvector-bot/);
+  });
+});
+
+describe('analyzeRepoCmd stays inside the analyzed repo', () => {
+  it('does not read high-signal files through symlinks', async () => {
+    const outside = await mkdtemp(join(tmpdir(), 'analyze-outside-'));
+    await writeFile(join(outside, 'data.json'), '{"name":"outside-marker-zq9"}', 'utf-8');
+    const dir = await rustRepoDir();
+    await symlink(join(outside, 'data.json'), join(dir, 'package.json'));
+    const files = inventory(dir);
+    expect(files['package.json']).toBeUndefined();
+    expect(JSON.stringify(files)).not.toContain('outside-marker-zq9');
+  });
+
+  it('does not write its outputs through a symlink in the repo', async () => {
+    const outside = await mkdtemp(join(tmpdir(), 'analyze-outside-'));
+    const victim = join(outside, 'keep.txt');
+    await writeFile(victim, 'original', 'utf-8');
+    const dir = await rustRepoDir();
+    await symlink(victim, join(dir, 'repo-profile.json'));
+    const r = await analyzeRepoCmd([dir]);
+    expect(r.code).not.toBe(0);
+    expect(await readFile(victim, 'utf-8')).toBe('original');
+    expect((await lstat(join(dir, 'repo-profile.json'))).isSymbolicLink()).toBe(true);
   });
 });

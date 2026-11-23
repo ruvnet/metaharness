@@ -13,7 +13,7 @@
 // high-signal text files are read.
 
 import { createRequire } from 'node:module';
-import { existsSync, readFileSync, writeFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, lstatSync, readFileSync, writeFileSync, readdirSync, statSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
 import { scaffold, type Host } from './index.js';
 import { validateHarnessName } from './renderer.js';
@@ -109,6 +109,24 @@ export const ARCHETYPES: Archetype[] = [
 const HIGH_SIGNAL = ['README.md', 'package.json', 'Cargo.toml', 'pyproject.toml', 'requirements.txt', 'go.mod', 'CONTRIBUTING.md', '.mcp.json'];
 const IGNORE_DIRS = new Set(['node_modules', '.git', 'dist', 'target', 'build', 'coverage', '.next', '.cache', 'vendor']);
 
+/** True only for a regular file that is not a symlink (lstat, never follows). */
+function isRegularFile(p: string, singleLink = false): boolean {
+  try {
+    const s = lstatSync(p);
+    return s.isFile() && (!singleLink || s.nlink <= 1);
+  } catch {
+    return false;
+  }
+}
+
+function isSymlink(p: string): boolean {
+  try {
+    return lstatSync(p).isSymbolicLink();
+  } catch {
+    return false;
+  }
+}
+
 function dirExists(root: string, sub: string): boolean {
   try {
     return existsSync(join(root, sub)) && statSync(join(root, sub)).isDirectory();
@@ -161,7 +179,9 @@ export function inventory(dir: string): Record<string, string> {
   const files: Record<string, string> = {};
   for (const name of HIGH_SIGNAL) {
     const p = join(root, name);
-    if (existsSync(p)) {
+    // Only regular files inside the repo: a symlink could point anywhere on the
+    // machine running the analysis, and its contents would land in the profile.
+    if (isRegularFile(p)) {
       try {
         files[name] = readFileSync(p, 'utf-8');
       } catch {
@@ -437,6 +457,15 @@ export async function analyzeRepoCmd(args: string[]): Promise<{ code: number; li
   const out = resolve(outDir ?? root);
   const profilePath = join(out, 'repo-profile.json');
   const planPath = join(out, 'harness-plan.json');
+  // The analyzed repo may be untrusted (e.g. a fresh `from-repo` clone): never
+  // write through a symlink or onto anything that is not a plain file.
+  for (const p of [profilePath, planPath]) {
+    if (existsSync(p) || isSymlink(p)) {
+      if (!isRegularFile(p, true)) {
+        return { code: 1, lines: [`Refusing to write ${p}: it exists and is not a regular file (symlink or special file).`] };
+      }
+    }
+  }
   writeFileSync(profilePath, JSON.stringify(profile, null, 2) + '\n', 'utf-8');
   writeFileSync(planPath, JSON.stringify(plan, null, 2) + '\n', 'utf-8');
 

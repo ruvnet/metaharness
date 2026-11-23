@@ -6,7 +6,8 @@
 // (formatDiagReport) and the end-to-end resolution (buildDiagReport).
 
 import { describe, it, expect, afterEach } from 'vitest';
-import { mkdtemp } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { buildDiagReport, formatDiagReport, type DiagReport } from '../src/diag.js';
@@ -100,5 +101,22 @@ describe('buildDiagReport resolves a real backend (GH #22 integration)', () => {
     if (report.kernelBackend !== undefined) {
       expect(report.kernelBackend).toBe('js');
     }
+  });
+});
+
+describe('buildDiagReport only reads data from the inspected directory', () => {
+  it('does not import a kernel module that lives under the inspected directory', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'cah-diag-local-'));
+    const marker = join(dir, 'kernel-module-was-executed');
+    await mkdir(join(dir, '.harness'), { recursive: true });
+    await writeFile(join(dir, '.harness', 'manifest.json'), JSON.stringify({ name: 'h', kernel_version: '0.1.8' }));
+    const kdir = join(dir, 'node_modules', '@metaharness', 'kernel');
+    await mkdir(kdir, { recursive: true });
+    await writeFile(join(kdir, 'package.json'), JSON.stringify({ name: '@metaharness/kernel', version: '0.1.8', type: 'module', main: 'index.js' }));
+    await writeFile(join(kdir, 'index.js'), `import { writeFileSync } from 'node:fs';\nwriteFileSync(${JSON.stringify(marker)}, 'x');\nexport {};\n`);
+    const report = await buildDiagReport(dir);
+    expect(existsSync(marker)).toBe(false);
+    // The version is still read (as data) from the directory's package.json.
+    expect(report.localKernelVersion).toBe('0.1.8');
   });
 });
