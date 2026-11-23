@@ -1,0 +1,1974 @@
+{
+  "planHash": "55037f6e8040abe2c57870d0e830829f3e9a533a9c85fdbfd567d67390acf275",
+  "rows": [
+    {
+      "split": 32001,
+      "searches": {
+        "incumbent": {
+          "candidates": [
+            {
+              "rate": 0.4,
+              "primary": 0.5579711348127312
+            },
+            {
+              "rate": 0.7493167040502009,
+              "primary": 0.5401328983695368
+            },
+            {
+              "rate": 0.7377195893175039,
+              "primary": 0.5452881635151325
+            },
+            {
+              "rate": 0.8747077635994657,
+              "primary": 0.5421371177788196
+            },
+            {
+              "rate": 0.941867585472628,
+              "primary": 0.5213185979580143
+            },
+            {
+              "rate": 0.15446182235258843,
+              "primary": 0.5703415572745743
+            },
+            {
+              "rate": 0.5371279152490998,
+              "primary": 0.5329315778507058
+            }
+          ],
+          "callbacks": [
+            {
+              "variantId": "baseline",
+              "rate": 0.4,
+              "primary": 0.5579711348127312
+            },
+            {
+              "variantId": "g1_v0",
+              "rate": 0.7493167040502009,
+              "primary": 0.5401328983695368
+            },
+            {
+              "variantId": "g1_v1",
+              "rate": 0.7377195893175039,
+              "primary": 0.5452881635151325
+            },
+            {
+              "variantId": "g2_v0",
+              "rate": 0.8747077635994657,
+              "primary": 0.5421371177788196
+            },
+            {
+              "variantId": "g2_v1",
+              "rate": 0.941867585472628,
+              "primary": 0.5213185979580143
+            },
+            {
+              "variantId": "g2_v2",
+              "rate": 0.15446182235258843,
+              "primary": 0.5703415572745743
+            },
+            {
+              "variantId": "g2_v3",
+              "rate": 0.5371279152490998,
+              "primary": 0.5329315778507058
+            }
+          ],
+          "winner": {
+            "rate": 0.15446182235258843,
+            "primary": 0.5703415572745743
+          },
+          "stoppedAtBudget": true,
+          "archiveNote": "Engine stops during a generation. Complete evaluation list is candidates/callbacks; archive may omit final partial generation scores.",
+          "reused": false
+        },
+        "candidate": {
+          "candidates": [
+            {
+              "rate": 0.4,
+              "primary": 0.5579711348127312
+            },
+            {
+              "rate": 0.4960491476461166,
+              "primary": 0.5275280642808772
+            },
+            {
+              "rate": 0.4934034248510588,
+              "primary": 0.5578168138250768
+            },
+            {
+              "rate": 0.5230748914092397,
+              "primary": 0.5473187542324321
+            },
+            {
+              "rate": 0.5365112095655615,
+              "primary": 0.5267465294056363
+            },
+            {
+              "rate": 0.2886543484724466,
+              "primary": 0.5579460657915298
+            },
+            {
+              "rate": 0.4425392396413462,
+              "primary": 0.544649717403761
+            }
+          ],
+          "callbacks": [
+            {
+              "variantId": "baseline",
+              "rate": 0.4,
+              "primary": 0.5579711348127312
+            },
+            {
+              "variantId": "g1_v0",
+              "rate": 0.4960491476461166,
+              "primary": 0.5275280642808772
+            },
+            {
+              "variantId": "g1_v1",
+              "rate": 0.4934034248510588,
+              "primary": 0.5578168138250768
+            },
+            {
+              "variantId": "g2_v0",
+              "rate": 0.5230748914092397,
+              "primary": 0.5473187542324321
+            },
+            {
+              "variantId": "g2_v1",
+              "rate": 0.5365112095655615,
+              "primary": 0.5267465294056363
+            },
+            {
+              "variantId": "g2_v2",
+              "rate": 0.2886543484724466,
+              "primary": 0.5579460657915298
+            },
+            {
+              "variantId": "g2_v3",
+              "rate": 0.4425392396413462,
+              "primary": 0.544649717403761
+            }
+          ],
+          "winner": {
+            "rate": 0.4,
+            "primary": 0.5579711348127312
+          },
+          "stoppedAtBudget": true,
+          "archiveNote": "Engine stops during a generation. Complete evaluation list is candidates/callbacks; archive may omit final partial generation scores.",
+          "reused": false
+        },
+        "random": {
+          "candidates": [
+            {
+              "rate": 0.4,
+              "primary": 0.5579711348127312
+            },
+            {
+              "rate": 0.2358905345949251,
+              "primary": 0.5651216661457519
+            },
+            {
+              "rate": 0.09917729102705874,
+              "primary": 0.5829209967703287
+            },
+            {
+              "rate": 0.7716468761464531,
+              "primary": 0.5442342879095692
+            },
+            {
+              "rate": 0.40895369074432386,
+              "primary": 0.5485196254623119
+            },
+            {
+              "rate": 0.8205795583991223,
+              "primary": 0.5120319906756263
+            },
+            {
+              "rate": 0.06652148467752819,
+              "primary": 0.5693921901859665
+            }
+          ],
+          "winner": {
+            "rate": 0.09917729102705874,
+            "primary": 0.5829209967703287
+          }
+        }
+      },
+      "rates": {
+        "incumbent": 0.15446182235258843,
+        "candidate": 0.4,
+        "random": 0.09917729102705874,
+        "anchor": 0.4
+      },
+      "confirmation": {
+        "incumbent": {
+          "primary": 0.5623188162484594,
+          "familyMeans": {
+            "compact_noisy": 0.5953731377298537,
+            "wide_sparse": 0.5292644947670649
+          }
+        },
+        "candidate": {
+          "primary": 0.5681344263185225,
+          "familyMeans": {
+            "compact_noisy": 0.6048532973902172,
+            "wide_sparse": 0.5314155552468278
+          }
+        },
+        "random": {
+          "primary": 0.5789658148426337,
+          "familyMeans": {
+            "compact_noisy": 0.6058682671771631,
+            "wide_sparse": 0.5520633625081042
+          }
+        },
+        "anchor": {
+          "primary": 0.5681344263185225,
+          "familyMeans": {
+            "compact_noisy": 0.6048532973902172,
+            "wide_sparse": 0.5314155552468278
+          }
+        }
+      },
+      "uniqueDiscoveryBudgetPerSearch": 7,
+      "discoveryFitsPerSearch": 28,
+      "confirmationFitsPerArm": 8
+    },
+    {
+      "split": 32101,
+      "searches": {
+        "incumbent": {
+          "candidates": [
+            {
+              "rate": 0.4,
+              "primary": 0.4891686112045038
+            },
+            {
+              "rate": 1,
+              "primary": 0.4836514035449528
+            },
+            {
+              "rate": 0.2504780367712564,
+              "primary": 0.4743364125885188
+            },
+            {
+              "rate": 0.05,
+              "primary": 0.5002563187397748
+            },
+            {
+              "rate": 0.31243722165251153,
+              "primary": 0.4847117558925276
+            },
+            {
+              "rate": 0.8937948197644094,
+              "primary": 0.45749522012974875
+            },
+            {
+              "rate": 0.5121460888919673,
+              "primary": 0.4928587861329229
+            }
+          ],
+          "callbacks": [
+            {
+              "variantId": "baseline",
+              "rate": 0.4,
+              "primary": 0.4891686112045038
+            },
+            {
+              "variantId": "g1_v0",
+              "rate": 1,
+              "primary": 0.4836514035449528
+            },
+            {
+              "variantId": "g1_v1",
+              "rate": 0.2504780367712564,
+              "primary": 0.4743364125885188
+            },
+            {
+              "variantId": "g2_v0",
+              "rate": 0.05,
+              "primary": 0.5002563187397748
+            },
+            {
+              "variantId": "g2_v1",
+              "rate": 0.31243722165251153,
+              "primary": 0.4847117558925276
+            },
+            {
+              "variantId": "g2_v2",
+              "rate": 0.8937948197644094,
+              "primary": 0.45749522012974875
+            },
+            {
+              "variantId": "g2_v3",
+              "rate": 0.5121460888919673,
+              "primary": 0.4928587861329229
+            }
+          ],
+          "winner": {
+            "rate": 0.05,
+            "primary": 0.5002563187397748
+          },
+          "stoppedAtBudget": true,
+          "archiveNote": "Engine stops during a generation. Complete evaluation list is candidates/callbacks; archive may omit final partial generation scores.",
+          "reused": false
+        },
+        "candidate": {
+          "candidates": [
+            {
+              "rate": 0.4,
+              "primary": 0.4891686112045038
+            },
+            {
+              "rate": 0.9250177629804786,
+              "primary": 0.46080409586355064
+            },
+            {
+              "rate": 0.3406908312983768,
+              "primary": 0.47937528584996586
+            },
+            {
+              "rate": 0.17995417541410064,
+              "primary": 0.49428189917541326
+            },
+            {
+              "rate": 0.3675127170853576,
+              "primary": 0.4838130985643466
+            },
+            {
+              "rate": 0.3278249387848483,
+              "primary": 0.4825391845221081
+            },
+            {
+              "rate": 0.2708470160388396,
+              "primary": 0.49722884239127907
+            }
+          ],
+          "callbacks": [
+            {
+              "variantId": "baseline",
+              "rate": 0.4,
+              "primary": 0.4891686112045038
+            },
+            {
+              "variantId": "g1_v0",
+              "rate": 0.9250177629804786,
+              "primary": 0.46080409586355064
+            },
+            {
+              "variantId": "g1_v1",
+              "rate": 0.3406908312983768,
+              "primary": 0.47937528584996586
+            },
+            {
+              "variantId": "g2_v0",
+              "rate": 0.17995417541410064,
+              "primary": 0.49428189917541326
+            },
+            {
+              "variantId": "g2_v1",
+              "rate": 0.3675127170853576,
+              "primary": 0.4838130985643466
+            },
+            {
+              "variantId": "g2_v2",
+              "rate": 0.3278249387848483,
+              "primary": 0.4825391845221081
+            },
+            {
+              "variantId": "g2_v3",
+              "rate": 0.2708470160388396,
+              "primary": 0.49722884239127907
+            }
+          ],
+          "winner": {
+            "rate": 0.2708470160388396,
+            "primary": 0.49722884239127907
+          },
+          "stoppedAtBudget": true,
+          "archiveNote": "Engine stops during a generation. Complete evaluation list is candidates/callbacks; archive may omit final partial generation scores.",
+          "reused": false
+        },
+        "random": {
+          "candidates": [
+            {
+              "rate": 0.4,
+              "primary": 0.4891686112045038
+            },
+            {
+              "rate": 0.264930676148146,
+              "primary": 0.4826866905314072
+            },
+            {
+              "rate": 0.12245434519423044,
+              "primary": 0.48880937331483393
+            },
+            {
+              "rate": 0.15810622189280765,
+              "primary": 0.4921685569781348
+            },
+            {
+              "rate": 0.16729940148052602,
+              "primary": 0.49409388929611137
+            },
+            {
+              "rate": 0.28468870039664124,
+              "primary": 0.48583464112022107
+            },
+            {
+              "rate": 0.6701451375469184,
+              "primary": 0.46436899837194967
+            }
+          ],
+          "winner": {
+            "rate": 0.16729940148052602,
+            "primary": 0.49409388929611137
+          }
+        }
+      },
+      "rates": {
+        "incumbent": 0.05,
+        "candidate": 0.2708470160388396,
+        "random": 0.16729940148052602,
+        "anchor": 0.4
+      },
+      "confirmation": {
+        "incumbent": {
+          "primary": 0.5408265185218911,
+          "familyMeans": {
+            "compact_noisy": 0.5474812184830709,
+            "wide_sparse": 0.5341718185607114
+          }
+        },
+        "candidate": {
+          "primary": 0.5028865768110262,
+          "familyMeans": {
+            "compact_noisy": 0.5211356385715755,
+            "wide_sparse": 0.484637515050477
+          }
+        },
+        "random": {
+          "primary": 0.5172367059844875,
+          "familyMeans": {
+            "compact_noisy": 0.5251620870639087,
+            "wide_sparse": 0.5093113249050663
+          }
+        },
+        "anchor": {
+          "primary": 0.5086726051641133,
+          "familyMeans": {
+            "compact_noisy": 0.5130827415869095,
+            "wide_sparse": 0.5042624687413171
+          }
+        }
+      },
+      "uniqueDiscoveryBudgetPerSearch": 7,
+      "discoveryFitsPerSearch": 28,
+      "confirmationFitsPerArm": 8
+    },
+    {
+      "split": 32201,
+      "searches": {
+        "incumbent": {
+          "candidates": [
+            {
+              "rate": 0.4,
+              "primary": 0.599993293937547
+            },
+            {
+              "rate": 0.06531505416565815,
+              "primary": 0.5897809704194832
+            },
+            {
+              "rate": 0.07224414971560952,
+              "primary": 0.5897025374459747
+            },
+            {
+              "rate": 0.23026671283526243,
+              "primary": 0.5981094422046849
+            },
+            {
+              "rate": 0.05,
+              "primary": 0.5938606200650332
+            },
+            {
+              "rate": 0.07388599553688883,
+              "primary": 0.5960450605096949
+            },
+            {
+              "rate": 0.07960653561969103,
+              "primary": 0.5908103133965705
+            }
+          ],
+          "callbacks": [
+            {
+              "variantId": "baseline",
+              "rate": 0.4,
+              "primary": 0.599993293937547
+            },
+            {
+              "variantId": "g1_v0",
+              "rate": 0.06531505416565815,
+              "primary": 0.5897809704194832
+            },
+            {
+              "variantId": "g1_v1",
+              "rate": 0.07224414971560952,
+              "primary": 0.5897025374459747
+            },
+            {
+              "variantId": "g2_v0",
+              "rate": 0.23026671283526243,
+              "primary": 0.5981094422046849
+            },
+            {
+              "variantId": "g2_v1",
+              "rate": 0.05,
+              "primary": 0.5938606200650332
+            },
+            {
+              "variantId": "g2_v2",
+              "rate": 0.07388599553688883,
+              "primary": 0.5960450605096949
+            },
+            {
+              "variantId": "g2_v3",
+              "rate": 0.07960653561969103,
+              "primary": 0.5908103133965705
+            }
+          ],
+          "winner": {
+            "rate": 0.4,
+            "primary": 0.599993293937547
+          },
+          "stoppedAtBudget": true,
+          "archiveNote": "Engine stops during a generation. Complete evaluation list is candidates/callbacks; archive may omit final partial generation scores.",
+          "reused": false
+        },
+        "candidate": {
+          "candidates": [
+            {
+              "rate": 0.4,
+              "primary": 0.599993293937547
+            },
+            {
+              "rate": 0.21488960544403957,
+              "primary": 0.5950851984150298
+            },
+            {
+              "rate": 0.22244820954337444,
+              "primary": 0.590861006512042
+            },
+            {
+              "rate": 0.3310037880097514,
+              "primary": 0.5896929595407602
+            },
+            {
+              "rate": 0.19510088717404966,
+              "primary": 0.6083947264411032
+            },
+            {
+              "rate": 0.22416871900563343,
+              "primary": 0.5980863277444783
+            },
+            {
+              "rate": 0.22997413049132878,
+              "primary": 0.5955655657139718
+            }
+          ],
+          "callbacks": [
+            {
+              "variantId": "baseline",
+              "rate": 0.4,
+              "primary": 0.599993293937547
+            },
+            {
+              "variantId": "g1_v0",
+              "rate": 0.21488960544403957,
+              "primary": 0.5950851984150298
+            },
+            {
+              "variantId": "g1_v1",
+              "rate": 0.22244820954337444,
+              "primary": 0.590861006512042
+            },
+            {
+              "variantId": "g2_v0",
+              "rate": 0.3310037880097514,
+              "primary": 0.5896929595407602
+            },
+            {
+              "variantId": "g2_v1",
+              "rate": 0.19510088717404966,
+              "primary": 0.6083947264411032
+            },
+            {
+              "variantId": "g2_v2",
+              "rate": 0.22416871900563343,
+              "primary": 0.5980863277444783
+            },
+            {
+              "variantId": "g2_v3",
+              "rate": 0.22997413049132878,
+              "primary": 0.5955655657139718
+            }
+          ],
+          "winner": {
+            "rate": 0.19510088717404966,
+            "primary": 0.6083947264411032
+          },
+          "stoppedAtBudget": true,
+          "archiveNote": "Engine stops during a generation. Complete evaluation list is candidates/callbacks; archive may omit final partial generation scores.",
+          "reused": false
+        },
+        "random": {
+          "candidates": [
+            {
+              "rate": 0.4,
+              "primary": 0.599993293937547
+            },
+            {
+              "rate": 0.29754590740506903,
+              "primary": 0.6010160256108253
+            },
+            {
+              "rate": 0.15119455776279084,
+              "primary": 0.5886876895561866
+            },
+            {
+              "rate": 0.6479019918036542,
+              "primary": 0.5780962482824759
+            },
+            {
+              "rate": 0.06844073147940088,
+              "primary": 0.5867160842177123
+            },
+            {
+              "rate": 0.09876879737492522,
+              "primary": 0.5961132689124358
+            },
+            {
+              "rate": 0.3375559847730582,
+              "primary": 0.5968946652455638
+            }
+          ],
+          "winner": {
+            "rate": 0.29754590740506903,
+            "primary": 0.6010160256108253
+          }
+        }
+      },
+      "rates": {
+        "incumbent": 0.4,
+        "candidate": 0.19510088717404966,
+        "random": 0.29754590740506903,
+        "anchor": 0.4
+      },
+      "confirmation": {
+        "incumbent": {
+          "primary": 0.5827562597044611,
+          "familyMeans": {
+            "compact_noisy": 0.5936010509454602,
+            "wide_sparse": 0.5719114684634621
+          }
+        },
+        "candidate": {
+          "primary": 0.6010097518422817,
+          "familyMeans": {
+            "compact_noisy": 0.6124321182997343,
+            "wide_sparse": 0.5895873853848291
+          }
+        },
+        "random": {
+          "primary": 0.5869341185656048,
+          "familyMeans": {
+            "compact_noisy": 0.5945797194874198,
+            "wide_sparse": 0.5792885176437899
+          }
+        },
+        "anchor": {
+          "primary": 0.5827562597044611,
+          "familyMeans": {
+            "compact_noisy": 0.5936010509454602,
+            "wide_sparse": 0.5719114684634621
+          }
+        }
+      },
+      "uniqueDiscoveryBudgetPerSearch": 7,
+      "discoveryFitsPerSearch": 28,
+      "confirmationFitsPerArm": 8
+    },
+    {
+      "split": 32301,
+      "searches": {
+        "incumbent": {
+          "candidates": [
+            {
+              "rate": 0.4,
+              "primary": 0.5206949344177857
+            },
+            {
+              "rate": 0.2799112438607755,
+              "primary": 0.4916791155517769
+            },
+            {
+              "rate": 0.8861958577920983,
+              "primary": 0.4693610035731497
+            },
+            {
+              "rate": 0.172175876698691,
+              "primary": 0.5135081268837559
+            },
+            {
+              "rate": 0.1780417281034335,
+              "primary": 0.5292643089587071
+            },
+            {
+              "rate": 1,
+              "primary": 0.48395825329280995
+            },
+            {
+              "rate": 0.9032239803367826,
+              "primary": 0.4733060396248087
+            }
+          ],
+          "callbacks": [
+            {
+              "variantId": "baseline",
+              "rate": 0.4,
+              "primary": 0.5206949344177857
+            },
+            {
+              "variantId": "g1_v0",
+              "rate": 0.2799112438607755,
+              "primary": 0.4916791155517769
+            },
+            {
+              "variantId": "g1_v1",
+              "rate": 0.8861958577920983,
+              "primary": 0.4693610035731497
+            },
+            {
+              "variantId": "g2_v0",
+              "rate": 0.172175876698691,
+              "primary": 0.5135081268837559
+            },
+            {
+              "variantId": "g2_v1",
+              "rate": 0.1780417281034335,
+              "primary": 0.5292643089587071
+            },
+            {
+              "variantId": "g2_v2",
+              "rate": 1,
+              "primary": 0.48395825329280995
+            },
+            {
+              "variantId": "g2_v3",
+              "rate": 0.9032239803367826,
+              "primary": 0.4733060396248087
+            }
+          ],
+          "winner": {
+            "rate": 0.1780417281034335,
+            "primary": 0.5292643089587071
+          },
+          "stoppedAtBudget": true,
+          "archiveNote": "Engine stops during a generation. Complete evaluation list is candidates/callbacks; archive may omit final partial generation scores.",
+          "reused": false
+        },
+        "candidate": {
+          "candidates": [
+            {
+              "rate": 0.4,
+              "primary": 0.5206949344177857
+            },
+            {
+              "rate": 0.35391872510844,
+              "primary": 0.5102420939423309
+            },
+            {
+              "rate": 0.5254201861846101,
+              "primary": 0.49243491028776676
+            },
+            {
+              "rate": 0.2996016580410319,
+              "primary": 0.5052954092867765
+            },
+            {
+              "rate": 0.30306278632991424,
+              "primary": 0.5105235809606816
+            },
+            {
+              "rate": 0.739046880530298,
+              "primary": 0.4709283965723833
+            },
+            {
+              "rate": 0.5288600031592847,
+              "primary": 0.4928043060987976
+            }
+          ],
+          "callbacks": [
+            {
+              "variantId": "baseline",
+              "rate": 0.4,
+              "primary": 0.5206949344177857
+            },
+            {
+              "variantId": "g1_v0",
+              "rate": 0.35391872510844,
+              "primary": 0.5102420939423309
+            },
+            {
+              "variantId": "g1_v1",
+              "rate": 0.5254201861846101,
+              "primary": 0.49243491028776676
+            },
+            {
+              "variantId": "g2_v0",
+              "rate": 0.2996016580410319,
+              "primary": 0.5052954092867765
+            },
+            {
+              "variantId": "g2_v1",
+              "rate": 0.30306278632991424,
+              "primary": 0.5105235809606816
+            },
+            {
+              "variantId": "g2_v2",
+              "rate": 0.739046880530298,
+              "primary": 0.4709283965723833
+            },
+            {
+              "variantId": "g2_v3",
+              "rate": 0.5288600031592847,
+              "primary": 0.4928043060987976
+            }
+          ],
+          "winner": {
+            "rate": 0.4,
+            "primary": 0.5206949344177857
+          },
+          "stoppedAtBudget": true,
+          "archiveNote": "Engine stops during a generation. Complete evaluation list is candidates/callbacks; archive may omit final partial generation scores.",
+          "reused": false
+        },
+        "random": {
+          "candidates": [
+            {
+              "rate": 0.4,
+              "primary": 0.5206949344177857
+            },
+            {
+              "rate": 0.3341763524734259,
+              "primary": 0.5082046582968907
+            },
+            {
+              "rate": 0.18668013993972143,
+              "primary": 0.5104143896896899
+            },
+            {
+              "rate": 0.13275157231564907,
+              "primary": 0.5146331489388782
+            },
+            {
+              "rate": 0.5599701713195547,
+              "primary": 0.4873523609667523
+            },
+            {
+              "rate": 0.6853292962662405,
+              "primary": 0.48477049446396636
+            },
+            {
+              "rate": 0.17002890340024523,
+              "primary": 0.5292912291814378
+            }
+          ],
+          "winner": {
+            "rate": 0.17002890340024523,
+            "primary": 0.5292912291814378
+          }
+        }
+      },
+      "rates": {
+        "incumbent": 0.1780417281034335,
+        "candidate": 0.4,
+        "random": 0.17002890340024523,
+        "anchor": 0.4
+      },
+      "confirmation": {
+        "incumbent": {
+          "primary": 0.5400389514413774,
+          "familyMeans": {
+            "compact_noisy": 0.6266447882481638,
+            "wide_sparse": 0.45343311463459085
+          }
+        },
+        "candidate": {
+          "primary": 0.5167315875601832,
+          "familyMeans": {
+            "compact_noisy": 0.6003895465437307,
+            "wide_sparse": 0.43307362857663567
+          }
+        },
+        "random": {
+          "primary": 0.5374882947271155,
+          "familyMeans": {
+            "compact_noisy": 0.6256799565036203,
+            "wide_sparse": 0.44929663295061056
+          }
+        },
+        "anchor": {
+          "primary": 0.5167315875601832,
+          "familyMeans": {
+            "compact_noisy": 0.6003895465437307,
+            "wide_sparse": 0.43307362857663567
+          }
+        }
+      },
+      "uniqueDiscoveryBudgetPerSearch": 7,
+      "discoveryFitsPerSearch": 28,
+      "confirmationFitsPerArm": 8
+    },
+    {
+      "split": 32401,
+      "searches": {
+        "incumbent": {
+          "candidates": [
+            {
+              "rate": 0.4,
+              "primary": 0.5119496479016653
+            },
+            {
+              "rate": 0.05515212341413598,
+              "primary": 0.5542971330363815
+            },
+            {
+              "rate": 0.7120358136786873,
+              "primary": 0.4974695566213103
+            },
+            {
+              "rate": 0.05,
+              "primary": 0.5480639137745442
+            },
+            {
+              "rate": 0.05324112532968898,
+              "primary": 0.5388439708491546
+            },
+            {
+              "rate": 0.11149882081760072,
+              "primary": 0.541115649629513
+            },
+            {
+              "rate": 0.14266929093832778,
+              "primary": 0.5336613874875646
+            }
+          ],
+          "callbacks": [
+            {
+              "variantId": "baseline",
+              "rate": 0.4,
+              "primary": 0.5119496479016653
+            },
+            {
+              "variantId": "g1_v0",
+              "rate": 0.05515212341413598,
+              "primary": 0.5542971330363815
+            },
+            {
+              "variantId": "g1_v1",
+              "rate": 0.7120358136786873,
+              "primary": 0.4974695566213103
+            },
+            {
+              "variantId": "g2_v0",
+              "rate": 0.05,
+              "primary": 0.5480639137745442
+            },
+            {
+              "variantId": "g2_v1",
+              "rate": 0.05,
+              "primary": 0.5480639137745442
+            },
+            {
+              "variantId": "g3_v0",
+              "rate": 0.05,
+              "primary": 0.5480639137745442
+            },
+            {
+              "variantId": "g3_v1",
+              "rate": 0.05,
+              "primary": 0.5480639137745442
+            },
+            {
+              "variantId": "g3_v2",
+              "rate": 0.05,
+              "primary": 0.5480639137745442
+            },
+            {
+              "variantId": "g3_v3",
+              "rate": 0.05324112532968898,
+              "primary": 0.5388439708491546
+            },
+            {
+              "variantId": "g4_v0",
+              "rate": 0.05,
+              "primary": 0.5480639137745442
+            },
+            {
+              "variantId": "g4_v1",
+              "rate": 0.11149882081760072,
+              "primary": 0.541115649629513
+            },
+            {
+              "variantId": "g4_v2",
+              "rate": 0.14266929093832778,
+              "primary": 0.5336613874875646
+            }
+          ],
+          "winner": {
+            "rate": 0.05515212341413598,
+            "primary": 0.5542971330363815
+          },
+          "stoppedAtBudget": true,
+          "archiveNote": "Engine stops during a generation. Complete evaluation list is candidates/callbacks; archive may omit final partial generation scores.",
+          "reused": false
+        },
+        "candidate": {
+          "candidates": [
+            {
+              "rate": 0.4,
+              "primary": 0.5119496479016653
+            },
+            {
+              "rate": 0.20278330180615015,
+              "primary": 0.5304518796029724
+            },
+            {
+              "rate": 0.48744516548009176,
+              "primary": 0.5025523120001891
+            },
+            {
+              "rate": 0.1303500711407611,
+              "primary": 0.5421048992518498
+            },
+            {
+              "rate": 0.16092639040473186,
+              "primary": 0.5200199949242295
+            },
+            {
+              "rate": 0.11996288630143068,
+              "primary": 0.5306178366807279
+            },
+            {
+              "rate": 0.08869353475211009,
+              "primary": 0.5462981607121945
+            }
+          ],
+          "callbacks": [
+            {
+              "variantId": "baseline",
+              "rate": 0.4,
+              "primary": 0.5119496479016653
+            },
+            {
+              "variantId": "g1_v0",
+              "rate": 0.20278330180615015,
+              "primary": 0.5304518796029724
+            },
+            {
+              "variantId": "g1_v1",
+              "rate": 0.48744516548009176,
+              "primary": 0.5025523120001891
+            },
+            {
+              "variantId": "g2_v0",
+              "rate": 0.1303500711407611,
+              "primary": 0.5421048992518498
+            },
+            {
+              "variantId": "g2_v1",
+              "rate": 0.16092639040473186,
+              "primary": 0.5200199949242295
+            },
+            {
+              "variantId": "g3_v0",
+              "rate": 0.11996288630143068,
+              "primary": 0.5306178366807279
+            },
+            {
+              "variantId": "g3_v1",
+              "rate": 0.08869353475211009,
+              "primary": 0.5462981607121945
+            }
+          ],
+          "winner": {
+            "rate": 0.08869353475211009,
+            "primary": 0.5462981607121945
+          },
+          "stoppedAtBudget": true,
+          "archiveNote": "Engine stops during a generation. Complete evaluation list is candidates/callbacks; archive may omit final partial generation scores.",
+          "reused": false
+        },
+        "random": {
+          "candidates": [
+            {
+              "rate": 0.4,
+              "primary": 0.5119496479016653
+            },
+            {
+              "rate": 0.37531631850144864,
+              "primary": 0.528083343919163
+            },
+            {
+              "rate": 0.2304942397635061,
+              "primary": 0.523249516105825
+            },
+            {
+              "rate": 0.5440014130290751,
+              "primary": 0.5053768633683515
+            },
+            {
+              "rate": 0.22907893150004388,
+              "primary": 0.5180110889649983
+            },
+            {
+              "rate": 0.2377654972034816,
+              "primary": 0.5241345872607648
+            },
+            {
+              "rate": 0.08564454281836022,
+              "primary": 0.5399596305832408
+            }
+          ],
+          "winner": {
+            "rate": 0.08564454281836022,
+            "primary": 0.5399596305832408
+          }
+        }
+      },
+      "rates": {
+        "incumbent": 0.05515212341413598,
+        "candidate": 0.08869353475211009,
+        "random": 0.08564454281836022,
+        "anchor": 0.4
+      },
+      "confirmation": {
+        "incumbent": {
+          "primary": 0.5782893515180481,
+          "familyMeans": {
+            "compact_noisy": 0.6349830051570557,
+            "wide_sparse": 0.5215956978790405
+          }
+        },
+        "candidate": {
+          "primary": 0.5684134989155016,
+          "familyMeans": {
+            "compact_noisy": 0.6266355094546023,
+            "wide_sparse": 0.5101914883764009
+          }
+        },
+        "random": {
+          "primary": 0.5746292043600723,
+          "familyMeans": {
+            "compact_noisy": 0.624500084648643,
+            "wide_sparse": 0.5247583240715014
+          }
+        },
+        "anchor": {
+          "primary": 0.5500213405964826,
+          "familyMeans": {
+            "compact_noisy": 0.6130292168047091,
+            "wide_sparse": 0.487013464388256
+          }
+        }
+      },
+      "uniqueDiscoveryBudgetPerSearch": 7,
+      "discoveryFitsPerSearch": 28,
+      "confirmationFitsPerArm": 8
+    },
+    {
+      "split": 32501,
+      "searches": {
+        "incumbent": {
+          "candidates": [
+            {
+              "rate": 0.4,
+              "primary": 0.5335715989457259
+            },
+            {
+              "rate": 0.11705180013380218,
+              "primary": 0.5607068549048985
+            },
+            {
+              "rate": 0.9004808334279514,
+              "primary": 0.5209231724885002
+            },
+            {
+              "rate": 0.355999781832243,
+              "primary": 0.5355670401313342
+            },
+            {
+              "rate": 0.4667902011243946,
+              "primary": 0.5492230546997516
+            },
+            {
+              "rate": 0.06372205171412476,
+              "primary": 0.5700965238596096
+            },
+            {
+              "rate": 0.28670802969303144,
+              "primary": 0.5448779758701126
+            }
+          ],
+          "callbacks": [
+            {
+              "variantId": "baseline",
+              "rate": 0.4,
+              "primary": 0.5335715989457259
+            },
+            {
+              "variantId": "g1_v0",
+              "rate": 0.11705180013380218,
+              "primary": 0.5607068549048985
+            },
+            {
+              "variantId": "g1_v1",
+              "rate": 0.9004808334279514,
+              "primary": 0.5209231724885002
+            },
+            {
+              "variantId": "g2_v0",
+              "rate": 0.355999781832243,
+              "primary": 0.5355670401313342
+            },
+            {
+              "variantId": "g2_v1",
+              "rate": 0.4667902011243946,
+              "primary": 0.5492230546997516
+            },
+            {
+              "variantId": "g3_v0",
+              "rate": 0.06372205171412476,
+              "primary": 0.5700965238596096
+            },
+            {
+              "variantId": "g3_v1",
+              "rate": 0.28670802969303144,
+              "primary": 0.5448779758701126
+            }
+          ],
+          "winner": {
+            "rate": 0.06372205171412476,
+            "primary": 0.5700965238596096
+          },
+          "stoppedAtBudget": true,
+          "archiveNote": "Engine stops during a generation. Complete evaluation list is candidates/callbacks; archive may omit final partial generation scores.",
+          "reused": false
+        },
+        "candidate": {
+          "candidates": [
+            {
+              "rate": 0.4,
+              "primary": 0.5335715989457259
+            },
+            {
+              "rate": 0.2624722183835267,
+              "primary": 0.5521452019983267
+            },
+            {
+              "rate": 0.5283087622723115,
+              "primary": 0.5315022238094272
+            },
+            {
+              "rate": 0.38433320039468694,
+              "primary": 0.5405871852400991
+            },
+            {
+              "rate": 0.42174756875996494,
+              "primary": 0.5282118654072863
+            },
+            {
+              "rate": 0.21307807567041337,
+              "primary": 0.5629753435981903
+            },
+            {
+              "rate": 0.35684198372453324,
+              "primary": 0.5272354758672539
+            }
+          ],
+          "callbacks": [
+            {
+              "variantId": "baseline",
+              "rate": 0.4,
+              "primary": 0.5335715989457259
+            },
+            {
+              "variantId": "g1_v0",
+              "rate": 0.2624722183835267,
+              "primary": 0.5521452019983267
+            },
+            {
+              "variantId": "g1_v1",
+              "rate": 0.5283087622723115,
+              "primary": 0.5315022238094272
+            },
+            {
+              "variantId": "g2_v0",
+              "rate": 0.38433320039468694,
+              "primary": 0.5405871852400991
+            },
+            {
+              "variantId": "g2_v1",
+              "rate": 0.42174756875996494,
+              "primary": 0.5282118654072863
+            },
+            {
+              "variantId": "g3_v0",
+              "rate": 0.21307807567041337,
+              "primary": 0.5629753435981903
+            },
+            {
+              "variantId": "g3_v1",
+              "rate": 0.35684198372453324,
+              "primary": 0.5272354758672539
+            }
+          ],
+          "winner": {
+            "rate": 0.21307807567041337,
+            "primary": 0.5629753435981903
+          },
+          "stoppedAtBudget": true,
+          "archiveNote": "Engine stops during a generation. Complete evaluation list is candidates/callbacks; archive may omit final partial generation scores.",
+          "reused": false
+        },
+        "random": {
+          "candidates": [
+            {
+              "rate": 0.4,
+              "primary": 0.5335715989457259
+            },
+            {
+              "rate": 0.42152096607339196,
+              "primary": 0.5387581156278138
+            },
+            {
+              "rate": 0.2845915724153164,
+              "primary": 0.5542861521604653
+            },
+            {
+              "rate": 0.11146291234651709,
+              "primary": 0.5699600762066837
+            },
+            {
+              "rate": 0.09371420040739098,
+              "primary": 0.5722840826099689
+            },
+            {
+              "rate": 0.08248944262037908,
+              "primary": 0.5782910019919959
+            },
+            {
+              "rate": 0.8627930390516599,
+              "primary": 0.5107726655747142
+            }
+          ],
+          "winner": {
+            "rate": 0.08248944262037908,
+            "primary": 0.5782910019919959
+          }
+        }
+      },
+      "rates": {
+        "incumbent": 0.06372205171412476,
+        "candidate": 0.21307807567041337,
+        "random": 0.08248944262037908,
+        "anchor": 0.4
+      },
+      "confirmation": {
+        "incumbent": {
+          "primary": 0.5488542508066501,
+          "familyMeans": {
+            "compact_noisy": 0.6104507564062982,
+            "wide_sparse": 0.48725774520700194
+          }
+        },
+        "candidate": {
+          "primary": 0.5324858335289928,
+          "familyMeans": {
+            "compact_noisy": 0.605601008541731,
+            "wide_sparse": 0.4593706585162546
+          }
+        },
+        "random": {
+          "primary": 0.5452178545820462,
+          "familyMeans": {
+            "compact_noisy": 0.6082638674488011,
+            "wide_sparse": 0.4821718417152912
+          }
+        },
+        "anchor": {
+          "primary": 0.5270552431694847,
+          "familyMeans": {
+            "compact_noisy": 0.5938046722239374,
+            "wide_sparse": 0.46030581411503196
+          }
+        }
+      },
+      "uniqueDiscoveryBudgetPerSearch": 7,
+      "discoveryFitsPerSearch": 28,
+      "confirmationFitsPerArm": 8
+    },
+    {
+      "split": 32601,
+      "searches": {
+        "incumbent": {
+          "candidates": [
+            {
+              "rate": 0.4,
+              "primary": 0.5208351430541792
+            },
+            {
+              "rate": 1,
+              "primary": 0.4737840533061004
+            },
+            {
+              "rate": 0.05637788979532247,
+              "primary": 0.5221666191918134
+            },
+            {
+              "rate": 0.3595225894703964,
+              "primary": 0.5289513926067991
+            },
+            {
+              "rate": 0.3504608431930436,
+              "primary": 0.5044568758039303
+            },
+            {
+              "rate": 0.2571376405480292,
+              "primary": 0.5314729819357205
+            },
+            {
+              "rate": 0.05,
+              "primary": 0.531614429955962
+            }
+          ],
+          "callbacks": [
+            {
+              "variantId": "baseline",
+              "rate": 0.4,
+              "primary": 0.5208351430541792
+            },
+            {
+              "variantId": "g1_v0",
+              "rate": 1,
+              "primary": 0.4737840533061004
+            },
+            {
+              "variantId": "g1_v1",
+              "rate": 1,
+              "primary": 0.4737840533061004
+            },
+            {
+              "variantId": "g2_v0",
+              "rate": 0.05637788979532247,
+              "primary": 0.5221666191918134
+            },
+            {
+              "variantId": "g2_v1",
+              "rate": 0.3595225894703964,
+              "primary": 0.5289513926067991
+            },
+            {
+              "variantId": "g2_v2",
+              "rate": 0.3504608431930436,
+              "primary": 0.5044568758039303
+            },
+            {
+              "variantId": "g2_v3",
+              "rate": 0.2571376405480292,
+              "primary": 0.5314729819357205
+            },
+            {
+              "variantId": "g3_v0",
+              "rate": 0.05,
+              "primary": 0.531614429955962
+            },
+            {
+              "variantId": "g3_v1",
+              "rate": 0.05,
+              "primary": 0.531614429955962
+            }
+          ],
+          "winner": {
+            "rate": 0.05,
+            "primary": 0.531614429955962
+          },
+          "stoppedAtBudget": true,
+          "archiveNote": "Engine stops during a generation. Complete evaluation list is candidates/callbacks; archive may omit final partial generation scores.",
+          "reused": false
+        },
+        "candidate": {
+          "candidates": [
+            {
+              "rate": 0.4,
+              "primary": 0.5208351430541792
+            },
+            {
+              "rate": 1,
+              "primary": 0.4737840533061004
+            },
+            {
+              "rate": 0.6752098440183195,
+              "primary": 0.49565095191823316
+            },
+            {
+              "rate": 0.20431737616494128,
+              "primary": 0.5292729239609386
+            },
+            {
+              "rate": 0.3856329318617189,
+              "primary": 0.516767816631134
+            },
+            {
+              "rate": 0.42384771569955476,
+              "primary": 0.5079966971997236
+            },
+            {
+              "rate": 0.17251618234121496,
+              "primary": 0.5160809893773911
+            }
+          ],
+          "callbacks": [
+            {
+              "variantId": "baseline",
+              "rate": 0.4,
+              "primary": 0.5208351430541792
+            },
+            {
+              "variantId": "g1_v0",
+              "rate": 1,
+              "primary": 0.4737840533061004
+            },
+            {
+              "variantId": "g1_v1",
+              "rate": 0.6752098440183195,
+              "primary": 0.49565095191823316
+            },
+            {
+              "variantId": "g2_v0",
+              "rate": 0.20431737616494128,
+              "primary": 0.5292729239609386
+            },
+            {
+              "variantId": "g2_v1",
+              "rate": 0.3856329318617189,
+              "primary": 0.516767816631134
+            },
+            {
+              "variantId": "g2_v2",
+              "rate": 1,
+              "primary": 0.4737840533061004
+            },
+            {
+              "variantId": "g2_v3",
+              "rate": 0.42384771569955476,
+              "primary": 0.5079966971997236
+            },
+            {
+              "variantId": "g3_v0",
+              "rate": 0.17251618234121496,
+              "primary": 0.5160809893773911
+            }
+          ],
+          "winner": {
+            "rate": 0.20431737616494128,
+            "primary": 0.5292729239609386
+          },
+          "stoppedAtBudget": true,
+          "archiveNote": "Engine stops during a generation. Complete evaluation list is candidates/callbacks; archive may omit final partial generation scores.",
+          "reused": false
+        },
+        "random": {
+          "candidates": [
+            {
+              "rate": 0.4,
+              "primary": 0.5208351430541792
+            },
+            {
+              "rate": 0.47341380078777406,
+              "primary": 0.5320367137803722
+            },
+            {
+              "rate": 0.35138562756675756,
+              "primary": 0.5169634440516131
+            },
+            {
+              "rate": 0.45676281462538537,
+              "primary": 0.4879451153045953
+            },
+            {
+              "rate": 0.7667533020595525,
+              "primary": 0.5243797251489091
+            },
+            {
+              "rate": 0.5723713679110857,
+              "primary": 0.509746349902745
+            },
+            {
+              "rate": 0.4345938478618478,
+              "primary": 0.5010625497736585
+            }
+          ],
+          "winner": {
+            "rate": 0.47341380078777406,
+            "primary": 0.5320367137803722
+          }
+        }
+      },
+      "rates": {
+        "incumbent": 0.05,
+        "candidate": 0.20431737616494128,
+        "random": 0.47341380078777406,
+        "anchor": 0.4
+      },
+      "confirmation": {
+        "incumbent": {
+          "primary": 0.5609805945765154,
+          "familyMeans": {
+            "compact_noisy": 0.5709195224863641,
+            "wide_sparse": 0.5510416666666667
+          }
+        },
+        "candidate": {
+          "primary": 0.5368476317278996,
+          "familyMeans": {
+            "compact_noisy": 0.5643202634557992,
+            "wide_sparse": 0.5093749999999999
+          }
+        },
+        "random": {
+          "primary": 0.5247214932592363,
+          "familyMeans": {
+            "compact_noisy": 0.5286096531851394,
+            "wide_sparse": 0.5208333333333334
+          }
+        },
+        "anchor": {
+          "primary": 0.5319586485026243,
+          "familyMeans": {
+            "compact_noisy": 0.550375630338582,
+            "wide_sparse": 0.5135416666666667
+          }
+        }
+      },
+      "uniqueDiscoveryBudgetPerSearch": 7,
+      "discoveryFitsPerSearch": 28,
+      "confirmationFitsPerArm": 8
+    },
+    {
+      "split": 32701,
+      "searches": {
+        "incumbent": {
+          "candidates": [
+            {
+              "rate": 0.4,
+              "primary": 0.6072916666666667
+            },
+            {
+              "rate": 1,
+              "primary": 0.5708333333333333
+            },
+            {
+              "rate": 0.5517571214955382,
+              "primary": 0.5979166666666667
+            },
+            {
+              "rate": 0.46764207883396386,
+              "primary": 0.6104166666666666
+            },
+            {
+              "rate": 0.17117036392890161,
+              "primary": 0.6364583333333333
+            },
+            {
+              "rate": 0.06646911311257084,
+              "primary": 0.6645833333333333
+            },
+            {
+              "rate": 0.05,
+              "primary": 0.6666666666666666
+            }
+          ],
+          "callbacks": [
+            {
+              "variantId": "baseline",
+              "rate": 0.4,
+              "primary": 0.6072916666666667
+            },
+            {
+              "variantId": "g1_v0",
+              "rate": 1,
+              "primary": 0.5708333333333333
+            },
+            {
+              "variantId": "g1_v1",
+              "rate": 1,
+              "primary": 0.5708333333333333
+            },
+            {
+              "variantId": "g2_v0",
+              "rate": 0.5517571214955382,
+              "primary": 0.5979166666666667
+            },
+            {
+              "variantId": "g2_v1",
+              "rate": 0.46764207883396386,
+              "primary": 0.6104166666666666
+            },
+            {
+              "variantId": "g2_v2",
+              "rate": 1,
+              "primary": 0.5708333333333333
+            },
+            {
+              "variantId": "g2_v3",
+              "rate": 0.17117036392890161,
+              "primary": 0.6364583333333333
+            },
+            {
+              "variantId": "g3_v0",
+              "rate": 0.06646911311257084,
+              "primary": 0.6645833333333333
+            },
+            {
+              "variantId": "g3_v1",
+              "rate": 1,
+              "primary": 0.5708333333333333
+            },
+            {
+              "variantId": "g3_v2",
+              "rate": 0.05,
+              "primary": 0.6666666666666666
+            },
+            {
+              "variantId": "g3_v3",
+              "rate": 0.05,
+              "primary": 0.6666666666666666
+            }
+          ],
+          "winner": {
+            "rate": 0.05,
+            "primary": 0.6666666666666666
+          },
+          "stoppedAtBudget": true,
+          "archiveNote": "Engine stops during a generation. Complete evaluation list is candidates/callbacks; archive may omit final partial generation scores.",
+          "reused": false
+        },
+        "candidate": {
+          "candidates": [
+            {
+              "rate": 0.4,
+              "primary": 0.6072916666666667
+            },
+            {
+              "rate": 0.6754715258992143,
+              "primary": 0.5854166666666667
+            },
+            {
+              "rate": 0.7087103436027009,
+              "primary": 0.5916666666666667
+            },
+            {
+              "rate": 0.4466352589328884,
+              "primary": 0.625
+            },
+            {
+              "rate": 0.4220112996984834,
+              "primary": 0.6166666666666667
+            },
+            {
+              "rate": 0.757103520275651,
+              "primary": 0.59375
+            },
+            {
+              "rate": 0.386940583666201,
+              "primary": 0.6145833333333334
+            }
+          ],
+          "callbacks": [
+            {
+              "variantId": "baseline",
+              "rate": 0.4,
+              "primary": 0.6072916666666667
+            },
+            {
+              "variantId": "g1_v0",
+              "rate": 0.6754715258992143,
+              "primary": 0.5854166666666667
+            },
+            {
+              "variantId": "g1_v1",
+              "rate": 0.7087103436027009,
+              "primary": 0.5916666666666667
+            },
+            {
+              "variantId": "g2_v0",
+              "rate": 0.4466352589328884,
+              "primary": 0.625
+            },
+            {
+              "variantId": "g2_v1",
+              "rate": 0.4220112996984834,
+              "primary": 0.6166666666666667
+            },
+            {
+              "variantId": "g2_v2",
+              "rate": 0.757103520275651,
+              "primary": 0.59375
+            },
+            {
+              "variantId": "g2_v3",
+              "rate": 0.386940583666201,
+              "primary": 0.6145833333333334
+            }
+          ],
+          "winner": {
+            "rate": 0.4466352589328884,
+            "primary": 0.625
+          },
+          "stoppedAtBudget": true,
+          "archiveNote": "Engine stops during a generation. Complete evaluation list is candidates/callbacks; archive may omit final partial generation scores.",
+          "reused": false
+        },
+        "random": {
+          "candidates": [
+            {
+              "rate": 0.4,
+              "primary": 0.6072916666666667
+            },
+            {
+              "rate": 0.5316950871129484,
+              "primary": 0.5916666666666667
+            },
+            {
+              "rate": 0.43385634441871807,
+              "primary": 0.6302083333333333
+            },
+            {
+              "rate": 0.09358820096854543,
+              "primary": 0.6489583333333333
+            },
+            {
+              "rate": 0.3136721135449504,
+              "primary": 0.6291666666666667
+            },
+            {
+              "rate": 0.1985763101298199,
+              "primary": 0.625
+            },
+            {
+              "rate": 0.2189074367208221,
+              "primary": 0.6281249999999999
+            }
+          ],
+          "winner": {
+            "rate": 0.09358820096854543,
+            "primary": 0.6489583333333333
+          }
+        }
+      },
+      "rates": {
+        "incumbent": 0.05,
+        "candidate": 0.4466352589328884,
+        "random": 0.09358820096854543,
+        "anchor": 0.4
+      },
+      "confirmation": {
+        "incumbent": {
+          "primary": 0.6099558944149995,
+          "familyMeans": {
+            "compact_noisy": 0.6250848114288691,
+            "wide_sparse": 0.59482697740113
+          }
+        },
+        "candidate": {
+          "primary": 0.5749915963556624,
+          "familyMeans": {
+            "compact_noisy": 0.6015056063447414,
+            "wide_sparse": 0.5484775863665834
+          }
+        },
+        "random": {
+          "primary": 0.5973100126457513,
+          "familyMeans": {
+            "compact_noisy": 0.6241733734437672,
+            "wide_sparse": 0.5704466518477356
+          }
+        },
+        "anchor": {
+          "primary": 0.5661681997656376,
+          "familyMeans": {
+            "compact_noisy": 0.594068246340574,
+            "wide_sparse": 0.5382681531907012
+          }
+        }
+      },
+      "uniqueDiscoveryBudgetPerSearch": 7,
+      "discoveryFitsPerSearch": 28,
+      "confirmationFitsPerArm": 8
+    }
+  ],
+  "comparisons": [
+    {
+      "control": "incumbent",
+      "gain": -0.015314966771541483,
+      "lower95": -0.03156445678178819,
+      "familyGains": {
+        "compact_noisy": -0.008458162785375506,
+        "wide_sparse": -0.022171770757707494
+      },
+      "pass": false
+    },
+    {
+      "control": "random",
+      "gain": -0.007625324488359675,
+      "lower95": -0.019163637261312632,
+      "familyGains": {
+        "compact_noisy": 4.497455458621347e-06,
+        "wide_sparse": -0.015255146432177985
+      },
+      "pass": false
+    },
+    {
+      "control": "anchor",
+      "gain": 0.006250324034820107,
+      "lower95": -0.000981684345001,
+      "familyGains": {
+        "compact_noisy": 0.009208573303501458,
+        "wide_sparse": 0.0032920747661387556
+      },
+      "pass": false
+    }
+  ],
+  "decision": "HOLD_NO_CONFIRMED_POLICY_GAIN",
+  "executedEvaluations": 180,
+  "seconds": 6.915,
+  "externalCalls": 0,
+  "providerCostUsd": 0,
+  "rsi": "NOT_ESTABLISHED",
+  "signed": false,
+  "promote": false,
+  "limits": "Hand-proposed policy change, not an automatically improved optimizer or LLM weight training. Two synthetic configurations from one generator; limited transfer evidence even if successful.",
+  "verification": {
+    "status": "PASS",
+    "verifiedEvaluations": 180,
+    "verifiedFits": 836,
+    "verifiedPredictions": 200640,
+    "trainingTraceSteps": 53504
+  },
+  "archive": {
+    "file": "policy-evidence-20261012.tar.gz",
+    "bytes": 8886576,
+    "sha256": "0276e28fbff7eeffb6f4d7e9a88cd13e8c908f55ac23dcf945b0f35b6a4654fb"
+  }
+}

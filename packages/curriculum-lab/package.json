@@ -1,0 +1,51 @@
+{
+  "name": "@metaharness/curriculum-lab",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Experimental verifier-grounded curriculum experiments with bounded HF proposals and Vast job dispatch",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.mjs",
+    "./darwin": "./src/darwin.mjs"
+  },
+  "bin": {
+    "metaharness-curriculum": "./src/cli.mjs"
+  },
+  "files": [
+    "src/*.mjs",
+    "examples/*.py",
+    "examples/*.mjs",
+    "examples/*.json",
+    "examples/learning-requirements.txt",
+    "README.md",
+    "DESIGN.md"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.mjs && python3 -m unittest discover -s test -p \"test_*.py\"",
+    "smoke": "python3 examples/local_learning.py",
+    "learning:test": "python3 examples/learning_checks.py && python3 examples/optimizer_checks.py && python3 examples/policy_checks.py && python3 examples/prior_checks.py",
+    "learning:search": "node --experimental-transform-types examples/learning_search.mjs",
+    "lint": "node --check src/index.mjs && node --check src/providers.mjs && node --check src/cli.mjs",
+    "learning:compare": "node --experimental-transform-types examples/optimizer_comparison.mjs",
+    "learning:policy": "node --experimental-transform-types examples/policy_search.mjs",
+    "learning:prior": "python3 examples/learned_prior.py",
+    "agent:test": "python3 examples/agent_task_checks.py && python3 examples/agent_experiment_checks.py"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/metaharness.git",
+    "directory": "packages/curriculum-lab"
+  },
+  "peerDependencies": {
+    "@metaharness/darwin": "0.10.3"
+  },
+  "peerDependenciesMeta": {
+    "@metaharness/darwin": {
+      "optional": true
+    }
+  }
+}
