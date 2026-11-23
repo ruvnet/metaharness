@@ -54,15 +54,69 @@ describe('buildThreatModel — mcpInUse / scanMcp detection-surface consistency'
     // discarded by formatThreatModel's early "mcp is off" return.
     expect(tm.findings.some((f) => f.id === 'no-policy')).toBe(true);
     expect(tm.worst).toBe('high');
-    // NOTE (disclosed, not fixed tonight): tm.verdict/tm.exitCode are derived
-    // from a separate boolean grid (shellAccess/policyDefaultDeny/secretsReachable/
-    // networkAccess/fileWrite/auditLog) that does not itself consider
-    // tm.worst/tm.findings severity, so a HIGH scanMcp finding like
-    // 'no-policy' can coexist with verdict:'clean' here. That is a real,
-    // narrower, separate gap from tonight's mcpInUse/scanMcp consistency fix
-    // — see the PR/gist for why it's out of scope for this diff.
-    expect(tm.verdict).toBe('clean');
-    expect(tm.exitCode).toBe(0);
+    // FIXED (Dream Cycle 2026-11-23): tm.verdict/tm.exitCode used to be
+    // derived from a separate boolean grid (shellAccess/policyDefaultDeny/
+    // secretsReachable/networkAccess/fileWrite/auditLog) that never
+    // consulted tm.worst/tm.findings severity at all, so this exact HIGH
+    // scanMcp finding ('no-policy' — MCP enabled, zero governance file)
+    // coexisted with verdict:'clean'/exitCode:0. buildThreatModel() now
+    // escalates on 'no-policy' (plus 'wildcard-tool-perm' and
+    // 'unrestricted-bash-allow' — see dedicated tests below).
+    expect(tm.verdict).toBe('high');
+    expect(tm.exitCode).toBe(2);
+  });
+
+  it('FIX (Dream Cycle 2026-11-23): a wildcard .claude/settings.json allow-rule (mcp__*) escalates verdict to high even with an otherwise-compliant mcp-policy.json', async () => {
+    const dir = await makeHarness({
+      policy: { defaultDeny: true, auditLog: true, requireApprovalForDangerous: true, toolTimeoutMs: 30000, maxToolCallsPerTurn: 8 },
+      allow: ['mcp__*'],
+      deny: ['Read(./.env)'],
+      servers: { bot: { command: 'npx' } },
+    });
+    const tm = buildThreatModel(dir);
+    // None of the pre-existing booleans fire — isolates the new escalation path.
+    expect(tm.shellAccess).toBe(false);
+    expect(tm.secretsReachable).toBe(false);
+    expect(tm.policyDefaultDeny).toBe(true);
+    expect(tm.findings.some((f) => f.id === 'wildcard-tool-perm')).toBe(true);
+    expect(tm.verdict).toBe('high');
+    expect(tm.exitCode).toBe(2);
+    expect(tm.dangerousPermissions).toBe(1);
+  });
+
+  it('FIX (Dream Cycle 2026-11-23): an unscoped Bash(*) allow-rule escalates verdict to high even with an otherwise-compliant mcp-policy.json', async () => {
+    const dir = await makeHarness({
+      policy: { defaultDeny: true, auditLog: true, requireApprovalForDangerous: true, toolTimeoutMs: 30000, maxToolCallsPerTurn: 8 },
+      allow: ['Bash(*)'],
+      deny: ['Read(./.env)'],
+      servers: { bot: { command: 'npx' } },
+    });
+    const tm = buildThreatModel(dir);
+    expect(tm.shellAccess).toBe(false);
+    expect(tm.findings.some((f) => f.id === 'unrestricted-bash-allow')).toBe(true);
+    expect(tm.verdict).toBe('high');
+    expect(tm.exitCode).toBe(2);
+    expect(tm.dangerousPermissions).toBe(1);
+  });
+
+  it('regression: no-default-deny and allow-shell are not double-counted in dangerousPermissions (they already map 1:1 to policyDefaultDeny/shellAccess)', async () => {
+    const dir = await makeHarness({
+      policy: { defaultDeny: false, allowShell: true, auditLog: true, requireApprovalForDangerous: true, toolTimeoutMs: 30000, maxToolCallsPerTurn: 8 },
+      allow: [],
+      deny: ['Read(./.env)'],
+      servers: { bot: { command: 'npx' } },
+    });
+    const tm = buildThreatModel(dir);
+    expect(tm.shellAccess).toBe(true);
+    expect(tm.policyDefaultDeny).toBe(false);
+    const scan = scanMcp(dir);
+    // mcp-scan independently reports both as HIGH findings, but each is the
+    // same underlying fact as shellAccess/policyDefaultDeny — must count once.
+    expect(scan.findings.some((f) => f.id === 'no-default-deny')).toBe(true);
+    expect(scan.findings.some((f) => f.id === 'allow-shell')).toBe(true);
+    expect(tm.verdict).toBe('high');
+    expect(tm.exitCode).toBe(2);
+    expect(tm.dangerousPermissions).toBe(2); // shellAccess + policyDefaultDeny===false — not +2 more
   });
 
   it('BUG REPRO: formatThreatModel does not early-return "off" when only mcpServers is registered', async () => {
