@@ -1,0 +1,18 @@
+{
+  "image": "ghcr.io/ruvnet/metaharness-arena@sha256:730f64d25ff21431a0af9c5d4fea8da2d74257569e1d53a2295d90c2c9721252",
+  "source_commit": "90a793a9f4f1a06a5b6422164951e9192c909daa",
+  "run_url": "https://github.com/ruvnet/metaharness/actions/runs/37858361136",
+  "job_id": 113587902896,
+  "anonymous_manifest_pull": true,
+  "anonymous_digest_controls_passed": 61,
+  "fresh_runner_full_blob_pull": true,
+  "model_performance": "unmeasured",
+  "compressed_layer_bytes": 210032512,
+  "layers": 10,
+  "native_replay_episodes_passed": 32,
+  "native_protocol_criteria_passed": 6,
+  "native_evidence_run": "https://github.com/ruvnet/metaharness/actions/runs/37859352503",
+  "artifact_collection": "passed",
+  "artifact_id": 11584934830,
+  "artifact_sha256": "871934c224481f859317ff3309fa9b8d1e0b8a93768eaee995933d9e82ba7c2c"
+}

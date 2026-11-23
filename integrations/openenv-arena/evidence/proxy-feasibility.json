@@ -1,0 +1,239 @@
+{
+  "schema_version": "openenv-arena.proxy-feasibility/v1",
+  "checked_at": "2026-10-09T00:11:40.075330+00:00",
+  "evidence_kind": "capability_review",
+  "decision": {
+    "ruvllm_small_qwen_screening": "defer: no installed local runtime/model; inspected default Candle GGUF loader rejects Qwen2 architecture",
+    "ruvector_failure_clustering": "defer semantic clustering; use existing deterministic failure facets until diagnostic records and a verified native backend are available",
+    "official_evaluation": false,
+    "promotion_authorized": false,
+    "model_inference_executed": false,
+    "vector_clustering_executed": false
+  },
+  "scope": {
+    "actions": [
+      "read public source",
+      "inspect workspace package resolution and model filenames",
+      "read ruOS inventory",
+      "read runtime connector availability",
+      "aggregate public v1 calibration metadata"
+    ],
+    "machine_wakes": 0,
+    "provisioning_or_rentals": 0,
+    "model_downloads": 0,
+    "package_installs": 0,
+    "credential_reads": 0,
+    "private_evaluation_access": false,
+    "cost_statement": "No incremental model API request or GPU rental was initiated. This is not a claim that local CPU, energy, storage or existing hardware is free."
+  },
+  "local_observations": {
+    "workspace": "/workspace/scratch/8b761c4699a3",
+    "metaharness_commit": "f6ae9f76db175bbc489f26ad92ef45a7d00728f7",
+    "node": "v24.19.0",
+    "path_binaries_not_found": [
+      "ruvllm",
+      "llama-cli",
+      "llama-server",
+      "ollama"
+    ],
+    "require_resolve_from_metaharness": {
+      "@ruvector/ruvllm": "MODULE_NOT_FOUND",
+      "ruvector": "MODULE_NOT_FOUND",
+      "@ruvector/core": "MODULE_NOT_FOUND",
+      "@ruvector/sona": "MODULE_NOT_FOUND"
+    },
+    "workspace_gguf_or_ruvector_native_files_found": 0,
+    "inspection_bound": "PATH, Node resolution from this checkout, and an rg --files --hidden --no-ignore scan of this workspace only; not a whole-computer inventory.",
+    "ruos": {
+      "tools": [
+        "desktop_status",
+        "fleet_status",
+        "guide"
+      ],
+      "cloud_desktops_stopped_with_asleep_heartbeat": 7,
+      "enrolled_machines_missing_heartbeat_with_unknown_state": 4,
+      "peer_telemetry": "unavailable",
+      "awake_executor_attested": false,
+      "remote_exec_attempted": false,
+      "interpretation": "Provisioning is not liveness. Missing heartbeat and unavailable peer telemetry do not prove enrolled machines are offline. No awake supported executor was established."
+    },
+    "ruvector_runtime_connector": {
+      "status": "Internal error (-32603)",
+      "list_tools": "Internal error (-32603)",
+      "operations_attempted": false
+    }
+  },
+  "source_findings": {
+    "ruvector_commit": "3e1d1886c50f2db817664648b95fab18e3e4c34b",
+    "retrieval": "Public GitHub main commit API resolved once; raw source fetched at this exact commit. No source was executed or installed.",
+    "findings": [
+      {
+        "id": "npm-is-not-gguf-inference",
+        "url": "https://github.com/ruvnet/ruvector/blob/3e1d1886c50f2db817664648b95fab18e3e4c34b/npm/packages/ruvllm/src/engine.ts",
+        "lines": [
+          74,
+          78,
+          141,
+          181,
+          341,
+          353
+        ],
+        "finding": "The npm engine explicitly warns that native query/generate has no language-model weights. Its JavaScript fallback embeddings use hashing. An import, native-loaded flag or nonempty response is not proof of GGUF model inference or semantic embedding quality."
+      },
+      {
+        "id": "cli-default-backend",
+        "url": "https://github.com/ruvnet/ruvector/blob/3e1d1886c50f2db817664648b95fab18e3e4c34b/crates/ruvllm-cli/Cargo.toml",
+        "lines": [
+          1,
+          17,
+          68,
+          72
+        ],
+        "finding": "Inspected CLI package is 2.4.0 and enables the Candle backend; Metal and CUDA are separate features. Installed binary version and compiled backend remain unverified."
+      },
+      {
+        "id": "qwen-gguf-blocker",
+        "url": "https://github.com/ruvnet/ruvector/blob/3e1d1886c50f2db817664648b95fab18e3e4c34b/crates/ruvllm/src/backends/candle_backend.rs",
+        "lines": [
+          623,
+          655,
+          1300,
+          1317,
+          1371,
+          1381
+        ],
+        "finding": "The GGUF loader constructs quantized_llama weights and explicitly rejects Qwen2/Phi/Gemma GGUF layouts. Existing absolute GGUF paths follow a local loading branch; absent paths may enter a Hub branch when compiled in. Do not use aliases or missing paths for an offline check. A separately verified Qwen-compatible backend/build is required."
+      },
+      {
+        "id": "server-proof-and-measurement-limits",
+        "url": "https://github.com/ruvnet/ruvector/blob/3e1d1886c50f2db817664648b95fab18e3e4c34b/crates/ruvllm-cli/src/commands/serve.rs",
+        "lines": [
+          81,
+          123,
+          309,
+          356,
+          483,
+          488,
+          564,
+          586,
+          620,
+          673
+        ],
+        "finding": "Model-load failure permits placeholder responses unless strict mode is enabled. Require health.mode=model and x-ruvllm-mode=model. Use non-stream requests and reject generation-error content; streaming can fall back to mock after a generation error. Non-stream usage is whitespace counts and finish_reason is always stop, so neither establishes tokenizer-accurate budgets or absence of truncation. The server constructs a generic role prompt rather than using the Qwen chat template."
+      },
+      {
+        "id": "existing-metaharness-client",
+        "url": "https://github.com/ruvnet/metaharness/blob/f6ae9f76db175bbc489f26ad92ef45a7d00728f7/packages/evals-servedmodel/src/ruvllmClient.ts",
+        "sha256": "6ccae893f330a2c01a225b6de11f7c94fdd94cb9af35ebefbddfee1857db4196",
+        "finding": "The client requires explicit live opt-in and calls OpenAI-compatible chat completions. It does not verify model/mock mode; nonempty output without a judge scores neutral 0.5. It is not an Arena screening proof or a verified serving backend."
+      },
+      {
+        "id": "existing-ruvector-adapter",
+        "url": "https://github.com/ruvnet/metaharness/blob/f6ae9f76db175bbc489f26ad92ef45a7d00728f7/packages/field-memory/src/ruvector-storage.ts",
+        "sha256": "f86cd906f2f02f8a9500f90839c7a1252e03aee71e6a76f905060b71f11f778e",
+        "finding": "The adapter requires an explicit registry and configuration-verified flat, in-place cosine index with matching dimension and absolute storage identity. A generic npm dependency or an HNSW claim does not satisfy that contract. Numeric-vector search can avoid embedding downloads, but this workspace has no resolved native backend."
+      }
+    ]
+  },
+  "minimal_existing_executor_check_for_ruvultra": {
+    "status": "recipe only; not executed",
+    "preconditions": [
+      "Use the already authorized awake executor only; no wake, new host, rental, package installation or download.",
+      "Run inventory first. Stop if no installed ruvllm binary, no existing small Qwen model, or no verified compatible backend.",
+      "The inspected default Candle build fails the Qwen GGUF compatibility requirement. Do not treat its expected strict-load error as a model smoke success.",
+      "Record binary version/hash, upstream build commit/features, exact model and tokenizer/template hashes, model architecture, quantization and backend. Do not read provider credentials."
+    ],
+    "inventory_commands": [
+      "command -v ruvllm",
+      "ruvllm --version",
+      "ruvllm serve --help",
+      "node -e 'for (const p of [\"ruvector\",\"@ruvector/ruvllm\"]) {try {console.log(p, require.resolve(p))} catch (e) {console.log(p,e.code)}}'"
+    ],
+    "conditional_strict_load": "After a compatible build is independently verified, set RUVLLM_SMOKE_GGUF to an existing absolute GGUF file (not a Hub ID), confirm it is a readable file, then run: timeout 120s ruvllm serve \"$RUVLLM_SMOKE_GGUF\" --strict --host 127.0.0.1 --port 18080 --max-concurrent 1 --max-context 2048. Inspect installed --help first; stop if flags differ. Do not remove --strict to obtain an answer.",
+    "conditional_request": {
+      "health": "GET http://127.0.0.1:18080/health, timeout 5s, no redirects; require HTTP 200, healthy, mode=model and x-ruvllm-mode=model.",
+      "model_id": "Use the actual identifier returned by that local server's health/models response.",
+      "request": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Return exactly the JSON object {\"answer\":42} and no other text."
+          }
+        ],
+        "stream": false,
+        "max_tokens": 32,
+        "temperature": 0
+      },
+      "limits": "One completion request to the loopback server, 30s deadline, at most 64 KiB response; no retries.",
+      "acceptance": "Require model mode header, nonempty non-placeholder content, no Generation error prefix, and exact JSON parse equal to {answer:42}. Preserve result as local model smoke only. Failure blocks screening; success does not establish Qwen3.8 fidelity or model quality.",
+      "budget_note": "The inspected server's reported usage and finish_reason are unsuitable for Arena budget decisions; independent tokenizer accounting and correct chat templating are prerequisites for further screening."
+    },
+    "screening_scope_if_unblocked": "Optional public-task format/action/observation diagnostics only, using frozen matched seeds and builds. Small-Qwen outcomes cannot select Arena difficulty, establish training improvement, or replace Qwen3.8-27B calibration or official private evaluation."
+  },
+  "failure_data_assessment": {
+    "source_review": "calibration-v1-review.json",
+    "source_review_sha256": "9dcdb714e5d74bb88a3c9cde3d73aed2105463bb71c765c86331977ba9263c24",
+    "public_gist": "https://gist.github.com/ruvnet/00fb40aeabb35a893f140597e2695c1d/a8e16faaaf19d7faf0e3ff53cdbee0a1ff299dfb",
+    "episode_source_sha256": "8b6b23a9d781c1ba83fcc266ab831094696772882e54afd5d02d367e0b2d3f09",
+    "frozen_environment_commit": "90a793a9f4f1a06a5b6422164951e9192c909daa",
+    "episodes": 77,
+    "full_successes": 63,
+    "non_successes": 14,
+    "validation_error_zero_reward": 11,
+    "partial_credit": 3,
+    "failure_facets": [
+      {
+        "family": "finance_ledger",
+        "validation_error": 1,
+        "partial_credit": 0
+      },
+      {
+        "family": "industrial_schedule",
+        "validation_error": 6,
+        "partial_credit": 0
+      },
+      {
+        "family": "media_timeline",
+        "validation_error": 1,
+        "partial_credit": 0
+      },
+      {
+        "family": "office_reconciliation",
+        "validation_error": 0,
+        "partial_credit": 1
+      },
+      {
+        "family": "security_triage",
+        "validation_error": 3,
+        "partial_credit": 2
+      }
+    ],
+    "limits": [
+      "Invalid assistant responses, detailed parser errors, finish reasons and reasoning content were not retained in v1. Eleven ValidationError records cannot distinguish truncation, empty content, malformed JSON or schema mismatch.",
+      "The three retained partial-credit cases permit local answer/rubric comparison but are too few to establish recurring semantic clusters.",
+      "The public capture is incomplete: 77 of 96 planned episodes, with 10 of 24 groups complete. Frequencies are descriptive, not population estimates.",
+      "V1 replay verified retained actions/observations/rewards; it did not attest the publisher's model execution. No private Arena traces or answers are available or needed."
+    ],
+    "minimum_useful_next_data": {
+      "policy_status": "Proposed operational threshold, not a statistical guarantee or RuVector requirement.",
+      "diagnostic_threshold": "Keep deterministic facets immediately. Consider exploratory grouping after at least 20 distinct complete failure records and at least five independent seeds per recurring proposed group; otherwise show individual cases. Include matched successes to identify features specific to failure.",
+      "required_fields": [
+        "environment and runner commits",
+        "model/tokenizer/template and backend pins",
+        "family/difficulty/seed/attempt",
+        "request parameters",
+        "action sequence and terminal state",
+        "reward components",
+        "canonical trajectory digest",
+        "structured parser/validator error type and field path",
+        "finish reason with provider semantics",
+        "separate prompt/completion/reasoning token counts and provenance",
+        "aggregate observation budget accounting",
+        "redacted normalized invalid response shape or local reference to retained response"
+      ],
+      "handling": "Retain approved proxy traces locally. Index only allowlisted sanitized diagnostic features or redacted summaries. Do not embed raw private logs, credentials, official private tasks, held-out answers, or oracle expected answers. Publish aggregate categories and digest references only.",
+      "native_backend_gate": "Before indexing, resolve the exact installed RuVector version/native binary and execute a tiny numeric-vector insert/search smoke in disposable local storage. Reject mock/stub fallback. Use numerical diagnostic features initially; semantic embeddings require a separately verified already installed local embedding model.",
+      "interpretation_gate": "RuVector nearest-neighbor search is retrieval, not automatic proof of a causal cluster. Manually validate each proposed category against independently replayed examples; keep unknown cases unknown and separate cohorts by environment/model/template versions."
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "source_commit": "0af81c55269be029dd64ccdc79e23654aa9dcaa4",
+  "image": "ghcr.io/ruvnet/metaharness-arena@sha256:2f3f12b986574ac99ecae451f47408ea5c8cc12c4fa27bf1c5cafa6880676b37",
+  "anonymous_manifest_verified": true,
+  "manifest_digest": "sha256:2f3f12b986574ac99ecae451f47408ea5c8cc12c4fa27bf1c5cafa6880676b37",
+  "compressed_layer_bytes": 208978186,
+  "layer_count": 10,
+  "architecture": "amd64",
+  "os": "linux",
+  "runtime_user": "10001",
+  "exposed_ports": {
+    "8000/tcp": {}
+  },
+  "entrypoint": [
+    "/usr/bin/tini",
+    "--"
+  ],
+  "cmd": [
+    "python",
+    "-m",
+    "uvicorn",
+    "arena_env.app:app",
+    "--host",
+    "0.0.0.0",
+    "--port",
+    "8000",
+    "--workers",
+    "1"
+  ],
+  "full_layer_pull": "CI evidence recorded separately"
+}

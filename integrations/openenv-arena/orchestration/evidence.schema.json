@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OpenEnv Arena evidence classes",
+  "description": "Structural interchange schema. curriculum.mjs adds manifest, split, seed, trajectory, budget and provenance invariants. Schema conformance is not proof of truth.",
+  "oneOf": [
+    { "$ref": "#/$defs/localControls" },
+    { "$ref": "#/$defs/proxyCalibration" },
+    { "$ref": "#/$defs/proxyTransfer" },
+    { "$ref": "#/$defs/officialEvaluation" }
+  ],
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9_.:/-]{1,128}$" },
+    "localControls": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "manifestDigest", "testsPassed", "testsTotal", "reportDigest"],
+      "properties": {
+        "kind": { "const": "local_controls" }, "manifestDigest": { "$ref": "#/$defs/digest" },
+        "testsPassed": { "type": "integer", "minimum": 0 }, "testsTotal": { "type": "integer", "minimum": 1 },
+        "reportDigest": { "$ref": "#/$defs/digest" }
+      }
+    },
+    "proxyCalibration": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "source", "modelId", "runnerRevision", "manifestDigest", "groups"],
+      "properties": {
+        "kind": { "const": "proxy_calibration" }, "source": { "const": "model_rollouts" },
+        "modelId": { "$ref": "#/$defs/id" }, "runnerRevision": { "$ref": "#/$defs/digest" },
+        "manifestDigest": { "$ref": "#/$defs/digest" },
+        "groups": { "type": "array", "minItems": 1, "maxItems": 500, "items": {
+          "type": "object", "additionalProperties": false, "required": ["taskId", "family", "attempts"],
+          "properties": {
+            "taskId": { "$ref": "#/$defs/id" }, "family": { "$ref": "#/$defs/id" },
+            "attempts": { "type": "array", "minItems": 4, "maxItems": 4, "items": {
+              "type": "object", "additionalProperties": false, "required": ["seed", "reward", "success", "trajectoryDigest"],
+              "properties": {
+                "seed": { "type": "integer", "minimum": 0 }, "reward": { "type": "number", "minimum": 0, "maximum": 1 },
+                "success": { "type": "boolean" }, "trajectoryDigest": { "$ref": "#/$defs/digest" }
+              }
+            } }
+          }
+        } }
+      }
+    },
+    "arm": {
+      "type": "object", "additionalProperties": false, "required": ["success", "noop", "costMicros", "trajectoryDigest"],
+      "properties": {
+        "success": { "type": "boolean" }, "noop": { "type": "boolean" },
+        "costMicros": { "type": "integer", "minimum": 0 }, "trajectoryDigest": { "$ref": "#/$defs/digest" }
+      }
+    },
+    "proxyTransfer": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "source", "auditId", "baseModelId", "trainingRecipeDigest", "baselineCheckpointDigest", "candidateCheckpointDigest", "baselineManifestDigest", "candidateManifestDigest", "rows"],
+      "properties": {
+        "kind": { "const": "proxy_transfer" }, "source": { "const": "trained_proxy_model_rollouts" },
+        "auditId": { "$ref": "#/$defs/id" }, "baseModelId": { "$ref": "#/$defs/id" },
+        "trainingRecipeDigest": { "$ref": "#/$defs/digest" },
+        "baselineCheckpointDigest": { "$ref": "#/$defs/digest" }, "candidateCheckpointDigest": { "$ref": "#/$defs/digest" },
+        "baselineManifestDigest": { "$ref": "#/$defs/digest" }, "candidateManifestDigest": { "$ref": "#/$defs/digest" },
+        "rows": { "type": "array", "minItems": 40, "maxItems": 10000, "items": {
+          "type": "object", "additionalProperties": false,
+          "required": ["split", "family", "taskId", "seed", "baseline", "candidate"],
+          "properties": {
+            "split": { "enum": ["selection", "anchor"] }, "family": { "$ref": "#/$defs/id" },
+            "taskId": { "$ref": "#/$defs/id" }, "seed": { "type": "integer", "minimum": 0 },
+            "baseline": { "$ref": "#/$defs/arm" }, "candidate": { "$ref": "#/$defs/arm" }
+          }
+        } }
+      }
+    },
+    "officialEvaluation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "source", "submissionId", "runId", "retrievedAt", "responseDigest", "rawResponse"],
+      "properties": {
+        "kind": { "const": "official_private_eval" }, "source": { "const": "openenv_arena_official_api" },
+        "submissionId": { "$ref": "#/$defs/id" }, "runId": { "$ref": "#/$defs/id" },
+        "retrievedAt": { "type": "string", "format": "date-time" },
+        "responseDigest": { "$ref": "#/$defs/digest" }, "rawResponse": { "type": "object" }
+      },
+      "description": "Archival envelope only. Preserve the real API shape verbatim. No local process upgrades an event or a training reward into an official private score. Read lifecycle and leaderboard from Arena. This class is refused by the local promotion gate."
+    }
+  }
+}
