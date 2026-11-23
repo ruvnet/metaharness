@@ -147,8 +147,31 @@ export function buildThreatModel(dir: string, generatedAt: string = new Date().t
   const secretsReachable = mcpInUse && !guardsEnv;
 
   // Count "dangerous permissions" = high-severity findings from mcp-scan +
-  // the top-level boolean knobs the user named.
-  let dangerousPermissions = 0;
+  // the top-level boolean knobs the user named. That was always the intent
+  // (see this comment, unchanged since before this fix), but the code below
+  // only ever summed the boolean knobs — `scan.findings`/`scan.worst` were
+  // computed, attached to the returned ThreatModel's `findings`/`worst`
+  // fields, and otherwise ignored here. Concretely: an MCP-enabled harness
+  // with NO `.harness/mcp-policy.json` at all scans HIGH (`no-policy` —
+  // "execution is ungoverned"), and a `.claude/settings.json` allow-rule of
+  // `'*'`/`'mcp__*'`/`'mcp__*__*'` (`wildcard-tool-perm`) or an unscoped
+  // `Bash`/`Bash(*)` (`unrestricted-bash-allow`) also scans HIGH — none of
+  // which set any of the five booleans below, so `threat-model` reported
+  // `Verdict: clean (exit 0)` directly underneath its own printed HIGH
+  // finding (disclosed, not fixed, in threat-model.test.ts's
+  // "MCP registered only via .claude/settings.json.mcpServers" case).
+  // `no-default-deny` and `allow-shell` are deliberately NOT included here
+  // even though they're also HIGH mcp-scan findings: they are the exact
+  // same underlying fact as `policyDefaultDeny === false` and `shellAccess`
+  // below, so counting both would double-count one dangerous condition as
+  // two. Scope: HIGH-severity only, matching the exact gap above — the
+  // analogous MEDIUM-severity blind spot (e.g. `risky-bash-allow`,
+  // `no-approval-gate`, `no-timeout` never lifting `verdict` off `clean`) is
+  // a real, separate gap, deliberately left for a future night.
+  const UNCOUNTED_HIGH_IDS = new Set(['no-policy', 'wildcard-tool-perm', 'unrestricted-bash-allow']);
+  const uncountedHighFindings = scan.findings.filter((f) => f.severity === 'high' && UNCOUNTED_HIGH_IDS.has(f.id));
+
+  let dangerousPermissions = uncountedHighFindings.length;
   if (shellAccess) dangerousPermissions++;
   if (networkAccess) dangerousPermissions++;
   if (fileWrite) dangerousPermissions++;
@@ -157,7 +180,7 @@ export function buildThreatModel(dir: string, generatedAt: string = new Date().t
 
   let verdict: 'clean' | 'medium' | 'high';
   let exitCode: 0 | 1 | 2;
-  if (shellAccess || policyDefaultDeny === false || secretsReachable) {
+  if (shellAccess || policyDefaultDeny === false || secretsReachable || uncountedHighFindings.length > 0) {
     verdict = 'high';
     exitCode = 2;
   } else if (networkAccess || fileWrite || (mcpInUse && auditLog === false)) {
