@@ -194,6 +194,36 @@ describe('installScript', () => {
     const withoutAutonomous = installScript({ name: 'x' });
     expect(withoutAutonomous).not.toContain('ADR-246');
   });
+
+  it('discloses ADR-246 mcpServers block as an explicit no-op, never silently drops it', () => {
+    const withMcp = installScript({
+      name: 'x',
+      mcpServers: [
+        { name: 'fs-server', command: ['npx', 'fs-mcp'] },
+        { name: 'search-server', command: ['npx', 'search-mcp'] },
+      ],
+    } as any);
+    expect(withMcp).toContain('ADR-246');
+    expect(withMcp).toMatch(/NOT projected/);
+    expect(withMcp).toContain('fs-server');
+    expect(withMcp).toContain('search-server');
+
+    const withoutMcp = installScript({ name: 'x' });
+    expect(withoutMcp).not.toMatch(/mcpServers/);
+
+    const withEmptyMcp = installScript({ name: 'x', mcpServers: [] } as any);
+    expect(withEmptyMcp).not.toMatch(/mcpServers/);
+  });
+
+  it('strips newlines from mcp server names so a hostile name cannot forge a new comment or statement', () => {
+    const s = installScript({
+      name: 'x',
+      mcpServers: [{ name: 'evil\nrm -rf /', command: ['x'] }],
+    } as any);
+    for (const line of s.split('\n')) {
+      if (line.includes('evil')) expect(line.startsWith('#')).toBe(true);
+    }
+  });
 });
 
 describe('adapter', () => {

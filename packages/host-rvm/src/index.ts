@@ -290,6 +290,18 @@ export function installScript(spec: HarnessSpec): string {
           '# never be silently dropped).',
         ]
       : []),
+    ...(spec.mcpServers && spec.mcpServers.length > 0
+      ? [
+          '',
+          '# MCP servers (ADR-246 §2.2): RVM has no MCP client surface -- it',
+          '# exposes capability-token rights (READ/WRITE/GRANT/REVOKE/EXECUTE/',
+          '# PROVE/GRANT_ONCE) and a wasm-guest lifecycle, not an MCP tool-call',
+          `# transport. This harness spec declares ${spec.mcpServers.length} MCP server(s)`,
+          '# that are NOT projected on this host (documented no-op --',
+          '# kernel-js HarnessSpec.mcpServers must never be silently dropped):',
+          ...spec.mcpServers.map(s => `#   - ${commentSafe(s.name)}`),
+        ]
+      : []),
   ].join('\n') + '\n';
 }
 
