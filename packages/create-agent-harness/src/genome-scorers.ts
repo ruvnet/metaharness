@@ -156,6 +156,18 @@ export function scorePublishReadiness(profile: RepoProfile, plan: HarnessPlan): 
   const hasRealTestSignal = profile.hasVerifiedTestFiles || profile.testCommands.includes('npm test');
   if (hasRealTestSignal) s += 0.15; // can test
   if (profile.hasCi) s += 0.2; // ci will gate it
-  if (plan.policy.defaultDeny) s += 0.05; // policy locked
+  // Removed (Dream Cycle 2026-11-25): a `+0.05 if (plan.policy.defaultDeny)`
+  // "policy locked" term used to sit here. Every call site that builds a
+  // `HarnessPlan` for genome scoring hardcodes `defaultDeny: true`
+  // (analyze-repo.ts, index.ts) — there is no code path that ever produces
+  // `false`, so the term contributed identically to every repo regardless of
+  // its actual properties. It wasn't evidence about the repo being scored;
+  // it was a constant dressed up as a signal (`'policy locked'`), and it
+  // silently lowered this file's own `publish_readiness >= 0.75` 'ready' bar
+  // (genome.ts) from requiring real test evidence
+  // (lang 0.3 + build 0.2 + test 0.15 + ci 0.2 = 0.85) to not requiring it at
+  // all (lang 0.3 + build 0.2 + ci 0.2 + the dead 0.05 = exactly 0.75). `plan`
+  // stays in the signature for call-site/API stability with this file's
+  // other scorers even though it is now unused here.
   return Math.min(1, s);
 }

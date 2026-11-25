@@ -261,8 +261,8 @@ describe('scorePublishReadiness', () => {
   it('#200: any detected language earns the same flat credit, not a per-language amount', () => {
     const ts = scorePublishReadiness(profile({ languages: ['typescript'] }), plan());
     const rs = scorePublishReadiness(profile({ languages: ['rust'] }), plan());
-    expect(ts).toBeCloseTo(0.3 + 0.05); // language 0.3 + policy.defaultDeny 0.05
-    expect(rs).toBeCloseTo(0.3 + 0.05); // rust is no longer discounted to 0.15
+    expect(ts).toBeCloseTo(0.3); // language 0.3 (2026-11-25: dead policy.defaultDeny +0.05 removed)
+    expect(rs).toBeCloseTo(0.3); // rust is no longer discounted to 0.15
     expect(rs).toBeCloseTo(ts);
   });
 
@@ -281,8 +281,9 @@ describe('scorePublishReadiness', () => {
       hasVerifiedTestFiles: true,
     });
     const score = scorePublishReadiness(p, plan());
-    // language(0.3) + build(0.2) + test(0.15) + ci(0.2) + policy.defaultDeny(0.05) = 0.9
-    expect(score).toBeCloseTo(0.9);
+    // language(0.3) + build(0.2) + test(0.15) + ci(0.2) = 0.85 (2026-11-25: dead
+    // policy.defaultDeny +0.05 removed)
+    expect(score).toBeCloseTo(0.85);
     expect(score).toBeGreaterThanOrEqual(0.75); // clears the 'ready' threshold
   });
 
@@ -302,9 +303,16 @@ describe('scorePublishReadiness', () => {
     const withRealTests = { ...withBogusTests, hasVerifiedTestFiles: true };
     const scoreBogus = scorePublishReadiness(withBogusTests, plan());
     const scoreReal = scorePublishReadiness(withRealTests, plan());
-    // language(0.3) + build(0.2) + ci(0.2) + policy.defaultDeny(0.05) = 0.75, no test credit
-    expect(scoreBogus).toBeCloseTo(0.75);
-    expect(scoreReal).toBeCloseTo(0.9); // the +0.15 "can test" credit applies
+    // language(0.3) + build(0.2) + ci(0.2) = 0.70, no test credit. Before
+    // 2026-11-25 this was 0.75 — exactly genome.ts's 'ready' threshold — only
+    // because of the dead `policy.defaultDeny` +0.05 term, so a repo with zero
+    // real test evidence could still be classified 'ready'. That is the actual
+    // defect this fix closes: the assertion below is the non-vacuous red→green
+    // proof (it fails pre-fix: scoreBogus was 0.75, not <0.75).
+    expect(scoreBogus).toBeCloseTo(0.7);
+    expect(scoreBogus).toBeLessThan(0.75); // no longer clears 'ready' without real test evidence
+    expect(scoreReal).toBeCloseTo(0.85); // the +0.15 "can test" credit applies
+    expect(scoreReal).toBeGreaterThanOrEqual(0.75); // clears 'ready' only with real test evidence
     expect(scoreReal - scoreBogus).toBeCloseTo(0.15);
   });
 
@@ -314,19 +322,25 @@ describe('scorePublishReadiness', () => {
   // resolveAgentTopology's existing authoredTestScript carve-out.
   it('DOES credit "can test" for an authored `npm test` script with no verified test directory', () => {
     const p = profile({ languages: ['typescript'], testCommands: ['npm test'], hasVerifiedTestFiles: false });
-    expect(scorePublishReadiness(p, plan())).toBeCloseTo(0.3 + 0.15 + 0.05);
+    expect(scorePublishReadiness(p, plan())).toBeCloseTo(0.3 + 0.15);
   });
 
-  it('credits buildCommands, testCommands, hasCi, and policy.defaultDeny independently', () => {
-    expect(scorePublishReadiness(profile({ buildCommands: ['tsc'] }), plan())).toBeCloseTo(0.2 + 0.05);
-    expect(scorePublishReadiness(profile({ testCommands: ['npm test'] }), plan())).toBeCloseTo(0.15 + 0.05);
-    expect(scorePublishReadiness(profile({ hasCi: true }), plan())).toBeCloseTo(0.2 + 0.05);
+  it('credits buildCommands, testCommands, and hasCi independently', () => {
+    expect(scorePublishReadiness(profile({ buildCommands: ['tsc'] }), plan())).toBeCloseTo(0.2);
+    expect(scorePublishReadiness(profile({ testCommands: ['npm test'] }), plan())).toBeCloseTo(0.15);
+    expect(scorePublishReadiness(profile({ hasCi: true }), plan())).toBeCloseTo(0.2);
   });
 
-  it('policy.defaultDeny contributes only 0.05', () => {
+  // 2026-11-25: the `+0.05 if (plan.policy.defaultDeny)` term was removed —
+  // every call site hardcodes `defaultDeny: true`, so it never varied and was
+  // not evidence about the repo being scored. This locks the fix in as an
+  // invariant: the policy value must never again affect this score.
+  it('policy.defaultDeny has no effect on publish readiness', () => {
     const denyOff = plan({ policy: { ...SAFE_POLICY, defaultDeny: false } });
     const denyOn = plan({ policy: { ...SAFE_POLICY, defaultDeny: true } });
-    expect(scorePublishReadiness(profile(), denyOn) - scorePublishReadiness(profile(), denyOff)).toBeCloseTo(0.05);
+    expect(scorePublishReadiness(profile(), denyOn)).toBe(scorePublishReadiness(profile(), denyOff));
+    const full = profile({ languages: ['typescript'], buildCommands: ['tsc'], testCommands: ['npm test'], hasCi: true });
+    expect(scorePublishReadiness(full, denyOn)).toBe(scorePublishReadiness(full, denyOff));
   });
 
   it('caps the total at 1 for a maximally-signaled repo', () => {
@@ -337,9 +351,10 @@ describe('scorePublishReadiness', () => {
       hasCi: true,
     });
     // Post-#200 the language credit is flat 0.3 rather than 0.3+0.15 additive, so
-    // the maximal repo now totals 0.9: language(0.3) + build(0.2) + test(0.15) +
-    // ci(0.2) + policy(0.05). The Math.min(1, ...) cap is still in place; this
-    // input simply no longer reaches it.
-    expect(scorePublishReadiness(p, plan())).toBeCloseTo(0.9);
+    // the maximal repo now totals 0.85: language(0.3) + build(0.2) + test(0.15) +
+    // ci(0.2). (2026-11-25: dead policy.defaultDeny +0.05 removed — the maximum
+    // achievable score was already 0.9 pre-fix, so the Math.min(1, ...) cap was,
+    // and remains, unreachable; it stays in place as a harmless defensive bound.)
+    expect(scorePublishReadiness(p, plan())).toBeCloseTo(0.85);
   });
 });
