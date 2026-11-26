@@ -87,7 +87,29 @@ export function pairedOutcomesFromItemWins(baseline: Score, candidate: Score): P
   // crashed on `.map` — `verifyReplayBundle` (replay.ts) calls this with no try/catch and must, per its
   // own documented contract, always return a structured verdict and never throw. `Array.isArray` closes
   // that without narrowing the honest `boolean[]` case at all.
-  if (!Array.isArray(bw) || !Array.isArray(cw) || bw.length === 0 || bw.length !== cw.length) return undefined;
+  //
+  // Array-shape plus matching length still does not prove the ELEMENTS are booleans (Dream Cycle
+  // 2026-11-26). `production-gate.ts`'s `validProductionScoreDomain` already requires
+  // `itemWins.every(v => typeof v === 'boolean')` before trusting a Score for the production gate; this
+  // function has no sibling guard of its own, even though it is the one `replay.ts`'s independent gate
+  // re-execution and `run.ts`'s live loop both go through. `sequentialEvidence` below compares pairs with
+  // `===`, which is reference equality for non-primitives — a non-boolean `itemWins` element (an object,
+  // a stray string) would silently produce a wrong concordant/discordant classification instead of the
+  // "return undefined, degrade to the base rule" contract every other malformed-input case here already
+  // gets.
+  //
+  // `.every`/`.map` both SKIP holes in a sparse array (`[true, , true]`), so that alone would vacuously
+  // pass the boolean-element check and produce a `pairedOutcomes` array with a matching hole — which
+  // `sequentialEvidence`'s hole-RESPECTING `for...of` then yields as `undefined`, throwing where
+  // `run.ts`'s live loop and `replay.ts`'s gate re-execution have no try/catch (independent-critic
+  // finding, same night). `production-gate.ts`'s `validProductionScore` already guards this exact case
+  // with `Object.keys(v).length === v.length`; mirror it here too.
+  const isDense = (v: unknown[]): boolean => Object.keys(v).length === v.length;
+  const isBooleanVector = (v: unknown[]): v is boolean[] => isDense(v) && v.every((x) => typeof x === 'boolean');
+  if (
+    !Array.isArray(bw) || !Array.isArray(cw) || bw.length === 0 || bw.length !== cw.length ||
+    !isBooleanVector(bw) || !isBooleanVector(cw)
+  ) return undefined;
   return bw.map((baselineWon, i) => ({ itemId: String(i), candidateWon: cw[i]!, baselineWon }));
 }
 

@@ -227,6 +227,43 @@ describe('pairedOutcomesFromItemWins', () => {
     expect(() => pairedOutcomesFromItemWins(base, cand)).not.toThrow();
     expect(pairedOutcomesFromItemWins(base, cand)).toBeUndefined();
   });
+
+  // Regression (Dream Cycle 2026-11-26): `Array.isArray` + length-equality alone does not prove the
+  // elements are booleans. `production-gate.ts`'s own `validProductionScoreDomain` already requires
+  // `itemWins.every(v => typeof v === 'boolean')` before trusting a Score for the production gate —
+  // this function, shared by the LIVE loop (run.ts) and independent replay's gate re-execution
+  // (replay.ts, ADR-235: "trust the gate re-run, not the logged verdict"), had no such guard of its
+  // own. An array-shaped, length-matched `itemWins` containing non-boolean elements used to pass
+  // straight through and be compared with `===` in `sequentialEvidence`, which is reference equality
+  // for objects — two distinct object-valued "wins" are always "discordant" regardless of their real
+  // win/loss meaning, silently distorting the promotion e-value instead of failing closed.
+  it('returns undefined when itemWins is array-shaped but contains non-boolean elements', () => {
+    const base = score({ itemWins: [1, 'x', {}] as unknown as boolean[] });
+    const cand = score({ itemWins: [0, 'y', {}] as unknown as boolean[] });
+    expect(() => pairedOutcomesFromItemWins(base, cand)).not.toThrow();
+    expect(pairedOutcomesFromItemWins(base, cand)).toBeUndefined();
+  });
+
+  it('returns undefined when only one side has a non-boolean element, even if lengths and the other side agree', () => {
+    const base = score({ itemWins: [true, false, true] });
+    const cand = score({ itemWins: [true, 'yes' as unknown as boolean, false] });
+    expect(pairedOutcomesFromItemWins(base, cand)).toBeUndefined();
+  });
+
+  // Regression (independent-critic finding, same Dream Cycle night): a sparse array hole is skipped by
+  // `.every`/`.map` but NOT by `sequentialEvidence`'s `for...of`, which previously let a holey itemWins
+  // vector pass the boolean check, build a holey `pairedOutcomes` array, and throw downstream in callers
+  // with no try/catch (run.ts's live loop, replay.ts's gate re-execution) instead of degrading safely.
+  it('returns undefined (never throws downstream) when itemWins is a sparse array with a hole', () => {
+    // eslint-disable-next-line no-sparse-arrays
+    const base = score({ itemWins: [true, , true] as unknown as boolean[] });
+    const cand = score({ itemWins: [true, true, true] });
+    const paired = pairedOutcomesFromItemWins(base, cand);
+    expect(paired).toBeUndefined();
+    expect(() => {
+      if (paired) sequentialEvidence(paired);
+    }).not.toThrow();
+  });
 });
 
 describe('numeric stability', () => {
