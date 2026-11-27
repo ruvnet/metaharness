@@ -89,6 +89,60 @@ test('STRICT rule — REJECT when empty-patch rate does not improve', () => {
   assert.match(v.reason, /empty-patch rate did not improve/);
 });
 
+test('STRICT rule — floor-tie: seed already at empty-patch floor (0); candidate ties it and improves gold+cost → PROMOTE', () => {
+  // seed: 0 empty-patch (floor), 1 gold resolved
+  const seedRows = [[true, 0], [false, 1], [false, 2], [false, 4]];
+  const seed = summarizeEval(mkHoldout(seedRows, 0.10));
+  assert.equal(seed.emptyPatchRate, 0); // confirms seed is genuinely at the floor
+  // cand: also 0 empty-patch (ties the floor, does not "strictly improve"), but resolves one more
+  // instance for the same total cost → strictly better on both other axes.
+  const candRows = [[true, 0], [true, 1], [false, 2], [false, 4]];
+  const cand = summarizeEval(mkHoldout(candRows, 0.05));
+  const v = evaluatePromotion({ seed, cand });
+  assert.equal(cand.emptyPatchRate, 0);
+  assert.equal(v.checks.emptyPatchImproves, true); // floor-tie now satisfies the clause
+  assert.equal(v.checks.goldNoRegress, true);
+  assert.equal(v.checks.costPerResolvedNotWorse, true);
+  assert.equal(v.promote, true);
+  assert.match(v.reason, /^PROMOTE/);
+});
+
+test('STRICT rule — floor-tie with a neutral, zero-lift candidate (identical gold+cost) → still REJECT (no_improvement_at_floor)', () => {
+  // seed and cand are byte-identical: both at the empty-patch floor, same gold, same cost. A
+  // tie-at-floor must NOT be sufficient on its own — mirrors flywheel/gate.ts's
+  // `no_improvement_at_noop_floor` guard: a no-op mutation must not be able to ride a floor-tie
+  // into promotion with zero real improvement.
+  const rows = [[true, 0], [false, 1], [false, 2], [false, 4]];
+  const seed = summarizeEval(mkHoldout(rows, 0.10));
+  const cand = summarizeEval(mkHoldout(rows, 0.10));
+  const v = evaluatePromotion({ seed, cand });
+  assert.equal(seed.emptyPatchRate, 0);
+  assert.equal(cand.emptyPatchRate, 0);
+  assert.equal(v.checks.emptyPatchImproves, false); // floor-tie alone is NOT enough
+  assert.equal(v.promote, false);
+  assert.match(v.reason, /tied at the floor.*no improvement/);
+});
+
+test('STRICT rule — floor-tie does NOT bypass the gold-regression backstop', () => {
+  const seedRows = [[true, 0], [true, 1], [false, 2], [false, 4]];
+  const seed = summarizeEval(mkHoldout(seedRows, 0.10));
+  // cand ties the empty-patch floor and is cheaper, but loses a seed-resolved instance → reject.
+  const candRows = [[true, 0], [false, 1], [false, 2], [false, 4]];
+  const cand = summarizeEval(mkHoldout(candRows, 0.05));
+  const v = evaluatePromotion({ seed, cand });
+  assert.equal(seed.emptyPatchRate, 0);
+  assert.equal(v.checks.goldNoRegress, false); // regression backstop still fires at the floor
+  assert.equal(v.promote, false);
+  assert.match(v.reason, /gold regressed/);
+});
+
+test('STRICT rule — off-floor behavior unchanged: tie above the floor still REJECTs (regression guard)', () => {
+  const seed = summarizeEval(mkHoldout(SEED_HOLDOUT_ROWS, 0.05)); // emptyPatchRate 0.583, not at floor
+  const tie = summarizeEval(mkHoldout(SEED_HOLDOUT_ROWS, 0.03)); // identical empty-patch rate (tie, off-floor)
+  const v = evaluatePromotion({ seed, cand: tie });
+  assert.equal(v.checks.emptyPatchImproves, false); // off-floor ties still rejected, as before
+});
+
 test('STRICT rule — REJECT when cost/resolved worsens', () => {
   const seed = summarizeEval(mkHoldout(SEED_HOLDOUT_ROWS, 0.05));       // $/resolved = 0.3
   const cand = summarizeEval(mkHoldout(CAND_HOLDOUT_ROWS, 0.20));       // 3 resolved but pricier: 0.8

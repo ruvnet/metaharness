@@ -114,16 +114,32 @@ export function evaluatePromotion({ seed, cand }: { seed: EvalSummary; cand: Eva
   const gains = [...candSet].filter((id) => !seedSet.has(id));        // newly resolved by cand
 
   const goldNoRegress = regressions.length === 0;
-  const emptyPatchImproves = cand.emptyPatchRate < seed.emptyPatchRate;
+  // emptyPatchRate is a floor-0 rate: once seed is already at the floor, "strictly fewer" is
+  // unsatisfiable by construction (no candidate can go below 0), which would permanently lock
+  // promotion on this clause forever after a seed reaches 0 — mirrors flywheel/gate.ts's
+  // baselineAtFloor fix (PR #306/#307, 2026-09-11) for the identical bug class. As in gate.ts, a
+  // tie at the floor is NOT enough on its own: it only counts when the candidate also strictly
+  // improves gold-resolution or cost (gate.ts's `no_improvement_at_noop_floor` guard) — otherwise a
+  // neutral, zero-lift candidate (identical gold, identical cost) could ride the floor-tie into
+  // promotion with no real improvement at all.
+  const seedAtFloor = seed.emptyPatchRate <= 0;
+  const emptyPatchNotWorse = seedAtFloor ? cand.emptyPatchRate <= 0 : cand.emptyPatchRate < seed.emptyPatchRate;
   // "does not worsen": candidate $/resolved must be <= seed's (Infinity when 0 resolved).
   const costPerResolvedNotWorse = cand.costPerResolved <= seed.costPerResolved;
+  const noImprovementAtFloor = seedAtFloor && emptyPatchNotWorse &&
+    !(gains.length > 0 || cand.costPerResolved < seed.costPerResolved);
+  const emptyPatchImproves = emptyPatchNotWorse && !noImprovementAtFloor;
 
   const checks: PromotionChecks = { goldNoRegress, emptyPatchImproves, costPerResolvedNotWorse };
   const promote = goldNoRegress && emptyPatchImproves && costPerResolvedNotWorse;
 
   const fails: string[] = [];
   if (!goldNoRegress) fails.push(`gold regressed: lost seed-resolved ${JSON.stringify(regressions)}`);
-  if (!emptyPatchImproves) fails.push(`empty-patch rate did not improve (${seed.emptyPatchRate} → ${cand.emptyPatchRate})`);
+  if (!emptyPatchImproves) {
+    fails.push(noImprovementAtFloor
+      ? `empty-patch rate tied at the floor (0) with no improvement on gold or cost/resolved`
+      : `empty-patch rate did not improve (${seed.emptyPatchRate} → ${cand.emptyPatchRate})`);
+  }
   if (!costPerResolvedNotWorse) fails.push(`cost/resolved worsened ($${seed.costPerResolved} → $${cand.costPerResolved})`);
 
   const reason = promote
