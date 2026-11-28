@@ -88,6 +88,60 @@ describe('credential guard + redaction', () => {
     expect(r).not.toContain('123-45-6789');
     expect(r).toContain('[REDACTED:');
   });
+  it('redacts every occurrence of a repeated credential, not just the first', () => {
+    // A non-global credential regex only matches once per String.replace()
+    // call, silently leaving every later occurrence of the SAME pattern in
+    // a payload untouched. Each case below carries two live tokens of one
+    // credential type; both must be gone from the output.
+    const openai = redact('first sk-aaaaaaaaaaaaaaaa1111 then sk-bbbbbbbbbbbbbbbb2222');
+    expect(openai).not.toContain('sk-aaaaaaaaaaaaaaaa1111');
+    expect(openai).not.toContain('sk-bbbbbbbbbbbbbbbb2222');
+
+    const aws = redact('keys AKIAIOSFODNN7EXAMPLE and AKIAZZZZZZZZZZZZZZZZ');
+    expect(aws).not.toContain('AKIAIOSFODNN7EXAMPLE');
+    expect(aws).not.toContain('AKIAZZZZZZZZZZZZZZZZ');
+
+    const gh = redact('tokens ghp_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa and ghp_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
+    expect(gh).not.toContain('ghp_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+    expect(gh).not.toContain('ghp_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
+
+    const bearer = redact('Bearer aaaaaaaaaaaaaaaaaaaa1 ... Bearer bbbbbbbbbbbbbbbbbbbb2');
+    expect(bearer).not.toContain('Bearer aaaaaaaaaaaaaaaaaaaa1');
+    expect(bearer).not.toContain('Bearer bbbbbbbbbbbbbbbbbbbb2');
+
+    const orKey = redact('or keys sk-or-aaaaaaaaaaaaaaaa and sk-or-bbbbbbbbbbbbbbbb');
+    expect(orKey).not.toContain('sk-or-aaaaaaaaaaaaaaaa');
+    expect(orKey).not.toContain('sk-or-bbbbbbbbbbbbbbbb');
+  });
+  it('KNOWN LIMITATION (pre-existing, not introduced or closed by this fix): two same-type credentials glued with no separator between them only partially redact', () => {
+    // Independent-critic-found, verified by this session too: when a second
+    // credential of the same type immediately follows the first with no
+    // non-token character in between, the pattern's greedy character class
+    // consumes into the second token's own prefix as part of the first
+    // match, leaving a mangled residue of the second token unredacted.
+    // Confirmed via `git stash` that this exact behavior is identical on
+    // plain `main` (pre-dates tonight's fix) — disclosed, not fixed here,
+    // to keep this diff to its one conceptual change (the first-match-only
+    // bug). This test pins today's actual output so a future fix changes
+    // it deliberately, not by surprise.
+    const bearerGlued = redact('Bearer aaaaaaaaaaaaaaaaaaaa1Bearer bbbbbbbbbbbbbbbbbbbb2');
+    expect(bearerGlued).toBe('[REDACTED:bearer_token] bbbbbbbbbbbbbbbbbbbb2');
+
+    const openaiGlued = redact('sk-aaaaaaaaaaaaaaaa1111 sk-bbbbbbbbbbbbbbbb2222sk-cccccccccccccccc3333');
+    expect(openaiGlued).toBe('[REDACTED:openai_key] [REDACTED:openai_key]-cccccccccccccccc3333');
+  });
+  it('assertNoLiveCredential stays correct across repeated calls (no shared-regex lastIndex regression)', () => {
+    // CREDENTIAL_PATTERNS must stay non-global: a global regex's .test()
+    // mutates lastIndex across calls, which would make a second call on a
+    // credential-bearing payload silently pass once the regex's lastIndex
+    // had advanced past the end of a prior match. Call it 3x in a row on
+    // credential-bearing text to prove no such state leaks between calls.
+    for (let i = 0; i < 3; i++) {
+      expect(() => assertNoLiveCredential(`attempt ${i}: sk-cccccccccccccccc${i}${i}${i}${i}`)).toThrow(
+        SafetyViolationError,
+      );
+    }
+  });
 });
 
 describe('parseYaml edge cases', () => {

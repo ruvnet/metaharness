@@ -121,9 +121,23 @@ const CREDENTIAL_PATTERNS: Array<{ label: string; re: RegExp }> = [
   { label: 'private_key', re: /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/ },
 ];
 
+/**
+ * `redact()` below calls `String.prototype.replace`, which only replaces the
+ * FIRST match unless the regex has the `g` flag — `CREDENTIAL_PATTERNS` is
+ * deliberately non-global (`assertNoLiveCredential()` uses the same objects
+ * with `.test()`, where a shared global regex's mutable `lastIndex` would
+ * cause a stateful false negative across calls). So for redaction we derive
+ * fresh, independent global copies here rather than mutating or reusing the
+ * originals — a second/third credential of the same kind in one payload
+ * must not survive redaction.
+ */
+function asGlobal(re: RegExp): RegExp {
+  return re.global ? re : new RegExp(re.source, `${re.flags}g`);
+}
+
 /** Generic sensitive content (PII-ish) we redact from stored evidence. */
 const SENSITIVE_PATTERNS: Array<{ label: string; re: RegExp }> = [
-  ...CREDENTIAL_PATTERNS,
+  ...CREDENTIAL_PATTERNS.map(({ label, re }) => ({ label, re: asGlobal(re) })),
   { label: 'email', re: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g },
   { label: 'ssn', re: /\b\d{3}-\d{2}-\d{4}\b/g },
   { label: 'credit_card', re: /\b(?:\d[ -]?){13,16}\b/g },
